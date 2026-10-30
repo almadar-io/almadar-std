@@ -234,7 +234,7 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.eventLogSearchTerm))
           limit: @config.relatedMaxRows
         })
       ;; REFETCH_* stays in `viewing` and DOES NOT replace the timeline with a
@@ -259,7 +259,7 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
           limit: @config.relatedMaxRows
         })
       EventLogRelatedLoaded -> viewing when (> ?totalCount (array/len ?data))
@@ -267,7 +267,7 @@ orbital EventLogOrbital {
       EventLogRelatedLoaded -> viewing
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: (* (- @entity.eventLogPage 1) @config.pageSize)
           orderBy: (str/concat @config.dateField ":desc")
@@ -289,7 +289,7 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.eventLogSearchTerm))
           limit: @config.relatedMaxRows
         })
       REFETCH_PAGE -> viewing when (or (= @config.searchRelation null) (= @entity.eventLogSearchTerm ""))
@@ -305,7 +305,7 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage ?page)
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.eventLogSearchTerm))
           limit: @config.relatedMaxRows
         })
       EventLogLoadFailed -> viewing

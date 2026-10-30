@@ -20,7 +20,7 @@ orbital GridSimOrbital {
     title : string
     taskText : string
     rule : string
-    rows : number
+    rows : number = 12
     cols : number = 16
     seeds : [number] = []
     cells : [number] = []
@@ -52,7 +52,7 @@ orbital GridSimOrbital {
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -107,7 +107,7 @@ orbital GridSimOrbital {
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -157,7 +157,7 @@ orbital GridSimOrbital {
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -332,15 +332,15 @@ orbital GridSimOrbital {
               (let (
                   (r (math/floor (default (/ @i @entity.cols) 0)))
                   (c (default (math/mod @i @entity.cols) 0))
-                  (v (array/nth @entity.cells @i))
-                  (up (if (> @r 0) (array/nth @entity.cells (- @i @entity.cols)) 0))
-                  (down (if (< @r (- @entity.rows 1)) (array/nth @entity.cells (+ @i @entity.cols)) 0))
-                  (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
-                  (right (if (< @c (- @entity.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
-                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0))
-                  (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0))
-                  (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0))
-                  (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ @i @entity.cols 1)) 0))
+                  (v (default (array/nth @entity.cells @i) 0))
+                  (up (if (> @r 0) (default (array/nth @entity.cells (- @i @entity.cols)) 0) 0))
+                  (down (if (< @r (- @entity.rows 1)) (default (array/nth @entity.cells (+ @i @entity.cols)) 0) 0))
+                  (left (if (> @c 0) (default (array/nth @entity.cells (- @i 1)) 0) 0))
+                  (right (if (< @c (- @entity.cols 1)) (default (array/nth @entity.cells (+ @i 1)) 0) 0))
+                  (ul (if (and (> @r 0) (> @c 0)) (default (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0) 0))
+                  (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (default (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0) 0))
+                  (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (default (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0) 0))
+                  (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (default (array/nth @entity.cells (+ @i @entity.cols 1)) 0) 0))
                   (n4 (+ @up @down @left @right))
                   (n8 (+ @n4 @ul @ur @dl @dr))
                 )
@@ -357,7 +357,7 @@ orbital GridSimOrbital {
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -393,13 +393,13 @@ orbital GridSimOrbital {
         (emit GRID_STEPPED { generation: @entity.generation, aliveCount: @entity.aliveCount })
 
       TAP_CELL -> idle when (== @entity.active true)
-        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (j) (if (== @j (object/get ?payload index)) (if (> (array/nth @entity.cells @j) 0.5) 0 1) (array/nth @entity.cells @j)))))
+        (set @entity.cells (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (j) (if (== @j (object/get ?payload index)) (if (> (default (array/nth @entity.cells @j) 0) 0.5) 0 1) (default (array/nth @entity.cells @j) 0)))))
         (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
         (set @entity.cellShapes (array/map (array/range 0 (* @entity.rows @entity.cols)) (fn (i)
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -443,7 +443,7 @@ orbital GridSimOrbital {
           (let (
               (r (math/floor (default (/ @i @entity.cols) 0)))
               (c (default (math/mod @i @entity.cols) 0))
-              (v (array/nth @entity.cells @i))
+              (v (default (array/nth @entity.cells @i) 0))
               (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
             )
             { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -490,15 +490,15 @@ orbital GridSimOrbital {
                   (let (
                       (r (math/floor (default (/ @i @entity.cols) 0)))
                       (c (default (math/mod @i @entity.cols) 0))
-                      (v (array/nth @entity.cells @i))
-                      (up (if (> @r 0) (array/nth @entity.cells (- @i @entity.cols)) 0))
-                      (down (if (< @r (- @entity.rows 1)) (array/nth @entity.cells (+ @i @entity.cols)) 0))
-                      (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
-                      (right (if (< @c (- @entity.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
-                      (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0))
-                      (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0))
-                      (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0))
-                      (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (array/nth @entity.cells (+ @i @entity.cols 1)) 0))
+                      (v (default (array/nth @entity.cells @i) 0))
+                      (up (if (> @r 0) (default (array/nth @entity.cells (- @i @entity.cols)) 0) 0))
+                      (down (if (< @r (- @entity.rows 1)) (default (array/nth @entity.cells (+ @i @entity.cols)) 0) 0))
+                      (left (if (> @c 0) (default (array/nth @entity.cells (- @i 1)) 0) 0))
+                      (right (if (< @c (- @entity.cols 1)) (default (array/nth @entity.cells (+ @i 1)) 0) 0))
+                      (ul (if (and (> @r 0) (> @c 0)) (default (array/nth @entity.cells (- (- @i @entity.cols) 1)) 0) 0))
+                      (ur (if (and (> @r 0) (< @c (- @entity.cols 1))) (default (array/nth @entity.cells (+ (- @i @entity.cols) 1)) 0) 0))
+                      (dl (if (and (< @r (- @entity.rows 1)) (> @c 0)) (default (array/nth @entity.cells (- (+ @i @entity.cols) 1)) 0) 0))
+                      (dr (if (and (< @r (- @entity.rows 1)) (< @c (- @entity.cols 1))) (default (array/nth @entity.cells (+ @i @entity.cols 1)) 0) 0))
                       (n4 (+ @up @down @left @right))
                       (n8 (+ @n4 @ul @ur @dl @dr))
                     )
@@ -515,7 +515,7 @@ orbital GridSimOrbital {
               (let (
                   (r (math/floor (default (/ @i @entity.cols) 0)))
                   (c (default (math/mod @i @entity.cols) 0))
-                  (v (array/nth @entity.cells @i))
+                  (v (default (array/nth @entity.cells @i) 0))
                   (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
                 )
                 { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
@@ -560,7 +560,7 @@ orbital GridSimOrbital {
         @description "Learner advanced exactly one generation while paused — the microscope view of the rule."
         @tier "domain"
       TAP_CELL {
-        payload : { id : string  type : string  index : number! }
+        payload : { id : string  type : string  index : number! }!
       }
         @description "Learner tapped a cell on the canvas — the canvas callback wraps its click info as payload { id, type, index }, where index is the flat cell index; the cell toggles between empty and active, seeding or editing the world."
         @tier "domain"

@@ -173,7 +173,7 @@ orbital SelectableItemOrbital {
       REFETCH_QUERY -> idle when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
           limit: @config.relatedMaxRows
         })
       SelectableItemRelatedLoaded -> idle when (> ?totalCount (array/len ?data))
@@ -182,7 +182,7 @@ orbital SelectableItemOrbital {
         (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
-          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
+          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
           limit: @config.pageSize
           offset: 0
         })

@@ -8,7 +8,7 @@ type GhBillingProduct = { product : string, gross : number, net : number, quanti
 type GhBillingSku = { product : string, sku : string, unit : string, category : string, quantity : number, gross : number, net : number }
 type GhBillingRepo = { repo : string, gross : number, net : number }
 type GhBillingCategories = { compute : number, storage : number, transfer : number, other : number }
-type GhBillingAccount = { name : string, kind : string, available : boolean, error : string, grossUsd : number, netUsd : number, discountUsd : number, byProduct : [GhBillingProduct], bySku : [GhBillingSku], netByCategory : GhBillingCategories, repos : [GhBillingRepo] }
+type GhBillingAccount = { name : string, kind : string, available : boolean, error : string, grossUsd : number!, netUsd : number!, discountUsd : number!, byProduct : [GhBillingProduct], bySku : [GhBillingSku], netByCategory : GhBillingCategories, repos : [GhBillingRepo] }
 type GhBillingAccountRef = { name : string, kind : "org" | "user" }
 type GhUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
 orbital GithubBillingOrbital {
@@ -21,12 +21,12 @@ orbital GithubBillingOrbital {
     totalGrossUsd : number = 0
     totalNetUsd : number = 0
     fetchedAt : string @description "When the read the board came from began." = ""
-    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    cachedAt : instant @description "Instant at which the board was cached." = 0
     hasCache : boolean = false
     loading : boolean @description "Whether a read is in flight." = false
     collected : [GhBillingAccount] @description "The accounts the read in flight has answered so far." = []
     cursor : number @description "Index of the account being read." = 0
-    startedAt : instant @description "Epoch milliseconds at which the read in flight began." = 0
+    startedAt : instant @description "Instant at which the read in flight began." = 0
   }
 
   trait BillingGithub = Github.traits.GithubClient {
@@ -42,10 +42,10 @@ orbital GithubBillingOrbital {
       INIT -> idle when @config.loadOnInit
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (emit BILLING_LOAD { })
-      BILLING_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+      BILLING_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit BILLING { accounts: @entity.accounts, period: @entity.period, totalGrossUsd: @entity.totalGrossUsd, totalNetUsd: @entity.totalNetUsd, fetchedAt: @entity.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: BILLING_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.period ": $" @entity.totalNetUsd " net of $" @entity.totalGrossUsd " gross") }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.accounts (fn a { id: @a.name, name: @a.name, kind: @a.kind, state: (if @a.available "read" (default @a.error "unavailable")), grossUsd: @a.grossUsd, netUsd: @a.netUsd, discountUsd: @a.discountUsd })), fields: [{ label: Account, name: name, variant: body }, { label: Kind, name: kind, variant: badge }, { label: Gross, name: grossUsd, variant: caption }, { label: Net, name: netUsd, variant: caption }, { label: Discount, name: discountUsd, variant: caption }, { label: State, name: state, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/flatten (array/map @entity.accounts (fn a (array/map @a.bySku (fn k { id: (str/concat @a.name "/" @k.sku), account: @a.name, sku: @k.sku, category: @k.category, quantity: @k.quantity, gross: @k.gross, net: @k.net }))))), fields: [{ label: Account, name: account, variant: caption }, { label: SKU, name: sku, variant: body }, { label: Category, name: category, variant: badge }, { label: Quantity, name: quantity, variant: caption }, { label: Gross, name: gross, variant: caption }, { label: Net, name: net, variant: caption }] }] })
-      BILLING_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+      BILLING_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor 0)
@@ -65,13 +65,13 @@ orbital GithubBillingOrbital {
       BILLING_REFRESH -> reading
       BILLING_NEXT -> reading when (< @entity.cursor (array/len @config.accounts))
         (let ((a (array/nth @config.accounts @entity.cursor)))
-          (let ((y (str/to-number (time/format @entity.startedAt "YYYY"))) (m (str/to-number (time/format @entity.startedAt "MM")))) (if (or (= @y null) (= @m null)) (emit BILLING_MONTH_FAILED { account: @a.name, kind: @a.kind, message: "the billing month could not be read from the clock" }) (emit BILLING_USAGE { account: @a.name, kind: @a.kind, year: @y, month: @m }))))
+          (let ((y (str/to-number (time/format @entity.startedAt "YYYY"))) (m (str/to-number (time/format @entity.startedAt "MM")))) (if (and (validate/required @y) (validate/required @m)) (emit BILLING_USAGE { account: (default @a.name ""), kind: (default @a.kind ""), year: (default @y 0), month: (default @m 0) }) (emit BILLING_MONTH_FAILED { account: (default @a.name ""), kind: (default @a.kind ""), message: "the billing month could not be read from the clock" }))))
       BILLING_NEXT -> idle when (>= @entity.cursor (array/len @config.accounts))
         (set @entity.accounts @entity.collected)
         (set @entity.period (time/format @entity.startedAt "YYYY-MM"))
         (set @entity.totalGrossUsd (math/round (array/reduce @entity.collected 0 (fn acc a (+ @acc @a.grossUsd))) 2))
         (set @entity.totalNetUsd (math/round (array/reduce @entity.collected 0 (fn acc a (+ @acc @a.netUsd))) 2))
-        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -86,7 +86,7 @@ orbital GithubBillingOrbital {
             grossUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.gross))) 2),
             netUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.net))) 2),
             discountUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.discount))) 2),
-            byProduct: (array/sort (array/map (array/unique (array/map @its (fn i @i.product))) (fn p (let ((ps (array/filter @its (fn i (= @i.product @p))))) { product: @p, gross: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.net))) 4), quantity: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.quantity))) 0), unit: (object/get (array/nth @ps 0) "unit" "") }))) "gross" "desc"),
+            byProduct: (array/sort (array/map (array/unique (array/map @its (fn i @i.product))) (fn p (let ((ps (array/filter @its (fn i (= @i.product @p)))) (first (array/nth @ps 0))) { product: @p, gross: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.net))) 4), quantity: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.quantity))) 0), unit: @first.unit }))) "gross" "desc"),
             bySku: (array/sort (array/map (array/unique (array/map @its (fn i @i.sku))) (fn k (let ((ks (array/filter @its (fn i (= @i.sku @k)))) (first (array/nth (array/filter @its (fn i (= @i.sku @k))) 0))) { product: @first.product, sku: @k, unit: @first.unit, category: (object/get @config.unitCategories @first.unit "other"), quantity: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.quantity))) 1), gross: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.net))) 4) }))) "gross" "desc"),
             netByCategory: { compute: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "compute"))) 0 (fn acc i (+ @acc @i.net))) 4), storage: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "storage"))) 0 (fn acc i (+ @acc @i.net))) 4), transfer: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "transfer"))) 0 (fn acc i (+ @acc @i.net))) 4), other: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "other"))) 0 (fn acc i (+ @acc @i.net))) 4) },
             repos: (array/sort (array/map (array/unique (array/map (array/filter @its (fn i (!= @i.repo ""))) (fn i @i.repo))) (fn r (let ((rs (array/filter @its (fn i (= @i.repo @r))))) { repo: @r, gross: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.net))) 4) }))) "gross" "desc")

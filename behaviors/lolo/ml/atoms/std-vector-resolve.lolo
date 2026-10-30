@@ -2,7 +2,7 @@ app std-vector-resolve [
   version: "1.0.0",
   description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, userAnchor, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
   net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
-  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  fs: { "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-resolve"
@@ -395,19 +395,19 @@ orbital VectorResolveOrbital {
 
     state reading {
       USER_STORE_READ -> looking
-        (emit VECTOR_LOOKUP_MANY { stores: (array/append @entity.snapshots @payload.data), origins: (array/append (array/map (array/range 0 (array/len @entity.snapshots)) (fn si (if (< @si (array/len @entity.snapshotPaths)) (array/nth @entity.snapshotPaths @si) (str/concat "snapshot " @si)))) @entity.userPath), model: @entity.model, texts: @entity.texts })
+        (emit VECTOR_LOOKUP_MANY { stores: (array/append @entity.snapshots @payload.data), origins: (array/append (array/map (array/range 0 (array/len @entity.snapshots)) (fn si (if (< @si (array/len @entity.snapshotPaths)) (default (array/nth @entity.snapshotPaths @si) (str/concat "snapshot " @si)) (str/concat "snapshot " @si)))) @entity.userPath), model: @entity.model, texts: @entity.texts })
     }
 
     state looking {
       VECTOR_RESOLVED -> looking
         (set @entity.entries @payload.entries)
-        (set @entity.misses (array/unique (array/map (array/filter (array/range 0 (array/len @entity.texts)) (fn mi (not (object/get (array/nth @payload.entries @mi) "found")))) (fn mi (array/nth @entity.texts @mi)))))
+        (set @entity.misses (array/unique (array/map (array/filter (array/range 0 (array/len @entity.texts)) (fn mi (not (object/get (default (array/nth @payload.entries @mi) { found: false, dims: 0, scale: 0, record: (bytes/from-string ""), vector: [] }) "found")))) (fn mi (default (array/nth @entity.texts @mi) "")))))
         (emit MISSES_COMPUTED { })
 
       MISSES_COMPUTED -> idle when (or (== (array/len @entity.misses) 0) (>= @entity.persisted 1))
         (emit FINISHED { })
       MISSES_COMPUTED -> idle when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (== @entity.providerModel ""))
-        (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_MISSING", detail: (str/concat (array/len @entity.misses) " embedding text(s) have no stored vector (first: " (str/join (array/map (array/take @entity.misses 5) (fn mt (object/get (array/find @entity.wanted (fn w (== @w.text @mt))) "key"))) ", ") ") and no embedding provider is configured; set EMBEDDING_PROVIDER (openrouter|openai|lmstudio) with OPEN_ROUTER_API_KEY, OPENAI_API_KEY or EMBEDDING_API_KEY (lmstudio: LMSTUDIO_URL), or import vectors with `orb behaviors vectors import`") })
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_MISSING", detail: (str/concat (array/len @entity.misses) " embedding text(s) have no stored vector (first: " (str/join (array/map (array/take @entity.misses 5) (fn mt (object/get (default (array/find @entity.wanted (fn w (== @w.text @mt))) { key: @mt, text: @mt }) "key"))) ", ") ") and no embedding provider is configured; set EMBEDDING_PROVIDER (openrouter|openai|lmstudio) with OPEN_ROUTER_API_KEY, OPENAI_API_KEY or EMBEDDING_API_KEY (lmstudio: LMSTUDIO_URL), or import vectors with `orb behaviors vectors import`") })
       MISSES_COMPUTED -> idle when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (!= @entity.providerModel "") (!= @entity.providerModel @entity.model))
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_MODEL_MISMATCH", detail: (str/concat "the stored vectors are `" @entity.model "` but the configured embedder produces `" @entity.providerModel "`") })
       MISSES_COMPUTED -> embedding when (and (> (array/len @entity.misses) 0) (< @entity.persisted 1) (!= @entity.providerModel "") (== @entity.providerModel @entity.model))
@@ -432,16 +432,16 @@ orbital VectorResolveOrbital {
         (emit LLM_EMBED_LM { texts: @payload.texts, model: @entity.embedModel })
       EMBED_BATCH -> idle when (and (!= @entity.providerKind "openrouter-shared") (!= @entity.providerKind "openrouter-own") (!= @entity.providerKind "openai-shared") (!= @entity.providerKind "openai-own") (!= @entity.providerKind "lmstudio"))
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_KIND", detail: (str/concat "no embedding instance serves the provider kind `" @entity.providerKind "`") })
-      LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx)))
-        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (array/nth @entity.chunks @entity.chunkIdx)) " texts") })
-      LLM_EMBED_RESULT -> embedding when (and (== (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx))) (< (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+      LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) [])))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (default (array/nth @entity.chunks @entity.chunkIdx) [])) " texts") })
+      LLM_EMBED_RESULT -> embedding when (and (== (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) []))) (< (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (set @entity.chunkIdx (+ @entity.chunkIdx 1))
-        (emit EMBED_BATCH { texts: (array/nth @entity.chunks @entity.chunkIdx) })
-      LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+        (emit EMBED_BATCH { texts: (default (array/nth @entity.chunks @entity.chunkIdx) []) })
+      LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) []))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (emit VECTORS_EMBEDDED { model: @entity.model, texts: @entity.misses, vectors: @entity.got })
-        (emit VECTOR_WRITE { path: @entity.userPath, anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (array/nth @entity.misses @wi), vector: (array/nth @entity.got @wi) })) })
+        (emit VECTOR_WRITE { path: @entity.userPath, anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (default (array/nth @entity.misses @wi) ""), vector: (default (array/nth @entity.got @wi) []) })) })
       LLM_FAILED -> idle
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_FAILED", detail: (str/concat "embedding failed: " @payload.message) })
     }

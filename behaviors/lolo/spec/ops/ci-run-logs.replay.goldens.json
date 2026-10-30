@@ -1,1092 +1,1137 @@
 {
- "atom": "ops/atoms/std-ci-run-logs.lolo",
- "trait": "CiRunLogs",
- "cases": [
-  {
-   "id": "failed-jobs-first-log-read-then-next",
-   "defaults": [
-    "CiLogsGh"
-   ],
-   "steps": [
+  "atom": "ops/atoms/std-ci-run-logs.lolo",
+  "trait": "CiRunLogs",
+  "cases": [
     {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "jobs",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/runs/777/jobs"
-         ]
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "jobs",
-      "out": "eyJ0b3RhbF9jb3VudCI6IDQsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAiZmFpbHVyZSJ9LCB7ImlkIjogMiwgIm5hbWUiOiAibGludCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9LCB7ImlkIjogMywgIm5hbWUiOiAidGVzdCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAiZmFpbHVyZSJ9LCB7ImlkIjogNCwgIm5hbWUiOiAiZTJlIiwgInN0YXR1cyI6ICJjb21wbGV0ZWQiLCAiY29uY2x1c2lvbiI6ICJmYWlsdXJlIn1dfQ==",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "jobs",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "{\"total_count\": 4, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"failure\"}, {\"id\": 2, \"name\": \"lint\", \"status\": \"completed\", \"conclusion\": \"success\"}, {\"id\": 3, \"name\": \"test\", \"status\": \"completed\", \"conclusion\": \"failure\"}, {\"id\": 4, \"name\": \"e2e\", \"status\": \"completed\", \"conclusion\": \"failure\"}]}",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "log",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/jobs/1/logs"
-         ]
-        }
-       }
+      "id": "failed-jobs-first-log-read-then-next",
+      "defaults": [
+        "CiLogsGh"
       ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "log",
-      "out": "MjAyNi0xMC0xOVQxMDowMDowMC4xMjM0NTY3WiAjI1tncm91cF1SdW4gcG5wbSB0ZXN0CjIwMjYtMTAtMTlUMTA6MDA6MDEuMDAwMDAwMFogICBucG0gd2FybiBkZXByZWNhdGVkCgoyMDI2LTEwLTE5VDEwOjAwOjAyLjVaICMjW2Vycm9yXVByb2Nlc3MgY29tcGxldGVkIHdpdGggZXhpdCBjb2RlIDEuCjIwMjYtMTAtMTlUMTA6MDA6MDNaICMjW3dhcm5pbmddTm9kZSAxOCBpcyBkZXByZWNhdGVkCjIwMjYtMTAtMTlUMTA6MDA6MDQuMDAwWiBbRVJST1JdIFRlc3RzIGZhaWxlZDogMwoyMDI2LTEwLTE5VDEwOjAwOjA1LjAwMFogc2VlICMjW2Vycm9yXSBpbiB0aGUgbWlkZGxlCiAgIApubyB0aW1lc3RhbXAgbGluZQoyMDI2LTEwLTE5VDEwOjAwOjA2LjAwMFogCg==",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "log",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "2026-10-19T10:00:00.1234567Z ##[group]Run pnpm test\n2026-10-19T10:00:01.0000000Z   npm warn deprecated\n\n2026-10-19T10:00:02.5Z ##[error]Process completed with exit code 1.\n2026-10-19T10:00:03Z ##[warning]Node 18 is deprecated\n2026-10-19T10:00:04.000Z [ERROR] Tests failed: 3\n2026-10-19T10:00:05.000Z see ##[error] in the middle\n   \nno timestamp line\n2026-10-19T10:00:06.000Z \n",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_NEXT",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    }
-   ],
-   "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
-  },
-  {
-   "id": "no-failed-job-run-summary-lines",
-   "defaults": [
-    "CiLogsGh"
-   ],
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "jobs",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/runs/777/jobs"
-         ]
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "jobs",
-      "out": "eyJ0b3RhbF9jb3VudCI6IDIsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9LCB7ImlkIjogMiwgIm5hbWUiOiAiZGVwbG95IiwgInN0YXR1cyI6ICJjb21wbGV0ZWQiLCAiY29uY2x1c2lvbiI6ICJjYW5jZWxsZWQifV19",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "jobs",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "{\"total_count\": 2, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"success\"}, {\"id\": 2, \"name\": \"deploy\", \"status\": \"completed\", \"conclusion\": \"cancelled\"}]}",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "view",
-         "argv": [
-          "run",
-          "view",
-          "777",
-          "--repo",
-          "almadar-io/almadar-core"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "view",
-      "out": "WCBtYWluIENJIMK3IDc3NwpUcmlnZ2VyZWQgdmlhIHB1c2ggYWJvdXQgMSBob3VyIGFnbwoKSk9CUwpYIGJ1aWxkIGluIDJtIChJRCAxKQogIGZhaWxlZCBzdGVwOiBlcnJvciBpbiBzZXR1cAo=",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "view",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "X main CI · 777\nTriggered via push about 1 hour ago\n\nJOBS\nX build in 2m (ID 1)\n  failed step: error in setup\n",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "CI_LOGS",
-        "payload": {
-         "repo": "almadar-core",
-         "runId": "777",
-         "lines": [
-          {
-           "job": "",
-           "step": "",
-           "msg": "X main CI · 777",
-           "level": "info"
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
           },
-          {
-           "job": "",
-           "step": "",
-           "msg": "Triggered via push about 1 hour ago",
-           "level": "info"
-          },
-          {
-           "job": "",
-           "step": "",
-           "msg": "JOBS",
-           "level": "info"
-          },
-          {
-           "job": "",
-           "step": "",
-           "msg": "X build in 2m (ID 1)",
-           "level": "info"
-          },
-          {
-           "job": "",
-           "step": "",
-           "msg": "failed step: error in setup",
-           "level": "info"
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "jobs",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/runs/777/jobs"
+                  ]
+                }
+              }
+            ]
           }
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    }
-   ],
-   "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
-  },
-  {
-   "id": "job-list-unreadable-summary-from-stderr",
-   "defaults": [
-    "CiLogsGh"
-   ],
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "jobs",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/runs/777/jobs"
-         ]
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 1,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "jobs",
-      "out": "",
-      "err": "SFRUUCA0MDQ6IE5vdCBGb3VuZA=="
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "jobs",
-      "exitCode": 1,
-      "signal": 0,
-      "stdout": "",
-      "stderr": "HTTP 404: Not Found",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "view",
-         "argv": [
-          "run",
-          "view",
-          "777",
-          "--repo",
-          "almadar-io/almadar-core"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 1,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "view",
-      "out": "",
-      "err": "Y291bGQgbm90IGZpbmQgYW55IHdvcmtmbG93IHJ1biB3aXRoIElEIDc3Nwo="
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "view",
-      "exitCode": 1,
-      "signal": 0,
-      "stdout": "",
-      "stderr": "could not find any workflow run with ID 777\n",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "CI_LOGS",
-        "payload": {
-         "repo": "almadar-core",
-         "runId": "777",
-         "lines": [
-          {
-           "job": "",
-           "step": "",
-           "msg": "could not find any workflow run with ID 777",
-           "level": "info"
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "jobs",
+            "out": "eyJ0b3RhbF9jb3VudCI6IDQsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAiZmFpbHVyZSJ9LCB7ImlkIjogMiwgIm5hbWUiOiAibGludCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9LCB7ImlkIjogMywgIm5hbWUiOiAidGVzdCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAiZmFpbHVyZSJ9LCB7ImlkIjogNCwgIm5hbWUiOiAiZTJlIiwgInN0YXR1cyI6ICJjb21wbGV0ZWQiLCAiY29uY2x1c2lvbiI6ICJmYWlsdXJlIn1dfQ==",
+            "err": ""
           }
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    }
-   ],
-   "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
-  },
-  {
-   "id": "job-list-not-json-run-summary",
-   "defaults": [
-    "CiLogsGh"
-   ],
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "jobs",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/runs/777/jobs"
-         ]
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "jobs",
-      "out": "PGh0bWw+b29wczwvaHRtbD4=",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "jobs",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "<html>oops</html>",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "view",
-         "argv": [
-          "run",
-          "view",
-          "777",
-          "--repo",
-          "almadar-io/almadar-core"
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "view",
-      "out": "4pyTIG1haW4gQ0kgwrcgNzc3Cg==",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "view",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "✓ main CI · 777\n",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "CI_LOGS",
-        "payload": {
-         "repo": "almadar-core",
-         "runId": "777",
-         "lines": [
-          {
-           "job": "",
-           "step": "",
-           "msg": "✓ main CI · 777",
-           "level": "info"
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"total_count\": 4, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"failure\"}, {\"id\": 2, \"name\": \"lint\", \"status\": \"completed\", \"conclusion\": \"success\"}, {\"id\": 3, \"name\": \"test\", \"status\": \"completed\", \"conclusion\": \"failure\"}, {\"id\": 4, \"name\": \"e2e\", \"status\": \"completed\", \"conclusion\": \"failure\"}]}",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "log",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/jobs/1/logs"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
           }
-         ]
-        }
-       }
-      ],
-      "neverEmits": [
-       "CLI_FAILED"
-      ]
-     }
-    }
-   ],
-   "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
-  },
-  {
-   "id": "busy-read-refused",
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     }
-    },
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_FAILED",
-        "payload": {
-         "runId": "777",
-         "error": "the log of run 777 is being read",
-         "code": "ci_logs_busy"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-successful-only-jobs-do-not-read-logs",
-   "defaults": [
-    "CiLogsGh"
-   ],
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "almadar-core",
-      "runId": "777"
-     }
-    },
-    {
-     "event": "CLI_EXITED",
-     "payload": {
-      "code": 0,
-      "signal": 0,
-      "key": "wait"
-     },
-     "from": "running",
-     "trait": "CiLogsGh",
-     "entity": {
-      "stage": "jobs",
-      "out": "eyJ0b3RhbF9jb3VudCI6IDEsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9XX0=",
-      "err": ""
-     }
-    },
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "jobs",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "{\"total_count\": 1, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"success\"}]}",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "neverEmits": [
-       "CI_LOGS",
-       "CLI_FAILED"
-      ],
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "view",
-         "argv": [
-          "run",
-          "view",
-          "777",
-          "--repo",
-          "almadar-io/almadar-core"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
-  },
-  {
-   "id": "a-load-shows-the-run-being-read",
-   "steps": [
-    {
-     "event": "CI_LOGS_LOAD",
-     "payload": {
-      "owner": "almadar-io",
-      "repo": "kflow",
-      "runId": "4242"
-     },
-     "expect": {
-      "fired": true,
-      "state": "reading",
-      "effects": [
-       {
-        "type": "render-ui"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "next-reads-second-failed-job-log",
-   "entity": {
-    "owner": "almadar-io",
-    "repo": "almadar-core",
-    "runId": "777",
-    "failed": [
-     {
-      "id": 1,
-      "name": "build",
-      "conclusion": "failure"
-     },
-     {
-      "id": 3,
-      "name": "test",
-      "conclusion": "failure"
-     },
-     {
-      "id": 4,
-      "name": "e2e",
-      "conclusion": "failure"
-     }
-    ],
-    "cursor": 1,
-    "lines": [
-     {
-      "job": "build",
-      "step": "",
-      "msg": "##[group]Run pnpm test",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "npm warn deprecated",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Process completed with exit code 1.",
-      "level": "error"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Node 18 is deprecated",
-      "level": "warning"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "[ERROR] Tests failed: 3",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "see ##[error] in the middle",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "no timestamp line",
-      "level": "info"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "CI_LOGS_NEXT",
-     "payload": {},
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "log",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/jobs/3/logs"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "second-log-crlf-error-marker-then-next",
-   "entity": {
-    "owner": "almadar-io",
-    "repo": "almadar-core",
-    "runId": "777",
-    "failed": [
-     {
-      "id": 1,
-      "name": "build",
-      "conclusion": "failure"
-     },
-     {
-      "id": 3,
-      "name": "test",
-      "conclusion": "failure"
-     },
-     {
-      "id": 4,
-      "name": "e2e",
-      "conclusion": "failure"
-     }
-    ],
-    "cursor": 1,
-    "lines": [
-     {
-      "job": "build",
-      "step": "",
-      "msg": "##[group]Run pnpm test",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "npm warn deprecated",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Process completed with exit code 1.",
-      "level": "error"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Node 18 is deprecated",
-      "level": "warning"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "[ERROR] Tests failed: 3",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "see ##[error] in the middle",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "no timestamp line",
-      "level": "info"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "CI_LOGS_RAN",
-     "payload": {
-      "stage": "log",
-      "exitCode": 0,
-      "signal": 0,
-      "stdout": "2026-10-19T11:00:00.000Z ##[error]lint failed\r\n2026-10-19T11:00:01.000Z done\n",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unreadable-log-skipped-then-answer",
-   "entity": {
-    "owner": "almadar-io",
-    "repo": "almadar-core",
-    "runId": "777",
-    "failed": [
-     {
-      "id": 1,
-      "name": "build",
-      "conclusion": "failure"
-     },
-     {
-      "id": 3,
-      "name": "test",
-      "conclusion": "failure"
-     },
-     {
-      "id": 4,
-      "name": "e2e",
-      "conclusion": "failure"
-     }
-    ],
-    "cursor": 2,
-    "lines": [
-     {
-      "job": "build",
-      "step": "",
-      "msg": "##[group]Run pnpm test",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "npm warn deprecated",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Process completed with exit code 1.",
-      "level": "error"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Node 18 is deprecated",
-      "level": "warning"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "[ERROR] Tests failed: 3",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "see ##[error] in the middle",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "no timestamp line",
-      "level": "info"
-     },
-     {
-      "job": "test",
-      "step": "",
-      "msg": "lint failed",
-      "level": "error"
-     },
-     {
-      "job": "test",
-      "step": "",
-      "msg": "done",
-      "level": "info"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "CI_LOGS_NEXT",
-     "payload": {},
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CI_LOGS_GH",
-        "payload": {
-         "stage": "log",
-         "argv": [
-          "api",
-          "repos/almadar-io/almadar-core/actions/jobs/4/logs"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "all-logs-read-answers",
-   "entity": {
-    "owner": "almadar-io",
-    "repo": "almadar-core",
-    "runId": "777",
-    "failed": [
-     {
-      "id": 1,
-      "name": "build",
-      "conclusion": "failure"
-     },
-     {
-      "id": 3,
-      "name": "test",
-      "conclusion": "failure"
-     },
-     {
-      "id": 4,
-      "name": "e2e",
-      "conclusion": "failure"
-     }
-    ],
-    "cursor": 3,
-    "lines": [
-     {
-      "job": "build",
-      "step": "",
-      "msg": "##[group]Run pnpm test",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "npm warn deprecated",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Process completed with exit code 1.",
-      "level": "error"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "Node 18 is deprecated",
-      "level": "warning"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "[ERROR] Tests failed: 3",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "see ##[error] in the middle",
-      "level": "info"
-     },
-     {
-      "job": "build",
-      "step": "",
-      "msg": "no timestamp line",
-      "level": "info"
-     },
-     {
-      "job": "test",
-      "step": "",
-      "msg": "lint failed",
-      "level": "error"
-     },
-     {
-      "job": "test",
-      "step": "",
-      "msg": "done",
-      "level": "info"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "CI_LOGS_NEXT",
-     "payload": {},
-     "from": "reading",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "CI_LOGS",
-        "payload": {
-         "repo": "almadar-core",
-         "runId": "777",
-         "lines": [
-          {
-           "job": "build",
-           "step": "",
-           "msg": "##[group]Run pnpm test",
-           "level": "info"
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
           },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "npm warn deprecated",
-           "level": "info"
-          },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "Process completed with exit code 1.",
-           "level": "error"
-          },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "Node 18 is deprecated",
-           "level": "warning"
-          },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "[ERROR] Tests failed: 3",
-           "level": "info"
-          },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "see ##[error] in the middle",
-           "level": "info"
-          },
-          {
-           "job": "build",
-           "step": "",
-           "msg": "no timestamp line",
-           "level": "info"
-          },
-          {
-           "job": "test",
-           "step": "",
-           "msg": "lint failed",
-           "level": "error"
-          },
-          {
-           "job": "test",
-           "step": "",
-           "msg": "done",
-           "level": "info"
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "log",
+            "out": "MjAyNi0xMC0xOVQxMDowMDowMC4xMjM0NTY3WiAjI1tncm91cF1SdW4gcG5wbSB0ZXN0CjIwMjYtMTAtMTlUMTA6MDA6MDEuMDAwMDAwMFogICBucG0gd2FybiBkZXByZWNhdGVkCgoyMDI2LTEwLTE5VDEwOjAwOjAyLjVaICMjW2Vycm9yXVByb2Nlc3MgY29tcGxldGVkIHdpdGggZXhpdCBjb2RlIDEuCjIwMjYtMTAtMTlUMTA6MDA6MDNaICMjW3dhcm5pbmddTm9kZSAxOCBpcyBkZXByZWNhdGVkCjIwMjYtMTAtMTlUMTA6MDA6MDQuMDAwWiBbRVJST1JdIFRlc3RzIGZhaWxlZDogMwoyMDI2LTEwLTE5VDEwOjAwOjA1LjAwMFogc2VlICMjW2Vycm9yXSBpbiB0aGUgbWlkZGxlCiAgIApubyB0aW1lc3RhbXAgbGluZQoyMDI2LTEwLTE5VDEwOjAwOjA2LjAwMFogCg==",
+            "err": ""
           }
-         ]
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "log",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "2026-10-19T10:00:00.1234567Z ##[group]Run pnpm test\n2026-10-19T10:00:01.0000000Z   npm warn deprecated\n\n2026-10-19T10:00:02.5Z ##[error]Process completed with exit code 1.\n2026-10-19T10:00:03Z ##[warning]Node 18 is deprecated\n2026-10-19T10:00:04.000Z [ERROR] Tests failed: 3\n2026-10-19T10:00:05.000Z see ##[error] in the middle\n   \nno timestamp line\n2026-10-19T10:00:06.000Z \n",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_NEXT",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
         }
-       }
+      ],
+      "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
+    },
+    {
+      "id": "no-failed-job-run-summary-lines",
+      "defaults": [
+        "CiLogsGh"
+      ],
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "jobs",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/runs/777/jobs"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "jobs",
+            "out": "eyJ0b3RhbF9jb3VudCI6IDIsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9LCB7ImlkIjogMiwgIm5hbWUiOiAiZGVwbG95IiwgInN0YXR1cyI6ICJjb21wbGV0ZWQiLCAiY29uY2x1c2lvbiI6ICJjYW5jZWxsZWQifV19",
+            "err": ""
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"total_count\": 2, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"success\"}, {\"id\": 2, \"name\": \"deploy\", \"status\": \"completed\", \"conclusion\": \"cancelled\"}]}",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "view",
+                  "argv": [
+                    "run",
+                    "view",
+                    "777",
+                    "--repo",
+                    "almadar-io/almadar-core"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "view",
+            "out": "WCBtYWluIENJIMK3IDc3NwpUcmlnZ2VyZWQgdmlhIHB1c2ggYWJvdXQgMSBob3VyIGFnbwoKSk9CUwpYIGJ1aWxkIGluIDJtIChJRCAxKQogIGZhaWxlZCBzdGVwOiBlcnJvciBpbiBzZXR1cAo=",
+            "err": ""
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "view",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "X main CI \u00b7 777\nTriggered via push about 1 hour ago\n\nJOBS\nX build in 2m (ID 1)\n  failed step: error in setup\n",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CI_LOGS",
+                "payload": {
+                  "repo": "almadar-core",
+                  "runId": "777",
+                  "lines": [
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "X main CI \u00b7 777",
+                      "level": "info"
+                    },
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "Triggered via push about 1 hour ago",
+                      "level": "info"
+                    },
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "JOBS",
+                      "level": "info"
+                    },
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "X build in 2m (ID 1)",
+                      "level": "info"
+                    },
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "failed step: error in setup",
+                      "level": "info"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        }
+      ],
+      "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
+    },
+    {
+      "id": "job-list-unreadable-summary-from-stderr",
+      "defaults": [
+        "CiLogsGh"
+      ],
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "jobs",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/runs/777/jobs"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 1,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "jobs",
+            "out": "",
+            "err": "SFRUUCA0MDQ6IE5vdCBGb3VuZA=="
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stderr": "HTTP 404: Not Found",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "view",
+                  "argv": [
+                    "run",
+                    "view",
+                    "777",
+                    "--repo",
+                    "almadar-io/almadar-core"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 1,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "view",
+            "out": "",
+            "err": "Y291bGQgbm90IGZpbmQgYW55IHdvcmtmbG93IHJ1biB3aXRoIElEIDc3Nwo="
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "view",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stderr": "could not find any workflow run with ID 777\n",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CI_LOGS",
+                "payload": {
+                  "repo": "almadar-core",
+                  "runId": "777",
+                  "lines": [
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "could not find any workflow run with ID 777",
+                      "level": "info"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        }
+      ],
+      "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
+    },
+    {
+      "id": "job-list-not-json-run-summary",
+      "defaults": [
+        "CiLogsGh"
+      ],
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "jobs",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/runs/777/jobs"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "jobs",
+            "out": "PGh0bWw+b29wczwvaHRtbD4=",
+            "err": ""
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "<html>oops</html>",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "view",
+                  "argv": [
+                    "run",
+                    "view",
+                    "777",
+                    "--repo",
+                    "almadar-io/almadar-core"
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "view",
+            "out": "4pyTIG1haW4gQ0kgwrcgNzc3Cg==",
+            "err": ""
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "view",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "\u2713 main CI \u00b7 777\n",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CI_LOGS",
+                "payload": {
+                  "repo": "almadar-core",
+                  "runId": "777",
+                  "lines": [
+                    {
+                      "job": "",
+                      "step": "",
+                      "msg": "\u2713 main CI \u00b7 777",
+                      "level": "info"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "CLI_FAILED"
+            ]
+          }
+        }
+      ],
+      "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
+    },
+    {
+      "id": "busy-read-refused",
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          }
+        },
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_FAILED",
+                "payload": {
+                  "runId": "777",
+                  "error": "the log of run 777 is being read",
+                  "code": "ci_logs_busy"
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "control-successful-only-jobs-do-not-read-logs",
+      "defaults": [
+        "CiLogsGh"
+      ],
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "777"
+          }
+        },
+        {
+          "event": "CLI_EXITED",
+          "payload": {
+            "code": 0,
+            "signal": 0,
+            "key": "wait"
+          },
+          "from": "running",
+          "trait": "CiLogsGh",
+          "entity": {
+            "stage": "jobs",
+            "out": "eyJ0b3RhbF9jb3VudCI6IDEsICJqb2JzIjogW3siaWQiOiAxLCAibmFtZSI6ICJidWlsZCIsICJzdGF0dXMiOiAiY29tcGxldGVkIiwgImNvbmNsdXNpb24iOiAic3VjY2VzcyJ9XX0=",
+            "err": ""
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"total_count\": 1, \"jobs\": [{\"id\": 1, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"success\"}]}",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "neverEmits": [
+              "CI_LOGS",
+              "CLI_FAILED"
+            ],
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "view",
+                  "argv": [
+                    "run",
+                    "view",
+                    "777",
+                    "--repo",
+                    "almadar-io/almadar-core"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "Complete the composed CLI runner with captured bytes so its next request starts idle; assert no CLI_FAILED cascade."
+    },
+    {
+      "id": "a-load-shows-the-run-being-read",
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "kflow",
+            "runId": "4242"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "next-reads-second-failed-job-log",
+      "entity": {
+        "owner": "almadar-io",
+        "repo": "almadar-core",
+        "runId": "777",
+        "failed": [
+          {
+            "id": 1,
+            "name": "build",
+            "conclusion": "failure"
+          },
+          {
+            "id": 3,
+            "name": "test",
+            "conclusion": "failure"
+          },
+          {
+            "id": 4,
+            "name": "e2e",
+            "conclusion": "failure"
+          }
+        ],
+        "cursor": 1,
+        "lines": [
+          {
+            "job": "build",
+            "step": "",
+            "msg": "##[group]Run pnpm test",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "npm warn deprecated",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Process completed with exit code 1.",
+            "level": "error"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Node 18 is deprecated",
+            "level": "warning"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "[ERROR] Tests failed: 3",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "see ##[error] in the middle",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "no timestamp line",
+            "level": "info"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "CI_LOGS_NEXT",
+          "payload": {},
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "log",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/jobs/3/logs"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "second-log-crlf-error-marker-then-next",
+      "entity": {
+        "owner": "almadar-io",
+        "repo": "almadar-core",
+        "runId": "777",
+        "failed": [
+          {
+            "id": 1,
+            "name": "build",
+            "conclusion": "failure"
+          },
+          {
+            "id": 3,
+            "name": "test",
+            "conclusion": "failure"
+          },
+          {
+            "id": 4,
+            "name": "e2e",
+            "conclusion": "failure"
+          }
+        ],
+        "cursor": 1,
+        "lines": [
+          {
+            "job": "build",
+            "step": "",
+            "msg": "##[group]Run pnpm test",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "npm warn deprecated",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Process completed with exit code 1.",
+            "level": "error"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Node 18 is deprecated",
+            "level": "warning"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "[ERROR] Tests failed: 3",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "see ##[error] in the middle",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "no timestamp line",
+            "level": "info"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "log",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "2026-10-19T11:00:00.000Z ##[error]lint failed\r\n2026-10-19T11:00:01.000Z done\n",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unreadable-log-skipped-then-answer",
+      "entity": {
+        "owner": "almadar-io",
+        "repo": "almadar-core",
+        "runId": "777",
+        "failed": [
+          {
+            "id": 1,
+            "name": "build",
+            "conclusion": "failure"
+          },
+          {
+            "id": 3,
+            "name": "test",
+            "conclusion": "failure"
+          },
+          {
+            "id": 4,
+            "name": "e2e",
+            "conclusion": "failure"
+          }
+        ],
+        "cursor": 2,
+        "lines": [
+          {
+            "job": "build",
+            "step": "",
+            "msg": "##[group]Run pnpm test",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "npm warn deprecated",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Process completed with exit code 1.",
+            "level": "error"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Node 18 is deprecated",
+            "level": "warning"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "[ERROR] Tests failed: 3",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "see ##[error] in the middle",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "no timestamp line",
+            "level": "info"
+          },
+          {
+            "job": "test",
+            "step": "",
+            "msg": "lint failed",
+            "level": "error"
+          },
+          {
+            "job": "test",
+            "step": "",
+            "msg": "done",
+            "level": "info"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "CI_LOGS_NEXT",
+          "payload": {},
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "log",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/almadar-core/actions/jobs/4/logs"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "all-logs-read-answers",
+      "entity": {
+        "owner": "almadar-io",
+        "repo": "almadar-core",
+        "runId": "777",
+        "failed": [
+          {
+            "id": 1,
+            "name": "build",
+            "conclusion": "failure"
+          },
+          {
+            "id": 3,
+            "name": "test",
+            "conclusion": "failure"
+          },
+          {
+            "id": 4,
+            "name": "e2e",
+            "conclusion": "failure"
+          }
+        ],
+        "cursor": 3,
+        "lines": [
+          {
+            "job": "build",
+            "step": "",
+            "msg": "##[group]Run pnpm test",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "npm warn deprecated",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Process completed with exit code 1.",
+            "level": "error"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "Node 18 is deprecated",
+            "level": "warning"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "[ERROR] Tests failed: 3",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "see ##[error] in the middle",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "no timestamp line",
+            "level": "info"
+          },
+          {
+            "job": "test",
+            "step": "",
+            "msg": "lint failed",
+            "level": "error"
+          },
+          {
+            "job": "test",
+            "step": "",
+            "msg": "done",
+            "level": "info"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "CI_LOGS_NEXT",
+          "payload": {},
+          "from": "reading",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CI_LOGS",
+                "payload": {
+                  "repo": "almadar-core",
+                  "runId": "777",
+                  "lines": [
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "##[group]Run pnpm test",
+                      "level": "info"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "npm warn deprecated",
+                      "level": "info"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "Process completed with exit code 1.",
+                      "level": "error"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "Node 18 is deprecated",
+                      "level": "warning"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "[ERROR] Tests failed: 3",
+                      "level": "info"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "see ##[error] in the middle",
+                      "level": "info"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "no timestamp line",
+                      "level": "info"
+                    },
+                    {
+                      "job": "test",
+                      "step": "",
+                      "msg": "lint failed",
+                      "level": "error"
+                    },
+                    {
+                      "job": "test",
+                      "step": "",
+                      "msg": "done",
+                      "level": "info"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "job-list-valid-json-wrong-shape-is-refused-not-empty",
+      "defaults": [
+        "CiLogsGh"
+      ],
+      "steps": [
+        {
+          "event": "CI_LOGS_LOAD",
+          "payload": {
+            "owner": "almadar-io",
+            "repo": "almadar-core",
+            "runId": "778"
+          }
+        },
+        {
+          "event": "CI_LOGS_RAN",
+          "payload": {
+            "stage": "jobs",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"jobs\": \"none\"}",
+            "stderr": "",
+            "stdoutBytes": ""
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "CI_LOGS_FAILED",
+                "payload": {
+                  "runId": "778",
+                  "error": "the job list could not be read",
+                  "code": "ci_logs_unreadable"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CI_LOGS_GH",
+              "CI_LOGS"
+            ],
+            "state": "idle"
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -187,15 +187,15 @@ orbital BehaviorCatalogOrbital {
     initial: loading
 
     state loading {
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })
@@ -247,7 +247,7 @@ orbital BehaviorCatalogOrbital {
       TOPICS_LISTED -> loading when (array/some ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic))))
         (set @entity.topics ?result)
         (emit CATALOG_TOPICS { topics: ?result })
-        (behavior/catalog { paths: [(str/concat (object/get (array/find ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))) prefix "") "/" @entity.topic)] } { traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: [(str/concat (let ((nthv (array/find ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))))) (if (= @nthv null) "" (object/get @nthv prefix ""))) "/" @entity.topic)] } { traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
       TOPICS_LISTED -> ready when (not (array/some ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))))
         (set @entity.topics ?result)
         (set @entity.entries [])
@@ -278,15 +278,15 @@ orbital BehaviorCatalogOrbital {
     }
 
     state ready {
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })
@@ -405,7 +405,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.query "")
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the topic" />)
-        (behavior/catalog { paths: [(str/concat (object/get (array/find @entity.topics (fn t (and (= @t.package ?package) (= @t.topic ?topic)))) prefix "") "/" ?topic)] } { traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: [(str/concat (let ((nthv (array/find @entity.topics (fn t (and (= @t.package ?package) (= @t.topic ?topic)))))) (if (= @nthv null) "" (object/get @nthv prefix ""))) "/" ?topic)] } { traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
       TOPIC -> ready when (not @config.perTopic)
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
@@ -415,18 +415,18 @@ orbital BehaviorCatalogOrbital {
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
         (set @entity.status searching)
-        (behavior/catalog { paths: (if (= @entity.topic "") (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) (let ((inTopic (array/find @entity.entries (fn e (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))))) (if (= @inTopic null) (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) [(str/concat (array/first (str/split @inTopic.behavior "/")) "/" @entity.topic)]))) } {
+        (behavior/catalog { paths: (if (= @entity.topic "") (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) (let ((inTopic (array/find @entity.entries (fn e (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))))) (if (= @inTopic null) (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) [(str/concat (default (array/first (str/split @inTopic.behavior "/")) "") "/" @entity.topic)]))) } {
           emit: { success: SEARCH_LISTED, failure: SEARCH_LIST_FAILED }
         })
       PICK -> ready
-        (emit PICKED { behavior: ?behavior, description: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) description ""), trait: (array/first (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) traits [])), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit PICKED { behavior: ?behavior, description: (object/get @en description ""), trait: (default (array/first (object/get @en traits [])) ""), value: (object/get @en value) })))
       TOGGLE -> ready when ?checked
         (set @entity.selected (array/append (array/filter @entity.selected (fn b (!= @b ?behavior))) ?behavior))
-        (emit TOGGLED { behavior: ?behavior, checked: true, topic: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) topic ""), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit TOGGLED { behavior: ?behavior, checked: true, topic: (object/get @en topic ""), value: (object/get @en value) })))
         (emit CATALOG_SHOWN {})
       TOGGLE -> ready when (not ?checked)
         (set @entity.selected (array/filter @entity.selected (fn b (!= @b ?behavior))))
-        (emit TOGGLED { behavior: ?behavior, checked: false, topic: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) topic ""), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit TOGGLED { behavior: ?behavior, checked: false, topic: (object/get @en topic ""), value: (object/get @en value) })))
         (emit CATALOG_SHOWN {})
       SELECTION -> ready
         (set @entity.selected ?behaviors)
@@ -440,15 +440,15 @@ orbital BehaviorCatalogOrbital {
     }
 
     state searching {
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })
@@ -472,7 +472,7 @@ orbital BehaviorCatalogOrbital {
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       EMBEDDED -> ready when (> (array/len ?embeddings) 0)
-        (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (if (object/has @e.vectors description) (array/cosine (object/get @e.vectors description) (array/first ?embeddings)) 0))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (default @c 0) }] [])))))) score desc))
+        (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (let ((vs (default @e.vectors {}))) (if (object/has @vs description) (array/cosine (object/get @vs description) (array/first ?embeddings)) 0)))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (default @c 0) }] [])))))) score desc))
         (set @entity.status ready)
         (emit CATALOG_SHOWN {})
       EMBEDDED -> ready when (= (array/len ?embeddings) 0)
@@ -488,15 +488,15 @@ orbital BehaviorCatalogOrbital {
     }
 
     state describing {
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
-      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (object/has @payload fingerprints) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })
@@ -521,13 +521,13 @@ orbital BehaviorCatalogOrbital {
     state failed {
       SCOPE -> loading when (not @config.perTopic)
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
       SCOPE -> loading when @config.perTopic
         (set @entity.paths ?paths)
-        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.fingerprints (if (object/has @payload fingerprints) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })

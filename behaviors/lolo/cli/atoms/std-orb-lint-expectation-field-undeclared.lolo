@@ -42,16 +42,16 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
  (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-  (let ((o (array/nth @orbs @oi)))
+  (let ((o (default (array/nth @orbs @oi) {})))
    (if (not (object/has @o "expects")) []
     (let ((exps (object/get @o "expects" [])) (on (object/get @o "name" "")) (trs (object/get @o "traits" [])))
      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn j
-      (let ((t (array/nth @trs @j)))
+      (let ((t (default (array/nth @trs @j) {})))
        (if (or (not (object/has @t "stateMachine")) (object/has @t "sourceBehavior")) []
-        (let ((base (str/concat "orbitals[" @oi " (" @on ")].traits[" @j " (" (object/get @t "name" "") ")]")) (trans (object/get (object/get @t "stateMachine") "transitions" [])) (ticks (object/get @t "ticks" [])))
+        (let ((base (str/concat "orbitals[" @oi " (" @on ")].traits[" @j " (" (object/get @t "name" "") ")]")) (trans (object/get (object/get @t "stateMachine" {}) "transitions" [])) (ticks (object/get @t "ticks" [])))
          (array/flatten (array/map (array/concat
-  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @trans @ti) "effects" []))) (fn ei { p: (str/concat @base ".stateMachine.transitions[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @trans @ti) "effects" []) @ei) })))))
-  (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @ticks @ti) "effects" []))) (fn ei { p: (str/concat @base ".ticks[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @ticks @ti) "effects" []) @ei) }))))))
+  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti (array/map (array/range 0 (array/len (object/get (default (array/nth @trans @ti) {}) "effects" []))) (fn ei { p: (str/concat @base ".stateMachine.transitions[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (default (array/nth @trans @ti) {}) "effects" []) @ei) })))))
+  (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn ti (array/map (array/range 0 (array/len (object/get (default (array/nth @ticks @ti) {}) "effects" []))) (fn ei { p: (str/concat @base ".ticks[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (default (array/nth @ticks @ti) {}) "effects" []) @ei) }))))))
           (fn s (array/flatten (array/map (let ((eff (object/get @s "eff"))) (let ((l (default (as @eff LNodes) [])))
   (if (or (< (array/len @l) 3) (!= (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "") "persist")) []
     (let ((a1 (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
@@ -74,7 +74,7 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
            (fn tg (let ((own (array/find @exps (fn e (and (= (object/get @e "kind" "") "entity") (= (object/get @e "name" "") (object/get @tg "e")) (not (object/get @e "strict" false)))))))
             (if (or (= @own null) (not (object/has @own "shape"))) []
              (let ((names (array/map (object/get @own "shape" []) (fn f (object/get @f "name" "")))))
-              (array/flatten (array/map (object/keys (object/get @tg "d")) (fn key
+              (array/flatten (array/map (object/keys (object/get @tg "d" {})) (fn key
                (if (array/includes @names @key) []
                 [{ code: @config.codes.sExpectationFieldUndeclared.code, path: (object/get @s "p"), message: (str/concat "`" @on "` persists `" @key "` to `" (object/get @tg "e") "`, but its `expects entity " (object/get @tg "e") "` shape declares only: " (str/join (array/sort @names) ", ") ". The declaration is this orbital's own source of truth for the fields it touches."), suggestion: (str/concat "Add `" @key "` to the `expects entity " (object/get @tg "e") "` shape, or remove it from the persist payload."), severity: "error" }])))))))))))))))))))))))))))
         (emit LINT_FINISH { })
@@ -92,7 +92,7 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PdProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PdProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -109,10 +109,10 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-field-undeclared <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

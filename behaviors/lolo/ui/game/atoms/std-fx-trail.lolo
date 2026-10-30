@@ -7,7 +7,7 @@ orbital FxTrailOrbital {
     id : string!
     x : number!
     y : number!
-    bornAt : number!
+    bornAt : instant!
     ttl : number!
   }
 
@@ -31,7 +31,7 @@ orbital FxTrailOrbital {
             (if (> @payload.speed @config.minSpeed)
               (array/concat @entity.trail [ { id: (str/concat "trail-" (+ @entity.seq 1)), x: @payload.x, y: @payload.y, bornAt: (time/now), ttl: @config.ttl } ])
               @entity.trail)
-            (fn d (< (- (time/now) (object/get @d bornAt)) (object/get @d ttl)))))
+            (fn d (< (time/diff (time/now) (object/get @d bornAt) "ms") (object/get @d ttl)))))
         (if (> @payload.speed @config.minSpeed)
           (set @entity.seq (+ @entity.seq 1))
           null)

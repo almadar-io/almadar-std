@@ -1,0 +1,324 @@
+{
+ "atom": "connect/atoms/std-calendar-sync.lolo",
+ "trait": "CalendarSync",
+ "cases": [
+  {
+   "id": "remote-list-starts-the-pull",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "CAL_REMOTE_LISTED",
+     "payload": {
+      "events": [
+       {
+        "id": "a",
+        "summary": "Sa",
+        "description": "",
+        "location": "",
+        "start": "2026-10-30",
+        "end": "2026-10-31",
+        "status": "confirmed",
+        "updated": ""
+       },
+       {
+        "id": "b",
+        "summary": "Sb",
+        "description": "",
+        "location": "",
+        "start": "2026-10-30",
+        "end": "2026-10-31",
+        "status": "confirmed",
+        "updated": ""
+       }
+      ],
+      "nextSyncToken": "t"
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-creates-a-row-for-an-unknown-remote-event",
+   "entity": {
+    "pending": [
+     {
+      "id": "a",
+      "summary": "Sa",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     },
+     {
+      "id": "b",
+      "summary": "Sb",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_TARGET_LOADED",
+     "payload": {
+      "data": [],
+      "totalCount": 0
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-updates-the-matching-row",
+   "entity": {
+    "pending": [
+     {
+      "id": "a",
+      "summary": "Sa",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     },
+     {
+      "id": "b",
+      "summary": "Sb",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_TARGET_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "row1",
+        "externalEventId": "a"
+       }
+      ],
+      "totalCount": 1
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-next-looks-up-the-head-event",
+   "entity": {
+    "pending": [
+     {
+      "id": "a",
+      "summary": "Sa",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     },
+     {
+      "id": "b",
+      "summary": "Sb",
+      "description": "",
+      "location": "",
+      "start": "2026-10-30",
+      "end": "2026-10-31",
+      "status": "confirmed",
+      "updated": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_NEXT",
+     "payload": {
+      "remaining": 2
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-finishes-with-an-instant",
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_NEXT",
+     "payload": {
+      "remaining": 0
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "CAL_SYNCED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-with-no-pending-fails-explicitly",
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_TARGET_LOADED",
+     "payload": {
+      "data": [],
+      "totalCount": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CAL_SYNC_FAILED",
+        "payload": {
+         "error": "the pull loop has no remote event left to upsert"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pull-next-with-no-pending-fails-explicitly",
+   "steps": [
+    {
+     "from": "pulling",
+     "event": "PULL_NEXT",
+     "payload": {
+      "remaining": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CAL_SYNC_FAILED",
+        "payload": {
+         "error": "the pull loop has no remote event left to look up"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "push-row-without-title-fails-explicitly",
+   "config": {
+    "enabled": true
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PUSH_ROWS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "r1",
+        "title": "",
+        "startsAt": "2026-10-30"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CAL_SYNC_FAILED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "push-row-emits-create",
+   "config": {
+    "enabled": true
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PUSH_ROWS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "r1",
+        "title": "T",
+        "startsAt": "2026-10-30"
+       }
+      ]
+     },
+     "expect": {
+      "state": "pushing",
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT",
+        "payload": {
+         "summary": "T",
+         "start": "2026-10-30",
+         "durationMinutes": 60
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "push-row-without-start-fails-explicitly",
+   "config": {
+    "enabled": true
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PUSH_ROWS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "r1",
+        "title": "T"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CAL_SYNC_FAILED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

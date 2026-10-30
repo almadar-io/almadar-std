@@ -44,10 +44,11 @@ orbital LearnSlopeProbeOrbital {
 
       BODY_MOVED -> idle when @config.running
         (let ((on (and @payload.skating (> (array/len @entity.curve) 1))))
-        (let ((inRange (and @on (and (>= @payload.x (object/get (array/first @entity.curve) x)) (<= @payload.x (object/get (array/last @entity.curve) x))))))
-        (if @inRange
-          (let ((leftSamp (array/last (array/filter @entity.curve (fn s (<= (object/get @s x) @payload.x)))))
-                (rightSamp (array/first (array/filter @entity.curve (fn s (> (object/get @s x) @payload.x))))))
+        (let ((firstSamp (array/first @entity.curve)) (lastSamp (array/last @entity.curve)))
+        (let ((leftSamp (array/last (array/filter @entity.curve (fn s (<= (object/get @s x) @payload.x)))))
+              (rightSamp (array/first (array/filter @entity.curve (fn s (> (object/get @s x) @payload.x))))))
+        (let ((inRange (and @on (and (!= @firstSamp null) (and (!= @lastSamp null) (and (>= @payload.x (object/get @firstSamp x)) (<= @payload.x (object/get @lastSamp x))))))))
+        (if (and @inRange (!= @leftSamp null))
           (let ((slope (if (== @rightSamp null) 0 (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))))))
           (let ((curveY (if (== @rightSamp null) (object/get @leftSamp y) (+ (object/get @leftSamp y) (* @slope (- @payload.x (object/get @leftSamp x)))))))
           (let ((norm (default (math/sqrt (+ 1 (* @slope @slope))) 1)))
@@ -73,12 +74,12 @@ orbital LearnSlopeProbeOrbital {
                 (do
                   (set @entity.bucket @newBucket)
                   (emit SLOPE_CHANGED { slope: @slope, bucket: @newBucket }))
-                null))))))))
+                null)))))))
           (if @entity.probing
             (do
               (set @entity.probing false)
               (set @entity.segment []))
-            null))))
+            null))))))
 
       RESTART -> idle
         (set @entity.probing false)

@@ -1,0 +1,1006 @@
+{
+  "atom": "connect/atoms/std-stripe.lolo",
+  "trait": "StripeClient",
+  "note": "std-stripe typed events and keyed pending [{key, job}]: every request is tracked under a counter key, answers are matched by key, and a real Stripe error body reaches STRIPE_FAILED with its code and message (G-STD-198).",
+  "cases": [
+    {
+      "id": "a-stripe-error-body-answers-stripe-failed-with-its-code-and-message",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 402,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{\"error\":{\"type\":\"card_error\",\"code\":\"card_declined\",\"message\":\"Your card was declined.\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "code": "card_declined",
+                  "message": "Your card was declined."
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-stripe-error-body-without-a-code-answers-its-message-alone",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 500,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{\"error\":{\"type\":\"api_error\",\"message\":\"An error occurred with our API.\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "An error occurred with our API."
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-oauth-style-error-body-answers-its-description",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 401,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{\"error\":\"invalid_request\",\"error_description\":\"Bad key\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Bad key"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-that-is-not-json-answers-invalid-json",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "<html>bad gateway</html>"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Invalid JSON received from the Stripe API"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-non-success-status-without-an-error-body-answers-the-status",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 503,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered HTTP 503"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-for-a-key-nothing-is-waiting-on-is-answered-as-a-failure",
+      "steps": [
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "key": "stripe-9",
+            "body": "{\"id\":\"pi_1\",\"object\":\"payment_intent\",\"amount\":500,\"currency\":\"usd\",\"status\":\"requires_payment_method\",\"client_secret\":\"pi_1_secret\",\"metadata\":{\"order\":\"7\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered a request that is not pending"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_OK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-http-call-answers-stripe-failed-and-frees-its-key",
+      "steps": [
+        {
+          "event": "STRIPE_GET_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_HTTP_FAILED",
+          "payload": {
+            "error": "connect timeout",
+            "kind": "timeout",
+            "key": "stripe-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "connect timeout"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{\"id\":\"pi_1\",\"object\":\"payment_intent\",\"amount\":500,\"currency\":\"usd\",\"status\":\"requires_payment_method\",\"client_secret\":\"pi_1_secret\",\"metadata\":{\"order\":\"7\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered a request that is not pending"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-random-draw-answers-stripe-failed",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_RANDOM_FAILED",
+          "payload": {
+            "error": "no entropy",
+            "key": "stripe-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "no entropy"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-drawn-key-for-a-request-nothing-is-waiting-on-is-answered-as-a-failure",
+      "steps": [
+        {
+          "event": "STRIPE_KEY_DRAWN",
+          "payload": {
+            "value": "AAAA",
+            "key": "stripe-9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe drew an idempotency key for a request that is not pending"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-refund-reply-reaches-its-result-by-key",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1",
+            "amount": 200
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "key": "stripe-0",
+            "body": "{\"id\":\"re_1\",\"object\":\"refund\",\"amount\":200,\"status\":\"succeeded\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_OK",
+                "payload": {
+                  "key": "stripe-0"
+                }
+              },
+              {
+                "event": "STRIPE_REFUND_RESULT",
+                "payload": {
+                  "id": "re_1",
+                  "object": "refund",
+                  "amount": 200,
+                  "status": "succeeded"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-requests-in-flight-are-matched-to-their-own-answers",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_CONFIRM_PAYMENT",
+          "payload": {
+            "paymentIntentId": "pi_2"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-1",
+            "body": "{\"id\":\"pi_1\",\"object\":\"payment_intent\",\"amount\":500,\"currency\":\"usd\",\"status\":\"requires_payment_method\",\"client_secret\":\"pi_1_secret\",\"metadata\":{\"order\":\"7\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_CONFIRM_PAYMENT_RESULT",
+                "payload": {
+                  "id": "pi_1",
+                  "status": "requires_payment_method",
+                  "client_secret": "pi_1_secret",
+                  "metadata": {
+                    "order": "7"
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_REFUND_RESULT",
+              "STRIPE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"re_1\",\"object\":\"refund\",\"amount\":200,\"status\":\"succeeded\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_REFUND_RESULT",
+                "payload": {
+                  "id": "re_1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_CONFIRM_PAYMENT_RESULT",
+              "STRIPE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-answered-key-is-freed-and-cannot-answer-twice",
+      "steps": [
+        {
+          "event": "STRIPE_REFUND",
+          "payload": {
+            "paymentIntentId": "pi_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"re_1\",\"object\":\"refund\",\"amount\":200,\"status\":\"succeeded\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_REFUND_RESULT",
+                "payload": {
+                  "id": "re_1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"re_1\",\"object\":\"refund\",\"amount\":200,\"status\":\"succeeded\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered a request that is not pending"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_REFUND_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-payment-intent-without-a-client-secret-is-unreadable",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_PAYMENT_INTENT",
+          "payload": {
+            "amount": 500,
+            "currency": "usd"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"pi_1\",\"object\":\"payment_intent\",\"amount\":500,\"currency\":\"usd\",\"status\":\"requires_payment_method\",\"metadata\":{\"order\":\"7\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered a payment intent that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_CREATE_PAYMENT_INTENT_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-payment-intent-reply-reaches-its-result",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_PAYMENT_INTENT",
+          "payload": {
+            "amount": 500,
+            "currency": "usd",
+            "metadata": {
+              "order": "7"
+            }
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"pi_1\",\"object\":\"payment_intent\",\"amount\":500,\"currency\":\"usd\",\"status\":\"requires_payment_method\",\"client_secret\":\"pi_1_secret\",\"metadata\":{\"order\":\"7\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_CREATE_PAYMENT_INTENT_RESULT",
+                "payload": {
+                  "id": "pi_1",
+                  "object": "payment_intent",
+                  "amount": 500,
+                  "currency": "usd",
+                  "status": "requires_payment_method",
+                  "client_secret": "pi_1_secret",
+                  "metadata": {
+                    "order": "7"
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-customer-without-email-or-metadata-answers-empty-strings",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_CUSTOMER",
+          "payload": {
+            "email": "a@b.c",
+            "almadarUid": "u1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"cus_1\",\"email\":null}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_CREATE_CUSTOMER_RESULT",
+                "payload": {
+                  "customerId": "cus_1",
+                  "email": "",
+                  "almadarUid": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-create-customer-echoes-email-and-uid",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_CUSTOMER",
+          "payload": {
+            "email": "a@b.c",
+            "almadarUid": "u1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"cus_1\",\"email\":\"a@b.c\",\"metadata\":{\"almadarUid\":\"u1\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_CREATE_CUSTOMER_RESULT",
+                "payload": {
+                  "customerId": "cus_1",
+                  "email": "a@b.c",
+                  "almadarUid": "u1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "checkout-with-an-unconfigured-tier-price-is-refused",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_CHECKOUT_SESSION",
+          "payload": {
+            "tier": "solo",
+            "quantity": 1,
+            "successUrl": "https://a/s",
+            "cancelUrl": "https://a/c"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "STRIPE_PRICE_SOLO not configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-tier-that-is-neither-solo-nor-teams-is-refused",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_SUBSCRIPTION",
+          "payload": {
+            "customerId": "cus_1",
+            "tier": "gold",
+            "quantity": 1
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "tier must be \"solo\" or \"teams\""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "portal-session-reply-answers-its-url-and-customer",
+      "steps": [
+        {
+          "event": "STRIPE_CREATE_PORTAL_SESSION",
+          "payload": {
+            "customerId": "cus_1",
+            "returnUrl": "https://a/r"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"bps_1\",\"url\":\"https://billing/x\",\"customer\":\"cus_1\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_CREATE_PORTAL_SESSION_RESULT",
+                "payload": {
+                  "url": "https://billing/x",
+                  "customerId": "cus_1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-subscription-reply-is-shaped-with-iso-period-bounds",
+      "steps": [
+        {
+          "event": "STRIPE_GET_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\",\"customer\":\"cus_1\",\"status\":\"active\",\"cancel_at_period_end\":false,\"current_period_start\":1700000000,\"current_period_end\":1702592000,\"items\":{\"data\":[{\"id\":\"si_1\",\"quantity\":3,\"price\":{\"id\":\"price_x\"}}]}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_SUBSCRIPTION_SHAPED",
+                "payload": {
+                  "action": "getSubscription",
+                  "subscriptionId": "sub_1",
+                  "customerId": "cus_1",
+                  "status": "active",
+                  "priceId": "price_x",
+                  "quantity": 3,
+                  "currentPeriodStart": "2023-11-14T22:13:20.000Z",
+                  "currentPeriodEnd": "2023-12-14T22:13:20.000Z",
+                  "cancelAtPeriodEnd": false,
+                  "tier": ""
+                }
+              },
+              {
+                "event": "STRIPE_GET_SUBSCRIPTION_RESULT",
+                "payload": {
+                  "subscriptionId": "sub_1",
+                  "customerId": "cus_1",
+                  "status": "active",
+                  "priceId": "price_x",
+                  "quantity": 3,
+                  "currentPeriodStart": "2023-11-14T22:13:20.000Z",
+                  "currentPeriodEnd": "2023-12-14T22:13:20.000Z",
+                  "cancelAtPeriodEnd": false,
+                  "tier": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-subscription-without-period-bounds-is-an-invalid-time-value",
+      "steps": [
+        {
+          "event": "STRIPE_GET_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\",\"customer\":\"cus_1\",\"status\":\"active\",\"cancel_at_period_end\":false,\"current_period_start\":1700000000,\"items\":{\"data\":[{\"id\":\"si_1\",\"quantity\":3,\"price\":{\"id\":\"price_x\"}}]}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Invalid time value"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_SUBSCRIPTION_SHAPED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-subscription-reply-that-is-not-a-subscription-is-unreadable",
+      "steps": [
+        {
+          "event": "STRIPE_GET_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1"
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_FAILED",
+                "payload": {
+                  "message": "Stripe answered a subscription that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_SUBSCRIPTION_SHAPED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "update-subscription-with-seats-fetches-then-readies-the-update",
+      "steps": [
+        {
+          "event": "STRIPE_UPDATE_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1",
+            "quantity": 5,
+            "cancelAtPeriodEnd": true
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\",\"customer\":\"cus_1\",\"status\":\"active\",\"cancel_at_period_end\":false,\"current_period_start\":1700000000,\"current_period_end\":1702592000,\"items\":{\"data\":[{\"id\":\"si_1\",\"quantity\":3,\"price\":{\"id\":\"price_x\"}}]}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_UPDATE_READY",
+                "payload": {
+                  "subscriptionId": "sub_1",
+                  "quantity": 5,
+                  "cancelAtPeriodEnd": true,
+                  "itemId": "si_1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "STRIPE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-update-subscription-without-seats-readies-the-update-directly",
+      "steps": [
+        {
+          "event": "STRIPE_UPDATE_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1",
+            "cancelAtPeriodEnd": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_UPDATE_READY",
+                "payload": {
+                  "subscriptionId": "sub_1",
+                  "cancelAtPeriodEnd": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-update-subscription-seats-without-a-cancel-flag-readies-without-it",
+      "steps": [
+        {
+          "event": "STRIPE_UPDATE_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1",
+            "quantity": 5
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\",\"customer\":\"cus_1\",\"status\":\"active\",\"cancel_at_period_end\":false,\"current_period_start\":1700000000,\"current_period_end\":1702592000,\"items\":{\"data\":[{\"id\":\"si_1\",\"quantity\":3,\"price\":{\"id\":\"price_x\"}}]}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_UPDATE_READY",
+                "payload": {
+                  "subscriptionId": "sub_1",
+                  "quantity": 5,
+                  "itemId": "si_1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cancel-immediately-keeps-the-cancel-job-by-key",
+      "steps": [
+        {
+          "event": "STRIPE_CANCEL_SUBSCRIPTION",
+          "payload": {
+            "subscriptionId": "sub_1",
+            "atPeriodEnd": false
+          },
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "STRIPE_OK",
+          "payload": {
+            "key": "stripe-0",
+            "body": "{\"id\":\"sub_1\",\"customer\":\"cus_1\",\"status\":\"canceled\",\"cancel_at_period_end\":false,\"current_period_start\":1700000000,\"current_period_end\":1702592000,\"items\":{\"data\":[{\"id\":\"si_1\",\"quantity\":3,\"price\":{\"id\":\"price_x\"}}]}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "STRIPE_SUBSCRIPTION_SHAPED",
+                "payload": {
+                  "action": "cancelSubscription",
+                  "subscriptionId": "sub_1",
+                  "customerId": "cus_1",
+                  "status": "canceled",
+                  "priceId": "price_x",
+                  "quantity": 3,
+                  "currentPeriodStart": "2023-11-14T22:13:20.000Z",
+                  "currentPeriodEnd": "2023-12-14T22:13:20.000Z",
+                  "cancelAtPeriodEnd": false,
+                  "tier": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

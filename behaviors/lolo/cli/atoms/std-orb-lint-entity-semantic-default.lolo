@@ -37,15 +37,15 @@ orbital OrbLintEntitySemanticDefaultOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals : [SemanticDefaultOrbital] (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+            (let ((auxs (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
               (array/flatten (array/map
-                (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                (array/concat [{ ent: (object/get (default (array/nth @orbitals @oi) {}) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
                   (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
                 (fn eb
                   (let ((ent (object/get @eb "ent")))
-                    (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((fields (object/get @ent "fields" [])))
+                    (if (and (validate/object @ent) (not (object/get (default (array/nth @orbitals @oi) {}) "spec" false))) (let ((fields (object/get @ent "fields" [])))
                       (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
-                        (let ((f (array/nth @fields @fi)))
+                        (let ((f (default (array/nth @fields @fi) {})))
                           (let ((kind (object/get @f "type" "")) (lit (object/get @f "default" 0)) (at (str/concat (object/get @eb "base") ".fields[" @fi "].default")))
                             (if (and (array/includes ["email" "url" "phone" "uuid" "image"] @kind) (validate/string @lit))
                               (if (= @lit "")
@@ -69,7 +69,7 @@ orbital OrbLintEntitySemanticDefaultOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SemanticDefaultProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SemanticDefaultProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -86,12 +86,12 @@ orbital OrbLintEntitySemanticDefaultOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint entity-semantic-default: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-semantic-default <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

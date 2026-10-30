@@ -3,12 +3,10 @@ app agent-planner-spec [
   description: "Design contract for a planner: a prompt first recalls memories, then asks for a plan from the prompt; a failed recall still plans (without memories), and a failed generation still ends planned with an empty plan, never stuck planning. PLANNED answers the plan text and how many memories were recalled. A planned run can be reset to idle."
 ]
 
-type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
-
 orbital AgentPlannerSpec {
   expects entity PlannerPlan [runtime] {
     prompt : string
-    memories : [MemoryRecord]
+    context : string
     plan : string
     status : "idle" | "planning" | "planned"
   }
@@ -17,8 +15,7 @@ orbital AgentPlannerSpec {
       PLAN -> recalling
     }
     state recalling {
-      MEMORIES_RECALLED -> planning
-      RECALL_FAILED -> planning
+      RECALLED -> planning
     }
     state planning {
       PLAN_GENERATED -> planned

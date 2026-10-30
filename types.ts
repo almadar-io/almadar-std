@@ -501,7 +501,8 @@ export interface StdOperatorMeta extends OperatorMeta {
   /** Schema v2: structured metadata for effect operators */
   effect?: OperatorEffectMeta;
   /** Circuit form, declared only where it is not derivable (lambda → conveyor, side effect → actuator, else block). */
-  visual?: { form: OperatorVisualForm };
+  /** How readers draw the operator: its AVL form, and `infix` when it reads between its operands (`a = b`). */
+  visual?: { form: OperatorVisualForm; infix?: boolean };
 }
 
 /**

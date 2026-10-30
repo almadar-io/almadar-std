@@ -1,12 +1,12 @@
 app std-migration-adapter-asana [
   version: "1.0.0",
-  description: "std-migration-adapter-asana — the Asana project-export adapter of a migration run. Each fetched document is Asana's JSON project export: a bare task array, or an object { data: [...], name } whose name titles the project. The project becomes a folder unit (titled with the export name, or the document ref when it has none, carrying the top-level task count); each task becomes a root unit under it and each subtask, at any depth, a section unit under its parent task, carrying the notes as content and source, completed, dueOn, assignee and section as metadata. Units come out in document order, a task before its subtasks. A task with no name, subtasks included, is left out of the units and ledgered in skipped with the reason. A document that is not a task array or a data object fails the whole run with MIGRATION_EXTRACT_FAILED. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is asana."
+  description: "std-migration-adapter-asana — the Asana project-export adapter of a migration run. Each fetched document is Asana's JSON project export: a bare task array, or an object { data: [...], name } whose name titles the project. The project becomes a folder unit (titled with the export name, or the document ref when it has none, carrying the top-level task count); each task becomes a root unit under it and each subtask, at any depth, a section unit under its parent task, carrying the notes as content and source, completed, dueOn, assignee and section as metadata. Units come out in document order, a task before its subtasks. A task with no name, subtasks included, is left out of the units and ledgered in skipped with the reason. A document that is not a task array or a data object fails the whole run with MIGRATION_SOURCE_UNREADABLE. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is asana."
 ]
 orbital MigrationAdapterAsanaOrbital {
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa"!, title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue!, source : string!, span : string? }
   type AsanaSection = { name : string }
   type AsanaMembership = { section : AsanaSection }
   type AsanaAssignee = { name : string }
@@ -14,9 +14,9 @@ orbital MigrationAdapterAsanaOrbital {
   type AsanaTasks = [AsanaTask]
   type AsanaEnvelope = { data : [AsanaTask], name : string }
   type AsanaDocument = { ref : string!, ok : boolean!, valid : boolean!, projectName : string!, tasks : [AsanaTask] }
-  type AsanaFrame = { task : AsanaTask, index : number!, parentRef : string!, kind : "root" | "section"!, docRef : string!, key : string! }
-  type AsanaRow = { key : string!, unit : ExtractedUnit }
-  type AsanaSkipRow = { key : string!, skip : ImportSkip }
+  type AsanaFrame = { task : AsanaTask!, index : number!, parentRef : string!, kind : "root" | "section"!, docRef : string!, key : string! }
+  type AsanaRow = { key : string!, unit : ExtractedUnit! }
+  type AsanaSkipRow = { key : string!, skip : ImportSkip! }
 
   entity MigrationAdapterAsanaRun [runtime] {
     id : string!
@@ -49,28 +49,33 @@ orbital MigrationAdapterAsanaOrbital {
                 { ref: (object/get @d ref), ok: false, valid: false, projectName: "", tasks: [] }
                 (if
                   (str/startsWith (str/trim (object/get @d raw)) "[")
-                  {
-                    ref: (object/get @d ref),
-                    ok: true,
-                    valid: true,
-                    projectName: "",
-                    tasks: (json/parse (object/get @d raw) AsanaTasks)
-                  }
+                  (let ((ts (json/parse (object/get @d raw) AsanaTasks)))
+                    (if (== @ts null)
+                      { ref: (object/get @d ref), ok: false, valid: true, projectName: "", tasks: [] }
+                      {
+                        ref: (object/get @d ref),
+                        ok: true,
+                        valid: true,
+                        projectName: "",
+                        tasks: @ts
+                      }))
                   (if
                     (str/startsWith (str/trim (object/get @d raw)) "{")
                     (let ((env (json/parse (object/get @d raw) AsanaEnvelope)))
-                      {
-                        ref: (object/get @d ref),
-                        ok: (validate/array (object/get @env data)),
-                        valid: true,
-                        projectName: (if (validate/string (object/get @env name)) (object/get @env name) ""),
-                        tasks: (if (validate/array (object/get @env data)) (object/get @env data) [])
-                      })
+                      (if (== @env null)
+                        { ref: (object/get @d ref), ok: false, valid: true, projectName: "", tasks: [] }
+                        {
+                          ref: (object/get @d ref),
+                          ok: (validate/array (object/get @env data)),
+                          valid: true,
+                          projectName: (if (validate/string (object/get @env name)) (object/get @env name) ""),
+                          tasks: (if (validate/array (object/get @env data)) (object/get @env data) [])
+                        }))
                     { ref: (object/get @d ref), ok: false, valid: true, projectName: "", tasks: [] }))))))
         (emit ASANA_PARSED {})
 
       ASANA_PARSED -> idle when (array/some @entity.documents (fn d (not (object/get @d ok))))
-        (emit MIGRATION_EXTRACT_FAILED { error: (if (object/get (array/find @entity.documents (fn d (not (object/get @d ok)))) valid) "Asana export must be a task array or { data: Task[] }" "Asana export is not valid JSON") })
+        (emit MIGRATION_SOURCE_UNREADABLE { error: (if (object/get (default (array/find @entity.documents (fn d (not (object/get @d ok)))) { ref: "", ok: true, valid: true, projectName: "", tasks: [] }) valid) "Asana export must be a task array or { data: Task[] }" "Asana export is not valid JSON") })
 
       ASANA_PARSED -> walking when (array/every @entity.documents (fn d (object/get @d ok)))
         (set
@@ -100,10 +105,10 @@ orbital MigrationAdapterAsanaOrbital {
               @entity.documents
               (fn d p
                 (array/map
-                  (array/range (array/len (object/get @d tasks [])))
-                  (fn i
+                  (object/get @d tasks [])
+                  (fn t i
                     {
-                      task: (array/nth (object/get @d tasks []) @i),
+                      task: @t,
                       index: @i,
                       parentRef: (str/concat "asana:" (object/get @d ref)),
                       kind: root,
@@ -134,11 +139,7 @@ orbital MigrationAdapterAsanaOrbital {
               (array/filter
                 @entity.frontier
                 (fn f
-                  (and
-                    (and
-                      (!= (object/get (object/get @f task) name "") null)
-                      (!= (object/get (object/get @f task) name "") ""))
-                    (!= (str/trim (object/get (object/get @f task) name "")) ""))))
+                  (!= (str/trim (object/get (object/get @f task) name "")) "")))
               (fn f
                 (let ((t (object/get @f task)))
                   {
@@ -148,10 +149,7 @@ orbital MigrationAdapterAsanaOrbital {
                                    "asana:"
                                    (object/get @f docRef)
                                    ":"
-                                   (if
-                                     (validate/string (object/get (object/get @f task) gid))
-                                     (object/get (object/get @f task) gid)
-                                     (str/concat "task-" (object/get @f index)))),
+                                   (default (object/get (object/get @f task) gid) (str/concat "task-" (object/get @f index)))),
                             kind: (object/get @f kind),
                             title: (object/get @t name ""),
                             content: (if
@@ -165,10 +163,7 @@ orbital MigrationAdapterAsanaOrbital {
                             span: (str/concat
                                     (object/get @f docRef)
                                     "#"
-                                    (if
-                                      (validate/string (object/get (object/get @f task) gid))
-                                      (object/get (object/get @f task) gid)
-                                      (str/concat (object/get @f index)))),
+                                    (default (object/get (object/get @f task) gid) (str/concat (object/get @f index)))),
                             metadata: (let ((fixed : Map string ImportFieldValue { source: "asana", completed: (not (not (object/get @t completed false))) }))
                                       (let ((none : Map string ImportFieldValue {}) (extra (object/fromEntries
                                           (array/map
@@ -182,8 +177,8 @@ orbital MigrationAdapterAsanaOrbital {
                                                }
                                               ]
                                               (fn q
-                                                (and (!= (object/get @q v) null) (!= (object/get @q v) ""))))
-                                            (fn q [(object/get @q k), (object/get @q v)]))))) (or (object/merge @fixed (or @extra @none)) @fixed)))
+                                                (!= (object/get @q v) "")))
+                                            (fn q [(object/get @q k), (object/get @q v)]))))) (default (object/merge @fixed (default @extra @none)) @fixed)))
                           }
                   })))))
         (set
@@ -195,11 +190,7 @@ orbital MigrationAdapterAsanaOrbital {
                 @entity.frontier
                 (fn f
                   (not
-                    (and
-                      (and
-                        (!= (object/get (object/get @f task) name "") null)
-                        (!= (object/get (object/get @f task) name "") ""))
-                      (!= (str/trim (object/get (object/get @f task) name "")) "")))))
+                    (!= (str/trim (object/get (object/get @f task) name "")) ""))))
               (fn f
                 {
                   key: (object/get @f key),
@@ -208,10 +199,7 @@ orbital MigrationAdapterAsanaOrbital {
                                  "asana:"
                                  (object/get @f docRef)
                                  ":"
-                                 (if
-                                   (validate/string (object/get (object/get @f task) gid))
-                                   (object/get (object/get @f task) gid)
-                                   (str/concat "task-" (object/get @f index)))),
+                                 (default (object/get (object/get @f task) gid) (str/concat "task-" (object/get @f index)))),
                           reason: "task has no name"
                         }
                 }))))
@@ -222,26 +210,19 @@ orbital MigrationAdapterAsanaOrbital {
               (array/filter
                 @entity.frontier
                 (fn f
-                  (and
-                    (and
-                      (!= (object/get (object/get @f task) name "") null)
-                      (!= (object/get (object/get @f task) name "") ""))
-                    (!= (str/trim (object/get (object/get @f task) name "")) ""))))
+                  (!= (str/trim (object/get (object/get @f task) name "")) "")))
               (fn f
                 (array/map
-                  (array/range (array/len (object/get (object/get @f task) subtasks [])))
-                  (fn j
+                  (object/get (object/get @f task) subtasks [])
+                  (fn st j
                     {
-                      task: (array/nth (object/get (object/get @f task) subtasks []) @j),
+                      task: @st,
                       index: @j,
                       parentRef: (str/concat
                                    "asana:"
                                    (object/get @f docRef)
                                    ":"
-                                   (if
-                                     (validate/string (object/get (object/get @f task) gid))
-                                     (object/get (object/get @f task) gid)
-                                     (str/concat "task-" (object/get @f index)))),
+                                   (default (object/get (object/get @f task) gid) (str/concat "task-" (object/get @f index)))),
                       kind: section,
                       docRef: (object/get @f docRef),
                       key: (str/concat (object/get @f key) "." (str/padStart (str/concat @j) 8 "0"))
@@ -276,7 +257,7 @@ orbital MigrationAdapterAsanaOrbital {
         @description "The Asana project extracted into a project folder, task units and nested subtask units, plus the ledger of tasks left out, in document order."
         @synonyms "asana extracted, asana staging, asana units"
         @tier "domain"
-      MIGRATION_EXTRACT_FAILED -> external {
+      MIGRATION_SOURCE_UNREADABLE -> external {
         error : string!
       }
         @description "A document is not an Asana project export, so the run cannot stage."

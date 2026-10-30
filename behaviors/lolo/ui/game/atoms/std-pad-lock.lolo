@@ -34,7 +34,7 @@ orbital PadLockOrbital {
         (let ((openGrps (array/filter @grpIds (fn g (< (array/len (array/filter @entity.pads (fn p (and (== (object/get @p grp) @g) (== (object/get @p lit) true))))) (array/len (array/filter @entity.pads (fn p (== (object/get @p grp) @g)))))))))
         (let ((currentGrp (array/reduce @openGrps 9999 (fn acc g (math/min @acc @g)))))
         (let ((newPads (array/map @entity.pads (fn p
-          (object/merge @p { lit: (or (object/get @p lit) (and (or (== (object/get @p grp) 0) (== (object/get @p grp) @currentGrp)) (and (<= (math/abs (- @payload.x (object/get @p x))) @config.reachX) (<= (math/abs (- @payload.y (object/get @p y))) @config.reachY)))) })))))
+          (object/merge @p { lit: (or (== (object/get @p lit) true) (and (or (== (object/get @p grp) 0) (== (object/get @p grp) @currentGrp)) (and (<= (math/abs (- @payload.x (object/get @p x))) @config.reachX) (<= (math/abs (- @payload.y (object/get @p y))) @config.reachY)))) })))))
         (let ((doneNow (array/filter @grpIds (fn g (== (array/len (array/filter @newPads (fn p (and (== (object/get @p grp) @g) (== (object/get @p lit) true))))) (array/len (array/filter @newPads (fn p (== (object/get @p grp) @g)))))))))
         (let ((newlyGrp (array/filter @doneNow (fn g (== (array/len (array/filter @entity.groupsDone (fn d (== @d @g)))) 0)))))
         (do
@@ -43,7 +43,7 @@ orbital PadLockOrbital {
           (if (> (array/len @newlyGrp) 0)
             (do
               (set @entity.groupsDone @doneNow)
-              (emit PAD_GROUP_COMPLETED { grp: (array/first @newlyGrp) }))
+              (emit PAD_GROUP_COMPLETED { grp: (default (array/first @newlyGrp) 0) }))
             null)
           (if (and (== @entity.completed false) (== (array/len (array/filter @newPads (fn p (== (object/get @p lit) false)))) 0))
             (do

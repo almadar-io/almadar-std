@@ -35,10 +35,10 @@ orbital LoopLockOrbital {
           (let ((dist (math/hypot @dx @dy)) (ang (math/atan2 @dy @dx)))
           (let ((in (<= (math/abs (- @dist (object/get @l radius))) (object/get @l band))))
           (let ((d (if (and @in (== (object/get @l inside) true))
-                     (math/atan2 (math/sin (- @ang (object/get @l lastAngle))) (math/cos (- @ang (object/get @l lastAngle))))
+                     (math/atan2 (math/sin (- @ang (object/get @l lastAngle 0))) (math/cos (- @ang (object/get @l lastAngle 0))))
                      0)))
-          (let ((swept (+ (object/get @l swept) @d)))
-            (object/merge @l { inside: @in, lastAngle: (if @in @ang (object/get @l lastAngle)), swept: @swept, unlocked: (or (object/get @l unlocked) (>= (math/abs @swept) (* (object/get @l turns) 6.283185307179586))) })))))))))
+          (let ((swept (+ (object/get @l swept 0) @d)))
+            (object/merge @l { inside: @in, lastAngle: (if @in @ang (object/get @l lastAngle 0)), swept: @swept, unlocked: (or (object/get @l unlocked false) (>= (math/abs @swept) (* (object/get @l turns) 6.283185307179586))) })))))))))
         (let ((newly (array/filter @entity.locks (fn l (and (== (object/get @l unlocked) true) (== (object/get @l reported) false))))))
         (if (> (array/len @newly) 0)
           (do

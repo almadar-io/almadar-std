@@ -108,7 +108,7 @@ orbital OrbLintControlValueDiscardedOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CvProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CvProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       VALUE_CONTROLS_HEARD { patterns : Map string [string]! }
         @description "std-orb-lint-input's LINT_VALUE_CONTROLS: the value-carrying event props per pattern."
@@ -125,11 +125,11 @@ orbital OrbLintControlValueDiscardedOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint control-value-discarded <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (set @entity.shown [])
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

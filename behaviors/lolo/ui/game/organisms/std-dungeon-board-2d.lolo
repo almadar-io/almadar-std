@@ -68,7 +68,7 @@ orbital DungeonBoard2DOrbital {
     message : string
     ttl : number!
     maxTtl : number
-    bornAt : number
+    bornAt : instant
     space : string
     effect : string
     color : string
@@ -301,43 +301,43 @@ orbital DungeonBoard2DOrbital {
 
       MOVE_UP -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
         (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
-          (let ((nx (object/get (object/get @hero position) x)) (ny (- (object/get (object/get @hero position) y) 1)))
+          (if (== @hero null) (emit HERO_MISSING { }) (let ((nx (object/get (object/get @hero position) x)) (ny (- (object/get (object/get @hero position) y) 1)))
             (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
               (if (!= @targetEnemy null)
                 (emit ATTACK { targetId: (object/get @targetEnemy id) })
                 (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
                   (emit MOVE { unitId: "hero", x: @nx, y: @ny })
-                  null)))))
+                  null))))))
 
       MOVE_DOWN -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
         (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
-          (let ((nx (object/get (object/get @hero position) x)) (ny (+ (object/get (object/get @hero position) y) 1)))
+          (if (== @hero null) (emit HERO_MISSING { }) (let ((nx (object/get (object/get @hero position) x)) (ny (+ (object/get (object/get @hero position) y) 1)))
             (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
               (if (!= @targetEnemy null)
                 (emit ATTACK { targetId: (object/get @targetEnemy id) })
                 (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
                   (emit MOVE { unitId: "hero", x: @nx, y: @ny })
-                  null)))))
+                  null))))))
 
       MOVE_LEFT -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
         (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
-          (let ((nx (- (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
+          (if (== @hero null) (emit HERO_MISSING { }) (let ((nx (- (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
             (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
               (if (!= @targetEnemy null)
                 (emit ATTACK { targetId: (object/get @targetEnemy id) })
                 (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
                   (emit MOVE { unitId: "hero", x: @nx, y: @ny })
-                  null)))))
+                  null))))))
 
       MOVE_RIGHT -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
         (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
-          (let ((nx (+ (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
+          (if (== @hero null) (emit HERO_MISSING { }) (let ((nx (+ (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
             (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
               (if (!= @targetEnemy null)
                 (emit ATTACK { targetId: (object/get @targetEnemy id) })
                 (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
                   (emit MOVE { unitId: "hero", x: @nx, y: @ny })
-                  null)))))
+                  null))))))
 
       PLAY_AGAIN -> playing
         (emit RESTART { id: "board" })
@@ -366,10 +366,13 @@ orbital DungeonBoard2DOrbital {
         })
 
       chaseTick every 900ms when (and (== @entity.result "none") (== @entity.combatResult "none"))
-        (emit MONSTER_TICK { heroX: (object/get (object/get (array/find @entity.units (fn u (== @u.id "hero"))) position) x), heroY: (object/get (object/get (array/find @entity.units (fn u (== @u.id "hero"))) position) y) })
+        (let ((hero (array/find @entity.units (fn u (== @u.id "hero"))))) (if (== @hero null) (emit HERO_MISSING { }) (emit MONSTER_TICK { heroX: (object/get (object/get @hero position) x), heroY: (object/get (object/get @hero position) y) })))
     }
 
     emits {
+      HERO_MISSING -> external { }
+        @description "A hero move or a chase tick found no unit with id hero in the roster: the board state is broken."
+        @tier "domain"
       MOVE -> external {
         unitId : string!
         x : number!

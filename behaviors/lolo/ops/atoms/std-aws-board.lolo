@@ -36,10 +36,10 @@ orbital AwsBoardOrbital {
   entity AwsBoard [runtime] {
     id : string!
     board : AwsOverview @description "The board last answered."
-    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    cachedAt : instant @description "Instant at which the board was cached." = 0
     hasCache : boolean = false
     loading : boolean @description "Whether a read is in flight." = false
-    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+    startedAt : instant @description "Instant at which the read in flight began." = 0
     instances : [AwsInstance] = []
     volumes : [AwsVolume] = []
     amis : [AwsImage] = []
@@ -71,10 +71,10 @@ orbital AwsBoardOrbital {
       INIT -> idle when @config.loadOnInit
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (emit AWS_LOAD { })
-      AWS_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+      AWS_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
-      AWS_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+      AWS_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt @now)
         (set @entity.instances [])
@@ -185,9 +185,9 @@ orbital AwsBoardOrbital {
         (emit AWS_QUOTA_NEXT { })
       AWS_RAN -> reading when (= @payload.stage "cost")
         (set @entity.costExplorer (if (and (= @payload.exitCode 0) (json/valid @payload.stdout) (array/every (object/get (array/nth (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) 0) "Groups" []) (fn g (!= (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) null)))) (array/sort (array/map (object/get (array/nth (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) 0) "Groups" []) (fn g { service: (default (array/nth (default @g.Keys []) 0) "Unknown"), cost: (math/round (default (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) 0) 2), unit: (object/get @g "Metrics.UnblendedCost.Unit" "USD") })) "cost" "desc") []))
-        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
+        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (time/subtract @entity.startedAt (* @config.historyDays 86400000) "ms") "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "cost")
-        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
+        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (time/subtract @entity.startedAt (* @config.historyDays 86400000) "ms") "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> idle when (= @payload.stage "history")
         (set @entity.history (if (and (= @payload.exitCode 0) (json/valid @payload.stdout) (array/every (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (default @b.Groups [])))) (fn g (and (!= (str/to-number (object/get @g "Metrics.UsageQuantity.Amount" "0")) null) (!= (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) null))))) (let ((groups (array/filter (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (default @b.Groups [])))) (fn g (and (!= (default (array/nth (default @g.Keys []) 0) "") "") (!= (array/nth (default @g.Keys []) 0) "NoInstanceType"))))))
           (array/sort (array/filter (array/map (array/unique (array/map @groups (fn g (array/nth (default @g.Keys []) 0)))) (fn t (let ((gs (array/filter @groups (fn g (= (array/nth (default @g.Keys []) 0) @t)))) (spec (array/nth (object/values (object/pick @config.catalog [@t])) 0)))
@@ -203,7 +203,7 @@ orbital AwsBoardOrbital {
             runningHourlyCost: @running,
             instanceTypeHistory: (array/map @entity.history (fn h { instanceType: @h.instanceType, hours: @h.hours, cost: @h.cost, vcpus: @h.vcpus, memoryGb: @h.memoryGb, gpu: @h.gpu, gpuCount: @h.gpuCount })),
             instanceTypeHistoryDays: @config.historyDays,
-            fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z") }))
+            fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z") }))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -222,7 +222,7 @@ orbital AwsBoardOrbital {
             runningHourlyCost: @running,
             instanceTypeHistory: (array/map @entity.history (fn h { instanceType: @h.instanceType, hours: @h.hours, cost: @h.cost, vcpus: @h.vcpus, memoryGb: @h.memoryGb, gpu: @h.gpu, gpuCount: @h.gpuCount })),
             instanceTypeHistoryDays: @config.historyDays,
-            fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z") }))
+            fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z") }))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)

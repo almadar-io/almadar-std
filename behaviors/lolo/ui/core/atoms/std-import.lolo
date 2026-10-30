@@ -41,13 +41,15 @@ orbital ImportOrbital {
       INIT -> idle
         (render-ui main { children: [@trait.Menu1], type: box })
       OPEN_IMPORT -> idle
-      IMPORT_SOURCE_PICKED -> picking when (== (object/get (array/find @config.sources (fn s (== (object/get @s id) ?itemId))) kind "") "file")
-        (set @entity.pendingSource (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))
+      IMPORT_SOURCE_PICKED -> picking when (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) false (== (object/get @src kind "") "file")))
+        (set @entity.pendingSource (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) @entity.pendingSource @src)))
         (browser/open-file-picker { accept: @config.accept, multiple: true }
           { emit: { success: FILES_PICKED, failure: PICK_FAILED } })
-      IMPORT_SOURCE_PICKED -> idle when (!= (object/get (array/find @config.sources (fn s (== (object/get @s id) ?itemId))) kind "") "file")
-        (set @entity.pendingSource (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))
+      IMPORT_SOURCE_PICKED -> idle when (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) false (!= (object/get @src kind "") "file")))
+        (set @entity.pendingSource (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) @entity.pendingSource @src)))
         (emit IMPORT_REQUESTED { files: @entity.pendingFiles, source: @entity.pendingSource })
+      IMPORT_SOURCE_PICKED -> idle when (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (= @src null))
+        (emit IMPORT_FAILED { error: (str/concat "unknown import source " (default ?itemId "")) })
       ;; Self-loops on the external emits so the validator sees in-atom
       ;; listeners for events consumed by the sibling std-migration-job.
       IMPORT_REQUESTED -> idle

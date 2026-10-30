@@ -55,21 +55,21 @@ orbital OrbLintBindingFieldsOrbital {
       (fn e [(object/get @e "name" ""), { name: (object/get @e "name" ""), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name" ""))) }]))))))
   {})) (plIdx : Map string [BfField] (default (object/fromEntries
   (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-    (let ((trts : [BfTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
+    (let ((trts : [BfTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
       (array/flatten (array/map (array/range 0 (array/len @trts)) (fn ti
-        (array/flatten (array/map (object/get (array/nth @trts @ti) "stateMachine.events" []) (fn e
+        (array/flatten (array/map (object/get (default (array/nth @trts @ti) {}) "stateMachine.events" []) (fn e
           (if (object/has @e "payloadSchema")
             [[(str/concat @oi "/" @ti "/" (object/get @e "key" "")), (object/get @e "payloadSchema")]]
             []))))))))))))
   {})) (roots : [BfRoot] (array/concat (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((o (array/nth @orbitals @oi)))
+      (let ((o (default (array/nth @orbitals @oi) {})))
         (let ((trts : [BfTrait] (object/get @o "traits" [])))
           (array/flatten
             (array/map (array/range 0 (array/len @trts))
               (fn ti
-                (let ((t (array/nth @trts @ti)))
+                (let ((t (default (array/nth @trts @ti) {})))
                   (if (not (object/has @t "stateMachine"))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (lk (object/get @t "linkedEntity" "")) (trs : [BfTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [BfState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [BfTick] (object/get @t "ticks" [])))
@@ -77,7 +77,7 @@ orbital OrbLintBindingFieldsOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @trs))
                             (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                              (let ((tr (default (array/nth @trs @xi) {})) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
                                 (let ((effs : [BfShape] (object/get @tr "effects" [])) (ens : [BfShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)) (ev (object/get @tr "event" "")) (pk (str/concat @oi "/" @ti "/" (object/get @tr "event" ""))))
                                   (array/concat
                                     (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "g", ev: @ev, pk: @pk, lk: @lk }] @noroots)
@@ -88,17 +88,17 @@ orbital OrbLintBindingFieldsOrbital {
                           (array/flatten
                             (array/map (array/range 0 (array/len @sts))
                               (fn si
-                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
+                                (let ((h (object/get (default (array/nth @sts @si) {}) "holds" null)))
                                   (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds"), c: "h", ev: "", pk: "", lk: @lk }] @noroots)))))
                           (array/flatten
                             (array/map (array/range 0 (array/len @tks))
                               (fn ki
-                                (let ((teffs : [BfShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                (let ((teffs : [BfShape] (object/get (default (array/nth @tks @ki) {}) "effects" [])))
                                   (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "t", ev: "", pk: "", lk: @lk }))))))))))))))))))) (array/concat
   (array/flatten
     (array/map (array/range 0 (array/len @orbitals))
       (fn oi
-        (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
+        (let ((ent (object/get (default (array/nth @orbitals @oi) {}) "entity" null)))
           (if (validate/object @ent)
             (let ((invs : [BfShape] (object/get @ent "invariants" [])) (en (object/get @ent "name" "")))
               (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].entity.invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en })))
@@ -106,11 +106,11 @@ orbital OrbLintBindingFieldsOrbital {
   (array/flatten
     (array/map (array/range 0 (array/len @orbitals))
       (fn oi
-        (let ((auxs : [BfEntity] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+        (let ((auxs : [BfEntity] (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
           (array/flatten
             (array/map (array/range 0 (array/len @auxs))
               (fn ai
-                (let ((invs : [BfShape] (object/get (array/nth @auxs @ai) "invariants" [])) (en (object/get (array/nth @auxs @ai) "name" "")))
+                (let ((invs : [BfShape] (object/get (default (array/nth @auxs @ai) {}) "invariants" [])) (en (object/get (default (array/nth @auxs @ai) {}) "name" "")))
                   (if (validate/object (array/nth @auxs @ai))
                     (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en }))
                     @noroots)))))))))))))
@@ -158,7 +158,7 @@ orbital OrbLintBindingFieldsOrbital {
                   @nof)
                 (let ((s2 (if (and (= @c "k") (str/startsWith @s @fP)) (str/concat @eP (str/slice @s 12)) @s)))
   (if (str/startsWith @s2 @eP)
-    (let ((fld (array/first (str/split (array/first (str/split (str/slice @s2 8) ".")) "[")))
+    (let ((fld (default (array/first (str/split (array/first (str/split (str/slice @s2 8) ".")) "[")) ""))
           (lent (object/get @defIdx (object/get @x "lk") null)))
       (if (or (= @fld "") (array/includes ["id", "createdAt", "updatedAt"] @fld) (= @lent null) (array/includes (object/get @lent "fields" []) @fld))
         @nof
@@ -166,7 +166,7 @@ orbital OrbLintBindingFieldsOrbital {
     (let ((parts (str/split (str/slice @s2 1) ".")))
       (if (< (array/len @parts) 2)
         @nof
-        (let ((root (array/first (str/split (array/first @parts) "["))) (fld (array/first (str/split (array/nth @parts 1) "["))))
+        (let ((root (default (array/first (str/split (array/first @parts) "[")) {})) (fld (default (array/first (str/split (array/nth @parts 1) "[")) "")))
           (let ((pent (object/get @defIdx @root null)))
             (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
@@ -187,7 +187,7 @@ orbital OrbLintBindingFieldsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BfProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BfProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
 
@@ -205,10 +205,10 @@ orbital OrbLintBindingFieldsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-fields <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

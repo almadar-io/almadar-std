@@ -63,6 +63,13 @@ def nmap(src, param, body, then, none='null'):
             '(if (!= (array/len @' + b + ') (array/len @' + a + ')) ' + none + ' ' + then('@' + b) + ')))')
 
 
+def nbytes(src, param, body, then, none='null'):
+    """Maps src with a body that may answer null; the whole is `none` if any element did, else then(list name). Bytes elements cannot be filtered to a non-null list by type, so the list grows only with present values."""
+    a, r = fresh('na'), fresh('nr')
+    return ('(let ((' + r + ' (array/reduce ' + src + ' { bad: false, out: [] } (fn ' + a + ' ' + param + ' (if @' + a + '.bad @' + a + ' (let ((nv ' + body + ')) (if (= @nv null) { bad: true, out: @' + a + '.out } '
+            '{ bad: false, out: (array/append @' + a + '.out @nv) })))))))  (if @' + r + '.bad ' + none + ' ' + then('@' + r + '.out') + '))')
+
+
 def fromstr(s):
     return '(bytes/from-string ' + s + ')'
 
@@ -219,11 +226,11 @@ def col_for(f, v):
 B64 = lambda b: '(bytes/to-base64 ' + b + ')'
 
 TABLE_OF = lambda et, v, decl: T(
-    '(let ((§v§chars (str/split §et§ ""))) (let ((§v§snake (str/join (array/map (array/range 0 (array/len @§v§chars)) (fn §v§i (let ((§v§c (array/nth @§v§chars @§v§i))) (if (and (> @§v§i 0) (validate/pattern @§v§c "^[A-Z]$") (validate/pattern (array/nth @§v§chars (- @§v§i 1)) "^[a-z0-9]$")) (str/concat "_" (str/lower @§v§c)) (str/lower @§v§c))))) ""))) (let ((§v§decl §decl§)) (if (!= @§v§decl "") @§v§decl (if (str/endsWith @§v§snake "y") (str/concat (str/slice @§v§snake 0 (- (str/len @§v§snake) 1)) "ies") (if (str/endsWith @§v§snake "s") (str/concat @§v§snake "es") (str/concat @§v§snake "s")))))))',
+    '(let ((§v§chars (str/split §et§ ""))) (let ((§v§snake (str/join (array/map (array/range 0 (array/len @§v§chars)) (fn §v§i (let ((§v§c (default (array/nth @§v§chars @§v§i) ""))) (if (and (> @§v§i 0) (validate/pattern @§v§c "^[A-Z]$") (validate/pattern (default (array/nth @§v§chars (- @§v§i 1)) "") "^[a-z0-9]$")) (str/concat "_" (str/lower @§v§c)) (str/lower @§v§c))))) ""))) (let ((§v§decl §decl§)) (if (!= @§v§decl "") @§v§decl (if (str/endsWith @§v§snake "y") (str/concat (str/slice @§v§snake 0 (- (str/len @§v§snake) 1)) "ies") (if (str/endsWith @§v§snake "s") (str/concat @§v§snake "es") (str/concat @§v§snake "s")))))))',
     et=et, v=v, decl=decl)
 
 NUMBERED = T(
-    '(let ((np (str/split @entity.sql §m§))) (str/join (array/map (array/range 0 (array/len @np)) (fn ni (str/concat (array/nth @np @ni) (if (< @ni (- (array/len @np) 1)) (str/concat "$" (+ @entity.bindBase @ni 1)) "")))) ""))',
+    '(let ((np (str/split @entity.sql §m§))) (str/join (array/map (array/range 0 (array/len @np)) (fn ni (str/concat (default (array/nth @np @ni) "") (if (< @ni (- (array/len @np) 1)) (str/concat "$" (+ @entity.bindBase @ni 1)) "")))) ""))',
     m=MARK)
 
 PARAMS_OF = lambda binds: '(array/map ' + binds + ' (fn pb (if @pb.isNull { kind: "null" } { kind: "text", text: @pb.text })))'
@@ -232,7 +239,7 @@ Z = fromstr(NUL)
 QUERY_PARAM = chain([('tb', '(bytes/from-string @p.text)')], chain([('pl', '(bytes/write-uint (bytes/length @tb) 4 "be")')], '(bytes/concat [@pl, @tb])'))
 QUERY_FRAME = chain(
     [('neg', '(bytes/write-uint 4294967295 4 "be")'), ('nb', '(bytes/write-uint (array/len @entity.binds) 2 "be")')],
-    '(let ((qs (bytes/from-string @entity.sql)) (z ' + Z + ')) ' + nmap(
+    '(let ((qs (bytes/from-string @entity.sql)) (z ' + Z + ')) ' + nbytes(
         '@entity.binds', 'p', '(if @p.isNull @neg ' + QUERY_PARAM + ')',
         lambda qq: chain(
             [('mp', msg('P', '(bytes/concat [@z, @qs, @z, ' + u16c(0) + '])')),
@@ -256,7 +263,7 @@ def word_of(read, mask):
 
 
 def hmac(k, m):
-    pad = lambda w, mask, fill: nmap('(array/range 0 8)', w, word_of('(bytes/read-uint ' + k + ' (* @' + w + ' 4) 4 "be")', mask),
+    pad = lambda w, mask, fill: nbytes('(array/range 0 8)', w, word_of('(bytes/read-uint ' + k + ' (* @' + w + ' 4) 4 "be")', mask),
                                       lambda ws: '(bytes/concat (array/append ' + ws + ' (bytes/from-string (str/repeat ' + fill + ' 32))))')
     ik, ok, inner = fresh('ik'), fresh('ok'), fresh('in')
     return chain([(ik, pad(fresh('hw'), '909522486', '"6"')), (ok, pad(fresh('hx'), '1549556828', '"\\\\"')),
@@ -270,14 +277,14 @@ def scram_proof():
     f3 = fail('the SCRAM exchange cannot be computed from the server first message')
     xw = lambda w: chain([(w + 'cs', '(bytes/read-uint @cs (* @' + w + ' 4) 4 "be")')], word_of('(bytes/read-uint @ck (* @' + w + ' 4) 4 "be")', '@' + w + 'cs'))
     pw = fresh('pw')
-    xor = nmap('(array/range 0 8)', pw, xw(pw), lambda ws: '(bytes/concat ' + ws + ')')
+    xor = nbytes('(array/range 0 8)', pw, xw(pw), lambda ws: '(bytes/concat ' + ws + ')')
     pf = chain([('xr', xor)], msg('p', fromstr('(str/concat @wop ",p=" ' + B64('@xr') + ')')))
     inner = chain(
         [('ck', hmac('@salted', fromstr('"Client Key"'))), ('sk', hmac('@salted', fromstr('"Server Key"'))), ('stored', SHA_BYTES('@ck')),
          ('cs', hmac('@stored', '@am')), ('ss', hmac('@sk', '@am')), ('pframe', pf)],
         '{ frame: @pframe, sig: @ss, error: "" }', none=f3)
     return T(
-        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (if (= @sf null) §f0§ (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (= @iter null) §f1§ (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (salted (hash/pbkdf2 @config.password @salt @iter 32))) (if (= @salted null) §f3§ §inner§)))))))))))))',
+        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (if (= @sf null) §f0§ (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (= @iter null) §f1§ (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (saltb (bytes/from-base64 @salt))) (let ((salted (if (= @saltb null) null (hash/pbkdf2 @config.password @saltb @iter 32)))) (if (= @salted null) §f3§ §inner§))))))))))))))',
         fr=find('r'), fs=find('s'), fi=find('i'),
         f0=fail('the SCRAM server-first message is not text'),
         f1=fail('the SCRAM server-first message lacks r, s or i'),
@@ -324,8 +331,8 @@ SCAN = T(
     z=rec(pos='@next', done='true'), o=rec(pos='@next'))
 
 # ---------------------------------------------------------------- cell -> JSON entries
-TS_CONVERT = '(if (str/endsWith @tx "infinity") @tx (let ((td (array/nth (str/split @tx " ") 0)) (tr (str/join (array/drop (str/split @tx " ") 1) " "))) (let ((toff (str/replace-pattern @tr "^[0-9:.]*" "")) (tclk (str/replace-pattern @tr "[+-][0-9:]*$" ""))) (let ((tclock (str/replace-pattern @tclk "\\\\..*$" "")) (tfrac (str/replace-pattern @tclk "^[^.]*\\\\.?" "")) (tsign (if (= (str/slice @toff 0 1) "-") -1 1)) (thms (str/split (str/slice @toff 1) ":"))) ' + chain(
-    [('th', '(str/to-number (array/nth @thms 0))'),
+TS_CONVERT = '(if (str/endsWith @tx "infinity") @tx (let ((td (default (array/nth (str/split @tx " ") 0) "")) (tr (str/join (array/drop (str/split @tx " ") 1) " "))) (let ((toff (str/replace-pattern @tr "^[0-9:.]*" "")) (tclk (str/replace-pattern @tr "[+-][0-9:]*$" ""))) (let ((tclock (str/replace-pattern @tclk "\\\\..*$" "")) (tfrac (str/replace-pattern @tclk "^[^.]*\\\\.?" "")) (tsign (if (= (str/slice @toff 0 1) "-") -1 1)) (thms (str/split (str/slice @toff 1) ":"))) ' + chain(
+    [('th', '(str/to-number (default (array/nth @thms 0) ""))'),
      ('tm', '(let ((tm1 (array/nth @thms 1))) (if (= @tm1 null) 0 (str/to-number @tm1)))'),
      ('tsc', '(let ((ts1 (array/nth @thms 2))) (if (= @ts1 null) 0 (str/to-number @ts1)))'),
      ('tp', '(time/parse (str/concat @td "T" @tclock "Z"))'),
@@ -340,8 +347,8 @@ HEXV = lambda c: '(array/indexOf (str/split "0123456789abcdef" "") ' + c + ')'
 def BYTEA_B64(tx):
     hi = HEXV('(str/slice ' + tx + ' (+ 2 (* @bk 2)) (+ 3 (* @bk 2)))')
     lo = HEXV('(str/slice ' + tx + ' (+ 3 (* @bk 2)) (+ 4 (* @bk 2)))')
-    byte_of = '(let ((bh ' + hi + ') (bl ' + lo + ')) (if (or (< @bh 0) (< @bl 0)) null (bytes/write-uint (+ (* 16 @bh) @bl) 1 "be")))'
-    return chain([('bb', nmap('(array/range 0 (math/floor (/ (- (str/len ' + tx + ') 2) 2)))', 'bk', byte_of, lambda bs: '(bytes/concat ' + bs + ')'))], B64('@bb'))
+    byte_of = '(default (bytes/write-uint (+ (* 16 ' + hi + ') ' + lo + ') 1 "be") ' + fromstr(NUL) + ')'
+    return ('(if (validate/pattern ' + tx + ' "^..([0-9a-f][0-9a-f])*$") ' + B64('(bytes/concat (array/map (array/range 0 (math/floor (/ (- (str/len ' + tx + ') 2) 2))) (fn bk ' + byte_of + ')))') + ' null)')
 
 
 def sv_of(oid, tx, ts):
@@ -385,7 +392,7 @@ CELL_ENTRY = T(
     '(let ((oid @rc.oid) (tx @rcell.text)) (let ((sv §sv§)) (if (= @sv null) null (let ((isArr (>= (array/indexOf §arrs§ @oid) 0)) (isJson (or (= @oid 114) (= @oid 3802))) (isBool (= @oid 16)) (isInt (or (= @oid 21) (= @oid 23) (= @oid 26) (= @oid 20))) (isFloat (or (= @oid 700) (= @oid 701)))) (let ((cj (if @rcell.isNull "null" (if @isArr §arr§ §conv§)))) (if (= @cj null) null { n: @rc.name, s: @sv, isStr: (and (not @isArr) (not @isJson) (not @isBool) (not @isInt) (not @isFloat)), j: @cj }))))))',
     arrs=ARR_OIDS, sv=SV_CELL, arr=ARRAY_JSON, conv=CONV_CELL)
 
-MILLIS = '(if (str/includes @en.s ".") (let ((mp (str/split @en.s "."))) (let ((mtail (str/join (array/drop @mp 1) "."))) (str/concat (array/nth @mp 0) "." (str/slice (str/padEnd (str/replace-pattern @mtail "[^0-9].*$" "") 3 "0") 0 3) (str/replace-pattern @mtail "^[0-9]*" "")))) (if (str/endsWith @en.s "Z") (str/concat (str/slice @en.s 0 (- (str/len @en.s) 1)) ".000Z") @en.s))'
+MILLIS = '(if (str/includes @en.s ".") (let ((mp (str/split @en.s "."))) (let ((mtail (str/join (array/drop @mp 1) "."))) (str/concat (default (array/nth @mp 0) "") "." (str/slice (str/padEnd (str/replace-pattern @mtail "[^0-9].*$" "") 3 "0") 0 3) (str/replace-pattern @mtail "^[0-9]*" "")))) (if (str/endsWith @en.s "Z") (str/concat (str/slice @en.s 0 (- (str/len @en.s) 1)) ".000Z") @en.s))'
 
 ROW_TEMPLATE = T(
     '(let ((es @es)) (let ((hasC (array/some @es (fn x1 (= @x1.n "createdAt")))) (hasU (array/some @es (fn x2 (= @x2.n "updatedAt"))))) (let ((fixed (array/map @es (fn en0 (let ((nn (if (and (= @en0.n "created_at") (not @hasC)) "createdAt" (if (and (= @en0.n "updated_at") (not @hasU)) "updatedAt" @en0.n)))) { n: @nn, s: @en0.s, isStr: @en0.isStr, j: @en0.j }))))) (let ((done (array/map @fixed (fn en (if (and @en.isStr (or (= @en.n "createdAt") (= @en.n "updatedAt"))) { n: @en.n, s: §ms§, isStr: true, j: (json/stringify §ms§) } @en))))) (json/parse (str/concat "{" (str/join (array/map @done (fn ej (str/concat (json/stringify @ej.n) ":" @ej.j))) ",") "}") Row)))))',
@@ -541,6 +548,7 @@ def send_inline(stage, frame, extra=()):
 
 
 # ---------------------------------------------------------------- composers
+QE_PREDS = '(array/concat (let ((pq1 (object/get @entity.query "policy" null))) (if (= @pq1 null) [] [@pq1])) (let ((pq2 (object/get @entity.query "filter" null))) (if (= @pq2 null) [] [@pq2])))'
 Q_TABLE = quote_ident('@entity.table')
 CUR_KIND = '@entity.cur.kind'
 HAS_GUARD = NE('(object/get @entity.cur "guard" null)', 'null')
@@ -549,7 +557,7 @@ TEXT_BIND = lambda v: '{ isNull: false, text: ' + v + ' }'
 
 COVERED = T('(let ((ce (object/get @entity.schema @entity.table {}))) (and (> (array/len (object/keys @ce)) 0) (array/every @entity.fields (fn cf (or (array/includes (object/keys @ce) @cf) (array/includes ["createdAt", "updatedAt"] @cf))))))')
 KINDS_NOW = '(if @entity.needKinds (object/get @entity.schema @entity.table {}) {})'
-KINDS_MAP = '(object/fromEntries (array/map @entity.raw (fn kr [(object/get (array/nth @kr.cells 0) "text" ""), (let ((dt (object/get (array/nth @kr.cells 1) "text" ""))) (if (array/includes ["text", "character varying", "character"] @dt) "text" (if (= @dt "jsonb") "jsonb" (if (= @dt "ARRAY") "array" "other"))))])))'
+KINDS_MAP = '(object/fromEntries (array/map @entity.raw (fn kr [(object/get @kr.cells "0.text" ""), (let ((dt (object/get @kr.cells "1.text" ""))) (if (array/includes ["text", "character varying", "character"] @dt) "text" (if (= @dt "jsonb") "jsonb" (if (= @dt "ARRAY") "array" "other"))))])))'
 SCHEMA_UPDATE = '(object/set @entity.schema @entity.table @kmap)'
 
 
@@ -574,7 +582,7 @@ UPSERT_COMPOSE = T(
 
 def modify_compose(kind):
     return T(
-        '(let ((we (array/filter (object/keys (object/get @entity.cur "data" {})) (fn wx (!= @wx "id")))) (wg @entity.where)) (let ((sets (array/map @we (fn wy (str/concat §qwy§ " = " §m§))))) { sql: (str/concat "WITH \\"pre\\" AS (SELECT * FROM " §qt§ " WHERE \\"id\\" = $1 FOR UPDATE), \\"post\\" AS (" §head§ " WHERE \\"id\\" = $1" (if (> (array/len @wg.sqls) 0) (str/concat " AND " (array/nth @wg.sqls 0)) "") " RETURNING *) SELECT \'before\' AS \\"__part\\", \\"pre\\".* FROM \\"pre\\" UNION ALL SELECT \'after\' AS \\"__part\\", \\"post\\".* FROM \\"post\\""), binds: (array/concat (array/concat [§idp§] (array/map @we (fn wz §bind§))) @wg.binds), bindBase: 1, countSql: "", countBinds: [] }))',
+        '(let ((we (array/filter (object/keys (object/get @entity.cur "data" {})) (fn wx (!= @wx "id")))) (wg @entity.where)) (let ((sets (array/map @we (fn wy (str/concat §qwy§ " = " §m§))))) { sql: (str/concat "WITH \\"pre\\" AS (SELECT * FROM " §qt§ " WHERE \\"id\\" = $1 FOR UPDATE), \\"post\\" AS (" §head§ " WHERE \\"id\\" = $1" (if (> (array/len @wg.sqls) 0) (str/concat " AND " (default (array/nth @wg.sqls 0) "")) "") " RETURNING *) SELECT \'before\' AS \\"__part\\", \\"pre\\".* FROM \\"pre\\" UNION ALL SELECT \'after\' AS \\"__part\\", \\"post\\".* FROM \\"post\\""), binds: (array/concat (array/concat [§idp§] (array/map @we (fn wz §bind§))) @wg.binds), bindBase: 1, countSql: "", countBinds: [] }))',
         qwy=quote_ident(col_for('@wy', 'mc1')), m=MARK, qt=Q_TABLE,
         head=('(str/concat "UPDATE " ' + Q_TABLE + ' " SET " (if (= (array/len @sets) 0) "\\"id\\" = \\"id\\"" (str/join @sets ", ")))' if kind == 'update' else '(str/concat "DELETE FROM " ' + Q_TABLE + ')'),
         idp=TEXT_BIND('(object/get @entity.cur "id" "")'), bind=BIND_OF('(object/get (object/get @entity.cur "data" {}) @wz)'))
@@ -649,7 +657,7 @@ P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"read"')),
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"list"')), send_stmt('statement', cat(S('SELECT * FROM '), Q_TABLE))))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"sql"')), send_stmt('statement', '@entity.userSql', SQL_BINDS)))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"query"')), [
-    SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
+    SET('preds', QE_PREDS),
     SET('extra', '["id", (object/get (let ((qo0 (object/get @entity.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'),
     SET('written', '[]'), SET('needKinds', 'true'), EMIT('PG_KINDS')]))
 PATH_FIELDS = '(array/filter (array/unique (array/concat ["id", "createdAt"] (array/flatten (array/map @entity.paths (fn xp (array/concat (object/get @xp "fields" []) [(array/nth (str/split (object/get @xp "orderBy" "") ":") 0)])))))) (fn xf (!= @xf "")))'
@@ -658,22 +666,22 @@ P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), EQ('@entity.b
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), NE('@entity.batch.onFailure', '"atomic"')), [EMIT('PG_OP')]))
 # ---- discovery
 D = stg('discover')
-P(tr('PG_PLAN', 'running', AND(D, NOT(IS_ERR)), [G('kmap', KINDS_MAP, 'the column list the server answered names a column this driver refuses'), SET('schema', SCHEMA_UPDATE), SET('fresh', 'true'), EMIT('PG_BUILD')]))
+P(tr('PG_PLAN', 'running', AND(D, NOT(IS_ERR)), [G('kmap', KINDS_MAP, 'the column list the server answered names a column this driver refuses'), G('schn', SCHEMA_UPDATE, 'the column list cannot be recorded under the table name'), SET('schema', '@schn'), SET('fresh', 'true'), EMIT('PG_BUILD')]))
 P(tr('PG_PLAN', 'running', AND(stg('begin'), NOT(IS_ERR)), [EMIT('PG_OP')]))
 # ---- statement replies
 ST = stg('statement')
 QUERY_OK = AND(ST, EQ('@entity.op', '"query"'), NOT(IS_ERR))
 PAGE = SET('page', '(array/map @entity.rows (fn pr (object/omit @pr ["__total"])))')
 TOTAL_MODE_NONE = EQ('(object/get @entity.query "total" "exact")', '"none"')
-HAS_WINDOW_TOTAL = AND('(> ' + ROWS_N + ' 0)', '(validate/number (object/get (array/nth @entity.rows 0) "__total" null))')
+HAS_WINDOW_TOTAL = AND('(> ' + ROWS_N + ' 0)', '(validate/number (object/get @entity.rows "0.__total" null))')
 NUM_OF = lambda x: '(let ((nmx ' + x + ')) (if (validate/number @nmx) @nmx 0))'
-FIRST_TOTAL = NUM_OF('(object/get (array/nth @entity.rows 0) "__total" null)')
+FIRST_TOTAL = NUM_OF('(object/get @entity.rows "0.__total" null)')
 OFFSET0 = '(= (if (= (object/get @entity.query "offset" null) null) 0 (object/get @entity.query "offset" 0)) 0)'
 NO_WINDOW_TOTAL = AND(QUERY_OK, NOT(TOTAL_MODE_NONE), NOT(HAS_WINDOW_TOTAL))
 LIMIT_NZ = NE('(object/get @entity.query "limit" null)', '0')
 P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"query"')), [PAGE] + send_stmt('count', '@entity.countSql', '@entity.countBinds')))
 P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"write"')), [EMIT('PG_OUTCOME')]))
-P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"ensure"')), [SET('opAt', '(+ @entity.opAt 1)')] + send_stmt('statement', '(array/nth @entity.ddl @entity.opAt)')))
+P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"ensure"')), [SET('opAt', '(+ @entity.opAt 1)')] + [G('ddn', '(array/nth @entity.ddl @entity.opAt)', 'the index statements ran past their list')] + send_stmt('statement', '@ddn')))
 # ---- count
 CN = stg('count')
 # ---- commit / rollback
@@ -697,7 +705,7 @@ ENS_ONE = T('(let ((fl (object/get @xp "fields" [])) (ob (object/get @xp "orderB
 ENS_BUILT = '(array/map @entity.paths (fn xp ' + ENS_ONE + '))'
 ENSURE_COMPOSE = [G('ens', ENS_BUILT, 'an index path names a column the table does not have'),
                   G('ensd', '(if (array/some @ens (fn xe (= @xe null))) null (array/map @ens (fn xs @xs.sql)))', 'an index path names a column the table does not have'),
-                  SET('ddl', '@ensd'), SET('sql', '(array/nth @entity.ddl 0)'), SET('binds', '[]'), SET('bindBase', '0'), SET('countSql', '""'), SET('countBinds', '[]'), SET('stage', '"statement"'), EMIT('PG_FRAME')]
+                  SET('ddl', '@ensd'), G('ens0', '(array/nth @ensd 0)', 'the index list is empty'), SET('sql', '@ens0'), SET('binds', '[]'), SET('bindBase', '0'), SET('countSql', '""'), SET('countBinds', '[]'), SET('stage', '"statement"'), EMIT('PG_FRAME')]
 P(tr('PG_COMPOSE', 'running', EQ('@entity.op', '"ensure"'), ENSURE_COMPOSE))
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"create"')), compose_effects(CREATE_COMPOSE)))
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"upsert"')), compose_effects(UPSERT_COMPOSE)))
@@ -705,16 +713,17 @@ P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"up
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"delete"')), compose_effects(modify_compose('delete'))))
 
 # ---- write ops
-OPVIEW_OF = lambda op: '(let ((co ' + op + ')) { kind: (object/get @co "kind" ""), entityType: (object/get @co "entityType" ""), id: (object/get @co "id" ""), data: (object/get @co "data" {}), guard: (object/get @co "guard" null) })'
+OPVIEW = '{ kind: (object/get @co "kind" ""), entityType: (object/get @co "entityType" ""), id: (object/get @co "id" ""), data: (object/get @co "data" {}), guard: (object/get @co "guard" null) }'
+OPVIEW_OF = lambda op: [G('co', op, 'the write batch has no op at this position'), SET('cur', OPVIEW)]
 OP = '(array/nth @entity.batch.ops @entity.opAt)'
-P(tr('PG_OP', 'running', None, [SET('cur', OPVIEW_OF(OP)), EMIT('PG_OPPED')]))
+P(tr('PG_OP', 'running', None, OPVIEW_OF(OP) + [EMIT('PG_OPPED')]))
 ID_OK = '(validate/string (object/get (object/get @entity.cur "data" {}) "id" null))'
 NEEDS_ID = AND(OR(EQ(CUR_KIND, '"create"'), EQ(CUR_KIND, '"upsert"')), NOT(ID_OK))
 P(tr('PG_OPPED', 'running', NEEDS_ID, [EMIT('PG_RECORD', '{ outcome: { kind: "failed", message: (str/concat ' + CUR_KIND + ' " needs a string id") } }')]))
 P(tr('PG_OPPED', 'running', NOT(NEEDS_ID), [
     SET('table', TABLE_OF('@entity.cur.entityType', 'tb', '(object/get @entity.writeCollections @entity.cur.entityType "")')),
     SET('fresh', 'false'),
-    SET('preds', '(array/filter [(object/get @entity.cur "guard" null)] (fn og (!= @og null)))'),
+    SET('preds', '(let ((og (object/get @entity.cur "guard" null))) (if (= @og null) [] [@og]))'),
     SET('extra', '[]'),
     SET('written', '(if (= ' + CUR_KIND + ' "delete") [] (object/keys (object/get @entity.cur "data" {})))'),
     SET('needKinds', '(if (= ' + CUR_KIND + ' "upsert") true (if (= ' + CUR_KIND + ' "create") ' + STAMP_ANY + ' (or ' + HAS_GUARD + ' ' + STAMP_ANY + ')))'),
@@ -728,7 +737,7 @@ P(tr('PG_OUTCOME', 'running', AND(NOT(IS_ERR), EQ(CUR_KIND, '"create"'), '(> ' +
 CURDATA = '(object/get @entity.cur "data" {})'
 P(tr('PG_OUTCOME', 'running', AND(NOT(IS_ERR), EQ(CUR_KIND, '"upsert"'), EQ(ROWS_N, '0')),
      [EMIT('PG_RECORD', OUT_OF('{ kind: "failed", message: (str/concat @entity.cur.entityType " " ' + SCALAR_TEXT('(object/get ' + CURDATA + ' "id" "")') + ' ": the upsert returned no row") }'))]))
-LASTROW = '(array/last @entity.rows)'
+LASTROW = '(default (array/last @entity.rows) {})'
 P(tr('PG_OUTCOME', 'running', AND(NOT(IS_ERR), EQ(CUR_KIND, '"upsert"'), '(> ' + ROWS_N + ' 0)'),
      [EMIT('PG_RECORD', OUT_OF('(if (= (object/get ' + LASTROW + ' "__inserted" false) true) { kind: "created", row: ' + CLEAN(LASTROW) + ' } { kind: "updated", row: ' + CLEAN(LASTROW) + ' })'))]))
 BEFORE = '(array/find @entity.rows (fn bq (= (object/get @bq "__part" "") "before")))'
@@ -758,18 +767,19 @@ STAMP_ANY_OF = lambda w: '(array/some ' + w + ' (fn sw (array/includes ["created
 WANT_OF = lambda need, covered: '(and ' + need + ' (not ' + covered + '))'
 
 # ---- ask-level (payload) views
-Q_PREDS = '(array/filter [(object/get @payload.query "policy" null), (object/get @payload.query "filter" null)] (fn pq (!= @pq null)))'
+Q_PREDS = '(array/concat (let ((pq1 (object/get @payload.query "policy" null))) (if (= @pq1 null) [] [@pq1])) (let ((pq2 (object/get @payload.query "filter" null))) (if (= @pq2 null) [] [@pq2])))'
 Q_EXTRA = '["id", (object/get (let ((qo0 (object/get @payload.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'
 Q_TABLE_P = TABLE_OF('@payload.entityType', 'qa', '(default @payload.collection "")')
 Q_WANT = WANT_OF('true', COVERED_OF(Q_TABLE_P, ALL_FIELDS(Q_PREDS, Q_EXTRA, '[]')))
 
-OPV0 = '(array/nth @payload.batch.ops 0)'
-K0 = '(object/get ' + OPV0 + ' "kind" "")'
-OP0_GUARDED = NE('(object/get ' + OPV0 + ' "guard" null)', 'null')
-OP0_PREDS = '(array/filter [(object/get ' + OPV0 + ' "guard" null)] (fn og (!= @og null)))'
-OP0_WRITTEN = lambda kind: '[]' if kind == 'delete' else '(object/keys (object/get ' + OPV0 + ' "data" {}))'
-OP0_TABLE = TABLE_OF('(object/get ' + OPV0 + ' "entityType" "")', 'o0', '(object/get (default @payload.collections {}) (object/get ' + OPV0 + ' "entityType" "") "")')
-OP0_ID_OK = '(validate/string (object/get (object/get ' + OPV0 + ' "data" {}) "id" null))'
+# the first op of a write ask: the early refusals ahead of every transition that reads it answer an empty batch, so index 0 exists wherever these run
+OP0F = lambda f, d: '(object/get @payload.batch.ops "0.' + f + '" ' + d + ')'
+K0 = OP0F('kind', '""')
+OP0_GUARDED = NE(OP0F('guard', 'null'), 'null')
+OP0_PREDS = '(let ((og ' + OP0F('guard', 'null') + ')) (if (= @og null) [] [@og]))'
+OP0_WRITTEN = lambda kind: '[]' if kind == 'delete' else '(object/keys ' + OP0F('data', '{}') + ')'
+OP0_TABLE = TABLE_OF(OP0F('entityType', '""'), 'o0', '(object/get (default @payload.collections {}) ' + OP0F('entityType', '""') + ' "")')
+OP0_ID_OK = '(validate/string (object/get ' + OP0F('data', '{}') + ' "id" null))'
 
 
 def op0_need(kind):
@@ -803,7 +813,7 @@ RESET_ASK = [SET('stage', '"start"'), SET('opAt', '0'), SET('outcomes', '[]'), S
              SET('sql', '""'), SET('params', '[]'), SET('binds', '[]'), SET('inbox', EMPTY_BYTES), SET('ddl', '[]')]
 TABLE_SET = SET('table', TABLE_OF('@entity.entityType', 'ta', '@entity.declared'))
 
-QUERY_PREP = [SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
+QUERY_PREP = [SET('preds', QE_PREDS),
               SET('extra', '["id", (object/get (let ((qo0 (object/get @entity.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'),
               SET('written', '[]'), SET('needKinds', 'true'), SET('fresh', 'false')]
 KINDS_SETS = [SET('fields', ALL_FIELDS('@entity.preds', '@entity.extra', '@entity.written')), SET('covered', COVERED_OF('@entity.table', '@entity.fields'))]
@@ -811,7 +821,7 @@ BUILD_SETS = [SET('kinds', KINDS_NOW), SET('where', WHERE_OF_PREDS)]
 COMPOSE_SETS = lambda built: [SET('built', built), SET('sql', '@entity.built.sql'), SET('binds', '@entity.built.binds'), SET('bindBase', '@entity.built.bindBase'),
                               SET('countSql', '@entity.built.countSql'), SET('countBinds', '@entity.built.countBinds'), SET('stage', '"statement"')]
 OP_PREP = [SET('table', TABLE_OF('@entity.cur.entityType', 'tb', '(object/get @entity.writeCollections @entity.cur.entityType "")')), SET('fresh', 'false'),
-           SET('preds', '(array/filter [(object/get @entity.cur "guard" null)] (fn og (!= @og null)))'),
+           SET('preds', '(let ((og (object/get @entity.cur "guard" null))) (if (= @og null) [] [@og]))'),
            SET('extra', '[]'),
            SET('written', '(if (= ' + CUR_KIND + ' "delete") [] (object/keys (object/get @entity.cur "data" {})))'),
            SET('needKinds', '(if (= ' + CUR_KIND + ' "upsert") true (if (= ' + CUR_KIND + ' "create") ' + STAMP_ANY_OF('@entity.written') + ' (or ' + HAS_GUARD + ' ' + STAMP_ANY_OF('@entity.written') + ')))')]
@@ -860,13 +870,14 @@ LOGIN_SUMMARY = T(
 
 # ---------------------------------------------------------------- url + sslmode
 DEC = lambda x: '(let ((dt ' + x + ')) (if (str/uri-component-valid @dt) (str/decode-uri-component @dt) @dt))'
-URL_REST = '(array/nth (str/split @config.url "://") 1)'
-URL_AUTH = '(array/nth (str/split ' + URL_REST + ' "/") 0)'
+# a split never answers an empty list, and index 1 of the url exists wherever the "://" check ahead of it holds
+URL_REST = '(default (array/nth (str/split @config.url "://") 1) "")'
+URL_AUTH = '(default (array/nth (str/split ' + URL_REST + ' "/") 0) "")'
 AT = '(str/slice "a@b" 1 2)'
-URL_CRED = '(if (str/includes ' + URL_AUTH + ' ' + AT + ') (array/nth (str/split ' + URL_AUTH + ' ' + AT + ') 0) "")'
-URL_USER_RAW = '(array/nth (str/split ' + URL_CRED + ' ":") 0)'
-URL_PATH = '(array/nth (str/split (str/join (array/drop (str/split ' + URL_REST + ' "/") 1) "/") "?") 0)'
-SCHEME = '(array/nth (str/split @config.url "://") 0)'
+URL_CRED = '(if (str/includes ' + URL_AUTH + ' ' + AT + ') (default (array/nth (str/split ' + URL_AUTH + ' ' + AT + ') 0) "") "")'
+URL_USER_RAW = '(default (array/nth (str/split ' + URL_CRED + ' ":") 0) "")'
+URL_PATH = '(default (array/nth (str/split (str/join (array/drop (str/split ' + URL_REST + ' "/") 1) "/") "?") 0) "")'
+SCHEME = '(default (array/nth (str/split @config.url "://") 0) "")'
 URL_NO_PASSWORD = '(not (str/includes ' + URL_CRED + ' ":"))'
 URL_OK = AND('(str/includes @config.url "://")', '(array/includes ["postgres", "postgresql"] ' + SCHEME + ')', URL_NO_PASSWORD)
 SSL_OK = '(array/includes ' + SSLMODES + ' @config.sslmode)'
@@ -908,7 +919,7 @@ ready = ['    state ready {', '      INIT -> ready', '']
 RD = ready.append
 RD(tr('PG_CLOSED', 'ready', None, []))
 NEARBY = NE('(object/get @payload.query "nearest" null)', 'null')
-NEAR_OK = '(object/get @config.queryCapabilities "nearest" false)'
+NEAR_OK = '(= (object/get @config.queryCapabilities "nearest" false) true)'
 HAS_REKEY = '(array/some @payload.batch.ops (fn ro (= (object/get @ro "kind" "") "rekey")))'
 ATOMIC_P = EQ('@payload.batch.onFailure', '"atomic"')
 WRITE_OK = AND(NOT(HAS_REKEY), '(> (array/len @payload.batch.ops) 0)', OR(NOT(ATOMIC_P), '@config.writeCapabilities.atomicBatch'), OR(ATOMIC_P, '@config.writeCapabilities.stopRuns'))
@@ -937,7 +948,7 @@ RD(tr('ROWS_QUERY', 'running', AND(WARM, QUERY_OK_P, NOT(Q_WANT)),
 RD(tr('ROWS_WRITE', 'beginning', AND(WARM, WRITE_OK, ATOMIC_P), pre('write') + send_now('begin', S('BEGIN'))))
 RD(tr('ROWS_ENSURE_INDEXES', 'running', AND(WARM, ENS_OK), pre('ensure') + [EMIT('PG_PLAN')]))
 RD(tr('ROWS_SQL', 'running', WARM, pre('sql') + send_now('statement', '@entity.userSql', SQL_BINDS)))
-OP0_SET = SET('cur', OPVIEW_OF('(array/nth @entity.batch.ops 0)'))
+OP0_SET = OPVIEW_OF('(array/nth @entity.batch.ops 0)')
 STOP_P = NOT(ATOMIC_P)
 for kind in ['create', 'upsert', 'update', 'delete']:
     isk = EQ(K0, S(kind))
@@ -946,9 +957,9 @@ for kind in ['create', 'upsert', 'update', 'delete']:
         RD(tr('ROWS_WRITE', 'ready', AND(base, NOT(OP0_ID_OK)), pre('write') + [
             EMIT('ROWS_WRITTEN', '{ key: @entity.key, outcomes: [{ kind: "failed", message: ' + S(kind + ' needs a string id') + ' }] }')]))
         base = AND(base, OP0_ID_OK)
-    RD(tr('ROWS_WRITE', 'discovering', AND(base, op0_want(kind)), pre('write') + [OP0_SET] + OP_PREP + DISCOVER_NOW))
+    RD(tr('ROWS_WRITE', 'discovering', AND(base, op0_want(kind)), pre('write') + OP0_SET + OP_PREP + DISCOVER_NOW))
     RD(tr('ROWS_WRITE', 'running', AND(base, NOT(op0_want(kind))),
-          pre('write') + [OP0_SET] + OP_PREP + KINDS_SETS + BUILD_SETS + COMPOSE_SETS(COMPOSERS[kind]) + FRAME_EFFECTS + SENT()))
+          pre('write') + OP0_SET + OP_PREP + KINDS_SETS + BUILD_SETS + COMPOSE_SETS(COMPOSERS[kind]) + FRAME_EFFECTS + SENT()))
 
 # ---- results that end an ask in `ready` (PG_FINISH)
 ST = stg('statement')
@@ -959,14 +970,14 @@ RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), NOT(IS_ERR), '(>
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), NOT(IS_ERR)), [EMIT('ROWS_INDEXES_ENSURED', '{ key: @entity.key }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"sql"'), IS_ERR), [EMIT('SQL_FAILED', '{ key: @entity.key, kind: (if (= @entity.err.code "57014") "timeout" "postgres"), code: @entity.err.code, message: ' + ERR_MSG + ' }')]))
-SQL_COUNT = '(let ((tn (str/to-int (array/last (str/split @entity.tag " "))))) (if (= @tn null) (array/len @entity.rows) @tn))'
+SQL_COUNT = '(let ((tn (str/to-int (default (array/last (str/split @entity.tag " ")) "")))) (if (= @tn null) (array/len @entity.rows) @tn))'
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"sql"'), NOT(IS_ERR)), [EMIT('SQL_ROWS', '{ key: @entity.key, rows: @entity.rows, rowCount: ' + SQL_COUNT + ', columns: (array/map @entity.cols (fn sc { name: @sc.name, typeOid: @sc.oid })) }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), NOT(IS_ERR)), [EMIT('ROWS_LISTED', '{ key: @entity.key, rows: @entity.rows }')]))
 RD(tr('PG_FINISH', 'ready', AND(OR(ST, stg('count')), EQ('@entity.op', '"query"'), IS_ERR, MISMATCH), DECLINE('"a compared value does not fit its column type"')))
 RD(tr('PG_FINISH', 'ready', AND(OR(ST, stg('count')), EQ('@entity.op', '"query"'), IS_ERR, NOT(MISMATCH)), FAIL_KEEP(ERR_MSG)))
 QPAGE_STMT = [SET('page', '(array/map @entity.rows (fn pr (object/omit @pr ["__total"])))')]
-Q_TOTAL = '(if (= (object/get @entity.query "total" "exact") "none") (array/len @entity.rows) (if (and (> (array/len @entity.rows) 0) (validate/number (object/get (array/nth @entity.rows 0) "__total" null))) ' + FIRST_TOTAL + ' 0))'
+Q_TOTAL = '(if (= (object/get @entity.query "total" "exact") "none") (array/len @entity.rows) (if (and (> (array/len @entity.rows) 0) (validate/number (object/get @entity.rows "0.__total" null))) ' + FIRST_TOTAL + ' 0))'
 PAGE_OUT = lambda total: [
     EMIT('ROWS_IDS', '{ key: @entity.key, ids: (array/map @entity.page (fn pi ' + SCALAR_TEXT('(object/get @pi "id" "")') + ')), total: ' + total + ' }'),
     ]
@@ -974,7 +985,7 @@ RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"query"'), NOT(IS_ERR), EQ
       QPAGE_STMT + [EMIT('ROWS_IDS', '{ key: @entity.key, ids: (array/map @entity.page (fn pi ' + SCALAR_TEXT('(object/get @pi "id" "")') + ')), total: ' + Q_TOTAL + ' }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"query"'), NOT(IS_ERR), NE('@entity.project', '"ids"')),
       QPAGE_STMT + [EMIT('ROWS_PAGE', '{ key: @entity.key, rows: @entity.page, total: ' + Q_TOTAL + ' }')]))
-COUNT_TOTAL = '(if (> (array/len @entity.rows) 0) ' + NUM_OF('(object/get (array/nth @entity.rows 0) "total" null)') + ' 0)'
+COUNT_TOTAL = '(if (> (array/len @entity.rows) 0) ' + NUM_OF('(object/get @entity.rows "0.total" null)') + ' 0)'
 RD(tr('PG_FINISH', 'ready', AND(stg('count'), EQ('@entity.op', '"query"'), NOT(IS_ERR), EQ('@entity.project', '"ids"')),
       [EMIT('ROWS_IDS', '{ key: @entity.key, ids: (array/map @entity.page (fn pi ' + SCALAR_TEXT('(object/get @pi "id" "")') + ')), total: ' + COUNT_TOTAL + ' }')]))
 RD(tr('PG_FINISH', 'ready', AND(stg('count'), EQ('@entity.op', '"query"'), NOT(IS_ERR), NE('@entity.project', '"ids"')),
@@ -1002,7 +1013,7 @@ connecting.append('    }')
 blocks.append('\n'.join(connecting))
 
 FIRST = '(bytes/at @payload.data 0)'
-HEX = '(let ((hb ' + FIRST + ') (hd "0123456789abcdef")) (if (< @hb 16) (str/slice @hd @hb (+ @hb 1)) (str/concat (str/slice @hd (math/floor (/ @hb 16)) (+ (math/floor (/ @hb 16)) 1)) (str/slice @hd (math/mod @hb 16) (+ (math/mod @hb 16) 1)))))'
+HEX = '(let ((hb ' + FIRST + ') (hd "0123456789abcdef")) (if (= @hb null) "" (if (< @hb 16) (str/slice @hd @hb (+ @hb 1)) (str/concat (str/slice @hd (math/floor (/ @hb 16)) (+ (math/floor (/ @hb 16)) 1)) (str/slice @hd (math/mod @hb 16) (+ (math/mod @hb 16) 1))))))'
 negotiating = ['    state negotiating {', '      INIT -> ready', '']
 negotiating.append(tr('PG_IO_FAILED', 'ready', None, FAIL_CLOSE('@payload.error')))
 negotiating.append(tr('PG_RECEIVED', 'ready', '@payload.eof', FAIL_CLOSE('"the server closed the connection answering the TLS request"')))
@@ -1011,7 +1022,7 @@ negotiating.append(tr('PG_RECEIVED', 'ready', AND(NOT('@payload.eof'), EQ(FIRST,
 negotiating.append(tr('PG_RECEIVED', 'ready', AND(NOT('@payload.eof'), EQ(FIRST, '83')),
                       FAIL_CLOSE('"the server answered S to the TLS request and this driver speaks no TLS over os sockets: set sslmode=disable, or have the server answer N"')))
 negotiating.append(tr('PG_RECEIVED', 'ready', AND(NOT('@payload.eof'), NE(FIRST, '78'), NE(FIRST, '83')),
-                      FAIL_CLOSE('(str/concat "the answer to the TLS request is 0x" ' + HEX + ' ", neither S nor N")')))
+                      FAIL_CLOSE('(if (= ' + FIRST + ' null) "the answer to the TLS request is empty, neither S nor N" (str/concat "the answer to the TLS request is 0x" ' + HEX + ' ", neither S nor N"))')))
 negotiating.append('    }')
 blocks.append('\n'.join(negotiating))
 
@@ -1091,7 +1102,7 @@ INSERTED = lambda r: '(= (object/get ' + r + ' "__inserted" false) true)'
 OUTCOME_EXPR = T(
     '(if §err§ { kind: "failed", message: §msg§ } (if (= §k§ "create") (if (= §n§ 0) { kind: "duplicate-id" } { kind: "created", row: (array/nth @entity.rows 0) }) (if (= §k§ "upsert") (if (= §n§ 0) { kind: "failed", message: (str/concat @entity.cur.entityType " " §idt§ ": the upsert returned no row") } (if §ins§ { kind: "created", row: §clast§ } { kind: "updated", row: §clast§ })) (let ((ob §b§) (oa §a§)) (if (= @ob null) { kind: "not-found" } (if (= @oa null) { kind: "refused" } (if (= §k§ "delete") (if §g§ { kind: "deleted", before: §cb§ } { kind: "deleted" }) (if §g§ { kind: "updated", row: §coa§, before: §cb§ } { kind: "updated", row: §coa§ }))))))))',
     err=IS_ERR, msg=ERR_MSG, k=CUR_KIND, n=ROWS_N_, idt=SCALAR_TEXT('(object/get (object/get @entity.cur "data" {}) "id" "")'),
-    ins=INSERTED('(array/last @entity.rows)'), clast=CLEAN('(array/last @entity.rows)'),
+    ins=INSERTED('(default (array/last @entity.rows) {})'), clast=CLEAN('(default (array/last @entity.rows) {})'),
     b=BEFORE, a=AFTER, g=HAS_GUARD, cb=CLEAN('@ob'), coa=CLEAN('@oa'))
 HALT_COND = AND(IS_ERR, HAS_GUARD, MISMATCH, OR(EQ(CUR_KIND, '"update"'), EQ(CUR_KIND, '"delete"')))
 WRITE_RECORD = [SET('halt', '(if ' + HALT_COND + ' { kind: "unsupported", message: "a guard value does not fit its column type" } { kind: "", message: "" })'),

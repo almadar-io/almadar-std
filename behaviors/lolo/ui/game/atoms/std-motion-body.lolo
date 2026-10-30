@@ -33,7 +33,7 @@ orbital MotionBodyOrbital {
         (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { ax: @payload.ax, ay: @payload.ay }) @b))))
 
       IMPULSE -> active
-        (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { vx: (+ (object/get @b vx) @payload.dvx), vy: (+ (object/get @b vy) @payload.dvy) }) @b))))
+        (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { vx: (+ (default (object/get @b vx) 0) @payload.dvx), vy: (+ (default (object/get @b vy) 0) @payload.dvy) }) @b))))
 
       PLACE -> active
         (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { x: @payload.x, y: @payload.y }) @b))))
@@ -55,8 +55,8 @@ orbital MotionBodyOrbital {
         when (and @config.running (> (array/len @entity.bodies) 0))
         (do
           (set @entity.bodies (array/map @entity.bodies (fn b
-            (let ((nvx (math/clamp (* (+ (object/get @b vx) (* (+ (object/get @b ax) @entity.biasAx) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
-            (let ((nvy (math/clamp (* (+ (object/get @b vy) (* (+ (+ (object/get @b ay) @entity.biasAy) @entity.gravity) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
+            (let ((nvx (math/clamp (* (+ (default (object/get @b vx) 0) (* (+ (default (object/get @b ax) 0) @entity.biasAx) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
+            (let ((nvy (math/clamp (* (+ (default (object/get @b vy) 0) (* (+ (+ (default (object/get @b ay) 0) @entity.biasAy) @entity.gravity) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
             (let ((nx (math/clamp (+ (object/get @b x) (* @nvx 0.05)) @config.xMin @config.xMax)))
             (let ((ny (math/clamp (+ (object/get @b y) (* @nvy 0.05)) @config.yMin @config.yMax)))
               (object/merge @b {
@@ -69,9 +69,9 @@ orbital MotionBodyOrbital {
             id: (object/get (array/first @entity.bodies) id),
             x: (object/get (array/first @entity.bodies) x),
             y: (object/get (array/first @entity.bodies) y),
-            vx: (object/get (array/first @entity.bodies) vx),
-            vy: (object/get (array/first @entity.bodies) vy),
-            speed: (math/hypot (object/get (array/first @entity.bodies) vx) (object/get (array/first @entity.bodies) vy))
+            vx: (default (object/get (array/first @entity.bodies) vx) 0),
+            vy: (default (object/get (array/first @entity.bodies) vy) 0),
+            speed: (math/hypot (default (object/get (array/first @entity.bodies) vx) 0) (default (object/get (array/first @entity.bodies) vy) 0))
           }))
     }
 

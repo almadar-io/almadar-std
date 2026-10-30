@@ -29,8 +29,6 @@ orbital OrbI18nOrbital {
   entity I18nCall [runtime] {
     id : string!
     args : OrbCommandArgs = { argv: [], cwd: "" }
-    manifest : PackageManifest = { orbLanguage: null }
-    lang : LangBlock = { vocabulary: null, operators: null }
     cwd : string = ""
     cmd : string = ""
     json : boolean = false
@@ -77,8 +75,6 @@ orbital OrbI18nOrbital {
         (emit I18N_ANSWERED { status: 400, body: "", stderr: "usage: orb i18n vocab [--json] | orb i18n check" })
       I18N_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (set @entity.args (default (json/parse (default @payload.rawBody "") OrbCommandArgs) @entity.args))
-        (set @entity.manifest { orbLanguage: null })
-        (set @entity.lang { vocabulary: null, operators: null })
         (set @entity.cwd (object/get @entity.args "cwd"))
         (emit I18N_ARGS_PARSE { stage: "i18n" argv: (object/get @entity.args "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
     }
@@ -99,10 +95,10 @@ orbital OrbI18nOrbital {
         (emit I18N_ANSWERED { status: 500, body: "", stderr: (str/concat "orb i18n: " (default @payload.error "")) })
       I18N_CORE_PKG -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null)
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: core package.json is unreadable" })
-      I18N_CORE_PKG -> ready when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((m (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest)) (l (default (object/get @m "orbLanguage") @entity.lang))) (= (object/get @l "vocabulary") null)))
+      I18N_CORE_PKG -> ready when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (= (object/get @l "vocabulary") null)))
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: core declares no orbLanguage.vocabulary" })
-      I18N_CORE_PKG -> loading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((m (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest)) (l (default (object/get @m "orbLanguage") @entity.lang))) (!= (object/get @l "vocabulary") null)))
-        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (default (object/get (default (object/get (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest) "orbLanguage") @entity.lang) "vocabulary") "")) } { key: "vocabulary" emit: { success: I18N_ENG_FILE, failure: I18N_FAILED } })
+      I18N_CORE_PKG -> loading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (!= (object/get @l "vocabulary") null)))
+        (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (default (object/get @l "vocabulary") "")) } { key: "vocabulary" emit: { success: I18N_ENG_FILE, failure: I18N_FAILED } }))
       I18N_ENG_FILE -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") EnglishParser) null)
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: the core vocabulary file is not the 12 parser sections" })
       I18N_ENG_FILE -> loading when (!= (json/parse (default (bytes/to-string @payload.data) "") EnglishParser) null)
@@ -115,10 +111,10 @@ orbital OrbI18nOrbital {
         (os/read-file { anchor: "cwd" path: "node_modules/@almadar/std/package.json" } { key: "std" emit: { success: I18N_STD_PKG, failure: I18N_FAILED } })
       I18N_STD_PKG -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null)
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: std package.json is unreadable" })
-      I18N_STD_PKG -> ready when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((m (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest)) (l (default (object/get @m "orbLanguage") @entity.lang))) (= (object/get @l "operators") null)))
+      I18N_STD_PKG -> ready when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (= (object/get @l "operators") null)))
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: std declares no orbLanguage.operators" })
-      I18N_STD_PKG -> loading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((m (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest)) (l (default (object/get @m "orbLanguage") @entity.lang))) (!= (object/get @l "operators") null)))
-        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/std/" (default (object/get (default (object/get (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @entity.manifest) "orbLanguage") @entity.lang) "operators") "")) } { key: "operators" emit: { success: I18N_OPS_FILE, failure: I18N_FAILED } })
+      I18N_STD_PKG -> loading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) null) (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (!= (object/get @l "operators") null)))
+        (let ((none : PackageManifest { orbLanguage: null }) (noLang : LangBlock { vocabulary: null, operators: null }) (m : PackageManifest (default (json/parse (default (bytes/to-string @payload.data) "") PackageManifest) @none)) (l : LangBlock (default (object/get @m "orbLanguage") @noLang))) (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/std/" (default (object/get @l "operators") "")) } { key: "operators" emit: { success: I18N_OPS_FILE, failure: I18N_FAILED } }))
       I18N_OPS_FILE -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") OperatorTable) null)
         (emit I18N_ANSWERED { status: 500, body: "", stderr: "orb i18n: the std operator table is unreadable" })
       I18N_OPS_FILE -> loading when (!= (json/parse (default (bytes/to-string @payload.data) "") OperatorTable) null)

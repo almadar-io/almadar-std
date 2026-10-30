@@ -62,8 +62,10 @@ orbital GoldensOrbital {
         (set @entity.dir (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
         (set @entity.lines [])
         (os/glob { anchor: "cwd" path: (os/path-join (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") "**" "*.replay.goldens.json") } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
-      GOLDENS_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")))
-        (emit GOLDENS_ANSWERED { status: 400, body: (str/concat "goldens: pass a directory relative to the working directory; an absolute directory is not globbed: " (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")) })
+      GOLDENS_CALLED -> listing when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")))
+        (set @entity.dir (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
+        (set @entity.lines [])
+        (os/glob (str/concat "/" (str/slice (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") 1 (str/len (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) "/**/*.replay.goldens.json") { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
     }
 
     state listing {

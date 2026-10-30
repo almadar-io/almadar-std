@@ -73,7 +73,7 @@ orbital ModalEditorOrbital {
 
       KEY -> OPERATOR_PENDING when (object/has @config.operators ?key)
         (set @entity.editorId ?editorId)
-        (set @entity.operator (object/get @config.operators ?key))
+        (set @entity.operator (default (object/get @config.operators ?key) ""))
         (set @entity.operatorKey ?key)
 
       KEY -> OPERATOR_PENDING when (= ?key @config.gotoPrefixKey)
@@ -170,7 +170,7 @@ orbital ModalEditorOrbital {
       KEY -> INSERT when (and (object/has @config.operators ?key) (= (object/get @config.operators ?key) "change"))
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: (object/get @config.operators ?key), motion: "selection", count: 1 })
-        (set @entity.lastOperator (object/get @config.operators ?key))
+        (set @entity.lastOperator (default (object/get @config.operators ?key) ""))
         (set @entity.lastMotion "selection")
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
@@ -178,7 +178,7 @@ orbital ModalEditorOrbital {
       KEY -> NORMAL when (and (object/has @config.operators ?key) (!= (object/get @config.operators ?key) "change"))
         (set @entity.count 0)
         (emit OPERATE { editorId: ?editorId, operator: (object/get @config.operators ?key), motion: "selection", count: 1 })
-        (set @entity.lastOperator (object/get @config.operators ?key))
+        (set @entity.lastOperator (default (object/get @config.operators ?key) ""))
         (set @entity.lastMotion "selection")
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
@@ -239,7 +239,7 @@ orbital ModalEditorOrbital {
       KEY -> INSERT when (and (object/has @config.motions ?key) (= @entity.operator "change"))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
-        (set @entity.lastMotion (object/get @config.motions ?key))
+        (set @entity.lastMotion (default (object/get @config.motions ?key) ""))
         (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
@@ -249,7 +249,7 @@ orbital ModalEditorOrbital {
       KEY -> NORMAL when (and (object/has @config.motions ?key) (!= @entity.operator "change") (!= @entity.operator "goto") (!= @entity.operator "replace"))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
-        (set @entity.lastMotion (object/get @config.motions ?key))
+        (set @entity.lastMotion (default (object/get @config.motions ?key) ""))
         (set @entity.lastCount (if (> @entity.count 0) @entity.count 1))
         (set @entity.operator "")
         (set @entity.operatorKey "")
@@ -314,9 +314,9 @@ orbital ModalEditorOrbital {
     listens {
       KEY {
         editorId : string
-        key : string
+        key : string!
         code : string
-        ctrl : boolean
+        ctrl : boolean!
         alt : boolean
         shift : boolean
         meta : boolean

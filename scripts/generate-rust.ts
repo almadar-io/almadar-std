@@ -100,7 +100,7 @@ interface CanonicalOperatorEntry {
      */
     lambdaArgPosition?: number;
     /** The AVL circuit form every reader draws this operator with (`operatorVisualForm`). */
-    visual: { form: OperatorVisualForm };
+    visual: { form: OperatorVisualForm; infix?: boolean };
     failable?: FailableMeta;
     sign?: ResultSign;
     busExcluded?: string[];
@@ -176,7 +176,7 @@ function toCanonicalEntry(
         returnType: meta.returnType,
         description: meta.description,
         module: meta.module,
-        visual: { form },
+        visual: meta.visual?.infix ? { form, infix: true } : { form },
     };
     if (meta.hasSideEffects) entry.hasSideEffects = true;
     if (meta.effect) entry.effect = meta.effect;

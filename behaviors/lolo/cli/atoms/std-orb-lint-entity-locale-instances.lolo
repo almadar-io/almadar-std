@@ -38,10 +38,10 @@ orbital OrbLintEntityLocaleInstancesOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (decl (object/get @payload.program "locales" [])))
           (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                  (let ((aux (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+                  (let ((aux (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
                     (array/concat
-                      (let ((e0 (object/get (array/nth @orbitals @oi) "entity" {}))) (if (validate/object @e0) [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: @e0, sp: (object/get (array/nth @orbitals @oi) "spec" false) }] []))
-                      (array/flatten (array/map (array/range 0 (array/len @aux)) (fn ai (let ((ea (array/nth @aux @ai))) (if (validate/object @ea) [{ pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: @ea, sp: (object/get (array/nth @orbitals @oi) "spec" false) }] []))))))))))))
+                      (let ((e0 (object/get (default (array/nth @orbitals @oi) {}) "entity" {}))) (if (validate/object @e0) [{ pth: (str/concat "orbitals[" @oi "].entity"), ee: @e0, sp: (object/get (default (array/nth @orbitals @oi) {}) "spec" false) }] []))
+                      (array/flatten (array/map (array/range 0 (array/len @aux)) (fn ai (let ((ea (array/nth @aux @ai))) (if (validate/object @ea) [{ pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: @ea, sp: (object/get (default (array/nth @orbitals @oi) {}) "spec" false) }] []))))))))))))
             (let ((jobs (array/flatten (array/map @ents (fn it
                     (array/concat (if (object/get @it "sp") [] [{ ee: (object/get @it "ee"), rows: (object/get (object/get @it "ee") "instances" []), rp: (str/concat (object/get @it "pth") ".instances") }])
                       (array/map (object/keys (object/get (object/get @it "ee") "localeInstances" {})) (fn k { ee: (object/get @it "ee"), rows: (object/get (object/get (object/get @it "ee") "localeInstances") @k), rp: (str/concat (object/get @it "pth") ".localeInstances." @k) }))))))))
@@ -64,7 +64,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
                 (array/flatten (array/map @jobs (fn jb
                   (let ((ee (object/get @jb "ee")) (rows (object/get @jb "rows")) (rp (object/get @jb "rp")))
                 (array/flatten (array/map (array/range 0 (array/len @rows)) (fn i
-                  (let ((row (array/nth @rows @i)) (rpi (str/concat @rp "[" @i "]")) (nm (object/get @ee "name" "")) (fields (object/get @ee "fields" [])))
+                  (let ((row (default (array/nth @rows @i) {})) (rpi (str/concat @rp "[" @i "]")) (nm (object/get @ee "name" "")) (fields (object/get @ee "fields" [])))
                     (array/concat
                       (array/map (array/filter (object/keys @row) (fn key (not (array/some @fields (fn fd (= (object/get @fd "name" null) @key)))))) (fn key
                         { code: @config.codes.eInstanceInvalid.code, path: (str/concat @rpi "." @key), message: (str/concat "Row " @i " of '" @nm "' sets '" @key "', which is not a field of the entity"), suggestion: "", severity: "error" }))
@@ -88,7 +88,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LocaleProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LocaleProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -105,12 +105,12 @@ orbital OrbLintEntityLocaleInstancesOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint entity-locale-instances: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-locale-instances <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

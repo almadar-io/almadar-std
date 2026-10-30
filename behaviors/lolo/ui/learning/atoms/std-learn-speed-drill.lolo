@@ -35,10 +35,15 @@ orbital SpeedDrillOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+      INIT -> idle when (and (== @config.matchMode "") (and (== @config.rosterSource "config") (= (array/len @config.items) 0)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main { type: empty-state, icon: "list", title: @config.emptyTitle, description: @config.emptyDescription })
+
+      INIT -> idle when (and (== @config.matchMode "") (and (== @config.rosterSource "config") (> (array/len @config.items) 0)))
         (set @entity.items @config.items)
         (let (
-            (first (array/nth @config.items 0))
+            (first (default (array/nth @config.items 0) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.active true)
@@ -98,10 +103,15 @@ orbital SpeedDrillOrbital {
         (set @entity.running false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (and (== @config.rosterSource "config") (= (array/len @config.items) 0)))
+        (set @entity.active false)
+        (set @entity.running false)
+        (render-ui main { type: empty-state, icon: "list", title: @config.emptyTitle, description: @config.emptyDescription })
+
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (and (== @config.rosterSource "config") (> (array/len @config.items) 0)))
         (set @entity.items @config.items)
         (let (
-            (first (array/nth @config.items 0))
+            (first (default (array/nth @config.items 0) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.active true)
@@ -159,7 +169,7 @@ orbital SpeedDrillOrbital {
       ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?items) 0)))
         (set @entity.items ?items)
         (let (
-            (first (array/nth ?items 0))
+            (first (default (array/nth ?items 0) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.active true)
@@ -235,7 +245,7 @@ orbital SpeedDrillOrbital {
             (set @entity.bestStreak (math/max @entity.bestStreak @newStreak))
             (set @entity.feedback (if @correct
               (str/concat "Correct with " @bonus "s to spare — +" (str/concat "" @points) " points.")
-              (str/concat "Not quite — the answer was: " (array/nth @entity.options @entity.correctIndex))))))
+              (str/concat "Not quite — the answer was: " (default (array/nth @entity.options @entity.correctIndex) ""))))))
         (emit ANSWER_JUDGED { correct: (== @entity.verdict "correct"), timeLeftTenths: @entity.remaining, score: @entity.score, streak: @entity.streak })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))))
@@ -243,7 +253,7 @@ orbital SpeedDrillOrbital {
         (let (
             (nextIndex (+ @entity.itemIndex 1))
             (finished (>= @nextIndex (array/len @entity.items)))
-            (next (array/nth @entity.items (math/min @nextIndex (- (array/len @entity.items) 1))))
+            (next (default (array/nth @entity.items (math/min @nextIndex (- (array/len @entity.items) 1))) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.itemIndex (if @finished @entity.itemIndex @nextIndex))
@@ -301,7 +311,7 @@ orbital SpeedDrillOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @entity.items 0))
+            (first (default (array/nth @entity.items 0) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.itemIndex 0)
@@ -360,7 +370,7 @@ orbital SpeedDrillOrbital {
         when (and (== @entity.active true) (== @entity.running true))
         (set @entity.remaining (math/max 0 (- @entity.remaining 1)))
         (set @entity.verdict (if (== @entity.remaining 0) "timeout" @entity.verdict))
-        (set @entity.feedback (if (== @entity.remaining 0) (str/concat "Time's up — the answer was: " (array/nth @entity.options @entity.correctIndex)) @entity.feedback))
+        (set @entity.feedback (if (== @entity.remaining 0) (str/concat "Time's up — the answer was: " (default (array/nth @entity.options @entity.correctIndex) "")) @entity.feedback))
         (set @entity.streak (if (== @entity.remaining 0) 0 @entity.streak))
         (set @entity.running (if (== @entity.remaining 0) false true))
     }
@@ -424,6 +434,14 @@ orbital SpeedDrillOrbital {
     }
 
     config {
+      emptyTitle : string = "Nothing to show"
+        @label "Empty title"
+        @description "Title of the empty state shown when the roster or station list is empty."
+        @tier "presentation"
+      emptyDescription : string = "No items are configured for this activity."
+        @label "Empty description"
+        @description "Text of the empty state shown when the roster or station list is empty."
+        @tier "presentation"
       matchMode : string = ""
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."

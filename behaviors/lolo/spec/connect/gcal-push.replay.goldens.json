@@ -1,0 +1,56 @@
+{
+ "atom": "connect/atoms/std-google-calendar.lolo",
+ "trait": "CalendarPushInbound",
+ "cases": [
+  {
+   "id": "push-without-headers-is-refused",
+   "steps": [
+    {
+     "event": "CALENDAR_PUSH_RECEIVED",
+     "payload": {
+      "verified": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_PUSH_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"missing-headers\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "push-with-headers-dispatches",
+   "steps": [
+    {
+     "event": "CALENDAR_PUSH_RECEIVED",
+     "payload": {
+      "verified": true,
+      "headers": {
+       "x-goog-channel-id": "c",
+       "x-goog-resource-id": "r",
+       "x-goog-resource-state": "exists"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CAL_REMOTE_CHANGED",
+        "payload": {
+         "channelId": "c",
+         "resourceId": "r",
+         "resourceState": "exists"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

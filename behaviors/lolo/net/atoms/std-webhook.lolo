@@ -38,7 +38,7 @@ orbital WebhookOrbital {
     state idle {
       INIT -> idle
 
-      WEBHOOK_SEND -> sending when (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event ""))
+      WEBHOOK_SEND -> sending when (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= (default (array/nth (str/split @payload.url "/") 2) "") "") (!= @payload.event ""))
         (set @entity.seq (+ @entity.seq 1))
         (set @entity.key (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey))
         (set @entity.url @payload.url)
@@ -48,6 +48,8 @@ orbital WebhookOrbital {
         (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey) })
       WEBHOOK_SEND -> idle when (not (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")))
         (emit WEBHOOK_FAILED { message: "Invalid URL", attempts: 0 })
+      WEBHOOK_SEND -> idle when (and (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")) (= (default (array/nth (str/split @payload.url "/") 2) "") ""))
+        (emit WEBHOOK_FAILED { message: "Invalid URL: no host after the scheme", attempts: 0 })
     }
 
     state sending {

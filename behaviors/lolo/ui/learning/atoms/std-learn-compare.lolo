@@ -64,8 +64,8 @@ orbital CompareOrbital {
                 )
                 { x: @x, y: @yVal }))))
             (allSamples (array/concat @leftSamples @rightSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
             (lMid (if (== @kind "power") (* @lA (default (math/pow @xMidV @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
@@ -155,8 +155,8 @@ orbital CompareOrbital {
                 )
                 { x: @x, y: @yVal }))))
             (allSamples (array/concat @leftSamples @rightSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
             (lMid (if (== @kind "power") (* @lA (default (math/pow @xMidV @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
@@ -242,8 +242,8 @@ orbital CompareOrbital {
                 )
                 { x: @x, y: @yVal }))))
             (allSamples (array/concat @leftSamples @rightSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (default (array/nth @allSamples 0) { x: 0, y: 0 }) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (lMid (if (== @kind "power") (* @lA (default (math/pow @entity.xMid @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @entity.xMid)) (* @lA (math/sin (* @lB @entity.xMid))))))
             (rMid (if (== @kind "power") (* @rA (default (math/pow @entity.xMid @rB) 0)) (if (== @kind "linear") (+ @rA (* @rB @entity.xMid)) (* @rA (math/sin (* @rB @entity.xMid))))))
@@ -306,7 +306,7 @@ orbital CompareOrbital {
       SET_PARAM {
         side : string
         which : string
-        value : number
+        value : number!
       }
         @description "Learner dragged one of the four sliders — side names the compared instance (left or right), which names the parameter (A or B), value is the new setting; both curves and the delta recompute immediately."
         @tier "domain"

@@ -129,9 +129,7 @@ orbital NotifyOnEventOrbital {
       NOTIFY_PREFS_LOADED -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "NotificationPreference has " ?totalCount " rows, over the maxPreferenceRows cap of " @config.maxPreferenceRows) })
       NOTIFY_PREFS_LOADED -> idle
-        (set @entity.prefMode (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "instant" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) mode)))
-        (set @entity.prefChannel (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) channel)))
-        (set @entity.prefQuietHours (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) quietHours)))
+        (let ((m (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))))) (do (set @entity.prefMode (if (= @m null) "instant" (object/get @m mode))) (set @entity.prefChannel (if (= @m null) "" (object/get @m channel))) (set @entity.prefQuietHours (if (= @m null) "" (object/get @m quietHours)))))
         (set @entity.channel (if (= @entity.prefChannel "") @entity.channel @entity.prefChannel))
         (if (= @entity.prefMode "off") (persist create NotificationRecord {
           channel: @entity.channel
@@ -149,7 +147,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)) (if (< (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2))))) (persist create NotificationRecord {
+        }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (if (< (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -188,9 +186,7 @@ orbital NotifyOnEventOrbital {
       NOTIFY_PUSH_SUBS -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
       NOTIFY_PUSH_SUBS -> idle
-        (set @entity.pushEndpoint (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) endpoint)))
-        (set @entity.pushP256dh (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) p256dh)))
-        (set @entity.pushAuth (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) auth)))
+        (let ((m (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))))) (do (set @entity.pushEndpoint (if (= @m null) "" (object/get @m endpoint))) (set @entity.pushP256dh (if (= @m null) "" (object/get @m p256dh))) (set @entity.pushAuth (if (= @m null) "" (object/get @m auth)))))
         (if (= @entity.pushEndpoint "") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false

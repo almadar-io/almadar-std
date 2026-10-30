@@ -81,9 +81,9 @@ orbital OrbLintCircuitClientBoundOrbital {
                 (opSet (default (object/fromEntries (array/map @config.failureOps (fn x [(str/replaceAll @x "/" "~s"), true]))) {})))
             (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
               (let ((trs0 : [CbTrait] (object/get @o "traits" @notd)))
-                (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine")))))
+                (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (default (array/nth @trs0 @i) {}) "stateMachine")))))
                   (let ((kids : [CbKid] (array/map @inlK (fn ti
-                          (let ((t (array/nth @trs0 @ti)) (gt (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nos) (quote "@trait"))))
+                          (let ((t (default (array/nth @trs0 @ti) {})) (gt (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nos) (quote "@trait"))))
                             { n: (object/get @t "name" ""),
                               ch: (if (not @gt) @nos
                                     (array/unique (array/filter
@@ -97,7 +97,7 @@ orbital OrbLintCircuitClientBoundOrbital {
                           (mounted (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn o2 (array/flatten (array/map (object/get @o2 "pages" @nopg) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))))) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
                           (isprog (or (> (array/len (object/get @o "pages" @nopg)) 0) (> (array/len (array/filter (object/get @entity.program "orbitals" []) (fn x (not (object/get @x "spec" false))))) 1))))
                       (array/flatten (array/map @inlK (fn ti
-                        (let ((t (array/nth @trs0 @ti)))
+                        (let ((t (default (array/nth @trs0 @ti) {})))
                           (if (not (array/includes @bound (object/get @t "name" ""))) (let ((tn (object/get @t "name" "")) (on (object/get @o "name" "")) (nt (array/len (object/get @t "stateMachine.transitions" @notr))))
                             (if (or (not @isprog) (= @nt 0) (array/includes @mounted @tn)) @nof
                               (let ((tp (str/concat "orbitals[" @oi " (" @on ")].traits[" @ti " (" @tn ")]"))
@@ -105,13 +105,13 @@ orbital OrbLintCircuitClientBoundOrbital {
                                     (pgs (object/get @o "pages" @nopg)))
                                 (let ((ch (if (= @kd null) @nos (object/get @kd "ch"))))
                                   (let ((paths (array/map (array/filter @pgs (fn p (array/some (object/get @p "traits" @nor) (fn r (array/includes @ch (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))) (fn p (object/get @p "path" "")))))
-                                    [{ code: @config.codes.tTraitUnmounted.code, path: @tp, message: (str/concat "'" @on "." @tn "' owns a state machine (" @nt " transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it — nothing mounts it, so it can never handle an event in the shipped app"), suggestion: (if (= (array/len @paths) 0) (str/concat "declare " @tn " on a page — its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> " @tn "` — or embed it in a mounted trait's render-ui as @trait." @tn) (str/concat "add " @tn " to the page decl already mounting one of its embedded children (" (str/join @paths ", ") "): " (str/join (array/map @paths (fn pa (let ((pg (array/find @pgs (fn p (= (object/get @p "path" "") @pa))))) (str/concat "page \"" @pa "\" as " (object/get @pg "name" "") " -> " (str/join (array/concat [@tn] (array/map (object/get @pg "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))) ", "))))) "; "))), severity: "error" }])))))
+                                    [{ code: @config.codes.tTraitUnmounted.code, path: @tp, message: (str/concat "'" @on "." @tn "' owns a state machine (" @nt " transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it — nothing mounts it, so it can never handle an event in the shipped app"), suggestion: (if (= (array/len @paths) 0) (str/concat "declare " @tn " on a page — its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> " @tn "` — or embed it in a mounted trait's render-ui as @trait." @tn) (str/concat "add " @tn " to the page decl already mounting one of its embedded children (" (str/join @paths ", ") "): " (str/join (array/map @paths (fn pa (let ((pg (default (array/find @pgs (fn p (= (object/get @p "path" "") @pa))) {}))) (str/concat "page \"" @pa "\" as " (object/get @pg "name" "") " -> " (str/join (array/concat [@tn] (array/map (object/get @pg "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))) ", "))))) "; "))), severity: "error" }])))))
                             (let ((tn (object/get @t "name" "")) (on (object/get @o "name" "")))
                               (let ((tp (str/concat "orbitals[" @oi " (" @on ")].traits[" @ti " (" @tn ")]"))
                                     (trs : [CbTransition] (object/get @t "stateMachine.transitions" @notr))
                                     (reported (array/concat (array/map (object/get @t "emits" @noem) (fn e (object/get @e "event" ""))) (array/flatten (array/map (object/get @t "stateMachine.events" @noev) (fn ev (let ((ib (object/get @ev "inbound" null))) (if (validate/object @ib) (array/append @nos (object/get @ib "answers" "")) @nos))))))))
                                 (let ((tl : [CbTr] (array/map (array/range 0 (array/len @trs)) (fn n0
-                                        (let ((x (array/nth @trs @n0)))
+                                        (let ((x (default (array/nth @trs @n0) {})))
                                           (let ((fr (object/get @x "from" "")) (effs (object/get @x "effects" [])))
                                             { f: (if (validate/string @fr) (array/append @nos @fr) @fr),
                                               e: (object/get @x "event" ""),
@@ -149,7 +149,7 @@ orbital OrbLintCircuitClientBoundOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CbProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CbProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
@@ -188,10 +188,10 @@ orbital OrbLintCircuitClientBoundOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-client-bound <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

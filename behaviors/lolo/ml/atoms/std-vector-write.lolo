@@ -1,7 +1,7 @@
 app std-vector-write [
   version: "1.0.0",
   description: "std-vector-write — write embedding vectors into an ORBVEC user store the way insert_many does. VECTOR_WRITE { path, anchor, model, records } quantizes through std-vector-quantize, creates the directory, takes the writer lock path.lock by exclusive create, reads the store, has std-vector-store validate it, refuses a model or dims that differ from the stored ones (ORB_VECTOR_MODEL_MISMATCH, ORB_VECTOR_DIMS_MISMATCH), merges (an incoming record wins a shared key, a later incoming duplicate wins an earlier one), keeps strictly ascending key order by inserting the sorted incoming records into the existing ones with a binary search, writes path.tmp and renames it over the store, then removes the lock. The store is addressed under the anchor the caller declares, the way std-vector-sources reads it: `anchor` is `env` for the directory ALMADAR_VECTORS_DIR names (each file by its base name under that anchor) and `home` for ~/.almadar/vectors; `path` is the same file as an absolute path, used in messages and answers only. VECTOR_WRITTEN { path, count } carries the total records; VECTOR_WRITE_REFUSED { code, detail } carries any refusal after the lock was released. A held lock is waited on with the Rust backoff (5 ms doubling to 100 ms, delayed through std-delay whose resolution is its 100 ms deadline check) until 180 s, then ORB_VECTOR_LOCKED; a lock older than 120 s or whose recorded pid is gone (kill -0) is renamed aside and removed.",
-  fs: { "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  fs: { "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-write"
@@ -14,18 +14,13 @@ uses BigCmp from "std/behaviors/std-bigcmp"
 
 type VecRecord = { text : string!, vector : [number]! }
 type PlanStep = { row : bytes!, pos : number!, eq : number! }
-type StoreAnchor = { env : string! }
-type StorePath = string | { anchor : StoreAnchor!, path : string }
 
 orbital VectorWriteOrbital {
   entity VectorWriteRun [runtime] {
     id : string!
     path : string = ""
-    dirAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
-    at : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
-    lockAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
-    staleAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
-    tmpAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
+    viaEnv : boolean = false
+    rel : string = ""
     model : string = ""
     dims : number = 0
     rows : [bytes] = []
@@ -97,13 +92,12 @@ orbital VectorWriteOrbital {
     initial: idle
 
     state idle {
-      VECTOR_WRITE -> quantizing
+      VECTOR_WRITE -> idle when (or (!= @payload.path (os/path-base @payload.path)) (== (os/path-base @payload.path) "") (== (os/path-base @payload.path) ".") (== (os/path-base @payload.path) ".."))
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat "the store path " @payload.path " is not a plain relative file name") })
+      VECTOR_WRITE -> quantizing when (not (or (!= @payload.path (os/path-base @payload.path)) (== (os/path-base @payload.path) "") (== (os/path-base @payload.path) ".") (== (os/path-base @payload.path) "..")))
         (set @entity.path @payload.path)
-        (set @entity.dirAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } } "~/.almadar/vectors"))
-        (set @entity.at (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (os/path-base @payload.path) } (str/concat "~/.almadar/vectors/" (os/path-base @payload.path))))
-        (set @entity.lockAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".lock") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".lock"))))
-        (set @entity.staleAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".lock.stale") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".lock.stale"))))
-        (set @entity.tmpAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".tmp") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".tmp"))))
+        (set @entity.viaEnv (== @payload.anchor "env"))
+        (set @entity.rel (os/path-base @payload.path))
         (set @entity.model @payload.model)
         (set @entity.existing (bytes/from-string ""))
         (set @entity.pendingCode "")
@@ -115,16 +109,16 @@ orbital VectorWriteOrbital {
       QUANTIZED -> preparing
         (set @entity.rows @payload.rows)
         (set @entity.dims @payload.dims)
-        (os/mkdir @entity.dirAt true { emit: { success: DIR_READY, failure: IO_FAILED } })
+        (if @entity.viaEnv (os/mkdir { anchor: { env: "ALMADAR_VECTORS_DIR" } } true { emit: { success: DIR_READY, failure: IO_FAILED } }) (os/mkdir "~/.almadar/vectors" true { emit: { success: DIR_READY, failure: IO_FAILED } }))
       QUANTIZE_REFUSED -> idle
         (emit VECTOR_WRITE_REFUSED { code: @payload.code, detail: @payload.detail })
     }
 
     state preparing {
       DIR_READY -> locking
-        (set @entity.lockStart (time/diff @now (time/parse "1970-01-01T00:00:00Z")))
+        (set @entity.lockStart (time/diff @now @config.epoch))
         (set @entity.wait 5)
-        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (if @entity.viaEnv (os/open { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }) (os/open (str/concat "~/.almadar/vectors/" @entity.rel ".lock") "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }))
       IO_FAILED -> idle
         (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ": " @payload.error) })
     }
@@ -133,7 +127,7 @@ orbital VectorWriteOrbital {
       LOCK_TAKEN -> locked
         (os/close @payload.fd { emit: { success: FD_CLOSED, failure: FD_CLOSED } })
       LOCK_FAILED -> statting when (== @payload.kind "exists")
-        (os/stat @entity.lockAt { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } })
+        (if @entity.viaEnv (os/stat { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } }) (os/stat (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } }))
       LOCK_FAILED -> idle when (!= @payload.kind "exists")
         (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ".lock: " @payload.error) })
     }
@@ -145,33 +139,33 @@ orbital VectorWriteOrbital {
 
     state pidding {
       PID_READ -> stamping
-        (os/write-file @entity.lockAt (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+        (if @entity.viaEnv (os/write-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } }) (os/write-file (str/concat "~/.almadar/vectors/" @entity.rel ".lock") (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } }))
       PID_FAILED -> stamping
-        (os/write-file @entity.lockAt (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+        (if @entity.viaEnv (os/write-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } }) (os/write-file (str/concat "~/.almadar/vectors/" @entity.rel ".lock") (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } }))
     }
 
     state stamping {
       LOCK_STAMPED -> reading
-        (os/read-file @entity.at { emit: { success: STORE_READ, failure: STORE_READ_FAILED } })
+        (if @entity.viaEnv (os/read-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: @entity.rel } { emit: { success: STORE_READ, failure: STORE_READ_FAILED } }) (os/read-file (str/concat "~/.almadar/vectors/" @entity.rel) { emit: { success: STORE_READ, failure: STORE_READ_FAILED } }))
     }
 
     state statting {
-      LOCK_STATTED -> breaking when (>= (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @payload.mtime) 120000)
+      LOCK_STATTED -> breaking when (>= (- (time/diff @now @config.epoch) @payload.mtime) 120000)
         (emit LOCK_STALE { reason: "age" })
-      LOCK_STATTED -> checking when (< (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @payload.mtime) 120000)
-        (os/read-file @entity.lockAt { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } })
+      LOCK_STATTED -> checking when (< (- (time/diff @now @config.epoch) @payload.mtime) 120000)
+        (if @entity.viaEnv (os/read-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } }) (os/read-file (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } }))
       LOCK_BUSY -> backoff
         (emit LOCK_RETRY { })
     }
 
     state checking {
-      LOCK_PID_READ -> backoff when (let ((text (bytes/to-string @payload.data))) (or (== @text null) (== (str/to-int (array/first (str/split @text " "))) null)))
+      LOCK_PID_READ -> backoff when (let ((text (bytes/to-string @payload.data))) (or (== @text null) (== (str/to-int (str/join (array/take (str/split @text " ") 1) "")) null)))
         (emit LOCK_RETRY { })
-      LOCK_PID_READ -> probing when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (str/to-int (array/first (str/split @text " "))) null)))
+      LOCK_PID_READ -> probing when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (str/to-int (str/join (array/take (str/split @text " ") 1) "")) null)))
         (let ((text (bytes/to-string @payload.data)))
           (if (== @text null)
             (emit LOCK_RETRY { })
-            (let ((pid (str/to-int (array/first (str/split @text " ")))))
+            (let ((pid (str/to-int (str/join (array/take (str/split @text " ") 1) ""))))
               (do
                 (set @entity.lockPid @pid)
                 (os/spawn "kill" ["-0" (str/concat @pid)] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } })))))
@@ -182,7 +176,7 @@ orbital VectorWriteOrbital {
     state probing {
       KILL_SPAWNED -> probing
         (os/wait @payload.pid { emit: { success: KILL_EXITED, failure: KILL_SPAWN_FAILED } })
-      KILL_EXITED -> breaking when (and (!= @payload.code null) (> @payload.code 0))
+      KILL_EXITED -> breaking when (> (default @payload.code 0) 0)
         (emit LOCK_STALE { reason: "pid" })
       KILL_EXITED -> backoff when (or (== @payload.code null) (<= @payload.code 0))
         (emit LOCK_RETRY { })
@@ -192,27 +186,27 @@ orbital VectorWriteOrbital {
 
     state breaking {
       LOCK_STALE -> breaking
-        (os/rename @entity.lockAt @entity.staleAt { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } })
+        (if @entity.viaEnv (os/rename { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock.stale") } { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } }) (os/rename (str/concat "~/.almadar/vectors/" @entity.rel ".lock") (str/concat "~/.almadar/vectors/" @entity.rel ".lock.stale") { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } }))
       LOCK_ASIDE -> unlocking
-        (os/remove @entity.staleAt { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock.stale") } { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock.stale") { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } }))
     }
 
     state unlocking {
       STALE_REMOVED -> locking
-        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (if @entity.viaEnv (os/open { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }) (os/open (str/concat "~/.almadar/vectors/" @entity.rel ".lock") "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }))
     }
 
     state backoff {
-      LOCK_RETRY -> idle when (>= (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) 180000)
-        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_LOCKED", detail: (str/concat @entity.path ".lock stayed locked for " (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) " ms (another session is writing; if none is, delete the lock file)") })
-      LOCK_RETRY -> waiting when (< (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) 180000)
+      LOCK_RETRY -> idle when (>= (- (time/diff @now @config.epoch) @entity.lockStart) 180000)
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_LOCKED", detail: (str/concat @entity.path ".lock stayed locked for " (- (time/diff @now @config.epoch) @entity.lockStart) " ms (another session is writing; if none is, delete the lock file)") })
+      LOCK_RETRY -> waiting when (< (- (time/diff @now @config.epoch) @entity.lockStart) 180000)
         (emit LOCK_WAIT { delayMs: @entity.wait })
         (set @entity.wait (math/min (* @entity.wait 2) 100))
     }
 
     state waiting {
       ELAPSED -> locking
-        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (if @entity.viaEnv (os/open { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }) (os/open (str/concat "~/.almadar/vectors/" @entity.rel ".lock") "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } }))
     }
 
     state reading {
@@ -225,43 +219,43 @@ orbital VectorWriteOrbital {
       STORE_READ_FAILED -> releasing when (!= @payload.kind "not-found")
         (set @entity.pendingCode "ORB_VECTOR_IO")
         (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
     }
 
     state validating {
       VECTOR_RESOLVED -> merging
-        (set @entity.emodel (let ((mlen (bytes/read-uint @entity.existing 8 2 "le"))) (if (and (> (bytes/length @entity.existing) 0) (validate/required @mlen)) (bytes/to-string (bytes/slice @entity.existing 10 (+ 10 @mlen))) "")))
+        (set @entity.emodel (let ((mlen (bytes/read-uint @entity.existing 8 2 "le"))) (if (and (> (bytes/length @entity.existing) 0) (validate/required @mlen)) (default (bytes/to-string (bytes/slice @entity.existing 10 (+ 10 @mlen))) "") "")))
         (set @entity.eoff (let ((mlen (bytes/read-uint @entity.existing 8 2 "le"))) (if (and (> (bytes/length @entity.existing) 0) (validate/required @mlen)) (+ 16 @mlen) 0)))
-        (set @entity.edims (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") 0))
-        (set @entity.ecount (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") 0))
-        (set @entity.unreadable (or (and (> (bytes/length @entity.existing) 0) (not (validate/required (bytes/read-uint @entity.existing 8 2 "le")))) (array/some @entity.rows (fn r (not (validate/required (bytes/read-uint (bytes/slice @r 0 32) 28 4 "be"))))) (array/some (array/range 0 @entity.ecount) (fn m (not (validate/required (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @m (+ 36 @entity.edims))) (+ @entity.eoff (* @m (+ 36 @entity.edims)) 32)) 28 4 "be")))))))
+        (set @entity.edims (if (> (bytes/length @entity.existing) 0) (default (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") 0) 0))
+        (set @entity.ecount (if (> (bytes/length @entity.existing) 0) (default (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") 0) 0))
+        (set @entity.unreadable (or (and (> (bytes/length @entity.existing) 0) (or (not (validate/required (bytes/read-uint @entity.existing 8 2 "le"))) (== (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") null) (== (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") null) (== (bytes/to-string (bytes/slice @entity.existing 10 (- @entity.eoff 6))) null))) (array/some @entity.rows (fn r (not (validate/required (bytes/read-uint (bytes/slice @r 0 32) 28 4 "be"))))) (array/some (array/range 0 @entity.ecount) (fn m (not (validate/required (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @m (+ 36 @entity.edims))) (+ @entity.eoff (* @m (+ 36 @entity.edims)) 32)) 28 4 "be")))))))
         (emit CHECKED { })
       VECTOR_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)
         (set @entity.pendingDetail @payload.detail)
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
     }
 
     state merging {
       HEADER_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)
         (set @entity.pendingDetail @payload.detail)
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       CHECKED -> releasing when @entity.unreadable
         (set @entity.pendingCode "ORB_VECTOR_CORRUPT")
         (set @entity.pendingDetail (str/concat @entity.path ": a record key could not be read"))
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (!= @entity.emodel @entity.model))
         (set @entity.pendingCode "ORB_VECTOR_MODEL_MISMATCH")
         (set @entity.pendingDetail (str/concat @entity.emodel " vs " @entity.model " — vectors from different embedding models are not comparable"))
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (== @entity.emodel @entity.model) (!= @entity.edims @entity.dims))
         (set @entity.pendingCode "ORB_VECTOR_DIMS_MISMATCH")
         (set @entity.pendingDetail (str/concat "model " @entity.model " has " @entity.edims " dims in one store and " @entity.dims " in the other"))
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       CHECKED -> writing when (and (not @entity.unreadable) (or (== @entity.emodel "") (and (== @entity.emodel @entity.model) (== @entity.edims @entity.dims))))
-        (set @entity.kept (array/filter (array/range 0 (array/len @entity.rows)) (fn i (not (array/some (array/range (+ @i 1) (array/len @entity.rows)) (fn j (bytes/equals (bytes/slice (array/nth @entity.rows @i) 0 32) (bytes/slice (array/nth @entity.rows @j) 0 32))))))))
-        (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (array/nth @entity.rows @j) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (array/nth @entity.rows @i) 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (array/nth @entity.rows (object/get (array/find @rk (fn z (== @z.r @r))) "i"))))))
+        (set @entity.kept (array/filter (array/range 0 (array/len @entity.rows)) (fn i (not (array/some (array/range (+ @i 1) (array/len @entity.rows)) (fn j (bytes/equals (bytes/slice (default (array/nth @entity.rows @i) (bytes/from-string "")) 0 32) (bytes/slice (default (array/nth @entity.rows @j) (bytes/from-string "")) 0 32))))))))
+        (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (default (array/nth @entity.rows @j) (bytes/from-string "")) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (default (array/nth @entity.rows @i) (bytes/from-string "")) 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (default (array/nth @entity.rows (object/get (default (array/find @rk (fn z (== @z.r @r))) { i: 0, r: 0 }) "i")) (bytes/from-string ""))))))
         (set @entity.plan (array/map @entity.sorted (fn row (let ((lo (object/get (array/reduce (array/range 0 34) { lo: 0, hi: @entity.ecount } (fn sa sj (if (>= @sa.lo @sa.hi) @sa (let ((mid (math/floor (/ (+ @sa.lo @sa.hi) 2)))) (if (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @mid (+ 36 @entity.edims))) (+ @entity.eoff (* @mid (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0) { lo: (+ @mid 1), hi: @sa.hi } { lo: @sa.lo, hi: @mid }))))) "lo"))) { row: @row, pos: @lo, eq: (if (and (< @lo @entity.ecount) (== (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @lo (+ 36 @entity.edims))) (+ @entity.eoff (* @lo (+ 36 @entity.edims)) 32)) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice @row 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)) 1 0) }))))
         (set @entity.total (- (+ @entity.ecount (array/len @entity.sorted)) (array/reduce @entity.plan 0 (fn ta tp (+ @ta @tp.eq)))))
         (let ((end (array/reduce @entity.plan { parts: [], cur: 0 } (fn pa pl { parts: (array/concat @pa.parts [(bytes/slice @entity.existing (+ @entity.eoff (* @pa.cur (+ 36 @entity.edims))) (+ @entity.eoff (* @pl.pos (+ 36 @entity.edims)))) @pl.row]), cur: (+ @pl.pos @pl.eq) }))) (ver (bytes/write-uint 1 2 "le")) (mlen (bytes/write-uint (bytes/length (bytes/from-string @entity.model)) 2 "le")) (dm (bytes/write-uint @entity.dims 2 "le")) (cnt (bytes/write-uint @entity.total 4 "le")))
@@ -274,21 +268,21 @@ orbital VectorWriteOrbital {
 
     state writing {
       MERGED -> renaming
-        (os/write-file @entity.tmpAt @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } })
+        (if @entity.viaEnv (os/write-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".tmp") } @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } }) (os/write-file (str/concat "~/.almadar/vectors/" @entity.rel ".tmp") @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } }))
     }
 
     state renaming {
       TMP_WRITTEN -> releasing
-        (os/rename @entity.tmpAt @entity.at { emit: { success: RENAMED, failure: WRITE_FAILED } })
+        (if @entity.viaEnv (os/rename { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".tmp") } { anchor: { env: "ALMADAR_VECTORS_DIR" } path: @entity.rel } { emit: { success: RENAMED, failure: WRITE_FAILED } }) (os/rename (str/concat "~/.almadar/vectors/" @entity.rel ".tmp") (str/concat "~/.almadar/vectors/" @entity.rel) { emit: { success: RENAMED, failure: WRITE_FAILED } }))
       WRITE_FAILED -> releasing
         (set @entity.pendingCode "ORB_VECTOR_IO")
         (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
     }
 
     state releasing {
       RENAMED -> releasing
-        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       LOCK_REMOVED -> idle when (!= @entity.pendingCode "")
         (emit VECTOR_WRITE_REFUSED { code: @entity.pendingCode, detail: @entity.pendingDetail })
       LOCK_REMOVED -> idle when (== @entity.pendingCode "")
@@ -387,6 +381,12 @@ orbital VectorWriteOrbital {
       }
         @description "ORB_VECTOR_BAD_MODEL, BAD_RECORD, LOCKED, IO, MODEL_MISMATCH, DIMS_MISMATCH or a store validation code."
         @tier "primary"
+    }
+
+    config {
+      epoch : datetime = "1970-01-01T00:00:00Z"
+        @label "Epoch"
+        @description "The instant the lock clock counts from: lock ages and waits are millisecond differences against it."
     }
 
     listens {

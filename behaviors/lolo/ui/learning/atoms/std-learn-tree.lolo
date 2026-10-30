@@ -210,7 +210,7 @@ orbital LearnTreeOrbital {
         (set @entity.done false)
         (if (not @entity.descending)
           (let (
-              (v (array/nth @entity.values @entity.cursor))
+              (v (default (array/nth @entity.values @entity.cursor) 0))
             )
             (if (== @entity.count 0)
               (do
@@ -224,9 +224,9 @@ orbital LearnTreeOrbital {
                 (set @entity.pending @v)
                 (set @entity.descending true)
                 (set @entity.trail [])
-                (set @entity.curId (object/get (array/first @entity.entries) id))
-                (set @entity.curVal (object/get (array/first @entity.entries) value))
-                (set @entity.curRank (object/get (array/first @entity.entries) rank))
+                (set @entity.curId (object/get (default (array/first @entity.entries) { id: "", value: 0, rank: 0 }) id))
+                (set @entity.curVal (object/get (default (array/first @entity.entries) { id: "", value: 0, rank: 0 }) value))
+                (set @entity.curRank (object/get (default (array/first @entity.entries) { id: "", value: 0, rank: 0 }) rank))
                 (set @entity.curRankOffset 150)
                 (set @entity.depth 0)
                 (set @entity.cursor (+ @entity.cursor 1))
@@ -246,7 +246,7 @@ orbital LearnTreeOrbital {
                 (set @entity.narration (str/concat (if @config.showComparisons (str/concat @cmpText " — ") "") "attach " (str/concat "" @entity.pending) " as a leaf" (if @config.balanced (str/concat " · height " (str/concat "" (+ @newMax 1)) " for " (str/concat "" @newCount) " nodes") "")))
                 (set @entity.nodes (array/append @entity.nodes { id: @newId, label: (str/concat "" @entity.pending), state: "visited" }))
                 (set @entity.edges (array/append @entity.edges { from: @entity.curId, to: @newId, directed: true, label: @side, state: "tree" }))
-                (set @entity.entries (array/append @entity.entries { id: @newId, value: @entity.pending, rank: @newRank, path: (str/concat (object/get (array/find @entity.entries (fn t (== (object/get @t id) @entity.curId))) path) @side), levelKey: (+ (* @newDepth 10000) @newRank) }))
+                (set @entity.entries (array/append @entity.entries { id: @newId, value: @entity.pending, rank: @newRank, path: (str/concat (default (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) @entity.curId))) { id: "", value: 0, rank: 0 }) path) "") @side), levelKey: (+ (* @newDepth 10000) @newRank) }))
                 (set @entity.count @newCount)
                 (set @entity.maxDepth @newMax)
                 (set @entity.descending false)
@@ -255,8 +255,8 @@ orbital LearnTreeOrbital {
                 (set @entity.narration (str/concat (if @config.showComparisons (str/concat @cmpText " — ") "") "descend " (if (== @side "L") "left" "right")))
                 (set @entity.trail (array/append @entity.trail @entity.curId))
                 (set @entity.curId (object/get @child to))
-                (set @entity.curVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) value))
-                (set @entity.curRank (object/get (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) rank))
+                (set @entity.curVal (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) { id: "", value: 0, rank: 0 }) value))
+                (set @entity.curRank (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) { id: "", value: 0, rank: 0 }) rank))
                 (set @entity.curRankOffset (/ @entity.curRankOffset 2))
                 (set @entity.depth @newDepth)))))
         (set @entity.nodes (array/map @entity.nodes (fn n
@@ -298,8 +298,8 @@ orbital LearnTreeOrbital {
 
       DELETE_VALUE -> idle when (and (== @entity.active true) (> @entity.count 0))
         (let (
-            (lastId (object/get (array/last @entity.entries) id))
-            (lastVal (object/get (array/last @entity.entries) value))
+            (lastId (object/get (default (array/last @entity.entries) { id: "", value: 0, rank: 0 }) id))
+            (lastVal (object/get (default (array/last @entity.entries) { id: "", value: 0, rank: 0 }) value))
           )
           (do
             (set @entity.nodes (array/filter @entity.nodes (fn n (!= (object/get @n id) @lastId))))
@@ -351,10 +351,10 @@ orbital LearnTreeOrbital {
                         (if (== @config.traversalKind "levelorder")
                           (array/map (array/sort @entity.entries "levelKey" "asc") (fn t (object/get @t id)))
                           (array/map (array/sort @entity.entries "value" "asc") (fn t (object/get @t id))))))
-              (firstId (array/first @order))
+              (firstId (default (array/first @order) ""))
             )
             (let (
-                (firstVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) value))
+                (firstVal (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) { id: "", value: 0, rank: 0 }) value))
               )
               (do
                 (set @entity.traversalOrder @order)
@@ -363,7 +363,7 @@ orbital LearnTreeOrbital {
                 (set @entity.done (== (array/len @order) 1))
                 (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/concat "" @firstVal))))))
           (let (
-              (nextId (array/nth @entity.traversalOrder (array/len @entity.sweptIds)))
+              (nextId (default (array/nth @entity.traversalOrder (array/len @entity.sweptIds)) ""))
             )
             (let (
                 (newSwept (array/append @entity.sweptIds @nextId))
@@ -371,7 +371,7 @@ orbital LearnTreeOrbital {
               (do
                 (set @entity.sweptIds @newSwept)
                 (set @entity.done (>= (array/len @newSwept) (array/len @entity.traversalOrder)))
-                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (array/find @entity.entries (fn t (== (object/get @t id) @sid))) value)))) ", ")))))))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) @sid))) { id: "", value: 0, rank: 0 }) value)))) ", ")))))))
         (set @entity.nodes (array/map @entity.nodes (fn n
           (object/merge @n {
             state: (if (and (== @entity.traversing true) (array/includes @entity.sweptIds (object/get @n id))) "path" "visited")
@@ -488,10 +488,10 @@ orbital LearnTreeOrbital {
                         (if (== @config.traversalKind "levelorder")
                           (array/map (array/sort @entity.entries "levelKey" "asc") (fn t (object/get @t id)))
                           (array/map (array/sort @entity.entries "value" "asc") (fn t (object/get @t id))))))
-              (firstId (array/first @order))
+              (firstId (default (array/first @order) ""))
             )
             (let (
-                (firstVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) value))
+                (firstVal (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) { id: "", value: 0, rank: 0 }) value))
               )
               (do
                 (set @entity.traversalOrder @order)
@@ -500,7 +500,7 @@ orbital LearnTreeOrbital {
                 (set @entity.done (== (array/len @order) 1))
                 (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/concat "" @firstVal))))))
           (let (
-              (nextId (array/nth @entity.traversalOrder (array/len @entity.sweptIds)))
+              (nextId (default (array/nth @entity.traversalOrder (array/len @entity.sweptIds)) ""))
             )
             (let (
                 (newSwept (array/append @entity.sweptIds @nextId))
@@ -508,7 +508,7 @@ orbital LearnTreeOrbital {
               (do
                 (set @entity.sweptIds @newSwept)
                 (set @entity.done (>= (array/len @newSwept) (array/len @entity.traversalOrder)))
-                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (array/find @entity.entries (fn t (== (object/get @t id) @sid))) value)))) ", ")))))))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (default (array/find @entity.entries (fn t (== (object/get @t id) @sid))) { id: "", value: 0, rank: 0 }) value)))) ", ")))))))
         (set @entity.nodes (array/map @entity.nodes (fn n
           (object/merge @n {
             state: (if (and (== @entity.traversing true) (array/includes @entity.sweptIds (object/get @n id))) "path" "visited")

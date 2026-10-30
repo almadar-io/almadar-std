@@ -8,20 +8,20 @@ orbital MigrationJobOrbital {
   type MigrationFile = { name : string, size : number, type : string, lastModified : number }
   type ImportSourceOption = { id : string!, kind : string!, label : string!, event : string }
   type ImportFieldValue = string | number | boolean
-  type ImportUnit = { ref : string!, targetEntity : string!, title : string?, fields : Map string ImportFieldValue, parentRef : string? }
+  type ImportUnit = { ref : string!, targetEntity : string!, title : string?, fields : Map string ImportFieldValue!, parentRef : string? }
   type ImportSkip = { ref : string!, reason : string! }
   type ImportFailure = { ref : string!, reason : string! }
   type ImportValidationError = { ref : string!, code : string!, field : string, message : string! }
   type MigrationStats = { committed : number, failed : [ImportFailure] }
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportDocument = { id : string, title : string, content : string }
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
-  type StagedUnit = { unit : ImportUnit, ledger : [ImportSkip] }
-  type SourceEndpoint = { name : string!, method : "GET" | "POST", path : string!, params : Map string string, headers : Map string string, recordsPath : string }
-  type TargetField = { name : string!, type : string!, required : boolean, hasDefault : boolean, values : [string], slots : number }
-  type TargetEntity = { name : string!, fields : [TargetField] }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa"!, title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue!, source : string!, span : string? }
+  type StagedUnit = { unit : ImportUnit!, ledger : [ImportSkip]! }
+  type SourceEndpoint = { name : string!, method : "GET" | "POST"!, path : string!, params : Map string string, headers : Map string string, recordsPath : string }
+  type TargetField = { name : string!, type : string!, required : boolean!, hasDefault : boolean!, values : [string], slots : number }
+  type TargetEntity = { name : string!, fields : [TargetField]! }
   type TargetRelation = { type : string!, from : string!, to : string! }
-  type SourceProfile = { id : string, adapter : string, accessKind : "http" | "database", endpoints : [SourceEndpoint], shaping : Map string string, unitTargets : Map string string, fieldMappings : Map string (Map string string), targetEntities : [TargetEntity], targetRelations : [TargetRelation] }
+  type SourceProfile = { id : string!, adapter : string!, accessKind : "http" | "database"!, endpoints : [SourceEndpoint]!, shaping : Map string string!, unitTargets : Map string string!, fieldMappings : Map string (Map string string)!, targetEntities : [TargetEntity]!, targetRelations : [TargetRelation]! }
   type SourceRecord = Map string ImportFieldValue
   type SourceRecords = [SourceRecord]
   type SourceEnvelope = Map string SourceRecords
@@ -32,8 +32,9 @@ orbital MigrationJobOrbital {
     files : [MigrationFile] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
     target : string @description "Name of the host entity this import writes into." = ""
     status : "idle" | "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" @description "Lifecycle position of the run." = idle
-    profile : SourceProfile @description "The stored profile of the run, read once when the run starts." = {}
+    profile : SourceProfile @description "The stored profile of the run, read once when the run starts; the empty profile until then." = { id: "", adapter: "", accessKind: http, endpoints: [], shaping: {}, unitTargets: {}, fieldMappings: {}, targetEntities: [], targetRelations: [] }
     endpointIndex : number @description "Position of the profile endpoint the run is reading." = 0
+    sourceSkipped : [ImportSkip] @description "Source records skipped while shaping documents, with a reason each." = []
     documents : [ImportDocument] @description "Documents shaped from the source records: id, title and verbatim content." = []
     document : ImportDocument @description "Most recently fetched document." = {}
     stats : MigrationStats @description "Committed count and per-unit failures." = {}
@@ -42,7 +43,7 @@ orbital MigrationJobOrbital {
     skipped : [ImportSkip] @description "Source elements skipped during staging with a reason each." @synonyms "skipped rows, skipped elements, staging skips" = []
     validationErrors : [ImportValidationError] @description "Staged rows that do not fit the profile's target entities." @synonyms "staging errors, validation issues, import errors" = []
     error : string @description "Failure detail when status is failed." = ""
-    createdAt : number @description "Run start timestamp." = 0
+    createdAt : instant @description "Run start timestamp." = "1970-01-01T00:00:00Z"
   }
 
   entity MigrationSourceProfile [persistent: migration_source_profiles] {
@@ -109,6 +110,7 @@ orbital MigrationJobOrbital {
           })
         (set @entity.endpointIndex 0)
         (set @entity.documents [])
+        (set @entity.sourceSkipped [])
         (emit MIGRATION_SOURCE_NEXT { index: 0 })
       MIGRATION_PROFILE_LOADED -> failed when (and (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))) (= ?data.accessKind "database"))
         (set @entity.error "database sources are not wired yet: std-postgres can read the rows (PG_QUERY, PG_RESULT), but a database profile declares no queries and the job has no database fetch state")
@@ -149,78 +151,88 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "method") "GET"))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET"))
         (http
           GET
           @config.sourceOrigin
-          (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "path")
+          (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "path")
           {
-            query: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "params"),
-            headers: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "headers" {}),
+            query: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "params"),
+            headers: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "headers" {}),
             auth: { scheme: bearer, credential: @config.connectionRef },
             timeoutMs: @config.timeoutMs
           }
           { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "method") "POST"))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "POST"))
         (http
           POST
           @config.sourceOrigin
-          (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "path")
+          (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "path")
           {
-            query: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "params"),
-            headers: (object/get (array/nth (object/get @entity.profile "endpoints" []) ?index) "headers" {}),
+            query: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "params"),
+            headers: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "headers" {}),
             auth: { scheme: bearer, credential: @config.connectionRef },
             timeoutMs: @config.timeoutMs
           }
           { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
-      MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body))
+      MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (!= (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (validate/string (object/get (object/get @entity.profile "shaping") "title")))
         (set @entity.documents (array/concat @entity.documents
-          (let ((records (if
-                          (=
-                            (object/get
-                              (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
-                              "recordsPath")
-                            "")
-                          (json/parse ?body SourceRecords)
-                          (object/get
-                            (json/parse ?body SourceEnvelope)
-                            (object/get
-                              (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
-                              "recordsPath"))))
+          (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
                 (titleKey (object/get (object/get @entity.profile "shaping") "title"))
-                (contentKey (object/get (object/get @entity.profile "shaping") "content")))
+                (contentKey (object/get (object/get @entity.profile "shaping") "content"))
+                (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
             (if
               (validate/array @records)
               (array/flatten
                 (array/map
-                  (array/range (array/len @records))
-                  (fn i
+                  @records
+                  (fn rec i
+                    (let ((tv (object/get @rec (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")))
+                          (cv (object/get
+                                @rec
+                                (if
+                                  (validate/string @contentKey)
+                                  (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\.")
+                                  ""))))
+                      (if
+                        (validate/string @tv)
+                        [{
+                          id: (str/concat @name ":" @i),
+                          title: @tv,
+                          content: (if (and (validate/string @contentKey) (validate/string @cv)) @cv "")
+                        }]
+                        [])))))
+              []))))
+        (set @entity.sourceSkipped (array/concat @entity.sourceSkipped
+          (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
+                (titleKey (object/get (object/get @entity.profile "shaping") "title"))
+                (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
+            (if
+              (validate/array @records)
+              (array/flatten
+                (array/map
+                  @records
+                  (fn rec i
                     (if
-                      (and (validate/object (array/nth @records @i)) (validate/string @titleKey))
-                      (let ((tv (object/get
-                                  (array/nth @records @i)
-                                  (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")))
-                            (cv (object/get
-                                  (array/nth @records @i)
-                                  (if
-                                    (validate/string @contentKey)
-                                    (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\.")
-                                    "")))
-                            (name (object/get
-                                    (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
-                                    "name")))
-                        (if
-                          (validate/string @tv)
-                          [{
-                            id: (str/concat @name ":" @i),
-                            title: @tv,
-                            content: (if (and (validate/string @contentKey) (validate/string @cv)) @cv "")
-                          }]
-                          []))
-                      []))))
+                      (validate/string (object/get @rec (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")))
+                      []
+                      [{ ref: (str/concat @name ":" @i), reason: "the record has no text under the profile's title key" }]))))
               []))))
         (set @entity.endpointIndex (+ @entity.endpointIndex 1))
         (emit MIGRATION_SOURCE_NEXT { index: @entity.endpointIndex })
+      MIGRATION_SOURCE_REPLIED -> failed when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (or (== (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (not (validate/string (object/get (object/get @entity.profile "shaping") "title")))))
+        (set @entity.error (if (validate/string (object/get (object/get @entity.profile "shaping") "title")) (str/concat "the source's reply does not hold the record array the profile declares at recordsPath '" (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" "") "'") "the profile's shaping declares no title key"))
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't read the source — " @entity.error))
       MIGRATION_SOURCE_REPLIED -> failed when (or (< ?status 200) (>= ?status 300) (not (json/valid ?body)))
         (set @entity.error (if (and (>= ?status 200) (< ?status 300)) "the source answered with a body that is not valid JSON" (str/concat "the source answered with HTTP status " ?status)))
         (set @entity.status failed)
@@ -234,7 +246,7 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (str/concat "Couldn't read the source — " @entity.error))
-      MIGRATION_SOURCE_NEXT -> mapping when (>= ?index (array/len @entity.profile.endpoints))
+      MIGRATION_SOURCE_NEXT -> mapping when (>= ?index (array/len (object/get @entity.profile "endpoints" [])))
         (set @entity.status mapping)
         (emit MIGRATION_FETCHED { documents: @entity.documents })
         (emit
@@ -290,8 +302,12 @@ orbital MigrationJobOrbital {
         (set @entity.staging [])
         (set @entity.endpointIndex 0)
       FETCH_DOCUMENT -> mapping
-        (set @entity.document (array/find @entity.documents (fn d (= (object/get @d id) ?documentId))))
-        (emit MIGRATION_DOCUMENT { document: @entity.document })
+        (let ((found (array/find @entity.documents (fn d (= (object/get @d id) ?documentId)))))
+          (if (== @found null)
+            (notify error (str/concat "No fetched document has the id '" ?documentId "'"))
+            (do
+              (set @entity.document @found)
+              (emit MIGRATION_DOCUMENT { document: @entity.document }))))
       MIGRATION_EXTRACTED -> reviewing
         (set @entity.staging
           (array/map
@@ -311,9 +327,9 @@ orbital MigrationJobOrbital {
                                   ]
                                   (fn s (validate/string (object/get @s "v"))))
                                 (fn s [(object/get @s "k"), (object/get @s "v")])))))
-                (if (= @fe1 null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                (if (= @fe1 null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), fields: {}, parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
                   (let ((slots (object/merge @fe1 (object/get @u "metadata"))))
-                    (if (= @slots null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                    (if (= @slots null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), fields: {}, parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
                       (let ((keys (object/keys @slots))
                     (pairs (array/map
                             (array/filter @keys (fn k (object/has @fm @k)))
@@ -335,9 +351,9 @@ orbital MigrationJobOrbital {
                                (array/map
                                  (array/filter @last (fn p (validate/boolean (object/get @p "v"))))
                                  (fn p [(object/get @p "t"), (object/get @p "v")])))))
-                        (if (or (= @f1 null) (= @f2 null) (= @f3 null)) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                        (if (or (= @f1 null) (= @f2 null) (= @f3 null)) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), fields: {}, parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
                           (let ((merged (object/merge @f1 @f2 @f3)))
-                            (if (= @merged null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                            (if (= @merged null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), fields: {}, parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
 {
                   unit: {
                           ref: (object/get @u "ref"),
@@ -363,7 +379,7 @@ orbital MigrationJobOrbital {
                 })))))))))))
         (set @entity.units
           (array/map @entity.staging (fn s (object/get @s "unit"))))
-        (set @entity.skipped (array/concat ?skipped
+        (set @entity.skipped (array/concat @entity.sourceSkipped ?skipped
           (array/flatten (array/map @entity.staging (fn s (object/get @s "ledger"))))
           (array/flatten
             (array/map
@@ -603,7 +619,7 @@ orbital MigrationJobOrbital {
                                                                  (= (object/get @fd "type") "tuple")
                                                                  (str/concat
                                                                    "expected tuple of "
-                                                                   (object/get @fd "slots")
+                                                                   (default (object/get @fd "slots") 0)
                                                                    ", got "
                                                                    (if
                                                                      (validate/string @val)
@@ -758,6 +774,19 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (str/concat "Couldn't stage the documents — " ?error))
+      MIGRATION_SOURCE_UNREADABLE -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't read the source documents — " ?error))
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
@@ -789,7 +818,7 @@ orbital MigrationJobOrbital {
       MIGRATION_APPROVED -> committing
         (set @entity.status committing)
         (render-ui @config.reviewSlot null)
-        (emit MIGRATION_COMMIT_REQUESTED { jobId: @entity.id, units: (or ?units @entity.units) })
+        (emit MIGRATION_COMMIT_REQUESTED { jobId: @entity.id, units: (default ?units @entity.units) })
       MIGRATION_REJECTED -> mapping
         (set @entity.status mapping)
         (render-ui @config.reviewSlot null)
@@ -1017,6 +1046,11 @@ orbital MigrationJobOrbital {
         error : string!
       }
         @description "The profile's adapter could not read the documents, so the run fails."
+        @tier "internal"
+      MIGRATION_SOURCE_UNREADABLE {
+        error : string!
+      }
+        @description "An adapter found the source's envelope unreadable (the text is not the JSON it documents, or a required top-level field is missing), so the run fails with the reason."
         @tier "internal"
       MIGRATION_STAGED {
         stats : MigrationStats!

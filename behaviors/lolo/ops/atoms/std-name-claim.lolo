@@ -7,7 +7,7 @@ orbital NameClaimOrbital {
   entity NameLock [persistent: name_locks] {
     id : string! @description "The claimed name."
     holder : string! @description "Who holds it."
-    claimedAt : number @description "When it was claimed, in epoch milliseconds."
+    claimedAt : instant @description "When it was claimed (ISO-8601 instant)."
   }
 
   entity NameHolder [persistent: name_holders] {
@@ -84,12 +84,14 @@ orbital NameClaimOrbital {
         (emit NAME_CLAIMED { name: @entity.name, holder: @entity.holder })
       LOCK_LOADED -> idle when (!= @payload.data.holder @entity.holder)
         (emit NAME_CLAIM_FAILED { code: "taken", value: @entity.name, message: (str/concat "\"" @entity.name "\" is taken") })
-      LOCK_ABSENT -> idle when (= @payload.code "not-found")
-        (persist batch (array/flatten [
-          [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }]],
-          (if (and (!= @entity.held "") (!= @entity.held @entity.name)) [["delete", "NameLock", @entity.held]] (array/take [["delete", "NameLock", ""]] 0)),
-          (if @entity.heldRow [["update", "NameHolder", @entity.holder, { name: @entity.name }]] [["create", "NameHolder", { id: @entity.holder, name: @entity.name }]])
-        ]) { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
+      LOCK_ABSENT -> idle when (and (= @payload.code "not-found") (and (!= @entity.held "") (!= @entity.held @entity.name)) @entity.heldRow)
+        (persist batch [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }], ["delete", "NameLock", @entity.held], ["update", "NameHolder", @entity.holder, { name: @entity.name }]] { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
+      LOCK_ABSENT -> idle when (and (= @payload.code "not-found") (and (!= @entity.held "") (!= @entity.held @entity.name)) (not @entity.heldRow))
+        (persist batch [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }], ["delete", "NameLock", @entity.held], ["create", "NameHolder", { id: @entity.holder, name: @entity.name }]] { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
+      LOCK_ABSENT -> idle when (and (= @payload.code "not-found") (not (and (!= @entity.held "") (!= @entity.held @entity.name))) @entity.heldRow)
+        (persist batch [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }], ["update", "NameHolder", @entity.holder, { name: @entity.name }]] { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
+      LOCK_ABSENT -> idle when (and (= @payload.code "not-found") (not (and (!= @entity.held "") (!= @entity.held @entity.name))) (not @entity.heldRow))
+        (persist batch [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }], ["create", "NameHolder", { id: @entity.holder, name: @entity.name }]] { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
       LOCK_ABSENT -> idle when (!= @payload.code "not-found")
         (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
 

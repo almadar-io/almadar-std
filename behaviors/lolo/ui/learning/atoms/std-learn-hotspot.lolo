@@ -45,7 +45,7 @@ orbital HotspotOrbital {
     done : boolean = false
     promptText : string
     targetId : string
-    explanation : string
+    explanation : string = ""
     feedback : string
     canvasShapes : [HotspotCanvasShape]
     view : [node]
@@ -59,7 +59,7 @@ orbital HotspotOrbital {
         (set @entity.shapes @config.shapes)
         (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @entity.prompts 0))
+            (first (default (array/nth @entity.prompts 0) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
@@ -116,7 +116,7 @@ orbital HotspotOrbital {
         (set @entity.shapes @config.shapes)
         (set @entity.prompts @config.prompts)
         (let (
-            (first (array/nth @entity.prompts 0))
+            (first (default (array/nth @entity.prompts 0) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
@@ -169,7 +169,7 @@ orbital HotspotOrbital {
         (set @entity.shapes ?shapes)
         (set @entity.prompts ?prompts)
         (let (
-            (first (array/nth @entity.prompts 0))
+            (first (default (array/nth @entity.prompts 0) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
@@ -227,11 +227,11 @@ orbital HotspotOrbital {
             (tappedId (str/replace (object/get ?payload id "") "label-" ""))
             (hit (== @tappedId @entity.targetId))
             (tapped (array/find @entity.shapes (fn s (== (object/get @s id) @tappedId))))
-            (tappedLabel (object/get @tapped label ""))
+            (tappedLabel (if (== @tapped null) "" (object/get @tapped label "")))
             (target (array/find @entity.shapes (fn s (== (object/get @s id) @entity.targetId))))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
-            (ring (if @hit
+            (ring (if (and @hit (!= @target null))
               [ { type: circle, id: "hit-ring", x: (object/get @target x), y: (object/get @target y), radius: (+ (object/get @target radius 22) 6), tone: @config.hitColor, fillStyle: "outline", stroke: "bold" } ]
               []))
             (newFound (if @hit true false))
@@ -298,7 +298,7 @@ orbital HotspotOrbital {
         (let (
             (nextIndex (+ @entity.promptIndex 1))
             (finished (>= @nextIndex (array/len @entity.prompts)))
-            (next (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))))
+            (next (default (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
@@ -353,7 +353,7 @@ orbital HotspotOrbital {
 
       RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
         (let (
-            (first (array/nth @entity.prompts 0))
+            (first (default (array/nth @entity.prompts 0) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )
@@ -415,7 +415,7 @@ orbital HotspotOrbital {
         @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone), shapes is the hotspot roster and prompts the prompt list; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       TAP_SHAPE {
-        payload : { id : string  type : string  index : number! }
+        payload : { id : string  type : string  index : number! }!
       }
         @description "Learner tapped a shape on the canvas — the canvas callback wraps its click info as payload { id, type, index }; the id names the hotspot (or its label) and the tap is judged against the current prompt's target."
         @tier "domain"

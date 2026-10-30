@@ -6,14 +6,15 @@ uses Spec from "almadar-std/orb-circuit"
 
 type IrExpr = string | number | boolean | [IrExpr?] | Map string IrExpr?
 type CircuitKind = "call" | "binding" | "literal" | "object" | "array" | "lambda"
-type CircuitNode = { path : string!, kind : CircuitKind!, label : string!, form : string?, type : string?, names : [string]!, children : [CircuitNode]! }
+type CircuitNode = { path : string!, kind : CircuitKind!, label : string!, form : string?, type : string?, source : string?, infix : boolean!, names : [string]!, children : [CircuitNode]! }
+type CircuitBinder = { name : string!, source : string!, scope : string! }
 type IrList = [IrExpr]
 type IrLists = [IrList]
-type CircuitInfo = { kind : string!, label : string!, form : string!, names : [string]! }
+type CircuitInfo = { kind : string!, label : string!, form : string!, infix : boolean!, names : [string]! }
 type CircuitFlat = { rel : string!, d : number!, info : CircuitInfo! }
 type CircuitManifestLanguage = { operators : string? }
 type CircuitManifest = { orbLanguage : CircuitManifestLanguage? }
-type CircuitVisual = { form : string? }
+type CircuitVisual = { form : string?, infix : boolean? }
 type CircuitOperator = { visual : CircuitVisual? }
 type CircuitTable = { operators : Map string CircuitOperator! }
 
@@ -22,11 +23,13 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
     id : string!
     operatorsPath : string = ""
     forms : Map string string = {}
+    infix : [string] = []
     requestId : string = ""
     expr : IrExpr = []
     rootPath : string = ""
     types : Map string string = {}
     flat : [CircuitFlat] = []
+    binders : [CircuitBinder] = []
     root : CircuitNode?
   }
 
@@ -67,6 +70,8 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
       CIRCUIT_OPERATORS -> ready when (!= (json/parse (default (bytes/to-string @payload.data) "") CircuitTable) null)
         (set @entity.forms (let ((tbl (json/parse (default (bytes/to-string @payload.data) "") CircuitTable)))
           (default (object/fromEntries (array/map (object/entries (object/get @tbl "operators")) (fn e [(array/nth @e 0) (default (object/get (array/nth @e 1) "visual.form") "unknown")]))) {})))
+        (set @entity.infix (let ((tbl (json/parse (default (bytes/to-string @payload.data) "") CircuitTable)))
+          (array/map (array/filter (object/entries (object/get @tbl "operators")) (fn e (= (object/get (array/nth @e 1) "visual.infix") true))) (fn e (array/nth @e 0)))))
         (emit CIRCUIT_RUN {})
     }
 
@@ -84,7 +89,7 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
             (let ((fm @entity.forms)
                   (at (str/slice "x@" 1 2))
                   (none : [string] [])
-                  (nullLeaf [{ rel: "", d: 0, info: { kind: "literal", label: "null", form: "", names: [] } }]))
+                  (nullLeaf [{ rel: "", d: 0, info: { kind: "literal", label: "null", form: "", infix: false, names: [] } }]))
               (if (validate/array @n)
                 (let ((h0 (array/nth @n 0))
                       (hd : string (if (validate/string @h0) @h0 ""))
@@ -96,10 +101,11 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
                           { kind: (if (= @hd "fn") "lambda" "call"),
                             label: @hd,
                             form: (default (object/get @fm @hd) "unknown"),
+                            infix: (array/includes @entity.infix @hd),
                             names: (if (= @hd "fn")
                                      (if (validate/string @p1) [@p1] (array/map (default (as @p1 IrList) []) (fn x (if (validate/string @x) @x ""))))
                                      (if @isLet (array/map (default (as @p1 IrLists) []) (fn pr (if (validate/string (array/nth @pr 0)) (array/nth @pr 0) ""))) [])) }
-                          { kind: "array", label: "[…]", form: "", names: @none }) }]
+                          { kind: "array", label: "[…]", form: "", infix: false, names: @none }) }]
                       (array/flatten (array/map (array/range (if @isCall 1 0) (array/len @k)) (fn i
                         (let ((piece (if (= @hd "do") (str/concat ".do[" (- @i 1) "]")
                                        (if (= @hd "if") (if (= @i 2) ".then" (if (= @i 3) ".else" (str/concat "[" @i "]")))
@@ -115,14 +121,27 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
                               (array/map @res (fn h { rel: (str/concat @piece (object/get @h "rel")), d: (+ 1 (object/get @h "d")), info: (object/get @h "info") })))))))))))
                 (if (validate/object @n)
                   (array/concat
-                    [{ rel: "", d: 0, info: { kind: "object", label: "{…}", form: "", names: (array/map (object/entries @k) (fn e (array/nth @e 0))) } }]
+                    [{ rel: "", d: 0, info: { kind: "object", label: "{…}", form: "", infix: false, names: (array/map (object/entries @k) (fn e (array/nth @e 0))) } }]
                     (array/flatten (array/map (object/entries @k) (fn e
                       (array/map (default (array/nth @e 1) @nullLeaf) (fn h { rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")), d: (+ 1 (object/get @h "d")), info: (object/get @h "info") }))))))
                   (let ((sv : string (if (validate/string @n) @n "")))
                     [{ rel: "", d: 0, info: (if (and (validate/string @n) (str/startsWith @sv @at))
-                        { kind: "binding", label: @sv, form: "", names: @none }
-                        { kind: "literal", label: (json/stringify @n), form: "", names: @none }) }])))))
+                        { kind: "binding", label: @sv, form: "", infix: false, names: @none }
+                        { kind: "literal", label: (json/stringify @n), form: "", infix: false, names: @none }) }])))))
           "IrExpr") []))
+        (set @entity.binders (array/flatten (array/map @entity.flat (fn e
+          (let ((p (str/concat @entity.rootPath @e.rel))
+                (ns @e.info.names))
+            (if (= @e.info.kind "lambda")
+              (array/map (array/range 0 (array/len @ns)) (fn k
+                { name: (default (array/nth @ns @k) ""), source: (str/concat @p ".params[" @k "]"), scope: (str/concat @p "[") }))
+              (if (= @e.info.form "scope")
+                (array/flatten (array/map (array/range 0 (array/len @ns)) (fn i
+                  (array/concat
+                    [{ name: (default (array/nth @ns @i) ""), source: (str/concat @p "[1][" @i "][1]"), scope: (str/concat @p ".body[") }]
+                    (array/map (array/range (+ @i 1) (array/len @ns)) (fn j
+                      { name: (default (array/nth @ns @i) ""), source: (str/concat @p "[1][" @i "][1]"), scope: (str/concat @p "[1][" @j "][") }))))))
+                [])))))))
         (set @entity.root (array/first (default (object/get
           (array/reduce (array/reverse @entity.flat) (let ((init : Map string [CircuitNode] {})) @init)
             (fn (m e)
@@ -137,6 +156,12 @@ orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
                       label: (object/get @info "label"),
                       form: (if (= (object/get @info "form") "") null (object/get @info "form")),
                       type: (let ((hit (array/find (object/entries @entity.types) (fn t (= (array/nth @t 0) @p))))) (if (= @hit null) null (default (array/nth @hit 1) ""))),
+                      source: (if (!= (object/get @info "kind") "binding") null
+                        (let ((label : string (object/get @info "label")))
+                          (let ((root (default (array/first (str/split (str/slice @label 1 (str/len @label)) ".")) ""))
+                                (inner (array/first (array/sort (array/filter @entity.binders (fn b (and (= @b.name @root) (str/startsWith @p @b.scope)))) "scope" "desc"))))
+                            (if (= @inner null) null @inner.source)))),
+                      infix: (object/get @info "infix"),
                       names: (object/get @info "names"),
                       children: (default (object/get @m (str/concat "d" (+ @d 1))) []) })) @m))))
           "d0") [])))

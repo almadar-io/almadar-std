@@ -76,17 +76,21 @@ orbital LearnTour3DOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+      INIT -> idle when (and (== @config.matchMode "") (and (== @config.rosterSource "config") (= (array/len @config.stations) 0)))
+        (set @entity.active false)
+        (render-ui main { type: empty-state, icon: "list", title: @config.emptyTitle, description: @config.emptyDescription })
+
+      INIT -> idle when (and (== @config.matchMode "") (and (== @config.rosterSource "config") (> (array/len @config.stations) 0)))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.stations @config.stations)
         (set @entity.backdrop @config.backdrop)
         (set @entity.edges @config.edges)
         (set @entity.selectedIndex 0)
-        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
-        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
+        (set @entity.visitedIds [(object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id)])
         (set @entity.tourComplete false)
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -107,7 +111,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -119,23 +123,27 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
 
       MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
         (set @entity.active false)
         (render-ui main null)
 
-      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (and (== @config.rosterSource "config") (= (array/len @config.stations) 0)))
+        (set @entity.active false)
+        (render-ui main { type: empty-state, icon: "list", title: @config.emptyTitle, description: @config.emptyDescription })
+
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (and (== @config.rosterSource "config") (> (array/len @config.stations) 0)))
         (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.stations @config.stations)
         (set @entity.backdrop @config.backdrop)
         (set @entity.edges @config.edges)
         (set @entity.selectedIndex 0)
-        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
-        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
+        (set @entity.visitedIds [(object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id)])
         (set @entity.tourComplete false)
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -156,7 +164,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -168,7 +176,7 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
 
       ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (and (== ?mode @config.matchMode) (> (array/len ?stations) 0)))
         (set @entity.active true)
@@ -177,10 +185,10 @@ orbital LearnTour3DOrbital {
         (set @entity.backdrop ?backdrop)
         (set @entity.edges ?edges)
         (set @entity.selectedIndex 0)
-        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
-        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
+        (set @entity.visitedIds [(object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id)])
         (set @entity.tourComplete false)
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -201,7 +209,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -213,19 +221,19 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
 
       ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
         (set @entity.active false)
         (render-ui main null)
 
       TOUR -> idle when (and (== @entity.active true) (!= (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations)) null))
-        (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (array/nth @entity.stations (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations))) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
-        (set @entity.selectedIndex (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations)))
-        (set @entity.selectedId (object/get (array/nth @entity.stations @entity.selectedIndex) id))
+        (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (default (array/nth @entity.stations (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations))) { id: "", name: "", x: 0, y: 0, z: 0 }) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
+        (set @entity.selectedIndex (default (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations)) @entity.selectedIndex))
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
         (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
         (set @entity.tourComplete (== (array/len @entity.visitedIds) (array/len @entity.stations)))
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations @entity.selectedIndex) name) " — " (object/get (array/nth @entity.stations @entity.selectedIndex) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -246,7 +254,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -258,7 +266,7 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations @entity.selectedIndex) name), caption: (object/get (array/nth @entity.stations @entity.selectedIndex) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
 
       SELECT_STATION -> idle when (== @entity.active true)
         (let (
@@ -267,12 +275,12 @@ orbital LearnTour3DOrbital {
             (idx (if (>= @found 0) @found @entity.selectedIndex))
           )
           (do
-            (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (array/nth @entity.stations @idx) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
+            (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
             (set @entity.selectedIndex @idx)
-            (set @entity.selectedId (object/get (array/nth @entity.stations @idx) id))
+            (set @entity.selectedId (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
             (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
             (set @entity.tourComplete (== (array/len @entity.visitedIds) (array/len @entity.stations)))
-            (set @entity.narration (str/concat (object/get (array/nth @entity.stations @idx) name) " — " (object/get (array/nth @entity.stations @idx) caption)))
+            (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
             (render-ui main {
               type: box
               padding: md
@@ -293,7 +301,7 @@ orbital LearnTour3DOrbital {
                     { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                       mode: "3d",
                       camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                        target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                        target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                       lighting: @config.lighting,
                       post: @config.post,
                       nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -305,16 +313,19 @@ orbital LearnTour3DOrbital {
                   ] }
               ]
             })
-            (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations @idx) name), caption: (object/get (array/nth @entity.stations @idx) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
+            (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations @idx) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
           )
         )
 
-      RESET -> idle when (== @entity.active true)
+      RESET -> idle when (and (== @entity.active true) (= (array/len @entity.stations) 0))
+        (emit STATIONS_EMPTY { })
+
+      RESET -> idle when (and (== @entity.active true) (> (array/len @entity.stations) 0))
         (set @entity.selectedIndex 0)
-        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
-        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
+        (set @entity.visitedIds [(object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id)])
         (set @entity.tourComplete false)
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -335,7 +346,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -347,17 +358,20 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
 
-      SYNC_STATIONS -> idle when (== @entity.active true)
+      SYNC_STATIONS -> idle when (and (== @entity.active true) (= (array/len ?stations) 0))
+        (emit STATIONS_EMPTY { })
+
+      SYNC_STATIONS -> idle when (and (== @entity.active true) (> (array/len ?stations) 0))
         (set @entity.stations ?stations)
         (set @entity.backdrop ?backdrop)
         (set @entity.edges ?edges)
         (set @entity.selectedIndex 0)
-        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
-        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.selectedId (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id))
+        (set @entity.visitedIds [(object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) id)])
         (set @entity.tourComplete false)
-        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (set @entity.narration (str/concat (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name) " — " (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) "")))
         (render-ui main {
           type: box
           padding: md
@@ -378,7 +392,7 @@ orbital LearnTour3DOrbital {
                 { type: biology-canvas, keyMap: { Space: TOUR, ArrowRight: TOUR, KeyR: RESET }, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
                   mode: "3d",
                   camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
-                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                    target: { x: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) x), y: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) y), z: (object/get (default (array/nth @entity.stations @entity.selectedIndex) { id: "", name: "", x: 0, y: 0, z: 0 }) z) } },
                   lighting: @config.lighting,
                   post: @config.post,
                   nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
@@ -390,7 +404,7 @@ orbital LearnTour3DOrbital {
               ] }
           ]
         })
-        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) name), caption: (default (object/get (default (array/nth @entity.stations 0) { id: "", name: "", x: 0, y: 0, z: 0 }) caption) ""), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
     }
 
     listens {
@@ -408,20 +422,23 @@ orbital LearnTour3DOrbital {
         @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and stations, edges and backdrop are the scene roster; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
         @tier "domain"
       SELECT_STATION {
-        payload : Learn3DClick
+        payload : Learn3DClick!
       }
         @description "Canvas shape-click from the 3D scene (biology-canvas onShapeClick) carrying the clicked station's id, type, and roster index."
         @tier "domain"
       SYNC_STATIONS {
-        stations : [Learn3DStation]
-        edges : [Learn3DEdge]
-        backdrop : [Learn3DStation]
+        stations : [Learn3DStation]!
+        edges : [Learn3DEdge]!
+        backdrop : [Learn3DStation]!
       }
         @description "Roster hot-swap from a composed preset coordinator — the tour adopts the new stations/edges/backdrop and restarts progress at the first new station; the single-writer entry point for dynamic rosters."
         @tier "domain"
     }
 
     emits {
+      STATIONS_EMPTY -> external { }
+        @description "The tour has no stations: a reset or a station sync arrived with an empty list, so nothing can be shown."
+        @tier "domain"
       TOUR_3D_UPDATED -> external {
         id : string
         name : string
@@ -443,6 +460,14 @@ orbital LearnTour3DOrbital {
     }
 
     config {
+      emptyTitle : string = "Nothing to show"
+        @label "Empty title"
+        @description "Title of the empty state shown when the station list is empty."
+        @tier "presentation"
+      emptyDescription : string = "No items are configured for this activity."
+        @label "Empty description"
+        @description "Text of the empty state shown when the station list is empty."
+        @tier "presentation"
       matchMode : string = ""
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."

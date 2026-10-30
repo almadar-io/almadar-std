@@ -61,7 +61,7 @@ orbital OrbLintCircuitItemActionsOrbital {
     (if (not (object/has @t "stateMachine")) @nos0
       (let ((trs (object/get @t "stateMachine.transitions" [])))
         (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-          (let ((effs (object/get (array/nth @trs @tj) "effects" [])) (to (object/get (array/nth @trs @tj) "to" "")))
+          (let ((effs (object/get (default (array/nth @trs @tj) {}) "effects" [])) (to (object/get (default (array/nth @trs @tj) {}) "to" "")))
             (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
               (let ((e (array/nth @effs @ej)))
                 (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
@@ -81,7 +81,7 @@ orbital OrbLintCircuitItemActionsOrbital {
     (if (not (object/has @t "stateMachine")) @nos0
       (let ((trs (object/get @t "stateMachine.transitions" [])))
         (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-          (let ((effs (object/get (array/nth @trs @tj) "effects" [])) (to (object/get (array/nth @trs @tj) "to" "")))
+          (let ((effs (object/get (default (array/nth @trs @tj) {}) "effects" [])) (to (object/get (default (array/nth @trs @tj) {}) "to" "")))
             (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
               (let ((e (array/nth @effs @ej)))
                 (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
@@ -109,9 +109,9 @@ orbital OrbLintCircuitItemActionsOrbital {
                 (sites : [CiSite] @entity.sites)
                 (lv @payload.leaves))
           (array/flatten (array/map (array/range 0 (array/len @sites)) (fn i
-            (let ((s (array/nth @sites @i)) (ls (array/nth @lv @i)))
-              (let ((o (array/nth @orbitals (object/get @s "oi"))))
-                (let ((t (array/nth (object/get @o "traits" @notd) (object/get @s "ti"))))
+            (let ((s (default (array/nth @sites @i) {})) (ls (default (array/nth @lv @i) [])))
+              (let ((o (default (array/nth @orbitals (object/get @s "oi")) {})))
+                (let ((t (default (array/nth (object/get @o "traits" @notd) (object/get @s "ti")) {})))
                   (let ((tp (str/concat "orbitals[" (object/get @s "oi") " (" (object/get @o "name" "") ")].traits[" (object/get @s "ti") " (" (object/get @t "name" "") ")]"))
                         (multi (> (array/len @ls) 1)))
                     (let ((base (str/concat @tp ".stateMachine.transitions[" (object/get @s "tj") "].effects[" (object/get @s "ej") "]")))
@@ -144,8 +144,8 @@ orbital OrbLintCircuitItemActionsOrbital {
     (let ((byTk : CiActMap (array/groupBy @acts "tk")) (byDk : CiActMap (array/groupBy @acts "dk")))
       (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
         (let ((grp (object/get @byTk @k @noact)))
-          (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
-            (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
+          (let ((o (default (array/nth @orbitals (object/get (array/first @grp) "oi")) {})))
+            (let ((t (default (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti")) {})))
               (let ((tl : [CiTr] (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (let ((fr (object/get @x "from" ""))) { f: (if (validate/string @fr) (array/append @nos @fr) @fr), e: (object/get @x "event" "") }))))
                     (orbH (array/flatten (array/map (object/get @o "traits" @notd) (fn t2 (array/concat (array/map (object/get @t2 "stateMachine.transitions" @notr) (fn x (object/get @x "event" ""))) (array/map (object/get @t2 "listens" @nolis) (fn l (object/get @l "event" ""))))))))
                     (em (array/map (object/get @t "emits" @noem) (fn e (object/get @e "event" "")))))
@@ -178,8 +178,8 @@ orbital OrbLintCircuitItemActionsOrbital {
             (let ((byTk : CiActMap (array/groupBy @acts "tk")))
               (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
                 (let ((grp (object/get @byTk @k @noact)))
-                  (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
-                    (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
+                  (let ((o (default (array/nth @orbitals (object/get (array/first @grp) "oi")) {})))
+                    (let ((t (default (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti")) {})))
                       (let ((paints : [CiPaint] (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x
                               (array/flatten (array/map (object/get @x "effects" []) (fn e
                                 (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
@@ -224,7 +224,7 @@ orbital OrbLintCircuitItemActionsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CiProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CiProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       PATTERNS_HEARD { patterns : Map string CiPat! }
@@ -263,10 +263,10 @@ orbital OrbLintCircuitItemActionsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-item-actions <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

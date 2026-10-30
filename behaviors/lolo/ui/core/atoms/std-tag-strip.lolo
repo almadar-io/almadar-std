@@ -168,7 +168,7 @@ orbital TagStripOrbital {
       TagStripAddOptions -> ready when (array/includes (array/map ?data (fn t (object/get @t name))) @entity.pendingTagName)
         (emit TAGS_CHANGED {
           id: @entity.docId
-          tagIds: (array/append @entity.docTagIds (object/get (array/first (array/filter ?data (fn t (= (object/get @t name) @entity.pendingTagName)))) id))
+          tagIds: (let ((hit (array/first (array/filter ?data (fn t (= (object/get @t name) @entity.pendingTagName)))))) (if (= @hit null) @entity.docTagIds (array/append @entity.docTagIds (object/get @hit id))))
         })
       ;; Unknown name — create it in the shared taxonomy, then attach.
       TagStripAddOptions -> creating

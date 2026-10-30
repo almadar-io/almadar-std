@@ -21,8 +21,8 @@ orbital XpOrbital {
         (set @entity.level 1)
         (set @entity.xpBaseline @config.initialEnemies)
       UNITS_CHANGED -> active when @config.running
-        (set @entity.xp (if (< @payload.enemiesAlive @entity.xpBaseline) (+ @entity.xp (* (- @entity.xpBaseline @payload.enemiesAlive) @config.xpPerKill)) @entity.xp))
-        (set @entity.xpBaseline @payload.enemiesAlive)
+        (set @entity.xp (if (< (default @payload.enemiesAlive @entity.xpBaseline) @entity.xpBaseline) (+ @entity.xp (* (- @entity.xpBaseline (default @payload.enemiesAlive @entity.xpBaseline)) @config.xpPerKill)) @entity.xp))
+        (set @entity.xpBaseline (default @payload.enemiesAlive @entity.xpBaseline))
         (if (>= @entity.xp @entity.xpToNext) (emit HEAL { team: @config.healTeam, amount: @config.levelUpHeal }) null)
         (set @entity.level (if (>= @entity.xp @entity.xpToNext) (+ @entity.level 1) @entity.level))
         (set @entity.xpToNext (if (>= @entity.xp @entity.xpToNext) (+ @entity.xpToNext @config.xpToNextIncrement) @entity.xpToNext))

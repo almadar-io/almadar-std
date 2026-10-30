@@ -1,16 +1,16 @@
 app std-migration-adapter-slack [
   version: "1.0.0",
-  description: "std-migration-adapter-slack — the Slack workspace-export adapter of a migration run. Each fetched document is one channel-day JSON file: an array of messages, whose ref is shaped channel/2026-08-01.json so that the directory before the file name is the channel. A channel becomes one folder unit titled #channel, created once at the first document of that channel (several documents share it); each ordinary message becomes a root unit nested under its channel, and a thread reply, matched by thread_ts, becomes a section unit nested under the message that opened the thread, carrying the text as content and source, channel, ts and author as metadata. A message that is not of type message, a system subtype such as a join or leave, or a blank message is left out of the units and ledgered in skipped with the reason. Given several documents, a document that is not a JSON array is ledgered in skipped and the rest still stage; given a single document it fails the run with MIGRATION_EXTRACT_FAILED. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is slack."
+  description: "std-migration-adapter-slack — the Slack workspace-export adapter of a migration run. Each fetched document is one channel-day JSON file: an array of messages, whose ref is shaped channel/2026-08-01.json so that the directory before the file name is the channel. A channel becomes one folder unit titled #channel, created once at the first document of that channel (several documents share it); each ordinary message becomes a root unit nested under its channel, and a thread reply, matched by thread_ts, becomes a section unit nested under the message that opened the thread, carrying the text as content and source, channel, ts and author as metadata. A message that is not of type message, a system subtype such as a join or leave, or a blank message is left out of the units and ledgered in skipped with the reason. Given several documents, a document that is not a JSON array is ledgered in skipped and the rest still stage; given a single document it fails the run with MIGRATION_SOURCE_UNREADABLE. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is slack."
 ]
 orbital MigrationAdapterSlackOrbital {
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa"!, title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue!, source : string!, span : string? }
   type SlackProfile = { display_name : string, real_name : string }
   type SlackMessage = { type : string, subtype : string, user : string, user_profile : SlackProfile, text : string, ts : string, thread_ts : string }
   type SlackMessages = [SlackMessage]
-  type SlackDocument = { ref : string!, channel : string!, ok : boolean!, valid : boolean!, messages : [SlackMessage] }
+  type SlackDocument = { ref : string!, channel : string!, ok : boolean!, valid : boolean!, messages : [SlackMessage]! }
 
   entity MigrationAdapterSlackRun [runtime] {
     id : string!
@@ -36,21 +36,21 @@ orbital MigrationAdapterSlackOrbital {
                   ref: (object/get @d ref),
                   channel: (if
                              (> (array/len (str/split (object/get @d ref) "/")) 1)
-                             (array/nth
+                             (default (array/nth
                                (str/split (object/get @d ref) "/")
-                               (- (array/len (str/split (object/get @d ref) "/")) 2))
+                               (- (array/len (str/split (object/get @d ref) "/")) 2)) "channel")
                              "channel"),
-                  ok: true,
+                  ok: (validate/array (json/parse (object/get @d raw) SlackMessages)),
                   valid: true,
-                  messages: (json/parse (object/get @d raw) SlackMessages)
+                  messages: (default (json/parse (object/get @d raw) SlackMessages) [])
                 }
                 {
                   ref: (object/get @d ref),
                   channel: (if
                              (> (array/len (str/split (object/get @d ref) "/")) 1)
-                             (array/nth
+                             (default (array/nth
                                (str/split (object/get @d ref) "/")
-                               (- (array/len (str/split (object/get @d ref) "/")) 2))
+                               (- (array/len (str/split (object/get @d ref) "/")) 2)) "channel")
                              "channel"),
                   ok: false,
                   valid: (json/valid (object/get @d raw)),
@@ -58,10 +58,10 @@ orbital MigrationAdapterSlackOrbital {
                 }))))
         (emit SLACK_PARSED {})
 
-      SLACK_PARSED -> idle when (and (= (array/len @entity.documents) 1) (not (object/get (array/first @entity.documents) ok)))
-        (emit MIGRATION_EXTRACT_FAILED { error: (if (object/get (array/first @entity.documents) valid) "Slack export file must be a JSON array of messages" "Slack export file is not valid JSON") })
+      SLACK_PARSED -> idle when (and (= (array/len @entity.documents) 1) (not (object/get (default (array/first @entity.documents) { ref: "", channel: "", ok: true, valid: true, messages: [] }) ok)))
+        (emit MIGRATION_SOURCE_UNREADABLE { error: (if (object/get (default (array/first @entity.documents) { ref: "", channel: "", ok: true, valid: true, messages: [] }) valid) "Slack export file must be a JSON array of messages" "Slack export file is not valid JSON") })
 
-      SLACK_PARSED -> idle when (or (!= (array/len @entity.documents) 1) (object/get (array/first @entity.documents) ok))
+      SLACK_PARSED -> idle when (or (!= (array/len @entity.documents) 1) (object/get (default (array/first @entity.documents) { ref: "", channel: "", ok: true, valid: true, messages: [] }) ok))
         (emit
           MIGRATION_EXTRACTED
           {
@@ -85,7 +85,7 @@ orbital MigrationAdapterSlackOrbital {
                                  0)
                                []
                                [
-                                {
+                                (let ((u : ExtractedUnit {
                                   ref: (str/concat "slack:channel:" (object/get @d channel)),
                                   kind: folder,
                                   title: (str/concat "#" (object/get @d channel)),
@@ -94,7 +94,7 @@ orbital MigrationAdapterSlackOrbital {
                                   source: "slack",
                                   span: (object/get @d ref),
                                   metadata: { source: "slack" }
-                                }
+                                })) @u)
                                ])
                              (array/map
                                (array/filter
@@ -102,38 +102,30 @@ orbital MigrationAdapterSlackOrbital {
                                  (fn i
                                    (and
                                      (=
-                                       (object/get (array/nth (object/get @d messages) @i) type "")
+                                       (object/get (default (array/nth (object/get @d messages) @i) {}) type "")
                                        "message")
                                      (not
                                        (and
+                                         (validate/required                                            (object/get (default (array/nth (object/get @d messages) @i) {}) subtype ""))
                                          (!=
-                                           (object/get (array/nth (object/get @d messages) @i) subtype "")
-                                           null)
-                                         (!=
-                                           (object/get (array/nth (object/get @d messages) @i) subtype "")
+                                           (object/get (default (array/nth (object/get @d messages) @i) {}) subtype "")
                                            "")))
                                      (and
                                        (and
-                                         (!=
-                                           (object/get (array/nth (object/get @d messages) @i) text "")
-                                           null)
-                                         (!= (object/get (array/nth (object/get @d messages) @i) text "") ""))
+                                         (validate/required                                            (object/get (default (array/nth (object/get @d messages) @i) {}) text ""))
+                                         (!= (object/get (default (array/nth (object/get @d messages) @i) {}) text "") ""))
                                        (!=
                                          (str/trim
-                                           (object/get (array/nth (object/get @d messages) @i) text ""))
+                                           (object/get (default (array/nth (object/get @d messages) @i) {}) text ""))
                                          "")))))
                                (fn i
-                                 (let ((mm (array/nth (object/get @d messages) @i)))
-                                   {
+                                 (let ((mm (default (array/nth (object/get @d messages) @i) {})))
+                                   (let ((u : ExtractedUnit {
                                      ref: (str/concat
                                             "slack:"
                                             (object/get @d channel)
                                             ":"
-                                            (if
-                                              (validate/string
-                                                (object/get (array/nth (object/get @d messages) @i) ts))
-                                              (object/get (array/nth (object/get @d messages) @i) ts)
-                                              (str/concat "msg-" @i))),
+                                            (default (object/get (default (array/nth (object/get @d messages) @i) {}) ts) (str/concat "msg-" @i))),
                                      kind: (if
                                              (and
                                                (and
@@ -154,13 +146,11 @@ orbital MigrationAdapterSlackOrbital {
                                                     "slack:"
                                                     (object/get @d channel)
                                                     ":"
-                                                    (object/get @mm thread_ts))
+                                                    (object/get @mm thread_ts ""))
                                                   (str/concat "slack:channel:" (object/get @d channel))),
                                      source: "slack",
                                      span: (str/concat (object/get @d ref) "#" @i),
-                                     metadata: (object/merge
-                                                 { source: "slack", channel: (object/get @d channel) }
-                                                 (object/fromEntries
+                                     metadata: (let ((none : Map string ImportFieldValue {}) (all : Map string ImportFieldValue { source: "slack", channel: (object/get @d channel) })) (default (object/merge @all (default (object/fromEntries
                                                    (array/map
                                                      (array/filter
                                                        [
@@ -169,12 +159,10 @@ orbital MigrationAdapterSlackOrbital {
                                                           k: "author",
                                                           v: (if
                                                                (and
-                                                                 (!=
-                                                                   (object/get
+                                                                 (validate/required                                                                    (object/get
                                                                      @mm
                                                                      "user_profile.display_name"
-                                                                     "")
-                                                                   null)
+                                                                     ""))
                                                                  (!=
                                                                    (object/get
                                                                      @mm
@@ -184,12 +172,10 @@ orbital MigrationAdapterSlackOrbital {
                                                                (object/get @mm "user_profile.display_name" "")
                                                                (if
                                                                  (and
-                                                                   (!=
-                                                                     (object/get
+                                                                   (validate/required                                                                      (object/get
                                                                        @mm
                                                                        "user_profile.real_name"
-                                                                       "")
-                                                                     null)
+                                                                       ""))
                                                                    (!=
                                                                      (object/get
                                                                        @mm
@@ -206,8 +192,8 @@ orbital MigrationAdapterSlackOrbital {
                                                         }
                                                        ]
                                                        (fn q (!= (object/get @q v) "")))
-                                                     (fn q [(object/get @q k), (object/get @q v)]))))
-                                   })))))))),
+                                                     (fn q [(object/get @q k), (object/get @q v)]))) @none)) @all))
+                                   })) @u))))))))),
             skipped: (array/flatten
                        (array/map
                          @entity.documents
@@ -230,27 +216,23 @@ orbital MigrationAdapterSlackOrbital {
                                    (not
                                      (and
                                        (=
-                                         (object/get (array/nth (object/get @d messages) @i) type "")
+                                         (object/get (default (array/nth (object/get @d messages) @i) {}) type "")
                                          "message")
                                        (not
                                          (and
+                                           (validate/required                                              (object/get (default (array/nth (object/get @d messages) @i) {}) subtype ""))
                                            (!=
-                                             (object/get (array/nth (object/get @d messages) @i) subtype "")
-                                             null)
-                                           (!=
-                                             (object/get (array/nth (object/get @d messages) @i) subtype "")
+                                             (object/get (default (array/nth (object/get @d messages) @i) {}) subtype "")
                                              "")))
                                        (and
                                          (and
+                                           (validate/required                                              (object/get (default (array/nth (object/get @d messages) @i) {}) text ""))
                                            (!=
-                                             (object/get (array/nth (object/get @d messages) @i) text "")
-                                             null)
-                                           (!=
-                                             (object/get (array/nth (object/get @d messages) @i) text "")
+                                             (object/get (default (array/nth (object/get @d messages) @i) {}) text "")
                                              ""))
                                          (!=
                                            (str/trim
-                                             (object/get (array/nth (object/get @d messages) @i) text ""))
+                                             (object/get (default (array/nth (object/get @d messages) @i) {}) text ""))
                                            ""))))))
                                (fn i
                                  {
@@ -258,44 +240,34 @@ orbital MigrationAdapterSlackOrbital {
                                           "slack:"
                                           (object/get @d channel)
                                           ":"
-                                          (if
-                                            (validate/string
-                                              (object/get (array/nth (object/get @d messages) @i) ts))
-                                            (object/get (array/nth (object/get @d messages) @i) ts)
-                                            (str/concat "msg-" @i))),
+                                          (default (object/get (default (array/nth (object/get @d messages) @i) {}) ts) (str/concat "msg-" @i))),
                                    reason: (if
                                              (not
                                                (=
-                                                 (object/get (array/nth (object/get @d messages) @i) type "")
+                                                 (object/get (default (array/nth (object/get @d messages) @i) {}) type "")
                                                  "message"))
                                              (str/concat
                                                "non-message type '"
-                                               (if
-                                                 (validate/string
-                                                   (object/get (array/nth (object/get @d messages) @i) type))
-                                                 (object/get (array/nth (object/get @d messages) @i) type)
-                                                 "")
+                                               (default (object/get (default (array/nth (object/get @d messages) @i) {}) type) "")
                                                "'")
                                              (if
                                                (not
                                                  (not
                                                    (and
-                                                     (!=
-                                                       (object/get
-                                                         (array/nth (object/get @d messages) @i)
+                                                     (validate/required                                                        (object/get
+                                                         (default (array/nth (object/get @d messages) @i) {})
                                                          subtype
-                                                         "")
-                                                       null)
+                                                         ""))
                                                      (!=
                                                        (object/get
-                                                         (array/nth (object/get @d messages) @i)
+                                                         (default (array/nth (object/get @d messages) @i) {})
                                                          subtype
                                                          "")
                                                        ""))))
                                                (str/concat
                                                  "system subtype '"
                                                  (object/get
-                                                   (array/nth (object/get @d messages) @i)
+                                                   (default (array/nth (object/get @d messages) @i) {})
                                                    subtype
                                                    "")
                                                  "'")
@@ -317,7 +289,7 @@ orbital MigrationAdapterSlackOrbital {
         @description "The Slack messages extracted into channel folders, message units and thread-reply units, plus the ledger of elements left out, in document order."
         @synonyms "slack extracted, slack staging, slack units"
         @tier "domain"
-      MIGRATION_EXTRACT_FAILED -> external {
+      MIGRATION_SOURCE_UNREADABLE -> external {
         error : string!
       }
         @description "The single document is not a Slack channel-day export, so the run cannot stage."

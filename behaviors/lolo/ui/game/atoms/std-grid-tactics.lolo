@@ -58,7 +58,7 @@ orbital GridTacticsOrbital {
         (emit UNITS_CHANGED { playersAlive: (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))), enemiesAlive: (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) })
 
       HEAL -> active when @config.running
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team @payload.team) (> @u.health 0)) (object/merge @u { health: (math/min @u.maxHealth (+ @u.health @payload.amount)) }) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team @payload.team) (> @u.health 0)) (object/merge @u { health: (if (= @u.maxHealth null) (+ @u.health @payload.amount) (math/min @u.maxHealth (+ @u.health @payload.amount))) }) @u))))
 
       AI_TURN -> active when @config.running
         (emit BURST { particles: (array/map (array/filter @entity.units (fn u (and (and (== @u.team "player") (> @u.health 0)) (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0)))) (fn u { id: (str/concat "fx-ai-" @u.id), type: "hit", x: @u.position.x, z: @u.position.y, message: "-1", ttl: 3 })) })
@@ -86,7 +86,8 @@ orbital GridTacticsOrbital {
       ATTACK { targetId : string }
       AI_TURN { turn : number }
       SPAWN { id : string, x : number, y : number, team : string, health : number!, maxHealth : number, unitType : string }
-      HEAL { team : string, amount : number }
+      HEAL { team : string, amount : number! }
+        @description "Heals every living unit of the team by amount, capped at maxHealth; a unit with no maxHealth declared has no cap."
     }
 
     config {

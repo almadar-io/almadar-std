@@ -11,7 +11,7 @@ orbital GalleryItemOrbital {
   uses Divider from "std/behaviors/ui-divider"
   uses Alert from "std/behaviors/ui-alert"
 
-    type GalleryItemLoaded = Event { data : [GalleryItem], totalCount : number! } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
+    type GalleryItemLoaded = Event { data : [GalleryItem]!, totalCount : number! } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
 
     type GalleryItemPageLoaded = Event { data : [GalleryItem], totalCount : number } "Fired when one page of GalleryItem finishes loading after a search, filter or REFETCH_PAGE"
 
@@ -185,7 +185,7 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
           limit: @config.relatedMaxRows
         })
       GalleryItemRelatedLoaded -> browsing when (> ?totalCount (array/len ?data))
@@ -193,7 +193,7 @@ orbital GalleryItemOrbital {
       GalleryItemRelatedLoaded -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (and (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
+          filter: (and (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: (* (- @entity.galleryPage 1) @config.pageSize)
         })
@@ -213,7 +213,7 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.gallerySearchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.gallerySearchTerm))
           limit: @config.relatedMaxRows
         })
       REFETCH_PAGE -> browsing when (or (= @config.searchRelation null) (= @entity.gallerySearchTerm ""))
@@ -228,7 +228,7 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage ?page)
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.gallerySearchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.gallerySearchTerm))
           limit: @config.relatedMaxRows
         })
       GalleryItemLoadFailed -> browsing
@@ -366,7 +366,7 @@ orbital GalleryItemOrbital {
         @synonyms "select, choose, display"
         @tier "domain"
       GalleryItemLoaded {
-        data : [GalleryItem]
+        data : [GalleryItem]!
         totalCount : number!
       }
         @description "Indicates a GalleryItem has finished loading."
@@ -422,7 +422,7 @@ orbital GalleryItemOrbital {
         @synonyms "dismiss, hide, close, cancel"
         @tier "domain"
       GalleryItemLoaded {
-        data : [GalleryItem]
+        data : [GalleryItem]!
         totalCount : number!
       }
         @description "Indicates a GalleryItem has finished loading."

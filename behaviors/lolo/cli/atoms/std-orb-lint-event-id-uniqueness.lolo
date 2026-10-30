@@ -37,7 +37,7 @@ orbital OrbLintEventIdUniquenessOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((orb (array/nth @orbitals @oi)))
+            (let ((orb (default (array/nth @orbitals @oi) {})))
               (let ((owners (array/flatten (array/map (array/filter (object/get @orb "traits" []) (fn t (validate/object @t))) (fn t
                               (array/map (array/unique (array/concat
                                 (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (object/has @e "id"))) (fn e (object/get @e "id")))
@@ -61,7 +61,7 @@ orbital OrbLintEventIdUniquenessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EventIdProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EventIdProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -78,10 +78,10 @@ orbital OrbLintEventIdUniquenessOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-id-uniqueness <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

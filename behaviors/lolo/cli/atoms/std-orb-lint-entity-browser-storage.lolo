@@ -34,13 +34,13 @@ orbital OrbLintEntityBrowserStorageOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+            (let ((auxs (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
              (array/flatten (array/map
-              (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+              (array/concat [{ ent: (object/get (default (array/nth @orbitals @oi) {}) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
                 (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
               (fn eb
             (let ((ent (object/get @eb "ent")))
-              (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "browser" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
+              (if (and (validate/object @ent) (not (object/get (default (array/nth @orbitals @oi) {}) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "browser" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
                 (array/concat
                   (if (and @lc @rt) [{ code: @config.codes.eLocalRequiresPersistent.code, path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [runtime, browser] — a runtime entity's frame already lives in the client; `browser` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, browser]` for rows stored in the browser, or drop `browser`.", severity: "error" }] [])
                   (if (and @idn @lc) [{ code: @config.codes.eIdentityLocal.code, path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [identity] and `browser` — the viewer directory is never browser-resident"), suggestion: "Drop `browser` from the identity entity.", severity: "error" }] []))) [])))))))))))
@@ -59,7 +59,7 @@ orbital OrbLintEntityBrowserStorageOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrowserProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrowserProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -76,10 +76,10 @@ orbital OrbLintEntityBrowserStorageOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-browser-storage <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

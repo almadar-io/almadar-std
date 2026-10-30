@@ -85,16 +85,24 @@ orbital DeploymentRegistryOrbital {
         (emit DEPLOY_WRITE { })
       DEPLOY_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
         (emit DEPLOY_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
-      DEPLOY_WRITE -> idle
+      DEPLOY_WRITE -> idle when (and @entity.counterRow (not @entity.activates))
         (set @entity.version (+ @entity.last 1))
-        (persist batch (array/flatten [
-          (if @entity.counterRow [["update", "DeploymentCounter", @entity.artifact, { last: (+ @entity.last 1) }]] [["create", "DeploymentCounter", { id: @entity.artifact, last: (+ @entity.last 1) }]]),
-          [["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }]],
-          (if (not @entity.activates) (array/take [["delete", "ActiveDeployment", ""]] 0)
-            (if @entity.activeRow
-              [["update", "ActiveDeployment", @entity.artifact, { version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]]
-              [["create", "ActiveDeployment", { id: @entity.artifact, version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]]))
-        ]) { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+        (persist batch [["update", "DeploymentCounter", @entity.artifact, { last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITE -> idle when (and @entity.counterRow @entity.activates @entity.activeRow)
+        (set @entity.version (+ @entity.last 1))
+        (persist batch [["update", "DeploymentCounter", @entity.artifact, { last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }], ["update", "ActiveDeployment", @entity.artifact, { version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITE -> idle when (and @entity.counterRow @entity.activates (not @entity.activeRow))
+        (set @entity.version (+ @entity.last 1))
+        (persist batch [["update", "DeploymentCounter", @entity.artifact, { last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }], ["create", "ActiveDeployment", { id: @entity.artifact, version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITE -> idle when (and (not @entity.counterRow) (not @entity.activates))
+        (set @entity.version (+ @entity.last 1))
+        (persist batch [["create", "DeploymentCounter", { id: @entity.artifact, last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITE -> idle when (and (not @entity.counterRow) @entity.activates @entity.activeRow)
+        (set @entity.version (+ @entity.last 1))
+        (persist batch [["create", "DeploymentCounter", { id: @entity.artifact, last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }], ["update", "ActiveDeployment", @entity.artifact, { version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITE -> idle when (and (not @entity.counterRow) @entity.activates (not @entity.activeRow))
+        (set @entity.version (+ @entity.last 1))
+        (persist batch [["create", "DeploymentCounter", { id: @entity.artifact, last: (+ @entity.last 1) }], ["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }], ["create", "ActiveDeployment", { id: @entity.artifact, version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]] { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
       DEPLOY_WRITTEN -> idle
         (emit DEPLOYED { artifact: @entity.artifact, version: @entity.version })
       DEPLOY_NOT_WRITTEN -> idle when (and (= @payload.code "duplicate-id") (< @entity.retries @config.maxRetries))

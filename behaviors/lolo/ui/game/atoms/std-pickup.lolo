@@ -47,7 +47,7 @@ orbital PickupOrbital {
           (do
             (set @entity.pickups (array/map @entity.pickups (fn c (if (== (object/get @c id) (object/get @f id)) (object/merge @c { collected: true }) @c))))
             (set @entity.total (+ @entity.total 1))
-            (emit PICKED { id: (object/get @f id), kind: (object/get @f kind), x: (object/get @f x), y: (object/get @f y), glyph: (object/get @f glyph), message: (object/get @f message) })
+            (emit PICKED { id: (object/get @f id), kind: (object/get @f kind), x: (object/get @f x), y: (object/get @f y), glyph: (default (object/get @f glyph) ""), message: (default (object/get @f message) "") })
             (emit COLLECT { total: @entity.total })
             (if (and (== @entity.pickupCompleted false) (== @remaining 0))
               (do

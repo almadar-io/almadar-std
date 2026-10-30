@@ -29,14 +29,17 @@ orbital TwilioOrbital {
           auth: { scheme: basic, user: @config.accountSidCredential, credential: @config.authTokenCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: TWILIO_SMS_REPLIED, failure: TWILIO_SMS_HTTP_FAILED } })
-      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (!= (object/get (json/parse @payload.body TwilioMessage) status null) null))
-        (emit TWILIO_SMS_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid ""), status: (object/get (json/parse @payload.body TwilioMessage) status "") })
-      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
-        (emit TWILIO_SMS_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
+      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) false (!= (object/get @m status null) null))))
+        (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) (emit TWILIO_SMS_FAILED { message: "Twilio answered a body that is not a message" }) (emit TWILIO_SMS_RESULT { sid: (object/get @m sid ""), status: (object/get @m status "") })))
+      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) false (= (object/get @m status null) null))))
+        (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) (emit TWILIO_SMS_FAILED { message: "Twilio answered a body that is not a message" }) (emit TWILIO_SMS_RESULT { sid: (object/get @m sid "") })))
+      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (json/parse @payload.body TwilioMessage) null))
+        (emit TWILIO_SMS_FAILED { message: "Twilio answered a body that is not a message" })
       TWILIO_SMS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit TWILIO_SMS_FAILED { message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
-          (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
-          (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
+        (let ((e (json/parse @payload.body TwilioError))) (emit TWILIO_SMS_FAILED { message: (if (= @e null) (str/concat "[HTTP " @payload.status "] Failed to execute request")
+          (if (and (!= (object/get @e type null) null) (!= (object/get @e title null) null) (!= (object/get @e status null) null) (!= (object/get @e code null) null))
+          (str/concat "[HTTP " (if (!= (object/get @e status 0) 0) (object/get @e status 0) @payload.status) "] " (if (!= (object/get @e title "") "") (object/get @e title "") "Failed to execute request"))
+          (object/get @e message ""))) }))
       TWILIO_SMS_HTTP_FAILED -> idle
         (emit TWILIO_SMS_FAILED { message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
 
@@ -53,14 +56,17 @@ orbital TwilioOrbital {
           auth: { scheme: basic, user: @config.accountSidCredential, credential: @config.authTokenCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: TWILIO_WHATSAPP_REPLIED, failure: TWILIO_WHATSAPP_HTTP_FAILED } })
-      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (!= (object/get (json/parse @payload.body TwilioMessage) status null) null))
-        (emit TWILIO_WHATSAPP_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid ""), status: (object/get (json/parse @payload.body TwilioMessage) status "") })
-      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
-        (emit TWILIO_WHATSAPP_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
+      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) false (!= (object/get @m status null) null))))
+        (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) (emit TWILIO_WHATSAPP_FAILED { message: "Twilio answered a body that is not a message" }) (emit TWILIO_WHATSAPP_RESULT { sid: (object/get @m sid ""), status: (object/get @m status "") })))
+      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) false (= (object/get @m status null) null))))
+        (let ((m (json/parse @payload.body TwilioMessage))) (if (= @m null) (emit TWILIO_WHATSAPP_FAILED { message: "Twilio answered a body that is not a message" }) (emit TWILIO_WHATSAPP_RESULT { sid: (object/get @m sid "") })))
+      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (json/parse @payload.body TwilioMessage) null))
+        (emit TWILIO_WHATSAPP_FAILED { message: "Twilio answered a body that is not a message" })
       TWILIO_WHATSAPP_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit TWILIO_WHATSAPP_FAILED { message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
-          (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
-          (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
+        (let ((e (json/parse @payload.body TwilioError))) (emit TWILIO_WHATSAPP_FAILED { message: (if (= @e null) (str/concat "[HTTP " @payload.status "] Failed to execute request")
+          (if (and (!= (object/get @e type null) null) (!= (object/get @e title null) null) (!= (object/get @e status null) null) (!= (object/get @e code null) null))
+          (str/concat "[HTTP " (if (!= (object/get @e status 0) 0) (object/get @e status 0) @payload.status) "] " (if (!= (object/get @e title "") "") (object/get @e title "") "Failed to execute request"))
+          (object/get @e message ""))) }))
       TWILIO_WHATSAPP_HTTP_FAILED -> idle
         (emit TWILIO_WHATSAPP_FAILED { message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
     }

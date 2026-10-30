@@ -3879,8 +3879,8 @@
       ]
     },
     {
-      "id": "an-absolute-directory-is-refused-with-the-relative-form",
-      "note": "G-STD-164: an absolute directory cannot be globbed until the kernel's static grant check takes a literal-directory str/concat glob prefix; it is refused with the fix, never listed one level deep.",
+      "id": "an-absolute-directory-is-globbed-at-any-depth",
+      "note": "G-STD-164 / G-CROSS-353: an absolute directory globs its replay goldens at every depth (os/glob with a literal-prefix concat target).",
       "steps": [
         {
           "trait": "OrbGoldens",
@@ -3892,14 +3892,12 @@
           },
           "expect": {
             "fired": true,
-            "state": "ready",
-            "emits": [
+            "state": "listing",
+            "effects": [
               {
-                "event": "GOLDENS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "goldens: pass a directory relative to the working directory; an absolute directory is not globbed: /w/spec/net"
-                }
+                "type": "os/glob",
+                "optionsAt": 1,
+                "key": "dir"
               }
             ]
           }

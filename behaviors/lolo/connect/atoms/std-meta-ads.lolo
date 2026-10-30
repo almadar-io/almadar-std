@@ -41,17 +41,20 @@ orbital MetaAdsOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: META_ADS_SPEND_REPLIED, failure: META_ADS_SPEND_FAILED } })
       META_ADS_SPEND_REPLIED -> idle when (>= @payload.status 500)
-        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (default (format/number @payload.status) "")) })
       META_ADS_SPEND_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (let ((e (json/parse @payload.body MetaErrorReply))) (default (if (= @e null) null (object/get @e "error.message" null)) (default (format/number @payload.status) "")))) })
       META_ADS_SPEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((row (array/first (default (object/get (json/parse @payload.body MetaInsightsReply) data []) []))))
-          (emit META_ADS_SPEND_RESULT {
-            spend: (if (= (str/trim (object/get @row spend "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row spend "") "}") MetaCount) v null)),
-            currency: (object/get @row account_currency ""),
-            impressions: (if (= (str/trim (object/get @row impressions "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row impressions "") "}") MetaCount) v null)),
-            clicks: (if (= (str/trim (object/get @row clicks "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row clicks "") "}") MetaCount) v null))
-          }))
+        (let ((reply (json/parse @payload.body MetaInsightsReply)))
+          (if (= @reply null)
+            (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with insights that are not a list" })
+            (let ((row (array/first (default (object/get @reply data []) []))))
+              (if (= @row null)
+                (emit META_ADS_SPEND_RESULT { spend: 0, currency: "", impressions: 0, clicks: 0 })
+                (let ((sp (if (= (str/trim (object/get @row spend "")) "") 0 (str/to-number (str/trim (object/get @row spend ""))))) (im (if (= (str/trim (object/get @row impressions "")) "") 0 (str/to-number (str/trim (object/get @row impressions ""))))) (cl (if (= (str/trim (object/get @row clicks "")) "") 0 (str/to-number (str/trim (object/get @row clicks ""))))))
+                  (if (or (= @sp null) (= @im null) (= @cl null))
+                    (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with an insights row whose counts are not numbers" })
+                    (emit META_ADS_SPEND_RESULT { spend: @sp, currency: (object/get @row account_currency ""), impressions: @im, clicks: @cl })))))))
       META_ADS_SPEND_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
         (emit META_ADS_FAILED { message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
@@ -77,22 +80,23 @@ orbital MetaAdsOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: META_ADS_CAMPAIGNS_REPLIED, failure: META_ADS_CAMPAIGNS_FAILED } })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (>= @payload.status 500)
-        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (default (format/number @payload.status) "")) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (let ((e (json/parse @payload.body MetaErrorReply))) (default (if (= @e null) null (object/get @e "error.message" null)) (default (format/number @payload.status) "")))) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a body that is not valid JSON" })
-      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (not (validate/array (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) []))))
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (let ((r (json/parse @payload.body MetaCampaignsReply))) (if (= @r null) true (not (validate/array (default (object/get @r data []) []))))))
         (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with campaigns that are not a list" })
-      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (validate/array (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) [])))
-        (emit META_ADS_CAMPAIGNS_RESULT {
-          campaigns: (array/map (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) []) (fn row {
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (let ((r (json/parse @payload.body MetaCampaignsReply))) (if (= @r null) false (validate/array (default (object/get @r data []) [])))))
+        (let ((rows (array/map (default (object/get (default (json/parse @payload.body MetaCampaignsReply) { data: [] }) data []) []) (fn row {
             id: (object/get @row id ""),
             name: (object/get @row name ""),
             status: (object/get @row status ""),
-            dailyBudget: (if (= (str/trim (object/get @row daily_budget "")) "") 0 (/ (object/get (json/parse (str/concat "{\"v\":" (object/get @row daily_budget "") "}") MetaCount) v null) 100))
-          }))
-        })
+            dailyBudget: (if (= (str/trim (object/get @row daily_budget "")) "") 0 (let ((n (str/to-number (str/trim (object/get @row daily_budget ""))))) (if (= @n null) null (/ @n 100))))
+          }))))
+          (if (array/some @rows (fn r (= @r.dailyBudget null)))
+            (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a campaign whose daily budget is not a number" })
+            (emit META_ADS_CAMPAIGNS_RESULT { campaigns: @rows })))
       META_ADS_CAMPAIGNS_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
         (emit META_ADS_FAILED { message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
       META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))

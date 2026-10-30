@@ -1,6 +1,6 @@
 app std-agent-memory [
   version: "2.0.0",
-  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall is headless (failures show as toasts); AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
+  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall (RECALL) and AgentMemoryStore (REMEMBER) are headless data traits that report failures as MEMORY_RECALL_NOTICE / MEMORY_STORE_NOTICE; AgentMemoryView renders those notices as toasts, so a composer that wants them composes it; AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
   net: { "openrouter.ai:443": [tcp] },
 ]
 
@@ -49,8 +49,8 @@ uses Delay from "std/behaviors/std-delay"
 orbital AgentMemoryOrbital {
   type AgentMemoriesLoaded = Event { data : [AgentMemory]!, totalCount : number } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
-  type MemoryEmbedded = Event { embeddings : [[number]]! } "Fired when a memory or query has been embedded"
-  type MemoryEmbedFailed = Event { code : string, message : string! } "Fired when embedding fails"
+  type MemoryEmbedded = Event { embeddings : [[number]]!, key : string } "Fired when a memory or query has been embedded"
+  type MemoryEmbedFailed = Event { code : string, message : string!, key : string } "Fired when embedding fails"
 
   entity AgentMemory [persistent: agentMemories] {
     id : string!
@@ -68,6 +68,7 @@ orbital AgentMemoryOrbital {
   trait AgentMemoryLlm = Llm.traits.LlmClient {
     listens {
       AgentMemoryRecall.LLM_EMBED -> LLM_EMBED
+      AgentMemoryStore.LLM_EMBED -> LLM_EMBED
       MemEmbedWait.MEM_EMBED_WAITED -> LLM_EMBED_WAITED
       MemEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
       MemEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
@@ -131,8 +132,6 @@ orbital AgentMemoryOrbital {
     state ready {
       INIT -> ready
         (set @entity.pendingQuery "")
-      MEMORY_STORED -> ready
-        (set @entity.pendingContent "")
       LIST -> ready
         (fetch AgentMemory {
           emit: { failure: MemoryListFailed, success: MemoriesForList }
@@ -144,31 +143,22 @@ orbital AgentMemoryOrbital {
         (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort (default ?data []) createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })), totalCount: ?totalCount })
       MemoryListFailed -> ready
         (emit ASSISTANT_MEMORIES_LOADED { data: [] })
-        (render-ui toast {
-          message: ?error
-          type: alert
-          variant: error
-        })
-      RECALL -> ready when ?ephemeral
+        (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "error" })
+      RECALL -> ready when (default ?ephemeral false)
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
       RECALL -> recalling when (not (default ?ephemeral false))
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
         (emit LLM_EMBED {
-          texts: (array/prepend [] (object/get (default (array/last ?messages) {}) content ""))
-        })
-      REMEMBER -> ready when ?ephemeral
-      REMEMBER -> remembering when (not (default ?ephemeral false))
-        (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
-        (emit LLM_EMBED {
-          texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
+          texts: (array/prepend [] (object/get (default (array/last ?messages) {}) content "")),
+          key: "recall"
         })
     }
 
     state recalling {
       INIT -> ready
         (set @entity.pendingQuery "")
-      MemoryEmbedded -> recalling
+      MemoryEmbedded -> recalling when (= (default ?key "") "recall")
         (set @entity.queryVector (default (array/first ?embeddings) []))
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
@@ -181,40 +171,12 @@ orbital AgentMemoryOrbital {
           messages: @entity.pendingMessages
           context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
         })
-      MemoryEmbedFailed -> ready
+      MemoryEmbedFailed -> ready when (= (default ?key "") "recall")
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })
-        (render-ui toast {
-          message: ?message
-          type: alert
-          variant: warning
-        })
+        (emit MEMORY_RECALL_NOTICE { message: ?message, variant: "warning" })
       AgentMemoriesLoadFailed -> ready
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })
-        (render-ui toast {
-          message: ?error
-          type: alert
-          variant: warning
-        })
-    }
-
-    state remembering {
-      INIT -> ready
-        (set @entity.pendingQuery "")
-      MemoryEmbedded -> ready
-        (persist create AgentMemory {
-          ownerId: @user.id
-          content: @entity.pendingContent
-          embedding: (default (array/first ?embeddings) [])
-          createdAt: @now
-        } {
-          emit: { success: MEMORY_STORED }
-        })
-      MemoryEmbedFailed -> ready
-        (render-ui toast {
-          message: ?message
-          type: alert
-          variant: warning
-        })
+        (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "warning" })
     }
 
     emits {
@@ -245,10 +207,11 @@ orbital AgentMemoryOrbital {
         code : string
       }
         @tier "internal"
-      MEMORY_STORED -> external
-        @description "A new memory was stored — payload is the created AgentMemory row itself."
-        @synonyms "remembered, stored, saved"
-        @tier "domain"
+      MEMORY_RECALL_NOTICE -> internal {
+        message : string
+        variant : "error" | "warning"
+      }
+        @tier "internal"
       AgentMemoriesLoadFailed {
         error : string
         code : string
@@ -261,6 +224,7 @@ orbital AgentMemoryOrbital {
         @tier "internal"
       LLM_EMBED -> external {
         texts : [string]!
+        key : string
       }
         @description "Ask std-llm to embed the recall query or the exchange being remembered."
         @tier "internal"
@@ -272,10 +236,12 @@ orbital AgentMemoryOrbital {
       AgentMemoryLlm.LLM_FAILED -> MemoryEmbedFailed
       MemoryEmbedded {
         embeddings : [[number]]!
+        key : string
       }
       MemoryEmbedFailed {
         code : string
         message : string!
+        key : string
       }
       LIST {
       }
@@ -287,11 +253,109 @@ orbital AgentMemoryOrbital {
         ephemeral : boolean
       }
         @description "Recall what is relevant to this conversation's last turn. An ephemeral conversation skips the recall."
+    }
+  }
+
+  trait AgentMemoryStore -> @rebindable AgentMemory {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MEMORY_STORED -> ready
+        (set @entity.pendingContent "")
+      REMEMBER -> ready when (default ?ephemeral false)
+      REMEMBER -> remembering when (not (default ?ephemeral false))
+        (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
+        (emit LLM_EMBED {
+          texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)),
+          key: "store"
+        })
+    }
+
+    state remembering {
+      INIT -> ready
+        (set @entity.pendingQuery "")
+      MemoryEmbedded -> ready when (= (default ?key "") "store")
+        (persist create AgentMemory {
+          ownerId: @user.id
+          content: @entity.pendingContent
+          embedding: (default (array/first ?embeddings) [])
+          createdAt: @now
+        } {
+          emit: { success: MEMORY_STORED }
+        })
+      MemoryEmbedFailed -> ready when (= (default ?key "") "store")
+        (emit MEMORY_STORE_NOTICE { message: ?message, variant: "warning" })
+    }
+
+    emits {
+      MEMORY_STORED -> external
+        @description "A new memory was stored — payload is the created AgentMemory row itself."
+        @synonyms "remembered, stored, saved"
+        @tier "domain"
+      LLM_EMBED -> external {
+        texts : [string]!
+        key : string
+      }
+        @description "Ask std-llm to embed the exchange being remembered."
+        @tier "internal"
+      MEMORY_STORE_NOTICE -> internal {
+        message : string
+        variant : "error" | "warning"
+      }
+        @tier "internal"
+    }
+
+    listens {
+      AgentMemoryLlm.LLM_EMBED_RESULT -> MemoryEmbedded
+      AgentMemoryLlm.LLM_FAILED -> MemoryEmbedFailed
+      MemoryEmbedded {
+        embeddings : [[number]]!
+        key : string
+      }
+      MemoryEmbedFailed {
+        code : string
+        message : string!
+        key : string
+      }
       REMEMBER {
         reply : string!
         ephemeral : boolean
       }
         @description "Remember the exchange just answered. An ephemeral conversation is never remembered."
+    }
+  }
+
+  trait AgentMemoryView -> @rebindable AgentMemory {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MEMORY_RECALL_NOTICE -> ready
+        (render-ui toast {
+          message: ?message
+          type: alert
+          variant: ?variant
+        })
+      MEMORY_STORE_NOTICE -> ready
+        (render-ui toast {
+          message: ?message
+          type: alert
+          variant: ?variant
+        })
+    }
+
+    listens {
+      AgentMemoryRecall.MEMORY_RECALL_NOTICE -> MEMORY_RECALL_NOTICE
+      AgentMemoryStore.MEMORY_STORE_NOTICE -> MEMORY_STORE_NOTICE
+      MEMORY_RECALL_NOTICE {
+        message : string
+        variant : "error" | "warning"
+      }
+      MEMORY_STORE_NOTICE {
+        message : string
+        variant : "error" | "warning"
+      }
     }
   }
 
@@ -379,7 +443,7 @@ orbital AgentMemoryOrbital {
     }
 
     listens {
-      AgentMemoryRecall.MEMORY_STORED -> MEMORY_STORED
+      AgentMemoryStore.MEMORY_STORED -> MEMORY_STORED
       REFETCH_PAGE {
         page : number!
       }
@@ -388,5 +452,5 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryLlm, MemEmbedWait, MemEmbedRequest, MemEmbedHttp
+  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryStore, AgentMemoryView, AgentMemoryLlm, MemEmbedWait, MemEmbedRequest, MemEmbedHttp
 }

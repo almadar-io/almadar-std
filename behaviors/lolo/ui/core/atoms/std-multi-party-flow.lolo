@@ -7,7 +7,7 @@ type PartySpec = { id : string, key : string, name : string, label : string, tit
 orbital MultiPartyFlowOrbital {
     type PartyView = { id : string!, title : string!, description : string, icon : string, actionLabel : string, actionIcon : string, actor : string }
 
-    type AuditEvent = { id : string!, title : string!, description : string, timestamp : string | number, status : "complete" | "active" | "pending" | "error" }
+    type AuditEvent = { id : string!, title : string!, description : string, timestamp : instant, status : "complete" | "active" | "pending" | "error" }
 
     type FlowLoaded = Event { data : [ObjectSpec] } "Fired when flow context finishes loading"
 
@@ -60,22 +60,22 @@ orbital MultiPartyFlowOrbital {
           actor: (object/get @party actor "")
           description: (object/get @party description "")
           icon: (object/get @party icon user)
-          id: (object/get @party id)
-          title: (object/get @party title)
+          id: (object/get @party id "")
+          title: (object/get @party title "")
         })))
-        (set @entity.currentPartyId (object/get (array/first @config.parties) id ""))
-        (set @entity.currentPartyTitle (object/get (array/first @config.parties) title ""))
-        (set @entity.currentPartyActor (object/get (array/first @config.parties) actor ""))
-        (set @entity.currentPartyIcon (object/get (array/first @config.parties) icon user))
-        (set @entity.currentActionLabel (object/get (array/first @config.parties) actionLabel Confirm))
-        (set @entity.currentActionIcon (object/get (array/first @config.parties) actionIcon check))
-        (set @entity.currentActionDescription (object/get (array/first @config.parties) actionDescription ""))
-        (set @entity.currentStepLabel (object/get (array/first @config.parties) stepLabel "Step 1"))
+        (set @entity.currentPartyId (let ((nthv (array/first @config.parties))) (if (= @nthv null) "" (object/get @nthv id ""))))
+        (set @entity.currentPartyTitle (let ((nthv (array/first @config.parties))) (if (= @nthv null) "" (object/get @nthv title ""))))
+        (set @entity.currentPartyActor (let ((nthv (array/first @config.parties))) (if (= @nthv null) "" (object/get @nthv actor ""))))
+        (set @entity.currentPartyIcon (let ((nthv (array/first @config.parties))) (if (= @nthv null) user (object/get @nthv icon user))))
+        (set @entity.currentActionLabel (let ((nthv (array/first @config.parties))) (if (= @nthv null) Confirm (object/get @nthv actionLabel Confirm))))
+        (set @entity.currentActionIcon (let ((nthv (array/first @config.parties))) (if (= @nthv null) check (object/get @nthv actionIcon check))))
+        (set @entity.currentActionDescription (let ((nthv (array/first @config.parties))) (if (= @nthv null) "" (object/get @nthv actionDescription ""))))
+        (set @entity.currentStepLabel (let ((nthv (array/first @config.parties))) (if (= @nthv null) "Step 1" (object/get @nthv stepLabel "Step 1"))))
         (set @entity.audit [{
           description: (str/concat "Reference " @config.transactionReference)
           id: init
-          status: complete
-          timestamp: "Just now"
+          status: "complete"
+          timestamp: (time/now)
           title: "Transaction opened"
         }])
         (render-ui main {
@@ -328,19 +328,19 @@ orbital MultiPartyFlowOrbital {
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @entity.currentPartyActor " completed: " @entity.currentActionLabel)
           id: (str/concat confirm- (object/get ? partyKey ""))
-          status: complete
+          status: "complete"
           timestamp: (time/now)
           title: (str/concat @entity.currentPartyTitle " confirmed")
         }))
         (set @entity.currentPartyIndex (+ @entity.currentPartyIndex 1))
-        (set @entity.currentPartyId (object/get (array/nth @config.parties @entity.currentPartyIndex) id ""))
-        (set @entity.currentPartyTitle (object/get (array/nth @config.parties @entity.currentPartyIndex) title ""))
-        (set @entity.currentPartyActor (object/get (array/nth @config.parties @entity.currentPartyIndex) actor ""))
-        (set @entity.currentPartyIcon (object/get (array/nth @config.parties @entity.currentPartyIndex) icon user))
-        (set @entity.currentActionLabel (object/get (array/nth @config.parties @entity.currentPartyIndex) actionLabel Confirm))
-        (set @entity.currentActionIcon (object/get (array/nth @config.parties @entity.currentPartyIndex) actionIcon check))
-        (set @entity.currentActionDescription (object/get (array/nth @config.parties @entity.currentPartyIndex) actionDescription ""))
-        (set @entity.currentStepLabel (object/get (array/nth @config.parties @entity.currentPartyIndex) stepLabel Step))
+        (set @entity.currentPartyId (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) "" (object/get @nthv id ""))))
+        (set @entity.currentPartyTitle (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) "" (object/get @nthv title ""))))
+        (set @entity.currentPartyActor (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) "" (object/get @nthv actor ""))))
+        (set @entity.currentPartyIcon (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) user (object/get @nthv icon user))))
+        (set @entity.currentActionLabel (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) Confirm (object/get @nthv actionLabel Confirm))))
+        (set @entity.currentActionIcon (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) check (object/get @nthv actionIcon check))))
+        (set @entity.currentActionDescription (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) "" (object/get @nthv actionDescription ""))))
+        (set @entity.currentStepLabel (let ((nthv (array/nth @config.parties @entity.currentPartyIndex))) (if (= @nthv null) Step (object/get @nthv stepLabel Step))))
         (render-ui main {
           children: [{
             align: center
@@ -559,14 +559,14 @@ orbital MultiPartyFlowOrbital {
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @entity.currentPartyActor " completed: " @entity.currentActionLabel)
           id: (str/concat confirm- (object/get ? partyKey ""))
-          status: complete
+          status: "complete"
           timestamp: (time/now)
           title: (str/concat @entity.currentPartyTitle " confirmed")
         }))
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @config.transactionAmount " is now funded and ready for release.")
           id: all-confirmed
-          status: complete
+          status: "complete"
           timestamp: (time/now)
           title: "All parties confirmed"
         }))
@@ -814,7 +814,7 @@ orbital MultiPartyFlowOrbital {
         (set @entity.audit (array/append @entity.audit {
           description: @entity.disputeReason
           id: dispute-opened
-          status: error
+          status: "error"
           timestamp: (time/now)
           title: "Dispute opened"
         }))
@@ -908,7 +908,7 @@ orbital MultiPartyFlowOrbital {
         (set @entity.audit (array/append @entity.audit {
           description: @entity.cancelReason
           id: cancelled
-          status: error
+          status: "error"
           timestamp: (time/now)
           title: "Transaction cancelled"
         }))
@@ -1001,7 +1001,7 @@ orbital MultiPartyFlowOrbital {
         (set @entity.audit (array/append @entity.audit {
           description: (str/concat @config.transactionAmount " released to the seller. Transaction complete.")
           id: released
-          status: complete
+          status: "complete"
           timestamp: (time/now)
           title: "Funds released"
         }))

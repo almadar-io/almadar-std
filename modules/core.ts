@@ -196,6 +196,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Add numbers',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     sign: 'sum',
     returnType: 'number',
     returnSemantics: 'integer-closed',
@@ -209,6 +210,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Subtract or negate',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'number',
     returnSemantics: 'integer-closed',
     params: [
@@ -224,6 +226,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Multiply numbers',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     sign: 'product',
     returnType: 'number',
     returnSemantics: 'integer-closed',
@@ -237,6 +240,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Divide numbers',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     failable: { unlessNonZero: [1] },
     returnType: nullable('number'),
     params: [
@@ -252,6 +256,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Modulo (remainder)',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     failable: { unlessNonZero: [1] },
     returnType: nullable('number'),
     returnSemantics: 'integer-closed',
@@ -271,6 +276,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Equal to',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: tv('T'), description: 'Left operand' },
@@ -285,6 +291,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Equal to (canonical .lolo spelling)',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: tv('T'), description: 'Left operand' },
@@ -299,6 +306,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Not equal to',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: tv('T'), description: 'Left operand' },
@@ -313,6 +321,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Less than',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: ORDERED, description: 'Left operand' },
@@ -327,6 +336,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Greater than',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: ORDERED, description: 'Left operand' },
@@ -341,6 +351,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Less than or equal',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: ORDERED, description: 'Left operand' },
@@ -355,6 +366,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Greater than or equal',
     hasSideEffects: false,
+    visual: { form: 'block', infix: true },
     returnType: 'boolean',
     params: [
       { name: 'a', type: ORDERED, description: 'Left operand' },

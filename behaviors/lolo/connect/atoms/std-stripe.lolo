@@ -3,24 +3,33 @@ app std-stripe [
   description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message.",
   egress: ["https://api.stripe.com"]
 ]
-type StripeDraw = { path : string, text : string, call : string }
-type StripeKey = { action : string, customerId : string, subscriptionId : string, quantity : number, cancelAtPeriodEnd : boolean }
-type StripeApiError = { type : string, code : string, message : string, param : string }
-type StripeErrorReply = { error : StripeApiError }
-type StripeOauthErrorReply = { error : string, error_description : string }
-type StripePaymentIntent = { id : string!, object : string, amount : number, currency : string, status : string, client_secret : string, metadata : Map string string }
-type StripeRefund = { id : string!, object : string, amount : number, status : string }
-type StripeCustomer = { id : string!, email : string, metadata : Map string string }
-type StripeIdRef = { id : string }
-type StripeSessionWithCustomer = { id : string!, url : string, customer : StripeIdRef }
-type StripeSessionWithCustomerId = { id : string, url : string, customer : string }
-type StripeSubscriptionItem = { id : string, quantity : number, price : StripeIdRef }
-type StripeSubscriptionItems = { data : [StripeSubscriptionItem] }
-type StripeSubscription = { id : string!, customer : StripeIdRef, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
-type StripeSubscriptionRef = { id : string, customer : string, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
+type StripeField = { k : string!, v : string! }
+type StripeJob = { action : string!, path : string!, fields : [StripeField]!, customerId : string, subscriptionId : string, quantity : number, cancelAtPeriodEnd : boolean }
+type StripePending = { key : string!, job : StripeJob! }
+type StripeApiError = { type : string, message : string! }
+type StripeCodedApiError = { type : string, code : string!, message : string! }
+type StripeErrorReply = { error : StripeApiError! }
+type StripeCodedErrorReply = { error : StripeCodedApiError! }
+type StripeOauthErrorReply = { error : string!, error_description : string }
+type StripeEnvelope = { id : string }
+type StripeMetadata = Map string string
+type StripePaymentIntent = { id : string!, object : string!, amount : number!, currency : string!, status : string!, client_secret : string!, metadata : StripeMetadata! }
+type StripeRefund = { id : string!, object : string!, amount : number!, status : string! }
+type StripeCustomer = { id : string!, email : string?, metadata : StripeMetadata? }
+type StripeIdRef = { id : string! }
+type StripeSessionWithCustomer = { id : string!, url : string?, customer : StripeIdRef? }
+type StripeSessionWithCustomerId = { id : string!, url : string?, customer : string? }
+type StripePortalSession = { id : string!, url : string!, customer : string! }
+type StripeSubscriptionItem = { id : string!, quantity : number?, price : StripeIdRef! }
+type StripeSubscriptionItems = { data : [StripeSubscriptionItem]! }
+type StripeSubscription = { id : string!, customer : string?, status : string!, cancel_at_period_end : boolean!, items : StripeSubscriptionItems! }
+type StripeSubscriptionPeriod = { current_period_start : number!, current_period_end : number! }
+type StripeSubscriptionExpanded = { customer : StripeIdRef! }
 orbital StripeOrbital {
   entity StripeCall [runtime] {
     id : string!
+    pending : [StripePending] = []
+    seq : number = 0
   }
 
   trait StripeClient -> StripeCall [optimistic] {
@@ -30,125 +39,220 @@ orbital StripeOrbital {
       INIT -> idle
 
       STRIPE_CREATE_PAYMENT_INTENT -> idle
-        (let ((p "/v1/payment_intents") (t (str/join (array/map (array/filter (array/concat [{ k: "amount", v: (str/concat @payload.amount) }, { k: "currency", v: @payload.currency }] (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createPaymentIntent" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "createPaymentIntent", path: "/v1/payment_intents", fields: (array/concat [{ k: "amount", v: (str/concat @payload.amount) }, { k: "currency", v: @payload.currency }] (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @e 0) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (default (array/nth @e 1) "") }))) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CONFIRM_PAYMENT -> idle
-        (let ((p (str/concat "/v1/payment_intents/" (str/encode-uri-component @payload.paymentIntentId) "/confirm")) (t ""))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "confirmPayment" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "confirmPayment", path: (str/concat "/v1/payment_intents/" (str/encode-uri-component @payload.paymentIntentId) "/confirm"), fields: [] } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_REFUND -> idle
-        (let ((p "/v1/refunds") (t (str/join (array/map (array/filter [{ k: "payment_intent", v: @payload.paymentIntentId }, { k: "amount", v: (if (validate/number @payload.amount) (str/concat @payload.amount) null) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "refund" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "refund", path: "/v1/refunds", fields: (array/concat [{ k: "payment_intent", v: @payload.paymentIntentId }] (if (validate/number @payload.amount) [{ k: "amount", v: (str/concat @payload.amount) }] [])) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CREATE_CUSTOMER -> idle
-        (let ((p "/v1/customers") (t (str/join (array/map (array/filter [{ k: "email", v: @payload.email }, { k: "name", v: @payload.displayName }, { k: "metadata[almadarUid]", v: @payload.almadarUid }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createCustomer" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "createCustomer", path: "/v1/customers", fields: (array/concat [{ k: "email", v: @payload.email }, { k: "metadata[almadarUid]", v: @payload.almadarUid }] (if (validate/string @payload.displayName) [{ k: "name", v: @payload.displayName }] [])) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
         (emit STRIPE_FAILED { message: "tier must be \"solo\" or \"teams\"" })
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
         (emit STRIPE_FAILED { message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
-        (let ((p "/v1/checkout/sessions") (t (str/join (array/map (array/filter (array/concat (array/concat [{ k: "mode", v: "subscription" }, { k: "customer", v: (if (validate/required @payload.customerId) @payload.customerId null) }, { k: "line_items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "line_items[0][quantity]", v: (str/concat @payload.quantity) }, { k: "success_url", v: @payload.successUrl }, { k: "cancel_url", v: @payload.cancelUrl }] (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "subscription_data[metadata][" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "automatic_tax[enabled]", v: "true" }, { k: "allow_promotion_codes", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createCheckoutSession" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "createCheckoutSession", path: "/v1/checkout/sessions", fields: (array/concat (array/concat (array/concat [{ k: "mode", v: "subscription" }] (if (validate/required @payload.customerId) [{ k: "customer", v: @payload.customerId }] [])) [{ k: "line_items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "line_items[0][quantity]", v: (str/concat @payload.quantity) }, { k: "success_url", v: @payload.successUrl }, { k: "cancel_url", v: @payload.cancelUrl }]) (array/concat (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "subscription_data[metadata][" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @e 0) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (default (array/nth @e 1) "") })) [{ k: "automatic_tax[enabled]", v: "true" }, { k: "allow_promotion_codes", v: "true" }])) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CREATE_PORTAL_SESSION -> idle
-        (let ((p "/v1/billing_portal/sessions") (t (str/join (array/map (array/filter [{ k: "customer", v: @payload.customerId }, { k: "return_url", v: @payload.returnUrl }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createPortalSession", customerId: @payload.customerId }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "createPortalSession", path: "/v1/billing_portal/sessions", fields: [{ k: "customer", v: @payload.customerId }, { k: "return_url", v: @payload.returnUrl }], customerId: @payload.customerId } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_GET_SUBSCRIPTION -> idle
-        (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "getSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "getSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [] } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+              auth: { scheme: bearer, credential: @config.secretKey },
+              timeoutMs: @config.timeoutMs
+            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
       STRIPE_CREATE_SUBSCRIPTION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
         (emit STRIPE_FAILED { message: "tier must be \"solo\" or \"teams\"" })
       STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
         (emit STRIPE_FAILED { message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
       STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
-        (let ((p "/v1/subscriptions") (t (str/join (array/map (array/filter (array/concat (array/concat [{ k: "customer", v: @payload.customerId }, { k: "items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "proration_behavior", v: "create_prorations" }, { k: "automatic_tax[enabled]", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "createSubscription", path: "/v1/subscriptions", fields: (array/concat (array/concat [{ k: "customer", v: @payload.customerId }, { k: "items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] (array/map (object/entries (default @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @e 0) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (default (array/nth @e 1) "") }))) [{ k: "proration_behavior", v: "create_prorations" }, { k: "automatic_tax[enabled]", v: "true" }]) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_UPDATE_SUBSCRIPTION -> idle when (validate/number @payload.quantity)
-        (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "updateSubscription.fetch", subscriptionId: @payload.subscriptionId, quantity: @payload.quantity, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "updateSubscription.fetch", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [], subscriptionId: @payload.subscriptionId, quantity: @payload.quantity, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+              auth: { scheme: bearer, credential: @config.secretKey },
+              timeoutMs: @config.timeoutMs
+            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
       STRIPE_UPDATE_SUBSCRIPTION -> idle when (not (validate/number @payload.quantity))
         (emit STRIPE_UPDATE_READY { subscriptionId: @payload.subscriptionId, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd })
       STRIPE_UPDATE_READY -> idle
-        (let ((p (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId))) (t (str/join (array/map (array/filter [{ k: "proration_behavior", v: "create_prorations" }, { k: "items[0][id]", v: @payload.itemId }, { k: "items[0][quantity]", v: (if (validate/required @payload.itemId) (str/concat @payload.quantity) null) }, { k: "cancel_at_period_end", v: (if (= @payload.cancelAtPeriodEnd null) null (if @payload.cancelAtPeriodEnd "true" "false")) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "updateSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "updateSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: (array/concat (array/concat [{ k: "proration_behavior", v: "create_prorations" }] (if (and (validate/required @payload.itemId) (validate/number @payload.quantity)) [{ k: "items[0][id]", v: @payload.itemId }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] [])) (if (validate/boolean @payload.cancelAtPeriodEnd) [{ k: "cancel_at_period_end", v: (if @payload.cancelAtPeriodEnd "true" "false") }] [])) } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CANCEL_SUBSCRIPTION -> idle when (!= @payload.atPeriodEnd false)
-        (let ((p (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId))) (t (str/join (array/map (array/filter [{ k: "cancel_at_period_end", v: "true" }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
-          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "cancelSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "cancelSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [{ k: "cancel_at_period_end", v: "true" }] } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (random-bytes 16 { key: @k, emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } })))
       STRIPE_CANCEL_SUBSCRIPTION -> idle when (= @payload.atPeriodEnd false)
-        (http DELETE @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
-      STRIPE_KEY_DRAWN -> idle when (= (hash/sha256 @payload.value "hex") null)
-        (emit STRIPE_FAILED { message: "The idempotency key could not be derived" })
-      STRIPE_KEY_DRAWN -> idle when (!= (hash/sha256 @payload.value "hex") null)
-        (let ((h (hash/sha256 @payload.value "hex")))
-          (http POST @config.origin (object/get (json/parse @payload.key StripeDraw) path "") {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (array/nth ["8", "9", "a", "b"] (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) },
-          text: (object/get (json/parse @payload.key StripeDraw) text ""),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (object/get (json/parse @payload.key StripeDraw) call ""), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } }))
+        (let ((k (str/concat "stripe-" @entity.seq)))
+          (do
+            (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "cancelSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [] } }))
+            (set @entity.seq (+ @entity.seq 1))
+            (http DELETE @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+              auth: { scheme: bearer, credential: @config.secretKey },
+              timeoutMs: @config.timeoutMs
+            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
+      STRIPE_KEY_DRAWN -> idle
+        (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (h (hash/sha256 @payload.value "hex")))
+          (if (= @e null)
+            (emit STRIPE_FAILED { message: "Stripe drew an idempotency key for a request that is not pending" })
+            (if (= @h null)
+              (do
+                (emit STRIPE_FAILED { message: "The idempotency key could not be derived" })
+                (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+              (http POST @config.origin @e.job.path {
+                headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (str/slice "89ab" (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) (+ (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) 1)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) },
+                text: (str/join (array/map @e.job.fields (fn f (str/concat @f.k "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @f.v) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+                auth: { scheme: bearer, credential: @config.secretKey },
+                timeoutMs: @config.timeoutMs
+              } { key: @e.key, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } }))))
       STRIPE_RANDOM_FAILED -> idle
         (emit STRIPE_FAILED { message: @payload.error })
-      STRIPE_REPLIED -> idle when (not (!= (json/parse @payload.body StripeErrorReply) null))
-        (emit STRIPE_FAILED { message: "Invalid JSON received from the Stripe API" })
-      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (not (and (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) "")))))
-        (emit STRIPE_FAILED { message: (if (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (object/get (json/parse @payload.body StripeOauthErrorReply) error_description "") (object/get (json/parse @payload.body StripeErrorReply) "error.message" "")) })
-      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (not (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (not (and (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) ""))))))
-        (emit STRIPE_OK { key: @payload.key, body: @payload.body })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+      STRIPE_REPLIED -> idle
+        (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (gc (json/parse @payload.body StripeCodedErrorReply)) (g (json/parse @payload.body StripeErrorReply)) (o (json/parse @payload.body StripeOauthErrorReply)) (env (json/parse @payload.body StripeEnvelope)))
+          (if (= @e null)
+            (emit STRIPE_FAILED { message: "Stripe answered a request that is not pending" })
+            (if (!= @gc null)
+              (do
+                (emit STRIPE_FAILED { code: @gc.error.code, message: @gc.error.message })
+                (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+            (if (!= @g null)
+              (do
+                (emit STRIPE_FAILED { message: @g.error.message })
+                (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+              (if (!= @o null)
+                (do
+                  (emit STRIPE_FAILED { message: (if (validate/string @o.error_description) @o.error_description @o.error) })
+                  (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+                (if (= @env null)
+                  (do
+                    (emit STRIPE_FAILED { message: "Invalid JSON received from the Stripe API" })
+                    (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+                  (if (or (< @payload.status 200) (>= @payload.status 300))
+                    (do
+                      (emit STRIPE_FAILED { message: (str/concat "Stripe answered HTTP " @payload.status) })
+                      (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
+                    (emit STRIPE_OK { key: @e.key, body: @payload.body }))))))))
       STRIPE_HTTP_FAILED -> idle
         (emit STRIPE_FAILED { message: @payload.error })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent") (= (json/parse @payload.body StripePaymentIntent) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a payment intent that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent") (!= (json/parse @payload.body StripePaymentIntent) null))
-        (emit STRIPE_CREATE_PAYMENT_INTENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment") (= (json/parse @payload.body StripePaymentIntent) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a payment intent that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment") (!= (json/parse @payload.body StripePaymentIntent) null))
-        (emit STRIPE_CONFIRM_PAYMENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "refund") (= (json/parse @payload.body StripeRefund) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a refund that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "refund") (!= (json/parse @payload.body StripeRefund) null))
-        (emit STRIPE_REFUND_RESULT { id: (object/get (json/parse @payload.body StripeRefund) id null), object: (object/get (json/parse @payload.body StripeRefund) object null), amount: (object/get (json/parse @payload.body StripeRefund) amount null), status: (object/get (json/parse @payload.body StripeRefund) status null) })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer") (= (json/parse @payload.body StripeCustomer) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a customer that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer") (!= (json/parse @payload.body StripeCustomer) null))
-        (emit STRIPE_CREATE_CUSTOMER_RESULT { customerId: (object/get (json/parse @payload.body StripeCustomer) id null), email: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) email null)) (object/get (json/parse @payload.body StripeCustomer) email null) ""), almadarUid: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null)) (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null) "") })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession") (= (json/parse @payload.body StripeSessionWithCustomer) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a checkout session that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession") (!= (json/parse @payload.body StripeSessionWithCustomer) null))
-        (emit STRIPE_CREATE_CHECKOUT_SESSION_RESULT { url: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomer) url null)) (object/get (json/parse @payload.body StripeSessionWithCustomer) url null) ""), sessionId: (object/get (json/parse @payload.body StripeSessionWithCustomer) id null), customerId: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer null)) (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer "") (object/get (json/parse @payload.body StripeSessionWithCustomer) "customer.id" "")) })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession") (= (json/parse @payload.body StripeSessionWithCustomer) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a portal session that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession") (!= (json/parse @payload.body StripeSessionWithCustomer) null))
-        (emit STRIPE_CREATE_PORTAL_SESSION_RESULT { url: (object/get (json/parse @payload.body StripeSessionWithCustomer) url null), customerId: (object/get (json/parse @payload.key StripeKey) customerId "") })
-      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (= (json/parse @payload.body StripeSubscription) null))
-        (emit STRIPE_FAILED { message: "Stripe answered a subscription that could not be read" })
-      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (!= (json/parse @payload.body StripeSubscription) null) (or (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null))) (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))))
-        (emit STRIPE_FAILED { message: "Invalid time value" })
-      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (!= (json/parse @payload.body StripeSubscription) null) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null)) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))
-        (emit STRIPE_SUBSCRIPTION_SHAPED {
-          action: (object/get (json/parse @payload.key StripeKey) action ""),
-          subscriptionId: (object/get (json/parse @payload.body StripeSubscription) id null),
-          customerId: (if (validate/string (object/get (json/parse @payload.body StripeSubscriptionRef) customer null)) (object/get (json/parse @payload.body StripeSubscriptionRef) customer "") (object/get (json/parse @payload.body StripeSubscription) "customer.id" "")),
-          status: (if (array/includes ["active", "past_due", "canceled", "incomplete", "incomplete_expired", "trialing", "unpaid"] (object/get (json/parse @payload.body StripeSubscription) status null)) (object/get (json/parse @payload.body StripeSubscription) status null) (if (= (object/get (json/parse @payload.body StripeSubscription) status null) "paused") "unpaid" "incomplete")),
-          priceId: (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" ""),
-          quantity: (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.quantity" null) null) 1 (object/get (json/parse @payload.body StripeSubscription) "items.data.0.quantity" null)),
-          currentPeriodStart: (str/concat (time/format (* (object/get (json/parse @payload.body StripeSubscription) current_period_start null) 1000) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* (object/get (json/parse @payload.body StripeSubscription) current_period_start null) 1000)) 1000)) 3 "0") "Z"),
-          currentPeriodEnd: (str/concat (time/format (* (object/get (json/parse @payload.body StripeSubscription) current_period_end null) 1000) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* (object/get (json/parse @payload.body StripeSubscription) current_period_end null) 1000)) 1000)) 3 "0") "Z"),
-          cancelAtPeriodEnd: (object/get (json/parse @payload.body StripeSubscription) cancel_at_period_end null),
-          tier: (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceSolo) "solo" (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceTeams) "teams" ""))
-        })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch") (or (= (json/parse @payload.key StripeKey) null) (= (json/parse @payload.body StripeSubscription) null)))
-        (emit STRIPE_FAILED { message: "Stripe answered a subscription that could not be read" })
-      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch") (!= (json/parse @payload.key StripeKey) null) (!= (json/parse @payload.body StripeSubscription) null))
-        (emit STRIPE_UPDATE_READY { subscriptionId: (object/get (json/parse @payload.key StripeKey) subscriptionId ""), quantity: (object/get (json/parse @payload.key StripeKey) quantity null), cancelAtPeriodEnd: (object/get (json/parse @payload.key StripeKey) cancelAtPeriodEnd null), itemId: (object/get (json/parse @payload.body StripeSubscription) "items.data.0.id" null) })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "createPaymentIntent"))))
+        (let ((pi (json/parse @payload.body StripePaymentIntent)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (= @pi null) (emit STRIPE_FAILED { message: "Stripe answered a payment intent that could not be read" })
+              (emit STRIPE_CREATE_PAYMENT_INTENT_RESULT { id: @pi.id, object: @pi.object, amount: @pi.amount, currency: @pi.currency, status: @pi.status, client_secret: @pi.client_secret, metadata: @pi.metadata }))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "confirmPayment"))))
+        (let ((pi (json/parse @payload.body StripePaymentIntent)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (= @pi null) (emit STRIPE_FAILED { message: "Stripe answered a payment intent that could not be read" })
+              (emit STRIPE_CONFIRM_PAYMENT_RESULT { id: @pi.id, object: @pi.object, amount: @pi.amount, currency: @pi.currency, status: @pi.status, client_secret: @pi.client_secret, metadata: @pi.metadata }))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "refund"))))
+        (let ((r (json/parse @payload.body StripeRefund)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (= @r null) (emit STRIPE_FAILED { message: "Stripe answered a refund that could not be read" })
+              (emit STRIPE_REFUND_RESULT { id: @r.id, object: @r.object, amount: @r.amount, status: @r.status }))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "createCustomer"))))
+        (let ((c (json/parse @payload.body StripeCustomer)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (= @c null) (emit STRIPE_FAILED { message: "Stripe answered a customer that could not be read" })
+              (let ((md : StripeMetadata (default @c.metadata {})))
+                (emit STRIPE_CREATE_CUSTOMER_RESULT { customerId: @c.id, email: (default @c.email ""), almadarUid: (object/get @md "almadarUid" "") })))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "createCheckoutSession"))))
+        (let ((sa (json/parse @payload.body StripeSessionWithCustomerId)) (sb (json/parse @payload.body StripeSessionWithCustomer)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (and (= @sa null) (= @sb null)) (emit STRIPE_FAILED { message: "Stripe answered a checkout session that could not be read" })
+              (if (!= @sa null)
+                (emit STRIPE_CREATE_CHECKOUT_SESSION_RESULT { url: (default @sa.url ""), sessionId: @sa.id, customerId: (default @sa.customer "") })
+                (emit STRIPE_CREATE_CHECKOUT_SESSION_RESULT { url: (default @sb.url ""), sessionId: @sb.id, customerId: (if (= @sb.customer null) "" @sb.customer.id) })))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "createPortalSession"))))
+        (let ((s (json/parse @payload.body StripePortalSession)))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (= @s null) (emit STRIPE_FAILED { message: "Stripe answered a portal session that could not be read" })
+              (emit STRIPE_CREATE_PORTAL_SESSION_RESULT { url: @s.url, customerId: @s.customer }))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.action "updateSubscription.fetch"))))
+        (let ((s (json/parse @payload.body StripeSubscription)) (e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (or (= @s null) (= @e null)) (emit STRIPE_FAILED { message: "Stripe answered a subscription that could not be read" })
+              (let ((f (array/first @s.items.data)))
+                (if (or (= @f null) (not (validate/number @e.job.quantity)))
+                  (emit STRIPE_FAILED { message: "Stripe answered a subscription that could not be read" })
+                  (if (validate/boolean @e.job.cancelAtPeriodEnd)
+                    (emit STRIPE_UPDATE_READY { subscriptionId: @s.id, quantity: (default @e.job.quantity 0), cancelAtPeriodEnd: (default @e.job.cancelAtPeriodEnd false), itemId: @f.id })
+                    (emit STRIPE_UPDATE_READY { subscriptionId: @s.id, quantity: (default @e.job.quantity 0), itemId: @f.id })))))))
+      STRIPE_OK -> idle when (array/some @entity.pending (fn p (and (= @p.key @payload.key) (array/includes ["getSubscription", "createSubscription", "updateSubscription", "cancelSubscription"] @p.job.action))))
+        (let ((s (json/parse @payload.body StripeSubscription)) (x (json/parse @payload.body StripeSubscriptionExpanded)) (pd (json/parse @payload.body StripeSubscriptionPeriod)) (e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (epoch : instant "1970-01-01T00:00:00.000Z"))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+            (if (or (= @s null) (= @e null)) (emit STRIPE_FAILED { message: "Stripe answered a subscription that could not be read" })
+              (if (= @pd null)
+                (emit STRIPE_FAILED { message: "Invalid time value" })
+                (let ((f (array/first @s.items.data)))
+                  (if (= @f null)
+                    (emit STRIPE_FAILED { message: "Stripe answered a subscription without items" })
+                    (if (and (= @s.customer null) (= @x null))
+                      (emit STRIPE_FAILED { message: "Stripe answered a subscription without a customer" })
+                      (emit STRIPE_SUBSCRIPTION_SHAPED {
+                        action: @e.job.action,
+                        subscriptionId: @s.id,
+                        customerId: (if (= @s.customer null) @x.customer.id @s.customer),
+                        status: (if (array/includes ["active", "past_due", "canceled", "incomplete", "incomplete_expired", "trialing", "unpaid"] @s.status) @s.status (if (= @s.status "paused") "unpaid" "incomplete")),
+                        priceId: @f.price.id,
+                        quantity: (if (= @f.quantity null) 1 @f.quantity),
+                        currentPeriodStart: (str/concat (time/format (time/add @epoch @pd.current_period_start "second") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* @pd.current_period_start 1000)) 1000)) 3 "0") "Z"),
+                        currentPeriodEnd: (str/concat (time/format (time/add @epoch @pd.current_period_end "second") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* @pd.current_period_end 1000)) 1000)) 3 "0") "Z"),
+                        cancelAtPeriodEnd: @s.cancel_at_period_end,
+                        tier: (if (= @f.price.id @config.priceSolo) "solo" (if (= @f.price.id @config.priceTeams) "teams" ""))
+                      }))))))))
+      STRIPE_OK -> idle when (not (array/some @entity.pending (fn p (and (= @p.key @payload.key) true))))
+        (emit STRIPE_FAILED { message: "Stripe answered a request that is not pending" })
       STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "getSubscription")
         (emit STRIPE_GET_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
       STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "createSubscription")
@@ -157,7 +261,6 @@ orbital StripeOrbital {
         (emit STRIPE_UPDATE_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
       STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "cancelSubscription")
         (emit STRIPE_CANCEL_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
-    }
 
     emits {
       STRIPE_CREATE_PAYMENT_INTENT_RESULT -> external {

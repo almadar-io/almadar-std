@@ -44,11 +44,12 @@ orbital ChoiceGateOrbital {
             (and (== @payload.grounded true)
               (and (<= (math/abs (- @payload.x (+ (object/get @g x) (object/get @oo dx)))) @config.reachX)
                 (<= (math/abs (- @payload.y (object/get @g y))) @config.reachY))))))))
+          (if (= @o null) (emit CHOICE_UNKNOWN { })
           (if (== (object/get @o correct) true)
             (do
               (set @entity.choices (array/map @entity.choices (fn c (if (== (object/get @c id) (object/get @g id)) (object/merge @c { solved: true, chosen: (object/get @o id) }) @c))))
               (emit CHOICE_CORRECT { id: (object/get @g id), optionId: (object/get @o id), x: (object/get @g x), y: (object/get @g y) }))
-            (emit CHOICE_WRONG { id: (object/get @g id), optionId: (object/get @o id), x: (+ (object/get @g x) (object/get @o dx)), y: (object/get @g y) }))))
+            (emit CHOICE_WRONG { id: (object/get @g id), optionId: (object/get @o id), x: (+ (object/get @g x) (object/get @o dx)), y: (object/get @g y) })))))
           null))
 
       SET_GATES -> active
@@ -59,6 +60,9 @@ orbital ChoiceGateOrbital {
     }
 
     emits {
+      CHOICE_UNKNOWN -> external { }
+        @description "The picked option id matches no option of the gate."
+        @tier "domain"
       CHOICE_CORRECT -> external {
         id : string!
         optionId : string!

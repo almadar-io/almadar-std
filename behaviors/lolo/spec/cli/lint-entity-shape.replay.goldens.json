@@ -1704,6 +1704,205 @@
       ]
     },
     {
+      "id": "an-orb-entity-name-with-no-cased-letters-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "مهمة",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-shape",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        }
+      ]
+    },
+    {
+      "id": "control-a-lowercase-latin-orb-entity-name-is-still-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "task_list",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-shape",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].entity.name",
+                      "message": "Entity name 'task_list' should be PascalCase",
+                      "suggestion": "Use PascalCase for entity names (e.g., 'Task', 'UserProfile')",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        }
+      ]
+    },
+    {
+      "id": "control-a-mixed-script-orb-entity-name-with-cased-letters-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "مهمةtask",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-shape",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_FIELD_NAME",
+                      "path": "orbitals[0].entity.name",
+                      "message": "Entity name 'مهمةtask' should be PascalCase",
+                      "suggestion": "Use PascalCase for entity names (e.g., 'Task', 'UserProfile')",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityShape"
+        }
+      ]
+    },
+    {
       "id": "an args body that does not parse is the usage error",
       "steps": [
         {

@@ -20,10 +20,10 @@ orbital LlmLocalOrbital {
       INIT -> idle
 
       LLM_CLASSIFY -> idle when (= (array/len @payload.categories) 0)
-        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (if (!= @payload.key null) @payload.key ""), action: "classify" })
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (default @payload.key ""), action: "classify" })
       LLM_CLASSIFY -> idle when (> (array/len @payload.categories) 0)
         (emit LLM_LOCAL_ASK {
-          job: (json/stringify { action: "classify", categories: @payload.categories, itemIds: [], count: 0, callKey: (if (!= @payload.key null) @payload.key "") }),
+          job: (json/stringify { action: "classify", categories: @payload.categories, itemIds: [], count: 0, callKey: (default @payload.key "") }),
           text: (str/join ["Classify the text into exactly one of these categories:" (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n") "Answer with the category, your confidence from 0 to 1, and one short sentence of reasoning." "" (str/concat "Text: " @payload.text)] "\n"),
           schema: (json/stringify {
             type: "object",
@@ -40,18 +40,18 @@ orbital LlmLocalOrbital {
         (emit LLM_FAILED {
           code: "VALIDATION_ERROR",
           message: (str/concat "Param 'items' must be a list with distinct ids; '"
-            (array/find (array/map @payload.items (fn it @it.id)) (fn id (> (array/count (array/map @payload.items (fn it @it.id)) (fn x (= @x @id))) 1)))
+            (default (array/find (array/map @payload.items (fn it @it.id)) (fn id (> (array/count (array/map @payload.items (fn it @it.id)) (fn x (= @x @id))) 1))) "")
             "' appears twice"),
-          key: (if (!= @payload.key null) @payload.key ""),
+          key: (default @payload.key ""),
           action: "classifyMany"
         })
       LLM_CLASSIFY_MANY -> idle when (and (= (array/len @payload.categories) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
-        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (if (!= @payload.key null) @payload.key ""), action: "classifyMany" })
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (default @payload.key ""), action: "classifyMany" })
       LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (= (array/len @payload.items) 0))
         (emit LLM_CLASSIFY_MANY_RESULT { verdicts: [] })
       LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (> (array/len @payload.items) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
         (emit LLM_LOCAL_ASK {
-          job: (json/stringify { action: "classifyMany", categories: @payload.categories, itemIds: (array/map @payload.items (fn it @it.id)), count: 0, callKey: (if (!= @payload.key null) @payload.key "") }),
+          job: (json/stringify { action: "classifyMany", categories: @payload.categories, itemIds: (array/map @payload.items (fn it @it.id)), count: 0, callKey: (default @payload.key "") }),
           text: (str/concat
             (str/join ["Classify each item below into exactly one of these categories:" (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n") "Answer with one verdict per item: its id, the category, and your confidence from 0 to 1."] "\n")
             "\n\n"
@@ -82,7 +82,7 @@ orbital LlmLocalOrbital {
         (emit LLM_EMBED_RESULT { embeddings: [] })
       LLM_EMBED -> idle when (> (array/len @payload.texts) 0)
         (emit LLM_LOCAL_EMBED_ASK {
-          job: (json/stringify { action: "embed", categories: [], itemIds: [], count: (array/len @payload.texts), callKey: (if (!= @payload.key null) @payload.key "") }),
+          job: (json/stringify { action: "embed", categories: [], itemIds: [], count: (array/len @payload.texts), callKey: (default @payload.key "") }),
           texts: @payload.texts
         })
 
@@ -90,20 +90,20 @@ orbital LlmLocalOrbital {
         (cancel-call @payload.key)
 
       LLM_LOCAL_ASK -> idle
-        (set @entity.pending (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
+        (set @entity.pending (let ((k (object/get (default (json/parse @payload.job LocalJob) { action: "" }) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
         (browser/prompt @payload.text @payload.schema {
-          key: (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @payload.job @k)),
+          key: (let ((k (object/get (default (json/parse @payload.job LocalJob) { action: "" }) callKey ""))) (if (= @k "") @payload.job @k)),
           emit: { success: LLM_LOCAL_PROMPTED, failure: LLM_LOCAL_FAILED, cancelled: LLM_LOCAL_CANCELLED }
         })
       LLM_LOCAL_EMBED_ASK -> idle
-        (set @entity.pending (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
+        (set @entity.pending (let ((k (object/get (default (json/parse @payload.job LocalJob) { action: "" }) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
         (browser/embed @payload.texts {
-          key: (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @payload.job @k)),
+          key: (let ((k (object/get (default (json/parse @payload.job LocalJob) { action: "" }) callKey ""))) (if (= @k "") @payload.job @k)),
           emit: { success: LLM_LOCAL_EMBEDDED, failure: LLM_LOCAL_FAILED, cancelled: LLM_LOCAL_CANCELLED }
         })
 
       LLM_LOCAL_FAILED -> idle
-        (let ((k (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey "")) (a (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) action "")))
+        (let ((k (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) callKey "")) (a (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) action "")))
           (if (= @payload.kind "unconfigured")
             (emit LLM_FAILED { code: "NOT_CONFIGURED", message: @payload.error, key: @k, action: @a })
             (if (= @payload.kind "unavailable")
@@ -122,21 +122,21 @@ orbital LlmLocalOrbital {
         })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
 
-      LLM_LOCAL_REPLIED -> idle when (= (object/get (json/parse @payload.job LocalJob) action "") "classify")
+      LLM_LOCAL_REPLIED -> idle when (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classify")
         (emit LLM_LOCAL_CHECKED {
           job: @payload.job, reply: @payload.reply,
-          problem: (let ((c (json/parse @payload.reply LocalClassification)) (cats (object/get (json/parse @payload.job LocalJob) categories [])))
-            (if (not (validate/object @c)) "The on-device model replied outside the declared shape"
+          problem: (let ((c (json/parse @payload.reply LocalClassification)) (cats (object/get (default (json/parse @payload.job LocalJob) { action: "" }) categories [])))
+            (if (= @c null) "The on-device model replied outside the declared shape"
               (if (not (and (validate/string (object/get @c category null)) (validate/number (object/get @c confidence null)) (validate/string (object/get @c reasoning null)))) "The on-device model replied outside the declared shape"
                 (if (or (< (object/get @c confidence 0) 0) (> (object/get @c confidence 0) 1)) "The on-device model replied outside the declared shape"
                   (if (array/includes @cats (object/get @c category "")) ""
                     (str/concat "The on-device model chose '" (object/get @c category "") "', not a declared category"))))))
         })
-      LLM_LOCAL_REPLIED -> idle when (= (object/get (json/parse @payload.job LocalJob) action "") "classifyMany")
+      LLM_LOCAL_REPLIED -> idle when (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classifyMany")
         (emit LLM_LOCAL_CHECKED {
           job: @payload.job, reply: @payload.reply,
-          problem: (let ((p (json/parse @payload.reply LocalVerdicts)) (ids (object/get (json/parse @payload.job LocalJob) itemIds [])) (cats (object/get (json/parse @payload.job LocalJob) categories [])))
-            (if (not (validate/object @p)) "The on-device model replied outside the declared shape"
+          problem: (let ((p (json/parse @payload.reply LocalVerdicts)) (ids (object/get (default (json/parse @payload.job LocalJob) { action: "" }) itemIds [])) (cats (object/get (default (json/parse @payload.job LocalJob) { action: "" }) categories [])))
+            (if (= @p null) "The on-device model replied outside the declared shape"
               (if (not (validate/array (object/get @p verdicts null))) "The on-device model replied outside the declared shape"
                 (let ((vs (object/get @p verdicts [])))
                   (if (not (array/every @vs (fn v (if (validate/object @v) (and (validate/string (object/get @v id null)) (validate/string (object/get @v category null)) (validate/number (object/get @v confidence null))) false)))) "The on-device model replied outside the declared shape"
@@ -149,30 +149,30 @@ orbital LlmLocalOrbital {
                           (if (> (array/count @errs (fn e (!= @e ""))) 0) (array/find @errs (fn e (!= @e ""))) (if (> (array/len @missing) 0) (str/concat "The model gave no verdict for " (str/join @missing ", ")) ""))))))))))
         })
       LLM_LOCAL_CHECKED -> idle when (!= @payload.problem "")
-        (emit LLM_FAILED { code: "SERVICE_ERROR", message: @payload.problem, key: (object/get (json/parse @payload.job LocalJob) callKey ""), action: (object/get (json/parse @payload.job LocalJob) action "") })
-      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (json/parse @payload.job LocalJob) action "") "classify"))
+        (emit LLM_FAILED { code: "SERVICE_ERROR", message: @payload.problem, key: (object/get (default (json/parse @payload.job LocalJob) { action: "" }) callKey ""), action: (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") })
+      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classify"))
         (emit LLM_CLASSIFY_RESULT {
-          category: (object/get (json/parse @payload.reply LocalClassification) category ""),
-          confidence: (object/get (json/parse @payload.reply LocalClassification) confidence 0),
-          reasoning: (object/get (json/parse @payload.reply LocalClassification) reasoning "")
+          category: (object/get (default (json/parse @payload.reply LocalClassification) { category: "", confidence: 0, reasoning: "" }) category ""),
+          confidence: (object/get (default (json/parse @payload.reply LocalClassification) { category: "", confidence: 0, reasoning: "" }) confidence 0),
+          reasoning: (object/get (default (json/parse @payload.reply LocalClassification) { category: "", confidence: 0, reasoning: "" }) reasoning "")
         })
-      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (json/parse @payload.job LocalJob) action "") "classifyMany"))
-        (let ((ids (object/get (json/parse @payload.job LocalJob) itemIds [])) (vs (object/get (json/parse @payload.reply LocalVerdicts) verdicts [])))
+      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classifyMany"))
+        (let ((ids (object/get (default (json/parse @payload.job LocalJob) { action: "" }) itemIds [])) (vs (object/get (default (json/parse @payload.reply LocalVerdicts) { verdicts: [] }) verdicts [])))
           (emit LLM_CLASSIFY_MANY_RESULT {
             verdicts: (array/map @ids (fn itemId (let ((k @index))
-              (let ((v (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) ""))))))
+              (let ((v (default (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) "")))) { id: "", category: "", confidence: 0 })))
                 { id: @itemId, category: (object/get @v category ""), confidence: (object/get @v confidence 0) }))))
           }))
 
-      LLM_LOCAL_EMBEDDED -> idle when (!= (array/len @payload.embeddings) (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0))
+      LLM_LOCAL_EMBEDDED -> idle when (!= (array/len @payload.embeddings) (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) count 0))
         (emit LLM_FAILED {
           code: "SERVICE_ERROR",
-          message: (str/concat "The on-device embedder returned " (array/len @payload.embeddings) " vectors for " (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0) " texts"),
-          key: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey ""),
+          message: (str/concat "The on-device embedder returned " (array/len @payload.embeddings) " vectors for " (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) count 0) " texts"),
+          key: (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) callKey ""),
           action: "embed"
         })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
-      LLM_LOCAL_EMBEDDED -> idle when (= (array/len @payload.embeddings) (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0))
+      LLM_LOCAL_EMBEDDED -> idle when (= (array/len @payload.embeddings) (object/get (default (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) { action: "" }) count 0))
         (emit LLM_EMBED_RESULT { embeddings: @payload.embeddings })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
     }

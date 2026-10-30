@@ -35,15 +35,15 @@ orbital OrbLintCollectionPolicyOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((es (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((o (array/nth @orbitals @oi)))
+            (let ((o (default (array/nth @orbitals @oi) {})))
               (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))
                 (fn en (and (validate/object @en) (object/has @en "collection") (or (object/has @en "read_policy") (object/has @en "create_policy") (object/has @en "update_policy") (object/has @en "delete_policy")))))))))))
             (array/flatten (array/map (array/range 0 (array/len @es)) (fn i
-              (let ((en (array/nth @es @i)))
-                (let ((fi (array/first (array/filter (array/range 0 (array/len @es)) (fn j (= (object/get (array/nth @es @j) "collection") (object/get @en "collection"))))))
-                      (first (array/find @es (fn x (= (object/get @x "collection") (object/get @en "collection"))))))
+              (let ((en (default (array/nth @es @i) {})))
+                (let ((fi (array/first (array/filter (array/range 0 (array/len @es)) (fn j (= (object/get (default (array/nth @es @j) {}) "collection") (object/get @en "collection"))))))
+                      (first (default (array/find @es (fn x (= (object/get @x "collection") (object/get @en "collection")))) {})))
                   (if (and (!= @fi @i) (!= [(object/get @first "read_policy" "") (object/get @first "create_policy" "") (object/get @first "update_policy" "") (object/get @first "delete_policy" "")] [(object/get @en "read_policy" "") (object/get @en "create_policy" "") (object/get @en "update_policy" "") (object/get @en "delete_policy" "")]))
-                    [{ code: @config.codes.sCollectionPolicyConflict.code, path: (str/concat (object/get @en "name") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
+                    [{ code: @config.codes.sCollectionPolicyConflict.code, path: (str/concat (object/get @en "name" "") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
                     [])))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -60,7 +60,7 @@ orbital OrbLintCollectionPolicyOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PolicyProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PolicyProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -77,10 +77,10 @@ orbital OrbLintCollectionPolicyOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint collection-policy <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

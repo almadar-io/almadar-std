@@ -276,7 +276,7 @@ orbital MeasureOrbital {
       PROBE -> idle when (and (== @entity.active true) (> @entity.t 0))
         (set @entity.points (array/append @entity.points { x: @entity.t, y: @entity.value, color: @config.probeColor }))
         (set @entity.sampleCount (array/len @entity.points))
-        (set @entity.meanValue (array/avg (array/map @entity.points (fn p (object/get @p y)))))
+        (set @entity.meanValue (default (array/avg (array/map @entity.points (fn p (object/get @p y)))) 0))
         (render-ui main {
           type: box
           padding: md

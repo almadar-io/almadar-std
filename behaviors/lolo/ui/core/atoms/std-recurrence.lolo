@@ -50,11 +50,11 @@ orbital RecurrenceOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
       RecurrenceLoaded -> viewing
-        (set @entity.frequency (object/get (array/first ?data) frequency weekly))
-        (set @entity.interval (object/get (array/first ?data) interval 1))
-        (set @entity.startDate (object/get (array/first ?data) startDate ""))
-        (set @entity.endDate (object/get (array/first ?data) endDate ""))
-        (set @entity.endAfterCount (object/get (array/first ?data) endAfterCount 0))
+        (set @entity.frequency (let ((rec (array/first ?data))) (if (= @rec null) weekly (object/get @rec frequency weekly))))
+        (set @entity.interval (let ((rec (array/first ?data))) (if (= @rec null) 1 (object/get @rec interval 1))))
+        (set @entity.startDate (let ((rec (array/first ?data))) (if (= @rec null) "" (object/get @rec startDate ""))))
+        (set @entity.endDate (let ((rec (array/first ?data))) (if (= @rec null) "" (object/get @rec endDate ""))))
+        (set @entity.endAfterCount (let ((rec (array/first ?data))) (if (= @rec null) 0 (object/get @rec endAfterCount 0))))
         (set @entity.occurrences (array/map ?data (fn row {
           date: (object/get @row date "")
           description: (object/get @row notes "")

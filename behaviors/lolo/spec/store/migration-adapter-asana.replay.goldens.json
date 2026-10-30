@@ -1,0 +1,149 @@
+{
+ "atom": "store/atoms/std-migration-adapter-asana.lolo",
+ "trait": "MigrationAdapterAsana",
+ "cases": [
+  {
+   "id": "an-export-that-is-not-json-is-unreadable",
+   "note": "the unreadable-envelope route",
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "asana",
+      "documents": [
+       {
+        "ref": "a.json",
+        "raw": "not json"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_SOURCE_UNREADABLE",
+        "payload": {
+         "error": "Asana export is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-export-of-the-wrong-shape-is-unreadable",
+   "note": "valid JSON that is neither a task array nor { data }",
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "asana",
+      "documents": [
+       {
+        "ref": "a.json",
+        "raw": "{\"x\":1}"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_SOURCE_UNREADABLE",
+        "payload": {
+         "error": "Asana export must be a task array or { data: Task[] }"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-task-without-a-name-is-skipped-with-its-reason",
+   "note": "the per-record ledger",
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "asana",
+      "documents": [
+       {
+        "ref": "a.json",
+        "raw": "[{\"gid\":\"1\",\"name\":\"\"}]"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "skipped": [
+          {
+           "ref": "asana:a.json:1",
+           "reason": "task has no name"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-named-task-becomes-a-unit",
+   "note": "a project folder unit plus the task unit",
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "asana",
+      "documents": [
+       {
+        "ref": "a.json",
+        "raw": "[{\"gid\":\"1\",\"name\":\"Write\",\"notes\":\"n\"}]"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [
+          {
+           "ref": "asana:a.json",
+           "kind": "folder",
+           "title": "a.json",
+           "source": "asana",
+           "span": "a.json",
+           "metadata": {
+            "source": "asana",
+            "taskCount": 1
+           }
+          },
+          {
+           "ref": "asana:a.json:1",
+           "kind": "root",
+           "title": "Write",
+           "content": "n",
+           "parentRef": "asana:a.json",
+           "source": "asana",
+           "span": "a.json#1",
+           "metadata": {
+            "source": "asana",
+            "completed": false
+           }
+          }
+         ],
+         "skipped": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

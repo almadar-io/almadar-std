@@ -55,11 +55,11 @@ orbital OrbLintEmbedBridgeOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (lp @entity.listenProps) (fired (array/concat (array/flatten (object/values @payload.byControl)) (array/flatten (object/values @payload.byEffect)))))
           (let ((rows (array/flatten (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                  (let ((trs (object/get (array/nth @orbitals @oi) "traits" [])))
+                  (let ((trs (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
                     (array/map (array/range 0 (array/len @trs)) (fn ti
-                      (let ((xs (object/get (object/get (array/nth @trs @ti) "stateMachine" {}) "transitions" [])))
+                      (let ((xs (object/get (object/get (default (array/nth @trs @ti) {}) "stateMachine" {}) "transitions" [])))
                         (array/map (array/range 0 (array/len @xs)) (fn xi
-                          (let ((x (array/nth @xs @xi)))
+                          (let ((x (default (array/nth @xs @xi) {})))
                             { path: (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]"),
                               event: (object/get @x "event" ""),
                               bridges: (array/flatten (array/map (object/get @x "effects" []) (fn e
@@ -110,7 +110,7 @@ orbital OrbLintEmbedBridgeOrbital {
     listens {
       LINT_EVENT_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry, the event-listen props by pattern."
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
@@ -131,10 +131,10 @@ orbital OrbLintEmbedBridgeOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint embed-bridge <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

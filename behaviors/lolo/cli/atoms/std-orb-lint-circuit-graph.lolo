@@ -74,7 +74,7 @@ orbital OrbLintCircuitGraphOrbital {
                                                 @noru))
                                             @noru))))) })))))
                         (let ((rl : [CgRl] (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
-                                (array/map (object/get (array/nth @tl @tj) "ru") (fn r { s: (object/get @r "s"), p: (object/get @r "p"), to: (object/get (array/nth @tl @tj) "to"), path: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" (object/get @r "ej") "]") })))))))
+                                (array/map (object/get (default (array/nth @tl @tj) {}) "ru") (fn r { s: (object/get @r "s"), p: (object/get @r "p"), to: (object/get (default (array/nth @tl @tj) {}) "to"), path: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" (object/get @r "ej") "]") })))))))
                           (let ((initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true))))
                                 (termNames (array/map (array/filter @sts (fn s (= (object/get @s "isTerminal" false) true))) (fn s (object/get @s "name" ""))))
                                 (closers (array/filter @tl (fn x (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))))))
@@ -100,7 +100,7 @@ orbital OrbLintCircuitGraphOrbital {
                                       (fn r { code: @config.codes.circuitNoOverlayExit.code, path: (object/get @r "path"), message: (str/concat "State '" (object/get @r "to") "' renders to '" (object/get @r "s") "' slot but has no exit transition. Users will be stuck in this overlay."), suggestion: (str/concat "Add a transition from '" (object/get @r "to") "' that goes to a state not rendering to '" (object/get @r "s") "' slot. Common exit events: " (str/join @config.exitEvents ", ")), severity: "error" })))
                                   (if (= (array/len @ovStates) 0) @nof
                                     (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
-                                      (let ((x (array/nth @tl @tj)))
+                                      (let ((x (default (array/nth @tl @tj) {})))
                                         (if (and (array/some @ovStates (fn s (array/includes (object/get @x "f") @s))) (array/includes @inlStates (object/get @x "to")) (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))) (not (object/get @x "hm")))
                                           [{ code: @config.codes.circuitModalExitIncomplete.code, path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " closes modal but doesn't re-render main slot. Main view will show stale content."), suggestion: "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal", severity: "error" }]
                                           @nof)))))))
@@ -132,7 +132,7 @@ orbital OrbLintCircuitGraphOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CgProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CgProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
 
@@ -157,10 +157,10 @@ orbital OrbLintCircuitGraphOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-graph <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

@@ -138,7 +138,7 @@ orbital BrowseItemOrbital {
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?searchTerm))))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -147,13 +147,13 @@ orbital BrowseItemOrbital {
       REFETCH_QUERY -> browsing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
         })
       BrowseItemRelatedLoaded -> browsing
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy

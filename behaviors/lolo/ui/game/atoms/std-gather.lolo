@@ -58,7 +58,7 @@ orbital GatherOrbital {
           (set @entity.wood (+ @entity.wood (* @config.yieldPerNode @woodHits)))
           (set @entity.stone (+ @entity.stone (* @config.yieldPerNode @stoneHits)))
           (set @entity.features (array/filter @entity.features (fn f (not (and (== (object/get @f x) @payload.x) (and (== (object/get @f y) @payload.z) (or (== (object/get @f type) @config.woodType) (== (object/get @f type) @config.stoneType))))))))
-          (emit BURST { particles: (array/map @matched (fn f { id: (str/concat "fx-gather-" (object/get @f id)), type: "pickup", x: (object/get @f x), z: (object/get @f y), message: (if (== (object/get @f type) @config.woodType) "+1 wood" "+1 stone"), ttl: 3 })) })
+          (emit BURST { particles: (array/map @matched (fn f { id: (str/concat "fx-gather-" (default (object/get @f id) "")), type: "pickup", x: (object/get @f x), z: (object/get @f y), message: (if (== (object/get @f type) @config.woodType) "+1 wood" "+1 stone"), ttl: 3 })) })
           (emit RESOURCES { wood: @entity.wood, stone: @entity.stone, movesLeft: @payload.movesLeft })
         )))
 

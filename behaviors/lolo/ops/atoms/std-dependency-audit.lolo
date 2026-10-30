@@ -35,7 +35,7 @@ orbital DependencyAuditOrbital {
     projects : [string] @description "The projects of the run in flight, relative to root." = []
     failOn : string @description "The severity at or above which the run fails: critical, high, moderate, low or never." = "high"
     includeDev : boolean @description "Whether outdated development dependencies are reported." = true
-    startedAt : number @description "Wall-clock milliseconds at which the run began." = 0
+    startedAt : instant @description "Instant at which the run began." = 0
     startNanos : number @description "Monotonic-clock nanoseconds at which the run began." = 0
     cursor : number @description "Index of the project being audited." = 0
     rel : string @description "The project being audited, relative to root." = ""
@@ -107,7 +107,7 @@ orbital DependencyAuditOrbital {
               (low (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "low")))))
               (info (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "info")))))
               (idx (array/indexOf ["critical", "high", "moderate", "low"] @entity.failOn))
-              (iso (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+              (iso (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
               (sevColor { critical: "\u{1b}[41m\u{1b}[37m\u{1b}[1m", high: "\u{1b}[31m\u{1b}[1m", moderate: "\u{1b}[33m", low: "\u{1b}[34m", info: "\u{1b}[2m" })
               (sevLabel { critical: "CRITICAL", high: "HIGH", moderate: "MODERATE", low: "LOW", info: "INFO" })
               (sarifLevel { critical: "error", high: "error", moderate: "warning", low: "note", info: "note" }))

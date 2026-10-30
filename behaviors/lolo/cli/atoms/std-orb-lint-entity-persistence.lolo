@@ -35,7 +35,7 @@ orbital OrbLintEntityPersistenceOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((orb (array/nth @orbitals @oi)) (auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])) (trList (object/get (array/nth @orbitals @oi) "traits" [])))
+            (let ((orb (default (array/nth @orbitals @oi) {})) (auxs (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])) (trList (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
               (array/concat
                 (array/flatten (array/map
                   (array/concat [{ ent: (object/get @orb "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
@@ -52,7 +52,7 @@ orbital OrbLintEntityPersistenceOrbital {
                             []))
                         [])))))
                 (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
-                  (let ((td (array/nth @trList @ti)) (des (object/get (array/nth @trList @ti) "dataEntities" [])))
+                  (let ((td (default (array/nth @trList @ti) {})) (des (object/get (default (array/nth @trList @ti) {}) "dataEntities" [])))
                     (array/flatten (array/map (array/range 0 (array/len @des)) (fn di
                       (let ((de (array/nth @des @di)))
                         (if (and (validate/object @de) (= (object/get @de "shared" false) true) (not (object/has @de "persistence")))
@@ -73,7 +73,7 @@ orbital OrbLintEntityPersistenceOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PersistenceProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PersistenceProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -90,10 +90,10 @@ orbital OrbLintEntityPersistenceOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-persistence <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

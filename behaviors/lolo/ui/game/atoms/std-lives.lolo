@@ -16,7 +16,7 @@ orbital LivesOrbital {
     respawnX : number = 0
     respawnY : number = 0
     cpX : number = -1000000
-    lastHitAt : number = 0
+    lastHitAt : instant?
   }
 
   trait Lives -> @rebindable LivesData [client] {
@@ -28,10 +28,10 @@ orbital LivesOrbital {
         (set @entity.respawnX @config.spawnX)
         (set @entity.respawnY @config.spawnY)
         (set @entity.cpX (- 0 1000000))
-        (set @entity.lastHitAt 0)
+        (set @entity.lastHitAt null)
 
       DAMAGE -> active when (and @config.running (> @entity.lives 0))
-        (if (>= (- (time/now) @entity.lastHitAt) @config.invulnMs)
+        (if (or (= @entity.lastHitAt null) (>= (time/diff (time/now) @entity.lastHitAt "ms") @config.invulnMs))
           (do
             (set @entity.lastHitAt (time/now))
             (set @entity.lives (- @entity.lives 1))
@@ -58,7 +58,7 @@ orbital LivesOrbital {
         (set @entity.respawnX @config.spawnX)
         (set @entity.respawnY @config.spawnY)
         (set @entity.cpX (- 0 1000000))
-        (set @entity.lastHitAt 0)
+        (set @entity.lastHitAt null)
     }
 
     emits {

@@ -10,8 +10,8 @@ type S3Listing = { Contents : [S3Entry], IsTruncated : string, NextContinuationT
 type StorageFile = { name : string, size : number, type : string, content : string }
 type StorageKey = { key : string, size : number, lastModified : number }
 type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
-type StoragePending = { mode : string, bucket : string!, key : string!, size : number, isPublic : boolean, fileName : string, fileSize : number, fileKind : string, etag : string, batch : string }
-type StorageBatch = { files : [StorageFile]!, idx : number, acl : string, maxSize : number, bucket : string, items : [StorageItem]! }
+type StoragePending = { mode : string!, bucket : string!, key : string!, size : number!, isPublic : boolean!, fileName : string!, fileSize : number!, fileKind : string!, etag : string!, batch : string! }
+type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
 orbital StorageOrbital {
   entity StorageObject [runtime] {
     id : string!
@@ -24,45 +24,45 @@ orbital StorageOrbital {
       INIT -> idle
 
       STORAGE_UPLOAD -> idle
-        (emit STORAGE_RESOLVE {
+        (let ((pf (default @payload.file {}))) (emit STORAGE_RESOLVE {
           mode: "single",
           bucket: (default @payload.bucket @config.bucket),
-          hasFile: (and (!= @payload.file null) (validate/required (object/get @payload.file name null))),
-          fileName: (object/get @payload.file name ""),
-          fileSize: (object/get @payload.file size 0),
-          fileType: (default (object/get @payload.file type "") "application/octet-stream"),
+          hasFile: (validate/required (object/get @pf name null)),
+          fileName: (object/get @pf name ""),
+          fileSize: (object/get @pf size 0),
+          fileType: (default (object/get @pf type "") "application/octet-stream"),
           hasContent: (validate/required @payload.content),
-          raw: (if (and (!= @payload.file null) (validate/required (object/get @payload.file name null))) (object/get @payload.file content "") (default @payload.content "")),
+          raw: (if (validate/required (object/get @pf name null)) (object/get @pf content "") (default @payload.content "")),
           key: (default @payload.key ""),
           contentType: (default @payload.contentType ""),
           acl: (default @payload.acl ""),
           maxSize: (default @payload.maxSize 0),
           batch: ""
-        })
+        }))
 
       STORAGE_RESOLVE -> idle when (and @payload.hasFile (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize))
         (emit STORAGE_FAILED { message: (str/concat "Upload rejected: " @payload.fileName " is " @payload.fileSize " bytes (max " @payload.maxSize ")") })
       STORAGE_RESOLVE -> idle when (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (= @payload.raw ""))
         (emit STORAGE_FAILED { message: (str/concat "Upload rejected: file payload for '" @payload.fileName "' carries no content — the uploader must include the base64 data URL") })
-      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (not (str/uri-component-valid (str/join (array/drop (str/split @payload.raw ",") 1) ",")))))
+      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (not (str/uri-component-valid (str/join (array/drop (str/split @payload.raw ",") 1) ",")))))
         (emit STORAGE_FAILED { message: "URI malformed" })
-      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (not (validate/pattern (str/join (array/drop (str/split @payload.raw ",") 1) ",") "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))))
+      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (not (validate/pattern (str/join (array/drop (str/split @payload.raw ",") 1) ",") "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))))
         (emit STORAGE_FAILED { code: "INVALID_BASE64", message: "Upload rejected: the data URL base64 payload is malformed" })
-      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (not (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (not (str/uri-component-valid (str/join (array/drop (str/split @payload.raw ",") 1) ","))))) (not (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (not (validate/pattern (str/join (array/drop (str/split @payload.raw ",") 1) ",") "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")))))
-        (emit STORAGE_PUT {
+      STORAGE_RESOLVE -> idle when (and (or (and (and @payload.hasFile (not (and (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize)))) (!= @payload.raw "")) (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)) (not (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (not (str/uri-component-valid (str/join (array/drop (str/split @payload.raw ",") 1) ","))))) (not (and (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (not (validate/pattern (str/join (array/drop (str/split @payload.raw ",") 1) ",") "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")))))
+        (let ((em (hash/md5 (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (let ((du (str/join (array/drop (str/split @payload.raw ",") 1) ","))) (let ((dd (str/decode-uri-component @du))) (if (= @dd null) @du @dd))) @payload.raw))) "hex"))) (if (= @em null) (emit STORAGE_FAILED { message: "The upload content could not be hashed" }) (emit STORAGE_PUT {
           mode: @payload.mode,
           bucket: @payload.bucket,
           key: (if @payload.hasFile (str/concat @now "-" (str/join (array/map (array/filter (str/split @payload.fileName "") (fn c (!= @c ""))) (fn c (if (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-" @c) @c (if (= (str/len (str/encode-uri-component @c)) 12) "__" "_")))) "")) @payload.key),
-          b64: (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw))),
-          contentType: (if @payload.hasFile (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) (str/slice (array/nth (str/split @payload.raw ",") 0) 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) (str/slice (array/nth (str/split @payload.raw ",") 0) 5)) @payload.fileType) (if (!= @payload.contentType "") @payload.contentType (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) (str/slice (array/nth (str/split @payload.raw ",") 0) 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) (str/slice (array/nth (str/split @payload.raw ",") 0) 5)) "application/octet-stream"))),
-          size: (- (math/floor (/ (* (str/len (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw)))) 3) 4)) (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw))) "==") 2 (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw))) "=") 1 0))),
-          etag: (str/concat "\"" (hash/md5 (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64") (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5 (- (str/len (array/nth (str/split @payload.raw ",") 0)) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (array/nth (str/split @payload.raw ",") 0) ";base64")) (not (str/includes (str/slice (array/nth (str/split @payload.raw ",") 0) 5) ";"))) (str/decode-uri-component (str/join (array/drop (str/split @payload.raw ",") 1) ",")) @payload.raw))) "hex") "\""),
+          b64: (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (let ((du (str/join (array/drop (str/split @payload.raw ",") 1) ","))) (let ((dd (str/decode-uri-component @du))) (if (= @dd null) @du @dd))) @payload.raw))),
+          contentType: (if @payload.hasFile (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) @payload.fileType) (if (!= @payload.contentType "") @payload.contentType (if (and (or (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";")))) (!= (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "")) (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5)) "application/octet-stream"))),
+          size: (- (math/floor (/ (* (str/len (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (let ((du (str/join (array/drop (str/split @payload.raw ",") 1) ","))) (let ((dd (str/decode-uri-component @du))) (if (= @dd null) @du @dd))) @payload.raw)))) 3) 4)) (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (let ((du (str/join (array/drop (str/split @payload.raw ",") 1) ","))) (let ((dd (str/decode-uri-component @du))) (if (= @dd null) @du @dd))) @payload.raw))) "==") 2 (if (str/endsWith (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64") (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5 (- (str/len (default (array/nth (str/split @payload.raw ",") 0) "")) 7)) ";"))) (str/join (array/drop (str/split @payload.raw ",") 1) ",") (base64/encode (if (and (and (str/startsWith @payload.raw "data:") (str/includes @payload.raw ",")) (not (str/endsWith (default (array/nth (str/split @payload.raw ",") 0) "") ";base64")) (not (str/includes (str/slice (default (array/nth (str/split @payload.raw ",") 0) "") 5) ";"))) (let ((du (str/join (array/drop (str/split @payload.raw ",") 1) ","))) (let ((dd (str/decode-uri-component @du))) (if (= @dd null) @du @dd))) @payload.raw))) "=") 1 0))),
+          etag: (str/concat "\"" @em "\""),
           isPublic: (= @payload.acl "public"),
           fileName: @payload.fileName,
           fileSize: @payload.fileSize,
           fileKind: @payload.fileType,
           batch: @payload.batch
-        })
+        })))
       STORAGE_RESOLVE -> idle when (and (not @payload.hasFile) (not (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)))
         (emit STORAGE_FAILED { message: "upload requires either `file` (with content) or the `key` + `content` pair" })
 
@@ -88,12 +88,12 @@ orbital StorageOrbital {
             timeoutMs: @config.timeoutMs,
             retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
           } { key: (json/stringify { mode: @payload.mode, bucket: @payload.bucket, key: @payload.key, size: @payload.size, isPublic: true, fileName: @payload.fileName, fileSize: @payload.fileSize, fileKind: @payload.fileKind, etag: @payload.etag, batch: @payload.batch }), emit: { success: STORAGE_PUT_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (object/get (json/parse @payload.key StoragePending) isPublic false))
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((pk (json/parse @payload.key StoragePending))) (if (= @pk null) false (object/get @pk isPublic false))))
         (let ((u (json/parse @payload.key StoragePending)))
           (if (= @u null)
             (emit STORAGE_FAILED { message: "The upload state could not be read back" })
           (emit STORAGE_PUT_DONE { url: (if (!= @config.publicUrlBase "") (str/concat (if (str/endsWith @config.publicUrlBase "/") (str/slice @config.publicUrlBase 0 (- (str/len @config.publicUrlBase) 1)) @config.publicUrlBase) "/" @u.key) (if (!= @config.endpoint "") (str/concat (if (str/endsWith @config.endpoint "/") (str/slice @config.endpoint 0 (- (str/len @config.endpoint) 1)) @config.endpoint) "/" @u.bucket "/" @u.key) (str/concat "https://" @u.bucket ".s3." @config.region ".amazonaws.com/" @u.key))), state: (json/stringify @u) })))
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (object/get (json/parse @payload.key StoragePending) isPublic false)))
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (let ((pk (json/parse @payload.key StoragePending))) (if (= @pk null) false (object/get @pk isPublic false)))))
         (let ((u (json/parse @payload.key StoragePending)))
           (if (= @u null)
             (emit STORAGE_FAILED { message: "The upload state could not be read back" })
@@ -106,39 +106,55 @@ orbital StorageOrbital {
         (emit STORAGE_HTTP_ERROR { text: @payload.body })
       STORAGE_PUT_PRESIGNED -> idle
         (emit STORAGE_PUT_DONE { url: @payload.url, state: @payload.key })
-      STORAGE_PUT_DONE -> idle when (= (object/get (json/parse @payload.state StoragePending) mode "single") "single")
+      STORAGE_PUT_DONE -> idle when (= (json/parse @payload.state StoragePending) null)
+        (emit STORAGE_FAILED { message: "The upload state could not be read back" })
+      STORAGE_PUT_DONE -> idle when (= (let ((ps (json/parse @payload.state StoragePending))) (if (= @ps null) "" (object/get @ps mode "single"))) "single")
         (let ((u (json/parse @payload.state StoragePending)))
-          (emit STORAGE_UPLOADED { key: @u.key, bucket: @u.bucket, size: @u.size, etag: @u.etag, id: @u.key, url: @payload.url }))
-      STORAGE_PUT_DONE -> idle when (= (object/get (json/parse @payload.state StoragePending) mode "single") "batch")
+          (if (= @u null)
+            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
+            (emit STORAGE_UPLOADED { key: @u.key, bucket: @u.bucket, size: @u.size, etag: @u.etag, id: @u.key, url: @payload.url })))
+      STORAGE_PUT_DONE -> idle when (= (let ((ps (json/parse @payload.state StoragePending))) (if (= @ps null) "" (object/get @ps mode "single"))) "batch")
         (let ((u (json/parse @payload.state StoragePending)))
-          (let ((b (json/parse @u.batch StorageBatch)))
-            (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: @b.files, idx: (+ @b.idx 1), acl: @b.acl, maxSize: @b.maxSize, bucket: @b.bucket, items: (array/append @b.items { id: @u.key, key: @u.key, url: @payload.url, name: @u.fileName, sizeBytes: @u.fileSize, mimeType: @u.fileKind }) }) })))
+          (if (= @u null)
+            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
+            (let ((b (json/parse @u.batch StorageBatch)))
+              (if (= @b null)
+                (emit STORAGE_FAILED { message: "The batch state could not be read back" })
+                (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: @b.files, idx: (+ @b.idx 1), acl: @b.acl, maxSize: @b.maxSize, bucket: @b.bucket, items: (array/append @b.items { id: @u.key, key: @u.key, url: @payload.url, name: @u.fileName, sizeBytes: @u.fileSize, mimeType: @u.fileKind }) }) })))))
 
       STORAGE_UPLOAD_MANY -> idle when (= (array/len (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null))))) 0)
         (emit STORAGE_FAILED { message: "uploadMany requires a non-empty `files` array (UploadDropZone batch shape)" })
       STORAGE_UPLOAD_MANY -> idle when (> (array/len (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null))))) 0)
-        (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: (array/filter @payload.files (fn f (validate/required (object/get @f name null)))), idx: 0, acl: (default @payload.acl ""), maxSize: (default @payload.maxSize 0), bucket: (default @payload.bucket @config.bucket), items: [] }) })
-      STORAGE_BATCH_NEXT -> idle when (>= (object/get (json/parse @payload.batch StorageBatch) idx 0) (array/len (object/get (json/parse @payload.batch StorageBatch) files [])))
+        (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null)))), idx: 0, acl: (default @payload.acl ""), maxSize: (default @payload.maxSize 0), bucket: (default @payload.bucket @config.bucket), items: [] }) })
+      STORAGE_BATCH_NEXT -> idle when (= (json/parse @payload.batch StorageBatch) null)
+        (emit STORAGE_FAILED { message: "The batch state could not be read back" })
+      STORAGE_BATCH_NEXT -> idle when (let ((pb (json/parse @payload.batch StorageBatch))) (if (= @pb null) false (>= @pb.idx (array/len @pb.files))))
         (let ((b (json/parse @payload.batch StorageBatch)))
-          (emit STORAGE_UPLOADED_MANY { items: @b.items, count: (array/len @b.items) }))
-      STORAGE_BATCH_NEXT -> idle when (< (object/get (json/parse @payload.batch StorageBatch) idx 0) (array/len (object/get (json/parse @payload.batch StorageBatch) files [])))
+          (if (= @b null)
+            (emit STORAGE_FAILED { message: "The batch state could not be read back" })
+            (emit STORAGE_UPLOADED_MANY { items: @b.items, count: (array/len @b.items) })))
+      STORAGE_BATCH_NEXT -> idle when (let ((pb (json/parse @payload.batch StorageBatch))) (if (= @pb null) false (< @pb.idx (array/len @pb.files))))
         (let ((b (json/parse @payload.batch StorageBatch)))
-          (let ((f (array/nth @b.files @b.idx)))
-            (emit STORAGE_RESOLVE {
-              mode: "batch",
-              bucket: @b.bucket,
-              hasFile: true,
-              fileName: @f.name,
-              fileSize: (object/get @f size 0),
-              fileType: (default (object/get @f type "") "application/octet-stream"),
-              hasContent: false,
-              raw: (object/get @f content ""),
-              key: "",
-              contentType: "",
-              acl: @b.acl,
-              maxSize: @b.maxSize,
-              batch: @payload.batch
-            })))
+          (if (= @b null)
+            (emit STORAGE_FAILED { message: "The batch state could not be read back" })
+            (let ((f (array/nth @b.files @b.idx)))
+              (if (= @f null)
+                (emit STORAGE_FAILED { message: "The batch has no file at this position" })
+                (emit STORAGE_RESOLVE {
+                  mode: "batch",
+                  bucket: @b.bucket,
+                  hasFile: true,
+                  fileName: (default @f.name ""),
+                  fileSize: (object/get @f size 0),
+                  fileType: (default (object/get @f type "") "application/octet-stream"),
+                  hasContent: false,
+                  raw: (object/get @f content ""),
+                  key: "",
+                  contentType: "",
+                  acl: @b.acl,
+                  maxSize: @b.maxSize,
+                  batch: @payload.batch
+                })))))
 
       STORAGE_DOWNLOAD -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
@@ -152,9 +168,9 @@ orbital StorageOrbital {
           retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
         } { emit: { success: STORAGE_DOWNLOAD_REPLIED, failure: STORAGE_HTTP_FAILED } })
       STORAGE_DOWNLOAD_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get @payload.headers "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (object/merge { } { }) })
+        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get (default @payload.headers {}) "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (object/merge { } { }) })
       STORAGE_DOWNLOAD_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit STORAGE_HTTP_ERROR { text: (if (base64/valid @payload.body) (base64/decode @payload.body) "x") })
+        (emit STORAGE_HTTP_ERROR { text: (if (base64/valid @payload.body) (let ((bd (base64/decode @payload.body))) (if (= @bd null) "x" @bd)) "x") })
 
       STORAGE_LIST -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
@@ -173,12 +189,12 @@ orbital StorageOrbital {
         } { emit: { success: STORAGE_LIST_REPLIED, failure: STORAGE_HTTP_FAILED } })
       STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (xml/valid @payload.body)))
         (emit STORAGE_FAILED { message: (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") })
-      STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (= (object/get (xml/parse @payload.body S3Listing) IsTruncated "") "true") (!= (object/get (xml/parse @payload.body S3Listing) NextContinuationToken null) null))
-        (let ((l (xml/parse @payload.body S3Listing)))
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (default (time/parse (object/get @e LastModified "")) 0) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") }))
-      STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (not (and (= (object/get (xml/parse @payload.body S3Listing) IsTruncated "") "true") (!= (object/get (xml/parse @payload.body S3Listing) NextContinuationToken null) null))))
-        (let ((l (xml/parse @payload.body S3Listing)))
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (default (time/parse (object/get @e LastModified "")) 0) })), truncated: (= (object/get @l IsTruncated "") "true") }))
+      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))
+        (let ((l (xml/parse @payload.body S3Listing))) (if (= @l null) (emit STORAGE_FAILED { message: "The listing could not be read" })
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (default (time/parse (object/get @e LastModified "")) 0) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") })))
+      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (not (and (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))))
+        (let ((l (xml/parse @payload.body S3Listing))) (if (= @l null) (emit STORAGE_FAILED { message: "The listing could not be read" })
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (default (time/parse (object/get @e LastModified "")) 0) })), truncated: (= (object/get @l IsTruncated "") "true") })))
       STORAGE_LIST_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit STORAGE_HTTP_ERROR { text: @payload.body })
 
@@ -212,12 +228,15 @@ orbital StorageOrbital {
           presign: { expiresSec: (if (!= @payload.expiresIn null) @payload.expiresIn 3600) }
         } { emit: { success: STORAGE_SIGNED_REPLIED, failure: STORAGE_HTTP_FAILED } })
       STORAGE_SIGNED_REPLIED -> idle
-        (emit STORAGE_SIGNED_URL { url: @payload.url, expiresAt: (+ @now (* (str/to-number (array/nth (str/split (array/nth (str/split @payload.url "X-Amz-Expires=") 1) "&") 0)) 1000)) })
+        (let ((ex (str/to-number (default (array/nth (str/split (default (array/nth (str/split @payload.url "X-Amz-Expires=") 1) "") "&") 0) ""))))
+          (if (= @ex null)
+            (emit STORAGE_FAILED { message: "The signed url carries no expiry" })
+            (emit STORAGE_SIGNED_URL { url: @payload.url, expiresAt: (time/add @now (* @ex 1000) "ms") })))
 
       STORAGE_HTTP_ERROR -> idle
-        (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (default (object/get @doc Message "") (default (object/get @doc message "") "UnknownError"))))) })
+        (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (if (= @doc null) "UnknownError" (default (object/get @doc Message "") (default (object/get @doc message "") "UnknownError")))))) })
       STORAGE_HTTP_FAILED -> idle
-        (emit STORAGE_FAILED { message: (if (= @payload.kind "timeout") "Connection timed out" (if (= @payload.kind "unconfigured") (str/concat "Storage credential not configured: " @payload.credential) @payload.error)) })
+        (emit STORAGE_FAILED { message: (if (= @payload.kind "timeout") "Connection timed out" (if (= @payload.kind "unconfigured") (str/concat "Storage credential not configured: " (default @payload.credential "")) @payload.error)) })
     }
 
     emits {
@@ -264,9 +283,9 @@ orbital StorageOrbital {
         @tier "primary"
       STORAGE_SIGNED_URL -> external {
         url : string!
-        expiresAt : number!
+        expiresAt : instant!
       }
-        @description "A presigned url and the epoch-ms instant it stops working."
+        @description "A presigned url and the instant it stops working."
         @synonyms "presigned url, signed link, upload url"
         @tier "primary"
       STORAGE_FAILED -> external {

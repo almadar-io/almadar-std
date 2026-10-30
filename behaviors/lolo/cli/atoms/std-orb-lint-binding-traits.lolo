@@ -49,11 +49,11 @@ orbital OrbLintBindingTraitsOrbital {
         (roots : [BtRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((o (array/nth @orbitals @oi)) (trts : [BtTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
+      (let ((o (default (array/nth @orbitals @oi) {})) (trts : [BtTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
         (array/flatten
           (array/map (array/range 0 (array/len @trts))
             (fn ti
-              (let ((t (array/nth @trts @ti)))
+              (let ((t (default (array/nth @trts @ti) {})))
                 (if (not (object/has @t "stateMachine"))
                   @noroots
                   (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
@@ -61,7 +61,7 @@ orbital OrbLintBindingTraitsOrbital {
                       (array/flatten
                         (array/map (array/sort (object/keys @cfg))
                           (fn kn
-                            (let ((cf (object/get @cfg @kn)) (dv (object/get (object/get @cfg @kn) "default" null)))
+                            (let ((cf (default (object/get @cfg @kn) {})) (dv (object/get (object/get @cfg @kn) "default" null)))
                               (if (= (object/get @cf "type" "") "trait")
                                 (if (validate/string @dv)
                                   (if (str/startsWith @dv @tP2)
@@ -73,7 +73,7 @@ orbital OrbLintBindingTraitsOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @trs))
                             (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                              (let ((tr (default (array/nth @trs @xi) {})) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
                                 (let ((effs : [BtShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
@@ -81,7 +81,7 @@ orbital OrbLintBindingTraitsOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @tks))
                             (fn ki
-                              (let ((tk (array/nth @tks @ki)) (teffs : [BtShape] (object/get (array/nth @tks @ki) "effects" [])) (tg (object/get (array/nth @tks @ki) "guard" null)))
+                              (let ((tk (array/nth @tks @ki)) (teffs : [BtShape] (object/get (default (array/nth @tks @ki) {}) "effects" [])) (tg (object/get (default (array/nth @tks @ki) {}) "guard" null)))
                                 (array/concat
                                   (if (!= @tg null) [{ x: @tg, w: (str/concat @tp ".ticks[" @ki "].guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
                                   (array/map (array/filter (array/range 0 (array/len @teffs)) (fn ei (not (validate/object (array/nth @teffs @ei))))) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false })))))))))))))))))))))
@@ -114,7 +114,7 @@ orbital OrbLintBindingTraitsOrbital {
                     (let ((parts (str/split (str/slice @s 1) ".")))
                       (if (= (array/len @parts) 1)
                         [{ code: @config.codes.bindingTraitMissingName.code, path: @p, message: (str/concat (quote "@") "trait binding missing trait name"), suggestion: (str/concat "Use " (quote "@") "trait.<TraitName> to reference another trait's current frame"), severity: "error" }]
-                        (let ((nm (array/nth @parts 1)))
+                        (let ((nm (default (array/nth @parts 1) "")))
                           (if (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$"))
                             [{ code: @config.codes.bindingTraitInvalidFormat.code, path: @p, message: (str/concat (quote "@") "trait binding trait name '" @nm "' is not PascalCase"), suggestion: (str/concat "Trait names must be PascalCase (e.g., " (quote "@") "trait.ItemSearch)"), severity: "error" }]
                             (if (= @nm @tn)
@@ -126,11 +126,11 @@ orbital OrbLintBindingTraitsOrbital {
       (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((trts : [BtTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
-        (let ((inl (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (array/nth @trts @ti) "stateMachine")))))
-          (let ((names : [string] (array/map @inl (fn ti (object/get (array/nth @trts @ti) "name" "")))))
+      (let ((trts : [BtTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
+        (let ((inl (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (default (array/nth @trts @ti) {}) "stateMachine")))))
+          (let ((names : [string] (array/map @inl (fn ti (object/get (default (array/nth @trts @ti) {}) "name" "")))))
             (let ((adj : Map string [string] (default (object/fromEntries (array/map @inl (fn ti
-                    (let ((t (array/nth @trts @ti)))
+                    (let ((t (default (array/nth @trts @ti) {})))
                       [(object/get @t "name" ""),
                        (array/unique (array/flatten (array/map
                          (array/concat
@@ -150,7 +150,7 @@ orbital OrbLintBindingTraitsOrbital {
                             (if (= (array/len @rts) 0)
                               @acc
                               (let ((r0 (array/first @rts))) { stack: [@r0], idx: [0], vis: (array/append @vis @r0), found: @nostr })))
-                          (let ((top (array/last @stack)) (i (array/last @idx)))
+                          (let ((top (default (array/last @stack) {})) (i (default (array/last @idx) [])))
                             (let ((kids (object/get @adj @top @nostr)))
                               (if (>= @i (array/len @kids))
                                 { stack: (array/dropLast @stack 1), idx: (array/dropLast @idx 1), vis: @vis, found: @nostr }
@@ -183,7 +183,7 @@ orbital OrbLintBindingTraitsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BtProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BtProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
 
@@ -201,10 +201,10 @@ orbital OrbLintBindingTraitsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-traits <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

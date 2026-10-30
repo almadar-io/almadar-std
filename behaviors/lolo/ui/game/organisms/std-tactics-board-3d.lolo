@@ -87,7 +87,7 @@ orbital TacticsBoard3DOrbital {
     message : string
     ttl : number!
     maxTtl : number
-    bornAt : number
+    bornAt : instant
     space : string
     effect : string
     color : string
@@ -264,7 +264,10 @@ orbital TacticsBoard3DOrbital {
           ])))))))) } ]
         })
 
-      UNIT_CLICK -> playing when (and (== @entity.uiPhase "action") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1)))
+      UNIT_CLICK -> playing when (not (array/some @entity.units (fn u (== @u.id ?unitId))))
+        (emit UNIT_NOT_FOUND { unitId: ?unitId })
+
+      UNIT_CLICK -> playing when (let ((cu (array/find @entity.units (fn u (== @u.id ?unitId)))) (su (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))))) (and (!= @cu null) (!= @su null) (and (== @entity.uiPhase "action") (and (== (object/get @cu team) "enemy") (<= (grid/manhattan-distance (object/get @su position) (object/get @cu position)) 1)))))
         (emit ATTACK { targetId: ?unitId })
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -274,15 +277,18 @@ orbital TacticsBoard3DOrbital {
       UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
         (set @entity.uiPhase "action")
         (set @entity.validMoves [])
-        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (and (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1))))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+        (set @entity.attackTargets (let ((su (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))))) (if (= @su null) [] (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (and (> @u.health 0) (<= (grid/manhattan-distance (object/get @su position) (object/get @u position)) 1))))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))))
 
-      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+      UNIT_CLICK -> playing when (let ((cu (array/find @entity.units (fn u (== @u.id ?unitId))))) (and (!= @cu null) (== (object/get @cu team) "player")))
         (set @entity.selectedUnitId ?unitId)
         (set @entity.uiPhase "selection")
         (set @entity.attackTargets [])
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.validMoves (let ((cu (array/find @entity.units (fn u (== @u.id ?unitId))))) (if (= @cu null) [] (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get @cu position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))))
 
-      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange)))
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (not (array/some @entity.units (fn u (== @u.id @entity.selectedUnitId)))))
+        (emit SELECTED_UNIT_NOT_FOUND { unitId: @entity.selectedUnitId })
+
+      TILE_CLICK -> playing when (let ((su (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))))) (and (!= @su null) (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (<= (grid/manhattan-distance (object/get @su position) { x: ?x, y: ?z }) @config.movementRange)))))
         (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?z })
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -334,6 +340,16 @@ orbital TacticsBoard3DOrbital {
     }
 
     emits {
+      UNIT_NOT_FOUND -> external {
+        unitId : string!
+      }
+        @description "A unit click named an id that is not in the roster: no selection, attack or move happens."
+        @tier "domain"
+      SELECTED_UNIT_NOT_FOUND -> external {
+        unitId : string!
+      }
+        @description "A tile click found the selected unit id missing from the roster: no move happens."
+        @tier "domain"
       MOVE -> external {
         unitId : string!
         x : number!

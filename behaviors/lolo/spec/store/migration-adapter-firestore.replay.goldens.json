@@ -30,7 +30,7 @@
      "expect": {
       "emits": [
        {
-        "event": "MIGRATION_EXTRACT_FAILED",
+        "event": "MIGRATION_SOURCE_UNREADABLE",
         "payload": {
          "error": "the Firestore reply is not a document"
         }
@@ -81,7 +81,7 @@
      "expect": {
       "emits": [
        {
-        "event": "MIGRATION_EXTRACT_FAILED",
+        "event": "MIGRATION_SOURCE_UNREADABLE",
         "payload": {
          "error": "the Firestore reply is not valid JSON"
         }
@@ -103,6 +103,133 @@
     }
    ],
    "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply"
+  },
+  {
+   "id": "a-document-whose-name-is-not-under-documents-is-unreadable",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"name\": \"projects/p/databases/(default)/documents\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_SOURCE_UNREADABLE",
+        "payload": {
+         "error": "the Firestore document name is not under /documents/"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 0,
+      "docs": [],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply"
+  },
+  {
+   "id": "a-non-numeric-integer-value-is-ledgered-with-its-field",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "skipped": [
+          {
+           "ref": "fs:c/d1#field:n",
+           "reason": "field 'n': integerValue 'abc' is not a number, so the field is left out of the unit"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": true,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [],
+       "edgesField": "edges",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "n": {
+          "integerValue": "abc"
+         },
+         "m": {
+          "integerValue": "12"
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "the build path from reading, seeded with one decoded document; the field with a non-numeric integerValue is ledgered, the numeric one is not"
   }
  ]
 }

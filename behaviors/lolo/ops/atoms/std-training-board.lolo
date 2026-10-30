@@ -22,10 +22,10 @@ orbital TrainingBoardOrbital {
     id : string!
     instances : [TrInstance] @description "The board last answered." = []
     fetchedAt : string @description "When the read the board came from began." = ""
-    cachedAt : number = 0
+    cachedAt : instant = 0
     hasCache : boolean = false
     loading : boolean @description "Whether a read is in flight." = false
-    startedAt : number = 0
+    startedAt : instant = 0
     found : [TrFound] @description "The instances the read in flight is visiting." = []
     collected : [TrInstance] = []
     cursor : number @description "Index of the instance being visited." = 0
@@ -60,10 +60,10 @@ orbital TrainingBoardOrbital {
       INIT -> idle when @config.loadOnInit
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (emit TRAINING_LOAD { })
-      TRAINING_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+      TRAINING_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.instances (fn i { id: @i.instanceId, instance: @i.instanceId, type: @i.instanceType, ip: (if (= @i.publicIp "") "no public address" @i.publicIp), uptime: (default @i.uptime "unreachable"), gpu: (if (== @i.gpu null) "" (str/concat @i.gpu.name " " @i.gpu.utilization "% · " @i.gpu.memoryUsed "/" @i.gpu.memoryTotal " MiB · " @i.gpu.temp "°C")), process: (if (== @i.process null) "none" (str/concat @i.process.command " (" @i.process.elapsed ")")), epochs: (array/len @i.epochs) })), fields: [{ label: Instance, name: instance, variant: body }, { label: Type, name: type, variant: caption }, { label: Address, name: ip, variant: caption }, { label: Uptime, name: uptime, variant: caption }, { label: GPU, name: gpu, variant: caption }, { label: Process, name: process, variant: caption }, { label: Epochs, name: epochs, variant: caption }] }] })
-      TRAINING_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+      TRAINING_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt @now)
         (set @entity.found [])
@@ -117,7 +117,7 @@ orbital TrainingBoardOrbital {
         (emit TR_NEXT { })
       TR_NEXT -> idle when (>= @entity.cursor (array/len @entity.found))
         (set @entity.instances @entity.collected)
-        (set @entity.fetchedAt (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.fetchedAt (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)

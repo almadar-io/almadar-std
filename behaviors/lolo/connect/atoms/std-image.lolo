@@ -29,7 +29,7 @@ orbital ImageOrbital {
           job: (json/stringify {
             request: {
               prompt: @payload.prompt,
-              model: (if (and (!= @payload.model null) (!= @payload.model "")) @payload.model @config.model),
+              model: (if (!= (default @payload.model "") "") @payload.model @config.model),
               n: @payload.n, size: @payload.size, resolution: @payload.resolution, aspectRatio: @payload.aspectRatio,
               quality: @payload.quality, background: @payload.background, seed: @payload.seed, steps: @payload.steps,
               strength: @payload.strength,
@@ -40,22 +40,22 @@ orbital ImageOrbital {
           })
         })
 
-      IMAGE_PREPARE -> idle when (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
-          (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))
+      IMAGE_PREPARE -> idle when (and (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) size null) null)
+          (or (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) resolution null) null) (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) aspectRatio null) null)))
         (emit IMAGE_FAILED { code: "VALIDATION_ERROR", message: "ImageClient.generate: `size` cannot be combined with `resolution`/`aspectRatio` — pass one or the other" })
-      IMAGE_PREPARE -> idle when (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request) checked false) true)
-          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
-            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))))
-        (http GET @config.origin (str/concat @config.basePath "/images/models/" (object/get (object/get (json/parse @payload.job ImageJob) request) model "") "/endpoints") {
+      IMAGE_PREPARE -> idle when (and (= @config.provider "openrouter") (= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) checked false) true)
+          (not (and (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) size null) null)
+            (or (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) resolution null) null) (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) aspectRatio null) null)))))
+        (http GET @config.origin (str/concat @config.basePath "/images/models/" (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) model "") "/endpoints") {
           headers: { Accept: "application/json" },
           auth: { scheme: bearer, credential: @config.apiKey },
           timeoutMs: @config.timeoutMs
         } { key: @payload.job, emit: { success: IMAGE_CAPS_HTTP_OK, failure: IMAGE_CAPS_HTTP_FAILED } })
-      IMAGE_PREPARE -> idle when (and (not (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request) checked false) true)))
-          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request) size null) null)
-            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request) aspectRatio null) null)))))
+      IMAGE_PREPARE -> idle when (and (not (and (= @config.provider "openrouter") (= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) checked false) true)))
+          (not (and (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) size null) null)
+            (or (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) resolution null) null) (!= (object/get (object/get (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) aspectRatio null) null)))))
         (emit IMAGE_SEND {
-          job: (let ((j (json/parse @payload.job ImageJob)))
+          job: (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
             (json/stringify {
               request: @j.request, attempt: 0, delayMs: 0, dropped: [],
               supported: (if (= @config.provider "local") ["seed", "steps", "image_strength", "input_references"] ["background", "seed", "steps", "image_strength", "input_references"])
@@ -67,17 +67,20 @@ orbital ImageOrbital {
       IMAGE_CAPS_HTTP_OK -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })
       IMAGE_CAPS_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit IMAGE_SEND {
-          job: (let ((j (json/parse @payload.key ImageJob)))
-            (json/stringify {
-              request: @j.request, attempt: 0, delayMs: 0, dropped: [],
-              supported: (array/flatten (array/map (array/concat (object/get (json/parse @payload.body ImageEndpoints) data []) (object/get (json/parse @payload.body ImageEndpoints) endpoints [])) (fn (e) (object/get @e supported_parameters []))))
-            }))
-        })
+        (let ((ep (json/parse @payload.body ImageEndpoints)))
+          (if (= @ep null)
+            (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned a capabilities body that is not an endpoint list") })
+            (emit IMAGE_SEND {
+              job: (let ((j (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
+                (json/stringify {
+                  request: @j.request, attempt: 0, delayMs: 0, dropped: [],
+                  supported: (array/flatten (array/map (array/concat (object/get @ep data []) (object/get @ep endpoints [])) (fn (e) (object/get @e supported_parameters []))))
+                }))
+            })))
 
       IMAGE_SEND -> idle
         (emit IMAGE_STRIPPED {
-          job: (let ((j (json/parse @payload.job ImageJob)))
+          job: (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
             (let ((r @j.request) (names { background: "background", seed: "seed", steps: "steps", strength: "image_strength", references: "input_references" }))
               (let ((gone (if (object/get @r checked false)
                     (array/filter ["background", "seed", "steps", "strength", "references"] (fn (k) (and (!= (object/get @r @k null) null) (not (array/includes @j.supported (object/get @names @k ""))))))
@@ -91,7 +94,7 @@ orbital ImageOrbital {
 
       IMAGE_STRIPPED -> idle
         (emit IMAGE_DISPATCH {
-          job: (let ((j (json/parse @payload.job ImageJob)))
+          job: (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
             (let ((r @j.request))
               (let ((gone (match @config.provider
                     ("local" (array/filter ["resolution", "aspectRatio", "quality", "background"] (fn (k) (!= (object/get @r @k null) null))))
@@ -105,7 +108,7 @@ orbital ImageOrbital {
         })
 
       IMAGE_DISPATCH -> idle when (= @config.provider "openrouter")
-        (let ((j (json/parse @payload.job ImageJob)))
+        (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
           (http POST @config.origin (str/concat @config.basePath "/images") {
             headers: { Accept: "application/json" },
             json: (let ((r @j.request))
@@ -126,7 +129,7 @@ orbital ImageOrbital {
             timeoutMs: @config.timeoutMs
           } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
       IMAGE_DISPATCH -> idle when (= @config.provider "openai")
-        (let ((j (json/parse @payload.job ImageJob)))
+        (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
           (http POST @config.origin (str/concat @config.basePath "/images/generations") {
             headers: { Accept: "application/json" },
             json: (let ((r @j.request))
@@ -142,7 +145,7 @@ orbital ImageOrbital {
             timeoutMs: @config.timeoutMs
           } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
       IMAGE_DISPATCH -> idle when (= @config.provider "local")
-        (let ((j (json/parse @payload.job ImageJob)))
+        (let ((j (default (json/parse @payload.job ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
           (http POST @config.origin (str/concat @config.basePath "/images/generations") {
             headers: { Accept: "application/json" },
             json: (let ((r @j.request))
@@ -159,20 +162,20 @@ orbital ImageOrbital {
             timeoutMs: @config.timeoutMs
           } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
 
-      IMAGE_HTTP_FAILED -> idle when (and (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+      IMAGE_HTTP_FAILED -> idle when (and (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_DISPATCH {
-          job: (let ((j (json/parse @payload.key ImageJob)))
+          job: (let ((j (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
             (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped }))
         })
-      IMAGE_HTTP_FAILED -> idle when (or (= @config.provider "local") (>= (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+      IMAGE_HTTP_FAILED -> idle when (or (= @config.provider "local") (>= (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " request failed: " @payload.error) })
 
-      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_DISPATCH {
-          job: (let ((j (json/parse @payload.key ImageJob)))
+          job: (let ((j (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
             (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped }))
         })
-      IMAGE_HTTP_OK -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))))
+      IMAGE_HTTP_OK -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ImageReply) null))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned unparseable body: " @payload.body) })
@@ -194,10 +197,10 @@ orbital ImageOrbital {
           (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (and (not (validate/required @d.b64_json)) (not (validate/required @d.url))))) 0))
         (emit IMAGE_GENERATED {
           images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: (if (validate/required @d.b64_json) @d.b64_json null), url: (if (validate/required @d.b64_json) null @d.url), mimeType: (default (object/get @d media_type "") "image/png") })),
-          model: (object/get (object/get (json/parse @payload.key ImageJob) request) model ""),
+          model: (object/get (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) request) model ""),
           cost: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) cost 0),
           totalTokens: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) total_tokens 0),
-          dropped: (object/get (json/parse @payload.key ImageJob) dropped [])
+          dropped: (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) dropped [])
         })
     }
 

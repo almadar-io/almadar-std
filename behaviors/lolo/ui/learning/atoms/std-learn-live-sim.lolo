@@ -9,8 +9,8 @@ orbital LearnLiveSimOrbital {
     y : number!
     radius : number!
     color : string
-    vx : number
-    vy : number
+    vx : number!
+    vy : number!
   }
 
   entity LiveSimScene [runtime] {
@@ -416,7 +416,7 @@ orbital LearnLiveSimOrbital {
         (set @entity.sampleSpeed (let (
             (s (array/first @entity.bodies))
           )
-          (math/sqrt (+ (* (object/get @s vx) (object/get @s vx)) (* (object/get @s vy) (object/get @s vy))))))
+          (if (== @s null) 0 (math/sqrt (+ (* (object/get @s vx) (object/get @s vx)) (* (object/get @s vy) (object/get @s vy)))))))
         (render-ui main {
           type: box
           padding: md
@@ -480,12 +480,12 @@ orbital LearnLiveSimOrbital {
         @description "Learner pressed Reset — bodies, gravity, and damping revert to their configured initial values and the tick counter clears."
         @tier "domain"
       SET_GRAVITY {
-        value : number
+        value : number!
       }
         @description "Learner dragged the gravity slider — value is the new downward acceleration applied to every body each tick."
         @tier "domain"
       SET_DAMPING {
-        value : number
+        value : number!
       }
         @description "Learner dragged the damping slider — value is the new fraction of velocity retained each tick (air resistance)."
         @tier "domain"

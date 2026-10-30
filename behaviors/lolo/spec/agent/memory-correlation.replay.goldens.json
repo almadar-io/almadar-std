@@ -1,0 +1,262 @@
+{
+  "atom": "agent/atoms/std-agent-memory.lolo",
+  "trait": "AgentMemoryRecall",
+  "note": "RECALL and REMEMBER share one embedding service; each request carries its own key (recall / store) and each trait's result transition is guarded on it, so results delivered in either order go to the trait that asked",
+  "cases": [
+    {
+      "id": "a recall and a remember in flight together, the store result delivered first: each trait takes only its own",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "neverEmits": [
+              "RECALLED",
+              "LLM_EMBED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "neverEmits": [
+              "MEMORY_STORED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "the recall result delivered first: the store keeps waiting for its own",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "neverEmits": [
+              "MEMORY_STORED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "neverEmits": [
+              "RECALLED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "state": "ready"
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    }
+  ]
+}

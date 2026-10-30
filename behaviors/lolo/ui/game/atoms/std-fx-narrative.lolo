@@ -22,7 +22,7 @@ orbital FxNarrativeOrbital {
     message : string
     ttl : number!
     maxTtl : number
-    bornAt : number
+    bornAt : instant
     space : string
     effect : string
     color : string
@@ -56,8 +56,9 @@ orbital FxNarrativeOrbital {
 
       NARRATE -> active when @config.running
         (let ((styleKey (if (not (validate/required (object/get @payload style))) "fact" (object/get @payload style)))
-              (styleDef (object/get @config.styles @styleKey))
-              (ttl (if (== (object/get @payload ttl) null) (object/get @styleDef ttl) (object/get @payload ttl)))
+              (styleDef (object/get @config.styles @styleKey)))
+          (if (= @styleDef null) (emit FX_STYLE_UNKNOWN { })
+          (let ((ttl (if (== (object/get @payload ttl) null) (object/get @styleDef ttl) (object/get @payload ttl)))
               (x (if (== (object/get @payload x) null) 0.5 (object/get @payload x)))
               (y (if (== (object/get @payload y) null) 0.25 (object/get @payload y)))
               (space (if (not (validate/required (object/get @payload space))) "world" (object/get @payload space)))
@@ -83,13 +84,16 @@ orbital FxNarrativeOrbital {
               vy: 0,
               vz: 0,
               particleCount: 1
-            } ] })))
+            } ] })))))
 
       TUTORIAL_SHOW -> active when @config.running
         (emit SHOW { id: "tutorial" })
     }
 
     emits {
+      FX_STYLE_UNKNOWN -> external { }
+        @description "A narrative cue named a style that is not in the configured styles."
+        @tier "domain"
       BURST -> external {
         particles : [FxParticle]
       }

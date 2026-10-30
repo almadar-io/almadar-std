@@ -55,6 +55,7 @@ orbital DungeonCombatOrbital {
 
       ATTACK -> active when (and @config.running (> (array/len (array/filter @entity.enemies (fn e (and (== @e.id @payload.targetId) (> @e.health 0))))) 0))
         (let ((target (array/find @entity.enemies (fn e (== @e.id @payload.targetId)))))
+          (if (= @target null) (emit COMBAT_TARGET_MISSING { })
           (let ((newHealth (math/max 0 (- (object/get @target health) @config.attackDamage))))
             (do
               (set @entity.enemies (array/map @entity.enemies (fn e (if (== @e.id @payload.targetId) (object/merge @e { health: @newHealth, animation: (if (<= @newHealth 0) "death" "hit") }) @e))))
@@ -62,7 +63,7 @@ orbital DungeonCombatOrbital {
                 (do
                   (set @entity.combatScore (+ @entity.combatScore @config.pointsPerKill))
                   (emit BURST { particles: (array/map (array/filter @entity.enemies (fn e (== @e.id @payload.targetId))) (fn t { id: (str/concat "fx-kill-" (object/get @t id)), type: "explosion", x: (object/get (object/get @t position) x), z: (object/get (object/get @t position) y), ttl: 5 })) }))
-                null))))
+                null)))))
 
       MONSTER_TICK -> active when @config.running
         (set @entity.enemies (array/map @entity.enemies (fn u
@@ -88,6 +89,9 @@ orbital DungeonCombatOrbital {
     }
 
     emits {
+      COMBAT_TARGET_MISSING -> external { }
+        @description "An attack named a target that is not in the roster."
+        @tier "domain"
       BURST -> external {
         particles : [Fx]
       }
@@ -102,7 +106,7 @@ orbital DungeonCombatOrbital {
 
     listens {
       ATTACK { targetId : string }
-      MONSTER_TICK { heroX : number, heroY : number }
+      MONSTER_TICK { heroX : number!, heroY : number! }
       RESTART { id : string }
     }
 

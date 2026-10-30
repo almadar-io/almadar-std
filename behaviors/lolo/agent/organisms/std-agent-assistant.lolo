@@ -204,6 +204,7 @@ orbital AgentAssistantOrbital {
     listens {
       AssistantContext.LLM_SUMMARIZE -> LLM_SUMMARIZE
       AssistantMemory.LLM_EMBED -> LLM_EMBED
+      AssistantMemoryStore.LLM_EMBED -> LLM_EMBED
       AssistantLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       AssistantLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       AssistantLoop.LLM_CANCEL -> LLM_CANCEL
@@ -283,17 +284,42 @@ orbital AgentAssistantOrbital {
     }
     listens {
       AssistantContext.COMPACTED -> RECALL
-      AssistantLoop.ASSISTANT_REPLIED -> REMEMBER
       *.ASSISTANT_MEMORIES_REQUESTED -> LIST
       AssistantLlm.LLM_EMBED_RESULT -> MemoryEmbedded
       AssistantLlm.LLM_FAILED -> MemoryEmbedFailed
       MemoryEmbedded {
         embeddings : [[number]]
+        key : string
       }
       MemoryEmbedFailed {
         code : string
         message : string!
+        key : string
       }
+    }
+  }
+
+  trait AssistantMemoryStore = Memory.traits.AgentMemoryStore -> AgentMemory {
+    listens {
+      AssistantLoop.ASSISTANT_REPLIED -> REMEMBER
+      AssistantLlm.LLM_EMBED_RESULT -> MemoryEmbedded
+      AssistantLlm.LLM_FAILED -> MemoryEmbedFailed
+      MemoryEmbedded {
+        embeddings : [[number]]
+        key : string
+      }
+      MemoryEmbedFailed {
+        code : string
+        message : string!
+        key : string
+      }
+    }
+  }
+
+  trait AssistantMemoryView = Memory.traits.AgentMemoryView -> AgentMemory {
+    listens {
+      AssistantMemory.MEMORY_RECALL_NOTICE -> MEMORY_RECALL_NOTICE
+      AssistantMemoryStore.MEMORY_STORE_NOTICE -> MEMORY_STORE_NOTICE
     }
   }
 
@@ -339,7 +365,7 @@ orbital AgentAssistantOrbital {
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedHttp, AsstChatRequest, AsstChatHttp, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantMemoryStore, AssistantMemoryView, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedHttp, AsstChatRequest, AsstChatHttp, AssistantLoop, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

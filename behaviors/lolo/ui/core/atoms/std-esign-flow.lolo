@@ -210,7 +210,7 @@ orbital SignatureSessionOrbital {
         @tier "presentation"
       CHECK_ENVELOPE_STATUS {
         id : string!
-        row : SignatureSession
+        row : SignatureSession!
       }
         @description "Pull the provider's current envelope status for this request."
         @synonyms "refresh status, check signature, poll envelope"
@@ -462,8 +462,8 @@ orbital SignatureSessionOrbital {
     emits {
       SEND_ENVELOPE -> internal {
         id : string!
-        row : SignatureSession
-        files : [{ name : string, size : number, type : string, content : string }]
+        row : SignatureSession!
+        files : [{ name : string, size : number, type : string, content : string }]!
       }
         @description "The document was dropped; EnvelopeDispatcher sends it."
         @tier "domain"
@@ -480,8 +480,8 @@ orbital SignatureSessionOrbital {
         @tier "presentation"
       SEND_ENVELOPE {
         id : string!
-        row : SignatureSession
-        files : [{ name : string, size : number, type : string, content : string }]
+        row : SignatureSession!
+        files : [{ name : string, size : number, type : string, content : string }]!
       }
         @description "The document was dropped; the request is being dispatched."
         @synonyms "send, dispatch"
@@ -495,10 +495,12 @@ orbital SignatureSessionOrbital {
     initial: idle
 
     state idle {
-      SEND_ENVELOPE -> dispatching
+      SEND_ENVELOPE -> idle when (= (array/len ?files) 0)
+        (notify error "No document was attached — drop the PDF to send")
+      SEND_ENVELOPE -> dispatching when (> (array/len ?files) 0)
         (set @entity.id ?id)
         (emit ESIGN_SEND_ENVELOPE {
-          documentContent: (object/get (array/first ?files) content)
+          documentContent: (let ((doc (array/first ?files))) (if (= @doc null) "" (object/get @doc content)))
           documentName: (object/get ?row documentName)
           emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
           recipientEmail: (str/concat "" (object/get ?row recipientEmail))
@@ -597,8 +599,8 @@ orbital SignatureSessionOrbital {
       EnvelopeSendDialog.SEND_ENVELOPE -> SEND_ENVELOPE
       SEND_ENVELOPE {
         id : string!
-        row : SignatureSession
-        files : [{ name : string, size : number, type : string, content : string }]
+        row : SignatureSession!
+        files : [{ name : string, size : number, type : string, content : string }]!
       }
         @description "Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape)."
         @synonyms "send envelope, dispatch signature, send for signing"
@@ -606,7 +608,7 @@ orbital SignatureSessionOrbital {
       SignatureSessionBrowse.CHECK_ENVELOPE_STATUS -> CHECK_ENVELOPE_STATUS
       CHECK_ENVELOPE_STATUS {
         id : string!
-        row : SignatureSession
+        row : SignatureSession!
       }
         @description "Pull the provider's current envelope status and stamp it onto the session row."
         @synonyms "refresh status, check signature, poll envelope"

@@ -255,7 +255,7 @@ orbital BoardOrbital {
       REFETCH_QUERY -> viewing_board when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
           limit: @config.relatedMaxRows
         })
       BoardItemsRelatedLoaded -> viewing_board when (> ?totalCount (array/len ?data))
@@ -265,7 +265,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
+          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {

@@ -52,15 +52,15 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((o (array/nth @orbitals @oi)))
+            (let ((o (default (array/nth @orbitals @oi) {})))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                   (let ((t (as (array/nth @trs @ti) AdTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
-                      (let ((trans (object/get (object/get @t "stateMachine") "transitions" [])))
+                      (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" [])))
                         (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
-                          (let ((tr (array/nth @trans @i)))
+                          (let ((tr (default (array/nth @trans @i) {})))
                             (let ((froms (default (as (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f])) AdNames) [])) (to (object/get @tr "to" "")))
                               (if (array/includes @froms @to)
                                 []
@@ -81,7 +81,7 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
                                       (if (= (array/len @deaf) 0)
                                         []
                                         (let ((dbg (str/concat "[" (str/join (array/map @deaf (fn r (str/concat "\"" @r "\""))) ", ") "]")))
-                                          [{ code: @config.codes.circuitAsyncResultDeafTarget.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @i "].effects"), message: (str/concat "transition " (if (= (array/len @froms) 1) (array/first @froms) (str/concat "[" (str/join @froms ", ") "]")) "--[" (object/get @tr "event" "") "]-->" @to " declares async result event(s) " @dbg " but state '" @to "' has no arm handling " (if (= (array/len @deaf) 1) "it" "them") " — the requester departs before it can hear its own operation's result"), suggestion: (str/concat "Add a transition `from: '" @to "'` handling each of " @dbg " in state '" @to "' (or route the result to a state that already does)."), severity: "error" }]))))))))))))))))))))))))
+                                          [{ code: @config.codes.circuitAsyncResultDeafTarget.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @i "].effects"), message: (str/concat "transition " (if (= (array/len @froms) 1) (default (array/first @froms) "") (str/concat "[" (str/join @froms ", ") "]")) "--[" (object/get @tr "event" "") "]-->" @to " declares async result event(s) " @dbg " but state '" @to "' has no arm handling " (if (= (array/len @deaf) 1) "it" "them") " — the requester departs before it can hear its own operation's result"), suggestion: (str/concat "Add a transition `from: '" @to "'` handling each of " @dbg " in state '" @to "' (or route the result to a state that already does)."), severity: "error" }]))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "async-result-deaf-target", scope: @entity.scope, findings: @entity.findings })
@@ -97,7 +97,7 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FbProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FbProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -114,10 +114,10 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint async-result-deaf-target <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

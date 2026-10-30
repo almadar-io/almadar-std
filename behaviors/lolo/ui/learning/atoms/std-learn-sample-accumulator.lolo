@@ -45,8 +45,8 @@ orbital SampleAccumulatorOrbital {
     active : boolean = false
     title : string
     sourceKind : string
-    batchSize : number
-    samples : [number]
+    batchSize : number! = 1
+    samples : [number]! = []
     sampleCount : number
     mean : number
     proportion : number
@@ -156,7 +156,7 @@ orbital SampleAccumulatorOrbital {
             (plotH (- @config.height 48))
             (histShapes (array/map (array/range @binCountV) (fn b
               (let (
-                  (barH (* (default (/ (array/nth @counts @b) @maxCount) 0) @plotH))
+                  (barH (* (default (/ (default (array/nth @counts @b) 0) @maxCount) 0) @plotH))
                 )
                 { type: "rect", x: (+ 24 (* @b (default (/ @plotW @binCountV) 0))), y: (- (+ 24 @plotH) @barH), width: (* (default (/ @plotW @binCountV) 0) 0.9), height: @barH, tone: @config.color, fillTone: @config.color, fillStyle: "solid" }))))
           )
@@ -267,7 +267,7 @@ orbital SampleAccumulatorOrbital {
         @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
         @tier "domain"
       SET_BATCH_SIZE {
-        value : number
+        value : number!
       }
         @description "Learner dragged the batch-size slider — value is the new number of samples each Draw adds."
         @tier "domain"

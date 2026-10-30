@@ -23,7 +23,7 @@ orbital CalendarEventOrbital {
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
-    weekAnchor : date @intrinsic
+    weekAnchor : instant @intrinsic
   }
 
   trait CalendarEventCalendar -> @rebindable CalendarEvent {
@@ -45,7 +45,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
+          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
         })
       CalendarEventLoaded -> loading when (> ?totalCount (array/len ?data))
         (emit CalendarEventLoadFailed { error: (str/concat "CalendarEvent has " ?totalCount " events, over the maxRows cap of " @config.maxRows), code: "CALENDAR_OVER_CAP" })
@@ -102,17 +102,17 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (time/isAfter (time/parse (object/get @entity @config.startField)) (if (= ?value week) (time/subtract (time/now) 1 week) (if (= ?value "3months") (time/subtract (time/now) 3 month) (if (= ?value year) (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
+          filter: (time/isAfter (time/parse (default (object/get @entity @config.startField) "")) (if (= ?value week) (time/subtract (time/now) 1 week) (if (= ?value "3months") (time/subtract (time/now) 3 month) (if (= ?value year) (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
         })
       CALENDAR_PREV_WEEK -> loading
-        (set @entity.weekAnchor (time/subtract @entity.weekAnchor 1 week))
+        (set @entity.weekAnchor (if (= @entity.weekAnchor null) (time/now) (time/subtract @entity.weekAnchor 1 week)))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
         })
       CALENDAR_NEXT_WEEK -> loading
-        (set @entity.weekAnchor (time/add @entity.weekAnchor 1 week))
+        (set @entity.weekAnchor (if (= @entity.weekAnchor null) (time/now) (time/add @entity.weekAnchor 1 week)))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
@@ -132,7 +132,7 @@ orbital CalendarEventOrbital {
       REFETCH_QUERY -> loading when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventRelatedLoaded }
-          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
           limit: @config.relatedMaxRows
         })
       REFETCH_FILTER -> loading

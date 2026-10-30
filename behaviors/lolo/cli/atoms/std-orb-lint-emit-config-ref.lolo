@@ -37,10 +37,10 @@ orbital OrbLintEmitConfigRefOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((o (array/nth @orbitals @oi)))
+            (let ((o (default (array/nth @orbitals @oi) {})))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (array/nth @trs @ti)))
+                  (let ((t (default (array/nth @trs @ti) {})))
                     (array/flatten (array/map (object/get @t "emits" []) (fn e
                       (let ((ev (object/get @e "event" "")))
                         (let ((knob (str/slice @ev 8 (str/len @ev))))
@@ -74,7 +74,7 @@ orbital OrbLintEmitConfigRefOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmitRefProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmitRefProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -91,12 +91,12 @@ orbital OrbLintEmitConfigRefOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint emit-config-ref: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-config-ref <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

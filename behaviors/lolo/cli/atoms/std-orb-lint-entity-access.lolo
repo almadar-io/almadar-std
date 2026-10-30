@@ -53,7 +53,7 @@ orbital OrbLintEntityAccessOrbital {
      (if (not @hasId) []
  (let ((idName (object/get (array/first @idDefs) "name" "")))
   (let ((lowId (str/lower @idName))
-        (sid (let ((d0 (array/first (array/filter @allDefs (fn d (= (object/get @d "name" "") @idName)))))) (array/includes (array/concat (array/concat (if (object/has @d0 "read_policy") (let ((cs (tree/fold (object/get @d0 "read_policy") (fn (n k)
+        (sid (let ((d0 (default (array/first (array/filter @allDefs (fn d (= (object/get @d "name" "") @idName)))) {}))) (array/includes (array/concat (array/concat (if (object/has @d0 "read_policy") (let ((cs (tree/fold (object/get @d0 "read_policy") (fn (n k)
  (if (validate/array @n)
   (array/concat
    (if (and (= (array/len @n) 3) (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (or (= (if (validate/string @o0) @o0 "") "=") (= (if (validate/string @o0) @o0 "") "=="))))
@@ -93,7 +93,7 @@ orbital OrbLintEntityAccessOrbital {
    (array/flatten (array/map @allDefs (fn dd
     (let ((lowD (str/lower (object/get @dd "name" ""))))
      (let ((same (array/filter @allDefs (fn e (= (str/lower (object/get @e "name" "")) @lowD)))))
-      (let ((l1 (array/flatten (array/map @same (fn e (array/map (array/filter (object/get @e "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation") "entity" "") @idName)))) (fn fd (object/get @fd "name" "")))))))
+      (let ((l1 (array/flatten (array/map @same (fn e (array/map (array/filter (object/get @e "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation" {}) "entity" "") @idName)))) (fn fd (object/get @fd "name" "")))))))
             (l2 (if (and (= @lowD @lowId) @sid) ["id"] []))
             (l3 (array/flatten (array/map @same (fn e (array/concat (array/concat (if (object/has @e "update_policy") (let ((cs (tree/fold (object/get @e "update_policy") (fn (n k)
  (if (validate/array @n)
@@ -123,15 +123,15 @@ orbital OrbLintEntityAccessOrbital {
     [])
    (array/flatten (array/filter @k (fn r (validate/array @r)))))
   [])) AccShape))) (if (validate/array @cs) @cs [])) []))))))
-            (l4 (array/flatten (array/map @same (fn e (if (object/has @e "collection") (let ((c (object/get @e "collection" ""))) (array/filter (array/unique (array/flatten (array/map (array/filter @allDefs (fn f (and (object/has @f "collection") (= (object/get @f "collection" "") @c)))) (fn f (array/map (array/filter (object/get @f "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation") "entity" "") @idName)))) (fn fd (object/get @fd "name" ""))))))) (fn col (> (array/len (array/filter (object/get @e "fields" []) (fn fd (= (object/get @fd "name" "") @col)))) 0)))) []))))))
+            (l4 (array/flatten (array/map @same (fn e (if (object/has @e "collection") (let ((c (object/get @e "collection" ""))) (array/filter (array/unique (array/flatten (array/map (array/filter @allDefs (fn f (and (object/has @f "collection") (= (object/get @f "collection" "") @c)))) (fn f (array/map (array/filter (object/get @f "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation" {}) "entity" "") @idName)))) (fn fd (object/get @fd "name" ""))))))) (fn col (> (array/len (array/filter (object/get @e "fields" []) (fn fd (= (object/get @fd "name" "") @col)))) 0)))) []))))))
        (let ((owners (array/concat @l1 (array/filter (array/unique (array/concat (array/concat @l2 @l3) @l4)) (fn col (not (array/includes @l1 @col)))))))
-        (if (or (= (array/len @owners) 0) (object/has @dd "read_policy") (and (object/has @dd "access_waivers") (object/has (object/get @dd "access_waivers") "read"))) []
+        (if (or (= (array/len @owners) 0) (object/has @dd "read_policy") (and (object/has @dd "access_waivers") (object/has (object/get @dd "access_waivers" {}) "read"))) []
          [{ code: @config.codes.entityOwnerColumnUnscoped.code, path: (str/concat (object/get @dd "name" "") ".@read"), message: (str/concat (object/get @dd "name" "") " declares owner column(s) " (str/join (array/map @owners (fn col (str/concat "`" @col "`"))) ", ") " pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row"), suggestion: (str/concat "declare @read on " (object/get @dd "name" "") " scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity " (array/first @owners) "), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING"), severity: "error" }])))))))))))
      (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-      (let ((orb (array/nth @orbs @oi)))
+      (let ((orb (default (array/nth @orbs @oi) {})))
        (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s1 (object/get @e "kind" ""))) (if (validate/string @s1) @s1 "")) "identity")))))
         (let ((hasExp (> (array/len @exps) 0)))
-         (let ((exp (array/first @exps)))
+         (let ((exp (default (array/first @exps) {})))
           (let ((hasShape (and @hasExp (object/has @exp "shape"))))
            (let ((idF (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) [])))
                  (idNm (if @hasDecl (object/get @declared "name" "") (if @hasShape (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user")) (quote "@user"))))
@@ -156,9 +156,9 @@ orbital OrbLintEntityAccessOrbital {
        (let ((sn (array/first @sns)))
         (let ((vocab (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @sn)))))
  (if (= (array/len @vf) 0) @nov
-  (let ((fd0 (array/first @vf)))
+  (let ((fd0 (default (array/first @vf) {})))
    (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
-    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov)))))))
+    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items" {}) "values" @nov) @nov)))))))
          (if (= (array/len @vocab) 0) []
           (let ((lits (if @incl
                        (let ((lit0 (array/first @litSide)))
@@ -185,9 +185,9 @@ orbital OrbLintEntityAccessOrbital {
      (if (= @fname "id") []
       (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @fname)))))
        (if (= (array/len @fm) 0) []
-        (let ((fd (array/first @fm)))
-         (if (and (object/has @fd "relation") (array/includes @idNames (object/get (object/get @fd "relation") "entity" ""))) []
-          [{ rel: "", kind: "owner-typed", a: @fname, b: (if (object/has @fd "relation") (str/concat "a relation to `" (object/get (object/get @fd "relation") "entity" "") "`") (str/concat "`" (object/get @fd "type" "") "`")), vv: @nov }]))))))
+        (let ((fd (default (array/first @fm) {})))
+         (if (and (object/has @fd "relation") (array/includes @idNames (object/get (object/get @fd "relation" {}) "entity" ""))) []
+          [{ rel: "", kind: "owner-typed", a: @fname, b: (if (object/has @fd "relation") (str/concat "a relation to `" (object/get (object/get @fd "relation" {}) "entity" "") "`") (str/concat "`" (object/get @fd "type" "") "`")), vv: @nov }]))))))
     [])))
  []))
     (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s2 (object/get @h "rel" ""))) (if (validate/string @s2) @s2 ""))), kind: (let ((s3 (object/get @h "kind" ""))) (if (validate/string @s3) @s3 "")), a: (let ((s4 (object/get @h "a" ""))) (if (validate/string @s4) @s4 "")), b: (let ((s5 (object/get @h "b" ""))) (if (validate/string @s5) @s5 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
@@ -214,7 +214,7 @@ orbital OrbLintEntityAccessOrbital {
    (if (= @kind "invalid-binding")
     [{ code: @config.codes.sAccessPolicyInvalidBinding.code, path: @path, message: (str/concat "`@" @a "` is not a legal binding inside an access directive — only `@entity` (the candidate row) and `@user` (the viewer) are. Access directives have no call site, so `@payload`/`@config`/`@state` are not meaningful here."), entity: @enn, suggestion: "Read only @entity.<field> or @user.<field>.", severity: "error" }]
     (if (= @kind "owner-typed")
-     (let ((idn (array/first @idNames)))
+     (let ((idn (default (array/first @idNames) "")))
       [{ code: @config.codes.sOwnerFieldNotIdentityTyped.code, path: @path, message: (str/concat "`" @enn "." @a "` is compared to `@user.id` but is not a relation to the [identity] entity `" @idn "` — it is " @b ". Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone."), entity: @enn, field: @a, suggestion: (str/concat "Type `" @a "` as a relation to " @idn " (`" @a " : " @idn "`), or compare against the field the viewer value actually lives in"), severity: "error" }])
      (if (= @kind "role")
       (let ((vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
@@ -236,7 +236,7 @@ orbital OrbLintEntityAccessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AccProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AccProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -253,10 +253,10 @@ orbital OrbLintEntityAccessOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-access <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

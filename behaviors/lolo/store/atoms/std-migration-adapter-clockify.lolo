@@ -1,17 +1,17 @@
 app std-migration-adapter-clockify [
   version: "1.0.0",
-  description: "std-migration-adapter-clockify — the Clockify report-export adapter of a migration run. Each fetched document is Clockify's detailed-report JSON: a bare entry array, or an object holding the entries under timeentries (or timeEntries). Entries group under one folder unit per project, created just before the project's first entry (an entry with no project name groups under '(no project)'); each entry becomes a root unit titled with its description ('(no description)' when blank), nested under its project folder, and carrying start, end, duration (as text), user, client and billable. An entry without timeInterval.start is left out of the units and ledgered in skipped with the reason. A document that is not a JSON entry array or timeentries object fails the whole run with MIGRATION_EXTRACT_FAILED. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is clockify."
+  description: "std-migration-adapter-clockify — the Clockify report-export adapter of a migration run. Each fetched document is Clockify's detailed-report JSON: a bare entry array, or an object holding the entries under timeentries (or timeEntries). Entries group under one folder unit per project, created just before the project's first entry (an entry with no project name groups under '(no project)'); each entry becomes a root unit titled with its description ('(no description)' when blank), nested under its project folder, and carrying start, end, duration (as text), user, client and billable. An entry without timeInterval.start is left out of the units and ledgered in skipped with the reason. A document that is not a JSON entry array or timeentries object fails the whole run with MIGRATION_SOURCE_UNREADABLE. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is clockify."
 ]
 orbital MigrationAdapterClockifyOrbital {
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa"!, title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue!, source : string!, span : string? }
   type ClockifyInterval = { start : string, end : string, duration : string | number }
   type ClockifyEntry = { _id : string, id : string, description : string, projectName : string, clientName : string, userName : string, billable : boolean, timeInterval : ClockifyInterval }
   type ClockifyList = [ClockifyEntry]
   type ClockifyReport = { timeentries : [ClockifyEntry], timeEntries : [ClockifyEntry] }
-  type ClockifyDocument = { ref : string!, ok : boolean!, valid : boolean!, entries : [ClockifyEntry] }
+  type ClockifyDocument = { ref : string!, ok : boolean!, valid : boolean!, entries : [ClockifyEntry]! }
 
   entity MigrationAdapterClockifyRun [runtime] {
     id : string!
@@ -36,34 +36,26 @@ orbital MigrationAdapterClockifyOrbital {
                 { ref: (object/get @d ref), ok: false, valid: false, entries: [] }
                 (if
                   (str/startsWith (str/trim (object/get @d raw)) "[")
-                  {
-                    ref: (object/get @d ref),
-                    ok: true,
-                    valid: true,
-                    entries: (json/parse (object/get @d raw) ClockifyList)
-                  }
+                  (let ((list (json/parse (object/get @d raw) ClockifyList)))
+                    (if (== @list null)
+                      { ref: (object/get @d ref), ok: false, valid: true, entries: [] }
+                      { ref: (object/get @d ref), ok: true, valid: true, entries: @list }))
                   (if
                     (str/startsWith (str/trim (object/get @d raw)) "{")
                     (let ((report (json/parse (object/get @d raw) ClockifyReport)))
                       (if
-                        (!= (object/get @report timeentries) null)
-                        {
-                          ref: (object/get @d ref),
-                          ok: (validate/array (object/get @report timeentries)),
-                          valid: true,
-                          entries: (object/get @report timeentries)
-                        }
-                        {
-                          ref: (object/get @d ref),
-                          ok: (validate/array (object/get @report timeEntries)),
-                          valid: true,
-                          entries: (object/get @report timeEntries)
-                        }))
+                        (== @report null)
+                        { ref: (object/get @d ref), ok: false, valid: true, entries: [] }
+                        (let ((found (default (object/get @report timeentries) (object/get @report timeEntries))))
+                          (if
+                            (validate/array @found)
+                            { ref: (object/get @d ref), ok: true, valid: true, entries: @found }
+                            { ref: (object/get @d ref), ok: false, valid: true, entries: [] }))))
                     { ref: (object/get @d ref), ok: false, valid: true, entries: [] }))))))
         (emit CLOCKIFY_PARSED {})
 
       CLOCKIFY_PARSED -> idle when (array/some @entity.documents (fn d (not (object/get @d ok))))
-        (emit MIGRATION_EXTRACT_FAILED { error: (if (object/get (array/find @entity.documents (fn d (not (object/get @d ok)))) valid) "Clockify export must be an entry array or { timeentries: [...] }" "Clockify export is not valid JSON") })
+        (emit MIGRATION_SOURCE_UNREADABLE { error: (if (object/get (default (array/find @entity.documents (fn d (not (object/get @d ok)))) { ref: "", ok: true, valid: true, entries: [] }) valid) "Clockify export must be an entry array or { timeentries: [...] }" "Clockify export is not valid JSON") })
 
       CLOCKIFY_PARSED -> idle when (array/every @entity.documents (fn d (object/get @d ok)))
         (emit
@@ -77,15 +69,13 @@ orbital MigrationAdapterClockifyOrbital {
                                        (array/range (array/len (object/get @d entries)))
                                        (fn i
                                          (and
-                                           (!=
-                                             (object/get
-                                               (array/nth (object/get @d entries) @i)
+                                           (validate/required                                              (object/get
+                                               (default (array/nth (object/get @d entries) @i) {})
                                                "timeInterval.start"
-                                               "")
-                                             null)
+                                               ""))
                                            (!=
                                              (object/get
-                                               (array/nth (object/get @d entries) @i)
+                                               (default (array/nth (object/get @d entries) @i) {})
                                                "timeInterval.start"
                                                "")
                                              ""))))))
@@ -93,7 +83,7 @@ orbital MigrationAdapterClockifyOrbital {
                              (array/map
                                @okIdx
                                (fn i p
-                                 (let ((e (array/nth (object/get @d entries) @i))
+                                 (let ((e (default (array/nth (object/get @d entries) @i) {}))
                                        (proj (if
                                               (and
                                                 (validate/required (object/get @e projectName ""))
@@ -108,27 +98,25 @@ orbital MigrationAdapterClockifyOrbital {
                                            (=
                                              (if
                                                (and
-                                                 (!=
-                                                   (object/get
-                                                     (array/nth (object/get @d entries) @j)
+                                                 (validate/required                                                    (object/get
+                                                     (default (array/nth (object/get @d entries) @j) {})
                                                      projectName
-                                                     "")
-                                                   null)
+                                                     ""))
                                                  (!=
                                                    (object/get
-                                                     (array/nth (object/get @d entries) @j)
+                                                     (default (array/nth (object/get @d entries) @j) {})
                                                      projectName
                                                      "")
                                                    ""))
                                                (object/get
-                                                 (array/nth (object/get @d entries) @j)
+                                                 (default (array/nth (object/get @d entries) @j) {})
                                                  projectName
                                                  "")
                                                "(no project)")
                                              @proj)))
                                        []
                                        [
-                                        {
+                                        (let ((u : ExtractedUnit {
                                           ref: (str/concat
                                                  "clockify:"
                                                  (object/get @d ref)
@@ -141,21 +129,15 @@ orbital MigrationAdapterClockifyOrbital {
                                           source: "clockify",
                                           span: (object/get @d ref),
                                           metadata: { source: "clockify" }
-                                        }
+                                        })) @u)
                                        ])
                                      [
-                                      {
+                                      (let ((u : ExtractedUnit {
                                         ref: (str/concat
                                                "clockify:"
                                                (object/get @d ref)
                                                ":"
-                                               (if
-                                                 (validate/string (object/get @e _id))
-                                                 (object/get @e _id)
-                                                 (if
-                                                   (validate/string (object/get @e id))
-                                                   (object/get @e id)
-                                                   (str/concat "entry-" @i)))),
+                                               (default (object/get @e _id) (default (object/get @e id) (str/concat "entry-" @i)))),
                                         kind: root,
                                         title: (if
                                                  (and
@@ -171,12 +153,8 @@ orbital MigrationAdapterClockifyOrbital {
                                                      (str/replace-pattern (str/lower @proj) "[^a-z0-9]+" "-")),
                                         source: "clockify",
                                         span: (str/concat (object/get @d ref) "#" @i),
-                                        metadata: (object/merge
-                                                    {
-                                                      source: "clockify",
-                                                      start: (object/get @e "timeInterval.start")
-                                                    }
-                                                    (object/fromEntries
+                                        metadata: (let ((none : Map string ImportFieldValue {}) (all : Map string ImportFieldValue { source: "clockify",
+                                                      start: (object/get @e "timeInterval.start" ""), billable: (not (not (object/get @e billable false))) })) (default (object/merge @all (default (object/fromEntries
                                                       (array/map
                                                         (array/filter
                                                           [
@@ -188,20 +166,17 @@ orbital MigrationAdapterClockifyOrbital {
                                                            }
                                                           ]
                                                           (fn q (!= (object/get @q v) "")))
-                                                        (fn q [(object/get @q k), (object/get @q v)])))
-                                                    (object/fromEntries
+                                                        (fn q [(object/get @q k), (object/get @q v)]))) @none) (default (object/fromEntries
                                                       (array/map
                                                         (array/filter
                                                           [
                                                            {
                                                              k: "duration",
-                                                             v: (str/concat
-                                                                  (object/get @e "timeInterval.duration"))
+                                                             v: (str/concat (default (object/get @e "timeInterval.duration") ""))
                                                            }
                                                           ]
                                                           (fn q (object/has @e "timeInterval.duration")))
-                                                        (fn q [(object/get @q k), (object/get @q v)])))
-                                                    (object/fromEntries
+                                                        (fn q [(object/get @q k), (object/get @q v)]))) @none) (default (object/fromEntries
                                                       (array/map
                                                         (array/filter
                                                           [
@@ -215,9 +190,8 @@ orbital MigrationAdapterClockifyOrbital {
                                                            }
                                                           ]
                                                           (fn q (!= (object/get @q v) "")))
-                                                        (fn q [(object/get @q k), (object/get @q v)])))
-                                                    { billable: (not (not (object/get @e billable false))) })
-                                      }
+                                                        (fn q [(object/get @q k), (object/get @q v)]))) @none)) @all))
+                                      })) @u)
                                      ]))))))))),
             skipped: (array/flatten
                        (array/map
@@ -229,15 +203,13 @@ orbital MigrationAdapterClockifyOrbital {
                                (fn i
                                  (not
                                    (and
-                                     (!=
-                                       (object/get
-                                         (array/nth (object/get @d entries) @i)
+                                     (validate/required                                        (object/get
+                                         (default (array/nth (object/get @d entries) @i) {})
                                          "timeInterval.start"
-                                         "")
-                                       null)
+                                         ""))
                                      (!=
                                        (object/get
-                                         (array/nth (object/get @d entries) @i)
+                                         (default (array/nth (object/get @d entries) @i) {})
                                          "timeInterval.start"
                                          "")
                                        "")))))
@@ -247,15 +219,7 @@ orbital MigrationAdapterClockifyOrbital {
                                         "clockify:"
                                         (object/get @d ref)
                                         ":"
-                                        (if
-                                          (validate/string
-                                            (object/get (array/nth (object/get @d entries) @i) _id))
-                                          (object/get (array/nth (object/get @d entries) @i) _id)
-                                          (if
-                                            (validate/string
-                                              (object/get (array/nth (object/get @d entries) @i) id))
-                                            (object/get (array/nth (object/get @d entries) @i) id)
-                                            (str/concat "entry-" @i)))),
+                                        (default (object/get (default (array/nth (object/get @d entries) @i) {}) _id) (default (object/get (default (array/nth (object/get @d entries) @i) {}) id) (str/concat "entry-" @i)))),
                                  reason: "entry has no timeInterval.start"
                                })))))
           })
@@ -274,7 +238,7 @@ orbital MigrationAdapterClockifyOrbital {
         @description "The Clockify entries extracted into project folders and entry units, plus the ledger of entries left out, in document order."
         @synonyms "clockify extracted, clockify staging, clockify units"
         @tier "domain"
-      MIGRATION_EXTRACT_FAILED -> external {
+      MIGRATION_SOURCE_UNREADABLE -> external {
         error : string!
       }
         @description "A document is not a Clockify report export, so the run cannot stage."

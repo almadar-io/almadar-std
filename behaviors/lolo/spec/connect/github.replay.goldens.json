@@ -136,6 +136,450 @@
           }
         }
       ]
+    },
+    {
+      "id": "commits-body-of-the-wrong-shape-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_COMMITS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"message\":\"x\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_LIST_COMMITS_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered commits that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_COMMITS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "commits-readable-body-answers-the-commits",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_COMMITS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "[{\"sha\":\"abc\",\"commit\":{\"message\":\"m\",\"author\":{\"name\":\"n\",\"date\":\"2026-01-01T00:00:00Z\"}}}]"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_COMMITS",
+                "payload": {
+                  "commits": [
+                    {
+                      "sha": "abc",
+                      "message": "m",
+                      "author": "n",
+                      "date": "2026-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_LIST_COMMITS_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-comments-body-of-the-wrong-shape-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_GET_PR_COMMENTS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"message\":\"x\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GET_PR_COMMENTS_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered pull request comments that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_PR_COMMENTS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-comments-readable-body-answers-the-comments",
+      "steps": [
+        {
+          "event": "GITHUB_GET_PR_COMMENTS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "[]"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_PR_COMMENTS",
+                "payload": {
+                  "comments": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GET_PR_COMMENTS_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "issues-body-of-the-wrong-shape-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_ISSUES_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "<html>x</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_LIST_ISSUES_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered issues that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_ISSUES"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "issue-comments-body-of-the-wrong-shape-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE_COMMENTS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"message\":\"x\"}",
+            "key": "{\"number\":7,\"title\":\"t\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GET_ISSUE_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered issue comments that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_ISSUE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "runs-body-without-the-run-list-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "key": "{\"owner\":\"o\",\"repo\":\"r\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_LIST_RUNS_FAILED",
+                "payload": {
+                  "owner": "o",
+                  "repo": "r",
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a run list that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_RUNS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "runs-readable-body-answers-the-runs",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"workflow_runs\":[]}",
+            "key": "{\"owner\":\"o\",\"repo\":\"r\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_RUNS",
+                "payload": {
+                  "owner": "o",
+                  "repo": "r",
+                  "runs": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_LIST_RUNS_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "jobs-body-without-the-job-list-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUN_JOBS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "key": "{\"owner\":\"o\",\"repo\":\"r\",\"runId\":5}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_LIST_RUN_JOBS_FAILED",
+                "payload": {
+                  "owner": "o",
+                  "repo": "r",
+                  "runId": 5,
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a job list that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_RUN_JOBS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "runners-valid-json-without-the-runner-list-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNNERS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "key": "{\"scope\":\"orgs/o\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_LIST_RUNNERS_FAILED",
+                "payload": {
+                  "scope": "orgs/o",
+                  "status": 200,
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a runner list that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_RUNNERS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "billing-valid-json-without-usage-items-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_BILLING_USAGE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "key": "{\"account\":\"a\",\"kind\":\"org\",\"year\":2026,\"month\":10}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_BILLING_USAGE_FAILED",
+                "payload": {
+                  "account": "a",
+                  "kind": "org",
+                  "status": 200,
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a billing usage report that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_BILLING_USAGE_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "billing-readable-report-answers-the-items",
+      "steps": [
+        {
+          "event": "GITHUB_BILLING_USAGE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"usageItems\":[]}",
+            "key": "{\"account\":\"a\",\"kind\":\"org\",\"year\":2026,\"month\":10}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_BILLING_USAGE_ANSWERED",
+                "payload": {
+                  "account": "a",
+                  "kind": "org",
+                  "year": 2026,
+                  "month": 10,
+                  "items": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_BILLING_USAGE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "file-body-that-is-not-a-file-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_GET_FILE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "<html>x</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GET_FILE_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a file that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_FILE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "file-base64-content-is-decoded",
+      "steps": [
+        {
+          "event": "GITHUB_GET_FILE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"path\":\"a.txt\",\"content\":\"aGk=\\n\",\"sha\":\"s\",\"size\":2,\"encoding\":\"base64\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_FILE",
+                "payload": {
+                  "path": "a.txt",
+                  "content": "hi",
+                  "sha": "s",
+                  "size": 2
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GET_FILE_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-created-body-that-is-not-a-pull-request-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_PR_REPLIED",
+          "payload": {
+            "status": 201,
+            "body": "<html>x</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_CREATE_PR_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a pull request that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_PR_CREATED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "issue-created-body-that-is-not-an-issue-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_ISSUE_REPLIED",
+          "payload": {
+            "status": 201,
+            "body": "<html>x</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_CREATE_ISSUE_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered an issue that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_ISSUE_CREATED"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

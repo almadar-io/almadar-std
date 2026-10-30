@@ -52,11 +52,11 @@ orbital OrbLintExpectationProviderMismatchOrbital {
        (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
        (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-  (let ((o (array/nth @orbs @oi)))
+  (let ((o (default (array/nth @orbs @oi) {})))
    (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
     (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
      (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
-      (let ((x (array/nth @xs @j)))
+      (let ((x (default (array/nth @xs @j) {})))
        (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
         (if (= @kind "entity") (let ((pv (array/find @provs (fn p (= (object/get @p "n") (object/get @x "name" ""))))))
   (if (= @pv null) []
@@ -117,7 +117,7 @@ orbital OrbLintExpectationProviderMismatchOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PmProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PmProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -134,10 +134,10 @@ orbital OrbLintExpectationProviderMismatchOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-provider-mismatch <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

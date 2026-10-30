@@ -1,6 +1,6 @@
 app std-calendar-sync [
   version: "1.0.0",
-  description: "std-calendar-sync — two-way Google Calendar synchronization engine. PUSH: a 15-minute cron scan (and the user-addressable SYNC_NOW) walks `targetEntity` rows whose `externalEventId` marker is blank and creates a remote event per row through calendar.createEvent, reading the summary/start/end via the configured field mapping (`titleField`/`startField`/`endField`/`durationMinutes` fallback/`locationField`/`descriptionField`) — so ANY event-shaped host entity pushes, provided it declares the two marker columns `externalEventId : string` and `syncedAt : number` (the remindedAt precedent). PULL: `CAL_REMOTE_CHANGED` (emitted by the google-calendar inbound hook, /api/hooks/google-calendar, for a calendar.watch channel) or the same cycle after a clean push lists remote events (incremental via the in-memory sync token; a restart falls back to a full window list) and upserts each into the atom's own canonical `CalendarEvent` store, matched by `externalEventId` — pulls land in the canonical store, NOT the arbitrary target, because persist keys are static in the language; bind calendar UI to `CalendarEvent` to surface remote events. Conflict detection (local-newer-than-remote) needs a local-modified marker convention and is a recorded gap, not a decorative state. Composes with std-notify-on-event via CAL_SYNCED / CAL_SYNC_FAILED.",
+  description: "std-calendar-sync — two-way Google Calendar synchronization engine. PUSH: a 15-minute cron scan (and the user-addressable SYNC_NOW) walks `targetEntity` rows whose `externalEventId` marker is blank and creates a remote event per row through calendar.createEvent, reading the summary/start/end via the configured field mapping (`titleField`/`startField`/`endField`/`durationMinutes` fallback/`locationField`/`descriptionField`) — so ANY event-shaped host entity pushes, provided it declares the two marker columns `externalEventId : string` and `syncedAt : instant?` (the remindedAt precedent). PULL: `CAL_REMOTE_CHANGED` (emitted by the google-calendar inbound hook, /api/hooks/google-calendar, for a calendar.watch channel) or the same cycle after a clean push lists remote events (incremental via the in-memory sync token; a restart falls back to a full window list) and upserts each into the atom's own canonical `CalendarEvent` store, matched by `externalEventId` — pulls land in the canonical store, NOT the arbitrary target, because persist keys are static in the language; bind calendar UI to `CalendarEvent` to surface remote events. Conflict detection (local-newer-than-remote) needs a local-modified marker convention and is a recorded gap, not a decorative state. Composes with std-notify-on-event via CAL_SYNCED / CAL_SYNC_FAILED.",
   egress: ["https://www.googleapis.com"],
   inbound: ["google-calendar"]
 ]
@@ -14,7 +14,7 @@ orbital CalendarSyncOrbital {
   entity CalendarSyncRun [persistent: calendarSyncState] {
     id : string!
     syncToken : string @intrinsic @description "Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list." @synonyms "sync cursor, next token" = ""
-    lastSyncedAt : number @intrinsic @description "When the last full push+pull cycle completed; 0 = never." @synonyms "last sync time" = 0
+    lastSyncedAt : instant? @intrinsic @description "When the last full push+pull cycle completed; null = never." @synonyms "last sync time"
     headId : string @intrinsic @description "Scratch: id of the target row the push loop is currently exporting." @synonyms "cursor, current row" = ""
     pending : [RemoteEvent] @intrinsic @description "Scratch: remote events remaining in the current pull-upsert loop." @synonyms "pull queue, remaining events" = []
     lastError : string @intrinsic @description "Last sync failure detail; blank = none." @synonyms "sync error, failure" = ""
@@ -29,7 +29,7 @@ orbital CalendarSyncOrbital {
     description : string @description "Event description/notes." @synonyms "notes, details, body" = ""
     status : string @description "Remote status (confirmed/tentative/cancelled)." @synonyms "state, confirmation" = ""
     externalEventId : string @description "Google Calendar event id this row mirrors; the pull-upsert match key." @synonyms "remote id, google id, calendar event id" = ""
-    syncedAt : number @description "When this row last synced with the remote calendar; 0 = never." @synonyms "last sync, synced" = 0
+    syncedAt : instant? @description "When this row last synced with the remote calendar; null = never." @synonyms "last sync, synced"
   }
 
   trait CalendarSyncApi = CalendarApi.traits.CalendarClient {
@@ -73,16 +73,22 @@ orbital CalendarSyncOrbital {
           syncToken: @entity.syncToken
         })
       PUSH_ROWS_LOADED -> pushing when (and @config.enabled (> (array/len ?data) 0))
-        (set @entity.headId (object/get (array/first ?data) id))
-        (emit CALENDAR_CREATE_EVENT {
-          calendarId: @config.calendarId
-          summary: (object/get (array/first ?data) @config.titleField)
-          description: (if (= @config.descriptionField "") "" (object/get (array/first ?data) @config.descriptionField))
-          location: (if (= @config.locationField "") "" (object/get (array/first ?data) @config.locationField))
-          start: (object/get (array/first ?data) @config.startField)
-          end: (if (= @config.endField "") "" (object/get (array/first ?data) @config.endField))
-          durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get (array/first ?data) @config.durationField))
-        })
+        (let ((row (array/first ?data)))
+          (if (= @row null)
+            (emit CAL_SYNC_FAILED { error: "the push loop found no row to export" })
+            (if (or (= (object/get @row @config.titleField "") "") (= (object/get @row @config.startField) null))
+              (emit CAL_SYNC_FAILED { error: (str/concat "Row " (object/get @row id "") " has no value in its title or start field, so it cannot be exported as a calendar event") })
+              (do
+                (set @entity.headId (object/get @row id ""))
+                (emit CALENDAR_CREATE_EVENT {
+                  calendarId: @config.calendarId
+                  summary: (object/get @row @config.titleField "")
+                  description: (if (= @config.descriptionField "") "" (object/get @row @config.descriptionField ""))
+                  location: (if (= @config.locationField "") "" (object/get @row @config.locationField ""))
+                  start: (str/concat (object/get @row @config.startField))
+                  end: (if (= @config.endField "") "" (let ((e (object/get @row @config.endField))) (if (= @e null) "" (str/concat @e))))
+                  durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get @row @config.durationField @config.durationMinutes))
+                })))))
       PUSH_ROWS_LOADED -> idle when (= (array/len ?data) 0)
         (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
@@ -99,7 +105,7 @@ orbital CalendarSyncOrbital {
       CAL_REMOTE_LISTED -> idle when (= (array/len ?events) 0)
         (set @entity.syncToken (default ?nextSyncToken ""))
         (set @entity.lastSyncedAt @now)
-        (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
+        (emit CAL_SYNCED { syncedAt: @now })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't sync the calendar — " ?error))
@@ -121,16 +127,22 @@ orbital CalendarSyncOrbital {
           limit: 1
         })
       PUSH_ROWS_LOADED -> pushing when (> (array/len ?data) 0)
-        (set @entity.headId (object/get (array/first ?data) id))
-        (emit CALENDAR_CREATE_EVENT {
-          calendarId: @config.calendarId
-          summary: (object/get (array/first ?data) @config.titleField)
-          description: (if (= @config.descriptionField "") "" (object/get (array/first ?data) @config.descriptionField))
-          location: (if (= @config.locationField "") "" (object/get (array/first ?data) @config.locationField))
-          start: (object/get (array/first ?data) @config.startField)
-          end: (if (= @config.endField "") "" (object/get (array/first ?data) @config.endField))
-          durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get (array/first ?data) @config.durationField))
-        })
+        (let ((row (array/first ?data)))
+          (if (= @row null)
+            (emit CAL_SYNC_FAILED { error: "the push loop found no row to export" })
+            (if (or (= (object/get @row @config.titleField "") "") (= (object/get @row @config.startField) null))
+              (emit CAL_SYNC_FAILED { error: (str/concat "Row " (object/get @row id "") " has no value in its title or start field, so it cannot be exported as a calendar event") })
+              (do
+                (set @entity.headId (object/get @row id ""))
+                (emit CALENDAR_CREATE_EVENT {
+                  calendarId: @config.calendarId
+                  summary: (object/get @row @config.titleField "")
+                  description: (if (= @config.descriptionField "") "" (object/get @row @config.descriptionField ""))
+                  location: (if (= @config.locationField "") "" (object/get @row @config.locationField ""))
+                  start: (str/concat (object/get @row @config.startField))
+                  end: (if (= @config.endField "") "" (let ((e (object/get @row @config.endField))) (if (= @e null) "" (str/concat @e))))
+                  durationMinutes: (if (= @config.durationField "") @config.durationMinutes (object/get @row @config.durationField @config.durationMinutes))
+                })))))
       PUSH_ROWS_LOADED -> idle when (= (array/len ?data) 0)
         (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
@@ -149,40 +161,51 @@ orbital CalendarSyncOrbital {
       PULL_TARGET_LOADED -> pulling when (> ?totalCount (array/len ?data))
         (emit CAL_SYNC_FAILED { error: (str/concat "CalendarEvent has " ?totalCount " rows for one remote event id, over the maxRows cap of " @config.maxRows) })
       PULL_TARGET_LOADED -> pulling
-        (set @entity.headId (object/get (array/first @entity.pending) id))
-        (if (= (array/len (array/filter ?data (fn r (= (object/get @r externalEventId) @entity.headId)))) 0) (persist create CalendarEvent {
-          title: (object/get (array/first @entity.pending) summary)
-          startsAt: (object/get (array/first @entity.pending) start)
-          endsAt: (object/get (array/first @entity.pending) end)
-          location: (object/get (array/first @entity.pending) location)
-          description: (object/get (array/first @entity.pending) description)
-          status: (object/get (array/first @entity.pending) status)
-          externalEventId: @entity.headId
-          syncedAt: @now
-        } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } }) (persist update CalendarEvent {
-          id: (object/get (array/first (array/filter ?data (fn r (= (object/get @r externalEventId) @entity.headId)))) id)
-          title: (object/get (array/first @entity.pending) summary)
-          startsAt: (object/get (array/first @entity.pending) start)
-          endsAt: (object/get (array/first @entity.pending) end)
-          location: (object/get (array/first @entity.pending) location)
-          description: (object/get (array/first @entity.pending) description)
-          status: (object/get (array/first @entity.pending) status)
-          syncedAt: @now
-        } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } }))
+        (let ((head (array/first @entity.pending)))
+          (if (= @head null)
+            (emit CAL_SYNC_FAILED { error: "the pull loop has no remote event left to upsert" })
+            (let ((hid (object/get @head id "")))
+              (do
+                (set @entity.headId @hid)
+                (let ((existing (array/first (array/filter ?data (fn r (= (object/get @r externalEventId) @hid))))))
+                  (if (= @existing null)
+                    (persist create CalendarEvent {
+                    title: (object/get @head summary "")
+                    startsAt: (object/get @head start "")
+                    endsAt: (object/get @head end "")
+                    location: (object/get @head location "")
+                    description: (object/get @head description "")
+                    status: (object/get @head status "")
+                    externalEventId: @hid
+                    syncedAt: @now
+                  } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } })
+                    (persist update CalendarEvent {
+                    id: (object/get @existing id "")
+                    title: (object/get @head summary "")
+                    startsAt: (object/get @head start "")
+                    endsAt: (object/get @head end "")
+                    location: (object/get @head location "")
+                    description: (object/get @head description "")
+                    status: (object/get @head status "")
+                    syncedAt: @now
+                  } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } })))))))
       PULL_STEPPED -> pulling
         (set @entity.pending (array/drop @entity.pending 1))
         (emit PULL_NEXT {
           remaining: (array/len @entity.pending)
         })
       PULL_NEXT -> pulling when (> ?remaining 0)
-        (fetch CalendarEvent {
-          emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
-          filter: (= (object/get @entity externalEventId) (object/get (array/first @entity.pending) id))
-          limit: @config.maxRows
-        })
+        (let ((head (array/first @entity.pending)))
+          (if (= @head null)
+            (emit CAL_SYNC_FAILED { error: "the pull loop has no remote event left to look up" })
+            (fetch CalendarEvent {
+              emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
+              filter: (= (object/get @entity externalEventId) (object/get @head id ""))
+              limit: @config.maxRows
+            })))
       PULL_NEXT -> idle when (= ?remaining 0)
         (set @entity.lastSyncedAt @now)
-        (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
+        (emit CAL_SYNCED { syncedAt: @now })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't sync the calendar — " ?error))
@@ -210,7 +233,7 @@ orbital CalendarSyncOrbital {
         @description "Ask the Google Calendar client to create a remote event for the row being pushed."
         @tier "internal"
       CAL_SYNCED -> external {
-        syncedAt : number
+        syncedAt : instant!
       }
         @description "A full push+pull cycle completed; wire to std-notify-on-event or a status surface."
       CAL_SYNC_FAILED {
@@ -219,7 +242,7 @@ orbital CalendarSyncOrbital {
         @description "A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger."
         @tier "secondary"
       PUSH_ROWS_LOADED {
-        data : [TargetRow]!
+        data : [@entity @config.targetEntity]!
       }
         @description "The next target row with a blank externalEventId marker, read one at a time; the push loop stamps it and reads the next, so the export queue drains without ever loading it whole."
         @tier "secondary"
@@ -264,7 +287,7 @@ orbital CalendarSyncOrbital {
         resourceState : string
       }
       PUSH_ROWS_LOADED {
-        data : [TargetRow]!
+        data : [@entity @config.targetEntity]!
       }
       CAL_EVENT_CREATED {
         id : string!
@@ -275,7 +298,7 @@ orbital CalendarSyncOrbital {
         id : string!
       }
       CAL_REMOTE_LISTED {
-        events : [RemoteEvent]
+        events : [RemoteEvent]!
         nextSyncToken : string?
       }
       PULL_TARGET_LOADED {
@@ -313,7 +336,7 @@ orbital CalendarSyncOrbital {
         @tier "infra"
       targetEntity : entity = CalendarEvent
         @label "Entity to push"
-        @description "Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = \"\"` and `syncedAt : number = 0` (stamped by the push loop). Defaults to the atom's own CalendarEvent store so the standalone validates; rebind per composition."
+        @description "Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = \"\"` and `syncedAt : instant?` (stamped by the push loop). Defaults to the atom's own CalendarEvent store so the standalone validates; rebind per composition."
         @synonyms "entity to sync, source entity, record type, appointments entity, sessions entity"
         @tier "internal"
       calendarId : string = ""

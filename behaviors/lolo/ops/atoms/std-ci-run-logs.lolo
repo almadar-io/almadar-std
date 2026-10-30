@@ -54,11 +54,20 @@ orbital CiRunLogsOrbital {
       CI_LOGS_LOAD -> reading
         (emit CI_LOGS_FAILED { runId: @payload.runId, error: (str/concat "the log of run " @entity.runId " is being read") , code: "ci_logs_busy" })
 
-      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (= @payload.exitCode 0) (json/valid @payload.stdout) (> (array/len (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure")))) 0))
-        (set @entity.failed (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure"))))
-        (set @entity.cursor 0)
-        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (array/nth @entity.failed 0) "id") "/logs")] })
-      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout) (> (array/len (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure")))) 0))))
+      CI_LOGS_RAN -> idle when (and (= @payload.stage "jobs") (= @payload.exitCode 0) (json/valid @payload.stdout) (= (json/parse @payload.stdout CiGhJobList) null))
+        (emit CI_LOGS_FAILED { runId: @entity.runId, error: "the job list could not be read", code: "ci_logs_unreadable" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "The job list of the run could not be read." })
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (and (= @payload.exitCode 0) (json/valid @payload.stdout) (let ((jl (json/parse @payload.stdout CiGhJobList))) (if (= @jl null) false (> (array/len (array/filter (object/get @jl "jobs" []) (fn j (= @j.conclusion "failure")))) 0)))))
+        (let ((jl (json/parse @payload.stdout CiGhJobList)))
+          (if (= @jl null)
+            (emit CI_LOGS_FAILED { runId: @entity.runId, error: "the job list could not be read", code: "ci_logs_unreadable" })
+            (do
+              (set @entity.failed (array/filter (object/get @jl "jobs" []) (fn j (= @j.conclusion "failure"))))
+              (set @entity.cursor 0)
+              (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (default (array/nth @entity.failed 0) { id: 0, name: "", conclusion: "" }) "id") "/logs")] }))))
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))) )
+        (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (= @payload.exitCode 0) (json/valid @payload.stdout) (let ((jl (json/parse @payload.stdout CiGhJobList))) (if (= @jl null) false (= (array/len (array/filter (object/get @jl "jobs" []) (fn j (= @j.conclusion "failure")))) 0))))
         (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
 
       CI_LOGS_RAN -> reading when (and (= @payload.stage "log") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
@@ -70,7 +79,7 @@ orbital CiRunLogsOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CI_LOGS_NEXT { })
       CI_LOGS_NEXT -> reading when (< @entity.cursor (array/len @entity.failed))
-        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (array/nth @entity.failed @entity.cursor) "id") "/logs")] })
+        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (default (array/nth @entity.failed @entity.cursor) { id: 0, name: "", conclusion: "" }) "id") "/logs")] })
       CI_LOGS_NEXT -> idle when (>= @entity.cursor (array/len @entity.failed))
         (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
 (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [

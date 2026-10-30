@@ -1,21 +1,36 @@
 app std-agent-planner [
   version: "1.0.0",
   description: "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context through std-llm (LLM_GENERATE).",
-  net: { "api.openai.com:443": [tcp] },
+  net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] },
 ]
 
 uses Spec from "almadar-std/planner"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Delay from "std/behaviors/std-delay"
+uses Memory from "std/behaviors/std-agent-memory"
 
-type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
+type PlannerChatMessage = { role : "user" | "assistant"!, content : string! }
 
 orbital AgentPlannerOrbital {
 
+  entity AgentMemory [persistent: agentMemories] {
+    id : string!
+    ownerId : string!
+    content : string!
+    embedding : [number] = []
+    createdAt : instant
+    pendingMessages : [PlannerChatMessage] @intrinsic = []
+    pendingQuery : string @intrinsic = ""
+    pendingContent : string @intrinsic = ""
+    page : number @intrinsic = 1
+    queryVector : [number] @intrinsic = []
+  }
+
   entity PlannerPlan [runtime] {
     prompt : string = ""
-    memories : [MemoryRecord] = []
+    context : string = ""
     plan : string = ""
     status : "idle" | "planning" | "planned" = idle
   }
@@ -27,6 +42,62 @@ orbital AgentPlannerOrbital {
       PlannerChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
       PlannerChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
       PlannerChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+      PlannerMemory.LLM_EMBED -> LLM_EMBED
+      PlannerEmbedWait.PLANNER_EMBED_WAITED -> LLM_EMBED_WAITED
+      PlannerEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      PlannerEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      PlannerEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait PlannerEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: PLANNER_EMBED_WAITED
+    }
+    listens {
+      PlannerLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait PlannerEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      PlannerLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      PlannerLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      PlannerEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      PlannerEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PlannerEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      PlannerEmbedRequest.HTTP_SEND -> HTTP_SEND
+      PlannerEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait PlannerMemory = Memory.traits.AgentMemoryRecall -> AgentMemory {
+    listens {
+      PlannerExecution.RECALL -> RECALL
+      PlannerLlm.LLM_EMBED_RESULT -> MemoryEmbedded
+      PlannerLlm.LLM_FAILED -> MemoryEmbedFailed
+      MemoryEmbedded {
+        embeddings : [[number]]
+        key : string
+      }
+      MemoryEmbedFailed {
+        code : string
+        message : string!
+        key : string
+      }
     }
   }
 
@@ -61,42 +132,39 @@ orbital AgentPlannerOrbital {
     state idle {
       INIT -> idle
         (set @entity.prompt "")
-        (set @entity.memories [])
+        (set @entity.context "")
         (set @entity.plan "")
         (set @entity.status idle)
       PLAN -> recalling
         (set @entity.prompt ?prompt)
-        (memory/recall @entity.prompt { emit: { success: MEMORIES_RECALLED, failure: RECALL_FAILED } })
+        (emit RECALL { messages: [{ role: "user", content: @entity.prompt }] })
     }
 
     state recalling {
       INIT -> idle
         (set @entity.prompt "")
-        (set @entity.memories [])
+        (set @entity.context "")
         (set @entity.plan "")
         (set @entity.status idle)
-      MEMORIES_RECALLED -> planning
-        (set @entity.memories ?result)
-        (emit LLM_GENERATE { userPrompt: @entity.prompt })
-      RECALL_FAILED -> planning
-        (set @entity.memories [])
+      RECALLED -> planning
+        (set @entity.context (default ?context ""))
         (emit LLM_GENERATE { userPrompt: @entity.prompt })
     }
 
     state planning {
       INIT -> idle
         (set @entity.prompt "")
-        (set @entity.memories [])
+        (set @entity.context "")
         (set @entity.plan "")
         (set @entity.status idle)
       PLAN_GENERATED -> planned
         (set @entity.plan ?content)
         (set @entity.status planned)
-        (emit PLANNED { plan: @entity.plan, memoryCount: (array/len @entity.memories) })
+        (emit PLANNED { plan: @entity.plan, memoryCount: (if (!= @entity.context "") 1 0) })
       PLAN_GENERATION_FAILED -> planned
         (set @entity.plan "")
         (set @entity.status planned)
-        (emit PLANNED { plan: @entity.plan, memoryCount: (array/len @entity.memories) })
+        (emit PLANNED { plan: @entity.plan, memoryCount: (if (!= @entity.context "") 1 0) })
     }
 
     state planned {
@@ -104,7 +172,7 @@ orbital AgentPlannerOrbital {
         (set @entity.status planned)
       RESET -> idle
         (set @entity.plan "")
-        (set @entity.memories [])
+        (set @entity.context "")
         (set @entity.prompt "")
         (set @entity.status idle)
     }
@@ -114,9 +182,11 @@ orbital AgentPlannerOrbital {
         plan : string!
         memoryCount : number!
       }
-      MEMORIES_RECALLED {
-        result : [MemoryRecord]!
+      RECALL -> external {
+        messages : [PlannerChatMessage]!
       }
+        @description "Ask std-agent-memory to recall what is relevant to the prompt"
+        @tier "secondary"
       LLM_GENERATE -> external {
         userPrompt : string!
       }
@@ -127,6 +197,11 @@ orbital AgentPlannerOrbital {
     listens {
       PlannerLlm.LLM_GENERATE_RESULT -> PLAN_GENERATED
       PlannerLlm.LLM_FAILED -> PLAN_GENERATION_FAILED
+      PlannerMemory.RECALLED -> RECALLED
+      RECALLED {
+        messages : [PlannerChatMessage]
+        context : string
+      }
       PLAN_GENERATED {
         content : string!
       }
@@ -163,5 +238,5 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm, PlannerChatRequest, PlannerChatHttp
+  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm, PlannerChatRequest, PlannerChatHttp, PlannerEmbedWait, PlannerEmbedRequest, PlannerEmbedHttp, PlannerMemory
 }

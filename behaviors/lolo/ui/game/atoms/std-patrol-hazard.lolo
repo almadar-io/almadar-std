@@ -52,18 +52,18 @@ orbital PatrolHazardOrbital {
       patrolTick every 33ms
         when (and @config.running (> (array/len @entity.patrols) 0))
         (set @entity.patrols (array/map @entity.patrols (fn p
-          (let ((nx (+ (object/get @p x) (* (* (object/get @p dir) (object/get @p speed)) 0.033))))
+          (let ((nx (+ (default (object/get @p x) (object/get @p x0)) (* (* (default (object/get @p dir) 1) (object/get @p speed)) 0.033))))
           (let ((overshoot (> @nx (object/get @p x1))) (undershoot (< @nx (object/get @p x0))))
           (let ((cx (if @overshoot (object/get @p x1) (if @undershoot (object/get @p x0) @nx)))
-                (cdir (if @overshoot -1 (if @undershoot 1 (object/get @p dir)))))
-          (let ((nt (+ (object/get @p t) 0.033)))
+                (cdir (if @overshoot -1 (if @undershoot 1 (default (object/get @p dir) 1)))))
+          (let ((nt (+ (default (object/get @p t) 0) 0.033)))
           (let ((amp (if (== (object/get @p waveAmp) null) 0 (object/get @p waveAmp))) (period (if (== (object/get @p wavePeriod) null) 3 (object/get @p wavePeriod))))
           (let ((cy (+ (object/get @p y) (* @amp (math/sin (default (/ (* 6.283185307179586 @nt) @period) 0))))))
           (let ((near (and (<= (math/abs (- @entity.px @cx)) @config.hitRadius) (<= (math/abs (- @entity.py @cy)) @config.hitRadius))))
             (object/merge @p { x: @cx, dir: @cdir, t: @nt, cy: @cy, hit: (and @near (== (object/get @p touching) false)), touching: @near })))))))))))
         (let ((hits (array/filter @entity.patrols (fn p (== (object/get @p hit) true)))))
         (if (> (array/len @hits) 0)
-          (emit PATROL_HIT { id: (object/get (array/first @hits) id), x: (object/get (array/first @hits) x), y: (object/get (array/first @hits) cy) })
+          (emit PATROL_HIT { id: (object/get (array/first @hits) id), x: (default (object/get (array/first @hits) x) (object/get (array/first @hits) x0)), y: (default (object/get (array/first @hits) cy) (object/get (array/first @hits) y)) })
           null))
     }
 

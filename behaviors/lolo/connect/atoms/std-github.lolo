@@ -6,32 +6,32 @@ app std-github [
 uses Spec from "almadar-std/github"
 type GithubError = { message : string }
 type GithubRef = { ref : string }
-type GithubPull = { number : number, url : string, html_url : string, title : string, state : string, draft : boolean, head : GithubRef, base : GithubRef }
+type GithubPull = { number : number!, url : string!, html_url : string!, title : string!, state : string!, draft : boolean!, head : GithubRef!, base : GithubRef! }
 type GithubUser = { login : string }
 type GithubLabel = { name : string, color : string }
 type GithubComment = { id : number, body : string, user : GithubUser, created_at : string }
 type GithubIssue = { number : number, url : string, title : string, body : string, state : string, labels : [GithubLabel], created_at : string, updated_at : string }
 type GithubCommit = { sha : string, message : string, author : string, date : string }
-type GithubFileData = { path : string, content : string, sha : string, size : number, encoding : string }
-type GithubCommitAuthor = { name : string, email : string, date : string }
-type GithubCommitDetail = { message : string, author : GithubCommitAuthor }
-type GithubCommitItem = { sha : string, commit : GithubCommitDetail }
-type GithubCreatedIssue = { number : number, title : string, url : string }
+type GithubFileData = { path : string!, content : string!, sha : string!, size : number!, encoding : string }
+type GithubCommitAuthor = { name : string!, email : string, date : string! }
+type GithubCommitDetail = { message : string!, author : GithubCommitAuthor! }
+type GithubCommitItem = { sha : string!, commit : GithubCommitDetail! }
+type GithubCreatedIssue = { number : number!, title : string!, url : string! }
 type GithubComments = [GithubComment]
 type GithubIssues = [GithubIssue]
 type GithubCommitItems = [GithubCommitItem]
 type GithubRun = { id : number!, name : string!, status : string!, conclusion : string?, created_at : string!, html_url : string! }
-type GithubRunList = { workflow_runs : [GithubRun] }
+type GithubRunList = { workflow_runs : [GithubRun]! }
 type GithubJob = { id : number!, name : string!, status : string!, conclusion : string?, html_url : string! }
-type GithubJobList = { jobs : [GithubJob] }
+type GithubJobList = { jobs : [GithubJob]! }
 type GithubRunner = { id : number!, name : string!, status : string!, busy : boolean! }
-type GithubRunnerList = { runners : [GithubRunner] }
-type GithubRunnersKey = { scope : string }
-type GithubRunsKey = { owner : string, repo : string }
-type GithubJobsKey = { owner : string, repo : string, runId : number }
+type GithubRunnerList = { runners : [GithubRunner]! }
+type GithubRunnersKey = { scope : string! }
+type GithubRunsKey = { owner : string!, repo : string! }
+type GithubJobsKey = { owner : string!, repo : string!, runId : number! }
 type GithubUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
-type GithubUsageReport = { usageItems : [GithubUsageItem] }
-type GithubBillingKey = { account : string, kind : string, year : number, month : number }
+type GithubUsageReport = { usageItems : [GithubUsageItem]! }
+type GithubBillingKey = { account : string!, kind : string!, year : number!, month : number! }
 orbital GithubOrbital {
   entity GithubCall [runtime] {
     id : string!
@@ -54,7 +54,9 @@ orbital GithubOrbital {
         (emit GITHUB_CREATE_PR_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_CREATE_PR_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((pr (json/parse @payload.body GithubPull)))
-          (emit GITHUB_PR_CREATED { number: @pr.number, url: @pr.url, html_url: @pr.html_url, title: @pr.title, state: @pr.state, draft: @pr.draft, head: @pr.head, base: @pr.base }))
+          (if (= @pr null)
+            (emit GITHUB_CREATE_PR_FAILED { code: "PARSE_ERROR", message: "GitHub answered a pull request that could not be read" })
+            (emit GITHUB_PR_CREATED { number: @pr.number, url: @pr.url, html_url: @pr.html_url, title: @pr.title, state: @pr.state, draft: @pr.draft, head: @pr.head, base: @pr.base })))
       GITHUB_CREATE_PR_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_CREATE_PR_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
@@ -71,7 +73,9 @@ orbital GithubOrbital {
         } { emit: { success: GITHUB_GET_PR_COMMENTS_REPLIED, failure: GITHUB_GET_PR_COMMENTS_UNREACHABLE } })
       GITHUB_GET_PR_COMMENTS -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_GET_PR_COMMENTS_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
-      GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body GithubComments) null))
+        (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "PARSE_ERROR", message: "GitHub answered pull request comments that could not be read" })
+      GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body GithubComments) null))
         (emit GITHUB_PR_COMMENTS { comments: (json/parse @payload.body GithubComments) })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_PR_COMMENTS_FAILED {
@@ -89,7 +93,9 @@ orbital GithubOrbital {
         } { emit: { success: GITHUB_LIST_ISSUES_REPLIED, failure: GITHUB_LIST_ISSUES_UNREACHABLE } })
       GITHUB_LIST_ISSUES -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_LIST_ISSUES_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
-      GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body GithubIssues) null))
+        (emit GITHUB_LIST_ISSUES_FAILED { code: "PARSE_ERROR", message: "GitHub answered issues that could not be read" })
+      GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body GithubIssues) null))
         (emit GITHUB_ISSUES { issues: (json/parse @payload.body GithubIssues) })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_LIST_ISSUES_FAILED {
@@ -122,7 +128,9 @@ orbital GithubOrbital {
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.key GithubIssue) null))
         (emit GITHUB_GET_ISSUE_FAILED { code: "PARSE_ERROR", message: "GitHub answered an issue that could not be read" })
-      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.key GithubIssue) null))
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.key GithubIssue) null) (= (json/parse @payload.body GithubComments) null))
+        (emit GITHUB_GET_ISSUE_FAILED { code: "PARSE_ERROR", message: "GitHub answered issue comments that could not be read" })
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.key GithubIssue) null) (!= (json/parse @payload.body GithubComments) null))
         (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body GithubComments) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_ISSUE_FAILED {
@@ -141,7 +149,12 @@ orbital GithubOrbital {
         } { emit: { success: GITHUB_GET_FILE_REPLIED, failure: GITHUB_GET_FILE_UNREACHABLE } })
       GITHUB_GET_FILE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((file (json/parse @payload.body GithubFileData)))
-          (emit GITHUB_FILE { path: @file.path, content: (if (= @file.encoding "base64") (base64/decode (str/replaceAll (str/replaceAll (str/replaceAll @file.content "\n" "") "\r" "") " " "")) @file.content), sha: @file.sha, size: @file.size }))
+          (if (= @file null)
+            (emit GITHUB_GET_FILE_FAILED { code: "PARSE_ERROR", message: "GitHub answered a file that could not be read" })
+            (let ((content : string? (if (= @file.encoding "base64") (base64/decode (str/replaceAll (str/replaceAll (str/replaceAll @file.content "\n" "") "\r" "") " " "")) @file.content)))
+              (if (= @content null)
+                (emit GITHUB_GET_FILE_FAILED { code: "PARSE_ERROR", message: "GitHub answered file content that is not valid base64" })
+                (emit GITHUB_FILE { path: @file.path, content: (default @content ""), sha: @file.sha, size: @file.size })))))
       GITHUB_GET_FILE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_FILE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
@@ -151,14 +164,17 @@ orbital GithubOrbital {
         (emit GITHUB_GET_FILE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_LIST_COMMITS -> idle
-        (let ((query (str/join (array/filter [(if (!= (default @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.per_page 0) 0) (str/concat "per_page=" @payload.per_page) "")] (fn p (!= @p ""))) "&")))
+        (let ((query (str/join (array/filter [(if (!= (default @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.per_page 0) 0) (str/concat "per_page=" (default @payload.per_page 0)) "")] (fn p (!= @p ""))) "&")))
           (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/commits" (if (= @query "") "" (str/concat "?" @query))) {
             headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
             auth: { scheme: bearer, credential: @config.token },
             timeoutMs: @config.timeoutMs
           } { emit: { success: GITHUB_LIST_COMMITS_REPLIED, failure: GITHUB_LIST_COMMITS_UNREACHABLE } }))
       GITHUB_LIST_COMMITS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit GITHUB_COMMITS { commits: (array/map (json/parse @payload.body GithubCommitItems) (fn c { sha: @c.sha, message: @c.commit.message, author: @c.commit.author.name, date: @c.commit.author.date })) })
+        (let ((items (json/parse @payload.body GithubCommitItems)))
+          (if (= @items null)
+            (emit GITHUB_LIST_COMMITS_FAILED { code: "PARSE_ERROR", message: "GitHub answered commits that could not be read" })
+            (emit GITHUB_COMMITS { commits: (array/map @items (fn c { sha: @c.sha, message: @c.commit.message, author: @c.commit.author.name, date: @c.commit.author.date })) })))
       GITHUB_LIST_COMMITS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_LIST_COMMITS_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
@@ -176,7 +192,9 @@ orbital GithubOrbital {
         } { emit: { success: GITHUB_CREATE_ISSUE_REPLIED, failure: GITHUB_CREATE_ISSUE_UNREACHABLE } })
       GITHUB_CREATE_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((issue (json/parse @payload.body GithubCreatedIssue)))
-          (emit GITHUB_ISSUE_CREATED { number: @issue.number, title: @issue.title, url: @issue.url }))
+          (if (= @issue null)
+            (emit GITHUB_CREATE_ISSUE_FAILED { code: "PARSE_ERROR", message: "GitHub answered an issue that could not be read" })
+            (emit GITHUB_ISSUE_CREATED { number: @issue.number, title: @issue.title, url: @issue.url })))
       GITHUB_CREATE_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_CREATE_ISSUE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
@@ -207,8 +225,10 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { scope: @payload.scope }), emit: { success: GITHUB_LIST_RUNNERS_REPLIED, failure: GITHUB_LIST_RUNNERS_UNREACHABLE } })
       GITHUB_LIST_RUNNERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (let ((at (json/parse @payload.key GithubRunnersKey)))
-          (emit GITHUB_RUNNERS { scope: @at.scope, runners: (array/map (object/get (json/parse @payload.body GithubRunnerList) runners []) (fn r { id: @r.id, name: @r.name, status: @r.status, busy: @r.busy })) }))
+        (let ((at (json/parse @payload.key GithubRunnersKey)) (list (json/parse @payload.body GithubRunnerList)))
+          (if (= @list null)
+            (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a runner list that could not be read" })
+            (emit GITHUB_RUNNERS { scope: @at.scope, runners: (array/map (object/get @list runners []) (fn r { id: @r.id, name: @r.name, status: @r.status, busy: @r.busy })) })))
       GITHUB_LIST_RUNNERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (let ((at (json/parse @payload.key GithubRunnersKey)))
           (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a runner list body that is not JSON" }))
@@ -227,8 +247,10 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo }), emit: { success: GITHUB_LIST_RUNS_REPLIED, failure: GITHUB_LIST_RUNS_UNREACHABLE } })
       GITHUB_LIST_RUNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((at (json/parse @payload.key GithubRunsKey)))
-          (emit GITHUB_RUNS { owner: @at.owner, repo: @at.repo, runs: (array/map (object/get (json/parse @payload.body GithubRunList) workflow_runs []) (fn r { id: @r.id, name: @r.name, status: @r.status, conclusion: @r.conclusion, created_at: @r.created_at, html_url: @r.html_url })) }))
+        (let ((at (json/parse @payload.key GithubRunsKey)) (list (json/parse @payload.body GithubRunList)))
+          (if (= @list null)
+            (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: "PARSE_ERROR", message: "GitHub answered a run list that could not be read" })
+            (emit GITHUB_RUNS { owner: @at.owner, repo: @at.repo, runs: (array/map (object/get @list workflow_runs []) (fn r { id: @r.id, name: @r.name, status: @r.status, conclusion: @r.conclusion, created_at: @r.created_at, html_url: @r.html_url })) })))
       GITHUB_LIST_RUNS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubRunsKey)))
           (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
@@ -243,8 +265,10 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId }), emit: { success: GITHUB_LIST_RUN_JOBS_REPLIED, failure: GITHUB_LIST_RUN_JOBS_UNREACHABLE } })
       GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((at (json/parse @payload.key GithubJobsKey)))
-          (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get (json/parse @payload.body GithubJobList) jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url })) }))
+        (let ((at (json/parse @payload.key GithubJobsKey)) (list (json/parse @payload.body GithubJobList)))
+          (if (= @list null)
+            (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "PARSE_ERROR", message: "GitHub answered a job list that could not be read" })
+            (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get @list jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url })) })))
       GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubJobsKey)))
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
@@ -260,8 +284,10 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { account: @payload.account, kind: @payload.kind, year: @payload.year, month: @payload.month }), emit: { success: GITHUB_BILLING_USAGE_REPLIED, failure: GITHUB_BILLING_USAGE_UNREACHABLE } })
       GITHUB_BILLING_USAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (let ((at (json/parse @payload.key GithubBillingKey)))
-          (emit GITHUB_BILLING_USAGE_ANSWERED { account: @at.account, kind: @at.kind, year: @at.year, month: @at.month, items: (object/get (json/parse @payload.body GithubUsageReport) "usageItems" []) }))
+        (let ((at (json/parse @payload.key GithubBillingKey)) (report (json/parse @payload.body GithubUsageReport)))
+          (if (= @report null)
+            (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a billing usage report that could not be read" })
+            (emit GITHUB_BILLING_USAGE_ANSWERED { account: @at.account, kind: @at.kind, year: @at.year, month: @at.month, items: (object/get @report usageItems []) })))
       GITHUB_BILLING_USAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (let ((at (json/parse @payload.key GithubBillingKey)))
           (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a billing usage body that is not JSON" }))

@@ -48,14 +48,14 @@ orbital OrbLintDerivedFieldWriteOrbital {
   (if (not @anyDerived) []
   (let ((derivedOf (object/fromEntries (array/map @ents (fn e [(object/get @e "name"), (array/map (array/filter (object/get @e "fields" []) (fn f (object/has @f "derived"))) (fn f (object/get @f "name" "")))])))))
    (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-    (let ((o (array/nth @orbs @oi)))
+    (let ((o (default (array/nth @orbs @oi) {})))
      (let ((trs (object/get @o "traits" [])))
       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-       (let ((t (array/nth @trs @ti)))
+       (let ((t (default (array/nth @trs @ti) {})))
         (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
               (lname (object/get @t "linkedEntity" "")))
          (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ni
-          (let ((hits (default (as (default (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
+          (let ((hits (default (as (default (tree/fold (object/get (default (array/nth @trans @ni) {}) "effects" []) (fn (n k)
                  (if (validate/array @n)
                   (let ((l (default (as @n IxNodes) [])))
                    (let ((h (if (> (array/len @l) 0) (default (as (array/nth @l 0) IxStr) "") ""))
@@ -87,7 +87,7 @@ orbital OrbLintDerivedFieldWriteOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IxProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IxProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -104,12 +104,12 @@ orbital OrbLintDerivedFieldWriteOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint derived-field-write: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint derived-field-write <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

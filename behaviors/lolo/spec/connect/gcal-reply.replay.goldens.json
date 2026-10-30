@@ -1,0 +1,625 @@
+{
+ "atom": "connect/atoms/std-google-calendar.lolo",
+ "trait": "CalendarClient",
+ "cases": [
+  {
+   "id": "list-maps-timed-and-all-day-events",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"items\":[{\"id\":\"a\",\"summary\":\"S\",\"start\":{\"dateTime\":\"2026-10-30T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-30T10:00:00Z\"},\"status\":\"confirmed\",\"updated\":\"u\"},{\"id\":\"b\",\"summary\":\"AllDay\",\"start\":{\"date\":\"2026-10-31\"},\"end\":{\"date\":\"2026-11-01\"}}],\"nextSyncToken\":\"tok\"}",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "a",
+           "summary": "S",
+           "description": "",
+           "location": "",
+           "start": "2026-10-30T09:00:00Z",
+           "end": "2026-10-30T10:00:00Z",
+           "status": "confirmed",
+           "updated": "u"
+          },
+          {
+           "id": "b",
+           "summary": "AllDay",
+           "description": "",
+           "location": "",
+           "start": "2026-10-31",
+           "end": "2026-11-01",
+           "status": "",
+           "updated": ""
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-without-items-answers-empty",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"nextSyncToken\":\"t\"}",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [],
+         "nextSyncToken": "t"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-with-non-object-json-is-malformed",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[1,2]",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "create-reply-maps-id",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"id\":\"x\",\"status\":\"confirmed\",\"htmlLink\":\"h\"}",
+      "key": "create"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_CREATED",
+        "payload": {
+         "id": "x",
+         "status": "confirmed",
+         "htmlLink": "h"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-reply-maps-id",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"id\":\"x\"}",
+      "key": "update"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_UPDATED",
+        "payload": {
+         "id": "x",
+         "status": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "free-busy-reply",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"calendars\":{\"primary\":{\"busy\":[{\"start\":\"s\",\"end\":\"e\"}]}}}",
+      "key": "freeBusy:primary"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_RESULT",
+        "payload": {
+         "busy": [
+          {
+           "start": "s",
+           "end": "e"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "watch-reply",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"id\":\"c\",\"resourceId\":\"r\",\"expiration\":\"123\"}",
+      "key": "watch:c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCHED",
+        "payload": {
+         "channelId": "c",
+         "resourceId": "r",
+         "expiration": "123"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "watch-reply-without-id-uses-key",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"resourceId\":\"r\"}",
+      "key": "watch:c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCHED",
+        "payload": {
+         "channelId": "c",
+         "resourceId": "r"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-object-message",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 403,
+      "body": "{\"error\":{\"code\":403,\"message\":\"Forbidden\"}}",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Forbidden"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-list-joined",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 400,
+      "body": "{\"error\":{\"code\":400,\"message\":\"Bad\",\"errors\":[{\"message\":\"m1\",\"domain\":\"d\"},{\"message\":\"m2\",\"domain\":\"d\"}]}}",
+      "key": "create"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "m1\nm2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-string-message",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 401,
+      "body": "{\"error\":\"invalid_grant\"}",
+      "key": "update"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "message": "invalid_grant"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-plain-body-status-400",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 400,
+      "body": "oops",
+      "key": "delete:e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_DELETE_EVENT_FAILED",
+        "payload": {
+         "message": "oops"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-status-300-no-body",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 302,
+      "body": "",
+      "key": "stopWatch"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_STOP_WATCH_FAILED",
+        "payload": {
+         "message": "Request failed with status code 302"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "transport-timeout",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "e",
+      "kind": "timeout",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "transport-unconfigured",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "e",
+      "kind": "unconfigured",
+      "key": "watch:c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "transport-failed-error-text",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "boom",
+      "kind": "failed",
+      "key": "freeBusy:p"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "grant-oauth-error",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "e",
+      "kind": "failed",
+      "key": "create",
+      "phase": "grant",
+      "grantStatus": 400,
+      "grantBody": "{\"error\":\"invalid_grant\",\"error_description\":\"bad key\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "invalid_grant: bad key"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "grant-google-error",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "e",
+      "kind": "failed",
+      "key": "create",
+      "phase": "grant",
+      "grantStatus": 500,
+      "grantBody": "{\"error\":{\"code\":500,\"message\":\"down\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "down"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "grant-plain-body",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "e",
+      "kind": "failed",
+      "key": "create",
+      "phase": "grant",
+      "grantStatus": 502,
+      "grantBody": "gateway"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "gateway"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "create-reply-wrong-shape-is-malformed",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[1]",
+      "key": "create"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-reply-wrong-shape-is-malformed",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "\"x\"",
+      "key": "update"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "free-busy-wrong-shape-is-malformed",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[]",
+      "key": "freeBusy:p"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "watch-wrong-shape-is-malformed",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "7",
+      "key": "watch:c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "error-json-without-error-field",
+   "steps": [
+    {
+     "event": "CALENDAR_REPLIED",
+     "payload": {
+      "status": 500,
+      "body": "{\"foo\":1}",
+      "key": "list"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "[object Object]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "grant-phase-without-grant-body-uses-error-text",
+   "steps": [
+    {
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "error": "grant broke",
+      "kind": "failed",
+      "key": "list",
+      "phase": "grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "grant broke"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

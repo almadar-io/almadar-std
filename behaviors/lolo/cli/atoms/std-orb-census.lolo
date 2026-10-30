@@ -9,6 +9,12 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type CensusHit = { name : string!, file : string!, kind : string!, label : string!, detail : string! }
 type CensusOwn = { name : string!, dir : string! }
+type CensusFileRef = { file : string! }
+type CensusImportRef = { file : string!, specifiers : [string]! }
+type CensusManifestRef = { file : string!, kind : string!, range : string! }
+type CensusPackageReport = { imports : [CensusImportRef]!, manifests : [CensusManifestRef]! }
+type CensusPathReport = { references : [CensusFileRef]! }
+type CensusSection = CensusPackageReport | CensusPathReport | [string]
 type CensusEntry = { name : string!, kind : string! }
 type CensusAcc = { names : [string]!, dirs : [string]!, json : boolean!, root : string!, maxBytes : number!, errors : [string]! }
 type PnpmBlock = { overrides : Map string string }
@@ -66,8 +72,6 @@ orbital OrbCensusOrbital {
         (emit CENSUS_FINISH { })
       CENSUS_FINISH -> ready when (and (= (array/len @entity.hits) 0) (= (array/len @entity.unscanned) 0) (not @entity.acc.json))
         (emit CENSUS_ANSWERED { status: 200, body: (str/join (array/map @entity.acc.names (fn n (str/concat @n ": 0 import file(s), 0 manifest edge(s)"))) "\n") })
-      CENSUS_FINISH -> ready when (and (= (array/len @entity.hits) 0) (= (array/len @entity.unscanned) 0) @entity.acc.json)
-        (emit CENSUS_ANSWERED { status: 200, body: (let ((nj (json/stringify (default (object/fromEntries (array/map @entity.acc.names (fn n [@n, { imports: [], manifests: [] }]))) {}))) (dj (json/stringify (default (object/fromEntries (array/map @entity.acc.dirs (fn d [@d, { references: [] }]))) {}))) (uj "")) (str/concat "{" (str/join (array/filter [(str/slice @nj 1 (- (str/len @nj) 1)) (str/slice @dj 1 (- (str/len @dj) 1)) @uj] (fn p (!= @p ""))) ",") "}")) })
       CENSUS_FINISH -> ready when (and (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) (not @entity.acc.json))
         (emit CENSUS_ANSWERED { status: 500, body: (str/join (array/concat
           (array/flatten (array/map @entity.acc.names (fn n (array/concat
@@ -80,10 +84,16 @@ orbital OrbCensusOrbital {
           (if (> (array/len @entity.unscanned) 0)
             (array/concat [(str/concat "UNSCANNED (over " @entity.acc.maxBytes " bytes or not text, not read): " (array/len @entity.unscanned) " file(s)")] (array/map @entity.unscanned (fn u (str/concat "  " @u))))
             [])) "\n") })
-      CENSUS_FINISH -> ready when (and (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) @entity.acc.json)
-        (emit CENSUS_ANSWERED { status: 500, body: (let ((nj (json/stringify (default (object/fromEntries (array/map @entity.acc.names (fn n [@n, {
-            imports: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "import")))) (fn h { file: (object/get @h "file"), specifiers: (str/split (object/get @h "detail") ", ") })),
-            manifests: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "manifest")))) (fn h { file: (object/get @h "file"), kind: (object/get @h "label"), range: (object/get @h "detail") })) }]))) {}))) (dj (json/stringify (default (object/fromEntries (array/map @entity.acc.dirs (fn d [@d, { references: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path")))) (fn h { file: (object/get @h "file") })) }]))) {}))) (uj (if (> (array/len @entity.unscanned) 0) (str/concat "\"unscanned\":" (json/stringify @entity.unscanned)) ""))) (str/concat "{" (str/join (array/filter [(str/slice @nj 1 (- (str/len @nj) 1)) (str/slice @dj 1 (- (str/len @dj) 1)) @uj] (fn p (!= @p ""))) ",") "}")) })
+      CENSUS_FINISH -> ready when @entity.acc.json
+        (let ((report (object/fromEntries (array/concat
+            (array/map @entity.acc.names (fn n [@n, (as {
+              imports: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "import")))) (fn h { file: (object/get @h "file"), specifiers: (str/split (object/get @h "detail") ", ") })),
+              manifests: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "manifest")))) (fn h { file: (object/get @h "file"), kind: (object/get @h "label"), range: (object/get @h "detail") })) } CensusSection)]))
+            (array/map @entity.acc.dirs (fn d [@d, (as { references: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path")))) (fn h { file: (object/get @h "file") })) } CensusSection)]))
+            (if (> (array/len @entity.unscanned) 0) [["unscanned", (as @entity.unscanned CensusSection)]] [])))))
+          (emit CENSUS_ANSWERED {
+            status: (if (= @report null) 400 (if (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) 500 200)),
+            body: (if (= @report null) "a package name or path cannot be a report key" (json/stringify @report)) }))
     }
 
     state walking {

@@ -53,11 +53,11 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
        (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
        (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-  (let ((o (array/nth @orbs @oi)))
+  (let ((o (default (array/nth @orbs @oi) {})))
    (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
     (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
      (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
-      (let ((x (array/nth @xs @j)))
+      (let ((x (default (array/nth @xs @j) {})))
        (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
         (if (and (= @kind "entity") @strict (= (object/get @x "persistence" "") "persistent") (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) (not (array/some @alltr (fn p
   (array/some (let ((nn (as (json/nodes [(array/map (object/get (object/get (object/get @p "t") "stateMachine") "transitions" []) (fn t (object/get @t "effects" []))), (array/map (object/get (object/get @p "t") "ticks" []) (fn t (object/get @t "effects" [])))]) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((l (default (as @n LNodes) [])))
@@ -83,7 +83,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
                               (if (and (= @head "array/filter") (= @len 3)) { ok: (object/get (array/nth @kr 1) "lok"), es: (object/get (array/nth @kr 1) "les") }
                                 (if (and (= @head "array/map") (= @len 3)) { ok: (object/get (array/nth @kr 2) "bok"), es: (object/get (array/nth @kr 2) "bes") }
                                   (if (and (= @head "array/flatten") (= @len 2))
-                                    (let ((m (array/nth @kr 1)))
+                                    (let ((m (default (array/nth @kr 1) {})))
                                       (if (not (object/get @m "arr")) { ok: false, es: [] }
                                         (if (and (object/get @m "hstr") (= (object/get @m "head") "list")) { ok: (object/get @m "rok"), es: (object/get @m "res") }
                                           (if (object/get @m "hstr") { ok: false, es: [] } { ok: (object/get @m "aok"), es: (object/get @m "aes") }))))
@@ -125,7 +125,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -142,10 +142,10 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-persistent-unwritten <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

@@ -9,6 +9,7 @@ app std-orb-lint-asset-inline-url [
 uses Spec from "almadar-std/lint-asset-inline-url"
 type AssetDocValue = string | number | boolean | [AssetDocValue] | Map string AssetDocValue
 type AssetKnob = { default : AssetDocValue }
+type AssetUrl = string
 type AssetUse = { from : string, as : string }
 type AssetEntity = { instances : AssetDocValue }
 type AssetListenSource = { trait : string }
@@ -39,27 +40,27 @@ orbital OrbLintAssetInlineUrlOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((orb (array/nth @orbitals @oi)))
+            (let ((orb (default (array/nth @orbitals @oi) {})))
               (let ((trs (object/get @orb "traits" [])) (oname (object/get @orb "name" "")))
                 (let ((packAliases (array/map (array/filter (object/get @orb "uses" []) (fn u (= (object/get @u "from" "") "std/behaviors/std-asset-pack"))) (fn u (object/get @u "as" "")))) (isPack (array/map @trs (fn td (and (validate/object @td) (let ((parts (str/split (object/get @td "ref" "") "."))) (and (= (array/len @parts) 3) (array/includes @packAliases (array/nth @parts 0))))))))
-                      (hasKnob (array/map @trs (fn td (and (validate/object @td) (validate/object (object/get @td "config" null)) (object/has (object/get @td "config") "assetPack")))))
-                      (packNames (array/map (array/filter (array/range 0 (array/len @trs)) (fn i (array/nth @hasKnob @i))) (fn i (object/get (array/nth @trs @i) "name" "")))))
+                      (hasKnob (array/map @trs (fn td (and (validate/object @td) (object/has (object/get @td "config" {}) "assetPack")))))
+                      (packNames (array/map (array/filter (array/range 0 (array/len @trs)) (fn i (default (array/nth @hasKnob @i) false))) (fn i (object/get (default (array/nth @trs @i) {}) "name" "")))))
                   (if (not (or (array/some @isPack (fn b @b)) (array/some @hasKnob (fn b @b))))
                     []
                     (let ((where (str/concat "orbitals[" @oi " (" @oname ")]"))
                           (units (array/concat
                             (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                              (let ((td (array/nth @trs @ti)))
-                                (if (or (array/nth @isPack @ti) (not (validate/object (object/get @td "config" null))))
+                              (let ((td (default (array/nth @trs @ti) {})))
+                                (if (default (array/nth @isPack @ti) false)
                                   []
-                                  (array/map (array/filter (object/keys (object/get @td "config")) (fn k (not (and (= @k "origin") (or (array/nth @hasKnob @ti) (array/some (object/get @td "listens" []) (fn l (array/includes @packNames (object/get (object/get @l "source" {}) "trait" ""))))))))) (fn k
+                                  (array/map (array/filter (object/keys (object/get @td "config" {})) (fn k (not (and (= @k "origin") (or (default (array/nth @hasKnob @ti) false) (array/some (object/get @td "listens" []) (fn l (array/includes @packNames (object/get (object/get @l "source" {}) "trait" ""))))))))) (fn k
                                     { path: (str/concat @where ".traits[" @ti " (" (object/get @td "name" "") ")].config." @k ".default"), ti: @ti, kn: @k })))))))
                             (if (validate/object (object/get @orb "entity" null))
                               [{ path: (str/concat @where ".entity.instances"), ti: -1, kn: "" }]
                               []))))
                       (array/flatten (array/map @units (fn u
-                        (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity") "instances" null) (let ((cf (object/get (array/nth @trs (object/get @u "ti")) "config"))) (if (validate/object (object/get @cf (object/get @u "kn") null)) (object/get (object/get @cf (object/get @u "kn")) "default" null) null)))) (p (object/get @u "path")))
-(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: @config.codes.assetInlineUrl.code, path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" @y "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
+                        (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity" {}) "instances" null) (let ((cf (object/get (default (array/nth @trs (object/get @u "ti")) {}) "config" {}))) (object/get (object/get @cf (object/get @u "kn") {}) "default" null)))) (p (object/get @u "path")))
+(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: @config.codes.assetInlineUrl.code, path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (default (as @y AssetUrl) "") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "asset-inline-url", scope: @entity.scope, findings: @entity.findings })
@@ -81,7 +82,7 @@ orbital OrbLintAssetInlineUrlOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AssetProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : AssetProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -92,12 +93,12 @@ orbital OrbLintAssetInlineUrlOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint asset-inline-url: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint asset-inline-url <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

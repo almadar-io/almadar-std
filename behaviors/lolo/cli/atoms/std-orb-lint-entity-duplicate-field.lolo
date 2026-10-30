@@ -35,17 +35,17 @@ orbital OrbLintEntityDuplicateFieldOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((auxs (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+            (let ((auxs (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
               (array/flatten (array/map
-                (array/concat [{ ent: (object/get (array/nth @orbitals @oi) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
+                (array/concat [{ ent: (object/get (default (array/nth @orbitals @oi) {}) "entity" {}), base: (str/concat "orbitals[" @oi "].entity") }]
                   (array/map (array/range 0 (array/len @auxs)) (fn ai { ent: (array/nth @auxs @ai), base: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]") })))
                 (fn eb
                   (let ((ent (object/get @eb "ent")) (base (object/get @eb "base")))
-                    (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false)))
+                    (if (and (validate/object @ent) (not (object/get (default (array/nth @orbitals @oi) {}) "spec" false)))
                       (let ((fields (object/get @ent "fields" [])))
                         (let ((names (array/map @fields (fn f (object/get @f "name" "")))))
                           (array/flatten (array/map (array/range 0 (array/len @names)) (fn fi
-                            (let ((nm (array/nth @names @fi)))
+                            (let ((nm (default (array/nth @names @fi) "")))
                               (if (or (= @nm "") (= (array/len (array/filter (array/range 0 @fi) (fn k (= (array/nth @names @k) @nm)))) 0))
                                 []
                                 [{ code: @config.codes.eDuplicateField.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Duplicate field name: '" @nm "'"), suggestion: "Each field must have a unique name within the entity", severity: "error" }])))))))
@@ -65,7 +65,7 @@ orbital OrbLintEntityDuplicateFieldOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DuplicateFieldProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DuplicateFieldProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -82,12 +82,12 @@ orbital OrbLintEntityDuplicateFieldOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint entity-duplicate-field: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-duplicate-field <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

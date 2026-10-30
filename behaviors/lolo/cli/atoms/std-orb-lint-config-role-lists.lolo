@@ -63,7 +63,7 @@ orbital OrbLintConfigRoleListsOrbital {
     (fn w
       (let ((x (object/get @w "x" null)) (sc (object/get @w "sc" @nosc)) (t (object/get @w "t" 0)))
         (if (and (validate/array @x) (= (array/len @x) 3) (= (let ((o0 (array/nth @x 0))) (if (validate/string @o0) @o0 "")) "array/includes"))
-          (let ((cx (array/nth @ctxs @t)))
+          (let ((cx (default (array/nth @ctxs @t) {})))
             (let ((f (let ((rs (array/nth @x 2)) (rfm (object/get @cx "rf" @norf))) (if (validate/string @rs) (if (and (validate/string @rs) (str/startsWith @rs (quote "@user.")) (> (str/len @rs) 6) (not (str/includes (str/slice @rs 6) ".")) (not (str/includes (str/slice @rs 6) "[")) (object/has @rfm (str/slice @rs 6))) (str/slice @rs 6) (if (str/startsWith @rs (quote "@config.")) (let ((dv (object/get (object/get @cx "cfg" @nocfg) (str/slice @rs 8) null))) (if (and (validate/string @dv) (str/startsWith @dv (quote "@user.")) (> (str/len @dv) 6) (not (str/includes (str/slice @dv 6) ".")) (not (str/includes (str/slice @dv 6) "[")) (object/has @rfm (str/slice @dv 6))) (str/slice @dv 6) "")) "")) ""))))
               (if (= @f "")
                 @nosites
@@ -126,7 +126,7 @@ orbital OrbLintConfigRoleListsOrbital {
     (array/flatten
       (array/map @uniq
         (fn s
-          (let ((cx (array/nth @entity.ctxs (object/get @s "t" 0))))
+          (let ((cx (default (array/nth @entity.ctxs (object/get @s "t" 0)) {})))
             (let ((dflt (object/get (object/get @cx "cfg" @nocfg) (object/get @s "knob" "") null)))
               (if (= @dflt null)
                 @nof
@@ -151,9 +151,9 @@ orbital OrbLintConfigRoleListsOrbital {
       (array/flatten
         (array/map (array/range 0 (array/len @orbs))
           (fn oi
-            (let ((orb (array/nth @orbs @oi)))
+            (let ((orb (default (array/nth @orbs @oi) {})))
               (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
-                (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (array/first @exps)))
+                (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (default (array/first @exps) {})))
                   (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) []))) (idName (if @hasDecl (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
                     (let ((rf (default (as (default (object/fromEntries (array/flatten (array/map @flds (fn f (let ((v1 (object/get @f "values" @nostr))) (let ((vs (if (> (array/len @v1) 0) @v1 (object/get (object/get @f "items" { values: [] }) "values" @nostr)))) (if (> (array/len @vs) 0) [[(object/get @f "name" ""), @vs]] @nopair))))))) {}) RlRfMap) @norf)))
                       (if (or (not @hasEnv) (= (array/len (object/keys @rf)) 0))
@@ -162,7 +162,7 @@ orbital OrbLintConfigRoleListsOrbital {
                           (array/flatten
                             (array/map (array/range 0 (array/len @trlist))
                               (fn ti
-                                (let ((td (array/nth @trlist @ti)))
+                                (let ((td (default (array/nth @trlist @ti) {})))
                                   (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (object/has @td "config") (not (and @skip (object/has @td "sourceBehavior"))))
                                     (let ((cfgm (object/get @td "config" {})))
                                       [{ tp: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"), idName: @idName, rf: @rf, o: @oi, i: @ti, cfg: (default (as (default (object/fromEntries (array/flatten (array/map (object/keys @cfgm) (fn kn (if (object/has (object/get @cfgm @kn) "default") [[@kn, (object/get (object/get @cfgm @kn) "default")]] @nopair))))) {}) RlCfgMap) @nocfg) }])
@@ -171,8 +171,8 @@ orbital OrbLintConfigRoleListsOrbital {
           (array/filter (array/flatten
   (array/map (array/range 0 (array/len @entity.ctxs))
     (fn t
-      (let ((cx (array/nth @entity.ctxs @t)))
-        (let ((td (array/nth (object/get (array/nth @orbs (object/get @cx "o" 0)) "traits" []) (object/get @cx "i" 0))))
+      (let ((cx (default (array/nth @entity.ctxs @t) {})))
+        (let ((td (default (array/nth (object/get (array/nth @orbs (object/get @cx "o" 0)) "traits" []) (object/get @cx "i" 0)) {})))
           (let ((trs (object/get (object/get @td "stateMachine" { transitions: [] }) "transitions" [])) (tks (object/get @td "ticks" [])) (lss (object/get @td "listens" [])))
             (array/concat
   (array/concat
@@ -222,7 +222,7 @@ orbital OrbLintConfigRoleListsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RlProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RlProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       WALK_HEARD { slots : Map string WalkSlot! }
@@ -242,10 +242,10 @@ orbital OrbLintConfigRoleListsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint config-role-lists <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {

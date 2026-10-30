@@ -57,7 +57,7 @@ orbital ArcadeBoard3DFrameOrbital {
     message : string
     ttl : number!
     maxTtl : number
-    bornAt : number
+    bornAt : instant
     space : string
     effect : string
     color : string
@@ -245,12 +245,12 @@ orbital ArcadeBoard3DFrameOrbital {
           ] } ]
         })
 
-      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+      UNIT_CLICK -> playing when (and (!= (array/find @entity.units (fn u (== @u.id ?unitId))) null) (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")))
         (set @entity.selectedUnitId ?unitId)
         (set @entity.phase "selection")
         (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
 
-      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))
+      TILE_CLICK -> playing when (and (!= (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) null) (and (!= (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) null) (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))))
         (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?z })
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -261,7 +261,7 @@ orbital ArcadeBoard3DFrameOrbital {
         (set @entity.validMoves [])
         (set @entity.phase "observation")
 
-      FEATURE_CLICK -> playing when (and (== @entity.result "none") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) @config.movementRange))
+      FEATURE_CLICK -> playing when (and (!= (array/find @entity.units (fn u (== @u.team "player"))) null) (and (== @entity.result "none") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) @config.movementRange)))
         (emit PLAY_MACHINE { machineId: ?featureId, x: ?x, z: ?z })
 
       PLAY_AGAIN -> playing

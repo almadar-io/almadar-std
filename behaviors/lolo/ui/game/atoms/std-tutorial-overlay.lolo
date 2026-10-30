@@ -51,8 +51,10 @@ orbital TutorialOverlayOrbital {
             ] }
           ]
         })
-        (when (!= (object/get (array/nth @config.steps 0) demoId "") "")
-          (do (emit TUTORIAL_DEMO_START { demoId: (object/get (array/nth @config.steps 0) demoId "") })))
+        (let ((demoStep (array/nth @config.steps 0)))
+          (if (== @demoStep null) (emit TUTORIAL_STEP_MISSING { })
+            (when (!= (object/get @demoStep demoId "") "")
+              (do (emit TUTORIAL_DEMO_START { demoId: (object/get @demoStep demoId "") })))))
 
       SHOW -> showing
         (set @entity.step 0)
@@ -71,8 +73,10 @@ orbital TutorialOverlayOrbital {
             ] }
           ]
         })
-        (when (!= (object/get (array/nth @config.steps 0) demoId "") "")
-          (do (emit TUTORIAL_DEMO_START { demoId: (object/get (array/nth @config.steps 0) demoId "") })))
+        (let ((demoStep (array/nth @config.steps 0)))
+          (if (== @demoStep null) (emit TUTORIAL_STEP_MISSING { })
+            (when (!= (object/get @demoStep demoId "") "")
+              (do (emit TUTORIAL_DEMO_START { demoId: (object/get @demoStep demoId "") })))))
     }
 
     state showing {
@@ -100,8 +104,10 @@ orbital TutorialOverlayOrbital {
           ]
         })
         (emit TUTORIAL_DEMO_STOP {})
-        (when (!= (object/get (array/nth @config.steps @entity.step) demoId "") "")
-          (do (emit TUTORIAL_DEMO_START { demoId: (object/get (array/nth @config.steps @entity.step) demoId "") })))
+        (let ((demoStep (array/nth @config.steps @entity.step)))
+          (if (== @demoStep null) (emit TUTORIAL_STEP_MISSING { })
+            (when (!= (object/get @demoStep demoId "") "")
+              (do (emit TUTORIAL_DEMO_START { demoId: (object/get @demoStep demoId "") })))))
 
       TUT_NEXT -> hidden when (>= (+ @entity.step 1) (array/len @config.steps))
         (set @entity.done true)
@@ -128,8 +134,10 @@ orbital TutorialOverlayOrbital {
           ]
         })
         (emit TUTORIAL_DEMO_STOP {})
-        (when (!= (object/get (array/nth @config.steps @entity.step) demoId "") "")
-          (do (emit TUTORIAL_DEMO_START { demoId: (object/get (array/nth @config.steps @entity.step) demoId "") })))
+        (let ((demoStep (array/nth @config.steps @entity.step)))
+          (if (== @demoStep null) (emit TUTORIAL_STEP_MISSING { })
+            (when (!= (object/get @demoStep demoId "") "")
+              (do (emit TUTORIAL_DEMO_START { demoId: (object/get @demoStep demoId "") })))))
 
       TUT_DISMISS -> hidden
         (set @entity.done true)
@@ -145,6 +153,9 @@ orbital TutorialOverlayOrbital {
     }
 
     emits {
+      TUTORIAL_STEP_MISSING -> external { }
+        @description "The tutorial pointed at a step that is not in the configured step list."
+        @tier "domain"
       TUT_AUTO -> external {
         id : string
       }

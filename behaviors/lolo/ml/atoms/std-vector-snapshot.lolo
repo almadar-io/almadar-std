@@ -2,7 +2,7 @@ app std-vector-snapshot [
   version: "1.0.0",
   description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, userAnchor, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
   net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
-  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  fs: { cwd: "**": [read, write, remove, create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-snapshot"
@@ -303,22 +303,29 @@ orbital VectorSnapshotOrbital {
 
     state rawLookup {
       VECTOR_RESOLVED -> idle when (array/some @payload.entries (fn en (not @en.found)))
-        (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_MISSING", detail: (str/concat "no vector for `" (object/get (array/find @entity.wanted (fn w (== @w.text (array/nth @entity.texts (array/findIndex @payload.entries (fn en (not @en.found))))))) "key") "` after embedding") })
+        (let ((mt (array/nth @entity.texts (array/findIndex @payload.entries (fn en (not @en.found))))))
+          (let ((mw (if (= @mt null) null (array/find @entity.wanted (fn w (== @w.text @mt))))))
+            (if (= @mw null)
+              (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_MISSING", detail: "no vector for a wanted text after embedding, and the store's answer does not name which one" })
+              (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_MISSING", detail: (str/concat "no vector for `" (object/get @mw "key") "` after embedding") }))))
       VECTOR_RESOLVED -> writing when (not (array/some @payload.entries (fn en (not @en.found))))
         (let ((w1 (bytes/write-uint 1 2 "le"))
               (w2 (bytes/write-uint (bytes/length (bytes/from-string @entity.model)) 2 "le"))
-              (w3 (bytes/write-uint (object/get (array/first @payload.entries) "dims") 2 "le"))
+              (fe (array/first @payload.entries))
+              (w3 (let ((f0 (array/first @payload.entries))) (if (= @f0 null) null (bytes/write-uint (object/get @f0 "dims") 2 "le"))))
               (w4 (bytes/write-uint (array/len @payload.entries) 4 "le"))
               (rows (array/map (array/range 0 (array/len @payload.entries)) (fn ei
-                (let ((hx (hash/sha256 (str/concat @entity.model "\u{0}" (array/nth @entity.texts @ei)) "hex")) (h64 (hash/sha256 (str/concat @entity.model "\u{0}" (array/nth @entity.texts @ei)) "base64")))
-                  (let ((dg (if (= @h64 null) null (bytes/from-base64 @h64))))
-                    (if (or (= @hx null) (= @dg null)) null { hk: @hx, row: (bytes/concat [@dg (object/get (array/nth @payload.entries @ei) "record")]) })))))))
-          (if (or (= @w1 null) (= @w2 null) (= @w3 null) (= @w4 null) (array/some @rows (fn r (= @r null))))
-            (emit SN_IO_FAILED { error: "the snapshot cannot be encoded: a vector digest could not be computed or a header field does not fit its width" })
+                (let ((tx (array/nth @entity.texts @ei)) (en (array/nth @payload.entries @ei)))
+                  (if (or (= @tx null) (= @en null)) null
+                    (let ((hx (hash/sha256 (str/concat @entity.model "\u{0}" @tx) "hex")) (h64 (hash/sha256 (str/concat @entity.model "\u{0}" @tx) "base64")))
+                      (let ((dg (if (= @h64 null) null (bytes/from-base64 @h64))))
+                        (if (or (= @hx null) (= @dg null)) null { hk: @hx, row: (bytes/concat [@dg (object/get @en "record")]) })))))))))
+          (if (or (= @fe null) (= @w1 null) (= @w2 null) (= @w3 null) (= @w4 null) (array/some @rows (fn r (= @r null))))
+            (emit SN_IO_FAILED { error: "the snapshot cannot be encoded: a vector digest could not be computed, a header field does not fit its width, or the store's entries do not line up with the texts" })
             (do
-              (set @entity.dims (object/get (array/first @payload.entries) "dims"))
+              (set @entity.dims (object/get @fe "dims"))
               (set @entity.count (array/len @payload.entries))
-              (set @entity.sorted (array/sort @rows "hk" "asc"))
+              (set @entity.sorted (array/sort (array/map @rows (fn r (default @r { hk: "", row: (bytes/from-string "") }))) "hk" "asc"))
               (set @entity.merged (bytes/concat (array/concat [(bytes/from-string "ORBVEC") @w1 @w2 (bytes/from-string @entity.model) @w3 @w4] (array/map @entity.sorted (fn sr @sr.row)))))
               (emit SN_BUILT { count: @entity.count, bytes: @entity.merged })
               (os/mkdir { anchor: "cwd" path: (os/path-dir @entity.out) } true { emit: { success: SN_DIR_OK, failure: SN_IO_FAILED } }))))

@@ -1,0 +1,1382 @@
+{
+ "source": "Replay goldens for the strict-typed reads: the dispatch trace carries atMs as an ISO instant (an epoch number is refused as not a dispatch trace), provider and model are required of every usage report, and a provider reply that is not of its shape is unavailable with the reason instead of reading as available with no numbers.",
+ "atom": "ops/atoms/std-llm-spend-board.lolo",
+ "trait": "LlmSpend",
+ "cases": [
+  {
+   "id": "the host trace (epoch-ms atMs) is priced and totalled",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[{\"atMs\": 1793354399250, \"outcomes\": [{\"emits\": [{\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"p\", \"model\": \"m\", \"action\": \"chat\", \"inputTokens\": 1000, \"outputTokens\": 500}}, {\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"p\", \"model\": \"m\", \"action\": \"chat\", \"inputTokens\": 2000}}, {\"event\": \"OTHER\", \"payload\": {\"x\": 1}}]}]}]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 2,
+          "inputTokens": 3000,
+          "outputTokens": 500,
+          "unreportedCalls": 0,
+          "totalCost": 4,
+          "byModel": [
+           {
+            "provider": "p",
+            "model": "m",
+            "calls": 2,
+            "inputTokens": 3000,
+            "outputTokens": 500,
+            "unreportedCalls": 0,
+            "cost": 4
+           }
+          ],
+          "byDay": [
+           {
+            "date": "2026-10-30",
+            "calls": 2,
+            "inputTokens": 3000,
+            "outputTokens": 500,
+            "cost": 4
+           }
+          ],
+          "recentCalls": [
+           {
+            "at": "2026-10-30T09:59:59.250Z",
+            "provider": "p",
+            "model": "m",
+            "action": "chat",
+            "inputTokens": 2000,
+            "outputTokens": null,
+            "cost": 2
+           },
+           {
+            "at": "2026-10-30T09:59:59.250Z",
+            "provider": "p",
+            "model": "m",
+            "action": "chat",
+            "inputTokens": 1000,
+            "outputTokens": 500,
+            "cost": 2
+           }
+          ],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": null
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The host's dispatch trace stamps atMs as epoch milliseconds (orbital-shell-rust runtime trace at_ms: i64); the atom converts it to an instant."
+  },
+  {
+   "id": "a call with no token counts is unreported and an unpriced model has no cost",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[{\"atMs\": 1793354399000, \"outcomes\": [{\"emits\": [{\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"q\", \"model\": \"n\", \"action\": \"chat\"}}]}]}]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 1,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 1,
+          "totalCost": null,
+          "byModel": [
+           {
+            "provider": "q",
+            "model": "n",
+            "calls": 1,
+            "inputTokens": null,
+            "outputTokens": null,
+            "unreportedCalls": 1,
+            "cost": null
+           }
+          ],
+          "byDay": [
+           {
+            "date": "2026-10-30",
+            "calls": 1,
+            "inputTokens": null,
+            "outputTokens": null,
+            "cost": null
+           }
+          ],
+          "recentCalls": [
+           {
+            "at": "2026-10-30T09:59:59.000Z",
+            "provider": "q",
+            "model": "n",
+            "action": "chat",
+            "inputTokens": null,
+            "outputTokens": null,
+            "cost": null
+           }
+          ],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": null
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an ISO-text atMs is not the host dispatch trace",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[{\"atMs\": \"2026-10-30T09:59:59.250Z\", \"outcomes\": [{\"emits\": [{\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"p\", \"model\": \"m\", \"action\": \"chat\", \"inputTokens\": 1, \"outputTokens\": 1}}]}]}]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace did not answer a dispatch trace: the body is not a dispatch trace (an array of dispatches)"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a non-instant atMs text is not a dispatch trace",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[{\"atMs\": \"yesterday\", \"outcomes\": [{\"emits\": [{\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"p\", \"model\": \"m\", \"action\": \"chat\", \"inputTokens\": 1, \"outputTokens\": 1}}]}]}]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace did not answer a dispatch trace: the body is not a dispatch trace (an array of dispatches)"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a usage report naming no model refuses the whole read",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[{\"atMs\": 1793354399000, \"outcomes\": [{\"emits\": [{\"event\": \"LLM_USAGE_REPORTED\", \"payload\": {\"provider\": \"p\", \"inputTokens\": 1}}]}]}]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace reported a usage event that names no provider or model"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an empty trace has no calls",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "[]"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": null
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trace server that answers 404 exposes no trace",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_TRACE_REPLIED",
+     "payload": {
+      "status": 404,
+      "body": "{}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {},
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace answered 404; the server exposes no trace"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an OpenRouter key reply fills usage and limit",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_OR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"data\": {\"usage\": 1.5, \"limit\": 10}}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "openrouter": {
+           "available": true,
+           "balance": null,
+           "usage": 1.5,
+           "limit": 10,
+           "actualSpend": 1.5,
+           "currency": "USD",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an OpenRouter key without a limit keeps the limit absent",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_OR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"data\": {\"usage\": 2}}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "openrouter": {
+           "available": true,
+           "balance": null,
+           "usage": 2,
+           "limit": null,
+           "actualSpend": 2,
+           "currency": "USD",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an OpenRouter reply that is not a key reply is unavailable with the reason",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_OR_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"data\":5}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "openrouter": {
+           "available": false,
+           "balance": null,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "USD",
+           "error": "the reply is not an OpenRouter key reply"
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an OpenRouter HTTP refusal is unavailable with the status",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_OR_REPLIED",
+     "payload": {
+      "status": 401,
+      "body": "{}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "openrouter": {
+           "available": false,
+           "balance": null,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "USD",
+           "error": "HTTP 401"
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a DeepSeek reply with no balance entry is unavailable with the reason",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_DS_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"balance_infos\": []}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "deepseek": {
+           "available": false,
+           "balance": null,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "CNY",
+           "error": "the reply carries no readable DeepSeek balance"
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a DeepSeek reply with a non-numeric balance is unavailable with the reason",
+   "entity": {
+    "id": "b",
+    "prices": [
+     {
+      "provider": "p",
+      "model": "m",
+      "promptPer1K": 1,
+      "completionPer1K": 2
+     }
+    ],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_DS_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"balance_infos\": [{\"currency\": \"CNY\", \"total_balance\": \"abc\"}]}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "deepseek": {
+           "available": false,
+           "balance": null,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "CNY",
+           "error": "the reply carries no readable DeepSeek balance"
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [
+          {
+           "provider": "p",
+           "model": "m",
+           "promptPer1K": 1,
+           "completionPer1K": 2
+          }
+         ],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a Moonshot reply that is not a balance reply is unavailable with the reason",
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "event": "LS_KM_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"x\":1}"
+     },
+     "from": "reading"
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "kimi": {
+           "available": false,
+           "balance": null,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "CNY",
+           "error": "the reply is not a Moonshot balance reply"
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true,
+    "pendingSpendFor": "deepseek",
+    "deepseek": {
+     "available": true,
+     "balance": 7,
+     "usage": null,
+     "limit": null,
+     "actualSpend": null,
+     "currency": "CNY",
+     "error": null
+    }
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_SNAPSHOTS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "deepseek#2",
+        "provider": "deepseek",
+        "timestamp": "2026-10-30T09:30:00.000Z",
+        "balance": 7,
+        "currency": "CNY"
+       },
+       {
+        "id": "deepseek#0",
+        "provider": "deepseek",
+        "timestamp": "2026-10-29T10:00:00.000Z",
+        "balance": 10,
+        "currency": "CNY"
+       },
+       {
+        "id": "deepseek#1",
+        "provider": "deepseek",
+        "timestamp": "2026-10-30T09:00:00.000Z",
+        "balance": 9,
+        "currency": "CNY"
+       }
+      ],
+      "totalCount": 3
+     }
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "deepseek": {
+           "available": true,
+           "balance": 7,
+           "usage": null,
+           "limit": null,
+           "actualSpend": 3,
+           "currency": "CNY",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "the spend is the first kept balance minus the latest, whatever the row order"
+  },
+  {
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true,
+    "pendingSpendFor": "kimi",
+    "kimi": {
+     "available": true,
+     "balance": 7,
+     "usage": null,
+     "limit": null,
+     "actualSpend": null,
+     "currency": "CNY",
+     "error": null
+    }
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_SNAPSHOTS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "kimi#0",
+        "provider": "kimi",
+        "timestamp": "2026-10-29T10:00:00.000Z",
+        "balance": 7,
+        "currency": "CNY"
+       }
+      ],
+      "totalCount": 1
+     }
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "kimi": {
+           "available": true,
+           "balance": 7,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "CNY",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "a single snapshot has no spend yet"
+  },
+  {
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true,
+    "pendingSpendFor": "kimi",
+    "kimi": {
+     "available": true,
+     "balance": 7,
+     "usage": null,
+     "limit": null,
+     "actualSpend": null,
+     "currency": "CNY",
+     "error": null
+    }
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_SNAPSHOTS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "kimi#0",
+        "provider": "kimi",
+        "timestamp": "2026-10-29T10:00:00.000Z",
+        "balance": 5,
+        "currency": "CNY"
+       },
+       {
+        "id": "kimi#1",
+        "provider": "kimi",
+        "timestamp": "2026-10-30T09:00:00.000Z",
+        "balance": 8,
+        "currency": "CNY"
+       }
+      ],
+      "totalCount": 2
+     }
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "kimi": {
+           "available": true,
+           "balance": 7,
+           "usage": null,
+           "limit": null,
+           "actualSpend": 0,
+           "currency": "CNY",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "id": "a balance that grew is a spend of zero"
+  },
+  {
+   "id": "a DeepSeek balance reply keeps the balance in its currency",
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_DS_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"balance_infos\": [{\"currency\": \"USD\", \"total_balance\": \"12.5\"}]}"
+     }
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "deepseek": {
+           "available": true,
+           "balance": 12.5,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "USD",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a Moonshot balance reply keeps the balance",
+   "entity": {
+    "id": "b",
+    "prices": [],
+    "startedAt": "2026-10-30T10:00:00.000Z",
+    "loading": true
+   },
+   "now": 1790000001000,
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LS_KM_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"data\": {\"available_balance\": 42}}"
+     }
+    },
+    {
+     "from": "reading",
+     "event": "LS_TRACE_FAILED",
+     "payload": {
+      "error": "down",
+      "kind": "unreachable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_SPEND",
+        "payload": {
+         "providers": {
+          "kimi": {
+           "available": true,
+           "balance": 42,
+           "usage": null,
+           "limit": null,
+           "actualSpend": null,
+           "currency": "CNY",
+           "error": null
+          }
+         },
+         "usage": {
+          "totalCalls": 0,
+          "inputTokens": null,
+          "outputTokens": null,
+          "unreportedCalls": 0,
+          "totalCost": null,
+          "byModel": [],
+          "byDay": [],
+          "recentCalls": [],
+          "source": "http://127.0.0.1:3000/api/trace",
+          "error": "http://127.0.0.1:3000/api/trace is unreachable: down"
+         },
+         "modelPricing": [],
+         "fetchedAt": "2026-10-30T10:00:00.000Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

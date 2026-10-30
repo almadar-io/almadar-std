@@ -121,7 +121,7 @@ orbital ThemeBootOrbital {
         (set @entity.base ?base)
         (set @entity.mode ?mode)
         (set @entity.found ?found)
-        (emit CANVAS_THEME_PRESET { key: ?key, base: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (if (> (array/len @m) 0) (object/get (array/nth @m 0) "tokens") {})), variant: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (if (> (array/len @m) 0) (object/get (array/nth @m 0) "variants.dark") null)) })
+        (emit CANVAS_THEME_PRESET { key: ?key, base: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (let ((first (array/nth @m 0))) (if (= @first null) {} (object/get @first "tokens")))), variant: (let ((m (array/filter @entity.definitions (fn d (== @d.name ?base))))) (let ((first (array/nth @m 0))) (if (= @first null) null (object/get @first "variants.dark")))) })
       THEME_MERGED -> ready
         (set @entity.tokens ?tokens)
         (set @entity.gotTokens true)

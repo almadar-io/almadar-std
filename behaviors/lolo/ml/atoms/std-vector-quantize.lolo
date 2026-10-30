@@ -50,7 +50,10 @@ orbital VectorQuantizeOrbital {
       QUANTIZE -> idle when (and (!= @payload.model "") (> (array/len @payload.records) 0) (or (== (array/len (object/get (array/first @payload.records) "vector")) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 65535)))
         (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_MODEL", detail: "dims must be between 1 and 65535" })
       QUANTIZE -> idle when (and (!= @payload.model "") (> (array/len @payload.records) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 0) (<= (array/len (object/get (array/first @payload.records) "vector")) 65535) (array/some @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector"))))))
-        (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: (str/concat "vector has " (array/len (object/get (array/find @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector"))))) "vector")) " components, store dims is " (array/len (object/get (array/first @payload.records) "vector"))) })
+        (let ((bad (array/find @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector")))))))
+          (if (= @bad null)
+            (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: "a record has a different number of components than the first" })
+            (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: (str/concat "vector has " (array/len (object/get @bad "vector")) " components, store dims is " (array/len (object/get (array/first @payload.records) "vector"))) })))
       QUANTIZE -> casting when (and (!= @payload.model "") (> (array/len @payload.records) 0) (> (array/len (object/get (array/first @payload.records) "vector")) 0) (<= (array/len (object/get (array/first @payload.records) "vector")) 65535) (not (array/some @payload.records (fn r (!= (array/len (object/get @r "vector")) (array/len (object/get (array/first @payload.records) "vector")))))))
         (set @entity.model @payload.model)
         (set @entity.texts (array/map @payload.records (fn r (object/get @r "text"))))
@@ -69,7 +72,10 @@ orbital VectorQuantizeOrbital {
 
     state scaling {
       SIG6_DONE -> idle
-        (emit QUANTIZED { dims: @entity.dims, rows: (array/map (array/range 0 (array/len @entity.texts)) (fn ri (bytes/concat [(hash/sha256 (str/concat @entity.model "\u{0}" (array/nth @entity.texts @ri)) "base64") (bytes/write-uint (array/nth @payload.bits @ri) 4 "le") (bytes/concat (array/map (array/nth @entity.ints @ri) (fn q (bytes/write-uint (math/mod (+ @q 256) 256) 1 "le"))))]))) })
+        (let ((built (array/reduce (array/range 0 (array/len @entity.texts)) [] (fn acc ri (let ((tx (array/nth @entity.texts @ri)) (bits (array/nth @payload.bits @ri)) (qs (array/nth @entity.ints @ri))) (if (or (= @tx null) (= @bits null) (= @qs null)) @acc (let ((kt (hash/sha256 (str/concat @entity.model "\u{0}" @tx) "base64"))) (if (= @kt null) @acc (let ((kb (bytes/from-base64 @kt))) (if (= @kb null) @acc (let ((bb (bytes/write-uint @bits 4 "le")) (qbs (array/reduce @qs [] (fn qa q (let ((w (bytes/write-uint (math/mod (+ @q 256) 256) 1 "le"))) (if (= @w null) @qa (array/append @qa @w))))))) (if (or (= @bb null) (!= (array/len @qbs) (array/len @qs))) @acc (array/append @acc (bytes/concat [@kb @bb (bytes/concat @qbs)]))))))))))))))
+          (if (!= (array/len @built) (array/len @entity.texts))
+            (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: "a quantized row could not be built from its text, bits and components" })
+            (emit QUANTIZED { dims: @entity.dims, rows: @built })))
       SIG6_REFUSED -> idle
         (emit QUANTIZE_REFUSED { code: "ORB_VECTOR_BAD_RECORD", detail: @payload.reason })
     }
