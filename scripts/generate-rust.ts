@@ -9,8 +9,8 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { ClosedCallMeta, EffectHost, FailableMeta, OAuthMeta, HttpWireMeta, EffectFamily, OsGrantNeed, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import { STD_OPERATORS, STD_OPERATORS_BY_MODULE, operatorVisualForm } from '../registry.js';
+import type { OperatorVisualForm, ClosedCallMeta, EffectHost, FailableMeta, OAuthMeta, HttpWireMeta, EffectFamily, OsGrantNeed, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -99,6 +99,8 @@ interface CanonicalOperatorEntry {
      * wrong-arg-order class (e.g. `(array/reduce arr (fn …) init)`).
      */
     lambdaArgPosition?: number;
+    /** The AVL circuit form every reader draws this operator with (`operatorVisualForm`). */
+    visual: { form: OperatorVisualForm };
     failable?: FailableMeta;
     sign?: ResultSign;
     busExcluded?: string[];
@@ -161,9 +163,12 @@ function jsonExampleToLolo(example: string): string | undefined {
 }
 
 function toCanonicalEntry(
+    name: string,
     meta: StdOperatorMeta,
     existing?: CanonicalOperatorEntry
 ): CanonicalOperatorEntry {
+    const form = operatorVisualForm(name);
+    if (!form) throw new Error(`no visual form for ${name}`);
     const entry: CanonicalOperatorEntry = {
         category: meta.category,
         minArity: meta.minArity,
@@ -171,6 +176,7 @@ function toCanonicalEntry(
         returnType: meta.returnType,
         description: meta.description,
         module: meta.module,
+        visual: { form },
     };
     if (meta.hasSideEffects) entry.hasSideEffects = true;
     if (meta.effect) entry.effect = meta.effect;
@@ -220,7 +226,7 @@ function writeCanonicalJson(): number {
     const operators: Record<string, CanonicalOperatorEntry> = {};
     const sortedNames = Object.keys(STD_OPERATORS).sort();
     for (const name of sortedNames) {
-        operators[name] = toCanonicalEntry(STD_OPERATORS[name], existing[name]);
+        operators[name] = toCanonicalEntry(name, STD_OPERATORS[name], existing[name]);
     }
 
     const schema = {

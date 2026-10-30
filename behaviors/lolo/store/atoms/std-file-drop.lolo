@@ -12,7 +12,7 @@ orbital FileDropOrbital {
   entity FileDropRecord [runtime] {
     id : string!
     name : string @description "The delivery in flight: its name under the directory, without the extension" = ""
-    data : bytes @description "The delivery in flight: its bytes"
+    data : bytes @description "The delivery in flight: its bytes" = ""
   }
 
   trait FileDrop -> FileDropRecord [optimistic] {
@@ -33,11 +33,11 @@ orbital FileDropOrbital {
 
     state ready {
       INIT -> ready
-      FILE_DELIVERED -> ready when (not (let ((b (json/parse @payload.rawBody FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"))))
+      FILE_DELIVERED -> ready when (not (let ((b (json/parse (default @payload.rawBody "") FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"))))
         (emit FILE_DROP_ANSWERED { status: 400, body: "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}" })
-      FILE_DELIVERED -> ready when (let ((b (json/parse @payload.rawBody FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
-        (set @entity.name (object/get (json/parse @payload.rawBody FileDropBody) "name"))
-        (set @entity.data (object/get (json/parse @payload.rawBody FileDropBody) "data"))
+      FILE_DELIVERED -> ready when (let ((b (json/parse (default @payload.rawBody "") FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
+        (set @entity.name (let ((b (json/parse (default @payload.rawBody "") FileDropBody))) (if (== @b null) "" (object/get @b "name"))))
+        (set @entity.data (let ((b (json/parse (default @payload.rawBody "") FileDropBody))) (if (== @b null) @entity.data (object/get @b "data"))))
         (os/mkdir (str/concat @config.dir (os/path-dir @entity.name)) true { emit: { success: DROP_DIR_READY, failure: DROP_WRITE_FAILED } })
       DROP_DIR_READY -> ready
         (os/write-file (str/concat @config.dir @entity.name "." @config.extension) @entity.data { emit: { success: DROP_WRITTEN, failure: DROP_WRITE_FAILED } })

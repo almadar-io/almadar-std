@@ -30,33 +30,33 @@ orbital OrbFormatOrbital {
 
     state ready {
       INIT -> ready
-      FORMAT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      FORMAT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
-      FORMAT_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
+      FORMAT_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
       FORMAT_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
         (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
-      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (not (os/path-is-absolute (array/first @payload.positionals))))
-        (set @entity.file (array/first @payload.positionals))
-        (set @entity.path (array/first @payload.positionals))
-        (set @entity.write (!= (object/get @payload.flags "write") null))
+      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (not (os/path-is-absolute (default (array/first @payload.positionals) ""))))
+        (set @entity.file (default (array/first @payload.positionals) ""))
+        (set @entity.path (default (array/first @payload.positionals) ""))
+        (set @entity.write (object/has @payload.flags "write"))
         (os/read-file { anchor: "cwd" path: @entity.path } { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
-      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (os/path-is-absolute (array/first @payload.positionals)))
-        (set @entity.file (array/first @payload.positionals))
-        (set @entity.path (array/first @payload.positionals))
-        (set @entity.write (!= (object/get @payload.flags "write") null))
+      FORMAT_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (os/path-is-absolute (default (array/first @payload.positionals) "")))
+        (set @entity.file (default (array/first @payload.positionals) ""))
+        (set @entity.path (default (array/first @payload.positionals) ""))
+        (set @entity.write (object/has @payload.flags "write"))
         (os/read-file (str/concat "/" (str/slice @entity.path 1 (str/len @entity.path))) { key: "source" emit: { success: FORMAT_READ, failure: FORMAT_READ_FAILED } })
     }
 
     state reading {
       INIT -> reading
       FORMAT_READ_FAILED -> ready
-        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not read " @entity.file ": " @payload.error) })
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not read " @entity.file ": " (default @payload.error "")) })
       FORMAT_READ -> printing
         (program/print null { source: (bytes/to-string @payload.data) } { emit: { success: FORMAT_PRINTED, failure: FORMAT_PRINT_FAILED } })
     }
@@ -64,7 +64,7 @@ orbital OrbFormatOrbital {
     state printing {
       INIT -> printing
       FORMAT_PRINT_FAILED -> ready
-        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       FORMAT_PRINTED -> ready when (not @entity.write)
         (emit FORMAT_ANSWERED { status: 200, body: @payload.result })
       FORMAT_PRINTED -> writing when (and @entity.write (not (os/path-is-absolute @entity.path)))
@@ -78,7 +78,7 @@ orbital OrbFormatOrbital {
     state writing {
       INIT -> writing
       FORMAT_WRITE_FAILED -> ready
-        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not write " @entity.file ": " @payload.error) })
+        (emit FORMAT_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not write " @entity.file ": " (default @payload.error "")) })
       FORMAT_WRITTEN -> ready
         (emit FORMAT_ANSWERED { status: 200, body: (str/concat "Formatted " @entity.file " (" (bytes/length (bytes/from-string @entity.text)) " bytes)") })
     }

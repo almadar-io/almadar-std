@@ -42,7 +42,7 @@ orbital MapsOrbital {
             (let ((place (array/first @places)))
               (if (= @place null)
                 (emit MAPS_FAILURE { error: "no place matches the address", code: "not_found" })
-                (let ((lat (str/to-number (object/get @place lat "0"))) (lng (str/to-number (object/get @place lon "0")))) (if (or (= @lat null) (= @lng null)) (emit MAPS_FAILURE { error: "Nominatim answered a place whose coordinates are not numbers", code: "http_error" }) (emit GEOCODED { lat: @lat, lng: @lng, formattedAddress: (object/get @place display_name "") })))))))
+                (let ((lat (str/to-number (object/get @place lat "0"))) (lng (str/to-number (object/get @place lon "0")))) (if (or (= @lat null) (= @lng null)) (emit MAPS_FAILURE { error: "Nominatim answered a place whose coordinates are not numbers", code: "http_error" }) (emit GEOCODED { lat: (default @lat 0), lng: (default @lng 0), formattedAddress: (object/get @place display_name "") })))))))
 
       REVERSE_GEOCODE -> idle
         (emit MAPS_HTTP_SEND { key: "reverse", method: "GET", target: (str/concat "/reverse?format=json&lat=" @payload.lat "&lon=" @payload.lng), headers: [{ name: "Accept", value: "application/json" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
@@ -50,9 +50,11 @@ orbital MapsOrbital {
         (emit MAPS_FAILURE { error: (str/concat "Nominatim answered HTTP " @payload.status), code: "http_error" })
       MAPS_REPLIED -> idle when (and (= @payload.key "reverse") (>= @payload.status 200) (< @payload.status 300))
         (let ((place (json/parse (default (bytes/to-string @payload.body) "") NominatimReverse)))
-          (if (validate/required (object/get @place display_name null))
-            (emit REVERSE_GEOCODED { address: (object/get @place display_name ""), formattedAddress: (object/get @place display_name "") })
-            (emit MAPS_FAILURE { error: "no address at the coordinates", code: "not_found" })))
+          (if (= @place null)
+            (emit MAPS_FAILURE { error: "Nominatim answered a body that is not a place", code: "http_error" })
+            (if (validate/required (object/get @place display_name null))
+              (emit REVERSE_GEOCODED { address: (object/get @place display_name ""), formattedAddress: (object/get @place display_name "") })
+              (emit MAPS_FAILURE { error: "no address at the coordinates", code: "not_found" }))))
 
       DISTANCE -> idle
         (let ((phi1 (math/deg-rad @payload.fromLat)))

@@ -15,13 +15,13 @@ orbital AnimTickOrbital {
     state running {
       INIT -> running
         (set @entity.animCounter 0)
-        (set @entity.frameName (if (> (array/len @config.frames) 0) (array/nth @config.frames 0) @entity.frameName))
+        (set @entity.frameName (if (> (array/len @config.frames) 0) (default (array/nth @config.frames 0) @entity.frameName) @entity.frameName))
     }
 
     ticks {
       animTick every 100ms [visible]
         (set @entity.animCounter (+ @entity.animCounter 1))
-        (set @entity.frameName (let ((i (% @entity.animCounter (array/len @config.frames)))) (if (== @i null) @entity.frameName (array/nth @config.frames @i))))
+        (set @entity.frameName (let ((i (% @entity.animCounter (array/len @config.frames)))) (if (== @i null) @entity.frameName (default (array/nth @config.frames @i) @entity.frameName))))
     }
 
     config {

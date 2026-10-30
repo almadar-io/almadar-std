@@ -8,6 +8,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 
 | Spec | Satisfied by |
 |---|---|
+| `cli/orb-circuit.lolo` | `std-orb-circuit` (bound; one lowered guard or effect to an AVL circuit tree of call, binding, literal, object, array and lambda nodes with the operator table's visual form, ir-calls paths and an optional per-path type; 18 replay goldens in `cli/orb-circuit.replay.goldens.json`) |
 | `store/approval-gate.lolo` | `std-approval-gate` (bound) |
 | `connect/asset-pack.lolo` | `std-asset-pack` (bound; loading, missing and failed keys render placeholders and emit `ASSET_PACK_MISSING` once per key; replay goldens `connect/asset-pack.replay.goldens.json`) |
 | `store/audit-trail.lolo` | `std-audit-capture` |

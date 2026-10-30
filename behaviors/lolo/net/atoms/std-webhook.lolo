@@ -15,7 +15,7 @@ orbital WebhookOrbital {
     payload : string @description "The payload of the send in flight, as JSON text." = "{}"
     attempts : number @description "Attempts made for the send in flight." = 0
     lastError : string @description "The latest attempt's error message." = ""
-    startedAt : number @description "Epoch milliseconds at which the latest attempt was sent." = 0
+    startedAt : instant @description "The instant at which the latest attempt was sent." = "1970-01-01T00:00:00Z"
   }
 
   trait WebhookRetry = Retry.traits.Retry {
@@ -56,8 +56,8 @@ orbital WebhookOrbital {
       WEBHOOK_ATTEMPT -> sending when @config.signed
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
-          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @now (time/startOf @now "second"))) 3 "0") "Z\"}")))
+          (http POST (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) "")) (if (= (str/slice @entity.url (str/len (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) "")))) "") "/" (str/slice @entity.url (str/len (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) ""))))) {
             headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
             text: @body,
             auth: { scheme: hmac-sha256, credential: @config.signingSecret, name: "X-Almadar-Signature", signs: @body, encoding: hex, prefix: "sha256=" },
@@ -66,8 +66,8 @@ orbital WebhookOrbital {
       WEBHOOK_ATTEMPT -> sending when (not @config.signed)
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
-          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @now (time/startOf @now "second"))) 3 "0") "Z\"}")))
+          (http POST (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) "")) (if (= (str/slice @entity.url (str/len (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) "")))) "") "/" (str/slice @entity.url (str/len (str/concat (default (array/nth (str/split @entity.url "/") 0) "") "//" (default (array/nth (str/split @entity.url "/") 2) ""))))) {
             headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
             text: @body,
             timeoutMs: @config.timeoutMs
@@ -78,7 +78,7 @@ orbital WebhookOrbital {
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: (str/concat "Webhook endpoint returned " @payload.status) })
       WEBHOOK_REPLIED -> idle when (< @payload.status 500)
         (emit WEBHOOK_RETRY_SUCCEEDED { key: @entity.key })
-        (emit WEBHOOK_RESULT { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), durationMs: (- @now @entity.startedAt) })
+        (emit WEBHOOK_RESULT { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), durationMs: (time/diff @now @entity.startedAt) })
       WEBHOOK_UNREACHABLE -> sending
         (set @entity.lastError @payload.error)
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: @payload.error })

@@ -4,7 +4,7 @@ app std-notify-on-event [
   egress: ["https://api.sendgrid.com", "https://api.resend.com", "https://api.twilio.com", "https://fcm.googleapis.com", "https://android.googleapis.com"]
 ]
 type PrefRow = { personId : string, eventKey : string, mode : string, channel : string, quietHours : string }
-type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : number }
+type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : instant }
 type NotifyWebhookPayload = { message : string, recipient : string, severity : string }
 type PushKeysTarget = { p256dh : string, auth : string }
 type PushTarget = { endpoint : string, keys : PushKeysTarget }
@@ -27,7 +27,7 @@ orbital NotifyOnEventOrbital {
     severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
     error : string @description "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription)." @synonyms "error message, failure reason, dispatch error" = ""
-    recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
+    recordedAt : instant @description "When the notification record was created (ISO-8601 instant)." @synonyms "creation time, timestamp, date, when"
     prefMode : string @description "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off)." @synonyms "resolved mode" = ""
     prefChannel : string @description "Scratch: channel override from the matched preference row; blank = no override." @synonyms "channel override" = ""
     prefQuietHours : string @description "Scratch: per-user quiet-hours window \"HH:MM-HH:MM\" from the matched preference row; blank = none." @synonyms "user quiet hours" = ""
@@ -160,7 +160,7 @@ orbital NotifyOnEventOrbital {
         }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
           emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
           limit: @config.maxRecordRows
-          filter: (> (object/get @entity recordedAt) (- @now 604800000))
+          filter: (> (object/get @entity recordedAt) (time/subtract @now 604800000 "ms"))
         })))))
       NOTIFY_CAP_LOADED -> idle when (> ?totalCount (array/len ?data))
         (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "NotificationRecord has " ?totalCount " rows in the 7-day window, over the maxRecordRows cap of " @config.maxRecordRows) })

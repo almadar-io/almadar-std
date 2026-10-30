@@ -37,7 +37,7 @@ orbital OrbStatsOrbital {
         (emit ORB_VERSION_READ { version: @entity.version })
         (program/inputs { stats: true } { emit: { success: ORB_INPUTS, failure: ORB_INPUTS_FAILED } })
       ORB_INPUTS -> ready
-        (emit ORB_KERNEL_READ { registeredSchemas: ?result.stats.registeredSchemas, registeredTraits: ?result.stats.registeredTraits, activeInstances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, uptimeMs: (time/diff @now @entity.startedAt "ms") })
+        (emit ORB_KERNEL_READ { registeredSchemas: ?result.stats.registeredSchemas, registeredTraits: ?result.stats.registeredTraits, activeInstances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, uptimeMs: (time/diff @now (default @entity.startedAt @now) "ms") })
       ORB_INPUTS_FAILED -> ready
         (emit ORB_STATS_FAILED { stat: "kernel", code: "inputs_refused", error: ?error })
       ORB_VERSION_DONE -> ready when (= ?exitCode 0)

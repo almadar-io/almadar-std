@@ -7,6 +7,7 @@ app std-agent-proposal [
 
 type AgentToolScope = {
   scope : "declared"!
+  roles : [string]!
   fireAndForget : boolean
 }
 type AgentToolField = {
@@ -19,11 +20,13 @@ type AgentToolField = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
+  roles : [string]!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentChatMessage = {
@@ -107,7 +110,7 @@ orbital AgentProposalOrbital {
       @description "The request that precedes the person's input in every run."
       @synonyms "task, goal, brief, question"
       @tier "domain"
-    tools : [AgentTool] = [{ event: AgentProposalWorkflow.PROPOSE, fireAndForget: true }]
+    tools : [AgentTool] = [{ event: AgentProposalWorkflow.PROPOSE, fireAndForget: true, roles: [] }]
       @label "What may the agent do?"
       @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without."
       @synonyms "allowlist, abilities, permissions"

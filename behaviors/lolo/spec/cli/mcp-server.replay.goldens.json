@@ -1620,9 +1620,13 @@
                 "arg0": {
                   "anchor": "cwd",
                   "path": [
-                    "object/get",
-                    "@entity.args",
-                    "path"
+                    "default",
+                    [
+                      "object/get",
+                      "@entity.args",
+                      "path"
+                    ],
+                    ""
                   ]
                 }
               }
@@ -1714,9 +1718,13 @@
                 "arg0": {
                   "anchor": "cwd",
                   "path": [
-                    "object/get",
-                    "@entity.args",
-                    "path"
+                    "default",
+                    [
+                      "object/get",
+                      "@entity.args",
+                      "path"
+                    ],
+                    ""
                   ]
                 }
               }
@@ -1950,6 +1958,277 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "operators-table-file-emits-its-operators-section",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_TABLE",
+          "payload": {
+            "data": "eyJvcGVyYXRvcnMiOnsiKyI6eyJjYXRlZ29yeSI6Im1hdGgiLCJkZXNjcmlwdGlvbiI6ImFkZCIsInBhcmFtcyI6WzFdfX0sInBhdHRlcm5zIjp7fX0="
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TABLE_READ",
+                "payload": {
+                  "table": {
+                    "+": {
+                      "category": "math",
+                      "description": "add",
+                      "params": [
+                        1
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "tool": "operators",
+            "args": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-operators-table-file-without-its-section-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_TABLE",
+          "payload": {
+            "data": "eyJwYXR0ZXJucyI6e319"
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED"
+              }
+            ]
+          },
+          "entity": {
+            "tool": "operators",
+            "args": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-named-table-entry-answers-with-every-field-of-the-entry",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_TABLE_READ",
+          "payload": {
+            "table": {
+              "+": {
+                "category": "math",
+                "description": "add",
+                "params": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_DONE",
+                "payload": {
+                  "result": {
+                    "name": "+",
+                    "entry": {
+                      "category": "math",
+                      "description": "add",
+                      "params": [
+                        1
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "tool": "operators",
+            "args": {
+              "name": "+"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-table-list-answers-name-category-and-description",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_TABLE_READ",
+          "payload": {
+            "table": {
+              "+": {
+                "category": "math",
+                "description": "add",
+                "params": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_DONE",
+                "payload": {
+                  "result": {
+                    "operators": [
+                      {
+                        "name": "+",
+                        "category": "math",
+                        "description": "add"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "tool": "operators",
+            "args": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "complete-tool-without-a-path-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_RUN",
+          "payload": {},
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED"
+              }
+            ]
+          },
+          "entity": {
+            "tool": "complete",
+            "args": {
+              "offset": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "test-tool-without-a-path-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_RUN",
+          "payload": {},
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED"
+              }
+            ]
+          },
+          "entity": {
+            "tool": "test",
+            "args": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "evaluate-tool-without-an-expr-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_RUN",
+          "payload": {},
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED"
+              }
+            ]
+          },
+          "entity": {
+            "tool": "evaluate",
+            "args": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "program-inputs-answering-no-result-fails-the-start",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "versioning",
+          "event": "MCP_INPUTS",
+          "payload": {},
+          "expect": {
+            "state": "versioning",
+            "emits": [
+              {
+                "event": "MCP_START_FAILED"
+              }
+            ]
+          },
+          "entity": {}
+        }
+      ]
+    },
+    {
+      "id": "control-program-inputs-with-a-result-lists-the-hook-names",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "versioning",
+          "event": "MCP_INPUTS",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "event": "HOOK_A"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "versioning",
+            "emits": [
+              {
+                "event": "MCP_LISTEN"
+              }
+            ]
+          },
+          "entity": {}
         }
       ]
     }

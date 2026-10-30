@@ -90,17 +90,19 @@ orbital OrbTestOrbital {
       INIT -> ready
       TEST_DONE -> ready
         (emit TEST_ANSWERED { status: @payload.status, body: @payload.body })
-      TEST_CALLED -> parsing
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit TEST_ARGS_PARSE { stage: "test" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
+      TEST_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit TEST_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
+      TEST_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit TEST_ARGS_PARSE { stage: "test" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      TEST_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "report") null) (not (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) "")))))
+      TEST_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (object/has @payload.flags "report") (not (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) "")))))
         (emit TEST_ANSWERED { status: 400, body: "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute]" })
-      TEST_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "report") null) (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) ""))))
-        (emit TEST_START { cwd: @entity.cwd, file: (array/first @payload.positionals), traitFilter: (if (!= (object/get @payload.flags "trait") null) (default (array/first (object/get @payload.flags "trait")) "") (if (!= (object/get @payload.flags "orbital") null) (default (array/first (object/get @payload.flags "orbital")) "") "")), report: (if (!= (object/get @payload.flags "report") null) (array/first (object/get @payload.flags "report")) "text") })
+      TEST_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (not (object/has @payload.flags "report")) (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) ""))))
+        (emit TEST_START { cwd: @entity.cwd, file: (default (array/first @payload.positionals) ""), traitFilter: (if (object/has @payload.flags "trait") (default (array/first (object/get @payload.flags "trait")) "") (if (object/has @payload.flags "orbital") (default (array/first (object/get @payload.flags "orbital")) "") "")), report: (if (object/has @payload.flags "report") (default (array/first (object/get @payload.flags "report")) "") "text") })
     }
 
     emits {
@@ -166,9 +168,9 @@ orbital OrbTestOrbital {
     state walking {
       INIT -> walking
       TEST_WALK_ANSWERED -> idle
-        (set @entity.outcomes (array/map (array/filter (str/split @payload.body "\n") (fn l (and (str/includes @l "  ") (not (str/startsWith @l "verify-walk:")) (or (str/startsWith @l "pass  ") (str/startsWith @l "fail  ") (str/startsWith @l "unplanned  ") (str/startsWith @l "guard-blocked  ") (str/startsWith @l "gap  "))))) (fn l (let ((parts (str/split @l "  "))) (let ((v (array/first @parts)) (rest (array/nth @parts 1)) (tail (str/join (array/drop @parts 2) "  ")) (all (str/join (array/drop @parts 1) "  "))) (if (not (str/includes @rest "--> "))
+        (set @entity.outcomes (array/map (array/filter (str/split @payload.body "\n") (fn l (and (str/includes @l "  ") (not (str/startsWith @l "verify-walk:")) (or (str/startsWith @l "pass  ") (str/startsWith @l "fail  ") (str/startsWith @l "unplanned  ") (str/startsWith @l "guard-blocked  ") (str/startsWith @l "gap  "))))) (fn l (let ((parts (str/split @l "  "))) (let ((v (default (array/first @parts) "")) (rest (default (array/nth @parts 1) "")) (tail (str/join (array/drop @parts 2) "  ")) (all (str/join (array/drop @parts 1) "  "))) (if (not (and (str/includes @rest "--> ") (str/includes @rest " --")))
           { status: "failed", traitName: "(program)", test: "validate", detail: (str/replace @all "validate " "") }
-          (let ((tr (array/first (str/split @rest " "))) (from (array/first (str/split (str/join (array/drop (str/split @rest " ") 1) " ") " --"))) (ev (array/first (str/split (array/nth (str/split @rest " --") 1) "--> "))) (to (array/nth (str/split @rest "--> ") 1))) (let ((name (str/concat @from " + " @ev " → " @to))) (if (= @v "pass") { status: "passed", traitName: @tr, test: @name }
+          (let ((tr (default (array/first (str/split @rest " ")) "")) (from (default (array/first (str/split (str/join (array/drop (str/split @rest " ") 1) " ") " --")) "")) (ev (default (array/first (str/split (default (array/nth (str/split @rest " --") 1) "") "--> ")) "")) (to (default (array/nth (str/split @rest "--> ") 1) ""))) (let ((name (str/concat @from " + " @ev " → " @to))) (if (= @v "pass") { status: "passed", traitName: @tr, test: @name }
             (if (= @v "fail") (if (= @tail "") { status: "failed", traitName: @tr, test: @name } { status: "failed", traitName: @tr, test: @name, detail: @tail })
               { status: "skipped", traitName: @tr, test: @name, reason: (if (= @tail "") @v (str/concat @v ": " @tail)) }))))))))))
         (set @entity.outcomes (array/filter @entity.outcomes (fn o (str/includes (str/lower (object/get @o "traitName")) (str/lower @entity.traitFilter)))))
@@ -176,12 +178,12 @@ orbital OrbTestOrbital {
         (set @entity.failed (array/len (array/filter @entity.outcomes (fn o (= (object/get @o "status") "failed")))))
         (set @entity.skipped (array/len (array/filter @entity.outcomes (fn o (= (object/get @o "status") "skipped")))))
         (set @entity.traits (array/unique (array/map @entity.outcomes (fn o (object/get @o "traitName")))))
-        (log (str/join (array/concat [(str/concat "orb test " @entity.file ": " @entity.passed " passed, " @entity.skipped " skipped")] (array/map (array/filter @entity.outcomes (fn o (!= (object/get @o "status") "failed"))) (fn o (if (= (object/get @o "status") "passed") (str/concat "  ✓ " (object/get @o "test")) (str/concat "  ⊘ " (object/get @o "test") " (" (object/get @o "reason") ")"))))) "\n"))
+        (log (str/join (array/concat [(str/concat "orb test " @entity.file ": " @entity.passed " passed, " @entity.skipped " skipped")] (array/map (array/filter @entity.outcomes (fn o (!= (object/get @o "status") "failed"))) (fn o (if (= (object/get @o "status") "passed") (str/concat "  ✓ " (object/get @o "test")) (str/concat "  ⊘ " (object/get @o "test") " (" (object/get @o "reason" "") ")"))))) "\n"))
         (emit TEST_ANSWERED { status: (if (and (> (array/len @entity.outcomes) 0) (> @entity.failed 0)) 500 (if (and (= (array/len @entity.outcomes) 0) (= @payload.status 500) (= @entity.traitFilter "")) 500 200)), body: (if (and (= (array/len @entity.outcomes) 0) (= @payload.status 500) (= @entity.traitFilter "")) (str/concat "orb test: " @payload.body)
           (if (= (array/len @entity.outcomes) 0) "No traits found matching the filter criteria."
             (if (= @entity.report "json") (json/stringify { passed: @entity.passed, failed: @entity.failed, skipped: @entity.skipped, outcomes: @entity.outcomes })
               (str/join (array/concat [(str/concat "Loading schema: " @entity.file)]
-                (array/map (array/filter @entity.outcomes (fn o (= (object/get @o "status") "failed"))) (fn o (str/concat "  ✗ " (object/get @o "test") (if (!= (object/get @o "detail" "") "") (str/concat " — " (object/get @o "detail")) ""))))
+                (array/map (array/filter @entity.outcomes (fn o (= (object/get @o "status") "failed"))) (fn o (str/concat "  ✗ " (object/get @o "test") (if (!= (object/get @o "detail" "") "") (str/concat " — " (object/get @o "detail" "")) ""))))
                 [(str/repeat " " 0), (str/repeat "=" 60), "Headless Execution Results", (str/repeat "=" 60)]
                 (array/map @entity.traits (fn tn (let ((tp (array/len (array/filter @entity.outcomes (fn o (and (= (object/get @o "traitName") @tn) (= (object/get @o "status") "passed")))))) (tf (array/len (array/filter @entity.outcomes (fn o (and (= (object/get @o "traitName") @tn) (= (object/get @o "status") "failed"))))))) (str/concat "  " (if (= @tf 0) "✓" "✗") " " @tn " — " @tp "/" (+ @tp @tf) " passed" (if (> @tf 0) (str/concat " (" @tf " failed)") "")))))
                 [(str/repeat "-" 60), (str/concat "Total: " @entity.passed " passed, " @entity.failed " failed, " @entity.skipped " skipped"), (str/repeat "=" 60)]) "\n")))) })

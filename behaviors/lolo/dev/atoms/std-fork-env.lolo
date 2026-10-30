@@ -23,12 +23,13 @@ orbital ForkEnvOrbital {
 
       FORK_ENV -> ready
         (set @entity.env
-          (object/merge
+          (default (object/merge
             (if @payload.allowReal @payload.base (object/omit @payload.base @payload.credentialVars))
             (if @payload.agentMock { AGENT_MOCK: "true" } {})
             (if @payload.mockLLM { MOCK_LLM: "true" } {})
             @payload.integrationEnv
-            (if @payload.allowReal {} { ALMADAR_INTEGRATIONS_MODE: "mock", NODE_ENV: "development" })))
+            (if @payload.allowReal {} { ALMADAR_INTEGRATIONS_MODE: "mock", NODE_ENV: "development" }))
+            {}))
         (emit FORK_ENV_BUILT { env: @entity.env })
 
       FORK_ROOT -> ready

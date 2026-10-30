@@ -4849,6 +4849,97 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-keep-field-that-is-not-emitted-fails-the-case",
+      "entity": {
+        "golden": {
+          "atom": "x",
+          "trait": "T",
+          "orbital": "O",
+          "cases": [
+            {
+              "id": "c",
+              "steps": [
+                {
+                  "event": "E",
+                  "payload": {},
+                  "keep": "v",
+                  "keepField": "f"
+                },
+                {
+                  "event": "F",
+                  "payload": {}
+                }
+              ]
+            }
+          ]
+        },
+        "curCase": {
+          "id": "c",
+          "steps": [
+            {
+              "event": "E",
+              "payload": {},
+              "keep": "v",
+              "keepField": "f"
+            },
+            {
+              "event": "F",
+              "payload": {}
+            }
+          ]
+        },
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "upto": 0,
+        "vars": {},
+        "lines": []
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "GOLDENS_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "event": "E",
+                "payload": {},
+                "result": {
+                  "transitionFired": true,
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "emitted": [
+                    {
+                      "type": "A",
+                      "payload": {
+                        "x": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GOLDENS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "fail  c\n  step 0: keep field f not emitted\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+                }
+              }
+            ]
+          },
+          "trait": "OrbGoldens"
+        }
+      ]
     }
   ]
 }

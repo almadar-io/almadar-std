@@ -38,11 +38,11 @@ orbital OrbLaunchpadOrbital {
 
     state ready {
       INIT -> ready
-      LAUNCHPAD_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LAUNCHPAD_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
-      LAUNCHPAD_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit LAUNCHPAD_ARGS_PARSE { stage: "launchpad" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }] })
+      LAUNCHPAD_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit LAUNCHPAD_ARGS_PARSE { stage: "launchpad" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -50,7 +50,7 @@ orbital OrbLaunchpadOrbital {
       LAUNCHPAD_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
       LAUNCHPAD_ARGS_DONE -> parsing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
-        (emit LAUNCHPAD_START { portText: (array/first (default (object/get @payload.flags "port") ["3030"])), portOk: (and (>= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (default (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))))), host: (array/first (default (object/get @payload.flags "host") ["127.0.0.1"])) })
+        (let ((pt (default (array/first (default (object/get @payload.flags "port") ["3030"])) "3030"))) (let ((pn (str/to-number @pt)) (pi (str/to-int @pt))) (emit LAUNCHPAD_START { portText: @pt, portOk: (and (!= @pn null) (!= @pi null) (>= @pn 0) (<= @pn 65535) (= @pi @pn)), host: (default (array/first (default (object/get @payload.flags "host") ["127.0.0.1"])) "127.0.0.1") })))
       LAUNCHPAD_START -> ready when (not @payload.portOk)
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: (str/concat "error: invalid value '" @payload.portText "' for '--port <PORT>': not an integer from 0 to 65535") })
       LAUNCHPAD_START -> locating when @payload.portOk
@@ -62,7 +62,7 @@ orbital OrbLaunchpadOrbital {
     state locating {
       INIT -> locating
       LAUNCHPAD_LOCATE_FAILED -> ready
-        (emit LAUNCHPAD_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @config.organism " could not be found: " @payload.error) })
+        (emit LAUNCHPAD_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @config.organism " could not be found: " (default @payload.error "")) })
       LAUNCHPAD_LOCATED -> working
         (emit SERVE_START { cwd: @entity.cwd, path: @payload.result.path, portText: @entity.port, portOk: true, host: @entity.host, hasClient: false, clientDir: "", clientGiven: "", clientInside: true, mock: false, open: false, noEmulators: false, flagged: false })
     }

@@ -101,13 +101,13 @@ orbital MlInferOrbital {
             (array/flatten (array/map (array/range 0 (array/len @entity.output)) (fn i
               (let ((r (object/get (object/get @config.outputContract "ranges" {}) (str/concat "" @i) null)))
                 (if (= @r null) []
-                  (if (or (< (array/nth @entity.output @i) (object/get @r "min")) (> (array/nth @entity.output @i) (object/get @r "max")))
-                    [{ type: "range_violation", dim: @i, min: (object/get @r "min"), max: (object/get @r "max"), actualMin: (array/nth @entity.output @i), actualMax: (array/nth @entity.output @i) }]
+                  (if (or (< (default (array/nth @entity.output @i) 0) (object/get @r "min")) (> (default (array/nth @entity.output @i) 0) (object/get @r "max")))
+                    [{ type: "range_violation", dim: @i, min: (object/get @r "min"), max: (object/get @r "max"), actualMin: (default (array/nth @entity.output @i) 0), actualMax: (default (array/nth @entity.output @i) 0) }]
                     [])))))))))
           (if (= (array/len @violations) 0)
             (if (>= @entity.confidence @config.confidenceFloor)
               (do
-                (set @entity.output (array/map (array/range 0 (array/len @entity.output)) (fn i (let ((r (object/get (object/get @config.outputContract "ranges" {}) (str/concat "" @i) null))) (if (= @r null) (array/nth @entity.output @i) (math/clamp (array/nth @entity.output @i) (object/get @r "min") (object/get @r "max")))))))
+                (set @entity.output (array/map (array/range 0 (array/len @entity.output)) (fn i (let ((r (object/get (object/get @config.outputContract "ranges" {}) (str/concat "" @i) null))) (if (= @r null) (default (array/nth @entity.output @i) 0) (math/clamp (default (array/nth @entity.output @i) 0) (object/get @r "min") (object/get @r "max")))))))
                 (set @entity.violations [])
                 (set @entity.reason "")
                 (set @entity.status resolved)

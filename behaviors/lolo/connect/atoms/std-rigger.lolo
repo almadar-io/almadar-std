@@ -73,8 +73,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "build_mesh") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_BUILD_MESH_FAILED {
               message: (str/concat "Rigger /mesh/build returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -89,8 +89,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "render") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_RENDER_FAILED {
               message: (str/concat "Rigger /render returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -105,8 +105,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "list_presets") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_LIST_PRESETS_FAILED {
               message: (str/concat "Rigger /presets returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -121,8 +121,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "load_rig") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_LOAD_RIG_FAILED {
               message: (str/concat "Rigger /rig/load returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -137,8 +137,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "save_rig") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_SAVE_RIG_FAILED {
               message: (str/concat "Rigger /rig/save returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -153,8 +153,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "ownership") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_OWNERSHIP_FAILED {
               message: (str/concat "Rigger /ownership returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -169,8 +169,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "build_layers") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_BUILD_LAYERS_FAILED {
               message: (str/concat "Rigger /layers returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -185,8 +185,8 @@ orbital RiggerOrbital {
       RIGGER_REPLIED -> idle when (and (= @payload.key "pose") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_POSE_FAILED {
               message: (str/concat "Rigger /pose returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
@@ -201,12 +201,12 @@ orbital RiggerOrbital {
         (emit RIGGER_GENERATE_FAILED { code: "VALIDATION_ERROR", message: "Validation failed for rigger.generate: params: sourcePath is required when model is kontext" })
       RIGGER_REPLIED -> idle when (and (= @payload.key "generate") (>= @payload.status 200) (< @payload.status 300))
         (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerGenerated)))
-          (emit RIGGER_GENERATED { outPath: @r.outPath, model: @r.model, prompt: @r.prompt, seed: @r.seed, size: @r.size, sourcePath: @r.sourcePath, elapsedMs: @r.elapsedMs }))
+          (emit RIGGER_GENERATED { outPath: @r.outPath, model: @r.model, prompt: @r.prompt, seed: (default @r.seed 0), size: @r.size, sourcePath: (default @r.sourcePath ""), elapsedMs: @r.elapsedMs }))
       RIGGER_REPLIED -> idle when (and (= @payload.key "generate") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
             (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
-            (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
+            (detailJson (if (== @errBody null) "" (json/stringify (object/get @errBody detail ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (let ((ds (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString))) (if (== @ds null) "" (object/get @ds detail ""))) @detailJson) ""))))
             (emit RIGGER_GENERATE_FAILED {
               message: (str/concat "Rigger /generate returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))

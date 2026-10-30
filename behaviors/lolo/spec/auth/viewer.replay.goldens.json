@@ -13,10 +13,24 @@
       "requestId": 1,
       "sourceKind": "none"
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "anonymous",
+          "role": "anonymous",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "no token is anonymous (directory)",
@@ -29,10 +43,24 @@
       "sourceKind": "directory",
       "sourceEntity": "Member"
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "anonymous",
+          "role": "anonymous",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "none: id from uid, every claim readable",
@@ -67,10 +95,47 @@
        ]
       }
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "role": "teacher",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "sub",
+            "value": "u-1"
+           },
+           {
+            "name": "role",
+            "value": "teacher"
+           },
+           {
+            "name": "plan",
+            "value": "pro"
+           },
+           {
+            "name": "iss",
+            "value": "https://issuer"
+           },
+           {
+            "name": "uid",
+            "value": "u-1"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "claims: only the declared fields are read",
@@ -110,10 +175,31 @@
        "role"
       ]
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "role": "teacher",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "role",
+            "value": "teacher"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "claims: a declared field the token lacks stays absent",
@@ -151,10 +237,25 @@
        "department"
       ]
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "claims: a token claim cannot overwrite the verified id",
@@ -180,10 +281,25 @@
        "id"
       ]
      },
-     "expect": {}
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
     }
-   ],
-   "skip": "needs program/step outcomes[]: VIEWER_RESOLVE cascades VIEWER_PUMP and the answer is the cascaded trait outcome"
+   ]
   },
   {
    "id": "directory: the row keyed by the verified uid",
@@ -383,6 +499,227 @@
      }
     }
    ]
+  },
+  {
+   "id": "directory: createMissing writes the first row and resolves its declared role",
+   "note": "S1: with createMissing on, a verified uid with no directory row gets one (id from the uid, name from the token), then the written row is read back and its declared role is the viewer's role.",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-9",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-9"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_ABSENT",
+     "payload": {
+      "code": "not-found"
+     },
+     "from": "looking",
+     "expect": {
+      "fired": true,
+      "state": "creating",
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DIRECTORY_CREATED",
+     "payload": {
+      "id": "u-9"
+     },
+     "from": "creating",
+     "expect": {
+      "fired": true,
+      "state": "refetching",
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DIRECTORY_FOUND",
+     "payload": {
+      "data": {
+       "id": "u-9",
+       "role": "learner",
+       "name": "Ada"
+      }
+     },
+     "from": "refetching",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-9",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "role": "learner",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "name",
+            "value": "Ada"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "createMissing": true
+   }
+  },
+  {
+   "id": "directory: a row that cannot be written resolves the token fields",
+   "note": "S1 control: a failed write never invents a role.",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-9",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-9"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_ABSENT",
+     "payload": {
+      "code": "not-found"
+     },
+     "from": "looking",
+     "expect": {
+      "fired": true,
+      "state": "creating"
+     }
+    },
+    {
+     "event": "DIRECTORY_CREATE_FAILED",
+     "payload": {
+      "error": "denied"
+     },
+     "from": "creating",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-9",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "createMissing": true
+   }
+  },
+  {
+   "id": "directory: a row still absent after the write resolves the token fields once",
+   "note": "S1 control: the re-read never writes again.",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-9",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-9"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_ABSENT",
+     "payload": {
+      "code": "not-found"
+     },
+     "from": "refetching",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-9",
+          "email": "ada@example.com",
+          "name": "Ada",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "DIRECTORY_CREATED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "createMissing": true
+   }
   }
  ]
 }

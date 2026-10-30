@@ -1,0 +1,460 @@
+{
+ "atom": "agent/atoms/std-agent-tool-loop.lolo",
+ "trait": "AgentToolLoop",
+ "orbital": "AgentToolLoopOrbital",
+ "note": "S1 deny by default (owner decision 5, 2026-10-27): a tool is offered to the model only when its `roles` include the signed-in viewer's role; empty or absent roles, and no viewer, offer nothing.",
+ "cases": [
+  {
+   "id": "a-tool-granted-to-the-viewers-role-is-offered",
+   "note": "S1: the read tool lists staff, and the viewer is staff.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-tool-not-granted-to-the-viewers-role-is-not-offered",
+   "note": "S1: the viewer is a guest, and the tool grants only staff.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "viewer": {
+      "id": "u2",
+      "role": "guest",
+      "claims": []
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": []
+        }
+       }
+      ]
+     },
+     "viewer": {
+      "id": "u2",
+      "role": "guest",
+      "claims": []
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-tool-with-empty-roles-is-refused",
+   "note": "S1: empty roles grants nobody.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": []
+        }
+       }
+      ]
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": []
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "no-viewer-is-offered-nothing",
+   "note": "S1: an anonymous turn is offered no tool.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-only-the-granted-tool-of-two-is-offered",
+   "note": "S1 control: the grant is per tool.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "an-ephemeral-conversations-tools-are-gated-the-same-way",
+   "note": "S1: tools carried on CONVERSE (ephemeral) obey the same grant.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ],
+      "ephemeral": true,
+      "tools": [
+       {
+        "read": "Note",
+        "roles": [
+         "staff"
+        ]
+       },
+       {
+        "read": "Payroll",
+        "roles": [
+         "admin"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "staff",
+      "claims": []
+     }
+    }
+   ],
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  }
+ ]
+}

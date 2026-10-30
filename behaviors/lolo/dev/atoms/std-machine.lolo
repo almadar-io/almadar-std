@@ -12,7 +12,7 @@ type MachineSources = [string]
 type MachineGraph = { events : [MachineEventDecl], transitions : [MachineArm] }
 type MachineTrait = { name : string!, stateMachine : MachineGraph }
 type MachineOrbital = { name : string!, traits : [MachineTrait] }
-type MachineProgram = { orbitals : [MachineOrbital] }
+type MachineProgram = { orbitals : [MachineOrbital]! }
 type MachineSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
 type MachineRow = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : [MachineSlot]! }
 
@@ -32,10 +32,12 @@ orbital MachineOrbital {
       MACHINE_READ -> ready when (!= (json/parse (json/stringify @payload.program) MachineProgram) null)
         (set @entity.rows (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) MachineProgram) "orbitals") (fn o
           (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
-            (let ((arms (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions") (fn a
+            (let ((sm (object/get @t "stateMachine")))
+             (if (= @sm null) []
+            (let ((arms (array/flatten (array/map (object/get @sm "transitions" []) (fn a
                           (array/map (let ((raw (object/get @a "from"))) (if (validate/array @raw) @raw [@raw])) (fn f
                             { from: @f, event: (object/get @a "event"), to: (object/get @a "to"), guarded: (object/has @a "guard") }))))))
-                  (events (object/get (object/get @t "stateMachine") "events" [])))
+                  (events (object/get @sm "events" [])))
               (array/flatten (array/map (array/unique (array/map @arms (fn a (str/concat (object/get @a "from") "\n" (object/get @a "event")))))
                 (fn k
                   (let ((group (array/filter @arms (fn a (= (str/concat (object/get @a "from") "\n" (object/get @a "event")) @k)))))
@@ -44,10 +46,10 @@ orbital MachineOrbital {
                                     (array/map (array/unique (array/map @group (fn a (object/get @a "to")))) (fn to (array/find @group (fn a (= (object/get @a "to") @to))))))))
                       (array/map @picked (fn a
                         { orbital: (object/get @o "name"), trait: (object/get @t "name"), from: (object/get @a "from"), event: (object/get @a "event"), to: (object/get @a "to"), guarded: (and (object/get @a "guarded") (array/some @group (fn g (object/get @g "guarded")))),
-                          payload: (array/map (object/get (array/find @events (fn e (= (object/get @e "key") (object/get @a "event")))) "payloadSchema" [])
+                          payload: (array/map (let ((decl (array/find @events (fn e (= (object/get @e "key") (object/get @a "event")))))) (if (= @decl null) [] (object/get @decl "payloadSchema" [])))
                             (fn p (let ((slot { name: (object/get @p "name"), type: (object/get @p "type"), required: (object/get @p "required" false) }))
                               (let ((withValues (if (object/has @p "values") (object/set @slot "values" (object/get @p "values")) @slot)))
-                                (if (object/has @p "entity") (object/set @withValues "entity" (object/get @p "entity")) @withValues))))) })))))))))))))))
+                                (if (object/has @p "entity") (object/set @withValues "entity" (object/get @p "entity")) @withValues))))) })))))))))))))))))
         (emit MACHINE_ANSWERED { rows: @entity.rows })
     }
 

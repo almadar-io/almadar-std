@@ -174,21 +174,21 @@ orbital OrbDiskOrbital {
 
     state ready {
       INIT -> ready
-      DISK_CALLED -> parsing
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit DISK_ARGS_UNREAD { }) (emit DISK_ARGS_PARSE { stage: "disk" argv: @argv flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "yes" aliases: [] takesValue: false repeatable: true }, { name: "safe" aliases: [] takesValue: false repeatable: true }, { name: "clear" aliases: [] takesValue: true repeatable: false }] })))
+      DISK_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit DISK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
+      DISK_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit DISK_ARGS_PARSE { stage: "disk" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "yes" aliases: [] takesValue: false repeatable: true }, { name: "safe" aliases: [] takesValue: false repeatable: true }, { name: "clear" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      DISK_ARGS_UNREAD -> ready
-        (emit DISK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       DISK_ARGS_DONE -> parsing
-        (set @entity.json (!= (object/get @payload.flags "json") null))
-        (set @entity.yes (!= (object/get @payload.flags "yes") null))
-        (set @entity.clearMode (or (!= (object/get @payload.flags "safe") null) (!= (object/get @payload.flags "clear") null)))
-        (set @entity.clearId (if (> (array/len (default (object/get @payload.flags "clear") [])) 0) (array/first (object/get @payload.flags "clear")) ""))
-        (set @entity.safeMode (or (!= (object/get @payload.flags "safe") null) (= @entity.clearId "__safe_batch__")))
+        (set @entity.json (object/has @payload.flags "json"))
+        (set @entity.yes (object/has @payload.flags "yes"))
+        (set @entity.clearMode (or (object/has @payload.flags "safe") (object/has @payload.flags "clear")))
+        (set @entity.clearId (if (> (array/len (default (object/get @payload.flags "clear") [])) 0) (default (array/first (object/get @payload.flags "clear")) "") ""))
+        (set @entity.safeMode (or (object/has @payload.flags "safe") (= @entity.clearId "__safe_batch__")))
         (set @entity.badArgs (+ (array/len (array/filter @payload.errors (fn e (!= @e "missing value for --clear")))) (array/len @payload.positionals)))
         (emit DISK_ROUTE { })
       DISK_ROUTE -> ready when (> @entity.badArgs 0)
@@ -215,14 +215,14 @@ orbital OrbDiskOrbital {
         (emit DISK_ANSWERED { status: 500, body: (if @entity.json (json/stringify { kind: "error", error: (str/concat "unknown or non-clearable item: " @entity.clearId), clearable: (array/map (array/filter @entity.avail (fn it (object/get @it "clearable"))) (fn it (object/get @it "id"))) }) (str/concat "unknown or non-clearable item: " @entity.clearId "\nclearable: " (str/join (array/map (array/filter @entity.avail (fn it (object/get @it "clearable"))) (fn it (object/get @it "id"))) ", "))) })
       DISK_CHECK -> measuring when (or (not @entity.clearMode) (> (array/len (array/filter @entity.avail (fn it (and (object/get @it "clearable") (if @entity.safeMode (object/get @it "batch") (= (object/get @it "id") @entity.clearId)))))) 0))
         (emit DISK_DF_RUN { stage: "df", argv: @entity.dfArgs })
-      DiskDf_DONE -> ready when (let ((row (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))) (or (= (str/to-number (array/nth @row @entity.dfOff)) null) (= (str/to-number (array/nth @row (+ @entity.dfOff 1))) null) (= (str/to-number (array/nth @row (+ @entity.dfOff 2))) null) (= (str/to-number (str/replace (array/nth @row (+ @entity.dfOff 3)) "%" "")) null)))
+      DiskDf_DONE -> ready when (let ((row (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))) (or (= (str/to-number (default (array/nth @row @entity.dfOff) "")) null) (= (str/to-number (default (array/nth @row (+ @entity.dfOff 1)) "")) null) (= (str/to-number (default (array/nth @row (+ @entity.dfOff 2)) "")) null) (= (str/to-number (str/replace (default (array/nth @row (+ @entity.dfOff 3)) "") "%" "")) null)))
         (emit DISK_ANSWERED { status: 500, body: "disk_df_unreadable: df answered a size that is not a number" })
-      DiskDf_DONE -> measuring when (let ((row (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))) (and (!= (str/to-number (array/nth @row @entity.dfOff)) null) (!= (str/to-number (array/nth @row (+ @entity.dfOff 1))) null) (!= (str/to-number (array/nth @row (+ @entity.dfOff 2))) null) (!= (str/to-number (str/replace (array/nth @row (+ @entity.dfOff 3)) "%" "")) null)))
-        (set @entity.dfRow (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))
-        (set @entity.totalBytes (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow @entity.dfOff)) 0)))
-        (set @entity.usedBytes (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow (+ @entity.dfOff 1))) 0)))
-        (set @entity.freeBytes (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow (+ @entity.dfOff 2))) 0)))
-        (set @entity.usePct (default (str/to-number (str/replace (array/nth @entity.dfRow (+ @entity.dfOff 3)) "%" "")) 0))
+      DiskDf_DONE -> measuring when (let ((row (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))) (and (!= (str/to-number (default (array/nth @row @entity.dfOff) "")) null) (!= (str/to-number (default (array/nth @row (+ @entity.dfOff 1)) "")) null) (!= (str/to-number (default (array/nth @row (+ @entity.dfOff 2)) "")) null) (!= (str/to-number (str/replace (default (array/nth @row (+ @entity.dfOff 3)) "") "%" "")) null)))
+        (set @entity.dfRow (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))
+        (set @entity.totalBytes (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow @entity.dfOff) "")) 0)))
+        (set @entity.usedBytes (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow (+ @entity.dfOff 1)) "")) 0)))
+        (set @entity.freeBytes (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow (+ @entity.dfOff 2)) "")) 0)))
+        (set @entity.usePct (default (str/to-number (str/replace (default (array/nth @entity.dfRow (+ @entity.dfOff 3)) "") "%" "")) 0))
         (emit DISK_FIND_RUN { stage: "root", argv: (array/flatten (array/map (array/range 0 (math/min 8 (+ (array/len (array/filter (str/split @entity.cwd "/") (fn s (!= @s "")))) 1))) (fn k [(str/concat (str/join (array/prepend (array/slice (array/filter (str/split @entity.cwd "/") (fn s (!= @s ""))) 0 (- (array/len (array/filter (str/split @entity.cwd "/") (fn s (!= @s "")))) @k)) "") "/") "/orbital-rust"), (str/concat (str/join (array/prepend (array/slice (array/filter (str/split @entity.cwd "/") (fn s (!= @s ""))) 0 (- (array/len (array/filter (str/split @entity.cwd "/") (fn s (!= @s "")))) @k)) "") "/") "/packages")]))) })
       DiskFind_DONE -> measuring when (= @payload.stage "root")
         (set @entity.root (let ((parts (array/filter (str/split @entity.cwd "/") (fn s (!= @s ""))))
@@ -260,19 +260,19 @@ orbital OrbDiskOrbital {
       DISK_GROUPS -> measuring
         (set @entity.groups (array/filter [{ id: "node-modules", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/node_modules"))) }, { id: "rust-debug", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/debug"))) }, { id: "rust-release", paths: (array/map (array/map (array/filter @entity.walkLines (fn l (str/endsWith @l "/Cargo.toml"))) (fn l (str/slice @l 0 (- (str/len @l) 11)))) (fn d (str/concat @d "/target/release"))) }, { id: "turbo", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.turbo"))) }, { id: "venv", paths: (array/filter @entity.walkLines (fn l (str/endsWith @l "/.venv"))) }, { id: "verify-temp", paths: @entity.tmpLines }, { id: "claude", paths: (array/concat (array/filter @entity.sessions (fn s (not (array/includes @entity.freshSess @s)))) (array/filter @entity.entries (fn e (and (array/includes @entity.freshSess (str/join (array/slice (str/split @e "/") 0 (+ (array/len (str/split (str/concat @entity.tmpRoot "/claude-" @entity.uid) "/")) 2)) "/")) (not (array/includes @entity.freshEnt @e)))))) }] (fn g (> (array/len (object/get @g "paths")) 0))))
         (emit DISK_DU_RUN { stage: "du", argv: (array/concat ["-sk", "--"] (array/flatten (array/map @entity.specs (fn it (object/get @it "abs"))))) })
-      DiskDu_DONE -> ready when (and (= @payload.stage "du") (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (array/first (str/split @l "\t"))) null))))
+      DiskDu_DONE -> ready when (and (= @payload.stage "du") (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (default (array/first (str/split @l "\t")) "")) null))))
         (emit DISK_ANSWERED { status: 500, body: "disk_du_unreadable: du answered a size that is not a number" })
-      DiskDu_DONE -> measuring when (and (= @payload.stage "du") (not (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (array/first (str/split @l "\t"))) null)))))
-        (set @entity.sizes (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l { path: (array/nth (str/split @l "\t") 1), kb: (default (str/to-number (array/first (str/split @l "\t"))) 0) })))
+      DiskDu_DONE -> measuring when (and (= @payload.stage "du") (not (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (default (array/first (str/split @l "\t")) "")) null)))))
+        (set @entity.sizes (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l { path: (default (array/nth (str/split @l "\t") 1) ""), kb: (default (str/to-number (default (array/first (str/split @l "\t")) "")) 0) })))
         (set @entity.gcursor 0)
         (set @entity.groupKb [])
         (emit DISK_GROUP_NEXT { })
-      DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (> (array/len (object/get (array/nth @entity.groups @entity.gcursor) "paths")) 0))
-        (emit DISK_DU_RUN { stage: "grp", argv: (array/concat ["-sk", "--"] (object/get (array/nth @entity.groups @entity.gcursor) "paths")) })
-      DiskDu_DONE -> ready when (and (= @payload.stage "grp") (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (array/first (str/split @l "\t"))) null))))
+      DISK_GROUP_NEXT -> measuring when (and (< @entity.gcursor (array/len @entity.groups)) (> (array/len (object/get (default (array/nth @entity.groups @entity.gcursor) { id: "", paths: [] }) "paths")) 0))
+        (emit DISK_DU_RUN { stage: "grp", argv: (array/concat ["-sk", "--"] (object/get (default (array/nth @entity.groups @entity.gcursor) { id: "", paths: [] }) "paths")) })
+      DiskDu_DONE -> ready when (and (= @payload.stage "grp") (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (default (array/first (str/split @l "\t")) "")) null))))
         (emit DISK_ANSWERED { status: 500, body: "disk_du_unreadable: du answered a size that is not a number" })
-      DiskDu_DONE -> measuring when (and (= @payload.stage "grp") (not (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (array/first (str/split @l "\t"))) null)))))
-        (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (array/nth @entity.groups @entity.gcursor) "id"), kb: (array/sum (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (default (str/to-number (array/first (str/split @l "\t"))) 0)))), paths: (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (array/nth (str/split @l "\t") 1))) }))
+      DiskDu_DONE -> measuring when (and (= @payload.stage "grp") (not (array/some (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (= (str/to-number (default (array/first (str/split @l "\t")) "")) null)))))
+        (set @entity.groupKb (array/append @entity.groupKb { id: (object/get (default (array/nth @entity.groups @entity.gcursor) { id: "", paths: [] }) "id"), kb: (array/sum (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (default (str/to-number (default (array/first (str/split @l "\t")) "")) 0)))), paths: (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l (default (array/nth (str/split @l "\t") 1) ""))) }))
         (set @entity.gcursor (+ @entity.gcursor 1))
         (emit DISK_GROUP_NEXT { })
       DISK_GROUP_NEXT -> measuring when (>= @entity.gcursor (array/len @entity.groups))
@@ -281,12 +281,12 @@ orbital OrbDiskOrbital {
       DISK_BUILT -> ready when (and (not @entity.clearMode) @entity.json)
         (emit DISK_ANSWERED { status: 200, body: (json/stringify { kind: "report", df: { totalBytes: @entity.totalBytes, usedBytes: @entity.usedBytes, freeBytes: @entity.freeBytes, usePct: @entity.usePct }, items: (array/map (array/sort @entity.items "bytes" "desc") (fn r (object/merge (object/merge { id: (object/get @r "id"), label: (object/get @r "label"), category: (object/get @r "category") } (if (= (object/get @r "note") "") {} { note: (object/get @r "note") })) { batch: (object/get @r "batch"), clearable: (object/get @r "clearable"), danger: (object/get @r "danger"), sizeless: (object/get @r "sizeless"), bytes: (if (< (object/get @r "bytes") 0) null (object/get @r "bytes")) }))), scannedAt: @entity.scannedAt }) })
       DISK_BUILT -> ready when (and (not @entity.clearMode) (not @entity.json))
-        (emit DISK_ANSWERED { status: 200, body: (let ((t (array/map (array/concat [@entity.usedBytes, @entity.freeBytes, @entity.totalBytes, (array/sum (array/map (array/filter (array/sort @entity.items "bytes" "desc") (fn r (= (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) "safe"))) (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (array/map (array/sort @entity.items "bytes" "desc") (fn r (object/get @r "bytes")))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (str/concat "Disk: " (array/nth @t 0) " used, " (array/nth @t 1) " free of " (array/nth @t 2) " (" @entity.usePct "%)\n\n" (str/join (array/map (array/range 0 (array/len (array/sort @entity.items "bytes" "desc"))) (fn k (let ((r (array/nth (array/sort @entity.items "bytes" "desc") @k))) (str/concat (str/padStart (array/nth @t (+ 4 @k)) 7 " ") "  " (str/padEnd (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) 6 " ") "  " (str/padEnd (object/get @r "id") 28 " ") "  " (object/get @r "label"))))) "\n") "\n\nsafe batch: ~" (array/nth @t 3) "  →  " @config.command " --safe --yes\none item:   " @config.command " --clear <id> [--yes]")) })
+        (emit DISK_ANSWERED { status: 200, body: (let ((t (array/map (array/concat [@entity.usedBytes, @entity.freeBytes, @entity.totalBytes, (array/sum (array/map (array/filter (array/sort @entity.items "bytes" "desc") (fn r (= (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) "safe"))) (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (array/map (array/sort @entity.items "bytes" "desc") (fn r (object/get @r "bytes")))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (default (array/nth ["B", "K", "M", "G", "T"] @i) "")))))))))) (str/concat "Disk: " (default (array/nth @t 0) "") " used, " (default (array/nth @t 1) "") " free of " (default (array/nth @t 2) "") " (" @entity.usePct "%)\n\n" (str/join (array/map (array/range 0 (array/len (array/sort @entity.items "bytes" "desc"))) (fn k (let ((r (default (array/nth (array/sort @entity.items "bytes" "desc") @k) { id: "", label: "", category: "", note: "", batch: false, clearable: false, danger: false, sizeless: false, paths: [], walk: "", act: "", cmd: [], os: "", linuxPaths: [], abs: [], exist: [], bytes: 0 }))) (str/concat (str/padStart (default (array/nth @t (+ 4 @k)) "") 7 " ") "  " (str/padEnd (if (not (object/get @r "clearable")) "keep" (if (object/get @r "batch") "safe" (if (object/get @r "danger") "danger" "cost"))) 6 " ") "  " (str/padEnd (object/get @r "id") 28 " ") "  " (object/get @r "label"))))) "\n") "\n\nsafe batch: ~" (default (array/nth @t 3) "") "  →  " @config.command " --safe --yes\none item:   " @config.command " --clear <id> [--yes]")) })
       DISK_BUILT -> measuring when @entity.clearMode
         (set @entity.plan (array/map (array/filter @entity.items (fn it (and (object/get @it "clearable") (if @entity.safeMode (object/get @it "batch") (= (object/get @it "id") @entity.clearId))))) (fn it (let ((ex (object/get @it "exist"))) { id: (object/get @it "id"), act: (object/get @it "act"), note: (object/get @it "note"), cmd: (object/get @it "cmd"), bytes: (object/get @it "bytes"), dir: (if (> (array/len (object/get @it "abs")) 0) (array/first (object/get @it "abs")) ""), paths: @ex, safe: (array/filter @ex (fn p (and (not (str/includes @p "/../")) (not (str/includes @p "/./")) (or (and (str/startsWith @p (str/concat @entity.home "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ (str/len @entity.home) 1) (str/len @p)) "/") (fn s (!= @s "")))) 2)) (and (str/startsWith @p (str/concat "/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 4 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)) (and (str/startsWith @p (str/concat "/private/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 12 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)))))), unsafe: (array/reject @ex (fn p (and (not (str/includes @p "/../")) (not (str/includes @p "/./")) (or (and (str/startsWith @p (str/concat @entity.home "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ (str/len @entity.home) 1) (str/len @p)) "/") (fn s (!= @s "")))) 2)) (and (str/startsWith @p (str/concat "/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 4 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)) (and (str/startsWith @p (str/concat "/private/tmp" "/")) (>= (array/len (array/filter (str/split (str/slice @p (+ 12 1) (str/len @p)) "/") (fn s (!= @s "")))) 1)))))) }))))
         (emit DISK_PLANNED { })
       DISK_PLANNED -> measuring when (or (not @entity.json) (not @entity.yes))
-        (set @entity.listing (let ((t (array/map (array/map @entity.plan (fn r (object/get @r "bytes"))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (array/flatten (array/map (array/range 0 (array/len @entity.plan)) (fn k (let ((r (array/nth @entity.plan @k))) (array/concat [(str/concat (str/padStart (array/nth @t @k) 7 " ") "  " (object/get @r "id") (if (= (object/get @r "note") "") "" (str/concat "  — " (object/get @r "note"))))] (if (= (object/get @r "act") "rm") (array/map (object/get @r "paths") (fn p (str/concat "           " @p))) []))))))))
+        (set @entity.listing (let ((t (array/map (array/map @entity.plan (fn r (object/get @r "bytes"))) (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (default (array/nth ["B", "K", "M", "G", "T"] @i) "")))))))))) (array/flatten (array/map (array/range 0 (array/len @entity.plan)) (fn k (let ((r (default (array/nth @entity.plan @k) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }))) (array/concat [(str/concat (str/padStart (default (array/nth @t @k) "") 7 " ") "  " (object/get @r "id") (if (= (object/get @r "note") "") "" (str/concat "  — " (object/get @r "note"))))] (if (= (object/get @r "act") "rm") (array/map (object/get @r "paths") (fn p (str/concat "           " @p))) []))))))))
         (emit DISK_LISTED { })
       DISK_PLANNED -> measuring when (and @entity.json @entity.yes)
         (set @entity.listing [])
@@ -294,7 +294,7 @@ orbital OrbDiskOrbital {
       DISK_LISTED -> ready when (and (not @entity.yes) @entity.json)
         (emit DISK_ANSWERED { status: 200, body: (json/stringify { kind: "preview", bytes: (array/sum (array/map @entity.plan (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes"))))), targets: (array/map @entity.plan (fn r { id: (object/get @r "id"), bytes: (if (< (object/get @r "bytes") 0) null (object/get @r "bytes")), paths: (if (= (object/get @r "act") "rm") (object/get @r "paths") []) })) }) })
       DISK_LISTED -> ready when (and (not @entity.yes) (not @entity.json))
-        (emit DISK_ANSWERED { status: 200, body: (str/concat (str/join @entity.listing "\n") "\n\ndry run: ~" (array/first (array/map [(array/sum (array/map @entity.plan (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i))))))))) " would be cleared. Add --yes to clear.") })
+        (emit DISK_ANSWERED { status: 200, body: (str/concat (str/join @entity.listing "\n") "\n\ndry run: ~" (default (array/first (array/map [(array/sum (array/map @entity.plan (fn r (if (< (object/get @r "bytes") 0) 0 (object/get @r "bytes")))))] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (default (array/nth ["B", "K", "M", "G", "T"] @i) ""))))))))) "") " would be cleared. Add --yes to clear.") })
       DISK_LISTED -> clearing when @entity.yes
         (set @entity.cursor 0)
         (set @entity.logs [])
@@ -302,15 +302,15 @@ orbital OrbDiskOrbital {
         (set @entity.failed [])
         (emit DISK_CLEAR_NEXT { })
       DiskDf_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
       DiskDu_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
       DiskFind_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
       DiskId_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
       DiskDate_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
       DISK_HOST_FAILED -> ready
         (emit DISK_ANSWERED { status: 500, body: "disk_host_failed: HOME could not be read" })
     }
@@ -319,40 +319,40 @@ orbital OrbDiskOrbital {
       INIT -> clearing
       DISK_CLEAR_NEXT -> clearing when (>= @entity.cursor (array/len @entity.plan))
         (emit DISK_DF_RUN { stage: "df2", argv: @entity.dfArgs })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "rm"))
-        (set @entity.logs (array/concat @entity.logs [(str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))] (if (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "unsafe")) 0) [(str/concat "disk: refusing to remove unsafe paths: " (str/join (object/get (array/nth @entity.plan @entity.cursor) "unsafe") ", "))] [])))
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "rm"))
+        (set @entity.logs (array/concat @entity.logs [(str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))] (if (> (array/len (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "unsafe")) 0) [(str/concat "disk: refusing to remove unsafe paths: " (str/join (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "unsafe") ", "))] [])))
         (set @entity.rcursor 0)
         (emit DISK_RM_NEXT { })
-      DISK_RM_NEXT -> clearing when (< @entity.rcursor (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: rm -rf " (array/nth (object/get (array/nth @entity.plan @entity.cursor) "safe") @entity.rcursor))))
-        (emit DISK_RM_RUN { stage: "rm", argv: ["-rf", "--", (array/nth (object/get (array/nth @entity.plan @entity.cursor) "safe") @entity.rcursor)] })
-      DISK_RM_NEXT -> clearing when (>= @entity.rcursor (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")))
+      DISK_RM_NEXT -> clearing when (< @entity.rcursor (array/len (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe")))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: rm -rf " (default (array/nth (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe") @entity.rcursor) ""))))
+        (emit DISK_RM_RUN { stage: "rm", argv: ["-rf", "--", (default (array/nth (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe") @entity.rcursor) "")] })
+      DISK_RM_NEXT -> clearing when (>= @entity.rcursor (array/len (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe")))
         (emit DISK_TARGET_DONE { ok: true, error: "" })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "contents") (> (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
-        (emit DISK_FIND_RUN { stage: "clear", argv: [(array/first (object/get (array/nth @entity.plan @entity.cursor) "safe")), "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "--", "{}", "+"] })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "contents") (= (array/len (object/get (array/nth @entity.plan @entity.cursor) "safe")) 0))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "contents") (> (array/len (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe")) 0))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
+        (emit DISK_FIND_RUN { stage: "clear", argv: [(default (array/first (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe")) ""), "-mindepth", "1", "-maxdepth", "1", "-exec", "rm", "-rf", "--", "{}", "+"] })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "contents") (= (array/len (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe")) 0))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
         (emit DISK_TARGET_DONE { ok: true, error: "" })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "tree"))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "tree"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
         (emit DISK_FIND_RUN { stage: "clear", argv: [@entity.root, "-type", "d", "-name", "node_modules", "-prune", "-exec", "rm", "-rf", "--", "{}", "+"] })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "pnpm"))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
-        (emit DISK_PNPM_RUN { stage: "pnpm", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "brew"))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
-        (emit DISK_BREW_RUN { stage: "brew", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
-      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (array/nth @entity.plan @entity.cursor) "act") "cmd") (= (array/first (object/get (array/nth @entity.plan @entity.cursor) "cmd")) "xcrun"))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (array/nth @entity.plan @entity.cursor) "id"))))
-        (emit DISK_XCRUN_RUN { stage: "xcrun", argv: (array/drop (object/get (array/nth @entity.plan @entity.cursor) "cmd") 1) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "cmd") (= (default (array/first (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd")) "") "pnpm"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
+        (emit DISK_PNPM_RUN { stage: "pnpm", argv: (array/drop (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd") 1) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "cmd") (= (default (array/first (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd")) "") "brew"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
+        (emit DISK_BREW_RUN { stage: "brew", argv: (array/drop (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd") 1) })
+      DISK_CLEAR_NEXT -> clearing when (and (< @entity.cursor (array/len @entity.plan)) (= (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "act") "cmd") (= (default (array/first (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd")) "") "xcrun"))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clearing " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"))))
+        (emit DISK_XCRUN_RUN { stage: "xcrun", argv: (array/drop (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "cmd") 1) })
       DiskRm_DONE -> clearing when (= @payload.exitCode 0)
         (set @entity.rcursor (+ @entity.rcursor 1))
         (emit DISK_RM_NEXT { })
       DiskRm_DONE -> clearing when (!= @payload.exitCode 0)
-        (emit DISK_TARGET_DONE { ok: false, error: (str/concat "Command failed: rm -rf -- " (array/nth (object/get (array/nth @entity.plan @entity.cursor) "safe") @entity.rcursor) "\n" (str/trim @payload.stderr)) })
+        (emit DISK_TARGET_DONE { ok: false, error: (str/concat "Command failed: rm -rf -- " (default (array/nth (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "safe") @entity.rcursor) "") "\n" (str/trim @payload.stderr)) })
       DiskRm_FAILED -> clearing
-        (emit DISK_TARGET_DONE { ok: false, error: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_TARGET_DONE { ok: false, error: (str/concat @payload.code ": " (default @payload.error "")) })
       DiskFind_DONE -> clearing
         (emit DISK_TARGET_DONE { ok: true, error: "" })
       DiskFind_FAILED -> clearing
@@ -370,29 +370,29 @@ orbital OrbDiskOrbital {
       DiskXcrun_FAILED -> clearing
         (emit DISK_TARGET_DONE { ok: true, error: "" })
       DISK_TARGET_DONE -> clearing when @payload.ok
-        (set @entity.cleared (array/append @entity.cleared (object/get (array/nth @entity.plan @entity.cursor) "id")))
+        (set @entity.cleared (array/append @entity.cleared (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit DISK_CLEAR_NEXT { })
       DISK_TARGET_DONE -> clearing when (not @payload.ok)
-        (set @entity.failed (array/append @entity.failed { id: (object/get (array/nth @entity.plan @entity.cursor) "id"), error: @payload.error }))
-        (set @entity.logs (array/append @entity.logs (str/concat "disk: clear " (object/get (array/nth @entity.plan @entity.cursor) "id") " failed: " @payload.error)))
+        (set @entity.failed (array/append @entity.failed { id: (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id"), error: @payload.error }))
+        (set @entity.logs (array/append @entity.logs (str/concat "disk: clear " (object/get (default (array/nth @entity.plan @entity.cursor) { id: "", act: "", note: "", cmd: [], bytes: 0, dir: "", paths: [], safe: [], unsafe: [] }) "id") " failed: " (default @payload.error ""))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit DISK_CLEAR_NEXT { })
-      DiskDf_DONE -> ready when (let ((row (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))) (or (= (str/to-number (array/nth @row @entity.dfOff)) null) (= (str/to-number (array/nth @row (+ @entity.dfOff 1))) null) (= (str/to-number (array/nth @row (+ @entity.dfOff 2))) null) (= (str/to-number (str/replace (array/nth @row (+ @entity.dfOff 3)) "%" "")) null)))
+      DiskDf_DONE -> ready when (let ((row (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))) (or (= (str/to-number (default (array/nth @row @entity.dfOff) "")) null) (= (str/to-number (default (array/nth @row (+ @entity.dfOff 1)) "")) null) (= (str/to-number (default (array/nth @row (+ @entity.dfOff 2)) "")) null) (= (str/to-number (str/replace (default (array/nth @row (+ @entity.dfOff 3)) "") "%" "")) null)))
         (emit DISK_ANSWERED { status: 500, body: "disk_df_unreadable: df answered a size that is not a number" })
-      DiskDf_DONE -> clearing when (let ((row (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))) (and (!= (str/to-number (array/nth @row @entity.dfOff)) null) (!= (str/to-number (array/nth @row (+ @entity.dfOff 1))) null) (!= (str/to-number (array/nth @row (+ @entity.dfOff 2))) null) (!= (str/to-number (str/replace (array/nth @row (+ @entity.dfOff 3)) "%" "")) null)))
-        (set @entity.dfRow (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " "))
-        (set @entity.afterTotal (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow @entity.dfOff)) 0)))
-        (set @entity.afterUsed (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow (+ @entity.dfOff 1))) 0)))
-        (set @entity.afterFree (* @entity.dfMul (default (str/to-number (array/nth @entity.dfRow (+ @entity.dfOff 2))) 0)))
-        (set @entity.afterPct (default (str/to-number (str/replace (array/nth @entity.dfRow (+ @entity.dfOff 3)) "%" "")) 0))
+      DiskDf_DONE -> clearing when (let ((row (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))) (and (!= (str/to-number (default (array/nth @row @entity.dfOff) "")) null) (!= (str/to-number (default (array/nth @row (+ @entity.dfOff 1)) "")) null) (!= (str/to-number (default (array/nth @row (+ @entity.dfOff 2)) "")) null) (!= (str/to-number (str/replace (default (array/nth @row (+ @entity.dfOff 3)) "") "%" "")) null)))
+        (set @entity.dfRow (str/split (str/replace-pattern (str/trim (default (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) "")) "\\s+" " ") " "))
+        (set @entity.afterTotal (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow @entity.dfOff) "")) 0)))
+        (set @entity.afterUsed (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow (+ @entity.dfOff 1)) "")) 0)))
+        (set @entity.afterFree (* @entity.dfMul (default (str/to-number (default (array/nth @entity.dfRow (+ @entity.dfOff 2)) "")) 0)))
+        (set @entity.afterPct (default (str/to-number (str/replace (default (array/nth @entity.dfRow (+ @entity.dfOff 3)) "") "%" "")) 0))
         (emit DISK_FINISH { })
       DISK_FINISH -> ready when @entity.json
         (emit DISK_ANSWERED { status: (if (> (array/len @entity.failed) 0) 500 200), body: (json/stringify { kind: "cleared", cleared: @entity.cleared, failed: @entity.failed, freedBytes: (math/max 0 (- @entity.usedBytes @entity.afterUsed)), df: { totalBytes: @entity.afterTotal, usedBytes: @entity.afterUsed, freeBytes: @entity.afterFree, usePct: @entity.afterPct }, log: @entity.logs }) })
       DISK_FINISH -> ready when (not @entity.json)
-        (emit DISK_ANSWERED { status: (if (> (array/len @entity.failed) 0) 500 200), body: (let ((t (array/map [(math/max 0 (- @entity.usedBytes @entity.afterUsed)), @entity.afterFree] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i)))))))))) (str/concat (str/join (array/concat @entity.listing @entity.logs) "\n") "\n\nfreed " (array/nth @t 0) "; now " (array/nth @t 1) " free" (str/join (array/map @entity.failed (fn f (str/concat "\nfailed: " (object/get @f "id") ": " (object/get @f "error")))) ""))) })
+        (emit DISK_ANSWERED { status: (if (> (array/len @entity.failed) 0) 500 200), body: (let ((t (array/map [(math/max 0 (- @entity.usedBytes @entity.afterUsed)), @entity.afterFree] (fn b (if (< @b 0) "—" (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (if (= @i 0) @b (if (= @i 1) (/ @b 1024) (if (= @i 2) (/ @b 1048576) (if (= @i 3) (/ @b 1073741824) (/ @b 1099511627776))))))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (default (array/nth ["B", "K", "M", "G", "T"] @i) "")))))))))) (str/concat (str/join (array/concat @entity.listing @entity.logs) "\n") "\n\nfreed " (default (array/nth @t 0) "") "; now " (default (array/nth @t 1) "") " free" (str/join (array/map @entity.failed (fn f (str/concat "\nfailed: " (object/get @f "id") ": " (object/get @f "error")))) ""))) })
       DiskDf_FAILED -> ready
-        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " (default @payload.error "")) })
     }
 
     emits {
@@ -443,9 +443,6 @@ orbital OrbDiskOrbital {
         @tier "internal"
       DISK_HOST_FAILED { error : string }
         @description "Internal: HOME could not be read."
-        @tier "internal"
-      DISK_ARGS_UNREAD {  }
-        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       DISK_ARGS_PARSE {
         stage : string!

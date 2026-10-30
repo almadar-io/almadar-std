@@ -55,33 +55,274 @@
   },
   {
    "id": "hidden-row-omitted-for-the-requesting-viewer",
-   "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED",
-   "steps": [],
-   "note": "pending spec: {\"expected\": {\"rowIds\": [\"a1\", \"a2\"], \"status\": 200, \"total\": 2}, \"fixture\": {\"readPolicy\": \"(= (object/get @entity \\\"ownerId\\\") @user.id)\", \"rows\": [[\"a1\", \"alice\", \"open\"], [\"a2\", \"alice\", \"closed\"], [\"b1\", \"bob\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"body\": {\"ref\": {\"entityType\": \"Note\", \"ids\": [\"a1\", \"b1\", \"a2\"], \"query\": {}, \"total\": 3}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"viewer\": {\"id\": \"alice\", \"role\": \"member\"}}}"
+   "steps": [
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "key": "rows-1",
+      "result": {
+       "rows": [
+        {
+         "id": "a1",
+         "ownerId": "alice",
+         "status": "open"
+        },
+        {
+         "id": "a2",
+         "ownerId": "alice",
+         "status": "closed"
+        }
+       ],
+       "total": 2
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200,
+         "body": "eyJyb3dzIjpbeyJpZCI6ImExIiwib3duZXJJZCI6ImFsaWNlIiwic3RhdHVzIjoib3BlbiJ9LHsiaWQiOiJhMiIsIm93bmVySWQiOiJhbGljZSIsInN0YXR1cyI6ImNsb3NlZCJ9XSwidG90YWwiOjJ9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the atom answers 200 with the rows and total the host resolved for the viewer, unchanged: b1 (bob's) is not in the host's answer, so it is not in the body. Which rows a viewer may read is the kernel's @read resolver; its twins are Rust-shell host::runtime::tests::a_program_resolve_rows_answers_only_the_rows_the_named_viewer_may_read and the node host's program/resolve-rows test in external-input-dispatch.test.ts",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 1,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-1",
+      "responseHeaders": []
+     }
+    ]
+   }
   },
   {
    "id": "control-policy-free-entity-keeps-reference-order",
-   "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED",
-   "steps": [],
-   "note": "pending spec: {\"expected\": {\"rowIds\": [\"b1\", \"a1\", \"a2\"], \"status\": 200, \"total\": 3}, \"fixture\": {\"rows\": [[\"a1\", \"alice\", \"open\"], [\"a2\", \"alice\", \"closed\"], [\"b1\", \"bob\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"body\": {\"ref\": {\"entityType\": \"Note\", \"ids\": [\"b1\", \"a1\", \"a2\"], \"query\": {}, \"total\": 3}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"viewer\": {\"id\": \"alice\", \"role\": \"member\"}}}"
+   "steps": [
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "key": "rows-1",
+      "result": {
+       "rows": [
+        {
+         "id": "b1",
+         "ownerId": "bob",
+         "status": "open"
+        },
+        {
+         "id": "a1",
+         "ownerId": "alice",
+         "status": "open"
+        },
+        {
+         "id": "a2",
+         "ownerId": "alice",
+         "status": "closed"
+        }
+       ],
+       "total": 3
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200,
+         "body": "eyJyb3dzIjpbeyJpZCI6ImIxIiwib3duZXJJZCI6ImJvYiIsInN0YXR1cyI6Im9wZW4ifSx7ImlkIjoiYTEiLCJvd25lcklkIjoiYWxpY2UiLCJzdGF0dXMiOiJvcGVuIn0seyJpZCI6ImEyIiwib3duZXJJZCI6ImFsaWNlIiwic3RhdHVzIjoiY2xvc2VkIn1dLCJ0b3RhbCI6M30="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "control: a policy-free entity answers every row in the reference's order; the atom neither sorts nor filters the host's answer",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 1,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-1",
+      "responseHeaders": []
+     }
+    ]
+   }
   },
   {
    "id": "deleted-row-omitted-and-total-follows-the-store",
-   "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED",
-   "steps": [],
-   "note": "pending spec: {\"expected\": {\"rowIds\": [\"a1\"], \"status\": 200, \"total\": 2}, \"fixture\": {\"rows\": [[\"a1\", \"alice\", \"open\"], [\"a2\", \"alice\", \"closed\"], [\"b1\", \"bob\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"beforeRequest\": \"delete Note a2\", \"body\": {\"ref\": {\"entityType\": \"Note\", \"ids\": [\"a1\", \"a2\"], \"query\": {}, \"total\": 3}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"viewer\": {\"id\": \"alice\", \"role\": \"member\"}}}"
+   "steps": [
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "key": "rows-1",
+      "result": {
+       "rows": [
+        {
+         "id": "a1",
+         "ownerId": "alice",
+         "status": "open"
+        }
+       ],
+       "total": 2
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200,
+         "body": "eyJyb3dzIjpbeyJpZCI6ImExIiwib3duZXJJZCI6ImFsaWNlIiwic3RhdHVzIjoib3BlbiJ9XSwidG90YWwiOjJ9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the host's answer omits the deleted a2 and re-counts total from the store (2, bob's b1 included); the atom answers exactly that and does not recompute total from the rows",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 1,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-1",
+      "responseHeaders": []
+     }
+    ]
+   }
   },
   {
    "id": "malformed-reference-is-a-client-error",
-   "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED",
-   "steps": [],
-   "note": "pending spec: {\"expected\": {\"notAnEmptyPage\": true, \"statusClass\": \"4xx\"}, \"fixture\": {\"rows\": [[\"a1\", \"alice\", \"open\"], [\"a2\", \"alice\", \"closed\"], [\"b1\", \"bob\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"body\": {\"ref\": {\"entityType\": \"Note\"}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"viewer\": null}}"
+   "steps": [
+    {
+     "event": "ROWS_FAILED",
+     "payload": {
+      "key": "rows-1",
+      "error": "program/resolve-rows: not a row-set reference: missing field ids",
+      "errors": [
+       {
+        "code": "INVALID_REQUEST",
+        "status": 400
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 400,
+         "body": "eyJlcnJvciI6InByb2dyYW0vcmVzb2x2ZS1yb3dzOiBub3QgYSByb3ctc2V0IHJlZmVyZW5jZTogbWlzc2luZyBmaWVsZCBpZHMiLCJjb2RlIjoiSU5WQUxJRF9SRVFVRVNUIn0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "a host that refuses the reference's shape names it INVALID_REQUEST 400 in errors, as the dispatch route reads it; the atom answers that status and code, not an empty page. A failure naming no status stays 500 RESOLVE_ROWS_ERROR (resolve-rows-without-a-substrate-host-answers-500)",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 1,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-1",
+      "responseHeaders": []
+     }
+    ]
+   }
   },
   {
    "id": "slow-resolve-does-not-stall-another-request",
-   "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED; also needs concurrent in-flight requests answered out of order (requestId correlation)",
-   "steps": [],
-   "note": "pending spec: {\"expected\": {\"answerOrder\": [2, 1], \"responses\": [{\"requestId\": 2, \"status\": 200}, {\"requestId\": 1, \"rowIds\": [\"a1\"], \"status\": 200}]}, \"fixture\": {\"rows\": [[\"a1\", \"alice\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"concurrent\": [{\"body\": {\"ref\": {\"entityType\": \"Note\", \"ids\": [\"a1\"], \"query\": {}, \"total\": 3}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"requestId\": 1, \"storeReadDelayMs\": 400}, {\"method\": \"GET\", \"path\": \"/api/orbitals/inputs\", \"requestId\": 2}]}}"
+   "steps": [
+    {
+     "event": "INPUTS_ANSWERED",
+     "payload": {
+      "result": {
+       "inputs": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 2,
+         "status": 200
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROWS_ANSWERED",
+     "payload": {
+      "key": "rows-1",
+      "result": {
+       "rows": [
+        {
+         "id": "a1",
+         "ownerId": "alice",
+         "status": "open"
+        }
+       ],
+       "total": 1
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 200,
+         "body": "eyJyb3dzIjpbeyJpZCI6ImExIiwib3duZXJJZCI6ImFsaWNlIiwic3RhdHVzIjoib3BlbiJ9XSwidG90YWwiOjF9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "request 1's resolve is still in flight (keyed rows-1, no inflight slot held) when request 2 is answered; ROWS_ANSWERED then answers request 1 by its key, so answers come out of arrival order (2, 1)",
+   "entity": {
+    "inflight": 2,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 1,
+      "kind": "resolve-rows",
+      "dispatchKey": "rows-1",
+      "responseHeaders": []
+     },
+     {
+      "requestId": 2,
+      "kind": "inputs-list",
+      "responseHeaders": []
+     }
+    ]
+   }
   },
   {
    "id": "resolve-rows-body-without-a-ref-answers-400",

@@ -198,6 +198,92 @@
      }
     }
    ]
+  },
+  {
+   "id": "the-servers-viewer-resolver-carries-the-token-role",
+   "note": "S1: a verified bearer reaches dispatch through ServerViewer (std-viewer, viewerSource none by default), which reads a `role` claim into the viewer.",
+   "steps": [
+    {
+     "trait": "ServerViewer",
+     "event": "VIEWER_RESOLVE",
+     "from": "idle",
+     "payload": {
+      "requestId": 3,
+      "verified": {
+       "uid": "u1",
+       "claims": [
+        {
+         "name": "role",
+         "value": "learner"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 3,
+         "viewer": {
+          "id": "u1",
+          "email": null,
+          "name": null,
+          "role": "learner",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "role",
+            "value": "learner"
+           },
+           {
+            "name": "uid",
+            "value": "u1"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ServerBearer"
+   ]
+  },
+  {
+   "id": "control-a-token-without-a-role-claim-resolves-without-a-role",
+   "note": "S1 control: no role claim, no role.",
+   "steps": [
+    {
+     "trait": "ServerViewer",
+     "event": "VIEWER_RESOLVE",
+     "from": "idle",
+     "payload": {
+      "requestId": 4,
+      "verified": {
+       "uid": "u2",
+       "claims": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 4
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ServerBearer"
+   ]
   }
  ]
 }

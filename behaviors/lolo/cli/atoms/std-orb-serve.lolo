@@ -48,11 +48,11 @@ orbital OrbServeOrbital {
 
     state ready {
       INIT -> ready
-      SERVE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      SERVE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit SERVE_ANSWERED { status: 400, body: "", stderr: "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]" })
-      SERVE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.path (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit SERVE_ARGS_PARSE { stage: "serve" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "client-dir" aliases: [] takesValue: true repeatable: false }, { name: "no-mock" aliases: [] takesValue: false repeatable: false }, { name: "open" aliases: [] takesValue: false repeatable: false }, { name: "no-emulators" aliases: [] takesValue: false repeatable: false }] })
+      SERVE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.path (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit SERVE_ARGS_PARSE { stage: "serve" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "client-dir" aliases: [] takesValue: true repeatable: false }, { name: "no-mock" aliases: [] takesValue: false repeatable: false }, { name: "open" aliases: [] takesValue: false repeatable: false }, { name: "no-emulators" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -62,18 +62,18 @@ orbital OrbServeOrbital {
       SERVE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
         (emit SERVE_START {
           cwd: @entity.path
-          path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.path (array/first @payload.positionals)))
-          portText: (array/first (default (object/get @payload.flags "port") ["3030"]))
-          portOk: (and (>= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (default (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"])))))
-          host: (array/first (default (object/get @payload.flags "host") ["127.0.0.1"]))
-          hasClient: (!= (object/get @payload.flags "client-dir") null)
-          clientDir: (if (== (object/get @payload.flags "client-dir") null) "" (if (os/path-is-absolute (array/first (object/get @payload.flags "client-dir"))) (array/first (object/get @payload.flags "client-dir")) (os/path-join @entity.path (array/first (object/get @payload.flags "client-dir")))))
-          clientGiven: (array/first (default (object/get @payload.flags "client-dir") [""]))
-          clientInside: (if (== (object/get @payload.flags "client-dir") null) true (str/startsWith (if (os/path-is-absolute (array/first (object/get @payload.flags "client-dir"))) (array/first (object/get @payload.flags "client-dir")) (os/path-join @entity.path (array/first (object/get @payload.flags "client-dir")))) (str/concat @entity.path "/")))
-          mock: (== (object/get @payload.flags "no-mock") null)
-          open: (!= (object/get @payload.flags "open") null)
-          noEmulators: (!= (object/get @payload.flags "no-emulators") null)
-          flagged: (or (!= (object/get @payload.flags "port") null) (!= (object/get @payload.flags "host") null) (!= (object/get @payload.flags "client-dir") null))
+          path: (if (os/path-is-absolute (default (array/first @payload.positionals) "")) (default (array/first @payload.positionals) "") (os/path-join @entity.path (default (array/first @payload.positionals) "")))
+          portText: (default (array/first (default (object/get @payload.flags "port") ["3030"])) "")
+          portOk: (and (!= (str/to-number (default (array/first (default (object/get @payload.flags "port") ["3030"])) "")) null) (>= (str/to-number (default (array/first (default (object/get @payload.flags "port") ["3030"])) "")) 0) (<= (str/to-number (default (array/first (default (object/get @payload.flags "port") ["3030"])) "")) 65535) (= (str/to-int (default (array/first (default (object/get @payload.flags "port") ["3030"])) "")) (str/to-number (default (array/first (default (object/get @payload.flags "port") ["3030"])) ""))))
+          host: (default (array/first (default (object/get @payload.flags "host") ["127.0.0.1"])) "")
+          hasClient: (object/has @payload.flags "client-dir")
+          clientDir: (if (not (object/has @payload.flags "client-dir")) "" (if (os/path-is-absolute (default (array/first (object/get @payload.flags "client-dir")) "")) (default (array/first (object/get @payload.flags "client-dir")) "") (os/path-join @entity.path (default (array/first (object/get @payload.flags "client-dir")) ""))))
+          clientGiven: (default (array/first (default (object/get @payload.flags "client-dir") [""])) "")
+          clientInside: (if (not (object/has @payload.flags "client-dir")) true (str/startsWith (if (os/path-is-absolute (default (array/first (object/get @payload.flags "client-dir")) "")) (default (array/first (object/get @payload.flags "client-dir")) "") (os/path-join @entity.path (default (array/first (object/get @payload.flags "client-dir")) ""))) (str/concat @entity.path "/")))
+          mock: (not (object/has @payload.flags "no-mock"))
+          open: (object/has @payload.flags "open")
+          noEmulators: (object/has @payload.flags "no-emulators")
+          flagged: (or (object/has @payload.flags "port") (object/has @payload.flags "host") (object/has @payload.flags "client-dir"))
         })
     }
 
@@ -158,7 +158,7 @@ orbital OrbServeOrbital {
       SERVE_START -> homing when (and (not @payload.open) (not @payload.noEmulators) @payload.portOk @payload.clientInside)
         (set @entity.path @payload.path)
         (set @entity.host @payload.host)
-        (set @entity.port (str/to-number @payload.portText))
+        (set @entity.port (default (str/to-number @payload.portText) 0))
         (set @entity.hasClient @payload.hasClient)
         (set @entity.rel (if @payload.hasClient (str/slice @payload.clientDir (+ (str/len @payload.cwd) 1) (str/len @payload.clientDir)) ""))
         (set @entity.mock @payload.mock)
@@ -170,7 +170,7 @@ orbital OrbServeOrbital {
     state homing {
       INIT -> homing
       SERVE_REFUSED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       SERVE_HOME -> idle when (= @payload.value "")
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: HOME is not set; orb serve writes the resolved app under ~/.almadar/serve" })
       SERVE_HOME -> making when (!= @payload.value "")
@@ -183,7 +183,7 @@ orbital OrbServeOrbital {
     state making {
       INIT -> making
       SERVE_DIR_FAILED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb serve could not create ~/.almadar/serve: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb serve could not create ~/.almadar/serve: " (default @payload.error "")) })
       SERVE_DIR -> reading
         (program/read "" { resolve: true path: @entity.path output: @entity.out text: false } { key: "app" emit: { success: SERVE_APP_READ, failure: SERVE_REFUSED } })
     }
@@ -191,26 +191,26 @@ orbital OrbServeOrbital {
     state reading {
       INIT -> reading
       SERVE_REFUSED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       SERVE_APP_READ -> idle when (= (default (object/get (object/get @payload.result "program") "name") "") "")
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: the program to serve names no app" })
       SERVE_APP_READ -> idle when (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) @entity.flagged)
-        (emit SERVE_ANSWERED { status: 400, body: "", stderr: (str/concat "Error: " (object/get (object/get @payload.result "program") "name") " declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir") })
+        (emit SERVE_ANSWERED { status: 400, body: "", stderr: (str/concat "Error: " (default (object/get (object/get @payload.result "program") "name") "") " declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir") })
       SERVE_APP_READ -> idle when (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) (not @entity.flagged))
-        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
-        (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (object/get (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) "name"), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
+        (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (let ((so (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (if (= @so null) "" (object/get @so "name"))), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
       SERVE_APP_READ -> writing when (and (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) @entity.hasClient)
-        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
         (emit SERVE_WRITE_SERVER { })
       SERVE_APP_READ -> writing when (and (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (not @entity.hasClient))
-        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.appName (default (object/get (object/get @payload.result "program") "name") ""))
         (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
-        (set @entity.rel (str/concat ".orbital/serve/" (object/get (object/get @payload.result "program") "name") "/web-client"))
+        (set @entity.rel (str/concat ".orbital/serve/" @entity.appName "/web-client"))
         (set @entity.hasClient true)
         (set @entity.prepare true)
         (emit SERVE_WRITE_SERVER { })
@@ -233,7 +233,7 @@ orbital OrbServeOrbital {
     state resolving {
       INIT -> resolving
       SERVE_REFUSED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       SERVE_SERVER_WRITTEN -> resolving
         (program/read "" { resolve: true path: @entity.serverPath } { key: "server" emit: { success: SERVE_SERVER_READ, failure: SERVE_REFUSED } })
       SERVE_SERVER_READ -> resolving

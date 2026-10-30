@@ -1,0 +1,22 @@
+app orb-circuit-spec [
+  version: "1.0.0",
+  description: "Design contract for the AVL circuit tree builder. CIRCUIT_BUILD { requestId, expr, path, types } answers CIRCUIT_BUILT { requestId, root }: the data a renderer paints to show how nested operators feed each other. expr is one lowered guard or effect (IrExpr), path is its root path (orbitals[i].traits[j].stateMachine.transitions[k].guard or .effects[m], the scheme of ir-calls), types maps a node path to its type text (may be empty). Every node is { path, kind, label, form, type, names, children }. A call is a list whose first element is a string: label is the operator, form is the operator's visual form read from the installed @almadar/std operator table (orbLanguage.operators, loaded once), and an operator absent from the table is the explicit form `unknown`. Child paths follow ir-calls: .do[i-1] under do, .then and .else under if, .then[i-2] under when, .body[i-2] under let, .key under a map, a bare [i] under any other list. A let (form scope) names its bound names in order in names and has each bound value then the body as children; a bound value sits at [1][i][1]. An fn is a lambda: names are its parameters and its children are its body forms (index 2 onward). A string starting with @ is a binding (the lowering's own rule for the IR), any other scalar is a literal whose label is its JSON text. A list that is not a call is an array (label [...]) and a map is an object (label {...}) whose names are its member keys, parallel to children. type is types[path] when present. An expression that is absent or a table that cannot be loaded answers CIRCUIT_FAILED { requestId, reason }; a request that arrives while the table loads is refused with CIRCUIT_FAILED, never dropped. Replay goldens: orb-circuit.replay.goldens.json."
+]
+
+type IrExpr = string | number | boolean | [IrExpr?] | Map string IrExpr?
+type CircuitKind = "call" | "binding" | "literal" | "object" | "array" | "lambda"
+type CircuitNode = { path : string!, kind : CircuitKind!, label : string!, form : string?, type : string?, names : [string]!, children : [CircuitNode]! }
+
+orbital OrbCircuitSpec {
+  expects trait OrbCircuit {
+    state idle
+    state std
+    state operators
+    state ready
+    emits {
+      CIRCUIT_BUILT { requestId : string!  root : CircuitNode! }
+      CIRCUIT_FAILED { requestId : string!  reason : string! }
+    }
+  }
+  expects page boot -> OrbCircuit
+}

@@ -21,7 +21,7 @@ orbital Sha256Orbital {
         (emit SHA256_REFUSED { requestId: (default ?requestId ""), reason: "encoding" })
       SHA256_DIGEST -> idle when (array/includes ["hex", "base64"] ?encoding)
         (set @entity.requestId (default ?requestId ""))
-        (set @entity.digest (hash/sha256 ?data ?encoding "bytes"))
+        (set @entity.digest (default (hash/sha256 ?data ?encoding "bytes") ""))
         (emit SHA256_DIGESTED { requestId: (default ?requestId ""), digest: @entity.digest })
     }
 

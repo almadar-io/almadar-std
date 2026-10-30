@@ -30,11 +30,11 @@ orbital OrbLowerOrbital {
 
     state ready {
       INIT -> ready
-      LOWER_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LOWER_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit LOWER_ANSWERED { status: 500, body: "", stderr: "Error: orb lower: the command arguments could not be read" })
-      LOWER_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+      LOWER_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [] })
     }
 
     state parsing {
@@ -114,18 +114,18 @@ orbital OrbLowerOrbital {
       INIT -> reading
       LOWER_NEXT -> idle when (>= @entity.cursor (array/len @entity.files))
         (emit LOWER_ANSWERED { status: 200, body: (str/join @entity.lines "\n") })
-      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (not (os/path-is-absolute (array/nth @entity.files @entity.cursor))))
-        (os/read-file { anchor: "cwd" path: (array/nth @entity.files @entity.cursor) } { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
-      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (os/path-is-absolute (array/nth @entity.files @entity.cursor)))
-        (os/read-file (str/concat "/" (str/slice (array/nth @entity.files @entity.cursor) 1 (str/len (array/nth @entity.files @entity.cursor)))) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (not (os/path-is-absolute (default (array/nth @entity.files @entity.cursor) ""))))
+        (os/read-file { anchor: "cwd" path: (default (array/nth @entity.files @entity.cursor) "") } { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (os/path-is-absolute (default (array/nth @entity.files @entity.cursor) "")))
+        (os/read-file (str/concat "/" (str/slice (default (array/nth @entity.files @entity.cursor) "") 1 (str/len (default (array/nth @entity.files @entity.cursor) "")))) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
       LOWER_FILE -> reading
         (program/read (bytes/to-string @payload.data) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_LOWERED, failure: LOWER_UNREAD } })
       LOWER_LOWERED -> reading
-        (set @entity.lines (array/append @entity.lines (json/stringify { path: (array/nth @entity.files @entity.cursor), orb: @payload.result })))
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (array/nth @entity.files @entity.cursor) ""), orb: @payload.result })))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LOWER_NEXT { })
       LOWER_UNREAD -> reading
-        (set @entity.lines (array/append @entity.lines (json/stringify { path: (array/nth @entity.files @entity.cursor), error: @payload.error })))
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (array/nth @entity.files @entity.cursor) ""), error: @payload.error })))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LOWER_NEXT { })
     }

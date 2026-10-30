@@ -18,8 +18,10 @@ orbital FileUploadOrbital {
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.formTrait}
         </Stack>)
-      UPLOAD -> uploading
-        (emit STORAGE_UPLOAD { bucket: @config.bucket, acl: @config.acl, file: (array/nth ?files 0), maxSize: @config.maxSize })
+      UPLOAD -> ready when (== (array/len ?files) 0)
+        (notify error @config.failedMessage)
+      UPLOAD -> uploading when (> (array/len ?files) 0)
+        (emit STORAGE_UPLOAD { bucket: @config.bucket, acl: @config.acl, file: (array/first ?files), maxSize: @config.maxSize })
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.uploadingTrait}
         </Stack>)

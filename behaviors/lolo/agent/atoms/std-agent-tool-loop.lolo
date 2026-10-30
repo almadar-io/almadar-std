@@ -6,6 +6,7 @@ app std-agent-tool-loop [
 
 type AgentToolScope = {
   scope : "declared"!
+  roles : [string]!
   fireAndForget : boolean
 }
 type AgentToolField = {
@@ -18,15 +19,18 @@ type AgentToolField = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
+  roles : [string]!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentToolInputData = {
   event : string!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
@@ -227,8 +231,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live (not @config.quiet))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
-        (set @entity.turnTools @config.tools)
-        (program/inputs { select: (array/filter @config.tools (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+        (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (if (= @user null) [] (array/filter @all (fn t (array/includes @t.roles (default @user.role "")))))))
+        (program/inputs { select: (let ((all : [AgentTool] @config.tools)) (if (= @user null) [] (array/filter @all (fn t (and (object/has @t event) (array/includes @t.roles (default @user.role ""))))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       CONVERSE -> preparing when ?ephemeral
         (set @entity.status thinking)
         (set @entity.ephemeral true)
@@ -236,8 +240,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live false)
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
-        (set @entity.turnTools (object/get ? tools []))
-        (program/inputs { select: (array/filter (object/get ? tools []) (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+        (set @entity.turnTools (if (= @user null) [] (array/filter (object/get ? tools []) (fn t (array/includes @t.roles (default @user.role ""))))))
+        (program/inputs { select: (if (= @user null) [] (array/filter (object/get ? tools []) (fn t (and (object/has @t event) (array/includes @t.roles (default @user.role "")))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
     }
 
     state preparing {

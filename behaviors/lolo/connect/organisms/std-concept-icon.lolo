@@ -76,7 +76,7 @@ orbital ConceptIconOrbital {
       CONCEPT_ICON -> searching
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
       CONCEPT_ICON_SEARCHED -> bodying when (> (array/len ?icons) 0)
-        (set @entity.iconId (array/first ?icons))
+        (set @entity.iconId (default (array/first ?icons) ""))
         (emit ICONIFY_GET_ICON_BODY { iconId: (array/first ?icons) })
       CONCEPT_ICON_SEARCHED -> storing when (= (array/len ?icons) 0)
         (set @entity.resultIcon "")
@@ -96,7 +96,7 @@ orbital ConceptIconOrbital {
         (persist create ConceptIconCache { id: @entity.key, label: @entity.term, fetchedAt: @now } {
           emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
         })
-      CONCEPT_ICON_BODIED -> storing when (!= ?body null)
+      CONCEPT_ICON_BODIED -> storing when (not (= ?body null))
         (set @entity.resultIcon @entity.iconId)
         (set @entity.fills (array/filter (array/drop (str/split ?body "#") 1) (fn s
           (and (>= (str/len @s) 6)

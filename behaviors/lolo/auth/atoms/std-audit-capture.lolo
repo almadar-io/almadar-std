@@ -3,7 +3,7 @@ app std-audit-capture [
   description: "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind, or on the delivered event's own name when the payload carries no kind (empty = capture all). Every entry also records where the change came from — the delivering event, the behavior and module that emitted it, and the scheduled job when a tick caused it — with no change to the upstream emitter. Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait."
 ]
 orbital AuditCaptureOrbital {
-    type EntityMutated = Event { data : @entity @config.captureEntity } "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
+    type EntityMutated = Event { data : @entity @config.captureEntity! } "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
 
     type AuditRecorded = Event { actor : string, action : string, entityType : string, entityId : string, recordedAt : number, sourceEvent : string, sourceTrait : string, sourceOrbital : string, sourceTick : string } "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
 
@@ -29,7 +29,7 @@ orbital AuditCaptureOrbital {
 
     state idle {
       EntityMutated -> idle when @config.enabled
-        (when (or (= (array/len @config.captureEventTypes) 0) (array/includes @config.captureEventTypes (object/get ?data kind @event.event))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
+        (when (and (validate/required ?data) (or (= (array/len @config.captureEventTypes) 0) (array/includes @config.captureEventTypes (object/get ?data kind @event.event)))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
           action: @entity.action
           actor: @user.id
           after: @entity.after
@@ -70,7 +70,7 @@ orbital AuditCaptureOrbital {
 
     listens {
       EntityMutated {
-        data : @entity @config.captureEntity
+        data : @entity @config.captureEntity!
       }
     }
 

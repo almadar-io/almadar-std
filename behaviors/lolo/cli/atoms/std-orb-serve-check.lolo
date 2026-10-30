@@ -80,9 +80,11 @@ orbital OrbServeCheckOrbital {
 
     state ready {
       INIT -> ready
-      SC_CALLED -> parsing
-        (set @entity.invokeCwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit SC_ARGS_UNREAD { }) (emit SC_ARGS_PARSE { stage: "serve-check" argv: @argv flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })))
+      SC_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit SC_ARGS_UNREAD { })
+      SC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.invokeCwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit SC_ARGS_PARSE { stage: "serve-check" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -92,9 +94,9 @@ orbital OrbServeCheckOrbital {
       SC_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1)))
         (emit SERVE_CHECK_ANSWERED { status: 400, body: "usage: orb serve-check PROGRAM [--port N] [--cwd DIR]" })
       SC_ARGS_DONE -> starting when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (set @entity.program (array/first @payload.positionals))
-        (set @entity.workDir (if (> (array/len (default (object/get @payload.flags "cwd") [])) 0) (array/first (object/get @payload.flags "cwd")) (str/concat @entity.invokeCwd "/packages/almadar-std")))
-        (set @entity.port (if (> (array/len (default (object/get @payload.flags "port") [])) 0) (array/first (object/get @payload.flags "port")) ""))
+        (set @entity.program (default (array/first @payload.positionals) ""))
+        (set @entity.workDir (if (> (array/len (default (object/get @payload.flags "cwd") [])) 0) (default (array/first (default (object/get @payload.flags "cwd") [])) "") (str/concat @entity.invokeCwd "/packages/almadar-std")))
+        (set @entity.port (if (> (array/len (default (object/get @payload.flags "port") [])) 0) (default (array/first (default (object/get @payload.flags "port") [])) "") ""))
         (set @entity.report "")
         (set @entity.failed false)
         (os/getenv "ORB_BIN" { key: "orbbin" emit: { success: SC_ORBBIN, failure: SC_HOST_FAILED } })
@@ -119,15 +121,15 @@ orbital OrbServeCheckOrbital {
         (set @entity.base (str/concat "http://127.0.0.1:" @entity.port))
         (emit SC_SH_RUN { stage: "start" argv: ["-c", "W=$(mktemp -d); cd \"$1\" || exit 1; ORB_NO_AUTO_SETUP=1 NODE_ENV=development nohup \"$2\" serve \"$3\" --port \"$4\" --no-mock --no-emulators >\"$W/serve.log\" 2>&1 </dev/null & echo \"$! $W\"", "sh", @entity.workDir, @entity.orbBin, @entity.program, @entity.port] })
       SC_SH_DONE -> polling when (and (= @payload.stage "start") (= @payload.exitCode 0))
-        (set @entity.pid (array/first (str/split (str/trim @payload.stdout) " ")))
-        (set @entity.tmp (array/nth (str/split (str/trim @payload.stdout) " ") 1))
+        (set @entity.pid (default (array/first (str/split (str/trim @payload.stdout) " ")) ""))
+        (set @entity.tmp (default (array/nth (str/split (str/trim @payload.stdout) " ") 1) ""))
         (emit SC_CURL_RUN { stage: "health" argv: ["-sf", "--retry", "119", "--retry-all-errors", "--retry-delay", "1", (str/concat @entity.base "/api/health")] })
       SC_SH_DONE -> ready when (and (= @payload.stage "start") (!= @payload.exitCode 0))
         (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  orb serve did not start: " (str/trim @payload.stderr)) })
       SC_SH_FAILED -> ready
-        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  " @payload.error) })
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  " (default @payload.error "")) })
       SC_PY_FAILED -> ready
-        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  no free port: " @payload.error) })
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  no free port: " (default @payload.error "")) })
     }
 
     state polling {
@@ -139,7 +141,7 @@ orbital OrbServeCheckOrbital {
       SC_CURL_DONE -> checking when (and (= @payload.stage "health") (= @payload.exitCode 0))
         (emit SC_LSOF_RUN { stage: "lsof" argv: ["-nP", (str/concat "-iTCP:" @entity.port), "-sTCP:LISTEN"] })
       SC_CURL_FAILED -> finishing
-        (set @entity.report (str/concat "FAIL  curl: " @payload.error))
+        (set @entity.report (str/concat "FAIL  curl: " (default @payload.error "")))
         (set @entity.failed true)
         (emit SC_FINISH { })
     }
@@ -174,11 +176,11 @@ orbital OrbServeCheckOrbital {
         (set @entity.report (str/concat @entity.report "FAIL  the wasm kernel is served by orb serve\n"))
         (set @entity.failed true)
         (emit SC_CURL_RUN { stage: "mint" argv: ["-s", "-X", "POST", "-w", "\n%{http_code}", (str/concat @entity.base "/api/events/ticket")] })
-      SC_CURL_DONE -> checking when (and (= @payload.stage "mint") (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))
+      SC_CURL_DONE -> checking when (and (= @payload.stage "mint") (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (!= (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) null) (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))
         (set @entity.report (str/concat @entity.report "PASS  a stream ticket is minted\n"))
-        (set @entity.ticket (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket"))
+        (set @entity.ticket (default (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))
         (emit SC_CURL_RUN { stage: "spend" argv: ["-s", "-m", "2", "-o", "/dev/null", (str/concat @entity.base "/api/events?clientId=spend&ticket=" @entity.ticket)] })
-      SC_CURL_DONE -> finishing when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (json/valid (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4))) (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))))
+      SC_CURL_DONE -> finishing when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (str/endsWith @payload.stdout "\n200") (json/valid (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4))) (!= (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) null) (!= (object/get (json/parse (str/slice @payload.stdout 0 (- (str/len @payload.stdout) 4)) TicketReply) "ticket") ""))))
         (set @entity.report (str/concat @entity.report "FAIL  a stream ticket is minted\nFAIL  a spent ticket is refused\n"))
         (set @entity.failed true)
         (emit SC_FINISH { })
@@ -207,7 +209,7 @@ orbital OrbServeCheckOrbital {
         (set @entity.report (str/concat @entity.report "--- serve.log\n" @payload.stdout))
         (emit SC_SH_RUN { stage: "stop" argv: ["-c", "kill \"$1\" 2>/dev/null; rm -rf \"$2\"", "sh", @entity.pid, @entity.tmp] })
       SC_SH_FAILED -> ready
-        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/trim (str/concat @entity.report "\nFAIL  " @payload.error)) })
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/trim (str/concat @entity.report "\nFAIL  " (default @payload.error ""))) })
       SC_SH_DONE -> ready when (and (= @payload.stage "stop") @entity.failed)
         (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/trim @entity.report) })
       SC_SH_DONE -> ready when (and (= @payload.stage "stop") (not @entity.failed))

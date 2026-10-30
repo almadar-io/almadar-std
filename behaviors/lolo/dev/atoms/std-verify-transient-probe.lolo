@@ -40,7 +40,7 @@ orbital VerifyTransientProbeOrbital {
                         (if (or (= (array/len @fails) 0) (<= (array/len @closureFrom) 1)) { outcome: "not-transient" }
                         (if (= @enter null) { outcome: "finding", finding: "no-entering-persist" }
                           (let ((eff (array/find (object/get @enter "effects" []) (fn e (and (= (object/get @e "op") "persist") (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))
-                            { outcome: "entering", entering: { from: (object/get @enter "from"), event: (object/get @enter "event"), to: (object/get @enter "to"), entity: (object/get @eff "entity" ""), operation: (object/get @eff "kind" ""), acceptStates: (if (> (array/len @closureTo) 1) @closureTo []), coverageKey: (str/concat @payload.query.trait ":" (object/get @enter "from") "+" (object/get @enter "event") "->" (object/get @enter "to") "[transient-failure-probe:" @ev "]") } }))))
+                            { outcome: "entering", entering: { from: (object/get @enter "from"), event: (object/get @enter "event"), to: (object/get @enter "to"), entity: (object/get (default @eff {}) "entity" ""), operation: (object/get (default @eff {}) "kind" ""), acceptStates: (if (> (array/len @closureTo) 1) @closureTo []), coverageKey: (str/concat @payload.query.trait ":" (object/get @enter "from") "+" (object/get @enter "event") "->" (object/get @enter "to") "[transient-failure-probe:" @ev "]") } }))))
                       (emit TRANSIENT_ANSWERED { answer: @entity.answer })))))))
     }
 

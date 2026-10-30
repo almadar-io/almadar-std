@@ -46,7 +46,7 @@ orbital ApprovalGateOrbital {
     status : "pending" | "approved" | "denied" | "escalated" @description "Current state of the approval process." @synonyms "approval status, state, condition" = pending
     reviewer : string @description "The user or system responsible for reviewing the request." @synonyms "assignee, owner, approver, responsible party" = ""
     requestedAt : number @description "Timestamp indicating when the approval request was initiated." @synonyms "creation time, request date, submission time" = 0
-    decidedAt : number @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
+    decidedAt : instant? @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at"
     escalatedAt : number @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
     notes : string @description "The reviewer's written reason, captured by the deny step." @synonyms "comments, remarks, explanation, reason, details" = ""
     payload : string @description "The held data of the gated action as JSON text, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = ""
@@ -142,7 +142,7 @@ orbital ApprovalGateOrbital {
         (set @entity.id ?requestId)
         (set @entity.status pending)
         (set @entity.reviewer "")
-        (set @entity.decidedAt 0)
+        (set @entity.decidedAt null)
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
@@ -265,12 +265,12 @@ orbital ApprovalGateOrbital {
         (set @entity.id ?id)
         (set @entity.status approved)
         (set @entity.reviewer @user.id)
-        (set @entity.decidedAt (time/now))
+        (set @entity.decidedAt @now)
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (let ((held (json/parse ?row.payload p)))
-          (if (!= @held null)
+        (let ((held (json/parse (default ?row.payload "") p)))
+          (if (validate/required @held)
             (emit ApprovalGranted { payload: @held, requestId: ?id })
             (emit ApprovalRequestReviewFailed { error: "the approved request's payload could not be read", code: "PAYLOAD_UNREADABLE" })))
       ;; Deny is a two-step: capture the written reason first, commit second.
@@ -318,7 +318,7 @@ orbital ApprovalGateOrbital {
         (set @entity.id ?requestId)
         (set @entity.status pending)
         (set @entity.reviewer "")
-        (set @entity.decidedAt 0)
+        (set @entity.decidedAt null)
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
@@ -341,7 +341,7 @@ orbital ApprovalGateOrbital {
         (set @entity.id (object/get ?data id))
         (set @entity.status denied)
         (set @entity.reviewer @user.id)
-        (set @entity.decidedAt (time/now))
+        (set @entity.decidedAt @now)
         (set @entity.notes (default (object/get ?data notes) ""))
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
@@ -401,21 +401,21 @@ orbital ApprovalGateOrbital {
     emits {
       APPROVE {
         id : string!
-        row : ApprovalRequest
+        row : ApprovalRequest!
       }
         @description "Signals that an approval request has been approved."
         @synonyms "accept, authorize, confirm, pass"
         @tier "domain"
       DENY {
         id : string!
-        row : ApprovalRequest
+        row : ApprovalRequest!
       }
         @description "Opens the deny step for a request; the decision commits with the written reason."
         @synonyms "reject, decline"
         @tier "domain"
       OPEN_SUBJECT -> external {
         id : string!
-        row : ApprovalRequest
+        row : ApprovalRequest!
         subjectId : string
         subjectLabel : string
       }
@@ -423,7 +423,7 @@ orbital ApprovalGateOrbital {
         @synonyms "view subject, open record, inspect request, see the article"
         @tier "domain"
       CONFIRM_DENY {
-        data : DenyCommit
+        data : DenyCommit!
       }
         @description "The deny form committed; data carries the request id + the written reason."
         @synonyms "submit denial, confirm rejection"
@@ -494,14 +494,14 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       APPROVE {
         id : string!
-        row : ApprovalRequest
+        row : ApprovalRequest!
       }
         @description "Indicates an approval action has been completed."
         @synonyms "accept, authorize, confirm, validate"
         @tier "domain"
       DENY {
         id : string!
-        row : ApprovalRequest
+        row : ApprovalRequest!
       }
         @description "Opens the deny step for a request."
         @synonyms "reject, decline, deny"
@@ -515,7 +515,7 @@ orbital ApprovalGateOrbital {
         @synonyms "view subject, open record, inspect"
         @tier "domain"
       CONFIRM_DENY {
-        data : DenyCommit
+        data : DenyCommit!
       }
         @description "The deny form committed with the written reason."
         @synonyms "submit denial, confirm rejection"

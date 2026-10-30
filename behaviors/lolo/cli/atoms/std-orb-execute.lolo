@@ -39,24 +39,24 @@ orbital OrbExecuteOrbital {
 
     state ready {
       INIT -> ready
-      EXEC_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      EXEC_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit EXEC_ANSWERED { status: 400, body: "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]" })
-      EXEC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }] })
+      EXEC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      EXEC_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "event") null)) (and (!= (object/get @payload.flags "steps") null) (or (!= (object/get @payload.flags "event") null) (!= (object/get @payload.flags "trait") null) (!= (object/get @payload.flags "payload") null) (!= (object/get @payload.flags "cascade") null))) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "trait") null)) (and (= (object/get @payload.flags "steps") null) (!= (object/get @payload.flags "live") null)))
+      EXEC_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (not (object/has @payload.flags "steps")) (not (object/has @payload.flags "event"))) (and (object/has @payload.flags "steps") (or (object/has @payload.flags "event") (object/has @payload.flags "trait") (object/has @payload.flags "payload") (object/has @payload.flags "cascade"))) (and (not (object/has @payload.flags "steps")) (not (object/has @payload.flags "trait"))) (and (not (object/has @payload.flags "steps")) (object/has @payload.flags "live")))
         (emit EXEC_ANSWERED { status: 400, body: "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]" })
-      EXEC_ARGS_DONE -> checking when (not (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "event") null)) (and (!= (object/get @payload.flags "steps") null) (or (!= (object/get @payload.flags "event") null) (!= (object/get @payload.flags "trait") null) (!= (object/get @payload.flags "payload") null) (!= (object/get @payload.flags "cascade") null))) (and (= (object/get @payload.flags "steps") null) (= (object/get @payload.flags "trait") null)) (and (= (object/get @payload.flags "steps") null) (!= (object/get @payload.flags "live") null))))
-        (set @entity.file (array/first @payload.positionals))
-        (set @entity.path (array/first @payload.positionals))
-        (set @entity.mode (if (!= (object/get @payload.flags "steps") null) "steps" "event"))
-        (set @entity.live (!= (object/get @payload.flags "live") null))
-        (set @entity.argText (if (!= (object/get @payload.flags "steps") null) (default (array/first (object/get @payload.flags "steps")) "") (if (!= (object/get @payload.flags "payload") null) (default (array/first (object/get @payload.flags "payload")) "") "{}")))
-        (set @entity.stepsText (if (!= (object/get @payload.flags "steps") null) (default (array/first (object/get @payload.flags "steps")) "") (str/concat "[{\"trait\":" (json/stringify (default (array/first (object/get @payload.flags "trait")) "")) ",\"event\":" (json/stringify (default (array/first (object/get @payload.flags "event")) "")) ",\"payload\":" (if (!= (object/get @payload.flags "payload") null) (default (array/first (object/get @payload.flags "payload")) "") "{}") "}]")))
+      EXEC_ARGS_DONE -> checking when (not (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (not (object/has @payload.flags "steps")) (not (object/has @payload.flags "event"))) (and (object/has @payload.flags "steps") (or (object/has @payload.flags "event") (object/has @payload.flags "trait") (object/has @payload.flags "payload") (object/has @payload.flags "cascade"))) (and (not (object/has @payload.flags "steps")) (not (object/has @payload.flags "trait"))) (and (not (object/has @payload.flags "steps")) (object/has @payload.flags "live"))))
+        (set @entity.file (default (array/first @payload.positionals) ""))
+        (set @entity.path (default (array/first @payload.positionals) ""))
+        (set @entity.mode (if (object/has @payload.flags "steps") "steps" "event"))
+        (set @entity.live (object/has @payload.flags "live"))
+        (set @entity.argText (if (object/has @payload.flags "steps") (default (array/first (object/get @payload.flags "steps")) "") (if (object/has @payload.flags "payload") (default (array/first (object/get @payload.flags "payload")) "") "{}")))
+        (set @entity.stepsText (if (object/has @payload.flags "steps") (default (array/first (object/get @payload.flags "steps")) "") (str/concat "[{\"trait\":" (json/stringify (default (array/first (object/get @payload.flags "trait")) "")) ",\"event\":" (json/stringify (default (array/first (object/get @payload.flags "event")) "")) ",\"payload\":" (if (object/has @payload.flags "payload") (default (array/first (object/get @payload.flags "payload")) "") "{}") "}]")))
         (emit EXEC_CHECK {})
     }
 
@@ -75,11 +75,11 @@ orbital OrbExecuteOrbital {
     state reading {
       INIT -> reading
       EXEC_READ_FAILED -> ready
-        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "Failed to read " @entity.file ": " @payload.error)) "\n}") })
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "Failed to read " @entity.file ": " (default @payload.error ""))) "\n}") })
       EXEC_READ -> reading
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: EXEC_PROGRAM, failure: EXEC_PROGRAM_FAILED } })
       EXEC_PROGRAM_FAILED -> ready
-        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify @payload.error) "\n}") })
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (default @payload.error "")) "\n}") })
       EXEC_PROGRAM -> stepping
         (program/step @payload.result (json/parse @entity.stepsText ExecSteps) { report: "raw" live: @entity.live } { emit: { success: EXEC_STEPPED, failure: EXEC_STEP_FAILED } })
     }
@@ -87,9 +87,13 @@ orbital OrbExecuteOrbital {
     state stepping {
       INIT -> stepping
       EXEC_STEP_FAILED -> ready
-        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (if (str/startsWith @payload.error "program/step: ") (str/slice @payload.error 14 (str/len @payload.error)) @payload.error)) "\n}") })
-      EXEC_STEPPED -> ready
-        (emit EXEC_ANSWERED { status: 200, body: (json/stringify (if (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps")) "outcomes") null)) (object/set @payload.result "outcomes" (object/get (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps")) "outcomes")) @payload.result) { pretty: true }) })
+        (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (if (str/startsWith (default @payload.error "") "program/step: ") (str/slice (default @payload.error "") 14 (str/len (default @payload.error ""))) (default @payload.error ""))) "\n}") })
+      EXEC_STEPPED -> ready when (= (json/parse (json/stringify @payload.result) ExecHoist) null)
+        (emit EXEC_ANSWERED { status: 200, body: "{\n  \"success\": false,\n  \"error\": \"the cascade report could not be read\"\n}" })
+      EXEC_STEPPED -> ready when (and (!= (json/parse (json/stringify @payload.result) ExecHoist) null) (not (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes") null))))
+        (emit EXEC_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
+      EXEC_STEPPED -> ready when (and (!= (json/parse (json/stringify @payload.result) ExecHoist) null) (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes") null)))
+        (emit EXEC_ANSWERED { status: 200, body: (json/stringify (object/set (default @payload.result {}) "outcomes" (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes")) { pretty: true }) })
     }
 
     emits {

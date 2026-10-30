@@ -67,6 +67,7 @@ type FieldWordLimit = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
@@ -186,6 +187,10 @@ orbital AgentBuilderOrbital {
 
   trait BuilderPipeline -> BuilderProcess [optimistic] {
     config {
+      toolRoles : [string]!
+        @label "Who may use the assistant's tools"
+        @description "The viewer roles the tools this atom hands the model are granted to (S1, deny by default): a turn whose signed-in viewer's role is not listed is offered no tool. Bind the roles of the app's identity explicitly, e.g. `[\"learner\"]`."
+        @tier "policy"
       ladder : [BuilderStep] = [{ name: "mount", source: "catalog", scope: ["almadar-std/ui/core/molecules"], threshold: 0, action: "mount", take: 1 }]
         @label "Caching tiers, cheapest first"
         @description "Each step ranks its source (a registry catalog under `scope`, or the pool) against the request and, when the best match reaches `threshold`, runs `action` on it: `mount` (a page around its first trait), `adopt` (serve it as it is, no model call) or `fill` (one model turn setting its knobs). A step whose best match falls short hands over to the next one; when no step serves, the build is rejected."
@@ -344,7 +349,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
           instructions: (str/concat @config.pickInstructions "\nThe building blocks:\n" (str/join (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (str/concat "- " @r.behavior ": " (object/get @r description "")))) "\n"))
-          tools: [{ fireAndForget: true, event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
+          tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
           ephemeral: true
         })
       RANKED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
@@ -431,7 +436,7 @@ orbital AgentBuilderOrbital {
             (emit CONVERSE {
               messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
               instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
-              tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
+              tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
               ephemeral: true
             }))
               (do
@@ -466,7 +471,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "Some fields are too long. The most words each field may hold: " (str/join (array/map @config.fieldWordLimits (fn l (str/concat @l.name " " (str/concat @l.words) " words"))) ", ") ". What you wrote: " (json/stringify @entity.filledFields) ". Call FILL again with the same knobs and shorter fields.") }]
           instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
-          tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
+          tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
       ASSISTANT_REPLIED -> building when (and (validate/required (array/nth @config.ladder @entity.step)) (and (validate/required @entity.target) (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))))
@@ -507,7 +512,7 @@ orbital AgentBuilderOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "The result did not validate. The validator's issues: " (json/stringify (if (== ?errors null) [] ?errors)) " (" ?error "). Call FILL again with corrected values.") }]
           instructions: @config.fillInstructions
-          tools: [{ fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
+          tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
       BUILD_FAILED -> failed when (and (validate/required (array/nth @config.ladder @entity.step)) (or (!= (object/get (array/nth @config.ladder @entity.step) action) "fill") (>= @entity.repairs @config.maxRepairs)))

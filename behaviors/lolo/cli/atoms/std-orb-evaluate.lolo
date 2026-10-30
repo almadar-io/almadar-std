@@ -42,10 +42,10 @@ orbital OrbEvaluateOrbital {
 
     state ready {
       INIT -> ready
-      EVALUATE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      EVALUATE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: "error: the arguments could not be read\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'." })
-      EVALUATE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit EVALUATE_ARGS_PARSE { stage: "evaluate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "entity" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: [] takesValue: true repeatable: false }] })
+      EVALUATE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit EVALUATE_ARGS_PARSE { stage: "evaluate" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "entity" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -53,9 +53,9 @@ orbital OrbEvaluateOrbital {
       EVALUATE_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
         (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (array/first @payload.errors) "\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'.") })
       EVALUATE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
-        (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (array/nth @payload.positionals 1) "' found\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'.") })
+        (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (default (array/nth @payload.positionals 1) "") "' found\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'.") })
       EVALUATE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
-        (emit EVALUATE_START { expr: (default (array/first @payload.positionals) ""), hasExpr: (= (array/len @payload.positionals) 1), entity: (default (array/first (default (object/get @payload.flags "entity") [""])) ""), hasEntity: (!= (object/get @payload.flags "entity") null), payload: (default (array/first (default (object/get @payload.flags "payload") [""])) ""), hasPayload: (!= (object/get @payload.flags "payload") null), output: (default (array/first (default (object/get @payload.flags "output") ["value"])) "value") })
+        (emit EVALUATE_START { expr: (default (array/first @payload.positionals) ""), hasExpr: (= (array/len @payload.positionals) 1), entity: (default (array/first (default (object/get @payload.flags "entity") [""])) ""), hasEntity: (object/has @payload.flags "entity"), payload: (default (array/first (default (object/get @payload.flags "payload") [""])) ""), hasPayload: (object/has @payload.flags "payload"), output: (default (array/first (default (object/get @payload.flags "output") ["value"])) "value") })
     }
 
     state working {
@@ -141,12 +141,14 @@ orbital OrbEvaluateOrbital {
     state reading {
       INIT -> reading
       EVALUATE_FAILED -> idle
-        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       EVALUATE_CHUNK -> reading when (not @payload.eof)
         (set @entity.source (bytes/concat [@entity.source @payload.data]))
         (os/stdin-read 65536 { key: "stdin" emit: { success: EVALUATE_CHUNK, failure: EVALUATE_FAILED } })
-      EVALUATE_CHUNK -> checking when @payload.eof
-        (set @entity.text (bytes/to-string (bytes/concat [@entity.source @payload.data])))
+      EVALUATE_CHUNK -> idle when (and @payload.eof (= (bytes/to-string (bytes/concat [@entity.source @payload.data])) null))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: standard input is not valid UTF-8 text" })
+      EVALUATE_CHUNK -> checking when (and @payload.eof (!= (bytes/to-string (bytes/concat [@entity.source @payload.data])) null))
+        (set @entity.text (default (bytes/to-string (bytes/concat [@entity.source @payload.data])) ""))
         (emit EVALUATE_CHECK { })
     }
 
@@ -160,26 +162,30 @@ orbital OrbEvaluateOrbital {
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: --payload JSON parse error: invalid JSON" })
       EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (not (json/valid (str/trim @entity.text))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: JSON parse error: invalid JSON" })
-      EVALUATE_CHECK -> persona when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (json/valid (str/trim @entity.text)))
+      EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (json/valid (str/trim @entity.text)) @entity.hasEntity (= (json/parse @entity.entityText EvaluateObject) null))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: --entity must be a JSON object" })
+      EVALUATE_CHECK -> idle when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (json/valid (str/trim @entity.text)) (or (not @entity.hasEntity) (!= (json/parse @entity.entityText EvaluateObject) null)) @entity.hasPayload (= (json/parse @entity.payloadText EvaluateObject) null))
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: --payload must be a JSON object" })
+      EVALUATE_CHECK -> persona when (and (!= (str/trim @entity.text) "") (or (not @entity.hasEntity) (json/valid @entity.entityText)) (or (not @entity.hasPayload) (json/valid @entity.payloadText)) (json/valid (str/trim @entity.text)) (or (not @entity.hasEntity) (!= (json/parse @entity.entityText EvaluateObject) null)) (or (not @entity.hasPayload) (!= (json/parse @entity.payloadText EvaluateObject) null)))
         (os/getenv "ALMADAR_PERSONA" { emit: { success: EVALUATE_ENV, failure: EVALUATE_FAILED } })
       EVALUATE_FAILED -> idle
-        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
     }
 
     state persona {
       INIT -> persona
       EVALUATE_FAILED -> idle
-        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       EVALUATE_ENV -> idle when (= (json/parse (str/trim @entity.text) EvaluateJson) null)
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: JSON parse error: invalid JSON" })
       EVALUATE_ENV -> evaluating when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (= (str/trim (default @payload.value "")) ""))
-        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (json/parse @entity.entityText EvaluateObject) (json/parse "{}" EvaluateObject)), payload: (if @entity.hasPayload (json/parse @entity.payloadText EvaluateObject) (json/parse "{}" EvaluateObject)), hasViewer: true })
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasViewer: true })
       EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (not (json/valid (str/trim (default @payload.value ""))))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona is not valid JSON: " (str/trim (default @payload.value ""))) })
-      EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (not (let ((u (json/parse (str/trim (default @payload.value "")) EvaluateObject))) (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv "")))))))
+      EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (not (let ((u (json/parse (str/trim (default @payload.value "")) EvaluateObject))) (if (= @u null) false (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv ""))))))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona needs an \"id\" (or \"uid\"): " (str/trim (default @payload.value ""))) })
-      EVALUATE_ENV -> evaluating when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (!= (json/parse (str/trim (default @payload.value "")) EvaluateObject) null) (let ((t (str/trim (default @payload.value "")))) (and (!= (json/parse @t EvaluateObject) null) (let ((u (json/parse @t EvaluateObject))) (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv ""))))))))
-        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (json/parse @entity.entityText EvaluateObject) (json/parse "{}" EvaluateObject)), payload: (if @entity.hasPayload (json/parse @entity.payloadText EvaluateObject) (json/parse "{}" EvaluateObject)), hasViewer: true, viewer: (json/parse (str/trim (default @payload.value "")) EvaluateObject) })
+      EVALUATE_ENV -> evaluating when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (!= (json/parse (str/trim (default @payload.value "")) EvaluateObject) null) (let ((u (json/parse (str/trim (default @payload.value "")) EvaluateObject))) (if (= @u null) false (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv "")))))))
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasViewer: true, viewer: (json/parse (str/trim (default @payload.value "")) EvaluateObject) })
       EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (!= (str/trim (default @payload.value "")) "") (not (str/startsWith (str/trim (default @payload.value "")) "{"))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona \"" (str/trim (default @payload.value "")) "\" is a bare id/role, which resolves against an app's declared [identity] roster — this schema-less probe accepts only the JSON persona form (e.g. {\"id\":\"member-1\",\"role\":\"member\"}).") })
     }
@@ -190,12 +196,12 @@ orbital OrbEvaluateOrbital {
         (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value) })
       EVALUATE_VALUE -> idle when (= @entity.output "pretty")
         (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value { pretty: true }) })
-      EVALUATE_VALUE -> idle when (and (!= @entity.output "json") (!= @entity.output "pretty") (str/startsWith (json/stringify @payload.value) "\""))
+      EVALUATE_VALUE -> idle when (and (!= @entity.output "json") (!= @entity.output "pretty") (str/startsWith (json/stringify @payload.value) "\"") (validate/string @payload.value))
         (emit EVALUATE_ANSWERED { status: 200, body: (str/concat @payload.value) })
       EVALUATE_VALUE -> idle when (and (!= @entity.output "json") (!= @entity.output "pretty") (not (str/startsWith (json/stringify @payload.value) "\"")))
         (emit EVALUATE_ANSWERED { status: 200, body: (json/stringify @payload.value) })
       EVALUATE_REFUSED -> idle
-        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Evaluation error: " @payload.error) })
+        (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Evaluation error: " (default @payload.error "")) })
     }
 
     emits {

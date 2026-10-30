@@ -1,0 +1,189 @@
+app std-orb-circuit [
+  version: "1.0.0",
+  description: "std-orb-circuit — turns one lowered guard or effect into an AVL circuit tree. CIRCUIT_BUILD { requestId, expr, path, types } answers CIRCUIT_BUILT { requestId, root }, root a CircuitNode { path, kind, label, form, type, names, children } for a call, binding, literal, object, array or lambda. It loads the operator table once (the file @almadar/std declares as orbLanguage.operators) and reads each call's visual form from it; an operator the table lacks is form `unknown`. It walks the expression with tree/fold over the recursive IrExpr type, then nests the flat pre-order result by depth. Node paths use the ir-calls scheme (.do[i-1], .then, .else, .then[i-2], .body[i-2], .key, bare [i]); a let names its bound names in order and has each bound value (at [1][i][1]) then the body as children; an fn names its parameters and has its body forms as children; an object's names are its member keys, parallel to its children. type is types[path] when present. A request that arrives while the table loads, an absent expression or an unreadable table answers CIRCUIT_FAILED { requestId, reason }."
+]
+uses Spec from "almadar-std/orb-circuit"
+
+type IrExpr = string | number | boolean | [IrExpr?] | Map string IrExpr?
+type CircuitKind = "call" | "binding" | "literal" | "object" | "array" | "lambda"
+type CircuitNode = { path : string!, kind : CircuitKind!, label : string!, form : string?, type : string?, names : [string]!, children : [CircuitNode]! }
+type IrList = [IrExpr]
+type IrLists = [IrList]
+type CircuitInfo = { kind : string!, label : string!, form : string!, names : [string]! }
+type CircuitFlat = { rel : string!, d : number!, info : CircuitInfo! }
+type CircuitManifestLanguage = { operators : string? }
+type CircuitManifest = { orbLanguage : CircuitManifestLanguage? }
+type CircuitVisual = { form : string? }
+type CircuitOperator = { visual : CircuitVisual? }
+type CircuitTable = { operators : Map string CircuitOperator! }
+
+orbital OrbCircuitOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] {
+  entity CircuitRun [runtime] {
+    id : string!
+    operatorsPath : string = ""
+    forms : Map string string = {}
+    requestId : string = ""
+    expr : IrExpr = []
+    rootPath : string = ""
+    types : Map string string = {}
+    flat : [CircuitFlat] = []
+    root : CircuitNode?
+  }
+
+  trait OrbCircuit -> CircuitRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CIRCUIT_BUILD -> std
+        (set @entity.requestId @payload.requestId)
+        (set @entity.expr @payload.expr)
+        (set @entity.rootPath @payload.path)
+        (set @entity.types @payload.types)
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/std/package.json" } { key: "std" emit: { success: CIRCUIT_STD, failure: CIRCUIT_TABLE_FAILED } })
+    }
+
+    state std {
+      INIT -> std
+      CIRCUIT_BUILD -> std
+        (emit CIRCUIT_FAILED { requestId: ?requestId, reason: "the operator table is still loading" })
+      CIRCUIT_TABLE_FAILED -> idle
+        (emit CIRCUIT_FAILED { requestId: @entity.requestId, reason: (str/concat "the operator table is not readable: " ?error) })
+      CIRCUIT_STD -> idle when (= (let ((man (json/parse (default (bytes/to-string @payload.data) "") CircuitManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") ""))))) "")
+        (emit CIRCUIT_FAILED { requestId: @entity.requestId, reason: "the installed @almadar/std declares no orbLanguage operators" })
+      CIRCUIT_STD -> operators when (!= (let ((man (json/parse (default (bytes/to-string @payload.data) "") CircuitManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") ""))))) "")
+        (set @entity.operatorsPath (str/concat "node_modules/@almadar/std/" (let ((man (json/parse (default (bytes/to-string @payload.data) "") CircuitManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") "")))))))
+        (os/read-file { anchor: "cwd" path: @entity.operatorsPath } { key: "operators" emit: { success: CIRCUIT_OPERATORS, failure: CIRCUIT_TABLE_FAILED } })
+    }
+
+    state operators {
+      INIT -> operators
+      CIRCUIT_BUILD -> operators
+        (emit CIRCUIT_FAILED { requestId: ?requestId, reason: "the operator table is still loading" })
+      CIRCUIT_TABLE_FAILED -> idle
+        (emit CIRCUIT_FAILED { requestId: @entity.requestId, reason: (str/concat "the operator table is not readable: " ?error) })
+      CIRCUIT_OPERATORS -> idle when (= (json/parse (default (bytes/to-string @payload.data) "") CircuitTable) null)
+        (emit CIRCUIT_FAILED { requestId: @entity.requestId, reason: "the operator table is not valid JSON" })
+      CIRCUIT_OPERATORS -> ready when (!= (json/parse (default (bytes/to-string @payload.data) "") CircuitTable) null)
+        (set @entity.forms (let ((tbl (json/parse (default (bytes/to-string @payload.data) "") CircuitTable)))
+          (default (object/fromEntries (array/map (object/entries (object/get @tbl "operators")) (fn e [(array/nth @e 0) (default (object/get (array/nth @e 1) "visual.form") "unknown")]))) {})))
+        (emit CIRCUIT_RUN {})
+    }
+
+    state ready {
+      INIT -> ready
+      CIRCUIT_BUILD -> ready
+        (set @entity.requestId @payload.requestId)
+        (set @entity.expr @payload.expr)
+        (set @entity.rootPath @payload.path)
+        (set @entity.types @payload.types)
+        (emit CIRCUIT_RUN {})
+      CIRCUIT_RUN -> ready
+        (set @entity.flat (default (tree/fold @entity.expr
+          (fn (n k)
+            (let ((fm @entity.forms)
+                  (at (str/slice "x@" 1 2))
+                  (none : [string] [])
+                  (nullLeaf [{ rel: "", d: 0, info: { kind: "literal", label: "null", form: "", names: [] } }]))
+              (if (validate/array @n)
+                (let ((h0 (array/nth @n 0))
+                      (hd : string (if (validate/string @h0) @h0 ""))
+                      (p1 (if (> (array/len @n) 1) (array/nth @n 1) null)))
+                  (let ((isCall (!= @hd ""))
+                        (isLet (and (!= @hd "") (> (array/len @n) 1) (validate/array @p1) (= (default (object/get @fm @hd) "unknown") "scope"))))
+                    (array/concat
+                      [{ rel: "", d: 0, info: (if @isCall
+                          { kind: (if (= @hd "fn") "lambda" "call"),
+                            label: @hd,
+                            form: (default (object/get @fm @hd) "unknown"),
+                            names: (if (= @hd "fn")
+                                     (if (validate/string @p1) [@p1] (array/map (default (as @p1 IrList) []) (fn x (if (validate/string @x) @x ""))))
+                                     (if @isLet (array/map (default (as @p1 IrLists) []) (fn pr (if (validate/string (array/nth @pr 0)) (array/nth @pr 0) ""))) [])) }
+                          { kind: "array", label: "[…]", form: "", names: @none }) }]
+                      (array/flatten (array/map (array/range (if @isCall 1 0) (array/len @k)) (fn i
+                        (let ((piece (if (= @hd "do") (str/concat ".do[" (- @i 1) "]")
+                                       (if (= @hd "if") (if (= @i 2) ".then" (if (= @i 3) ".else" (str/concat "[" @i "]")))
+                                         (if (and (= @hd "when") (>= @i 2)) (str/concat ".then[" (- @i 2) "]")
+                                           (if (and @isLet (>= @i 2)) (str/concat ".body[" (- @i 2) "]")
+                                             (str/concat "[" @i "]"))))))
+                              (res (default (array/nth @k @i) @nullLeaf)))
+                          (if (and @isLet (= @i 1))
+                            (array/map (array/filter @res (fn h (>= (object/get @h "d") 2)))
+                              (fn h { rel: (str/concat @piece (object/get @h "rel")), d: (- (object/get @h "d") 1), info: (object/get @h "info") }))
+                            (if (and (= @hd "fn") (= @i 1))
+                              []
+                              (array/map @res (fn h { rel: (str/concat @piece (object/get @h "rel")), d: (+ 1 (object/get @h "d")), info: (object/get @h "info") })))))))))))
+                (if (validate/object @n)
+                  (array/concat
+                    [{ rel: "", d: 0, info: { kind: "object", label: "{…}", form: "", names: (array/map (object/entries @k) (fn e (array/nth @e 0))) } }]
+                    (array/flatten (array/map (object/entries @k) (fn e
+                      (array/map (default (array/nth @e 1) @nullLeaf) (fn h { rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")), d: (+ 1 (object/get @h "d")), info: (object/get @h "info") }))))))
+                  (let ((sv : string (if (validate/string @n) @n "")))
+                    [{ rel: "", d: 0, info: (if (and (validate/string @n) (str/startsWith @sv @at))
+                        { kind: "binding", label: @sv, form: "", names: @none }
+                        { kind: "literal", label: (json/stringify @n), form: "", names: @none }) }])))))
+          "IrExpr") []))
+        (set @entity.root (array/first (default (object/get
+          (array/reduce (array/reverse @entity.flat) (let ((init : Map string [CircuitNode] {})) @init)
+            (fn (m e)
+              (let ((d (object/get @e "d"))
+                    (info (object/get @e "info"))
+                    (p (str/concat @entity.rootPath (object/get @e "rel"))))
+                (default (object/set (default (object/set @m (str/concat "d" (+ @d 1)) []) @m)
+                  (str/concat "d" @d)
+                  (array/prepend (default (object/get @m (str/concat "d" @d)) [])
+                    { path: @p,
+                      kind: (default (as (object/get @info "kind") CircuitKind) "call"),
+                      label: (object/get @info "label"),
+                      form: (if (= (object/get @info "form") "") null (object/get @info "form")),
+                      type: (let ((hit (array/find (object/entries @entity.types) (fn t (= (array/nth @t 0) @p))))) (if (= @hit null) null (default (array/nth @hit 1) ""))),
+                      names: (object/get @info "names"),
+                      children: (default (object/get @m (str/concat "d" (+ @d 1))) []) })) @m))))
+          "d0") [])))
+        (emit CIRCUIT_DONE {})
+      CIRCUIT_DONE -> ready when (= @entity.root null)
+        (emit CIRCUIT_FAILED { requestId: @entity.requestId, reason: "the expression is absent or not an IR expression" })
+      CIRCUIT_DONE -> ready when (!= @entity.root null)
+        (emit CIRCUIT_BUILT { requestId: @entity.requestId, root: @entity.root })
+    }
+
+    emits {
+      CIRCUIT_BUILT -> external { requestId : string!  root : CircuitNode! }
+        @description "The circuit tree of one guard or effect."
+        @synonyms "circuit built, avl circuit, expression tree"
+        @tier "primary"
+      CIRCUIT_FAILED -> external { requestId : string!  reason : string! }
+        @description "The tree could not be built: the operator table is unreadable or still loading, or the expression is absent."
+        @tier "primary"
+      CIRCUIT_RUN {}
+        @description "Internal: build the circuit of the stored request."
+        @tier "internal"
+      CIRCUIT_DONE {}
+        @description "Internal: the stored request's circuit is built or absent."
+        @tier "internal"
+    }
+
+    listens {
+      CIRCUIT_BUILD -> input { requestId : string!  expr : IrExpr!  path : string!  types : Map string string! }
+        @description "Build the AVL circuit tree of one lowered guard or effect."
+        @synonyms "build circuit, expression circuit, operator tree"
+      CIRCUIT_RUN {}
+        @description "Internal: build the stored request."
+        @tier "internal"
+      CIRCUIT_DONE {}
+        @description "Internal: answer the stored request."
+        @tier "internal"
+      CIRCUIT_STD { data : bytes! }
+        @description "Internal: the @almadar/std manifest."
+        @tier "internal"
+      CIRCUIT_OPERATORS { data : bytes! }
+        @description "Internal: the operator table file."
+        @tier "internal"
+      CIRCUIT_TABLE_FAILED { error : string! }
+        @description "Internal: a table file could not be read."
+        @tier "internal"
+    }
+  }
+
+  page boot as OrbCircuitStart -> OrbCircuit
+}

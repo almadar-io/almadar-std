@@ -24,14 +24,14 @@ orbital EmailOrbital {
               {
                 from: (if (str/includes @from "<")
                   (object/merge
-                    { email: (str/trim (str/replace (array/nth (str/split @from "<") 1) ">" "")) }
-                    (if (!= (str/trim (array/nth (str/split @from "<") 0)) "") { name: (str/trim (array/nth (str/split @from "<") 0)) } {}))
+                    { email: (str/trim (str/replace (default (array/nth (str/split @from "<") 1) "") ">" "")) }
+                    (if (!= (str/trim (default (array/nth (str/split @from "<") 0) "")) "") { name: (str/trim (default (array/nth (str/split @from "<") 0) "")) } {}))
                   { email: @from }),
                 subject: @payload.subject,
                 personalizations: [{ to: [(if (str/includes @payload.to "<")
                   (object/merge
-                    { email: (str/trim (str/replace (array/nth (str/split @payload.to "<") 1) ">" "")) }
-                    (if (!= (str/trim (array/nth (str/split @payload.to "<") 0)) "") { name: (str/trim (array/nth (str/split @payload.to "<") 0)) } {}))
+                    { email: (str/trim (str/replace (default (array/nth (str/split @payload.to "<") 1) "") ">" "")) }
+                    (if (!= (str/trim (default (array/nth (str/split @payload.to "<") 0) "")) "") { name: (str/trim (default (array/nth (str/split @payload.to "<") 0) "")) } {}))
                   { email: @payload.to })] }],
                 content: (if (validate/required @payload.htmlBody)
                   [{ value: @payload.body, type: "text/plain" }, { value: @payload.htmlBody, type: "text/html" }]
@@ -40,8 +40,8 @@ orbital EmailOrbital {
               (if (validate/required @payload.replyTo)
                 { reply_to: (if (str/includes @payload.replyTo "<")
                   (object/merge
-                    { email: (str/trim (str/replace (array/nth (str/split @payload.replyTo "<") 1) ">" "")) }
-                    (if (!= (str/trim (array/nth (str/split @payload.replyTo "<") 0)) "") { name: (str/trim (array/nth (str/split @payload.replyTo "<") 0)) } {}))
+                    { email: (str/trim (str/replace (default (array/nth (str/split @payload.replyTo "<") 1) "") ">" "")) }
+                    (if (!= (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) "") { name: (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) } {}))
                   { email: @payload.replyTo }) }
                 {})
               (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})),
@@ -65,9 +65,9 @@ orbital EmailOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: EMAIL_RESEND_REPLIED, failure: EMAIL_RESEND_FAILED } })
 
-      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get @payload.headers "x-message-id" "") ""))
-        (emit EMAIL_SENT { id: (object/get @payload.headers "x-message-id" ""), status: "sent" })
-      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get @payload.headers "x-message-id" "") ""))
+      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get (default @payload.headers {}) "x-message-id" "") ""))
+        (emit EMAIL_SENT { id: (object/get (default @payload.headers {}) "x-message-id" ""), status: "sent" })
+      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default @payload.headers {}) "x-message-id" "") ""))
         (emit EMAIL_SENT { status: "sent" })
       EMAIL_SENDGRID_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit EMAIL_SEND_FAILED { message: (object/get @config.statusText (str/concat @payload.status) "") })

@@ -7,7 +7,7 @@ type Claim = { name : string!, value : string! }
 type ViewerJob = { requestId : number, verified : VerifiedToken, sourceKind : string!, sourceFields : [string] }
 type VerifiedToken = { uid : string!, email : string, name : string, claims : [Claim]! }
 orbital ViewerOrbital {
-  type VIEWER_RESOLVE = Event { requestId : number, verified : VerifiedToken, sourceKind : string!, sourceFields : [string], sourceEntity : string } "Resolve one verified token into the viewer."
+  type VIEWER_RESOLVE = Event { requestId : number, verified : VerifiedToken, sourceKind : string, sourceFields : [string], sourceEntity : string } "Resolve one verified token into the viewer."
 
   entity ViewerRow [persistent: viewer_rows] {
     id : string! @description "The identity row's key: the verified uid."
@@ -29,7 +29,7 @@ orbital ViewerOrbital {
       INIT -> idle
 
       VIEWER_RESOLVE -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: (default @payload.sourceKind @config.source), sourceFields: (default @payload.sourceFields []) }))
         (emit VIEWER_PUMP {})
       VIEWER_RESOLVE -> idle when (>= (array/len @entity.queue) @config.maxQueue)
         (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
@@ -62,22 +62,22 @@ orbital ViewerOrbital {
                   (set @entity.queue (array/slice @entity.queue 1))
                   (emit VIEWER_NEXT {}))))))
       VIEWER_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "directory") (!= (object/get (array/first @entity.queue) "verified") null))
-        (let ((job (array/first @entity.queue)))
+        (let ((job : ViewerJob (array/first @entity.queue)))
           (do
             (set @entity.requestId (default (object/get @job "requestId") 0))
-            (set @entity.verified (object/get @job "verified"))
+            (set @entity.verified @job.verified)
             (set @entity.queue (array/slice @entity.queue 1))
-            (fetch ViewerRow { id: (object/get (object/get @job "verified") "uid"), emit: { success: DIRECTORY_FOUND, failure: DIRECTORY_ABSENT } })))
+            (fetch @config.directory { id: @job.verified.uid, emit: { success: DIRECTORY_FOUND, failure: DIRECTORY_ABSENT } })))
     }
 
     state looking {
       INIT -> idle
 
       VIEWER_RESOLVE -> looking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: (default @payload.sourceKind @config.source), sourceFields: (default @payload.sourceFields []) }))
       VIEWER_RESOLVE -> looking when (>= (array/len @entity.queue) @config.maxQueue)
         (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
-      DIRECTORY_ABSENT -> idle when (= @payload.code "not-found")
+      DIRECTORY_ABSENT -> idle when (and (= @payload.code "not-found") (not @config.createMissing))
         (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
         (emit VIEWER_PUMP {})
       DIRECTORY_ABSENT -> idle when (!= @payload.code "not-found")
@@ -85,6 +85,27 @@ orbital ViewerOrbital {
         (emit VIEWER_PUMP {})
       DIRECTORY_FOUND -> idle
         (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_PUMP {})
+      DIRECTORY_ABSENT -> creating when (and (= @payload.code "not-found") @config.createMissing)
+        (persist create @config.directory { id: @entity.verified.uid, name: (default @entity.verified.name "") } { emit: { success: DIRECTORY_CREATED, failure: DIRECTORY_CREATE_FAILED } })
+    }
+
+    state creating {
+      INIT -> idle
+      DIRECTORY_CREATED -> refetching
+        (fetch @config.directory { id: @entity.verified.uid, emit: { success: DIRECTORY_FOUND, failure: DIRECTORY_ABSENT } })
+      DIRECTORY_CREATE_FAILED -> idle
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
+        (emit VIEWER_PUMP {})
+    }
+
+    state refetching {
+      INIT -> idle
+      DIRECTORY_FOUND -> idle
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_PUMP {})
+      DIRECTORY_ABSENT -> idle
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
         (emit VIEWER_PUMP {})
     }
 
@@ -110,7 +131,7 @@ orbital ViewerOrbital {
         @description "Internal: start the oldest queued resolution."
         @tier "secondary"
       DIRECTORY_FOUND {
-        data : ViewerRow!
+        data : (@entity @config.directory)!
       }
         @description "Internal: the identity row exists."
         @tier "secondary"
@@ -120,9 +141,31 @@ orbital ViewerOrbital {
       }
         @description "Internal: no identity row, or the store failed."
         @tier "secondary"
+      DIRECTORY_CREATED {
+        id : string
+      }
+        @description "Internal: the first identity row of a verified uid is written (createMissing)."
+        @tier "secondary"
+      DIRECTORY_CREATE_FAILED {
+        error : string
+      }
+        @description "Internal: the first identity row could not be written; the token's fields resolve."
+        @tier "secondary"
     }
 
     config {
+      source : "none" | "claims" | "directory" = none
+        @label "Viewer source"
+        @description "The source a VIEWER_RESOLVE uses when it names no sourceKind: none reads the token, claims only its declared fields, directory the row of `directory` keyed by the uid."
+        @tier "policy"
+      createMissing : boolean = false
+        @label "Create the first identity row"
+        @description "Under source directory, a verified uid with no row gets one: id is the uid, name is the token's, and every other field takes the directory entity's declared default (its role among them). Off, a missing row resolves the token's id, email and name only."
+        @tier "policy"
+      directory : entity = ViewerRow
+        @label "Identity directory"
+        @description "The entity whose row, keyed by the verified uid, supplies the viewer's role and claims under source directory. Bind the app's [identity] entity (it must declare `role` and `name`)."
+        @tier "policy"
       maxQueue : number = 32
         @label "Queue limit"
         @description "How many resolutions may wait; one beyond is refused busy."
@@ -134,7 +177,7 @@ orbital ViewerOrbital {
       VIEWER_RESOLVE {
         requestId : number
         verified : VerifiedToken
-        sourceKind : string!
+        sourceKind : string
         sourceFields : [string]
         sourceEntity : string
       }

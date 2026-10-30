@@ -8,6 +8,7 @@ uses Lifecycle from "std/behaviors/std-lifecycle"
 
 type AgentToolScope = {
   scope : "declared"!
+  roles : [string]!
   fireAndForget : boolean
 }
 type AgentToolField = {
@@ -20,11 +21,13 @@ type AgentToolField = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
+  roles : [string]!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentChatMessage = {
@@ -159,7 +162,7 @@ orbital AgentSuggestionsOrbital {
       @label "How should the agent behave?"
       @description "Standing instructions sent with every proactive run."
       @tier "domain"
-    tools : [AgentTool] = [{ event: AgentSuggestionProposer.PROPOSE_SUGGESTION, fireAndForget: true }]
+    tools : [AgentTool] = [{ event: AgentSuggestionProposer.PROPOSE_SUGGESTION, fireAndForget: true, roles: [] }]
       @label "What may the agent do?"
       @description "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without."
       @tier "domain"

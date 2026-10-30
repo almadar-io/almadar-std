@@ -25,6 +25,7 @@ type AgentToolField = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
@@ -122,6 +123,10 @@ orbital LearnGenerateOrbital {
 
   trait LearnGenerate -> LearnGeneration [optimistic] {
     config {
+      toolRoles : [string]!
+        @label "Who may use the assistant's tools"
+        @description "The viewer roles the tools this atom hands the model are granted to (S1, deny by default): a turn whose signed-in viewer's role is not listed is offered no tool. Bind the roles of the app's identity explicitly, e.g. `[\"learner\"]`."
+        @tier "policy"
       scope : [string] = ["almadar-std/ui/learning"]
         @label "Behavior folders"
         @description "Registry folders (`<prefix>/<topic>[/<tier>]`) the generator may draw instruments from; nothing outside them is ever offered"
@@ -167,7 +172,7 @@ orbital LearnGenerateOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " ?subject (if (= (object/get @payload context "") "") "" (str/concat "\nContext: " (object/get @payload context "")))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
-          tools: [{
+          tools: [{ roles: @config.toolRoles,
             fireAndForget: true
             event: @config.chooseEvent
             payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
@@ -230,7 +235,7 @@ orbital LearnGenerateOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You pick the one interactive learning instrument that best lets a learner explore the subject. The installed instruments:\n" (str/join (array/map @entity.instruments (fn i (str/concat "- " (object/get @i behavior) ": " (object/get @i description "")))) "\n") "\nCall the CHOOSE tool once with exactly one of them, then reply with one sentence.")
-          tools: [{
+          tools: [{ roles: @config.toolRoles,
             fireAndForget: true
             event: @config.chooseEvent
             payload: [{ name: "choice", type: "string", required: true, values: (array/map @entity.instruments (fn i (object/get @i behavior))) }]
@@ -248,7 +253,7 @@ orbital LearnGenerateOrbital {
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
           instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (default (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) {}) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
-          tools: [{
+          tools: [{ roles: @config.toolRoles,
             fireAndForget: true
             event: @config.fillEvent
             payload: [{ name: "roster", type: "object", required: true, properties: (object/get (default (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) {}) fields []) }]

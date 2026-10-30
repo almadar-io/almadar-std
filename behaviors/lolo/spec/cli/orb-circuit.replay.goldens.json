@@ -1,0 +1,1785 @@
+{
+  "atom": "cli/atoms/std-orb-circuit.lolo",
+  "trait": "OrbCircuit",
+  "note": "Forms in the entity seed are the values canonical-operators.json carries for those operators (checked when this file was written). Expected trees come from an independent reference walk of the same rules.",
+  "cases": [
+    {
+      "id": "the guard (and (= a 1) (not b)) is a series of a block and an invert",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "and",
+              [
+                "=",
+                "@entity.a",
+                1
+              ],
+              [
+                "not",
+                "@entity.b"
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+                    "kind": "call",
+                    "label": "and",
+                    "form": "series",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1]",
+                        "kind": "call",
+                        "label": "=",
+                        "form": "block",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1][1]",
+                            "kind": "binding",
+                            "label": "@entity.a",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1][2]",
+                            "kind": "literal",
+                            "label": "1",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2]",
+                        "kind": "call",
+                        "label": "not",
+                        "form": "invert",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2][1]",
+                            "kind": "binding",
+                            "label": "@entity.b",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a filter with a lambda is a conveyor whose lambda names its parameter",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "array/filter",
+              "@entity.rows",
+              [
+                "fn",
+                "r",
+                "@r.ok"
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "array/filter",
+                    "form": "conveyor",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "binding",
+                        "label": "@entity.rows",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2]",
+                        "kind": "lambda",
+                        "label": "fn",
+                        "form": "template",
+                        "type": null,
+                        "names": [
+                          "r"
+                        ],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][2]",
+                            "kind": "binding",
+                            "label": "@r.ok",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a let names its two bound names and has each value then the body",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "let",
+              [
+                [
+                  "x",
+                  [
+                    "+",
+                    "@entity.a",
+                    1
+                  ]
+                ],
+                [
+                  "y",
+                  "@payload.n"
+                ]
+              ],
+              [
+                "set",
+                "@entity.v",
+                [
+                  "+",
+                  "@x",
+                  "@y"
+                ]
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+                    "kind": "call",
+                    "label": "let",
+                    "form": "scope",
+                    "type": null,
+                    "names": [
+                      "x",
+                      "y"
+                    ],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1][1][0][1]",
+                        "kind": "call",
+                        "label": "+",
+                        "form": "block",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1][1][0][1][1]",
+                            "kind": "binding",
+                            "label": "@entity.a",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1][1][0][1][2]",
+                            "kind": "literal",
+                            "label": "1",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1][1][1][1]",
+                        "kind": "binding",
+                        "label": "@payload.n",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1].body[0]",
+                        "kind": "call",
+                        "label": "set",
+                        "form": "actuator",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1].body[0][1]",
+                            "kind": "binding",
+                            "label": "@entity.v",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1].body[0][2]",
+                            "kind": "call",
+                            "label": "+",
+                            "form": "block",
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1].body[0][2][1]",
+                                "kind": "binding",
+                                "label": "@x",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              },
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1].body[0][2][2]",
+                                "kind": "binding",
+                                "label": "@y",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an if puts its condition at [1] and its branches at .then and .else",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "if",
+              [
+                "=",
+                "@entity.a",
+                1
+              ],
+              [
+                "set",
+                "@entity.b",
+                2
+              ],
+              [
+                "set",
+                "@entity.b",
+                3
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "if",
+                    "form": "branch",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "call",
+                        "label": "=",
+                        "form": "block",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1][1]",
+                            "kind": "binding",
+                            "label": "@entity.a",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1][2]",
+                            "kind": "literal",
+                            "label": "1",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].then",
+                        "kind": "call",
+                        "label": "set",
+                        "form": "actuator",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].then[1]",
+                            "kind": "binding",
+                            "label": "@entity.b",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].then[2]",
+                            "kind": "literal",
+                            "label": "2",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].else",
+                        "kind": "call",
+                        "label": "set",
+                        "form": "actuator",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].else[1]",
+                            "kind": "binding",
+                            "label": "@entity.b",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0].else[2]",
+                            "kind": "literal",
+                            "label": "3",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an object literal names its member keys beside its children",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "set",
+              "@entity.row",
+              {
+                "id": "@payload.id",
+                "n": 2
+              }
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "set",
+                    "form": "actuator",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "binding",
+                        "label": "@entity.row",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2]",
+                        "kind": "object",
+                        "label": "{\u2026}",
+                        "form": null,
+                        "type": null,
+                        "names": [
+                          "id",
+                          "n"
+                        ],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2].id",
+                            "kind": "binding",
+                            "label": "@payload.id",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2].n",
+                            "kind": "literal",
+                            "label": "2",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an operator the table lacks is the explicit form unknown",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "no-such-op",
+              "@entity.a",
+              true
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+                    "kind": "call",
+                    "label": "no-such-op",
+                    "form": "unknown",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1]",
+                        "kind": "binding",
+                        "label": "@entity.a",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2]",
+                        "kind": "literal",
+                        "label": "true",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a types map types the nodes whose path it lists and no others",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "and",
+              [
+                "=",
+                "@entity.a",
+                1
+              ],
+              [
+                "not",
+                "@entity.b"
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {
+              "orbitals[0].traits[0].stateMachine.transitions[3].guard": "boolean",
+              "orbitals[0].traits[0].stateMachine.transitions[3].guard[1][1]": "number"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+                    "kind": "call",
+                    "label": "and",
+                    "form": "series",
+                    "type": "boolean",
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1]",
+                        "kind": "call",
+                        "label": "=",
+                        "form": "block",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1][1]",
+                            "kind": "binding",
+                            "label": "@entity.a",
+                            "form": null,
+                            "type": "number",
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1][2]",
+                            "kind": "literal",
+                            "label": "1",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2]",
+                        "kind": "call",
+                        "label": "not",
+                        "form": "invert",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2][1]",
+                            "kind": "binding",
+                            "label": "@entity.b",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "do puts its steps at .do[i-1] and when its body at .then[i-2]",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "do",
+              [
+                "when",
+                "@entity.ok",
+                [
+                  "set",
+                  "@entity.a",
+                  1
+                ],
+                [
+                  "set",
+                  "@entity.b",
+                  2
+                ]
+              ],
+              [
+                "emit",
+                "DONE"
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2]",
+                    "kind": "call",
+                    "label": "do",
+                    "form": "ladder",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0]",
+                        "kind": "call",
+                        "label": "when",
+                        "form": "branch",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0][1]",
+                            "kind": "binding",
+                            "label": "@entity.ok",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[0]",
+                            "kind": "call",
+                            "label": "set",
+                            "form": "actuator",
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[0][1]",
+                                "kind": "binding",
+                                "label": "@entity.a",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              },
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[0][2]",
+                                "kind": "literal",
+                                "label": "1",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[1]",
+                            "kind": "call",
+                            "label": "set",
+                            "form": "actuator",
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[1][1]",
+                                "kind": "binding",
+                                "label": "@entity.b",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              },
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[0].then[1][2]",
+                                "kind": "literal",
+                                "label": "2",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[1]",
+                        "kind": "call",
+                        "label": "emit",
+                        "form": "actuator",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[2].do[1][1]",
+                            "kind": "literal",
+                            "label": "\"DONE\"",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a list that is not a call is an array of members at [i]",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "set",
+              "@entity.xs",
+              [
+                [
+                  1,
+                  2
+                ],
+                [
+                  3
+                ]
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "set",
+                    "form": "actuator",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "binding",
+                        "label": "@entity.xs",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2]",
+                        "kind": "array",
+                        "label": "[\u2026]",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][0]",
+                            "kind": "array",
+                            "label": "[\u2026]",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][0][0]",
+                                "kind": "literal",
+                                "label": "1",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              },
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][0][1]",
+                                "kind": "literal",
+                                "label": "2",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][1]",
+                            "kind": "array",
+                            "label": "[\u2026]",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][1][0]",
+                                "kind": "literal",
+                                "label": "3",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a multi-parameter lambda names every parameter",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "array/reduce",
+              "@entity.xs",
+              0,
+              [
+                "fn",
+                [
+                  "acc",
+                  "x"
+                ],
+                [
+                  "+",
+                  "@acc",
+                  "@x"
+                ]
+              ]
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "array/reduce",
+                    "form": "unknown",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "binding",
+                        "label": "@entity.xs",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2]",
+                        "kind": "literal",
+                        "label": "0",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][3]",
+                        "kind": "lambda",
+                        "label": "fn",
+                        "form": "template",
+                        "type": null,
+                        "names": [
+                          "acc",
+                          "x"
+                        ],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][3][2]",
+                            "kind": "call",
+                            "label": "+",
+                            "form": "block",
+                            "type": null,
+                            "names": [],
+                            "children": [
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][3][2][1]",
+                                "kind": "binding",
+                                "label": "@acc",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              },
+                              {
+                                "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][3][2][2]",
+                                "kind": "binding",
+                                "label": "@x",
+                                "form": null,
+                                "type": null,
+                                "names": [],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a string literal keeps its JSON text and a number its digits",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "object/get",
+              "@entity.m",
+              "k"
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+                    "kind": "call",
+                    "label": "object/get",
+                    "form": "block",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[1]",
+                        "kind": "binding",
+                        "label": "@entity.m",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard[2]",
+                        "kind": "literal",
+                        "label": "\"k\"",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a build on a cold atom asks for the std manifest",
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "idle",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "not",
+              "@entity.a"
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "std"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a manifest naming the operators table asks for it",
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "std",
+          "event": "CIRCUIT_STD",
+          "payload": {
+            "data": "eyJvcmJMYW5ndWFnZSI6IHsib3BlcmF0b3JzIjogImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
+          },
+          "expect": {
+            "state": "operators"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a manifest without orbLanguage operators fails the request",
+      "entity": {
+        "requestId": "r9"
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "std",
+          "event": "CIRCUIT_STD",
+          "payload": {
+            "data": "eyJuYW1lIjogIngifQ=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CIRCUIT_FAILED",
+                "payload": {
+                  "requestId": "r9",
+                  "reason": "the installed @almadar/std declares no orbLanguage operators"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_BUILT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unreadable file fails the request and the atom stays cold",
+      "entity": {
+        "requestId": "r9"
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "operators",
+          "event": "CIRCUIT_TABLE_FAILED",
+          "payload": {
+            "error": "ENOENT"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CIRCUIT_FAILED",
+                "payload": {
+                  "requestId": "r9",
+                  "reason": "the operator table is not readable: ENOENT"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a table that is not JSON fails the request",
+      "entity": {
+        "requestId": "r9"
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "operators",
+          "event": "CIRCUIT_OPERATORS",
+          "payload": {
+            "data": "bm90IGpzb24="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CIRCUIT_FAILED",
+                "payload": {
+                  "requestId": "r9",
+                  "reason": "the operator table is not valid JSON"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CIRCUIT_BUILT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a second request while the table loads is refused, not dropped",
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "operators",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r2",
+            "expr": [
+              "not",
+              "@entity.a"
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[3].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "operators",
+            "emits": [
+              {
+                "event": "CIRCUIT_FAILED",
+                "payload": {
+                  "requestId": "r2",
+                  "reason": "the operator table is still loading"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a loaded table fills the forms, reads a missing visual as unknown, and answers the waiting request",
+      "entity": {
+        "requestId": "r1",
+        "expr": [
+          "set",
+          "@entity.v",
+          [
+            "weird",
+            "@entity.a"
+          ]
+        ],
+        "rootPath": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]"
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "operators",
+          "event": "CIRCUIT_OPERATORS",
+          "payload": {
+            "data": "eyJvcGVyYXRvcnMiOiB7Im5vdCI6IHsidmlzdWFsIjogeyJmb3JtIjogImludmVydCJ9fSwgIndlaXJkIjoge30sICJzZXQiOiB7InZpc3VhbCI6IHsiZm9ybSI6ICJhY3R1YXRvciJ9fX19"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0]",
+                    "kind": "call",
+                    "label": "set",
+                    "form": "actuator",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][1]",
+                        "kind": "binding",
+                        "label": "@entity.v",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2]",
+                        "kind": "call",
+                        "label": "weird",
+                        "form": "unknown",
+                        "type": null,
+                        "names": [],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[0][2][1]",
+                            "kind": "binding",
+                            "label": "@entity.a",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a null literal is a literal node, never a dropped expression",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "=",
+              "@entity.a",
+              null
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[0].guard",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[0].guard",
+                    "kind": "call",
+                    "label": "=",
+                    "form": "block",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[0].guard[1]",
+                        "kind": "binding",
+                        "label": "@entity.a",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[0].guard[2]",
+                        "kind": "literal",
+                        "label": "null",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a null object member is a literal node, never a dropped member",
+      "entity": {
+        "forms": {
+          "and": "series",
+          "or": "parallel",
+          "not": "invert",
+          "=": "block",
+          "array/filter": "conveyor",
+          "let": "scope",
+          "fn": "template",
+          "if": "branch",
+          "when": "branch",
+          "set": "actuator",
+          "do": "ladder",
+          "+": "block",
+          "object/get": "block",
+          "emit": "actuator"
+        }
+      },
+      "steps": [
+        {
+          "trait": "OrbCircuit",
+          "from": "ready",
+          "event": "CIRCUIT_BUILD",
+          "payload": {
+            "requestId": "r1",
+            "expr": [
+              "emit",
+              "DONE",
+              {
+                "a": null,
+                "b": 1
+              }
+            ],
+            "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+            "types": {}
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CIRCUIT_BUILT",
+                "payload": {
+                  "requestId": "r1",
+                  "root": {
+                    "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+                    "kind": "call",
+                    "label": "emit",
+                    "form": "actuator",
+                    "type": null,
+                    "names": [],
+                    "children": [
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][1]",
+                        "kind": "literal",
+                        "label": "\"DONE\"",
+                        "form": null,
+                        "type": null,
+                        "names": [],
+                        "children": []
+                      },
+                      {
+                        "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2]",
+                        "kind": "object",
+                        "label": "{\u2026}",
+                        "form": null,
+                        "type": null,
+                        "names": [
+                          "a",
+                          "b"
+                        ],
+                        "children": [
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2].a",
+                            "kind": "literal",
+                            "label": "null",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          },
+                          {
+                            "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2].b",
+                            "kind": "literal",
+                            "label": "1",
+                            "form": null,
+                            "type": null,
+                            "names": [],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

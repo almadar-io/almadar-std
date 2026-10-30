@@ -38,10 +38,10 @@ orbital OrbTailwindContentOrbital {
 
     state ready {
       INIT -> ready
-      TAILWIND_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      TAILWIND_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
-      TAILWIND_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
+      TAILWIND_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -50,7 +50,7 @@ orbital OrbTailwindContentOrbital {
         (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
       TAILWIND_ARGS_DONE -> working when (= (array/len @payload.errors) 0)
         (set @entity.out (default (array/first (default (object/get @payload.flags "out") [])) @config.defaultOut))
-        (set @entity.check (!= (object/get @payload.flags "check") null))
+        (set @entity.check (object/has @payload.flags "check"))
         (behavior/catalog { paths: (if (> (array/len @payload.positionals) 0) @payload.positionals @config.defaultScope), exposure: [] } {
           emit: { success: TAILWIND_LISTED, failure: TAILWIND_CATALOG_FAILED }
         })
@@ -59,7 +59,7 @@ orbital OrbTailwindContentOrbital {
     state working {
       INIT -> working
       TAILWIND_CATALOG_FAILED -> ready
-        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not list the behaviors: " @payload.error) })
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not list the behaviors: " (default @payload.error "")) })
       TAILWIND_LISTED -> working
         (set @entity.hits (array/map @payload.result (fn h (object/get @h "value"))))
         (set @entity.cursor 0)

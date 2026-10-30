@@ -10,7 +10,7 @@ uses Spec from "almadar-std/asset-pack"
 orbital StdAssetPackOrbital {
   type PackAsset = {
     key : string!
-    url : asset
+    url : asset!
     atlas : asset
     sprite : string
     role : string
@@ -27,7 +27,7 @@ orbital StdAssetPackOrbital {
     pack : string!
     version : number!
     base : string!
-    assets : [PackAsset]
+    assets : [PackAsset]!
   }
 
   entity StdAssetPack [runtime, shared] {
@@ -56,12 +56,12 @@ orbital StdAssetPackOrbital {
       INIT -> ready when (= @config.assetPack "")
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "http"))
         (set @entity.assetPackStatus "loading")
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))) {}))
         (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
         (emit PACK_HTTP_SEND { key: "pack", method: "GET", target: @config.packPath, headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "file"))
         (set @entity.assetPackStatus "loading")
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))) {}))
         (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
     }
 
@@ -73,7 +73,7 @@ orbital StdAssetPackOrbital {
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))) {}))
         (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat "HTTP " (str/concat @payload.status " or invalid JSON at " @config.packPath)) })
         (emit ASSET_PACK_PUBLISH { })
       PACK_FILE_READ -> loading when (and (!= (bytes/to-string @payload.data) null) (json/valid (bytes/to-string @payload.data)))
@@ -82,30 +82,30 @@ orbital StdAssetPackOrbital {
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))) {}))
         (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat "invalid JSON at " @config.packPath) })
         (emit ASSET_PACK_PUBLISH { })
       PACK_LOAD_FAILED -> failed
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))) {}))
         (notify error (str/concat "Asset pack " (str/concat @config.assetPack (str/concat " failed to load: " @payload.error))))
         (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: @payload.error })
         (emit ASSET_PACK_PUBLISH { })
-      PACK_TEXT -> reporting when (and (!= (json/parse @payload.text AssetPackManifest) null) (not (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key")))))) (not (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets")))))
-        (set @entity.assetByKey (let ((base (object/get (json/parse @payload.text AssetPackManifest) "base"))) (object/fromEntries (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r [(object/get @r "key") (object/merge @r (object/merge { url: (str/concat @base (object/get @r "url")) } (if (validate/required (object/get @r "atlas")) { atlas: (str/concat @base (object/get @r "atlas")) } {})))])))))
+      PACK_TEXT -> reporting when (let ((man (json/parse @payload.text AssetPackManifest))) (if (= @man null) false (and (not (array/some (object/get @man "assets") (fn r (not (validate/required (object/get @r "key")))))) (= (array/len (array/unique (array/map (object/get @man "assets") (fn r (object/get @r "key"))))) (array/len (object/get @man "assets"))))))
+        (set @entity.assetByKey (let ((man (default (json/parse @payload.text AssetPackManifest) { pack: "", version: 0, base: "", assets: [] }))) (let ((base (object/get @man "base"))) (default (object/fromEntries (array/map (object/get @man "assets") (fn r [(object/get @r "key") (object/merge @r (object/merge { url: (str/concat @base (object/get @r "url")) } (if (validate/required (object/get @r "atlas")) { atlas: (str/concat @base (object/get @r "atlas")) } {})))]))) {}))))
         (set @entity.assetPackMissing (array/filter @config.expectedKeys (fn k (not (object/has @entity.assetByKey @k)))))
         (set @entity.assetPackCursor 0)
         (let ((placeholders (object/fromEntries (array/map @entity.assetPackMissing (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))) (set @entity.assetByKey (if (= @placeholders null) @entity.assetByKey (object/merge @entity.assetByKey @placeholders))))
         (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
         (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
-      PACK_TEXT -> failed when (or (= (json/parse @payload.text AssetPackManifest) null) (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets"))))
+      PACK_TEXT -> failed when (let ((man (json/parse @payload.text AssetPackManifest))) (if (= @man null) true (or (array/some (object/get @man "assets") (fn r (not (validate/required (object/get @r "key"))))) (!= (array/len (array/unique (array/map (object/get @man "assets") (fn r (object/get @r "key"))))) (array/len (object/get @man "assets"))))))
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
-        (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))
-        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat (if (= (json/parse @payload.text AssetPackManifest) null) "invalid asset pack manifest" (if (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) "asset row without key" "duplicate asset key")) (str/concat " in " @config.packPath)) })
+        (set @entity.assetByKey (default (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))) {}))
+        (emit ASSET_PACK_FAILED { pack: @config.assetPack, message: (str/concat (let ((man (json/parse @payload.text AssetPackManifest))) (if (= @man null) "invalid asset pack manifest" (if (array/some (object/get @man "assets") (fn r (not (validate/required (object/get @r "key"))))) "asset row without key" "duplicate asset key"))) (str/concat " in " @config.packPath)) })
         (emit ASSET_PACK_PUBLISH { })
     }
 
@@ -119,7 +119,7 @@ orbital StdAssetPackOrbital {
     state reporting {
       INIT -> reporting
       ASSET_PACK_REPORT_NEXT -> reporting when (< @payload.cursor (array/len @entity.assetPackMissing))
-        (emit ASSET_PACK_MISSING { pack: @config.assetPack, key: (array/nth @entity.assetPackMissing @payload.cursor) })
+        (emit ASSET_PACK_MISSING { pack: @config.assetPack, key: (default (array/nth @entity.assetPackMissing @payload.cursor) "") })
         (set @entity.assetPackCursor (+ @payload.cursor 1))
         (emit ASSET_PACK_REPORT_NEXT { cursor: (+ @payload.cursor 1) })
       ASSET_PACK_REPORT_NEXT -> ready when (>= @payload.cursor (array/len @entity.assetPackMissing))

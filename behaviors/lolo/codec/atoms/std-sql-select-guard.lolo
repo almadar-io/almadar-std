@@ -32,12 +32,12 @@ orbital SqlSelectGuardOrbital {
             (if (= @c "'")
               (object/merge @a { m: (if (let ((t (str/replace-pattern (str/join (array/slice @ch 0 @i) "") "[ \t\n\r]+$" "")))
   (let ((tc (str/split @t "")))
-    (and (> (array/len @tc) 0) (array/includes ["e", "E"] (array/last @tc)) (or (= (array/len @tc) 1) (not (validate/pattern (array/nth @tc (- (array/len @tc) 2)) "^[A-Za-z0-9_$]$")))))) "esq" "sq"), o: (array/append (object/get @a "o") "''") })
+    (and (> (array/len @tc) 0) (array/includes ["e", "E"] (array/last @tc)) (or (= (array/len @tc) 1) (not (validate/pattern (default (array/nth @tc (- (array/len @tc) 2)) "") "^[A-Za-z0-9_$]$")))))) "esq" "sq"), o: (array/append (object/get @a "o") "''") })
               (if (= @c "\"")
                 (object/merge @a { m: "dq", o: (array/append (object/get @a "o") "\"\"") })
                 (if (= @c "$")
                   (let ((parts (str/split (str/join (array/slice @ch (+ @i 1) @n) "") "$")))
-  (let ((e (array/first @parts)))
+  (let ((e (default (array/first @parts) "")))
     (if (and (> (array/len @parts) 1) (or (= @e "") (validate/pattern @e "^[A-Za-z_][A-Za-z0-9_]*$")))
       (let ((tag (str/concat "$" @e "$")))
         (object/merge @a { m: "dol", tg: @tag, sk: (+ @i (array/len (str/split @tag ""))), o: (array/append (object/get @a "o") "$$") }))
@@ -70,7 +70,7 @@ orbital SqlSelectGuardOrbital {
     { ok: false, reason: "Empty statement" }
     (if (> (array/len @stmts) 1)
       { ok: false, reason: "Only a single statement is allowed" }
-      (let ((words (array/map (array/filter (str/split (str/replace-pattern (array/first @stmts) "[^A-Za-z0-9_]" " ") " ") (fn w (validate/pattern @w "^[A-Za-z_]"))) (fn w (str/upper @w)))))
+      (let ((words (array/map (array/filter (str/split (str/replace-pattern (default (array/first @stmts) "") "[^A-Za-z0-9_]" " ") " ") (fn w (validate/pattern @w "^[A-Za-z_]"))) (fn w (str/upper @w)))))
         (if (not (array/includes ["SELECT", "WITH"] (array/first @words)))
           { ok: false, reason: "Only SELECT statements are allowed" }
           (let ((denied (array/find @words (fn w (array/includes ["INSERT", "UPDATE", "DELETE", "MERGE", "INTO", "FOR"] @w)))))

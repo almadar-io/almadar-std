@@ -20,8 +20,8 @@ orbital FirebaseEmulatorsOrbital {
     hostPath : string @description "The host's PATH, with Java 21 put first for the child." = ""
     imports : boolean @description "A previous export exists and is imported at start." = false
     started : boolean @description "This run started the suite and waits for its ports." = false
-    pollDueAt : number @description "When the next port probe is due (ms since the epoch); 0 when none is." = 0
-    deadline : number @description "When waiting for the ports gives up (ms since the epoch)." = 0
+    pollDueAt : instant? @description "When the next port probe is due; null when none is." = null
+    deadline : instant? @description "When waiting for the ports gives up; null while idle." = null
   }
 
   trait FirebaseEmulators -> EmulatorSuite [optimistic] {
@@ -29,14 +29,14 @@ orbital FirebaseEmulatorsOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.pollDueAt 0)
+        (set @entity.pollDueAt null)
       EMULATORS_START -> starting
         (set @entity.projectId @config.projectId)
         (set @entity.reused false)
         (set @entity.started false)
         (set @entity.javaHome "")
         (set @entity.javaCandidate 0)
-        (set @entity.pollDueAt 0)
+        (set @entity.pollDueAt null)
         (os/getenv "NODE_ENV" { emit: { success: EMULATORS_NODE_ENV failure: EMULATORS_HOST_FAILED } })
     }
 
@@ -68,19 +68,19 @@ orbital FirebaseEmulatorsOrbital {
         (emit EMULATORS_PROBED { })
       EMULATORS_PROBED -> idle when (and @entity.firestoreUp @entity.authUp)
         (set @entity.reused (not @entity.started))
-        (set @entity.pollDueAt 0)
+        (set @entity.pollDueAt null)
         (emit EMULATORS_READY { projectId: @entity.projectId firestoreHost: "127.0.0.1:8080" authHost: "127.0.0.1:9099" reused: (not @entity.started) })
       EMULATORS_PROBED -> idle when (and (not @entity.started) (!= @entity.firestoreUp @entity.authUp))
         (emit EMULATORS_FAILED { code: "emulators_port_split" message: (if @entity.firestoreUp "port 8080 is in use but 9099 is not, so this is not one emulator suite; stop what holds 8080" "port 9099 is in use but 8080 is not, so this is not one emulator suite; stop what holds 9099") })
       EMULATORS_PROBED -> starting when (and (not @entity.started) (not @entity.firestoreUp) (not @entity.authUp))
         (os/getenv "JAVA21_HOME" { emit: { success: EMULATORS_JAVA_HOME failure: EMULATORS_HOST_FAILED } })
-      EMULATORS_PROBED -> starting when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (< @now @entity.deadline))
-        (set @entity.pollDueAt (+ @now 500))
-      EMULATORS_PROBED -> idle when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (>= @now @entity.deadline))
-        (set @entity.pollDueAt 0)
+      EMULATORS_PROBED -> starting when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (time/isBefore @now (default @entity.deadline @now)))
+        (set @entity.pollDueAt (time/add @now 500 "ms"))
+      EMULATORS_PROBED -> idle when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (not (time/isBefore @now (default @entity.deadline @now))))
+        (set @entity.pollDueAt null)
         (emit EMULATORS_FAILED { code: "emulators_timeout" message: "the Firebase emulators did not listen on 8080 and 9099 within 120 seconds; see ~/.almadar/emulator-data/*-debug.log" })
       EMULATORS_JAVA_HOME -> starting when (!= @payload.value null)
-        (set @entity.javaHome @payload.value)
+        (set @entity.javaHome (default @payload.value ""))
         (os/getenv "PATH" { emit: { success: EMULATORS_PATH failure: EMULATORS_HOST_FAILED } })
       EMULATORS_JAVA_HOME -> starting when (== @payload.value null)
         (emit EMULATORS_JAVA_NEXT { })
@@ -121,21 +121,21 @@ orbital FirebaseEmulatorsOrbital {
         (os/spawn "firebase" ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export"] { cwd: "~/.almadar/emulator-data/" env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath HOME: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: EMULATORS_SPAWNED failure: EMULATORS_SPAWN_FAILED } })
       EMULATORS_SPAWNED -> starting
         (set @entity.started true)
-        (set @entity.deadline (+ @now 120000))
-        (set @entity.pollDueAt (+ @now 500))
+        (set @entity.deadline (time/add @now 120000 "ms"))
+        (set @entity.pollDueAt (time/add @now 500 "ms"))
       EMULATORS_SPAWN_FAILED -> idle
         (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " (default @payload.error "")) })
       EMULATORS_POLL -> starting
-        (set @entity.pollDueAt 0)
+        (set @entity.pollDueAt null)
         (emit EMULATORS_PROBE { })
       EMULATORS_HOST_FAILED -> idle
-        (set @entity.pollDueAt 0)
+        (set @entity.pollDueAt null)
         (emit EMULATORS_FAILED { code: "emulators_host_failed" message: (default @payload.error "") })
     }
 
     ticks {
       pollPorts every 100ms [background]
-        when (and (> @entity.pollDueAt 0) (>= @now @entity.pollDueAt))
+        when (and (!= @entity.pollDueAt null) (not (time/isBefore @now (default @entity.pollDueAt @now))))
         (emit EMULATORS_POLL { })
     }
 
@@ -196,7 +196,7 @@ orbital FirebaseEmulatorsOrbital {
         @description "Internal: the Auth port refused a connection."
         @tier "internal"
       EMULATORS_JAVA_HOME -> internal {
-        value : string
+        value : string?
       }
         @description "Internal: the os/getenv answer for JAVA21_HOME."
         @tier "internal"

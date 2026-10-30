@@ -28,7 +28,7 @@ orbital OwnerOverlayOrbital {
                 (let ((h (hash/sha256 @payload.ownerId "base64")))
                   (if (== @h null)
                     ""
-                    (let ((n (bytes/read-uint @h 0 4 "be")))
+                    (let ((n (let ((hb (bytes/from-base64 @h))) (if (== @hb null) null (bytes/read-uint @hb 0 4 "be")))))
                       (if (== @n null)
                         ""
                         (let ((m (math/mod @n (array/len @ids))))
@@ -43,7 +43,7 @@ orbital OwnerOverlayOrbital {
             (let ((target (let ((h (hash/sha256 @payload.ownerId "base64")))
                             (if (== @h null)
                               ""
-                              (let ((n (bytes/read-uint @h 0 4 "be")))
+                              (let ((n (let ((hb (bytes/from-base64 @h))) (if (== @hb null) null (bytes/read-uint @hb 0 4 "be")))))
                                 (if (== @n null)
                                   ""
                                   (let ((m (math/mod @n (array/len @ids))))

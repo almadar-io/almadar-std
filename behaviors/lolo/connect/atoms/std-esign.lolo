@@ -33,7 +33,10 @@ orbital EsignOrbital {
           }
         } { emit: { success: ESIGN_SEND_ENVELOPE_REPLIED, failure: ESIGN_SEND_ENVELOPE_UNREACHED } })
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ESIGN_ENVELOPE_SENT { envelopeId: (object/get (json/parse @payload.body DocusignEnvelopeReply) envelopeId ""), status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status "sent") })
+        (let ((reply (json/parse @payload.body DocusignEnvelopeReply)))
+          (if (= @reply null)
+            (emit ESIGN_SEND_ENVELOPE_FAILED { message: "DocuSign answered a body that is not an envelope" })
+            (emit ESIGN_ENVELOPE_SENT { envelopeId: (object/get @reply envelopeId ""), status: (object/get @reply status "sent") })))
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (>= @payload.status 500)
         (emit ESIGN_SEND_ENVELOPE_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
@@ -48,7 +51,10 @@ orbital EsignOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: ESIGN_GET_ENVELOPE_STATUS_REPLIED, failure: ESIGN_GET_ENVELOPE_STATUS_UNREACHED } })
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ESIGN_ENVELOPE_STATUS { status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status ""), completedAt: (object/get (json/parse @payload.body DocusignEnvelopeReply) completedDateTime "") })
+        (let ((reply (json/parse @payload.body DocusignEnvelopeReply)))
+          (if (= @reply null)
+            (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: "DocuSign answered a body that is not an envelope" })
+            (emit ESIGN_ENVELOPE_STATUS { status: (object/get @reply status ""), completedAt: (object/get @reply completedDateTime "") })))
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (>= @payload.status 500)
         (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
@@ -64,11 +70,11 @@ orbital EsignOrbital {
           responseAs: bytes
         } { key: @payload.envelopeId, emit: { success: ESIGN_DOWNLOAD_DOCUMENT_REPLIED, failure: ESIGN_DOWNLOAD_DOCUMENT_UNREACHED } })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ESIGN_DOCUMENT_DOWNLOADED { content: @payload.body, documentName: (str/concat "envelope-" @payload.key ".pdf") })
+        (emit ESIGN_DOCUMENT_DOWNLOADED { content: @payload.body, documentName: (str/concat "envelope-" (default @payload.key "") ".pdf") })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (>= @payload.status 500)
         (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
-        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: (str/concat "DocuSign error " @payload.status ": " (str/slice (base64/decode @payload.body) 0 300)) })
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: (str/concat "DocuSign error " @payload.status ": " (str/slice (default (base64/decode @payload.body) "") 0 300)) })
       ESIGN_DOWNLOAD_DOCUMENT_UNREACHED -> idle
         (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: @payload.error })
     }

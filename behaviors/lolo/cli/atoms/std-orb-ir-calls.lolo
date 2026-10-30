@@ -27,16 +27,16 @@ orbital IrCallsOrbital {
     state ready {
       INIT -> ready
       IR_CALLS_FIND -> ready
-        (set @entity.calls (let ((hs ?heads) (orbs (object/get ?program "orbitals" [])))
+        (set @entity.calls (let ((hs ?heads) (orbs (object/get ?program "orbitals" [])) (no : IrOrbital { traits: [] }) (nt : IrTrait { stateMachine: { transitions: [] }, ticks: [] }) (nx : IrTransition {}) (nk : IrTick {}))
             (let ((units (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-                    (let ((trs (object/get (array/nth @orbs @oi) "traits" [])))
+                    (let ((trs (object/get (default (array/nth @orbs @oi) @no) "traits" [])))
                       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                         (let ((base (str/concat "orbitals[" @oi "].traits[" @ti "]"))
-                              (xs (object/get (object/get (array/nth @trs @ti) "stateMachine" {}) "transitions" []))
-                              (ks (object/get (array/nth @trs @ti) "ticks" [])))
+                              (xs (object/get (object/get (default (array/nth @trs @ti) @nt) "stateMachine" {}) "transitions" []))
+                              (ks (object/get (default (array/nth @trs @ti) @nt) "ticks" [])))
                           (array/concat
-                            (array/map (array/range 0 (array/len @xs)) (fn xi { path: (str/concat @base ".stateMachine.transitions[" @xi "]"), unit: (array/nth @xs @xi) }))
-                            (array/map (array/range 0 (array/len @ks)) (fn ki { path: (str/concat @base ".ticks[" @ki "]"), unit: (array/nth @ks @ki) })))))))))))))
+                            (array/map (array/range 0 (array/len @xs)) (fn xi { path: (str/concat @base ".stateMachine.transitions[" @xi "]"), unit: (default (array/nth @xs @xi) @nx) }))
+                            (array/map (array/range 0 (array/len @ks)) (fn ki { path: (str/concat @base ".ticks[" @ki "]"), unit: (default (array/nth @ks @ki) @nk) })))))))))))))
               (let ((roots (array/flatten (array/map @units (fn u
                       (let ((x (object/get @u "unit")) (p (object/get @u "path")))
                         (array/concat
@@ -50,7 +50,7 @@ orbital IrCallsOrbital {
                             (if (= @hd "quote")
                               []
                               (array/concat
-                                (if (and (!= @hd "") (array/includes @hs @hd)) [{ head: @hd, args: (array/map (array/range 1 (array/len @k)) (fn a (array/nth @n @a))), rel: "", d: 0 }] [])
+                                (if (and (!= @hd "") (array/includes @hs @hd)) [{ head: @hd, args: (array/map (array/range 1 (array/len @k)) (fn a (default (array/nth @n @a) ""))), rel: "", d: 0 }] [])
                                 (let ((pairs (array/flatten (array/map (array/range 0 (array/len @k)) (fn i
                                         (let ((piece (if (= @hd "do") (str/concat ".do[" (- @i 1) "]")
                                                        (if (= @hd "if") (if (= @i 2) ".then" (if (= @i 3) ".else" (str/concat "[" @i "]")))

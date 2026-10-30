@@ -56,10 +56,10 @@ orbital OrbShellCheckOrbital {
 
     state ready {
       INIT -> ready
-      SC_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      SC_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit SHELL_CHECK_ANSWERED { status: 500, body: "Error: orb shell check: the command arguments could not be read", errors: [] })
-      SC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
+      SC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
       SHELL_LAYOUT_EVALUATE -> ready
         (set @entity.errors (array/concat
           (array/map (array/filter @payload.roots (fn dir (not (or (array/includes @config.fixedRoots @dir) (array/includes @config.metadataRoots @dir) (array/includes (array/map @config.roleRules (fn rule (object/get @rule "directory"))) @dir))))) (fn dir (str/concat "unexpected root directory: " @dir)))
@@ -70,7 +70,7 @@ orbital OrbShellCheckOrbital {
                 (if (> (array/len (str/split @path "/")) 2) [(str/concat "pack exceeds role/name depth: " @path)] [])
                 (if (object/get @item "empty") []
                   (let ((rules (array/filter @config.roleRules (fn rule (= (object/get @rule "directory") @root)))))
-                    (if (= (array/len @rules) 0)
+                    (if (= (array/first @rules) null)
                       (if (= @role "") [] [(str/concat "tagged pack has no role root: " @path)])
                       (if (= @role "") [(str/concat "missing role descriptor: " @path)]
                         (if (= @role (object/get (array/first @rules) "role")) [] [(str/concat "role " @role " is misplaced at " @path)]))))))))))))
@@ -105,7 +105,7 @@ orbital OrbShellCheckOrbital {
       SC_NEXT -> ready when (= (array/len @entity.tasks) 0)
         (emit SHELL_LAYOUT_EVALUATE { roots: @entity.roots, packs: @entity.packs })
       SC_NEXT -> listingPack when (> (array/len @entity.tasks) 0)
-        (set @entity.current (array/first @entity.tasks))
+        (set @entity.current (default (array/first @entity.tasks) @entity.current))
         (set @entity.tasks (array/drop @entity.tasks 1))
         (os/list-dir { anchor: "cwd", path: (str/concat @entity.root "/" (object/get @entity.current "path")) } { key: "pack", emit: { success: SC_PACK_LISTED, failure: SC_IO_FAILED } })
     }
@@ -139,8 +139,8 @@ orbital OrbShellCheckOrbital {
       SC_IO_FAILED -> ready
         (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
       SC_ROLE_READ -> scanning
-        (set @entity.packs (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (default (object/get (json/parse @text ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))))
-        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit SC_IO_FAILED { error: (str/concat (object/get @entity.current "path") " is not readable text") }) (emit SC_NEXT { })))
+        (set @entity.packs (let ((text (bytes/to-string @payload.data))) (if (or (= @text null) (= (json/parse @text ShellRoleDescriptor) null)) @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (object/get (json/parse @text ShellRoleDescriptor) "role"), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit SC_IO_FAILED { error: (str/concat (object/get @entity.current "path") " is not readable text") }) (if (= (json/parse @text ShellRoleDescriptor) null) (emit SC_IO_FAILED { error: (str/concat (object/get @entity.current "path") " is not a valid shell role descriptor") }) (emit SC_NEXT { }))))
     }
 
     emits {

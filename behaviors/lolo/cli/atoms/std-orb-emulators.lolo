@@ -28,9 +28,9 @@ orbital OrbEmulatorsOrbital {
 
     state ready {
       INIT -> ready
-      EMULATORS_CALLED -> ready when (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      EMULATORS_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (> (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 0))
         (emit EMULATORS_ANSWERED { status: 400, body: "usage: orb emulators" })
-      EMULATORS_CALLED -> ready when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      EMULATORS_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 0))
         (emit EMULATORS_REQUESTED { })
       SUITE_READY -> ready
         (emit EMULATORS_ANSWERED { status: 200, body: (str/concat "FIRESTORE_EMULATOR_HOST=" @payload.firestoreHost "\nFIREBASE_AUTH_EMULATOR_HOST=" @payload.authHost "\nFIREBASE_PROJECT_ID=" @payload.projectId "\nGCLOUD_PROJECT=" @payload.projectId) })

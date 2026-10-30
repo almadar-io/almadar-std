@@ -28,22 +28,22 @@ orbital OrbEmbedsOrbital {
 
     state ready {
       INIT -> ready
-      EMBEDS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      EMBEDS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit EMBEDS_ANSWERED { status: 400, body: "", stderr: "usage: orb embeds <file.lolo> | --stdin" })
-      EMBEDS_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
+      EMBEDS_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
       EMBEDS_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
         (emit EMBEDS_ANSWERED { status: 400, body: "", stderr: "usage: orb embeds <file.lolo> | --stdin" })
-      EMBEDS_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (object/get @payload.flags "stdin") null))
+      EMBEDS_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (not (object/has @payload.flags "stdin")))
         (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: "Error: orb embeds: pass a .lolo file or --stdin" })
-      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1) (!= (object/get @payload.flags "stdin") null))
+      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1) (object/has @payload.flags "stdin"))
         (emit EMBEDS_START { file: "", stdin: true })
-      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (object/get @payload.flags "stdin") null))
-        (emit EMBEDS_START { file: (array/first @payload.positionals), stdin: false })
+      EMBEDS_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (not (object/has @payload.flags "stdin")))
+        (emit EMBEDS_START { file: (default (array/first @payload.positionals) ""), stdin: false })
     }
 
     state working {
@@ -115,7 +115,7 @@ orbital OrbEmbedsOrbital {
     state reading {
       INIT -> reading
       EMBEDS_FAILED -> idle
-        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       EMBEDS_FILE -> listing
         (program/read (bytes/to-string @payload.data) { embeds: true } { key: "embeds" emit: { success: EMBEDS_LISTED, failure: EMBEDS_REFUSED } })
       EMBEDS_CHUNK -> reading when (not @payload.eof)
@@ -130,7 +130,7 @@ orbital OrbEmbedsOrbital {
       EMBEDS_LISTED -> idle
         (emit EMBEDS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       EMBEDS_REFUSED -> idle
-        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb embeds: " @payload.error) })
+        (emit EMBEDS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb embeds: " (default @payload.error "")) })
     }
 
     emits {

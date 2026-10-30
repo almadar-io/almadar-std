@@ -48,7 +48,7 @@ orbital VerifyWalkOrbital {
     unplanned : number! = 0
     guardBlocked : number! = 0
     notes : [WalkNote] = []
-    program : string = ""
+    program : WalkFull?
     machineRows : [WalkMachineRow] = []
     planned : [WalkPlanned] = []
     judgeSteps : [WalkPlanStep] = []
@@ -102,11 +102,12 @@ orbital VerifyWalkOrbital {
 
     state ready {
       INIT -> ready
-      VERIFY_WALK_CALLED -> ready
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
-          (if (= @argv null) (emit VERIFY_WALK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
-            (if (!= (array/len @argv) 1) (emit VERIFY_WALK_ANSWERED { status: 400, body: "usage: orb verify-walk <program.lolo>" })
-              (emit VERIFY_WALK_START { file: (array/first @argv) }))))
+      VERIFY_WALK_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
+      VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit VERIFY_WALK_ANSWERED { status: 400, body: "usage: orb verify-walk <program.lolo>" })
+      VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit VERIFY_WALK_START { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
       WALK_ANSWERED -> ready
         (emit VERIFY_WALK_ANSWERED { status: @payload.status, body: @payload.body })
     }
@@ -150,22 +151,24 @@ orbital VerifyWalkOrbital {
       WALK_FILE_READ -> reading
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
       WALK_PROGRAM -> validating
-        (set @entity.program (json/stringify @payload.result))
+        (set @entity.program (as @payload.result WalkFull))
         (program/validate @payload.result { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state validating {
       INIT -> validating
       WALK_VALIDATED -> ready when (> (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0)
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/join (array/concat
-          (array/map (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" [])) (fn e (str/concat "fail  validate [" (object/get @e "code") "] " (object/get @e "message"))))
+          (array/map (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" [])) (fn e (str/concat "fail  validate [" (object/get @e "code") "] " (default (object/get @e "message") ""))))
           [(str/concat "0 passed, " (array/len (object/get @payload.result "errors")) " failed, 0 unplanned, 0 guard-blocked")]) "\n") })
-      WALK_VALIDATED -> machine when (= (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0)
-        (let ((program (json/parse @entity.program WalkFull))) (if (= @program null) (emit WALK_FAILED { error: "the program could not be read back" }) (emit WALK_MACHINE_READ { program: @program })))
+      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0) (!= @entity.program null))
+        (emit WALK_MACHINE_READ { program: @entity.program })
+      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0) (= @entity.program null))
+        (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state machine {
@@ -174,55 +177,65 @@ orbital VerifyWalkOrbital {
         (emit WALK_FAILED { error: "the program could not be read as a machine" })
       WALK_MACHINE_ANSWERED -> ready when (= (array/len @payload.rows) 0)
         (emit VERIFY_WALK_ANSWERED { status: 500, body: "verify-walk: the program has no transitions" })
-      WALK_MACHINE_ANSWERED -> planning when (> (array/len @payload.rows) 0)
+      WALK_MACHINE_ANSWERED -> planning when (and (> (array/len @payload.rows) 0) (!= @entity.program null))
         (set @entity.machineRows @payload.rows)
-        (let ((program (json/parse @entity.program WalkFull))) (if (= @program null) (emit WALK_FAILED { error: "the program could not be read back" }) (emit WALK_PLAN_REQUEST { program: @program, rows: @payload.rows, viewer: @entity.viewer, owners: @entity.owners })))
+        (emit WALK_PLAN_REQUEST { program: @entity.program, rows: @payload.rows, viewer: @entity.viewer, owners: @entity.owners })
+      WALK_MACHINE_ANSWERED -> planning when (and (> (array/len @payload.rows) 0) (= @entity.program null))
+        (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state planning {
       INIT -> planning
       WALK_PLAN_REFUSED -> planning
         (emit WALK_FAILED { error: @payload.error })
-      WALK_PLAN_ANSWERED -> stepping
+      WALK_PLAN_ANSWERED -> planning when (!= (array/len @payload.steps) (array/len @entity.machineRows))
+        (emit WALK_FAILED { error: "the plan answered a different number of steps than the program has transitions" })
+      WALK_PLAN_ANSWERED -> stepping when (= (array/len @payload.steps) (array/len @entity.machineRows))
         (set @entity.planned (array/reduce @entity.machineRows [] (fn acc r
           (let ((s (array/nth @payload.steps (array/len @acc))))
-            (array/concat @acc [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
-              payload: (object/get @s "payload" {}), unplanned: (object/get @s "unplanned" ""), reply: (object/get @s "reply" "") }])))))
+            (if (= @s null) @acc (array/concat @acc [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
+              payload: (object/get @s "payload" {}), unplanned: (object/get @s "unplanned" ""), reply: (object/get @s "reply" "") }]))))))
         (set @entity.judgeSteps (array/filter @payload.steps (fn s (and (= (object/get @s "unplanned" "") "") (= (object/get @s "reply" "") "")))))
         (set @entity.creditSteps (array/map (array/filter @payload.steps (fn s (= (object/get @s "unplanned" "") ""))) (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply" "") })))
         (set @entity.notes (array/map (array/filter @entity.planned (fn r (!= (object/get @r "unplanned") "")))
           (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), missing: (object/get @r "unplanned") })))
         (emit WALK_PLAY { rows: (array/filter @entity.planned (fn r (and (= (object/get @r "unplanned") "") (= (object/get @r "reply") "")))) })
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state stepping {
       INIT -> stepping
       WALK_PLAY -> stepping when (= (array/len @payload.rows) 0)
         (emit WALK_STEPPED { result: [] })
-      WALK_PLAY -> stepping when (> (array/len @payload.rows) 0)
-        (let ((program (json/parse @entity.program WalkFull))) (if (= @program null) (emit WALK_FAILED { error: "the program could not be read back" }) (program/step @program (array/map @payload.rows (fn r
+      WALK_PLAY -> stepping when (and (> (array/len @payload.rows) 0) (= @entity.program null))
+        (emit WALK_FAILED { error: "the program could not be read back" })
+      WALK_PLAY -> stepping when (and (> (array/len @payload.rows) 0) (!= @entity.program null))
+        (program/step @entity.program (array/map @payload.rows (fn r
           { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
             targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))),
             payload: (object/get @r "payload"), viewer: @entity.viewer
-          })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })))
+          })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> judging
         (set @entity.played @payload.result)
         (set @entity.hops (array/reduce (array/filter @payload.result (fn p (object/get (object/get @p "result") "transitionFired"))) [] (fn acc p
-          (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get (object/get (object/get @p "result") "state") "after" ""), arm: (object/get (object/get @p "result") "firedArm" (- 0 1)) }]))))
+          (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get (default (object/get (object/get @p "result") "state") {}) "after" ""), arm: (object/get (object/get @p "result") "firedArm" (- 0 1)) }]))))
         (set @entity.judged [])
         (emit WALK_JUDGE_NEXT {})
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state judging {
       INIT -> judging
-      WALK_JUDGE_NEXT -> judging when (< (array/len @entity.judged) (array/len @entity.played))
-        (let ((program (json/parse @entity.program WalkFull))) (if (= @program null) (emit WALK_FAILED { error: "the program could not be read back" }) (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @program })))
+      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (!= (array/nth @entity.judgeSteps (array/len @entity.judged)) null) (!= (array/nth @entity.played (array/len @entity.judged)) null))
+        (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @entity.program })
+      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (= @entity.program null))
+        (emit WALK_FAILED { error: "the program could not be read back" })
+      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (or (= (array/nth @entity.judgeSteps (array/len @entity.judged)) null) (= (array/nth @entity.played (array/len @entity.judged)) null)))
+        (emit WALK_FAILED { error: "the judged step has no planned or played row" })
       WALK_JUDGE_ANSWERED -> judging
         (set @entity.judged (array/concat @entity.judged [{ verdicts: @payload.verdicts }]))
         (emit WALK_JUDGE_NEXT {})
@@ -230,25 +243,29 @@ orbital VerifyWalkOrbital {
         (let ((credit : [WalkCreditStep] (array/map @entity.creditSteps (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply" ""), fired: @entity.hops }))))
           (emit WALK_CREDIT_REQUEST { steps: @credit }))
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state crediting {
       INIT -> crediting
-      WALK_CREDIT_ANSWERED -> ready
+      WALK_CREDIT_ANSWERED -> crediting when (not (and (= (array/len @entity.judged) (array/len @entity.played)) (array/every @payload.credits (fn c (< (object/get @c "index") (array/len @entity.creditSteps))))))
+        (emit WALK_FAILED { error: "the credit answer does not match the played rows" })
+      WALK_CREDIT_ANSWERED -> ready when (and (= (array/len @entity.judged) (array/len @entity.played)) (array/every @payload.credits (fn c (< (object/get @c "index") (array/len @entity.creditSteps)))))
         (set @entity.credits @payload.credits)
         (set @entity.rows (array/concat
           (array/reduce @entity.played [] (fn acc p
-            (let ((bad (array/filter (object/get (array/nth @entity.judged (array/len @acc)) "verdicts") (fn v (not (object/get @v "passed"))))))
-              (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get @p "to"),
-                verdict: (if (and (object/get (object/get @p "result") "transitionFired") (array/includes (object/get @p "targets") (object/get (object/get (object/get @p "result") "state") "after")) (= (array/len @bad) 0)) "pass"
-                  (if (and (not (object/get (object/get @p "result") "transitionFired")) (object/get @p "guarded")) "guard-blocked" "fail")),
-                detail: (str/join (array/map @bad (fn v (str/concat (object/get @v "name") ": " (object/get @v "detail")))) "; ") }]))))
+            (let ((j (array/nth @entity.judged (array/len @acc))))
+              (if (= @j null) @acc
+                (let ((bad (array/filter (object/get @j "verdicts") (fn v (not (object/get @v "passed"))))))
+                  (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get @p "to"),
+                    verdict: (if (and (object/get (object/get @p "result") "transitionFired") (array/includes (object/get @p "targets") (object/get (default (object/get (object/get @p "result") "state") {}) "after" "")) (= (array/len @bad) 0)) "pass"
+                      (if (and (not (object/get (object/get @p "result") "transitionFired")) (object/get @p "guarded")) "guard-blocked" "fail")),
+                    detail: (str/join (array/map @bad (fn v (str/concat (object/get @v "name") ": " (object/get @v "detail")))) "; ") }]))))))
           (array/map (array/filter @entity.planned (fn r (and (= (object/get @r "unplanned") "") (!= (object/get @r "reply") "")))) (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"),
-            verdict: (if (array/some @payload.credits (fn c (let ((cs (array/nth @entity.creditSteps (object/get @c "index")))) (and (= (object/get @cs "trait") (object/get @r "trait")) (= (object/get @cs "from") (object/get @r "from")) (= (object/get @cs "event") (object/get @r "event")))))) "pass" "gap"),
+            verdict: (if (array/some @payload.credits (fn c (let ((cs (array/nth @entity.creditSteps (object/get @c "index")))) (if (= @cs null) false (and (= (object/get @cs "trait") (object/get @r "trait")) (= (object/get @cs "from") (object/get @r "from")) (= (object/get @cs "event") (object/get @r "event"))))))) "pass" "gap"),
             detail: "reply route, reachable only with a network" }))
           (array/map @entity.notes (fn n { trait: (object/get @n "trait"), from: (object/get @n "from"), event: (object/get @n "event"),
-            to: (object/get (array/find @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @n "trait")) (= (object/get @g "from") (object/get @n "from")) (= (object/get @g "event") (object/get @n "event"))))) "to"),
+            to: (let ((g (array/find @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @n "trait")) (= (object/get @g "from") (object/get @n "from")) (= (object/get @g "event") (object/get @n "event"))))))) (if (= @g null) "" (object/get @g "to"))),
             verdict: "unplanned" }))))
         (set @entity.failed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "fail")))))
         (set @entity.passed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "pass")))))
@@ -257,11 +274,11 @@ orbital VerifyWalkOrbital {
         (set @entity.guardBlocked (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "guard-blocked")))))
         (emit VERIFY_WALK_ANSWERED { status: (if (= @entity.failed 0) 200 500), body: (str/join (array/concat
           (array/map @entity.rows (fn r (str/concat (object/get @r "verdict") "  " (object/get @r "trait") " " (object/get @r "from") " --" (object/get @r "event") "--> " (object/get @r "to")
-            (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (object/get (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))) "missing"))
-              (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail")) "")))))
+            (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (let ((nt (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))))) (if (= @nt null) "" (object/get @nt "missing"))))
+              (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail" "")) "")))))
           [(str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.unplanned " unplanned, " @entity.guardBlocked " guard-blocked" (if (> @entity.gaps 0) (str/concat ", " @entity.gaps " gap") ""))]) "\n") })
       WALK_FAILED -> ready
-        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " @payload.error) })
+        (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     emits {

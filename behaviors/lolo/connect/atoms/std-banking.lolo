@@ -21,7 +21,7 @@ orbital BankingOrbital {
     state idle {
       INIT -> idle
 
-      BANKING_CREATE_REQUISITION -> idle when (and (!= @payload.reference null) (!= @payload.reference ""))
+      BANKING_CREATE_REQUISITION -> idle when (!= (default @payload.reference "") "")
         (http POST @config.origin "/requisitions/" {
           json: { institution_id: @payload.institutionId, redirect: @payload.redirectUrl, reference: @payload.reference },
           headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -37,7 +37,7 @@ orbital BankingOrbital {
           },
           timeoutMs: @config.timeoutMs
         } { emit: { success: BANKING_REQUISITION_REPLIED, failure: BANKING_HTTP_FAILED } })
-      BANKING_CREATE_REQUISITION -> idle when (or (= @payload.reference null) (= @payload.reference ""))
+      BANKING_CREATE_REQUISITION -> idle when (= (default @payload.reference "") "")
         (http POST @config.origin "/requisitions/" {
           json: { institution_id: @payload.institutionId, redirect: @payload.redirectUrl },
           headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -54,16 +54,19 @@ orbital BankingOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: BANKING_REQUISITION_REPLIED, failure: BANKING_HTTP_FAILED } })
       BANKING_REQUISITION_REPLIED -> idle when (>= @payload.status 500)
-        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (format/number @payload.status)) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_REQUISITION_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
         (emit BANKING_FAILED { message: "GoCardless returned a reply that is not valid JSON" })
       BANKING_REQUISITION_REPLIED -> idle when (and (< @payload.status 500) (json/valid @payload.body) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (default (format/number @payload.status) "") ": " @payload.body) })
       BANKING_REQUISITION_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (emit BANKING_REQUISITION_RESULT {
-          requisitionId: (default (object/get (json/parse @payload.body BankingRequisition) id null) ""),
-          link: (default (object/get (json/parse @payload.body BankingRequisition) link null) "")
-        })
+        (let ((reply (json/parse @payload.body BankingRequisition)))
+          (if (= @reply null)
+            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition" })
+            (emit BANKING_REQUISITION_RESULT {
+              requisitionId: (default (object/get @reply id null) ""),
+              link: (default (object/get @reply link null) "")
+            })))
 
       BANKING_LIST_ACCOUNTS -> idle
         (http GET @config.origin (str/concat "/requisitions/" (str/join (array/map (str/split @payload.requisitionId "/") (fn p (str/encode-uri-component @p))) "/") "/") {
@@ -81,15 +84,18 @@ orbital BankingOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: BANKING_ACCOUNTS_REPLIED, failure: BANKING_HTTP_FAILED } })
       BANKING_ACCOUNTS_REPLIED -> idle when (>= @payload.status 500)
-        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (format/number @payload.status)) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
         (emit BANKING_FAILED { message: "GoCardless returned a reply that is not valid JSON" })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (< @payload.status 500) (json/valid @payload.body) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (default (format/number @payload.status) "") ": " @payload.body) })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (emit BANKING_ACCOUNTS_RESULT {
-          accounts: (default (object/get (json/parse @payload.body BankingRequisitionReply) accounts null) [])
-        })
+        (let ((reply (json/parse @payload.body BankingRequisitionReply)))
+          (if (= @reply null)
+            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition" })
+            (emit BANKING_ACCOUNTS_RESULT {
+              accounts: (default (object/get @reply accounts null) [])
+            })))
 
       BANKING_LIST_TRANSACTIONS -> idle
         (http GET @config.origin (str/concat "/accounts/" (str/join (array/map (str/split @payload.accountId "/") (fn p (str/encode-uri-component @p))) "/") "/transactions/") {
@@ -111,14 +117,17 @@ orbital BankingOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: BANKING_TRANSACTIONS_REPLIED, failure: BANKING_HTTP_FAILED } })
       BANKING_TRANSACTIONS_REPLIED -> idle when (>= @payload.status 500)
-        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (format/number @payload.status)) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
         (emit BANKING_FAILED { message: "GoCardless returned a reply that is not valid JSON" })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (< @payload.status 500) (json/valid @payload.body) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
+        (emit BANKING_FAILED { message: (str/concat "GoCardless error " (default (format/number @payload.status) "") ": " @payload.body) })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (let (
-            (booked (default (object/get (json/parse @payload.body BankingTransactionsReply) "transactions.booked" null) []))
+        (let ((reply (json/parse @payload.body BankingTransactionsReply)))
+         (if (= @reply null)
+          (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a transaction list" })
+          (let (
+            (booked (default (object/get @reply "transactions.booked" null) []))
           )
           (let (
               (rows (array/reduce @booked [] (fn acc tx (let ((amount (str/to-number (default (object/get @tx "transactionAmount.amount" null) "")))) (if (= @amount null) @acc (array/append @acc {
@@ -132,15 +141,15 @@ orbital BankingOrbital {
             )
             (if (< (array/len @rows) (array/len @booked))
               (emit BANKING_FAILED { message: "GoCardless returned a transaction whose amount is not a number" })
-              (emit BANKING_TRANSACTIONS_RESULT { transactions: @rows }))))
+              (emit BANKING_TRANSACTIONS_RESULT { transactions: @rows }))))))
 
       BANKING_HTTP_FAILED -> idle when (= @payload.kind "unconfigured")
         (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY." })
       BANKING_HTTP_FAILED -> idle when (= @payload.kind "timeout")
         (emit BANKING_FAILED { message: "The operation was aborted due to timeout" })
-      BANKING_HTTP_FAILED -> idle when (and (= @payload.phase "grant") (!= @payload.grantStatus null) (!= @payload.kind "unconfigured") (!= @payload.kind "timeout"))
-        (emit BANKING_FAILED { message: (str/concat "GoCardless token request failed: " (format/number @payload.grantStatus)) })
-      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.kind "timeout") (not (and (= @payload.phase "grant") (!= @payload.grantStatus null))))
+      BANKING_HTTP_FAILED -> idle when (and (= @payload.phase "grant") (validate/required @payload.grantStatus) (!= @payload.kind "unconfigured") (!= @payload.kind "timeout"))
+        (emit BANKING_FAILED { message: (str/concat "GoCardless token request failed: " (default (format/number @payload.grantStatus) "")) })
+      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.kind "timeout") (not (and (= @payload.phase "grant") (validate/required @payload.grantStatus))))
         (emit BANKING_FAILED { message: @payload.error })
     }
 

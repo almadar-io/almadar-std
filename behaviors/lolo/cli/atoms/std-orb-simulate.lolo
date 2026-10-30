@@ -28,12 +28,12 @@ orbital OrbSimulateOrbital {
 
     state ready {
       INIT -> ready
-      SIMULATE_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      SIMULATE_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit SIMULATE_ANSWERED { status: 400, body: "usage: orb simulate <file>" })
-      SIMULATE_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
-        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
-      SIMULATE_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
-        (os/read-file (str/concat "/" (str/slice (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1 (str/len (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))) { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
+      SIMULATE_CALLED -> reading when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (not (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))))
+        (os/read-file { anchor: "cwd" path: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") } { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
+      SIMULATE_CALLED -> reading when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")))
+        (os/read-file (str/concat "/" (str/slice (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") 1 (str/len (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")))) { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
     }
 
     state reading {
@@ -49,9 +49,9 @@ orbital OrbSimulateOrbital {
                 (if (!= (object/get @pg "path" null) null)
                   (let ((names (array/map (object/get @pg "traits" []) (fn r (default (object/get @r "ref" null) (object/get @r "name" null))))))
                     (array/concat
-                      (array/concat [""] [(str/concat "Page: " (object/get @pg "name" "?") " (" (object/get @pg "path") ")")])
+                      (array/concat [""] [(str/concat "Page: " (object/get @pg "name" "?") " (" (object/get @pg "path" "") ")")])
                       (array/flatten (array/map (array/filter @trList (fn td (and (validate/object (object/get @td "stateMachine" null)) (array/includes @names (object/get @td "name" ""))))) (fn td
-                        (let ((sts (object/get (object/get @td "stateMachine") "states" [])) (tx (object/get (object/get @td "stateMachine") "transitions" [])))
+                        (let ((sts (object/get (object/get @td "stateMachine" {}) "states" [])) (tx (object/get (object/get @td "stateMachine" {}) "transitions" [])))
                           (let ((initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
                             (let ((initial (if (= @initRow null) "(unknown)" (object/get @initRow "name" ""))))
                               (let ((order (array/reduce (array/range 0 (+ (array/len @tx) (array/len @sts) 1)) [@initial] (fn (cur i)
@@ -74,8 +74,8 @@ orbital OrbSimulateOrbital {
                                                 (let ((slot (if (validate/string (array/nth @e 1)) (array/nth @e 1) "?"))
                                                       (pat (array/nth @e 2)))
                                                   (let ((isObj (validate/object @pat)) (isClear (and (= @pat null) (> (array/len @e) 2))))
-                                                    (let ((ptype (if @isObj (let ((ty (object/get @pat "type" null))) (if (validate/string @ty) @ty "?")) (if @isClear "null (clear)" "?")))
-                                                          (props (if @isObj (array/filter (object/keys @pat) (fn k (!= @k "type"))) [])))
+                                                    (let ((ptype (if (validate/object @pat) (let ((ty (object/get @pat "type" null))) (if (validate/string @ty) @ty "?")) (if @isClear "null (clear)" "?")))
+                                                          (props (if (validate/object @pat) (array/filter (object/keys @pat) (fn k (!= @k "type"))) [])))
                                                       (array/concat
                                                         [(str/concat "      " (if @isClear "🗑️" "✅") " Slot " (json/stringify @slot) " ← [" @ptype "]" (if (> (array/len @props) 0) (str/concat " (" (str/join @props ", ") ")") ""))]
                                                         (if (and (= (array/len @fetches) 0) (array/includes @props "entity"))
@@ -106,7 +106,7 @@ orbital OrbSimulateOrbital {
       SIMULATE_UNREAD { error : string }
         @description "The file could not be read or lowered."
         @tier "internal"
-      SIMULATE_PROGRAM_READ { result : SimProgram }
+      SIMULATE_PROGRAM_READ { result : SimProgram! }
         @description "The file lowered by program/read."
         @tier "internal"
     }

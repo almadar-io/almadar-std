@@ -41,10 +41,10 @@ orbital OrbSignaturesOrbital {
 
     state ready {
       INIT -> ready
-      SIGNATURES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      SIGNATURES_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit SIGNATURES_ANSWERED { status: 400, body: "", stderr: "usage: orb signatures [--out FILE]" })
-      SIGNATURES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
+      SIGNATURES_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -119,10 +119,12 @@ orbital OrbSignaturesOrbital {
     state core {
       INIT -> core
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_CORE -> idle when (let ((lang (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "constructs") null) (= (object/get @lang "validationCodes") null) (= (object/get @lang "vocabulary") null) (= (object/get @lang "patterns") null)))
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
+      SIGNATURES_CORE -> idle when (= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null)
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/core package.json is not valid JSON" })
+      SIGNATURES_CORE -> idle when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null) (not (and (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "constructs") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "validationCodes") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "vocabulary") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "patterns") null))))
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns" })
-      SIGNATURES_CORE -> std when (let ((lang (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "constructs") null) (!= (object/get @lang "validationCodes") null) (!= (object/get @lang "vocabulary") null) (!= (object/get @lang "patterns") null)))
+      SIGNATURES_CORE -> std when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null) (and (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "constructs") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "validationCodes") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "vocabulary") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "patterns") null)))
         (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "constructs")))
         (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "validationCodes")))
         (set @entity.vocabularyPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "vocabulary")))
@@ -133,10 +135,12 @@ orbital OrbSignaturesOrbital {
     state std {
       INIT -> std
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_STD -> idle when (let ((lang (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "operators") null)))
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
+      SIGNATURES_STD -> idle when (= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null)
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/std package.json is not valid JSON" })
+      SIGNATURES_STD -> idle when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null) (not (and (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "operators") null))))
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators" })
-      SIGNATURES_STD -> constructs when (let ((lang (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "operators") null)))
+      SIGNATURES_STD -> constructs when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SigManifest) null) (and (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "operators") null)))
         (set @entity.operatorsPath (str/concat "node_modules/@almadar/std/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "operators")))
         (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs" emit: { success: SIGNATURES_CONSTRUCTS, failure: SIGNATURES_FAILED } })
     }
@@ -144,51 +148,51 @@ orbital OrbSignaturesOrbital {
     state constructs {
       INIT -> constructs
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_CONSTRUCTS -> constructs when (= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
         (emit SIGNATURES_FAILED { error: (str/concat @entity.constructsPath " is not valid JSON") })
       SIGNATURES_CONSTRUCTS -> vocabulary when (!= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
-        (set @entity.constructs (json/parse (default (bytes/to-string @payload.data) "") SigJson))
+        (set @entity.constructs (default (json/parse (default (bytes/to-string @payload.data) "") SigJson) @entity.constructs))
         (os/read-file { anchor: "cwd" path: @entity.vocabularyPath } { key: "vocabulary" emit: { success: SIGNATURES_VOCABULARY, failure: SIGNATURES_FAILED } })
     }
 
     state vocabulary {
       INIT -> vocabulary
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_VOCABULARY -> vocabulary when (= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
         (emit SIGNATURES_FAILED { error: (str/concat @entity.vocabularyPath " is not valid JSON") })
       SIGNATURES_VOCABULARY -> codes when (!= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
-        (set @entity.vocabulary (json/parse (default (bytes/to-string @payload.data) "") SigJson))
+        (set @entity.vocabulary (default (json/parse (default (bytes/to-string @payload.data) "") SigJson) @entity.vocabulary))
         (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes" emit: { success: SIGNATURES_CODES, failure: SIGNATURES_FAILED } })
     }
 
     state codes {
       INIT -> codes
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_CODES -> codes when (= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
         (emit SIGNATURES_FAILED { error: (str/concat @entity.codesPath " is not valid JSON") })
       SIGNATURES_CODES -> operators when (!= (json/parse (default (bytes/to-string @payload.data) "") SigJson) null)
-        (set @entity.codes (json/parse (default (bytes/to-string @payload.data) "") SigJson))
+        (set @entity.codes (default (json/parse (default (bytes/to-string @payload.data) "") SigJson) @entity.codes))
         (os/read-file { anchor: "cwd" path: @entity.operatorsPath } { key: "operators" emit: { success: SIGNATURES_OPERATORS, failure: SIGNATURES_FAILED } })
     }
 
     state operators {
       INIT -> operators
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_OPERATORS -> operators when (= (json/parse (default (bytes/to-string @payload.data) "") SigOperatorTable) null)
         (emit SIGNATURES_FAILED { error: (str/concat @entity.operatorsPath " is not valid JSON") })
       SIGNATURES_OPERATORS -> patterns when (!= (json/parse (default (bytes/to-string @payload.data) "") SigOperatorTable) null)
-        (set @entity.operators (object/get (json/parse (default (bytes/to-string @payload.data) "") SigOperatorTable) "operators"))
+        (set @entity.operators (default (object/get (json/parse (default (bytes/to-string @payload.data) "") SigOperatorTable) "operators") @entity.operators))
         (os/read-file { anchor: "cwd" path: @entity.patternsPath } { key: "patterns" emit: { success: SIGNATURES_PATTERNS, failure: SIGNATURES_FAILED } })
     }
 
     state patterns {
       INIT -> patterns
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_PATTERNS -> patterns when (= (json/parse (default (bytes/to-string @payload.data) "") SigPatternTable) null)
         (emit SIGNATURES_FAILED { error: (str/concat @entity.patternsPath " is not valid JSON") })
       SIGNATURES_PATTERNS -> idle when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SigPatternTable) null) (= @entity.out ""))
@@ -204,7 +208,7 @@ orbital OrbSignaturesOrbital {
     state writing {
       INIT -> writing
       SIGNATURES_FAILED -> idle
-        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
+        (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " (default @payload.error "")) })
       SIGNATURES_WRITTEN -> idle
         (emit SIGNATURES_ANSWERED { status: 200, body: "", stderr: (str/concat "Wrote " (bytes/length (bytes/from-string @entity.catalog)) " bytes to " @entity.out) })
     }

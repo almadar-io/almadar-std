@@ -40,12 +40,14 @@ orbital OrbCensusOrbital {
 
     state ready {
       INIT -> ready
-      CENSUS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      CENSUS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
-      CENSUS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit CENSUS_ARGS_PARSE { stage: "census" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "root" aliases: [] takesValue: true repeatable: true }, { name: "path" aliases: [] takesValue: true repeatable: true }, { name: "max-bytes" aliases: [] takesValue: true repeatable: true }] })
-      CENSUS_ARGS_DONE -> ready
-        (set @entity.acc { names: @payload.positionals, dirs: (default (object/get @payload.flags "path") []), json: (!= (object/get @payload.flags "json") null), root: (if (> (array/len (default (object/get @payload.flags "root") [])) 0) (array/last (object/get @payload.flags "root")) "."), maxBytes: (if (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (str/to-number (array/last (object/get @payload.flags "max-bytes"))) 67108864), errors: @payload.errors })
+      CENSUS_CALLED -> ready when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit CENSUS_ARGS_PARSE { stage: "census" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "root" aliases: [] takesValue: true repeatable: true }, { name: "path" aliases: [] takesValue: true repeatable: true }, { name: "max-bytes" aliases: [] takesValue: true repeatable: true }] })
+      CENSUS_ARGS_DONE -> ready when (and (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (= (str/to-number (default (array/last (object/get @payload.flags "max-bytes")) "")) null))
+        (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
+      CENSUS_ARGS_DONE -> ready when (not (and (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (= (str/to-number (default (array/last (object/get @payload.flags "max-bytes")) "")) null)))
+        (set @entity.acc { names: @payload.positionals, dirs: (default (object/get @payload.flags "path") []), json: (object/has @payload.flags "json"), root: (if (> (array/len (default (object/get @payload.flags "root") [])) 0) (array/last (object/get @payload.flags "root")) "."), maxBytes: (if (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (default (str/to-number (default (array/last (object/get @payload.flags "max-bytes")) "")) 0) 67108864), errors: @payload.errors })
         (emit CENSUS_PARSED { })
       CENSUS_PARSED -> ready when (or (> (array/len @entity.acc.errors) 0) (and (= (array/len @entity.acc.names) 0) (= (array/len @entity.acc.dirs) 0)))
         (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
@@ -65,9 +67,7 @@ orbital OrbCensusOrbital {
       CENSUS_FINISH -> ready when (and (= (array/len @entity.hits) 0) (= (array/len @entity.unscanned) 0) (not @entity.acc.json))
         (emit CENSUS_ANSWERED { status: 200, body: (str/join (array/map @entity.acc.names (fn n (str/concat @n ": 0 import file(s), 0 manifest edge(s)"))) "\n") })
       CENSUS_FINISH -> ready when (and (= (array/len @entity.hits) 0) (= (array/len @entity.unscanned) 0) @entity.acc.json)
-        (emit CENSUS_ANSWERED { status: 200, body: (json/stringify (object/fromEntries (array/concat
-          (array/map @entity.acc.names (fn n [@n, { imports: [], manifests: [] }]))
-          (array/map @entity.acc.dirs (fn d [@d, { references: [] }]))))) })
+        (emit CENSUS_ANSWERED { status: 200, body: (let ((nj (json/stringify (default (object/fromEntries (array/map @entity.acc.names (fn n [@n, { imports: [], manifests: [] }]))) {}))) (dj (json/stringify (default (object/fromEntries (array/map @entity.acc.dirs (fn d [@d, { references: [] }]))) {}))) (uj "")) (str/concat "{" (str/join (array/filter [(str/slice @nj 1 (- (str/len @nj) 1)) (str/slice @dj 1 (- (str/len @dj) 1)) @uj] (fn p (!= @p ""))) ",") "}")) })
       CENSUS_FINISH -> ready when (and (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) (not @entity.acc.json))
         (emit CENSUS_ANSWERED { status: 500, body: (str/join (array/concat
           (array/flatten (array/map @entity.acc.names (fn n (array/concat
@@ -81,18 +81,15 @@ orbital OrbCensusOrbital {
             (array/concat [(str/concat "UNSCANNED (over " @entity.acc.maxBytes " bytes or not text, not read): " (array/len @entity.unscanned) " file(s)")] (array/map @entity.unscanned (fn u (str/concat "  " @u))))
             [])) "\n") })
       CENSUS_FINISH -> ready when (and (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) @entity.acc.json)
-        (emit CENSUS_ANSWERED { status: 500, body: (json/stringify (object/fromEntries (array/concat
-          (array/map @entity.acc.names (fn n [@n, {
+        (emit CENSUS_ANSWERED { status: 500, body: (let ((nj (json/stringify (default (object/fromEntries (array/map @entity.acc.names (fn n [@n, {
             imports: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "import")))) (fn h { file: (object/get @h "file"), specifiers: (str/split (object/get @h "detail") ", ") })),
-            manifests: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "manifest")))) (fn h { file: (object/get @h "file"), kind: (object/get @h "label"), range: (object/get @h "detail") })) }]))
-          (array/map @entity.acc.dirs (fn d [@d, { references: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path")))) (fn h { file: (object/get @h "file") })) }]))
-          (if (> (array/len @entity.unscanned) 0) [["unscanned", @entity.unscanned]] [])))) })
+            manifests: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @n) (= (object/get @h "kind") "manifest")))) (fn h { file: (object/get @h "file"), kind: (object/get @h "label"), range: (object/get @h "detail") })) }]))) {}))) (dj (json/stringify (default (object/fromEntries (array/map @entity.acc.dirs (fn d [@d, { references: (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path")))) (fn h { file: (object/get @h "file") })) }]))) {}))) (uj (if (> (array/len @entity.unscanned) 0) (str/concat "\"unscanned\":" (json/stringify @entity.unscanned)) ""))) (str/concat "{" (str/join (array/filter [(str/slice @nj 1 (- (str/len @nj) 1)) (str/slice @dj 1 (- (str/len @dj) 1)) @uj] (fn p (!= @p ""))) ",") "}")) })
     }
 
     state walking {
       INIT -> walking
       CENSUS_WALK -> walking when (> (array/len @entity.stack) 0)
-        (set @entity.cur (array/first @entity.stack))
+        (set @entity.cur (default (array/first @entity.stack) ""))
         (set @entity.stack (array/drop @entity.stack 1))
         (os/list-dir { anchor: "cwd" path: (if (= @entity.cur "") @entity.acc.root (str/concat @entity.acc.root "/" @entity.cur)) } { key: "dir" emit: { success: CENSUS_LISTED, failure: CENSUS_LIST_FAILED } })
       CENSUS_WALK -> ready when (= (array/len @entity.stack) 0)
@@ -107,51 +104,55 @@ orbital OrbCensusOrbital {
         (set @entity.cursor 0)
         (emit CENSUS_STAT { })
       CENSUS_LIST_FAILED -> walking when (= @entity.cur "")
-        (emit CENSUS_ANSWERED { status: 500, body: (str/concat "cannot list " @entity.acc.root ": " @payload.error) })
+        (emit CENSUS_ANSWERED { status: 500, body: (str/concat "cannot list " @entity.acc.root ": " (default @payload.error "")) })
       CENSUS_LIST_FAILED -> walking when (!= @entity.cur "")
         (emit CENSUS_WALK { })
     }
 
     state statting {
       INIT -> statting
-      CENSUS_STAT -> statting when (and (< @entity.cursor (array/len @entity.files)) (str/endsWith (array/nth @entity.files @entity.cursor) "package.json"))
-        (os/read-file { anchor: "cwd" path: (str/concat @entity.acc.root "/" (array/nth @entity.files @entity.cursor)) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_GONE } })
-      CENSUS_STAT -> statting when (and (< @entity.cursor (array/len @entity.files)) (not (str/endsWith (array/nth @entity.files @entity.cursor) "package.json")))
-        (os/stat { anchor: "cwd" path: (str/concat @entity.acc.root "/" (array/nth @entity.files @entity.cursor)) } { key: "file" emit: { success: CENSUS_STATTED, failure: CENSUS_FILE_GONE } })
+      CENSUS_STAT -> statting when (and (< @entity.cursor (array/len @entity.files)) (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json"))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.acc.root "/" (default (array/nth @entity.files @entity.cursor) "")) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_GONE } })
+      CENSUS_STAT -> statting when (and (< @entity.cursor (array/len @entity.files)) (not (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json")))
+        (os/stat { anchor: "cwd" path: (str/concat @entity.acc.root "/" (default (array/nth @entity.files @entity.cursor) "")) } { key: "file" emit: { success: CENSUS_STATTED, failure: CENSUS_FILE_GONE } })
       CENSUS_STAT -> walking when (>= @entity.cursor (array/len @entity.files))
         (emit CENSUS_WALK { })
       CENSUS_FILE_GONE -> statting
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
       CENSUS_STATTED -> statting when (> @payload.size @entity.acc.maxBytes)
-        (set @entity.unscanned (array/append @entity.unscanned (array/nth @entity.files @entity.cursor)))
+        (set @entity.unscanned (array/append @entity.unscanned (default (array/nth @entity.files @entity.cursor) "")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
-      CENSUS_STATTED -> statting when (and (<= @payload.size @entity.acc.maxBytes) (or (> (array/len @entity.acc.dirs) 0) (validate/pattern (array/nth @entity.files @entity.cursor) @config.sourcePattern) (str/endsWith (array/nth @entity.files @entity.cursor) "package.json")))
-        (os/read-file { anchor: "cwd" path: (str/concat @entity.acc.root "/" (array/nth @entity.files @entity.cursor)) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_GONE } })
-      CENSUS_STATTED -> statting when (and (<= @payload.size @entity.acc.maxBytes) (= (array/len @entity.acc.dirs) 0) (not (validate/pattern (array/nth @entity.files @entity.cursor) @config.sourcePattern)) (not (str/endsWith (array/nth @entity.files @entity.cursor) "package.json")))
+      CENSUS_STATTED -> statting when (and (<= @payload.size @entity.acc.maxBytes) (or (> (array/len @entity.acc.dirs) 0) (validate/pattern (default (array/nth @entity.files @entity.cursor) "") @config.sourcePattern) (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json")))
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.acc.root "/" (default (array/nth @entity.files @entity.cursor) "")) } { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_GONE } })
+      CENSUS_STATTED -> statting when (and (<= @payload.size @entity.acc.maxBytes) (= (array/len @entity.acc.dirs) 0) (not (validate/pattern (default (array/nth @entity.files @entity.cursor) "") @config.sourcePattern)) (not (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
       CENSUS_FILE_READ -> statting when (= (bytes/to-string @payload.data) null)
-        (set @entity.unscanned (array/append @entity.unscanned (array/nth @entity.files @entity.cursor)))
+        (set @entity.unscanned (array/append @entity.unscanned (default (array/nth @entity.files @entity.cursor) "")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
-      CENSUS_FILE_READ -> statting when (!= (bytes/to-string @payload.data) null)
+      CENSUS_FILE_READ -> statting when (and (!= (bytes/to-string @payload.data) null) (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json") (json/valid (default (bytes/to-string @payload.data) "")) (= (json/parse (default (bytes/to-string @payload.data) "") Manifest) null))
+        (set @entity.unscanned (array/append @entity.unscanned (default (array/nth @entity.files @entity.cursor) "")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_STAT { })
+      CENSUS_FILE_READ -> statting when (and (!= (bytes/to-string @payload.data) null) (not (and (str/endsWith (default (array/nth @entity.files @entity.cursor) "") "package.json") (json/valid (default (bytes/to-string @payload.data) "")) (= (json/parse (default (bytes/to-string @payload.data) "") Manifest) null))))
         (let ((text (default (bytes/to-string @payload.data) ""))
-              (file (array/nth @entity.files @entity.cursor)))
+              (file (default (array/nth @entity.files @entity.cursor) "")))
           (do
             (set @entity.ownDirs (array/concat @entity.ownDirs
               (if (and (str/endsWith @file "package.json") (json/valid @text))
-                (let ((m (json/parse @text Manifest))) (array/map (array/filter @entity.acc.names (fn n (= (object/get @m "name") @n))) (fn n { name: @n, dir: (str/replace @file "package.json" "") })))
+                (let ((m (json/parse @text Manifest))) (if (= @m null) [] (array/map (array/filter @entity.acc.names (fn n (= (object/get @m "name") @n))) (fn n { name: @n, dir: (str/replace @file "package.json" "") }))))
                 [])))
             (set @entity.hits (array/concat @entity.hits
               (if (and (str/endsWith @file "package.json") (json/valid @text))
-                (let ((m (json/parse @text Manifest))) (array/flatten (array/map (array/filter @entity.acc.names (fn n (!= (object/get @m "name") @n))) (fn n
+                (let ((m (json/parse @text Manifest))) (if (= @m null) [] (array/flatten (array/map (array/filter @entity.acc.names (fn n (!= (object/get @m "name") @n))) (fn n
                   (array/flatten (array/map [{ label: "dependencies", tbl: (object/get @m "dependencies") }, { label: "devDependencies", tbl: (object/get @m "devDependencies") }, { label: "peerDependencies", tbl: (object/get @m "peerDependencies") }, { label: "optionalDependencies", tbl: (object/get @m "optionalDependencies") }, { label: "pnpm.overrides", tbl: (object/get @m "pnpm.overrides") }, { label: "overrides", tbl: (object/get @m "overrides") }, { label: "resolutions", tbl: (object/get @m "resolutions") }] (fn k
                     (let ((tbl (object/get @k "tbl")))
                       (if (and (!= @tbl null) (not (validate/string @tbl)) (array/includes (object/keys @tbl) @n))
-                        [{ name: @n, file: @file, kind: "manifest", label: (object/get @k "label"), detail: (str/concat (object/get @tbl (str/replace @n "." "\\."))) }]
-                        [])))))))))
+                        [{ name: @n, file: @file, kind: "manifest", label: (object/get @k "label"), detail: (str/concat (default (object/get @tbl (str/replace @n "." "\\.")) "")) }]
+                        []))))))))))
                 [])))
             (set @entity.hits (array/concat @entity.hits
               (if (validate/pattern @file @config.sourcePattern)

@@ -108,8 +108,10 @@ orbital OrbRunnersOrbital {
 
     state ready {
       INIT -> ready
-      RN_CALLED -> parsing
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit RN_ARGS_UNREAD { }) (emit RN_ARGS_PARSE { stage: "runners" argv: @argv flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })))
+      RN_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit RN_ARGS_UNREAD { })
+      RN_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit RN_ARGS_PARSE { stage: "runners" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -119,10 +121,10 @@ orbital OrbRunnersOrbital {
       RN_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals))))
         (emit RUNNERS_ANSWERED { status: 400, body: "usage: orb runners up|once|down [--mac]" })
       RN_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals)))
-        (set @entity.verb (array/first @payload.positionals))
-        (set @entity.mac (!= (object/get @payload.flags "mac") null))
+        (set @entity.verb (default (array/first @payload.positionals) ""))
+        (set @entity.mac (object/has @payload.flags "mac"))
         (set @entity.cursor 0)
-        (set @entity.vars (json/parse "{}" RunnerVars))
+        (set @entity.vars {})
         (emit RN_ENV_NEXT { })
     }
 
@@ -156,12 +158,14 @@ orbital OrbRunnersOrbital {
         (set @entity.vars (let ((entry (object/fromEntries [[@payload.key, (default @payload.value "")]]))) (if (= @entry null) @entity.vars (object/merge @entity.vars @entry))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RN_ENV_NEXT { })
-      RN_ENV_NEXT -> reading when (>= @entity.cursor 10)
+      RN_ENV_NEXT -> ready when (and (>= @entity.cursor 10) (!= (object/get @entity.vars "RUNNER_COUNT") "") (= (str/to-number (object/get @entity.vars "RUNNER_COUNT")) null))
+        (emit RUNNERS_ANSWERED { status: 500, body: "RUNNER_COUNT is not a number" })
+      RN_ENV_NEXT -> reading when (and (>= @entity.cursor 10) (or (= (object/get @entity.vars "RUNNER_COUNT") "") (!= (str/to-number (object/get @entity.vars "RUNNER_COUNT")) null)))
         (set @entity.scope (if (!= (object/get @entity.vars "GITHUB_RUNNER_SCOPE") "") (object/get @entity.vars "GITHUB_RUNNER_SCOPE") (str/concat "orgs/" (if (!= (object/get @entity.vars "GITHUB_ORG") "") (object/get @entity.vars "GITHUB_ORG") "almadar-io"))))
         (set @entity.urlPath (if (str/startsWith @entity.scope "orgs/") (str/slice @entity.scope 5) (if (str/startsWith @entity.scope "repos/") (str/slice @entity.scope 6) @entity.scope)))
         (set @entity.image (if (!= (object/get @entity.vars "RUNNER_IMAGE") "") (object/get @entity.vars "RUNNER_IMAGE") "almadar-runner:2.337.0-r5"))
         (set @entity.prefix (if (!= (object/get @entity.vars "RUNNER_PREFIX") "") (object/get @entity.vars "RUNNER_PREFIX") "almadar"))
-        (set @entity.count (if (!= (object/get @entity.vars "RUNNER_COUNT") "") (str/to-number (object/get @entity.vars "RUNNER_COUNT")) 2))
+        (set @entity.count (if (!= (object/get @entity.vars "RUNNER_COUNT") "") (default (str/to-number (object/get @entity.vars "RUNNER_COUNT")) 2) 2))
         (set @entity.runnerVersion (if (!= (object/get @entity.vars "RUNNER_VERSION") "") (object/get @entity.vars "RUNNER_VERSION") "2.337.0"))
         (set @entity.labels (if (!= (object/get @entity.vars "RUNNER_LABELS") "") (object/get @entity.vars "RUNNER_LABELS") "self-hosted,macos,arm64,almadar-mac"))
         (set @entity.pat (object/get @entity.vars "GITHUB_TOKEN"))
@@ -206,12 +210,14 @@ orbital OrbRunnersOrbital {
         (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "docker failed") })
       RN_PID -> running
         (set @entity.pid (str/concat @payload.pid))
-      RN_HOME -> running when (= @entity.cont "mac-down")
-        (set @entity.runnerDir (if (!= (object/get @entity.vars "RUNNER_DIR") "") (object/get @entity.vars "RUNNER_DIR") (str/concat @payload.value "/actions-runner-mac")))
+      RN_HOME -> ready when (== @payload.value null)
+        (emit RUNNERS_ANSWERED { status: 500, body: "HOME is not set" })
+      RN_HOME -> running when (and (!= @payload.value null) (= @entity.cont "mac-down"))
+        (set @entity.runnerDir (if (!= (object/get @entity.vars "RUNNER_DIR") "") (object/get @entity.vars "RUNNER_DIR") (str/concat (default @payload.value "") "/actions-runner-mac")))
         (emit RN_MINT { })
-      RN_HOME -> running when (!= @entity.cont "mac-down")
+      RN_HOME -> running when (and (!= @payload.value null) (!= @entity.cont "mac-down"))
         (os/pid { key: "pid" emit: { success: RN_PID, failure: RN_HOST_FAILED } })
-        (set @entity.runnerDir (if (!= (object/get @entity.vars "RUNNER_DIR") "") (object/get @entity.vars "RUNNER_DIR") (str/concat @payload.value "/actions-runner-mac")))
+        (set @entity.runnerDir (if (!= (object/get @entity.vars "RUNNER_DIR") "") (object/get @entity.vars "RUNNER_DIR") (str/concat (default @payload.value "") "/actions-runner-mac")))
         (emit RN_SH_RUN { stage: "mac-software" argv: ["-c", "[ -x \"$1/config.sh\" ] || { echo \"downloading actions/runner osx-arm64 v$2 to $1...\"; mkdir -p \"$1\" && curl -fsSL -o \"$1/runner.tar.gz\" \"https://github.com/actions/runner/releases/download/v$2/actions-runner-osx-arm64-$2.tar.gz\" && tar xzf \"$1/runner.tar.gz\" -C \"$1\" && rm \"$1/runner.tar.gz\"; }", "sh", @entity.runnerDir, @entity.runnerVersion] })
       RN_DOCKER_DONE -> running when (and (= @payload.stage "rm") (< @entity.index @entity.count))
         (set @entity.index (+ @entity.index 1))
@@ -221,12 +227,12 @@ orbital OrbRunnersOrbital {
       RN_MINT -> running
         (emit RN_CURL_RUN { stage: "mint" argv: ["-sS", "-X", "POST", "-H", (str/concat "Authorization: Bearer " @entity.pat), "-H", "Accept: application/vnd.github+json", (str/concat "https://api.github.com/" @entity.scope "/actions/runners/registration-token")] })
       RN_CURL_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (str/concat "registration-token failed: " @payload.error) })
-      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))
-        (set @entity.rtok (object/get (json/parse @payload.stdout RegistrationReply) "token"))
+        (emit RUNNERS_ANSWERED { status: 500, body: (str/concat "registration-token failed: " (default @payload.error "")) })
+      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (json/parse @payload.stdout RegistrationReply) null) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))
+        (set @entity.rtok (default (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))
         (emit RN_MINTED { })
-      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))))
-        (set @entity.report (str/concat "registration-token failed: " (if (json/valid @payload.stdout) (object/get (json/parse @payload.stdout RegistrationReply) "message") (str/trim @payload.stderr))))
+      RN_CURL_DONE -> running when (and (= @payload.stage "mint") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout) (!= (json/parse @payload.stdout RegistrationReply) null) (!= (object/get (json/parse @payload.stdout RegistrationReply) "token") ""))))
+        (set @entity.report (str/concat "registration-token failed: " (if (and (json/valid @payload.stdout) (!= (json/parse @payload.stdout RegistrationReply) null)) (default (object/get (json/parse @payload.stdout RegistrationReply) "message") "") (str/trim @payload.stderr))))
         (emit RN_MINT_FAILED { })
       RN_MINT_FAILED -> ready when (or (= @entity.verb "once") (= @entity.verb "down"))
         (emit RUNNERS_ANSWERED { status: 500, body: @entity.report })
@@ -267,7 +273,7 @@ orbital OrbRunnersOrbital {
       RN_TTY_DONE -> running when (and (= @payload.stage "say") (= @entity.cont "next"))
         (emit RN_NEXT { })
       RN_NEXT -> running when (> (array/len @entity.queue) 0)
-        (set @entity.index (array/first @entity.queue))
+        (set @entity.index (default (array/first @entity.queue) 1))
         (set @entity.queue (array/slice @entity.queue 1))
         (set @entity.cont "start")
         (emit RN_MINT { })
@@ -341,7 +347,7 @@ orbital OrbRunnersOrbital {
       RN_ENV_NEXT {  }
         @description "Internal: read the next runner variable."
         @tier "internal"
-      RN_ENV_READ { key : string  value : string }
+      RN_ENV_READ { key : string?  value : string? }
         @description "os/getenv: one runner variable."
         @tier "internal"
       RN_HOST_FAILED { error : string }
@@ -362,7 +368,7 @@ orbital OrbRunnersOrbital {
       RN_PID { pid : number! }
         @description "os/pid: this process, the $$ of the job name."
         @tier "internal"
-      RN_HOME { value : string }
+      RN_HOME { value : string? }
         @description "os/getenv: HOME."
         @tier "internal"
       RN_MINT {  }

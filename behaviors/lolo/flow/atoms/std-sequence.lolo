@@ -16,7 +16,7 @@ orbital SequenceOrbital {
         (set @entity.index 0)
       START -> running when (> (array/len @config.steps) 0)
         (set @entity.index 0)
-        (emit STEP { step: (array/nth @config.steps 0), index: 0 })
+        (emit STEP { step: (default (array/nth @config.steps 0) ""), index: 0 })
       START -> idle when (== (array/len @config.steps) 0)
         (emit COMPLETED { steps: 0 })
     }
@@ -26,7 +26,7 @@ orbital SequenceOrbital {
         (set @entity.index 0)
       STEP_DONE -> running when (and (== ?step (array/nth @config.steps @entity.index)) (< (+ @entity.index 1) (array/len @config.steps)))
         (set @entity.index (+ @entity.index 1))
-        (emit STEP { step: (array/nth @config.steps (+ @entity.index 1)), index: (+ @entity.index 1) })
+        (emit STEP { step: (default (array/nth @config.steps (+ @entity.index 1)) ""), index: (+ @entity.index 1) })
       STEP_DONE -> idle when (and (== ?step (array/nth @config.steps @entity.index)) (== (+ @entity.index 1) (array/len @config.steps)))
         (emit COMPLETED { steps: (array/len @config.steps) })
         (set @entity.index 0)

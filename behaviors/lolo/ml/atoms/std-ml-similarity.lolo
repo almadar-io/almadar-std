@@ -158,7 +158,7 @@ orbital MlSimilarityOrbital {
             (set @entity.reason "embedding result incomplete")
             (emit SIMILARITY_ABSTAINED { reason: "embedding result incomplete", request: @entity.request }))
           (do
-            (set @entity.queryVector (array/first @entity.embeddings))
+            (set @entity.queryVector (default (array/first @entity.embeddings) []))
             (set @entity.candidateVectors (array/drop @entity.embeddings 1))
             (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
               (if (= @nearest null)

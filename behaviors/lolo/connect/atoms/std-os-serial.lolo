@@ -53,7 +53,7 @@ orbital OsSerialOrbital {
             (let ((byte (bytes/write-uint @low 1 "be")))
               (if (= @byte null)
                 (emit SERIAL_ERROR { error: "the data register held no byte" })
-                (emit INPUT_BYTES { data: @byte })))))
+                (emit INPUT_BYTES { data: (default @byte (bytes/from-string "")) })))))
         (os/mmio-read @config.base 24 4 { emit: { success: SERIAL_RX_FLAGS, failure: SERIAL_FAILED } })
       SERIAL_RX_BYTE -> failed when (let ((low (bit/and @payload.value 255))) (if (= @low null) true (= (bytes/write-uint @low 1 "be") null)))
         (emit SERIAL_ERROR { error: "the data register held no byte" })

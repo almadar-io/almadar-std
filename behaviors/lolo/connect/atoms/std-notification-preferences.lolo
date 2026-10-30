@@ -516,16 +516,18 @@ orbital NotificationPreferencesOrbital {
         ;; Fail-open default policy: no matching row resolves channel in_app /
         ;; mode instant / suppressed false — absence of a preference never
         ;; silences a notification.
-        (set @entity.channel (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) 0) in_app (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) channel)))
-        (set @entity.mode (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) 0) instant (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) mode)))
-        (set @entity.quietHours (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey)))))) quietHours)))
-        (emit PREFERENCE_RESOLVED {
-          channel: @entity.channel
-          eventKey: @entity.eventKey
-          mode: @entity.mode
-          personId: @entity.personId
-          suppressed: (and (str/includes @entity.quietHours "-") (!= (str/slice (array/first (str/split @entity.quietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)) (if (< (str/slice (array/first (str/split @entity.quietHours "-")) 0 2) (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.quietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/first (str/split @entity.quietHours "-")) 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)))))
-        })
+        (let ((m (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.personId) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @entity.eventKey))))))))
+          (do
+            (set @entity.channel (if (= @m null) in_app (object/get @m channel)))
+            (set @entity.mode (if (= @m null) instant (object/get @m mode)))
+            (set @entity.quietHours (if (= @m null) "" (object/get @m quietHours)))
+            (emit PREFERENCE_RESOLVED {
+              channel: @entity.channel
+              eventKey: @entity.eventKey
+              mode: @entity.mode
+              personId: @entity.personId
+              suppressed: (let ((qs (str/split @entity.quietHours "-"))) (let ((qa (array/first @qs)) (qb (array/nth @qs 1))) (if (or (= @qa null) (= @qb null)) false (and (str/includes @entity.quietHours "-") (!= (str/slice @qa 0 2) (str/slice @qb 0 2)) (if (< (str/slice @qa 0 2) (str/slice @qb 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice @qa 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice @qb 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice @qa 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice @qb 0 2))))))))
+            })))
       ;; Lookup failure is fail-open too: a broken preference store must not
       ;; mute notifications.
       PREFERENCE_CHECK_FAILED -> idle

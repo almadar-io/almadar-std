@@ -30,10 +30,10 @@ orbital OrbParseOrbital {
 
     state ready {
       INIT -> ready
-      PARSE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      PARSE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit PARSE_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'." })
-      PARSE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+      PARSE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [] })
     }
 
     state parsing {
@@ -43,9 +43,9 @@ orbital OrbParseOrbital {
       PARSE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
         (emit PARSE_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'." })
       PARSE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
-        (emit PARSE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (array/nth @payload.positionals 1) "' found\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'.") })
+        (emit PARSE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: unexpected argument '" (default (array/nth @payload.positionals 1) "") "' found\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'.") })
       PARSE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (emit PARSE_START { path: (array/first @payload.positionals) })
+        (emit PARSE_START { path: (default (array/first @payload.positionals) "") })
     }
 
     state working {
@@ -115,11 +115,11 @@ orbital OrbParseOrbital {
     state reading {
       INIT -> reading
       PARSE_UNREAD -> idle
-        (emit PARSE_ANSWERED { status: 500, body: (str/concat "Parsing schema: " @entity.path), stderr: (str/concat "Error: " @payload.error) })
+        (emit PARSE_ANSWERED { status: 500, body: (str/concat "Parsing schema: " @entity.path), stderr: (str/concat "Error: " (default @payload.error "")) })
       PARSE_FILE -> reading
         (program/read (bytes/to-string @payload.data) { key: "parse-program", emit: { success: PARSE_READ, failure: PARSE_UNREAD } })
       PARSE_READ -> idle
-        (emit PARSE_ANSWERED { status: 200, body: (str/join (array/concat [(str/concat "Parsing schema: " @entity.path), (str/concat ""), (str/concat "Schema: " (object/get @payload.result "name"))] (if (!= (object/get @payload.result "version") null) [(str/concat "Version: " (object/get @payload.result "version"))] []) (if (!= (object/get @payload.result "description") null) [(str/concat "Description: " (object/get @payload.result "description"))] []) [(str/concat ""), (str/concat "Orbitals (" (array/len (default (object/get @payload.result "orbitals") [])) "):")] (array/flatten (array/map (default (object/get @payload.result "orbitals") []) (fn o (array/concat [(str/concat "  - " (object/get @o "name") " (entity: " (if (validate/string (object/get @o "entity")) (object/get @o "entity") (object/get (object/get @o "entity") "name")) ")"), (str/concat "    Fields: " (if (validate/string (object/get @o "entity")) 0 (array/len (default (object/get (object/get @o "entity") "fields") [])))), (str/concat "    Traits: " (array/len (default (object/get @o "traits") [])))] (if (object/has @o "pages") [(str/concat "    Pages: " (array/len (object/get @o "pages")))] []))))))  "\n") })
+        (emit PARSE_ANSWERED { status: 200, body: (str/join (array/concat [(str/concat "Parsing schema: " @entity.path), (str/concat ""), (str/concat "Schema: " (object/get @payload.result "name"))] (if (!= (object/get @payload.result "version") null) [(str/concat "Version: " (object/get @payload.result "version"))] []) (if (!= (object/get @payload.result "description") null) [(str/concat "Description: " (object/get @payload.result "description"))] []) [(str/concat ""), (str/concat "Orbitals (" (array/len (default (object/get @payload.result "orbitals") [])) "):")] (array/flatten (array/map (default (object/get @payload.result "orbitals") []) (fn o (array/concat [(str/concat "  - " (object/get @o "name") " (entity: " (if (validate/string (object/get @o "entity")) (object/get @o "entity") (if (validate/object (object/get @o "entity")) (object/get (object/get @o "entity") "name") "")) ")"), (str/concat "    Fields: " (if (validate/string (object/get @o "entity")) 0 (if (validate/object (object/get @o "entity")) (array/len (default (object/get (object/get @o "entity") "fields") [])) 0))), (str/concat "    Traits: " (array/len (default (object/get @o "traits") [])))] (if (object/has @o "pages") [(str/concat "    Pages: " (array/len (default (object/get @o "pages") [])))] []))))))  "\n") })
     }
 
     emits {

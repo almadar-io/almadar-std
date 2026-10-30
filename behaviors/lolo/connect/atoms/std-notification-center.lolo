@@ -3,7 +3,7 @@ app std-notification-center [
   description: "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
   egress: ["https://api.sendgrid.com", "https://api.resend.com"]
 ]
-type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : number }
+type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : instant }
 type PushCreds = { endpoint : string, p256dh : string, auth : string }
 orbital NotificationCenterOrbital {
     uses Button from "std/behaviors/ui-button"
@@ -40,7 +40,7 @@ orbital NotificationCenterOrbital {
     severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
     error : string @description "Suppression reason or delivery failure detail when dispatched is false." @synonyms "error message, failure reason, dispatch error" = ""
-    recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
+    recordedAt : instant @description "When the notification record was created (ISO-8601 instant)." @synonyms "creation time, timestamp, date, when"
   }
 
   entity DigestRunView [runtime] {
@@ -223,9 +223,9 @@ orbital NotificationCenterOrbital {
 
     state idle {
       DIGEST_ROWS_LOADED -> draining when (and @config.digestEnabled (> (array/len ?data) 0))
-        (set @entity.headId (object/get (array/first ?data) id))
-        (set @entity.headRecipient (object/get (array/first ?data) recipient))
-        (set @entity.headMessage (object/get (array/first ?data) message))
+        (set @entity.headId (default (object/get (array/first ?data) id) ""))
+        (set @entity.headRecipient (default (object/get (array/first ?data) recipient) ""))
+        (set @entity.headMessage (default (object/get (array/first ?data) message) ""))
         (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
       DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
@@ -242,13 +242,13 @@ orbital NotificationCenterOrbital {
       DIGEST_STEPPED -> draining
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms")))
           limit: @config.batchSize
         })
       DIGEST_ROWS_LOADED -> draining when (> (array/len ?data) 0)
-        (set @entity.headId (object/get (array/first ?data) id))
-        (set @entity.headRecipient (object/get (array/first ?data) recipient))
-        (set @entity.headMessage (object/get (array/first ?data) message))
+        (set @entity.headId (default (object/get (array/first ?data) id) ""))
+        (set @entity.headRecipient (default (object/get (array/first ?data) recipient) ""))
+        (set @entity.headMessage (default (object/get (array/first ?data) message) ""))
         (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
       DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
@@ -311,7 +311,7 @@ orbital NotificationCenterOrbital {
       digestCycle every "0 * * * *" [background]
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms")))
           limit: @config.batchSize
         })
 

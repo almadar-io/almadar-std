@@ -21,12 +21,12 @@ orbital GateOrbital {
 
     state ready {
       INIT -> ready
-      GATE_CALLED -> ready when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (or (= @args null) (!= (array/len (object/get @args "argv")) 2) (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p)))))
+      GATE_CALLED -> ready when (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs))) (or (= @args null) (!= (array/len (object/get @args "argv")) 2) (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p)))))
         (emit GATE_ANSWERED { status: 400, body: "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)" })
-      GATE_CALLED -> reading when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @args null) (= (array/len (object/get @args "argv")) 2) (not (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p))))))
-        (set @entity.knownPath (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
-        (set @entity.observedPath (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1))
-        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "known" emit: { success: GATE_KNOWN_READ, failure: GATE_FAILED } })
+      GATE_CALLED -> reading when (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @args null) (= (array/len (object/get @args "argv")) 2) (not (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p))))))
+        (set @entity.knownPath (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
+        (set @entity.observedPath (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) ""))
+        (os/read-file { anchor: "cwd" path: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") } { key: "known" emit: { success: GATE_KNOWN_READ, failure: GATE_FAILED } })
     }
 
     state reading {
@@ -34,15 +34,15 @@ orbital GateOrbital {
       GATE_KNOWN_READ -> ready when (= (bytes/to-string @payload.data) null)
         (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: not a text file: " @entity.knownPath) })
       GATE_KNOWN_READ -> reading when (!= (bytes/to-string @payload.data) null)
-        (set @entity.knownText (bytes/to-string @payload.data))
+        (set @entity.knownText (default (bytes/to-string @payload.data) ""))
         (os/read-file { anchor: "cwd" path: @entity.observedPath } { key: "observed" emit: { success: GATE_OBSERVED_READ, failure: GATE_FAILED } })
       GATE_OBSERVED_READ -> ready when (= (bytes/to-string @payload.data) null)
         (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: not a text file: " @entity.observedPath) })
       GATE_OBSERVED_READ -> comparing when (!= (bytes/to-string @payload.data) null)
-        (set @entity.observedText (bytes/to-string @payload.data))
+        (set @entity.observedText (default (bytes/to-string @payload.data) ""))
         (emit GATE_COMPARE {})
       GATE_FAILED -> ready
-        (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: " @payload.error) })
+        (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: " (default @payload.error "")) })
     }
 
     state comparing {

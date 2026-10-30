@@ -4128,6 +4128,165 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-guarded-row-no-guarded-transition-backs-fails-the-plan",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": true,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_FAILED",
+        "payload": {
+         "error": "verify-plan: a guard or set node the plan reads as text is not text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-program-whose-entities-cannot-be-read-fails-the-plan",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": 5
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_FAILED",
+        "payload": {
+         "error": "verify-plan: the program could not be read for planning"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-sample-row-with-no-entity-pending-fails-the-plan",
+   "steps": [
+    {
+     "event": "ROWS_DONE",
+     "payload": {
+      "rows": [
+       {
+        "id": "x"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_FAILED",
+        "payload": {
+         "error": "verify-plan: a sample row arrived with no entity pending"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

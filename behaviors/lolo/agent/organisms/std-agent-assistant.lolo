@@ -6,6 +6,7 @@ app std-agent-assistant [
 
 type AgentToolScope = {
   scope : "declared"!
+  roles : [string]!
   fireAndForget : boolean
 }
 type AgentToolField = {
@@ -18,11 +19,13 @@ type AgentToolField = {
 }
 type AgentToolInput = {
   event : EventAddress!
+  roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
 }
 type AgentToolRead = {
   read : string!
+  roles : [string]!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentLink = {
@@ -94,7 +97,7 @@ orbital AgentAssistantOrbital {
   uses Shell from "std/behaviors/std-app-layout"
 
   config {
-    tools : [AgentTool] = [{ scope: declared, fireAndForget: true }]
+    tools : [AgentTool] = [{ scope: declared, fireAndForget: true, roles: [] }]
       @label "What may the assistant do?"
       @description "As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block's declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity."
       @synonyms "allowlist, abilities, actions, permissions"

@@ -34,21 +34,21 @@ orbital OrbFirestoreIndexesOrbital {
 
     state ready {
       INIT -> ready
-      FIRESTORE_INDEXES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      FIRESTORE_INDEXES_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit FIRESTORE_INDEXES_ANSWERED { status: 400, body: "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]" })
-      FIRESTORE_INDEXES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit FIRESTORE_INDEXES_ARGS_PARSE { stage: "firestore-indexes" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "scope" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
+      FIRESTORE_INDEXES_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit FIRESTORE_INDEXES_ARGS_PARSE { stage: "firestore-indexes" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "scope" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      FIRESTORE_INDEXES_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "scope") null) (not (array/includes ["collection", "collection-group"] (array/first (object/get @payload.flags "scope"))))))
+      FIRESTORE_INDEXES_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (object/has @payload.flags "scope") (not (array/includes ["collection", "collection-group"] (default (array/first (default (object/get @payload.flags "scope") [])) "")))))
         (emit FIRESTORE_INDEXES_ANSWERED { status: 400, body: "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]" })
-      FIRESTORE_INDEXES_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "scope") null) (array/includes ["collection", "collection-group"] (array/first (object/get @payload.flags "scope")))))
-        (set @entity.file (array/first @payload.positionals))
-        (set @entity.out (if (!= (object/get @payload.flags "out") null) (array/first (object/get @payload.flags "out")) ""))
-        (set @entity.scope (if (= (object/get @payload.flags "scope") null) "COLLECTION" (if (= (array/first (object/get @payload.flags "scope")) "collection-group") "COLLECTION_GROUP" "COLLECTION")))
+      FIRESTORE_INDEXES_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (not (object/has @payload.flags "scope")) (array/includes ["collection", "collection-group"] (default (array/first (default (object/get @payload.flags "scope") [])) ""))))
+        (set @entity.file (default (array/first @payload.positionals) ""))
+        (set @entity.out (if (object/has @payload.flags "out") (default (array/first (default (object/get @payload.flags "out") [])) "") ""))
+        (set @entity.scope (if (not (object/has @payload.flags "scope")) "COLLECTION" (if (= (default (array/first (default (object/get @payload.flags "scope") [])) "") "collection-group") "COLLECTION_GROUP" "COLLECTION")))
         (emit FIRESTORE_INDEXES_READ_FILE {})
     }
 
@@ -59,16 +59,18 @@ orbital OrbFirestoreIndexesOrbital {
       FIRESTORE_INDEXES_READ_FILE -> reading when (os/path-is-absolute @entity.file)
         (os/read-file (str/concat "/" (str/slice @entity.file 1 (str/len @entity.file))) { key: "program" emit: { success: FIRESTORE_INDEXES_READ, failure: FIRESTORE_INDEXES_FAILED } })
       FIRESTORE_INDEXES_FAILED -> ready
-        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " @payload.error) })
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "")) })
       FIRESTORE_INDEXES_READ -> reading
         (program/read (bytes/to-string @payload.data) { key: "lowered" emit: { success: FIRESTORE_INDEXES_PROGRAM, failure: FIRESTORE_INDEXES_FAILED } })
-      FIRESTORE_INDEXES_PROGRAM -> rendering
+      FIRESTORE_INDEXES_PROGRAM -> ready when (= (json/parse (json/stringify @payload.result) IndexProgram) null)
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: "Error: the resolved program is not valid JSON of the expected shape" })
+      FIRESTORE_INDEXES_PROGRAM -> rendering when (!= (json/parse (json/stringify @payload.result) IndexProgram) null)
         (set @entity.text (str/concat (json/stringify { indexes: (array/flatten (array/map (object/get (json/parse (json/stringify @payload.result) IndexProgram) "orbitals" []) (fn o
           (let ((ent (object/get @o "entity" {})))
             (if (or (!= (object/get @ent "persistence" "") "persistent") (= (object/get @ent "collection" "") ""))
               []
               (array/filter (array/map (object/get @ent "indexes" []) (fn d
-                { collectionGroup: (object/get @ent "collection"), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (array/first (str/split (object/get @d "orderBy") ":")), order: (if (= (default (array/nth (str/split (object/get @d "orderBy") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
+                { collectionGroup: (object/get @ent "collection" ""), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (default (array/first (str/split (object/get @d "orderBy" "") ":")) ""), order: (if (= (default (array/nth (str/split (object/get @d "orderBy" "") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
                 (fn x (> (array/len (object/get @x "fields")) 1)))))))), fieldOverrides: [] } { pretty: true }) "\n"))
         (emit FIRESTORE_INDEXES_RENDERED {})
     }
@@ -86,7 +88,7 @@ orbital OrbFirestoreIndexesOrbital {
     state writing {
       INIT -> writing
       FIRESTORE_INDEXES_FAILED -> ready
-        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " @payload.error) })
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "")) })
       FIRESTORE_INDEXES_WROTE -> ready
         (emit FIRESTORE_INDEXES_ANSWERED { status: 200, body: (str/concat "wrote " @entity.out) })
     }

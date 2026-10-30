@@ -68,21 +68,21 @@ orbital OrbSuperviseOrbital {
 
     state ready {
       INIT -> ready
-      SUPERVISE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      SUPERVISE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
-      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--")))
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (not (array/includes (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") "--")))
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
-      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--"))
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (array/includes (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") "--"))
+        (let ((argv (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")))
           (let ((cut (array/reduce (array/range (array/len @argv)) -1 (fn acc i (if (and (< @acc 0) (= (array/nth @argv @i) "--")) @i @acc)))))
             (do
               (set @entity.command (array/drop @argv (+ @cut 1)))
               (emit SUPERVISE_ARGS_PARSE { stage: "supervise" argv: (array/take @argv @cut) flags: [{ name: "watch" aliases: [] takesValue: true repeatable: true }, { name: "debounce" aliases: [] takesValue: true repeatable: false }] }))))
-      SUPERVISE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len @entity.command) 0) (!= (array/first @entity.command) "orb") (and (!= (object/get @payload.flags "debounce") null) (not (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$"))))
+      SUPERVISE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len @entity.command) 0) (!= (array/first @entity.command) "orb") (and (object/has @payload.flags "debounce") (not (validate/pattern (default (array/last (default (object/get @payload.flags "debounce") [])) "") "^[0-9]+$"))))
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
-      SUPERVISE_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (> (array/len @entity.command) 0) (= (array/first @entity.command) "orb") (or (= (object/get @payload.flags "debounce") null) (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$")))
+      SUPERVISE_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (> (array/len @entity.command) 0) (= (array/first @entity.command) "orb") (or (not (object/has @payload.flags "debounce")) (validate/pattern (default (array/last (default (object/get @payload.flags "debounce") [])) "") "^[0-9]+$")))
         (set @entity.watches (default (object/get @payload.flags "watch") []))
-        (set @entity.debounce (if (!= (object/get @payload.flags "debounce") null) (str/to-number (array/last (object/get @payload.flags "debounce"))) @config.debounceMs))
+        (set @entity.debounce (if (object/has @payload.flags "debounce") (default (str/to-number (default (array/last (default (object/get @payload.flags "debounce") [])) "")) @config.debounceMs) @config.debounceMs))
         (set @entity.cursor 0)
         (emit SUPERVISE_BOOT { })
     }
@@ -108,7 +108,7 @@ orbital OrbSuperviseOrbital {
         (emit SUPERVISE_STOP { })
       SUPERVISE_SIGNAL_FAILED -> running
       SUPERVISE_GAVE_UP -> ready
-        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " @payload.error) "")) })
+        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " (default @payload.error "")) "")) })
     }
 
     state stopping {
@@ -118,7 +118,7 @@ orbital OrbSuperviseOrbital {
       SUPERVISE_STOPPED -> ready when (!= @entity.pending "")
         (emit SUPERVISE_ANSWERED { status: 500, body: @entity.pending })
       SUPERVISE_GAVE_UP -> ready
-        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " @payload.error) "")) })
+        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " (default @payload.error "")) "")) })
     }
 
     emits {

@@ -24,12 +24,24 @@ orbital OrbEvalOrbital {
 
     state evaluating {
       INIT -> evaluating
-      EXPR_EVAL_STEPPED -> idle when (!= (default (object/get (object/get (array/first @payload.result) "result") "failure") "") "")
-        (emit EXPR_EVAL_FAILED { error: (default (object/get (object/get (array/first @payload.result) "result") "failure") "") })
-      EXPR_EVAL_STEPPED -> idle when (= (default (object/get (object/get (array/first @payload.result) "result") "failure") "") "")
-        (emit EXPR_EVAL_DONE { value: (json/parse (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") EvalJson) })
+      EXPR_EVAL_STEPPED -> idle
+        (let ((pl (array/first @payload.result)))
+          (if (= @pl null)
+            (emit EXPR_EVAL_FAILED { error: "the evaluator answered no result" })
+            (let ((fail (default (object/get (object/get @pl "result" {}) "failure") "")) (em (array/first (default (object/get (object/get @pl "result" {}) "emitted") []))))
+              (if (!= @fail "")
+                (emit EXPR_EVAL_FAILED { error: @fail })
+                (if (= @em null)
+                  (emit EXPR_EVAL_FAILED { error: "the evaluator emitted no value" })
+                  (let ((raw (object/get (object/get @em "payload" {}) "value")))
+                    (if (not (validate/string @raw))
+                      (emit EXPR_EVAL_FAILED { error: "the evaluator emitted no value" })
+                      (let ((val (json/parse @raw EvalJson)))
+                        (if (= @val null)
+                          (emit EXPR_EVAL_FAILED { error: "the evaluator emitted a value that is not JSON" })
+                          (emit EXPR_EVAL_DONE { value: (default @val "") }))))))))))
       EXPR_EVAL_REFUSED -> idle
-        (emit EXPR_EVAL_FAILED { error: @payload.error })
+        (emit EXPR_EVAL_FAILED { error: (default @payload.error "") })
     }
 
     emits {
@@ -44,7 +56,7 @@ orbital OrbEvalOrbital {
         @description "The expression could not be evaluated."
         @tier "primary"
       EXPR_EVAL_STEPPED {
-        result : [EvalPlayed]
+        result : [EvalPlayed]!
       }
         @description "program/step: the played request."
         @tier "internal"
