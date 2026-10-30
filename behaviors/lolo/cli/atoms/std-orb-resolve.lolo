@@ -27,11 +27,11 @@ orbital OrbResolveOrbital {
 
     state ready {
       INIT -> ready
-      RESOLVE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      RESOLVE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit RESOLVE_ANSWERED { status: 400, body: "", stderr: "usage: orb resolve <FILE> [-o|--output FILE]" })
-      RESOLVE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit RESOLVE_ARGS_PARSE { stage: "resolve" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "output" aliases: ["-o"] takesValue: true repeatable: false }] })
+      RESOLVE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit RESOLVE_ARGS_PARSE { stage: "resolve" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "output" aliases: ["-o"] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -39,7 +39,7 @@ orbital OrbResolveOrbital {
       RESOLVE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
         (emit RESOLVE_ANSWERED { status: 400, body: "", stderr: "usage: orb resolve <FILE> [-o|--output FILE]" })
       RESOLVE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (emit RESOLVE_START { path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))), output: (default (array/first (default (object/get @payload.flags "output") [""])) ""), hasOutput: (!= (object/get @payload.flags "output") null) })
+        (let ((f (default (array/first @payload.positionals) ""))) (emit RESOLVE_START { path: (if (os/path-is-absolute @f) @f (os/path-join @entity.cwd @f)), output: (default (array/first (default (object/get @payload.flags "output") [""])) ""), hasOutput: (object/has @payload.flags "output") }))
     }
 
     state working {
@@ -115,7 +115,7 @@ orbital OrbResolveOrbital {
       RESOLVE_RESOLVED -> idle when (not @entity.written)
         (emit RESOLVE_ANSWERED { status: 200, body: (object/get @payload.result "text") })
       RESOLVE_REFUSED -> idle
-        (emit RESOLVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit RESOLVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
     }
 
     emits {

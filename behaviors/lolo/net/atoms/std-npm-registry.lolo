@@ -86,7 +86,7 @@ orbital NpmRegistryOrbital {
         (set @entity.name @payload.name)
         (set @entity.current @payload.current)
         (set @entity.bump @payload.bump)
-        (set @entity.major (if @payload.major true false))
+        (set @entity.major (default @payload.major false))
         (emit NPM_GET { kind: "next" })
       NPM_NEXT_VERSION -> idle when (not (and (= (str/replace-pattern @payload.current "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "") (or (= @payload.bump "patch") (= @payload.bump "minor") (= @payload.bump "major"))))
         (emit NPM_FAILED { name: @payload.name, code: "invalid_version", status: 0, error: (str/concat "cannot bump " @payload.current " by " @payload.bump) })

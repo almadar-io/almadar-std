@@ -7,7 +7,7 @@ uses Spec from "almadar-std/throttle"
 orbital ThrottleOrbital {
   entity ThrottleGate [runtime] {
     id : string!
-    openAt : number @description "Epoch milliseconds at which the interval ends; 0 while open." = 0
+    openAt : instant? @description "The instant at which the interval ends; null while open." = null
     suppressed : number @description "INPUTs dropped inside the current interval." = 0
   }
 
@@ -16,19 +16,18 @@ orbital ThrottleOrbital {
 
     state open {
       INIT -> open
-        (set @entity.openAt 0)
+        (set @entity.openAt null)
         (set @entity.suppressed 0)
       INPUT -> cooling
         @ensures (= @entity.suppressed 0)
-        @ensures (> @entity.openAt 0)
-        (set @entity.openAt (+ @now @config.intervalMs))
+        (set @entity.openAt (time/add @now @config.intervalMs "ms"))
         (set @entity.suppressed 0)
         (emit PASSED { trailing: false, suppressed: 0 })
     }
 
     state cooling {
       INIT -> open
-        (set @entity.openAt 0)
+        (set @entity.openAt null)
         (set @entity.suppressed 0)
       INPUT -> cooling
         @ensures (= @entity.suppressed (+ @fromEntity.suppressed 1))
@@ -36,11 +35,11 @@ orbital ThrottleOrbital {
         (set @entity.suppressed (+ @entity.suppressed 1))
       TIMER_DUE -> cooling when (and @config.trailing (> @entity.suppressed 0))
         (emit PASSED { trailing: true, suppressed: @entity.suppressed })
-        (set @entity.openAt (+ @now @config.intervalMs))
+        (set @entity.openAt (time/add @now @config.intervalMs "ms"))
         (set @entity.suppressed 0)
       TIMER_DUE -> open when (not (and @config.trailing (> @entity.suppressed 0)))
-        @ensures (and (= @entity.openAt 0) (= @entity.suppressed 0))
-        (set @entity.openAt 0)
+        @ensures (and (= @entity.openAt null) (= @entity.suppressed 0))
+        (set @entity.openAt null)
         (set @entity.suppressed 0)
     }
 
@@ -65,7 +64,7 @@ orbital ThrottleOrbital {
 
     ticks {
       intervalCheck every 100ms
-        when (and (> @entity.openAt 0) (>= @now @entity.openAt))
+        when (and (!= @entity.openAt null) (not (time/isBefore @now (default @entity.openAt @now))))
         (emit TIMER_DUE { })
     }
 

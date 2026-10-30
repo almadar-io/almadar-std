@@ -16,24 +16,24 @@ orbital GoalSeekOrbital {
   entity GoalSeekScene [runtime] {
     id : string!
     active : boolean = false
-    title : string
-    curveKind : string
-    goalText : string
-    targetA : number
-    targetB : number
-    paramA : number
-    paramB : number
-    paramALabel : string
-    paramBLabel : string
+    title : string = ""
+    curveKind : string = ""
+    goalText : string = ""
+    targetA : number = 0
+    targetB : number = 0
+    paramA : number = 0
+    paramB : number = 0
+    paramALabel : string = ""
+    paramBLabel : string = ""
     targetSamples : [GoalSeekCurveSample] = []
-    curves : [GoalSeekCurve]
+    curves : [GoalSeekCurve] = []
     distance : number? = 0
     attempts : number = 0
     solved : boolean = false
-    feedback : string
-    resultRow : [node]
-    yMin : number
-    yMax : number
+    feedback : string = ""
+    resultRow : [node] = []
+    yMin : number = 0
+    yMax : number = 0
   }
 
   trait GoalSeekSim -> @rebindable GoalSeekScene [client] {
@@ -71,7 +71,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
@@ -170,7 +170,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
@@ -265,7 +265,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
@@ -352,7 +352,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
@@ -423,7 +423,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
@@ -539,7 +539,7 @@ orbital GoalSeekOrbital {
             (sqs (array/flatten (array/map @samples (fn (s)
               (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
                 (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
-            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (ms (if (== (array/len @sqs) 0) null (/ (array/sum @sqs) (array/len @sqs))))
             (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
             (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))

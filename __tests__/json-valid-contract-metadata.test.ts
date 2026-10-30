@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { JSON_OPERATORS, getJsonOperators } from '../modules/json.js';
 import { STD_OPERATORS, getOperatorRunsOn } from '../registry.js';
-import { SHAPE } from '../signature.js';
+import { SHAPE, nullable } from '../signature.js';
 import canonical from '../canonical-operators.json';
 
 describe('json/valid source contract', () => {
@@ -49,7 +49,7 @@ describe('json/valid source contract', () => {
   it('control: json/parse retains its two-argument declared-shape contract', () => {
     const operator = JSON_OPERATORS['json/parse'];
     expect([operator.minArity, operator.maxArity]).toEqual([2, 2]);
-    expect(operator.returnType).toEqual(SHAPE);
+    expect(operator.returnType).toEqual(nullable(SHAPE));
     expect(operator.params?.map(({ name, type, optional }) => ({ name, type, optional: optional === true }))).toEqual([
       { name: 's', type: 'string', optional: false },
       { name: 'shape', type: SHAPE, optional: false },

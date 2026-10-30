@@ -24,7 +24,7 @@ orbital ServiceNodeOrbital {
     failureCount : number @intrinsic @description "The number of times the circuit breaker has failed." @synonyms "error count, failures, error occurrences" = 0
     successCount : number @intrinsic @description "Number of successful operations." @synonyms "successes, hits, completions" = 0
     threshold : number @intrinsic @description "Maximum value before triggering an action." @synonyms "limit, cap, boundary" = 5
-    openedAt : number @intrinsic @description "When the circuit last opened, in epoch milliseconds; the cooldown tick measures from it. 0 = never opened." @synonyms "tripped at, opened time" = 0
+    openedAt : instant? @intrinsic @description "When the circuit last opened; the cooldown tick measures from it. null = never opened." @synonyms "tripped at, opened time" = null
   }
 
   trait ShieldIcon = Icon.traits.IconRender -> ServiceNode [client] {
@@ -170,7 +170,7 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       FAILURE -> open
-        @ensures (> @entity.openedAt 0)
+        @ensures (!= @entity.openedAt null)
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
@@ -326,7 +326,7 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       FAILURE -> open
-        @ensures (> @entity.openedAt 0)
+        @ensures (!= @entity.openedAt null)
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
@@ -371,7 +371,7 @@ orbital ServiceNodeOrbital {
 
     ticks {
       cooldownCheck every 1s
-        when (and (== @state "open") (>= (- @now @entity.openedAt) @config.cooldownMs))
+        when (and (== @state "open") (!= @entity.openedAt null) (>= (time/diff @now (default @entity.openedAt @now) "ms") @config.cooldownMs))
         (emit TIMEOUT)
     }
 

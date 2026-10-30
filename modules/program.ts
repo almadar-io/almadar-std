@@ -31,7 +31,7 @@ const ValidationReport = shape({
 });
 
 const PROVE_PROPOSITION = shape({ kind: STRING, entity: STRING, trait: STRING, state: STRING, from: STRING, event: STRING, to: STRING, expr: SEXPR }, ['entity', 'trait', 'state', 'from', 'event', 'to']);
-const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: openShape({}), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
+const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: mapOf(STRING, SEXPR), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
 
 const OS_GRANT_FINDING = shape({
   code: union(lit('missing'), lit('unused'), lit('entry-invalid'), lit('target-not-static')),

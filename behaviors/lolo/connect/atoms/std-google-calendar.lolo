@@ -31,59 +31,59 @@ orbital CalendarOrbital {
       INIT -> idle
 
       CALENDAR_LIST_EVENTS -> idle
-        (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") {
+        (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events") {
           headers: { Accept: "*/*" },
           query: { syncToken: (if (!= (default @payload.syncToken "") "") (default @payload.syncToken "") null), timeMin: (if (and (not (!= (default @payload.syncToken "") "")) (!= (default @payload.timeMin "") "")) (default @payload.timeMin "") null), timeMax: (if (and (not (!= (default @payload.syncToken "") "")) (!= (default @payload.timeMax "") "")) (default @payload.timeMax "") null), singleEvents: (if (!= (default @payload.syncToken "") "") null "true"), orderBy: (if (!= (default @payload.syncToken "") "") null "startTime"), maxResults: (default @payload.maxResults 250) },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] },
           timeoutMs: @config.timeoutMs
         } { key: "list", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_CREATE_EVENT -> idle when (or (validate/required @payload.end) (= (str/len @payload.start) 10) (> (default @payload.durationMinutes 0) 0))
-        (let ((st (time/parse @payload.start)))
-         (let ((endValue (if (validate/required @payload.end) @payload.end (if (== @st null) null (if (= (str/len @payload.start) 10) (time/format (time/add @st 1 day) "YYYY-MM-DD") (let ((ts (math/floor (+ @st (* @payload.durationMinutes 60000))))) (let ((f (time/format @ts "YYYY-MM-DDTHH:mm:ss"))) (if (== @f null) null (str/concat @f "." (str/padStart (str/concat (math/mod @ts 1000)) 3 "0") "Z")))))))))
+        (let ((st (if (validate/required @payload.end) null (time/parse @payload.start))))
+         (let ((endValue (if (validate/required @payload.end) @payload.end (if (== @st null) null (if (= (str/len @payload.start) 10) (time/format (time/add @st 1 day) "YYYY-MM-DD") (time/add @st @payload.durationMinutes "minute"))))))
           (if (== @endValue null)
             (emit CALENDAR_CREATE_EVENT_FAILED { message: "createEvent could not read `start` as a date or date-time to compute `end`" })
-          (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") {
+          (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events") {
             headers: { Accept: "*/*", Content-Type: "application/json" },
             text: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (validate/required @payload.description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (validate/required @payload.location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len @endValue) 10) (str/concat "{\"date\":" (json/stringify @endValue) "}") (str/concat "{\"dateTime\":" (json/stringify @endValue) "}")))] (fn p (!= @p ""))) ",") "}"),
-            auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+            auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
             timeoutMs: @config.timeoutMs
           } { key: "create", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))))
       CALENDAR_CREATE_EVENT -> idle when (and (not (validate/required @payload.end)) (!= (str/len @payload.start) 10) (<= (default @payload.durationMinutes 0) 0))
         (emit CALENDAR_CREATE_EVENT_FAILED { message: "createEvent requires `end` or a positive `durationMinutes`" })
       CALENDAR_UPDATE_EVENT -> idle
-        (http PATCH @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
+        (http PATCH @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
           headers: { Accept: "*/*", Content-Type: "application/json" },
           text: (str/concat "{" (str/join (array/filter [(if (object/has @payload summary) (str/concat "\"summary\":" (json/stringify @payload.summary)) "") (if (object/has @payload description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (object/has @payload location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (if (validate/required @payload.start) (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) "") (if (validate/required @payload.end) (str/concat "\"end\":" (if (= (str/len @payload.end) 10) (str/concat "{\"date\":" (json/stringify @payload.end) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.end) "}"))) "")] (fn p (!= @p ""))) ",") "}"),
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           timeoutMs: @config.timeoutMs
         } { key: "update", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_DELETE_EVENT -> idle
-        (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
+        (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
           headers: { Accept: "*/*" },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] },
           timeoutMs: @config.timeoutMs
         } { key: (str/concat "delete:" @payload.eventId), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_FREE_BUSY -> idle
         (http POST @config.origin "/calendar/v3/freeBusy" {
           headers: { Accept: "*/*" },
-          json: { timeMin: @payload.timeMin, timeMax: @payload.timeMax, items: [{ id: (or @payload.calendarId @config.calendarId) }] },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          json: { timeMin: @payload.timeMin, timeMax: @payload.timeMax, items: [{ id: (default @payload.calendarId @config.calendarId) }] },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           timeoutMs: @config.timeoutMs
-        } { key: (str/concat "freeBusy:" (or @payload.calendarId @config.calendarId)), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        } { key: (str/concat "freeBusy:" (default @payload.calendarId @config.calendarId)), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_WATCH -> idle
-        (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/watch") {
+        (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/watch") {
           headers: { Accept: "*/*", Content-Type: "application/json" },
           text: (str/concat "{" (str/join (array/filter [(str/concat "\"id\":" (json/stringify @payload.channelId)) (str/concat "\"type\":" "\"web_hook\"") (str/concat "\"address\":" (json/stringify @payload.address)) (if (!= (default @payload.ttlSeconds 0) 0) (str/concat "\"params\":{\"ttl\":" (json/stringify (str/concat @payload.ttlSeconds)) "}") "")] (fn p (!= @p ""))) ",") "}"),
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           timeoutMs: @config.timeoutMs
         } { key: (str/concat "watch:" @payload.channelId), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_STOP_WATCH -> idle
         (http POST @config.origin "/calendar/v3/channels/stop" {
           headers: { Accept: "*/*" },
           json: { id: @payload.channelId, resourceId: @payload.resourceId },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
+          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
           timeoutMs: @config.timeoutMs
         } { key: "stopWatch", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @payload.key "list"))
@@ -344,6 +344,9 @@ orbital CalendarOrbital {
         @label "Token endpoint"
         @description "The Google OAuth token endpoint the signed service-account assertion is exchanged at; also the assertion audience. Must be declared in the app egress list."
         @synonyms "oauth token url, jwt exchange endpoint"
+        @tier "infra"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @description "The Unix epoch; the service-account assertion exp and iat are NumericDate seconds counted from it."
         @tier "infra"
       serviceAccount : secret = "GOOGLE_CALENDAR_SA_KEY"
         @label "Service account credential"

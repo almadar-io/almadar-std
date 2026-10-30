@@ -7,7 +7,7 @@ app std-log-levels [
 uses Spec from "almadar-std/log-levels"
 
 type LevelEntry = { namespace : string!, level : string! }
-type LogChange = { namespace : string!, level : string }
+type LogChange = { namespace : string!, level : string? }
 
 orbital LogLevelsOrbital {
   entity LogLevelsRun [runtime] {
@@ -28,7 +28,7 @@ orbital LogLevelsOrbital {
             (array/concat
               (array/map
                 (array/filter @payload.overrides (fn (o) (and (str/startsWith (object/get @o "namespace") (str/concat @payload.key ":")) (!= (object/get @o "namespace") (str/concat @payload.key ":*")))))
-                (fn (o) (json/parse (str/concat "{\"namespace\":" (json/stringify (object/get @o "namespace")) ",\"level\":null}") LogChange)))
+                (fn (o) { namespace: (object/get @o "namespace"), level: null }))
               (array/concat
                 [{ namespace: (str/concat @payload.key ":*"), level: @level }]
                 (if @payload.isNamespace [{ namespace: @payload.key, level: @level }] [])))))

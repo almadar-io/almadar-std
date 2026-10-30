@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { XML_OPERATORS, getXmlOperators } from '../modules/xml.js';
 import { STD_OPERATORS, getOperatorRunsOn } from '../registry.js';
-import { SHAPE } from '../signature.js';
+import { SHAPE, nullable } from '../signature.js';
 import canonical from '../canonical-operators.json';
 
 describe('xml/valid source contract', () => {
@@ -49,7 +49,7 @@ describe('xml/valid source contract', () => {
   it('control: xml/parse keeps its declared-shape contract plus the compiler-written listPaths', () => {
     const operator = XML_OPERATORS['xml/parse'];
     expect([operator.minArity, operator.maxArity]).toEqual([2, 3]);
-    expect(operator.returnType).toEqual(SHAPE);
+    expect(operator.returnType).toEqual(nullable(SHAPE));
     expect(operator.params?.map(({ name, type, optional }) => ({ name, type, optional: optional === true }))).toEqual([
       { name: 's', type: 'string', optional: false },
       { name: 'shape', type: SHAPE, optional: false },

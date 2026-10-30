@@ -2,10 +2,10 @@
  "atom": "net/atoms/std-http-dispatch.lolo",
  "trait": "ServerDispatch",
  "source": "orbital-rust/crates/orbital-server/tests/resolve_rows_route.rs",
- "note": "Twin of orbital-server tests/resolve_rows_route.rs. One runnable case pins the interim 501; the five behavior cases are pending on the rows-resolve viewer. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
+ "note": "Twin of orbital-server tests/resolve_rows_route.rs. One runnable case pins the 500 of a host with no substrate; the five behavior cases are pending on the rows-resolve viewer. Replay limits found: the entity round-trips between steps without its bytes type, so DISPATCH_RUN cannot be asserted after the request is stored (preparedExpect records the intended DISPATCH_PREPARED); a RESPOND payload expectation (requestId, status) does not match even when the event is emitted, so expectedResponse records the intended status and the step asserts only that RESPOND is emitted.",
  "cases": [
   {
-   "id": "resolve-rows-unbuilt-answers-501",
+   "id": "resolve-rows-without-a-substrate-host-answers-500",
    "entity": {
     "inflight": 0,
     "waiting": [],
@@ -44,14 +44,14 @@
         "event": "RESPOND",
         "payload": {
          "requestId": 1,
-         "status": 501
+         "status": 500
         }
        }
       ]
      }
     }
    ],
-   "note": "documents the current atom: RESOLVE_ROWS_REQUESTED then 501 NOT_IMPLEMENTED. Replace by the cases below once the rows-resolve viewer exists"
+   "note": "the atom asks program/resolve-rows; with no substrate host configured the ask fails (ROWS_FAILED) and the route answers 500 RESOLVE_ROWS_ERROR after RESOLVE_ROWS_REQUESTED. Replace by the cases below once a replay can seed a substrate host"
   },
   {
    "id": "hidden-row-omitted-for-the-requesting-viewer",

@@ -29,7 +29,7 @@ orbital ViewerOrbital {
       INIT -> idle
 
       VIEWER_RESOLVE -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
         (emit VIEWER_PUMP {})
       VIEWER_RESOLVE -> idle when (>= (array/len @entity.queue) @config.maxQueue)
         (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
@@ -74,7 +74,7 @@ orbital ViewerOrbital {
       INIT -> idle
 
       VIEWER_RESOLVE -> looking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: @payload.verified, sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
       VIEWER_RESOLVE -> looking when (>= (array/len @entity.queue) @config.maxQueue)
         (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       DIRECTORY_ABSENT -> idle when (= @payload.code "not-found")
@@ -84,7 +84,7 @@ orbital ViewerOrbital {
         (emit VIEWER_REFUSED { requestId: @entity.requestId, reason: "no-lookup" })
         (emit VIEWER_PUMP {})
       DIRECTORY_FOUND -> idle
-        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (or @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
         (emit VIEWER_PUMP {})
     }
 

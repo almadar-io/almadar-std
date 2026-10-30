@@ -295,6 +295,118 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-empty-key-is-refused-as-failed-never-the-singleton",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-non-empty-key-after-a-refused-one-opens-its-own-row",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "kind": "refused"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-with-an-empty-key-answers-nothing",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": ""
+     },
+     "expect": {
+      "neverEmits": [
+       "HTTP_FAILED",
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

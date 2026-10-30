@@ -5,8 +5,8 @@ app std-debounce [
 orbital DebounceOrbital {
   entity DebounceBurst [runtime] {
     id : string!
-    deadline : number @description "Epoch milliseconds at which SETTLED fires; 0 while idle." = 0
-    firstAt : number @description "Epoch milliseconds of the first INPUT in the burst." = 0
+    deadline : instant? @description "The instant at which SETTLED fires; null while idle." = null
+    firstAt : instant? @description "The instant of the first INPUT in the burst; null while idle." = null
     count : number @description "INPUTs absorbed by the burst." = 0
   }
 
@@ -15,27 +15,27 @@ orbital DebounceOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (set @entity.count 0)
       INPUT -> pending
         (set @entity.firstAt @now)
         (set @entity.count 1)
-        (set @entity.deadline (+ @now @config.quietMs))
+        (set @entity.deadline (time/add @now @config.quietMs "ms"))
     }
 
     state pending {
       INIT -> idle
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (set @entity.count 0)
       INPUT -> pending
         (set @entity.count (+ @entity.count 1))
-        (set @entity.deadline (if (> @config.maxWaitMs 0) (math/min (+ @now @config.quietMs) (+ @entity.firstAt @config.maxWaitMs)) (+ @now @config.quietMs)))
+        (set @entity.deadline (if (> @config.maxWaitMs 0) (let ((quiet (time/add @now @config.quietMs "ms")) (cap (time/add (default @entity.firstAt @now) @config.maxWaitMs "ms"))) (if (time/isBefore @cap @quiet) @cap @quiet)) (time/add @now @config.quietMs "ms")))
       CANCEL -> idle
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (set @entity.count 0)
       TIMER_DUE -> idle
         (emit SETTLED { count: @entity.count })
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (set @entity.count 0)
     }
 
@@ -61,7 +61,7 @@ orbital DebounceOrbital {
 
     ticks {
       quietCheck every 100ms
-        when (and (> @entity.deadline 0) (>= @now @entity.deadline))
+        when (and (!= @entity.deadline null) (not (time/isBefore @now (default @entity.deadline @now))))
         (emit TIMER_DUE { })
     }
 

@@ -1,0 +1,124 @@
+{
+ "atom": "flow/atoms/std-debounce.lolo",
+ "trait": "Debounce",
+ "note": "@now is ISO text (G-STD-212): deadline and firstAt are instants; the quiet tick is a host answer played as TIMER_DUE",
+ "cases": [
+  {
+   "id": "first-input-starts-a-burst",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "INPUT",
+     "payload": {},
+     "expect": {
+      "state": "pending"
+     }
+    }
+   ]
+  },
+  {
+   "id": "burst-settles-with-its-count",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "INPUT",
+     "payload": {}
+    },
+    {
+     "event": "INPUT",
+     "payload": {},
+     "from": "pending",
+     "expect": {
+      "state": "pending"
+     }
+    },
+    {
+     "event": "INPUT",
+     "payload": {},
+     "from": "pending"
+    },
+    {
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "pending",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SETTLED",
+        "payload": {
+         "count": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "max-wait-bounds-the-postponement",
+   "now": 1760531400000,
+   "config": {
+    "maxWaitMs": 1000
+   },
+   "steps": [
+    {
+     "event": "INPUT",
+     "payload": {}
+    },
+    {
+     "event": "INPUT",
+     "payload": {},
+     "from": "pending",
+     "expect": {
+      "state": "pending"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancel-drops-the-burst",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "INPUT",
+     "payload": {}
+    },
+    {
+     "event": "CANCEL",
+     "payload": {},
+     "from": "pending",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "SETTLED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-settled-after-cancel-needs-a-new-burst",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "INPUT",
+     "payload": {}
+    },
+    {
+     "event": "CANCEL",
+     "payload": {},
+     "from": "pending"
+    },
+    {
+     "event": "INPUT",
+     "payload": {},
+     "from": "idle",
+     "expect": {
+      "state": "pending"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -54,7 +54,7 @@ orbital ServeHandoffOrbital {
     state composing {
       INIT -> composing
       SERVE_COMPOSE_REFUSED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
       SERVE_COMPOSED -> idle when (and @entity.mock (not @entity.prepare))
         (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
       SERVE_COMPOSED -> idle when (and (not @entity.mock) (not @entity.prepare))
@@ -67,9 +67,9 @@ orbital ServeHandoffOrbital {
     state preparing {
       INIT -> preparing
       SERVE_PREP_FAILED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " (default @payload.error "")) })
       SERVE_GENERATE_FAILED -> idle
-        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " @payload.error) })
+        (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the web client could not be prepared: " (default @payload.error "")) })
       SERVE_PREP_DIR -> preparing
         (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_PROGRAM_WRITTEN -> preparing

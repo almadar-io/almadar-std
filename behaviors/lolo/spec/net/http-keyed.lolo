@@ -1,6 +1,6 @@
 app http-keyed-spec [
   version: "2.0.0",
-  description: "Design contract for concurrent HTTP calls by key (std-http-client stays one call per frame): HTTP_SEND { key, method, target, headers, body, stream } routed with `per @payload.key` is answered HTTP_REPLIED { key, status, headers, body } or HTTP_FAILED { key, error, kind } carrying the same key, with a stream of sse or jsonl framed as HTTP_STREAM_EVENT { key, data, event, id }. Each key is its own row of std-http-client, so its own socket and its own head and body state, created on first use and dropped when the call has ended and the row is back at its defaults; a second call on a key in flight answers HTTP_FAILED kind refused; an empty key is refused by the `per` clause as DELIVERY_REJECTED, which fails the dispatch when no trait listens for it. HTTP_CANCEL { key } closes the in-flight call's socket, and no answer follows. The stream framer is shared by every row."
+  description: "Design contract for concurrent HTTP calls by key (std-http-client stays one call per frame): HTTP_SEND { key, method, target, headers, body, stream } routed with `per @payload.key` is answered HTTP_REPLIED { key, status, headers, body } or HTTP_FAILED { key, error, kind } carrying the same key, with a stream of sse or jsonl framed as HTTP_STREAM_EVENT { key, data, event, id }. Each key is its own row of std-http-client, so its own socket and its own head and body state, created on first use and dropped when the call has ended and the row is back at its defaults; a second call on a key in flight answers HTTP_FAILED kind refused; a key that is not a non-empty string is refused by the `per` clause as DELIVERY_REJECTED from HttpKeyed, which hears it and answers HTTP_FAILED with an empty key and kind refused. HTTP_CANCEL { key } closes the in-flight call's socket, and no answer follows. The stream framer is shared by every row."
 ]
 
 type HttpHeader = { name : string!, value : string! }
@@ -15,6 +15,9 @@ orbital HttpKeyedSpec {
     state ready {
       HTTP_SEND -> ready
       HTTP_CANCEL -> ready
+    }
+    emits {
+      HTTP_FAILED { key : string!  error : string!  kind : string! }
     }
   }
   expects trait KeyedHttp {

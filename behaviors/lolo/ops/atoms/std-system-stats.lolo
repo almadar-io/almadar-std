@@ -17,7 +17,7 @@ orbital SystemStatsOrbital {
     id : string!
     active : boolean = false
     sampling : boolean = false
-    dueAt : number = 0
+    dueAt : instant? = null
     pids : [number] = []
     memoryTotal : number = 0
     memoryUsed : number = 0
@@ -47,7 +47,7 @@ orbital SystemStatsOrbital {
       INIT -> ready
       STATS_START -> ready
         (set @entity.active true)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
       STATS_STOP -> ready
         (set @entity.active false)
       STATS_WATCH -> ready when (and @entity.active (not @entity.sampling))
@@ -134,13 +134,13 @@ orbital SystemStatsOrbital {
         (emit STATS_FINISH {})
       STATS_FINISH -> ready
         (set @entity.sampling false)
-        (set @entity.dueAt (+ @now @config.intervalMs))
+        (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
         (emit STATS_READ { memoryTotal: @entity.memoryTotal, memoryUsed: @entity.memoryUsed, memoryAvailable: @entity.memoryAvailable, memoryPercent: @entity.memoryPercent, cpuPercent: @entity.cpuPercent, load1: @entity.load1, load5: @entity.load5, load15: @entity.load15, uptimeSeconds: @entity.uptimeSeconds, processes: @entity.processes, missing: @entity.missing, unavailable: @entity.unavailable, at: @now })
     }
 
     ticks {
       sampleDue every 1s [background]
-        when (and @entity.active (not @entity.sampling) (>= @now @entity.dueAt))
+        when (and @entity.active (not @entity.sampling) (or (== @entity.dueAt null) (>= (time/diff @now @entity.dueAt "ms") 0)))
         (emit STATS_SAMPLE {})
     }
 
@@ -158,7 +158,7 @@ orbital SystemStatsOrbital {
         processes : [StatsProcess]!
         missing : [number]!
         unavailable : [string]!
-        at : number!
+        at : instant!
       }
         @description "One finished sample: memory in bytes, cpu and memory percent, the load averages, the uptime in seconds, the resident memory (kilobytes) of each watched process, the watched pids ps did not list, and the stats the host could not answer (left at zero)."
         @tier "domain"

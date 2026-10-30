@@ -1,5 +1,5 @@
 {
- "note": "Outcome goldens: operation events, refusals, per-step argv (read from STEPS_RUN: dirFlag + scope dir + prefix + step args) and hand-offs through STEPS_RUN / STEPS_DONE / STEPS_FAILED to std-step-runner. Replay limits: case-level entity seeding and @user cannot be seeded, so every flow starts from the operation event with from working and resumes at WS_ROOT_READY past the WS_BEGIN mkdir effect (WS_BEGIN itself always refuses AUTH_ERROR, covered by the signed-out cases). Firing a WORKSPACE_* operation with from idle loses the queue append under replay; this is most likely the program/step array-persistence defect (PS1), do not chase it here. Expectations record the replay's actual emits, including a premature lookup-stage hop whose extra WS_FAIL / empty *_LOADED are replay artifacts, not product behavior. Not covered: tree, read, write, remove and the bucket flows (os effects and config seeding).",
+ "note": "Outcome goldens: operation events, refusals, per-step argv (read from STEPS_RUN: dirFlag + scope dir + prefix + step args) and hand-offs through STEPS_RUN / STEPS_DONE / STEPS_FAILED to std-step-runner. Replay limits: case-level entity seeding and @user cannot be seeded, so every flow starts from the operation event with from working and resumes at WS_ROOT_READY past the WS_BEGIN mkdir effect (WS_BEGIN itself always refuses AUTH_ERROR, covered by the signed-out cases). Firing a WORKSPACE_* operation with from idle loses the queue append under replay; this is most likely the program/step array-persistence defect (PS1), do not chase it here. Expectations record the replay's actual emits, including a premature lookup-stage hop whose extra WS_FAIL / empty *_LOADED are replay artifacts, not product behavior. Not covered: tree, read, write, remove and the bucket flows (os effects and config seeding). The restore, undo and redo cases are driven the way the kernel runs them (EXEC-QUEUE-2: an emit the trait handles is delivered in the same dispatch; EXEC-DIST-4): only the operation event, the WS_ROOT_READY hand-off past the WS_BEGIN mkdir and each git process's exit (CLI_EXITED on WorkspaceGit, seeded with the process output) are fed; the runner's STEPS_DONE, the script hops and the next WS_STEPS_RUN ask are asserted as the chain's emits.",
  "atom": "ops/atoms/std-workspace.lolo",
  "trait": "WorkspaceClient",
  "cases": [
@@ -124,14 +124,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -481,14 +475,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -753,14 +741,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -1025,14 +1007,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -1303,14 +1279,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -1556,14 +1526,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -1785,14 +1749,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
-        "payload": {
-         "code": "",
-         "message": "git commit: "
-        }
-       }
+      "neverEmits": [
+       "WS_FAIL"
       ]
      }
     },
@@ -3518,18 +3476,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WORKSPACE_CHANGES_LOADED",
-        "payload": {
-         "changes": [],
-         "workspace": "w"
-        }
-       },
-       {
-        "event": "WS_NEXT",
-        "payload": {}
-       }
+      "neverEmits": [
+       "WORKSPACE_CHANGES_LOADED"
       ]
      }
     },
@@ -4045,18 +3993,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WORKSPACE_CHANGES_LOADED",
-        "payload": {
-         "changes": [],
-         "workspace": "w"
-        }
-       },
-       {
-        "event": "WS_NEXT",
-        "payload": {}
-       }
+      "neverEmits": [
+       "WORKSPACE_CHANGES_LOADED"
       ]
      }
     },
@@ -4513,18 +4451,8 @@
      "payload": {},
      "from": "working",
      "expect": {
-      "emits": [
-       {
-        "event": "WORKSPACE_CHANGES_LOADED",
-        "payload": {
-         "changes": [],
-         "workspace": "w"
-        }
-       },
-       {
-        "event": "WS_NEXT",
-        "payload": {}
-       }
+      "neverEmits": [
+       "WORKSPACE_CHANGES_LOADED"
       ]
      }
     },
@@ -5101,19 +5029,6 @@
      "expect": {
       "emits": [
        {
-        "event": "WS_START",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
         "event": "WS_STEPS_RUN",
         "payload": {
          "dirFlag": "-C",
@@ -5159,64 +5074,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "o/w/.almadar/app-marker.json\n"
-      ],
-      "rawOuts": [
-       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_STAGE",
+        "event": "WS_OPENED",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_OPENED",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -5259,64 +5155,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "abc123\n"
-      ],
-      "rawOuts": [
-       "YWJjMTIzCg=="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "YWJjMTIzCg==",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_APPLY",
+        "event": "WS_STAGE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_STAGE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -5367,64 +5244,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "M\ta.lolo\nA\tb.lolo\n"
-      ],
-      "rawOuts": [
-       "TQlhLmxvbG8KQQliLmxvbG8K"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "TQlhLmxvbG8KQQliLmxvbG8K",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_FINISH",
+        "event": "WS_APPLY",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_APPLY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -5511,63 +5369,116 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "",
-       "",
-       "",
-       "cafe01\n"
-      ],
-      "rawOuts": [
-       "",
-       "",
-       "",
-       "Y2FmZTAxCg=="
-      ],
-      "codes": [
-       0,
-       0,
-       0,
-       0
-      ],
-      "failures": [
-       "",
-       "",
-       "",
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "Y2FmZTAxCg==",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_FINISH",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_FINISH",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WORKSPACE_HISTORY_STEPPED",
         "payload": {
@@ -5583,6 +5494,10 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "WorkspaceSteps",
+    "WorkspaceGit"
    ]
   },
   {
@@ -5612,19 +5527,6 @@
     },
     {
      "event": "WS_ROOT_READY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
-        "event": "WS_START",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
      "payload": {},
      "from": "working",
      "expect": {
@@ -5675,64 +5577,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "o/w/.almadar/app-marker.json\n"
-      ],
-      "rawOuts": [
-       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_STAGE",
+        "event": "WS_OPENED",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_OPENED",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -5775,64 +5658,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "abc123\n"
-      ],
-      "rawOuts": [
-       "YWJjMTIzCg=="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "YWJjMTIzCg==",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_APPLY",
+        "event": "WS_STAGE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_STAGE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -5883,64 +5747,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "M\ta.lolo\n"
-      ],
-      "rawOuts": [
-       "TQlhLmxvbG8K"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "TQlhLmxvbG8K",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_FINISH",
+        "event": "WS_APPLY",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_APPLY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -6011,65 +5856,94 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "",
-       "",
-       "cafe01\n"
-      ],
-      "rawOuts": [
-       "",
-       "",
-       "Y2FmZTAxCg=="
-      ],
-      "codes": [
-       0,
-       1,
-       0
-      ],
-      "failures": [
-       "",
-       "fatal: boom",
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
        {
-        "event": "WS_SCRIPT_DONE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
-        "event": "WS_FAIL",
+        "event": "CLI_DONE",
         "payload": {
-         "code": "",
-         "message": "git commit: fatal: boom"
+         "stage": "step"
         }
        }
       ]
      }
     },
     {
-     "event": "WS_FAIL",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "code": "",
-      "message": "git commit: fatal: boom"
+      "code": 1,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": "ZmF0YWw6IGJvb20="
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "Y2FmZTAxCg==",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       },
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "",
+         "message": "git commit: fatal: boom"
+        }
+       },
        {
         "event": "WORKSPACE_STEP_FAILED",
         "payload": {
@@ -6085,6 +5959,10 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "WorkspaceSteps",
+    "WorkspaceGit"
    ]
   },
   {
@@ -6113,19 +5991,6 @@
     },
     {
      "event": "WS_ROOT_READY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
-        "event": "WS_START",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
      "payload": {},
      "from": "working",
      "expect": {
@@ -6176,57 +6041,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "o/w/.almadar/app-marker.json\n"
-      ],
-      "rawOuts": [
-       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {}
-    },
-    {
-     "event": "WS_OPENED",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
+       {
+        "event": "WS_OPENED",
+        "payload": {}
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -6275,64 +6128,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
-      ],
-      "rawOuts": [
-       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg==",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_STAGE",
+        "event": "WS_TARGET",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_TARGET",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -6375,64 +6209,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "p0\n"
-      ],
-      "rawOuts": [
-       "cDAK"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "cDAK",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_APPLY",
+        "event": "WS_STAGE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_STAGE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -6483,64 +6298,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "M\ta.lolo\n"
-      ],
-      "rawOuts": [
-       "TQlhLmxvbG8K"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "TQlhLmxvbG8K",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_FINISH",
+        "event": "WS_APPLY",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_APPLY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -6611,59 +6407,91 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "",
-       "",
-       "cafe02\n"
-      ],
-      "rawOuts": [
-       "",
-       "",
-       "Y2FmZTAyCg=="
-      ],
-      "codes": [
-       0,
-       0,
-       0
-      ],
-      "failures": [
-       "",
-       "",
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "Y2FmZTAyCg==",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_FINISH",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_FINISH",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WORKSPACE_HISTORY_STEPPED",
         "payload": {
@@ -6679,6 +6507,10 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "WorkspaceSteps",
+    "WorkspaceGit"
    ]
   },
   {
@@ -6975,19 +6807,6 @@
      "expect": {
       "emits": [
        {
-        "event": "WS_START",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
         "event": "WS_STEPS_RUN",
         "payload": {
          "dirFlag": "-C",
@@ -7033,57 +6852,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "o/w/.almadar/app-marker.json\n"
-      ],
-      "rawOuts": [
-       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {}
-    },
-    {
-     "event": "WS_OPENED",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
+       {
+        "event": "WS_OPENED",
+        "payload": {}
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7132,64 +6939,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "abc123\u001f1700000000\u001fsnapshot: first\u001fAlmadar-Kind: snapshot\u001e def456\u001f1700000100\u001fedit\u001f\u001e"
-      ],
-      "rawOuts": [
-       "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg=="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "YWJjMTIzHzE3MDAwMDAwMDAfc25hcHNob3Q6IGZpcnN0H0FsbWFkYXItS2luZDogc25hcHNob3QeIGRlZjQ1Nh8xNzAwMDAwMTAwH2VkaXQfHg==",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_STAGE",
+        "event": "WS_TARGET",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_TARGET",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7232,64 +7020,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       ""
-      ],
-      "rawOuts": [
-       ""
-      ],
-      "codes": [
-       1
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 1,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_APPLY",
+        "event": "WS_STAGE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_STAGE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7337,64 +7106,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "a.lolo\nb.lolo\n"
-      ],
-      "rawOuts": [
-       "YS5sb2xvCmIubG9sbwo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "YS5sb2xvCmIubG9sbwo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_FINISH",
+        "event": "WS_APPLY",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_APPLY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7467,46 +7217,87 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "",
-       "",
-       "cafe03\n"
-      ],
-      "rawOuts": [
-       "",
-       "",
-       "Y2FmZTAzCg=="
-      ],
-      "codes": [
-       0,
-       0,
-       0
-      ],
-      "failures": [
-       "",
-       "",
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
        {
-        "event": "WS_SCRIPT_DONE",
-        "payload": {}
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
        }
       ]
      }
     },
     {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
+     "payload": {
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
+     },
+     "entity": {
+      "stage": "step",
+      "out": "Y2FmZTAzCg==",
+      "err": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
+       {
+        "event": "WS_SCRIPT_DONE",
+        "payload": {}
+       },
        {
         "event": "WS_FINISH",
         "payload": {}
@@ -7514,6 +7305,10 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "WorkspaceSteps",
+    "WorkspaceGit"
    ]
   },
   {
@@ -7542,19 +7337,6 @@
     },
     {
      "event": "WS_ROOT_READY",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
-       {
-        "event": "WS_START",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
      "payload": {},
      "from": "working",
      "expect": {
@@ -7605,57 +7387,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "o/w/.almadar/app-marker.json\n"
-      ],
-      "rawOuts": [
-       "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo="
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "by93Ly5hbG1hZGFyL2FwcC1tYXJrZXIuanNvbgo=",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {}
-    },
-    {
-     "event": "WS_OPENED",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
+       {
+        "event": "WS_OPENED",
+        "payload": {}
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7704,64 +7474,45 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "u2\u001f1700000300\u001fundo: abc\u001fAlmadar-Kind: undo\nUndoes: u1\u001e u1\u001f1700000200\u001fedit\u001f\u001e"
-      ],
-      "rawOuts": [
-       "dTIfMTcwMDAwMDMwMB91bmRvOiBhYmMfQWxtYWRhci1LaW5kOiB1bmRvClVuZG9lczogdTEeIHUxHzE3MDAwMDAyMDAfZWRpdB8e"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "dTIfMTcwMDAwMDMwMB91bmRvOiBhYmMfQWxtYWRhci1LaW5kOiB1bmRvClVuZG9lczogdTEeIHUxHzE3MDAwMDAyMDAfZWRpdB8e",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_STAGE",
+        "event": "WS_TARGET",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_TARGET",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_START",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_STEPS_RUN",
         "payload": {
@@ -7804,58 +7555,81 @@
      }
     },
     {
-     "event": "WS_STEPS_DONE",
+     "trait": "WorkspaceGit",
+     "event": "CLI_EXITED",
+     "from": "running",
      "payload": {
-      "requestId": "step",
-      "outputs": [
-       "u1\n"
-      ],
-      "rawOuts": [
-       "dTEK"
-      ],
-      "codes": [
-       0
-      ],
-      "failures": [
-       ""
-      ]
+      "code": 0,
+      "signal": 0,
+      "key": "wait"
      },
-     "from": "working",
+     "entity": {
+      "stage": "step",
+      "out": "dTEK",
+      "err": ""
+     },
      "expect": {
       "emits": [
+       {
+        "event": "CLI_DONE",
+        "payload": {
+         "stage": "step"
+        }
+       },
+       {
+        "event": "STEPS_DONE",
+        "payload": {
+         "requestId": "step"
+        }
+       },
        {
         "event": "WS_SCRIPT_DONE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_SCRIPT_DONE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
-        "event": "WS_APPLY",
+        "event": "WS_STAGE",
         "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "WS_STAGE",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "emits": [
+       },
        {
         "event": "WS_START",
         "payload": {}
+       },
+       {
+        "event": "WS_STEPS_RUN",
+        "payload": {
+         "requestId": "step",
+         "steps": [
+          {
+           "scope": "repo",
+           "args": [
+            "diff",
+            "--name-status",
+            "--no-renames",
+            "u1",
+            "--",
+            "schema.orb",
+            ":(glob)orbitals/*",
+            ":(glob)**/*.lolo",
+            ":(glob).almadar/sessions/*/spec.json",
+            ":(exclude,glob).almadar/**/*.lolo",
+            ":(exclude)apps",
+            ":(exclude)node_modules"
+           ],
+           "stdin": "",
+           "feed": false,
+           "tolerate": false,
+           "raw": false
+          }
+         ]
+        }
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "WorkspaceSteps",
+    "WorkspaceGit"
    ]
   },
   {

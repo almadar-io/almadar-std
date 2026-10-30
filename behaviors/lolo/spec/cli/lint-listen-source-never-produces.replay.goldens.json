@@ -2404,6 +2404,370 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-per-edge-sources-delivery-rejected-from-the-kernel",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Sender",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DELIVERY_REJECTED",
+             "scope": "internal"
+            }
+           ]
+          },
+          {
+           "name": "Receiver",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "DELIVERY_REJECTED",
+             "triggers": "REFUSED",
+             "source": {
+              "kind": "trait",
+              "trait": "Sender"
+             }
+            },
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "key": "@payload.key",
+             "source": {
+              "kind": "trait",
+              "trait": "Sender"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Sender": [],
+        "Receiver": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Sender": [],
+       "Receiver": []
+      },
+      "byEffect": {
+       "Sender": [
+        "DELIVERY_REJECTED"
+       ],
+       "Receiver": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-the-kernel-production-delivery-rejected-is-never-produced",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Sender",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "DELIVERY_REJECTED",
+             "scope": "internal"
+            }
+           ]
+          },
+          {
+           "name": "Receiver",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "DELIVERY_REJECTED",
+             "triggers": "REFUSED",
+             "source": {
+              "kind": "trait",
+              "trait": "Sender"
+             }
+            },
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "key": "@payload.key",
+             "source": {
+              "kind": "trait",
+              "trait": "Sender"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Sender": [],
+        "Receiver": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Sender": [],
+       "Receiver": []
+      },
+      "byEffect": {
+       "Sender": [],
+       "Receiver": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES",
+           "path": "orbitals.O.traits.Receiver.listens",
+           "message": "listens route Sender.DELIVERY_REJECTED -> REFUSED: Sender's emits contract declares DELIVERY_REJECTED, but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer",
+           "suggestion": "restore DELIVERY_REJECTED to Sender's active affordance config, or drop the Receiver route if the removal is intentional",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

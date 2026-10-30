@@ -176,7 +176,23 @@ orbital OrbLintControlValueDiscardedOrbital {
     }
   }
 
+  trait Packs = Input.traits.Packs {
+  }
+  trait Versions = Input.traits.Versions {
+  }
   trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintControlValueDiscardedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
   }
   trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
     listens {
@@ -188,4 +204,6 @@ orbital OrbLintControlValueDiscardedOrbital {
       OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
     }
   }
+
+  page boot as OrbLintControlValueDiscardedOrbitalStart -> OrbLintControlValueDiscarded, OrbLintControlValueDiscardedCli, OrbLintInput, OrbEmbedChain, Packs, Versions
 }

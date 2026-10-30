@@ -24,7 +24,7 @@ orbital OrbEmitConfigOrbital {
       INIT -> ready
       EMIT_CONFIG_CHECK -> ready
         (emit EMIT_CONFIG_CHECKED { requestId: @payload.requestId, results: (array/map @payload.items (fn it
-          { id: (object/get @it "id"), findings: (array/flatten (array/map (object/entries (object/get @it "emit")) (fn kv
+          { id: (object/get @it "id"), findings: (array/flatten (array/map (object/entries (object/get @it "emit" {})) (fn kv
             (let ((key (array/nth @kv 0)) (v (array/nth @kv 1)) (p (object/get @it "path")) (allowed (object/get @it "allowedKeys")))
               (if (not (array/includes @allowed @key))
                 [{ code: @config.codes.effEmitKeyInvalid.code, path: @p, message: (str/concat "emit." @key " is not supported on this operator (allowed: " (str/join @allowed ", ") ")"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]

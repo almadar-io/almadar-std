@@ -1,12 +1,13 @@
 app std-http-keyed [
   version: "2.0.0",
   net: { "api.example.test:80": [tcp] },
-  description: "std-http-keyed — concurrent HTTP calls by key (spec/net/http-keyed.lolo): one std-http-client trait (KeyedHttp) whose rows are addressed by the call key, and its one stream framer (KeyedFrame). A caller routes its HTTP_SEND { key, method, target, headers, body, stream } and HTTP_CANCEL { key } to HttpKeyed, which re-emits them and KeyedHttp hears each with `per @payload.key`; the kernel gives each key its own row of the client, so its own socket, head and body state, and creates it on first use (INIT runs once). The client's answers are keyed and unchanged: HTTP_REPLIED { key, status, headers, body }, HTTP_FAILED { key, error, kind } and, for a stream of sse or jsonl, HTTP_STREAM_EVENT { key, data, event, id }. The framer is stateless, so every row shares KeyedFrame, and the frames it answers return to their row by `per @payload.key`. A second HTTP_SEND on a key whose call is in flight answers HTTP_FAILED kind refused (std-http-client's one call per frame); an empty key is refused by the `per` clause as DELIVERY_REJECTED, and with no trait listening for it the dispatch fails naming the envelope and reason. A row returns to its defaults, and so is dropped, when its call ends and its socket is closed; a kept-alive socket keeps it until HTTP_CLOSE. No slot count or queue: the number of keys in flight is the caller's. The host, port, tls, serverName and credential knobs are set once on KeyedHttp (the net grant names that host); a call site that restates KeyedHttp's listens restates every `per` clause with it. The answers come from KeyedHttp."
+  description: "std-http-keyed — concurrent HTTP calls by key (spec/net/http-keyed.lolo): one std-http-client trait (KeyedHttp) whose rows are addressed by the call key, and its one stream framer (KeyedFrame). A caller routes its HTTP_SEND { key, method, target, headers, body, stream } and HTTP_CANCEL { key } to HttpKeyed, which re-emits them and KeyedHttp hears each with `per @payload.key`; the kernel gives each key its own row of the client, so its own socket, head and body state, and creates it on first use (INIT runs once). The client's answers are keyed and unchanged: HTTP_REPLIED { key, status, headers, body }, HTTP_FAILED { key, error, kind } and, for a stream of sse or jsonl, HTTP_STREAM_EVENT { key, data, event, id }. The framer is stateless, so every row shares KeyedFrame, and the frames it answers return to their row by `per @payload.key`. A second HTTP_SEND on a key whose call is in flight answers HTTP_FAILED kind refused (std-http-client's one call per frame); a key that is not a non-empty string is refused by the `per` clause as DELIVERY_REJECTED (reason key-invalid) from HttpKeyed, which hears it and answers HTTP_FAILED with an empty key and kind refused itself (a refused HTTP_CANCEL has no answer, as a cancel never has one). A row returns to its defaults, and so is dropped, when its call ends and its socket is closed; a kept-alive socket keeps it until HTTP_CLOSE. No slot count or queue: the number of keys in flight is the caller's. The host, port, tls, serverName and credential knobs are set once on KeyedHttp (the net grant names that host); a call site that restates KeyedHttp's listens restates every `per` clause with it. The answers come from KeyedHttp."
 ]
 uses Spec from "almadar-std/http-keyed"
 uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
+type RefusedTo = { instance : string!, orbital : string!, trait : string }
 
 orbital HttpKeyedOrbital {
   entity KeyedCall [runtime] {
@@ -28,9 +29,25 @@ orbital HttpKeyedOrbital {
         (emit KEYED_SEND { key: @payload.key, method: @payload.method, target: @payload.target, headers: @payload.headers, body: @payload.body, stream: @payload.stream })
       HTTP_CANCEL -> ready
         (emit KEYED_CANCEL { key: @payload.key })
+      KEY_REFUSED -> ready when (and (= @payload.reason "key-invalid") (= @payload.event "HTTP_SEND"))
+        (emit HTTP_FAILED { key: "", error: "a call needs a key: a non-empty string", kind: "refused" })
     }
 
     emits {
+      HTTP_FAILED -> external {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "A call whose key is not a non-empty string is refused before any row exists: kind refused, key empty (the key it carried cannot name a row). A call on a good key is answered by KeyedHttp."
+      DELIVERY_REJECTED {
+        id : string!
+        to : RefusedTo!
+        event : string!
+        reason : string!
+        causalId : string!
+      }
+        @description "Produced by the kernel, never by an effect: a delivery this trait emitted whose `per` key is not a non-empty string is refused, reason key-invalid (EXEC-STEP-1a)."
       KEYED_SEND {
         key : string!
         method : string!
@@ -49,6 +66,13 @@ orbital HttpKeyedOrbital {
     }
 
     listens {
+      KEY_REFUSED {
+        id : string!
+        reason : string!
+        event : string!
+      }
+        @description "The kernel refused a delivery whose `per` key is not a non-empty string (DELIVERY_REJECTED from this trait, EXEC-STEP-1a); only a refused HTTP_SEND is answered, a refused HTTP_CANCEL has no answer."
+      HttpKeyed.DELIVERY_REJECTED -> KEY_REFUSED
       HTTP_SEND {
         key : string!
         method : string!

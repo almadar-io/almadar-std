@@ -216,6 +216,230 @@
       ]
     },
     {
+      "id": "viewer-without-claims-fails",
+      "entity": {
+        "golden": {
+          "atom": "cli/atoms/std-orb-goldens.lolo",
+          "trait": "G",
+          "orbital": "Gating",
+          "cases": [
+            {
+              "id": "c",
+              "steps": [
+                {
+                  "from": "ready",
+                  "event": "OPEN",
+                  "viewer": {
+                    "id": "ann"
+                  },
+                  "expect": {
+                    "fired": true,
+                    "state": "open"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "GOLDENS_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GOLDENS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "fail  c\n  step 0: viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "G-STD-156 / S3: a step viewer is checked against the core Viewer shape before it is played; claims is required."
+    },
+    {
+      "id": "viewer-with-a-wrong-typed-field-fails",
+      "entity": {
+        "golden": {
+          "atom": "cli/atoms/std-orb-goldens.lolo",
+          "trait": "G",
+          "orbital": "Gating",
+          "cases": [
+            {
+              "id": "c",
+              "steps": [
+                {
+                  "from": "ready",
+                  "event": "OPEN",
+                  "viewer": {
+                    "id": 7,
+                    "claims": []
+                  },
+                  "expect": {
+                    "fired": true,
+                    "state": "open"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "GOLDENS_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GOLDENS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "fail  c\n  step 0: viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "S3: a viewer whose id is not a string does not fit Viewer."
+    },
+    {
+      "id": "control-viewer-with-claims-reaches-the-step",
+      "entity": {
+        "golden": {
+          "atom": "cli/atoms/std-orb-goldens.lolo",
+          "trait": "G",
+          "orbital": "Gating",
+          "cases": [
+            {
+              "id": "c",
+              "steps": [
+                {
+                  "from": "ready",
+                  "event": "OPEN",
+                  "viewer": {
+                    "id": "ann",
+                    "role": "admin",
+                    "claims": [
+                      {
+                        "name": "tier",
+                        "value": "gold"
+                      }
+                    ]
+                  },
+                  "expect": {
+                    "fired": true,
+                    "state": "open"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "GOLDENS_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GOLDENS_PREFLIGHT",
+                "payload": {}
+              },
+              {
+                "event": "GOLDENS_CASE_FAILED",
+                "payload": {
+                  "error": "no substrate host configured for program/step"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "S3 control: a viewer that fits Viewer reaches the step."
+    },
+    {
+      "id": "control-null-viewer-reaches-the-step",
+      "entity": {
+        "golden": {
+          "atom": "cli/atoms/std-orb-goldens.lolo",
+          "trait": "G",
+          "orbital": "Gating",
+          "cases": [
+            {
+              "id": "c",
+              "steps": [
+                {
+                  "from": "ready",
+                  "event": "OPEN",
+                  "viewer": null,
+                  "expect": {
+                    "fired": true,
+                    "state": "open"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "program": "{\"name\": \"GateApp\", \"orbitals\": [{\"name\": \"Gating\", \"entity\": {\"name\": \"Gate\", \"persistence\": \"runtime\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}, {\"name\": \"owner\", \"type\": \"string\", \"default\": \"\"}]}, \"pages\": [], \"traits\": [{\"name\": \"G\", \"linkedEntity\": \"Gate\", \"stateMachine\": {\"states\": [{\"name\": \"ready\", \"isInitial\": true}, {\"name\": \"open\"}], \"transitions\": [{\"from\": \"ready\", \"to\": \"open\", \"event\": \"OPEN\", \"guard\": [\"=\", \"@entity.owner\", \"ann\"]}]}}]}]}",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "from": "running",
+          "event": "GOLDENS_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GOLDENS_PREFLIGHT",
+                "payload": {}
+              },
+              {
+                "event": "GOLDENS_CASE_FAILED",
+                "payload": {
+                  "error": "no substrate host configured for program/step"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "S3 control: a null viewer plays as nobody and is not checked."
+    },
+    {
       "id": "unknown-case-key-fails",
       "entity": {
         "golden": {
@@ -3271,17 +3495,25 @@
                   [
                     "str/slice",
                     [
-                      "array/nth",
-                      "@entity.files",
-                      "@entity.fileCursor"
+                      "default",
+                      [
+                        "array/nth",
+                        "@entity.files",
+                        "@entity.fileCursor"
+                      ],
+                      ""
                     ],
                     1,
                     [
                       "str/len",
                       [
-                        "array/nth",
-                        "@entity.files",
-                        "@entity.fileCursor"
+                        "default",
+                        [
+                          "array/nth",
+                          "@entity.files",
+                          "@entity.fileCursor"
+                        ],
+                        ""
                       ]
                     ]
                   ]
@@ -3319,9 +3551,13 @@
                 "arg0": {
                   "anchor": "cwd",
                   "path": [
-                    "array/nth",
-                    "@entity.files",
-                    "@entity.fileCursor"
+                    "default",
+                    [
+                      "array/nth",
+                      "@entity.files",
+                      "@entity.fileCursor"
+                    ],
+                    ""
                   ]
                 },
                 "optionsAt": 1
@@ -3354,84 +3590,48 @@
             "state": "reading",
             "effects": [
               {
-                "type": "let",
-                "arg1": [
-                  "if",
+                "type": "os/read-file",
+                "optionsAt": 1,
+                "key": "atom",
+                "arg0": [
+                  "str/concat",
+                  "/",
                   [
-                    "=",
-                    "@text",
-                    null
-                  ],
-                  [
-                    "emit",
-                    "GOLDENS_ANSWERED",
-                    {
-                      "status": 500,
-                      "body": [
-                        "str/concat",
-                        "goldens: goldens file is not valid text: ",
-                        "@entity.file"
-                      ]
-                    }
-                  ],
-                  [
-                    "os/read-file",
+                    "str/slice",
                     [
-                      "str/concat",
-                      "/",
+                      "os/path-normalize",
                       [
-                        "str/slice",
+                        "os/path-join",
+                        "@entity.file",
+                        "..",
+                        "..",
+                        "..",
                         [
-                          "os/path-normalize",
-                          [
-                            "os/path-join",
-                            "@entity.file",
-                            "..",
-                            "..",
-                            "..",
-                            [
-                              "object/get",
-                              [
-                                "json/parse",
-                                "@text",
-                                "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
-                              ],
-                              "atom"
-                            ]
-                          ]
-                        ],
-                        1,
-                        [
-                          "str/len",
-                          [
-                            "os/path-normalize",
-                            [
-                              "os/path-join",
-                              "@entity.file",
-                              "..",
-                              "..",
-                              "..",
-                              [
-                                "object/get",
-                                [
-                                  "json/parse",
-                                  "@text",
-                                  "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
-                                ],
-                                "atom"
-                              ]
-                            ]
-                          ]
+                          "object/get",
+                          "@entity.golden",
+                          "atom"
                         ]
                       ]
                     ],
-                    {
-                      "key": "atom",
-                      "emit": {
-                        "success": "GOLDENS_ATOM_READ",
-                        "failure": "GOLDENS_FAILED"
-                      }
-                    }
+                    1,
+                    [
+                      "str/len",
+                      [
+                        "os/path-normalize",
+                        [
+                          "os/path-join",
+                          "@entity.file",
+                          "..",
+                          "..",
+                          "..",
+                          [
+                            "object/get",
+                            "@entity.golden",
+                            "atom"
+                          ]
+                        ]
+                      ]
+                    ]
                   ]
                 ]
               }
@@ -3463,59 +3663,27 @@
             "state": "reading",
             "effects": [
               {
-                "type": "let",
-                "arg1": [
-                  "if",
-                  [
-                    "=",
-                    "@text",
-                    null
-                  ],
-                  [
-                    "emit",
-                    "GOLDENS_ANSWERED",
-                    {
-                      "status": 500,
-                      "body": [
-                        "str/concat",
-                        "goldens: goldens file is not valid text: ",
-                        "@entity.file"
+                "type": "os/read-file",
+                "optionsAt": 1,
+                "key": "atom",
+                "arg0": {
+                  "anchor": "cwd",
+                  "path": [
+                    "os/path-normalize",
+                    [
+                      "os/path-join",
+                      "@entity.file",
+                      "..",
+                      "..",
+                      "..",
+                      [
+                        "object/get",
+                        "@entity.golden",
+                        "atom"
                       ]
-                    }
-                  ],
-                  [
-                    "os/read-file",
-                    {
-                      "anchor": "cwd",
-                      "path": [
-                        "os/path-normalize",
-                        [
-                          "os/path-join",
-                          "@entity.file",
-                          "..",
-                          "..",
-                          "..",
-                          [
-                            "object/get",
-                            [
-                              "json/parse",
-                              "@text",
-                              "{\"version\":1,\"name\":\"GoldenFile\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"atom\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"cases\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenCase\"}},\"required\":true,\"constraints\":[]}]},\"named\":{\"GoldenCase\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"note\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"golden\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"skip\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"config\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"id\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"steps\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenStep\"}},\"required\":true,\"constraints\":[]}]},\"GoldenEmit\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"optionsAt\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]}]},\"GoldenPayload\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"GoldenStep\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"keep\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"keepField\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"now\",\"fieldType\":{\"kind\":\"union\",\"variants\":[{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]},{\"name\":\"viewer\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"trait\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"orbital\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"from\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"event\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]},{\"name\":\"payload\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]},{\"name\":\"expect\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"fired\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"state\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"emits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"neverEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":false,\"constraints\":[]},{\"name\":\"exactEmits\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenEmit\"}},\"required\":false,\"constraints\":[]},{\"name\":\"emitCounts\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"number\"}},\"required\":false,\"constraints\":[]},{\"name\":\"effects\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"}},\"required\":false,\"constraints\":[]},{\"name\":\"entity\",\"fieldType\":{\"kind\":\"reference\",\"entity\":\"GoldenPayload\"},\"required\":false,\"constraints\":[]}]},\"required\":false,\"constraints\":[]}]},\"GoldenValue\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":false,\"constraints\":[]},{\"name\":\"number\",\"fieldType\":{\"kind\":\"number\"},\"required\":false,\"constraints\":[]},{\"name\":\"boolean\",\"fieldType\":{\"kind\":\"boolean\"},\"required\":false,\"constraints\":[]},{\"name\":\"array\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]},{\"name\":\"object\",\"fieldType\":{\"kind\":\"map\",\"key\":{\"kind\":\"string\"},\"value\":{\"kind\":\"optional\",\"inner\":{\"kind\":\"reference\",\"entity\":\"GoldenValue\"}}},\"required\":false,\"constraints\":[]}]}}}"
-                            ],
-                            "atom"
-                          ]
-                        ]
-                      ]
-                    },
-                    {
-                      "key": "atom",
-                      "emit": {
-                        "success": "GOLDENS_ATOM_READ",
-                        "failure": "GOLDENS_FAILED"
-                      }
-                    }
+                    ]
                   ]
-                ]
+                }
               }
             ]
           },
@@ -3609,6 +3777,128 @@
                 "payload": {
                   "status": 400,
                   "body": "usage: orb goldens <file.goldens.json>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-directory-is-globbed-at-any-depth",
+      "note": "G-STD-164: a directory argument globs its replay goldens at every depth (os/glob), not one level of os/list-dir.",
+      "steps": [
+        {
+          "trait": "OrbGoldens",
+          "from": "ready",
+          "event": "GOLDENS_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"spec/net\"],\"cwd\":\"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "effects": [
+              {
+                "type": "os/glob",
+                "optionsAt": 1,
+                "key": "dir"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "globbed-paths-are-replayed",
+      "note": "G-STD-164: the globbed paths become the file list and the first file opens.",
+      "entity": {
+        "dir": "spec/net",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "trait": "OrbGoldens",
+          "from": "listing",
+          "event": "GOLDENS_LISTED",
+          "payload": {
+            "paths": [
+              "spec/net/b/x.replay.goldens.json",
+              "spec/net/a.replay.goldens.json"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "GOLDENS_FILE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-directory-holding-no-goldens-is-a-failure",
+      "note": "G-STD-164: zero files read is a failure that names the directory, never a pass.",
+      "entity": {
+        "dir": "spec/none",
+        "files": [],
+        "fileCursor": 0,
+        "cursor": 0,
+        "lines": []
+      },
+      "steps": [
+        {
+          "trait": "OrbGoldens",
+          "from": "listing",
+          "event": "GOLDENS_LISTED",
+          "payload": {
+            "paths": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GOLDENS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "goldens: no *.replay.goldens.json file under spec/none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-absolute-directory-is-refused-with-the-relative-form",
+      "note": "G-STD-164: an absolute directory cannot be globbed until the kernel's static grant check takes a literal-directory str/concat glob prefix; it is refused with the fix, never listed one level deep.",
+      "steps": [
+        {
+          "trait": "OrbGoldens",
+          "from": "ready",
+          "event": "GOLDENS_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"/w/spec/net\"],\"cwd\":\"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GOLDENS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "goldens: pass a directory relative to the working directory; an absolute directory is not globbed: /w/spec/net"
                 }
               }
             ]

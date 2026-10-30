@@ -11,7 +11,8 @@
      "event": "MINT_TICKET",
      "payload": {
       "viewer": {
-       "id": "alice"
+       "id": "alice",
+       "claims": []
       },
       "requestId": 1
      }
@@ -63,9 +64,10 @@
       "data": {
        "id": "tk1",
        "viewer": {
-        "id": "alice"
+        "id": "alice",
+        "claims": []
        },
-       "expiresAt": 99999999999999
+       "expiresAt": "5138-11-16T09:46:39.999Z"
       }
      },
      "from": "taking"
@@ -103,9 +105,10 @@
       "data": {
        "id": "tk1",
        "viewer": {
-        "id": "alice"
+        "id": "alice",
+        "claims": []
        },
-       "expiresAt": 99999999999999
+       "expiresAt": "5138-11-16T09:46:39.999Z"
       }
      },
      "from": "taking"
@@ -170,7 +173,8 @@
      "event": "MINT_TICKET",
      "payload": {
       "viewer": {
-       "id": "alice"
+       "id": "alice",
+       "claims": []
       },
       "requestId": 1
      }
@@ -222,9 +226,10 @@
       "data": {
        "id": "tk1",
        "viewer": {
-        "id": "alice"
+        "id": "alice",
+        "claims": []
        },
-       "expiresAt": 1
+       "expiresAt": "1970-01-01T00:00:00.001Z"
       }
      },
      "from": "taking"
@@ -241,6 +246,218 @@
         "event": "TICKET_REFUSED",
         "payload": {
          "code": "expired",
+         "ticket": "tk1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-viewers-hold-two-tickets-each-opens-once",
+   "note": "two tickets held at once; each spends on its own and a second take of the first is refused",
+   "steps": [
+    {
+     "event": "MINT_TICKET",
+     "payload": {
+      "viewer": {
+       "id": "alice",
+       "claims": []
+      },
+      "requestId": 1
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "SEED_DRAWN",
+     "payload": {
+      "value": "tk1"
+     },
+     "from": "drawing"
+    },
+    {
+     "event": "TICKET_SAVED",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "saving",
+     "keep": "a",
+     "keepField": "ticket",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "ticket": "tk1",
+         "requestId": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "MINT_TICKET",
+     "payload": {
+      "viewer": {
+       "id": "bob",
+       "claims": []
+      },
+      "requestId": 2
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "SEED_DRAWN",
+     "payload": {
+      "value": "tk2"
+     },
+     "from": "drawing"
+    },
+    {
+     "event": "TICKET_SAVED",
+     "payload": {
+      "id": "tk2"
+     },
+     "from": "saving",
+     "keep": "b",
+     "keepField": "ticket",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "ticket": "tk2",
+         "requestId": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$b"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk2",
+       "viewer": {
+        "id": "bob",
+        "claims": []
+       },
+       "expiresAt": "5138-11-16T09:46:39.999Z"
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_SPENT",
+     "payload": {
+      "id": "tk2"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_TAKEN",
+        "payload": {
+         "ticket": "tk2"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$a"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk1",
+       "viewer": {
+        "id": "alice",
+        "claims": []
+       },
+       "expiresAt": "5138-11-16T09:46:39.999Z"
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_SPENT",
+     "payload": {
+      "id": "tk1"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_TAKEN",
+        "payload": {
+         "ticket": "tk1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TAKE_TICKET",
+     "payload": {
+      "ticket": "$a"
+     }
+    },
+    {
+     "event": "TICKET_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "TICKET_LOADED",
+     "payload": {
+      "data": {
+       "id": "tk1",
+       "viewer": {
+        "id": "alice",
+        "claims": []
+       },
+       "expiresAt": "5138-11-16T09:46:39.999Z"
+      }
+     },
+     "from": "taking"
+    },
+    {
+     "event": "TICKET_NOT_SPENT",
+     "payload": {
+      "error": "gone"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "used",
          "ticket": "tk1"
         }
        }

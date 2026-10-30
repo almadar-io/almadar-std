@@ -27,11 +27,11 @@ orbital OrbStampOrbital {
 
     state ready {
       INIT -> ready
-      STAMP_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      STAMP_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit STAMP_ANSWERED { status: 400, body: "", stderr: "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]" })
-      STAMP_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit STAMP_ARGS_PARSE { stage: "stamp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "prior" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "imports" aliases: [] takesValue: true repeatable: false }] })
+      STAMP_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit STAMP_ARGS_PARSE { stage: "stamp" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "prior" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "imports" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -100,14 +100,14 @@ orbital OrbStampOrbital {
 
     state idle {
       INIT -> idle
-      STAMP_START -> stamping when (not (!= (object/get @payload.flags "output") null))
+      STAMP_START -> stamping when (not (object/has @payload.flags "output"))
         (set @entity.cwd @payload.cwd)
         (set @entity.written false)
-        (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))) } (if (!= (object/get @payload.flags "prior") null) { prior: (if (os/path-is-absolute (array/first (object/get @payload.flags "prior"))) (array/first (object/get @payload.flags "prior")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "prior")))) } {}) (if (!= (object/get @payload.flags "imports") null) { imports: (if (os/path-is-absolute (array/first (object/get @payload.flags "imports"))) (array/first (object/get @payload.flags "imports")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "imports")))) } {}) (if (!= (object/get @payload.flags "output") null) { output: (if (os/path-is-absolute (array/first (object/get @payload.flags "output"))) (array/first (object/get @payload.flags "output")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "output")))) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } })
-      STAMP_START -> stamping when (!= (object/get @payload.flags "output") null)
+        (let ((f (default (array/first @payload.positionals) "")) (pf (default (array/first (default (object/get @payload.flags "prior") [])) "")) (imf (default (array/first (default (object/get @payload.flags "imports") [])) "")) (of (default (array/first (default (object/get @payload.flags "output") [])) ""))) (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute @f) @f (os/path-join @entity.cwd @f)) } (if (object/has @payload.flags "prior") { prior: (if (os/path-is-absolute @pf) @pf (os/path-join @entity.cwd @pf)) } {}) (if (object/has @payload.flags "imports") { imports: (if (os/path-is-absolute @imf) @imf (os/path-join @entity.cwd @imf)) } {}) (if (object/has @payload.flags "output") { output: (if (os/path-is-absolute @of) @of (os/path-join @entity.cwd @of)) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } }))
+      STAMP_START -> stamping when (object/has @payload.flags "output")
         (set @entity.cwd @payload.cwd)
         (set @entity.written true)
-        (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))) } (if (!= (object/get @payload.flags "prior") null) { prior: (if (os/path-is-absolute (array/first (object/get @payload.flags "prior"))) (array/first (object/get @payload.flags "prior")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "prior")))) } {}) (if (!= (object/get @payload.flags "imports") null) { imports: (if (os/path-is-absolute (array/first (object/get @payload.flags "imports"))) (array/first (object/get @payload.flags "imports")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "imports")))) } {}) (if (!= (object/get @payload.flags "output") null) { output: (if (os/path-is-absolute (array/first (object/get @payload.flags "output"))) (array/first (object/get @payload.flags "output")) (os/path-join @entity.cwd (array/first (object/get @payload.flags "output")))) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } })
+        (let ((f (default (array/first @payload.positionals) "")) (pf (default (array/first (default (object/get @payload.flags "prior") [])) "")) (imf (default (array/first (default (object/get @payload.flags "imports") [])) "")) (of (default (array/first (default (object/get @payload.flags "output") [])) ""))) (program/read "" (object/merge { stamp: true, path: (if (os/path-is-absolute @f) @f (os/path-join @entity.cwd @f)) } (if (object/has @payload.flags "prior") { prior: (if (os/path-is-absolute @pf) @pf (os/path-join @entity.cwd @pf)) } {}) (if (object/has @payload.flags "imports") { imports: (if (os/path-is-absolute @imf) @imf (os/path-join @entity.cwd @imf)) } {}) (if (object/has @payload.flags "output") { output: (if (os/path-is-absolute @of) @of (os/path-join @entity.cwd @of)) } {})) { key: "stamp" emit: { success: STAMP_STAMPED, failure: STAMP_REFUSED } }))
     }
 
     state stamping {
@@ -117,7 +117,7 @@ orbital OrbStampOrbital {
       STAMP_STAMPED -> idle when (not @entity.written)
         (emit STAMP_ANSWERED { status: 200, body: (object/get @payload.result "text") })
       STAMP_REFUSED -> idle
-        (emit STAMP_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
+        (emit STAMP_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
     }
 
     emits {

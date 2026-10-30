@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STD_OPERATORS, getOperatorRunsOn } from '../registry.js';
+import { nullable } from '../signature.js';
 import canonical from '../canonical-operators.json';
 
 describe('str/to-number contract', () => {
@@ -24,7 +25,7 @@ describe('str/to-number contract', () => {
     expect(operator.module).toBe('str');
     expect(operator.category).toBe('std-str');
     expect(operator.hasSideEffects).toBe(false);
-    expect(operator.returnType).toBe('number');
+    expect(operator.returnType).toEqual(nullable('number'));
     expect([operator.minArity, operator.maxArity]).toEqual([1, 1]);
     expect(operator.params?.map(({ name, type, optional }) => ({ name, type, optional: optional === true }))).toEqual([{ name: 's', type: 'string', optional: false }]);
     expect(getOperatorRunsOn('str/to-number')).toBeUndefined();

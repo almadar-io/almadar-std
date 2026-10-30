@@ -434,7 +434,7 @@ orbital CouchdbOrbital {
         } { emit: { success: COUCH_IDX_REPLIED, failure: COUCH_UNREACHABLE } })
       COUCH_IDX_DB_REPLIED -> idle when (not (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)))
         (set @entity.mode "")
-        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create database answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create database answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_IDX_REPLIED -> indexing when (and (or (= @payload.status 200) (= @payload.status 201)) (< (+ @entity.at 1) (array/len @entity.paths)))
         (set @entity.at (+ @entity.at 1))
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_index") {
@@ -453,7 +453,7 @@ orbital CouchdbOrbital {
         (emit ROWS_INDEXES_ENSURED { key: @entity.key })
       COUCH_IDX_REPLIED -> idle when (not (or (= @payload.status 200) (= @payload.status 201)))
         (set @entity.mode "")
-        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create index answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create index answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (set @entity.mode "")
         (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB request failed: " @payload.error) })
@@ -468,7 +468,7 @@ orbital CouchdbOrbital {
       COUCH_GET_REPLIED -> idle when (= @payload.status 404)
         (emit COUCH_ROW_ABSENT { db: @entity.db, id: @entity.docId })
       COUCH_GET_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -495,7 +495,7 @@ orbital CouchdbOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
       COUCH_ENSURE_REPLIED -> idle when (not (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB create database answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB create database answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -547,7 +547,7 @@ orbital CouchdbOrbital {
       COUCH_READ_REPLIED -> idle when (and (= @payload.status 404) (!= @entity.op "upsert"))
         (emit COUCH_NOT_FOUND { db: @entity.db, id: @entity.docId })
       COUCH_READ_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -576,7 +576,7 @@ orbital CouchdbOrbital {
       COUCH_WRITE_REPLIED -> idle when (and (= @payload.status 409) (!= @entity.op "create") (>= @entity.attempt @config.maxAttempts))
         (emit COUCH_FAILED { op: @entity.op, status: 409, message: (str/concat @entity.db " " @entity.docId " changed concurrently " @entity.attempt " times") })
       COUCH_WRITE_REPLIED -> idle when (and (not (and (>= @payload.status 200) (< @payload.status 300))) (!= @payload.status 409))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB " (if (= @entity.op "delete") "delete" "write") " answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB " (if (= @entity.op "delete") "delete" "write") " answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -590,7 +590,7 @@ orbital CouchdbOrbital {
       COUCH_LIST_REPLIED -> idle when (= @payload.status 404)
         (emit COUCH_LISTED { db: @entity.db, rows: [] })
       COUCH_LIST_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB list answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB list answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -643,7 +643,7 @@ orbital CouchdbOrbital {
       COUCH_FIND_REPLIED -> idle when (and (= @payload.status 404) (> (array/len @entity.acc) 0))
         (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map @entity.acc (fn doc (str/concat (object/get @doc "_id" "")))), total: (if @entity.totalNone (array/len @entity.acc) (+ @entity.skip (array/len @entity.acc))) })
       COUCH_FIND_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -668,7 +668,7 @@ orbital CouchdbOrbital {
       COUCH_COUNT_REPLIED -> idle when (= @payload.status 404)
         (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), ids: (array/map @entity.acc (fn doc (str/concat (object/get @doc "_id" "")))), total: @entity.count })
       COUCH_COUNT_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
-        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (let ((err (json/parse @payload.body CouchError))) (if (= @err null) "" (object/get @err "reason" "")))) })
       COUCH_UNREACHABLE -> idle
         (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
     }
@@ -723,13 +723,13 @@ orbital CouchdbOrbital {
         @tier "internal"
       COUCH_UPDATE -> internal { db : string!  id : string!  changes : Map string RowCell?!  guard : RowPredicate }
         @tier "internal"
-      COUCH_DELETE -> internal { db : string!  id : string!  guard : RowPredicate }
+      COUCH_DELETE -> internal { db : string!  id : string!  guard : RowPredicate? }
         @tier "internal"
       COUCH_LIST -> internal { db : string! }
         @tier "internal"
-      COUCH_FIND -> internal { db : string!  selector : string!  sort : string!  skip : number  limit : number  fields : string  totalNone : boolean }
+      COUCH_FIND -> internal { db : string!  selector : string!  sort : string!  skip : number?  limit : number?  fields : string  totalNone : boolean }
         @tier "internal"
-      COUCH_PLAN -> internal { selector : string!  sort : string!  offset : number!  limit : number  totalNone : boolean!  reason : string! }
+      COUCH_PLAN -> internal { selector : string!  sort : string!  offset : number!  limit : number?  totalNone : boolean!  reason : string! }
         @tier "internal"
       COUCH_STEP -> internal { }
         @tier "internal"
@@ -745,11 +745,11 @@ orbital CouchdbOrbital {
         @tier "internal"
       COUCH_DUPLICATE_ID -> internal { db : string!  id : string! }
         @tier "internal"
-      COUCH_UPDATED -> internal { db : string!  id : string!  row : Map string RowCell?!  before : Map string RowCell? }
+      COUCH_UPDATED -> internal { db : string!  id : string!  row : Map string RowCell?!  before : (Map string RowCell?)? }
         @tier "internal"
       COUCH_UPSERTED -> internal { db : string!  id : string!  created : boolean!  row : Map string RowCell?! }
         @tier "internal"
-      COUCH_DELETED -> internal { db : string!  id : string!  before : Map string RowCell? }
+      COUCH_DELETED -> internal { db : string!  id : string!  before : (Map string RowCell?)? }
         @tier "internal"
       COUCH_NOT_FOUND -> internal { db : string!  id : string! }
         @tier "internal"

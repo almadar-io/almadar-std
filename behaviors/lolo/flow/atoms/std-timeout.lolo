@@ -6,7 +6,7 @@ orbital TimeoutOrbital {
   entity TimeoutRun [runtime] {
     id : string!
     key : CallKey @description "The call key the ask runs under; set by START."
-    deadline : number @description "Epoch milliseconds at which the ask is abandoned; 0 while idle." = 0
+    deadline : instant? @description "The instant at which the ask is abandoned; null while idle." = null
   }
 
   trait Timeout -> @rebindable TimeoutRun [optimistic] {
@@ -14,28 +14,28 @@ orbital TimeoutOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
       START -> running
         (set @entity.key ?key)
-        (set @entity.deadline (+ @now @config.timeoutMs))
+        (set @entity.deadline (time/add @now @config.timeoutMs "ms"))
         (emit ASK_STARTED { key: ?key })
     }
 
     state running {
       INIT -> idle
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
       SUCCEEDED -> idle when (== ?key @entity.key)
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (emit COMPLETED { key: @entity.key })
       FAILED -> idle when (== ?key @entity.key)
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (emit ASK_FAILED { key: @entity.key, error: ?error })
       CANCEL -> idle
         (cancel-call @entity.key)
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
       TIMER_DUE -> idle
         (cancel-call @entity.key)
-        (set @entity.deadline 0)
+        (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
     }
 
@@ -94,7 +94,7 @@ orbital TimeoutOrbital {
 
     ticks {
       deadlineCheck every 100ms [background]
-        when (and (> @entity.deadline 0) (>= @now @entity.deadline))
+        when (and (!= @entity.deadline null) (not (time/isBefore @now (default @entity.deadline @now))))
         (emit TIMER_DUE { })
     }
 

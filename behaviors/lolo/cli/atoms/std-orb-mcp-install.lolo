@@ -46,9 +46,11 @@ orbital OrbMcpInstallOrbital {
 
     state ready {
       INIT -> ready
-      MCP_CALLED -> parsing
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit MCP_ARGS_UNREAD { }) (emit MCP_ARGS_PARSE { stage: "mcp" argv: @argv flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })))
+      MCP_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit MCP_ARGS_UNREAD { })
+      MCP_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -58,7 +60,7 @@ orbital OrbMcpInstallOrbital {
       MCP_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (default (object/get @payload.flags "client") [])))))
         (emit MCP_INSTALL_ANSWERED { status: 400, body: "usage: orb mcp install --client <claude|cursor|vscode>" })
       MCP_ARGS_DONE -> probing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (default (object/get @payload.flags "client") []))))
-        (set @entity.client (array/first (object/get @payload.flags "client")))
+        (set @entity.client (default (array/first (default (object/get @payload.flags "client") [])) ""))
         (set @entity.dir (if (= @entity.client "cursor") ".cursor" (if (= @entity.client "vscode") ".vscode" "")))
         (set @entity.path (if (= @entity.dir "") ".mcp.json" (str/concat @entity.dir "/mcp.json")))
         (set @entity.serversKey (if (= @entity.client "vscode") "servers" "mcpServers"))
@@ -68,35 +70,35 @@ orbital OrbMcpInstallOrbital {
     state probing {
       INIT -> probing
       MCP_HOST_FAILED -> ready
-        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " (default @payload.error "")) })
       MCP_EXISTS -> reading when @payload.ok
         (os/read-file { anchor: "cwd" path: @entity.path } { key: "config" emit: { success: MCP_READ, failure: MCP_HOST_FAILED } })
       MCP_EXISTS -> writing when (not @payload.ok)
-        (set @entity.config (json/parse "{}" McpConfig))
+        (set @entity.config {})
         (emit MCP_MERGE { })
     }
 
     state reading {
       INIT -> reading
       MCP_HOST_FAILED -> ready
-        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " (default @payload.error "")) })
       MCP_READ -> ready when (not (and (json/valid (default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (default (bytes/to-string @payload.data) "") McpConfig) null)))
         (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path) })
       MCP_READ -> writing when (and (json/valid (default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (default (bytes/to-string @payload.data) "") McpConfig) null))
-        (set @entity.config (json/parse (default (bytes/to-string @payload.data) "") McpConfig))
+        (set @entity.config (default (json/parse (default (bytes/to-string @payload.data) "") McpConfig) {}))
         (emit MCP_MERGE { })
     }
 
     state writing {
       INIT -> writing
       MCP_HOST_FAILED -> ready
-        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " (default @payload.error "")) })
       MCP_MERGE -> ready when (and (!= (object/get @entity.config @entity.serversKey) null) (not (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
         (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path) })
       MCP_MERGE -> writing when (and (= @entity.dir "") (or (= (object/get @entity.config @entity.serversKey) null) (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
-        (let ((servers (object/set (if (= (object/get @entity.config @entity.serversKey) null) (json/parse "{}" McpConfig) (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] })))) (if (= @servers null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (let ((merged (object/set @entity.config @entity.serversKey @servers))) (if (= @merged null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (do (set @entity.config @merged) (emit MCP_DIR_READY { }))))))
+        (let ((empty : McpConfig {}) (servers (object/set (if (= (object/get @entity.config @entity.serversKey) null) @empty (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] })))) (if (= @servers null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (let ((merged (object/set @entity.config @entity.serversKey @servers))) (if (= @merged null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (do (set @entity.config @merged) (emit MCP_DIR_READY { }))))))
       MCP_MERGE -> writing when (and (!= @entity.dir "") (or (= (object/get @entity.config @entity.serversKey) null) (str/startsWith (json/stringify (object/get @entity.config @entity.serversKey)) "{")))
-        (let ((servers (object/set (if (= (object/get @entity.config @entity.serversKey) null) (json/parse "{}" McpConfig) (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] })))) (if (= @servers null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (let ((merged (object/set @entity.config @entity.serversKey @servers))) (if (= @merged null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (do (set @entity.config @merged) (os/mkdir { anchor: "cwd" path: @entity.dir } true { key: "dir" emit: { success: MCP_DIR_READY, failure: MCP_HOST_FAILED } }))))))
+        (let ((empty : McpConfig {}) (servers (object/set (if (= (object/get @entity.config @entity.serversKey) null) @empty (object/get @entity.config @entity.serversKey)) "orb" (if (= @entity.client "vscode") { type: "stdio", command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] } { command: "npx", args: ["-y", (str/slice "x@almadar/orb" 1), "mcp"] })))) (if (= @servers null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (let ((merged (object/set @entity.config @entity.serversKey @servers))) (if (= @merged null) (emit MCP_HOST_FAILED { error: "could not register orb in the servers entry" }) (do (set @entity.config @merged) (os/mkdir { anchor: "cwd" path: @entity.dir } true { key: "dir" emit: { success: MCP_DIR_READY, failure: MCP_HOST_FAILED } }))))))
       MCP_DIR_READY -> writing
         (os/write-file { anchor: "cwd" path: @entity.path } (bytes/from-string (str/concat (json/stringify @entity.config { pretty: true }) "\n")) { key: "config" emit: { success: MCP_WRITTEN, failure: MCP_HOST_FAILED } })
       MCP_WRITTEN -> setup

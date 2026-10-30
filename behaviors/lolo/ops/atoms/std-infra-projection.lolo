@@ -88,7 +88,7 @@ orbital InfraProjectionOrbital {
                           forms: @forms,
                           badForms: (array/concat @badTop @badNested),
                           services: (array/concat
-                            (array/filter (array/map (default @o.services []) (fn s (if (validate/string @s) @s (let ((d (json/parse (json/stringify @s) InfraService))) (or @d.ref @d.name ""))))) (fn n (!= @n "")))
+                            (array/filter (array/map (default @o.services []) (fn s (if (validate/string @s) @s (let ((d (json/parse (json/stringify @s) InfraService))) (default @d.ref (default @d.name "")))))) (fn n (!= @n "")))
                             (array/flatten (array/map @forms (fn f (array/concat
                               (array/flatten (array/map (json/nodes (array/drop @f 1)) (fn n (if (str/startsWith (json/stringify @n) "[") (let ((l (json/parse (json/stringify @n) InfraForm))) (if (= @l null) [] (if (and (> (array/len @l) 1) (= (json/stringify (array/first @l)) "\"call-service\"") (validate/string (array/nth @l 1))) [(array/nth @l 1)] []))) []))))
                               (if (and (> (array/len @f) 1) (= (json/stringify (array/first @f)) "\"call-service\"") (validate/string (array/nth @f 1))) [(str/concat (array/nth @f 1))] (array/take [""] 0))))))),
@@ -113,7 +113,7 @@ orbital InfraProjectionOrbital {
                       (set @entity.persistentEntityCount (array/len (array/filter @entities (fn e (= (default @e.entity.persistence "persistent") "persistent")))))
                       (set @entity.runtimeEntityCount (array/len (array/filter @entities (fn e (= @e.entity.persistence "runtime")))))
                       (set @entity.hasFileUploads (array/some @entities (fn e (array/some (default @e.entity.fields []) (fn f (or (= @f.type "file") (= @f.type "image")))))))
-                      (set @entity.entityNames (array/map @entities (fn e (or @e.entity.name @e.orbital))))
+                      (set @entity.entityNames (array/map @entities (fn e (default @e.entity.name @e.orbital))))
                       (set @entity.renderUI (array/len (array/filter @heads (fn h (= @h "\"render-ui\"")))))
                       (set @entity.persistCount (array/len (array/filter @heads (fn h (= @h "\"persist\"")))))
                       (set @entity.fetchCount (array/len (array/filter @heads (fn h (= @h "\"fetch\"")))))

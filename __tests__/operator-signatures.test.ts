@@ -177,7 +177,7 @@ describe('operator table: signatures are well formed', () => {
       const meta = STD_OPERATORS[op];
       return `${(meta.params ?? []).map((p) => formatOperatorType(p.type)).join(', ')} -> ${formatOperatorType(meta.returnType)}`;
     };
-    expect(text('array/first')).toBe('[T] -> T');
+    expect(text('array/first')).toBe('[T] -> T | null');
     expect(text('array/append')).toBe('[T], T -> [T]');
     expect(text('=')).toBe('T, T -> boolean');
     expect(text('if')).toBe('boolean, T, T -> T');
@@ -185,7 +185,7 @@ describe('operator table: signatures are well formed', () => {
     expect(text('array/filter')).toBe('[T], (T) -> boolean -> [T]');
     expect(text('array/reduce')).toBe('[T], A, (A, T) -> A -> A');
     expect(text('object/get')).toBe('R, key-of R, field-of R -> field-of R');
-    expect(text('json/parse')).toBe('string, Shape -> Shape');
+    expect(text('json/parse')).toBe('string, Shape -> Shape | null');
   });
 
   it('control: the builders print their own grammar', () => {

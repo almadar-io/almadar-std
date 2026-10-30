@@ -17,6 +17,9 @@ type GithubCommitAuthor = { name : string, email : string, date : string }
 type GithubCommitDetail = { message : string, author : GithubCommitAuthor }
 type GithubCommitItem = { sha : string, commit : GithubCommitDetail }
 type GithubCreatedIssue = { number : number, title : string, url : string }
+type GithubComments = [GithubComment]
+type GithubIssues = [GithubIssue]
+type GithubCommitItems = [GithubCommitItem]
 type GithubRun = { id : number!, name : string!, status : string!, conclusion : string?, created_at : string!, html_url : string! }
 type GithubRunList = { workflow_runs : [GithubRun] }
 type GithubJob = { id : number!, name : string!, status : string!, conclusion : string?, html_url : string! }
@@ -55,7 +58,7 @@ orbital GithubOrbital {
       GITHUB_CREATE_PR_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_CREATE_PR_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_CREATE_PR_UNREACHABLE -> idle
         (emit GITHUB_CREATE_PR_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -69,11 +72,11 @@ orbital GithubOrbital {
       GITHUB_GET_PR_COMMENTS -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_GET_PR_COMMENTS_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit GITHUB_PR_COMMENTS { comments: (json/parse @payload.body [GithubComment]) })
+        (emit GITHUB_PR_COMMENTS { comments: (json/parse @payload.body GithubComments) })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_PR_COMMENTS_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_GET_PR_COMMENTS_UNREACHABLE -> idle
         (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -87,11 +90,11 @@ orbital GithubOrbital {
       GITHUB_LIST_ISSUES -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_LIST_ISSUES_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit GITHUB_ISSUES { issues: (json/parse @payload.body [GithubIssue]) })
+        (emit GITHUB_ISSUES { issues: (json/parse @payload.body GithubIssues) })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_LIST_ISSUES_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_LIST_ISSUES_UNREACHABLE -> idle
         (emit GITHUB_LIST_ISSUES_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -113,18 +116,18 @@ orbital GithubOrbital {
       GITHUB_GET_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_ISSUE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_GET_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.key GithubIssue) null))
         (emit GITHUB_GET_ISSUE_FAILED { code: "PARSE_ERROR", message: "GitHub answered an issue that could not be read" })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.key GithubIssue) null))
-        (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body [GithubComment]) })
+        (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body GithubComments) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_ISSUE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE -> idle
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -142,7 +145,7 @@ orbital GithubOrbital {
       GITHUB_GET_FILE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_FILE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_GET_FILE_UNREACHABLE -> idle
         (emit GITHUB_GET_FILE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -155,11 +158,11 @@ orbital GithubOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: GITHUB_LIST_COMMITS_REPLIED, failure: GITHUB_LIST_COMMITS_UNREACHABLE } }))
       GITHUB_LIST_COMMITS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit GITHUB_COMMITS { commits: (array/map (json/parse @payload.body [GithubCommitItem]) (fn c { sha: @c.sha, message: @c.commit.message, author: @c.commit.author.name, date: @c.commit.author.date })) })
+        (emit GITHUB_COMMITS { commits: (array/map (json/parse @payload.body GithubCommitItems) (fn c { sha: @c.sha, message: @c.commit.message, author: @c.commit.author.name, date: @c.commit.author.date })) })
       GITHUB_LIST_COMMITS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_LIST_COMMITS_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_LIST_COMMITS_UNREACHABLE -> idle
         (emit GITHUB_LIST_COMMITS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -177,7 +180,7 @@ orbital GithubOrbital {
       GITHUB_CREATE_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_CREATE_ISSUE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
-          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
         })
       GITHUB_CREATE_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_CREATE_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
@@ -193,7 +196,7 @@ orbital GithubOrbital {
       GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a GraphQL body that is not JSON" })
       GITHUB_GRAPHQL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) })
+        (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) })
       GITHUB_GRAPHQL_UNREACHABLE -> idle
         (emit GITHUB_GRAPHQL_FAILED { status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
@@ -211,7 +214,7 @@ orbital GithubOrbital {
           (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a runner list body that is not JSON" }))
       GITHUB_LIST_RUNNERS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubRunnersKey)))
-          (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+          (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") ""))) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
       GITHUB_LIST_RUNNERS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubRunnersKey)))
           (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
@@ -228,7 +231,7 @@ orbital GithubOrbital {
           (emit GITHUB_RUNS { owner: @at.owner, repo: @at.repo, runs: (array/map (object/get (json/parse @payload.body GithubRunList) workflow_runs []) (fn r { id: @r.id, name: @r.name, status: @r.status, conclusion: @r.conclusion, created_at: @r.created_at, html_url: @r.html_url })) }))
       GITHUB_LIST_RUNS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubRunsKey)))
-          (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+          (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
       GITHUB_LIST_RUNS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubRunsKey)))
           (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
@@ -244,7 +247,7 @@ orbital GithubOrbital {
           (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get (json/parse @payload.body GithubJobList) jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url })) }))
       GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubJobsKey)))
-          (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+          (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
       GITHUB_LIST_RUN_JOBS_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubJobsKey)))
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
@@ -264,7 +267,7 @@ orbital GithubOrbital {
           (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a billing usage body that is not JSON" }))
       GITHUB_BILLING_USAGE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubBillingKey)))
-          (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+          (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") ""))) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
       GITHUB_BILLING_USAGE_UNREACHABLE -> idle
         (let ((at (json/parse @payload.key GithubBillingKey)))
           (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))

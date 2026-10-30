@@ -31,12 +31,14 @@ orbital OrbAppHostingKeysOrbital {
 
     state ready {
       INIT -> ready
-      APP_HOSTING_KEYS_CALLED -> ready when (!= (array/len (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 2)
+      APP_HOSTING_KEYS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit APP_HOSTING_KEYS_ANSWERED { status: 400, body: "usage: orb app-hosting-keys <program> <apphosting.yaml>" })
-      APP_HOSTING_KEYS_CALLED -> parsing when (= (array/len (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 2)
-        (set @entity.program (default (array/nth (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") 0) ""))
-        (set @entity.cwd (default (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "cwd") ""))
-        (set @entity.file (default (array/nth (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) ""))
+      APP_HOSTING_KEYS_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2))
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 400, body: "usage: orb app-hosting-keys <program> <apphosting.yaml>" })
+      APP_HOSTING_KEYS_CALLED -> parsing when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2))
+        (set @entity.program (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 0) ""))
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (set @entity.file (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) ""))
         (emit APP_HOSTING_KEYS_READ_PROGRAM {})
     }
 
@@ -52,8 +54,10 @@ orbital OrbAppHostingKeysOrbital {
       INIT -> readingProgram
       APP_HOSTING_KEYS_FAILED -> ready
         (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "unreadable")) })
-      APP_HOSTING_KEYS_PROGRAM_LOWERED -> readingProgram
-        (let ((program (object/get (default (json/parse (json/stringify @payload.result) KeysResolved) { program: { osGrants: { env: [] }, orbitals: [] } }) "program" { osGrants: { env: [] }, orbitals: [] })))
+      APP_HOSTING_KEYS_PROGRAM_LOWERED -> ready when (= (json/parse (json/stringify @payload.result) KeysResolved) null)
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: "Error: the resolved program is not valid JSON of the expected shape" })
+      APP_HOSTING_KEYS_PROGRAM_LOWERED -> readingProgram when (!= (json/parse (json/stringify @payload.result) KeysResolved) null)
+        (let ((program (object/get (json/parse (json/stringify @payload.result) KeysResolved) "program" { osGrants: { env: [] }, orbitals: [] })))
           (do (set @entity.declared (object/get (default (object/get @program "osGrants" { env: [] }) { env: [] }) "env" []))
           (set @entity.secrets (array/unique (array/flatten (array/map (object/get @program "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/filter (array/map (array/filter (object/values (object/get @t "config" {})) (fn k (= (object/get @k "type") "secret"))) (fn k (let ((d (object/get @k "default"))) (if (validate/string @d) @d "")))) (fn n (!= @n "")))))))))))))
         (emit APP_HOSTING_KEYS_READ_FILE {})

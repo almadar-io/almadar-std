@@ -1,0 +1,102 @@
+{
+ "atom": "flow/atoms/std-circuit-breaker.lolo",
+ "trait": "ServiceNodeCircuitBreaker",
+ "note": "@now is ISO text (G-STD-212): openedAt is an instant stamped by time/now; the cooldown tick is a host answer played as TIMEOUT",
+ "cases": [
+  {
+   "id": "failure-opens-the-circuit",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "expect": {
+      "state": "open"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cooldown-elapsing-goes-half-open",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {}
+    },
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "open",
+     "expect": {
+      "state": "halfOpen"
+     }
+    }
+   ]
+  },
+  {
+   "id": "half-open-success-closes",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {}
+    },
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "open"
+    },
+    {
+     "event": "SUCCESS",
+     "payload": {},
+     "from": "halfOpen",
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "half-open-failure-reopens",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {}
+    },
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "open"
+    },
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "from": "halfOpen",
+     "expect": {
+      "state": "open"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-reset-closes-an-open-circuit",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {}
+    },
+    {
+     "event": "RESET",
+     "payload": {},
+     "from": "open",
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ]
+  }
+ ]
+}

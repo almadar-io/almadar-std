@@ -30,7 +30,7 @@ orbital CiStatusOrbital {
     id : string!
     runs : [CiRun] @description "The board last answered." = []
     fetchedAt : string @description "ISO time of the read the board came from; empty before the first." = ""
-    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    cachedAt : instant @description "ISO-8601 instant at which the board was cached." = "1970-01-01T00:00:00.000Z"
     hasCache : boolean @description "Whether a board has been cached." = false
     loading : boolean @description "Whether a read is in flight." = false
     collected : [CiRun] @description "The runs the read in flight has collected so far." = []
@@ -77,14 +77,14 @@ orbital CiStatusOrbital {
         (emit CI_RUN_SELECTED { owner: (array/nth (str/split @payload.id "/") 0), repo: (array/nth (str/split @payload.id "/") 1), runId: (str/concat @payload.row.runId) })
         (when (!= @config.logsPage "") (navigate (str/concat "/" @config.logsPage "/" (array/nth (str/split @payload.id "/") 0) "/" (array/nth (str/split @payload.id "/") 1) "/" @payload.row.runId)))
       CI_RUN_OPEN -> idle when (!= @payload.row.conclusion "failure")
-      CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs))
+      CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs))
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
           { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
           { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if false " (GitHub could not be read; this is the last board)" "")) },
           { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
         ] })
-      CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs)))
+      CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor "")
@@ -130,7 +130,7 @@ orbital CiStatusOrbital {
       CI_GQL_FAILED -> idle when (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
         (emit CI_RETRY_CANCEL { })
         (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
         (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -142,7 +142,7 @@ orbital CiStatusOrbital {
         ] })
       CI_GAVE_UP -> idle when (== @payload.key @entity.key)
         (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
         (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -158,7 +158,7 @@ orbital CiStatusOrbital {
           (emit CI_EXTRA { owner: @x.owner, repo: @x.name, per_page: 1 }))
       CI_EXTRA_NEXT -> idle when (>= @entity.extra (array/len @config.extraRepos))
         (set @entity.runs @entity.collected)
-        (set @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z"))))
+        (set @entity.fetchedAt @now)
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)

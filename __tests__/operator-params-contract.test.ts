@@ -28,14 +28,16 @@ describe('operator params: the module source is the contract', () => {
 
   it('declares every position of the subtraction and the default operators the evaluators check', () => {
     expect(STD_OPERATORS['-'].params?.map((p) => p.name)).toEqual(['a', 'b']);
-    expect(STD_OPERATORS['math/default'].params).toHaveLength(2);
-    expect(STD_OPERATORS['str/default'].params).toHaveLength(2);
+    expect(STD_OPERATORS.default.params?.map((p) => p.name)).toEqual(['value', 'fallback']);
+    expect(STD_OPERATORS['math/default']).toBeUndefined();
+    expect(STD_OPERATORS['str/default']).toBeUndefined();
     expect(STD_OPERATORS['validate/length'].params?.map((p) => p.name)).toEqual(['value', 'exact']);
   });
 
   it('control: the logic operators declare booleans and type variables, never `any`', () => {
-    expect(STD_OPERATORS.and.params?.[0].type).toEqual({ kind: 'var', name: 'T' });
-    expect(STD_OPERATORS.or.params?.[0].type).toEqual({ kind: 'var', name: 'T' });
+    expect(STD_OPERATORS.and.params?.[0].type).toBe('boolean');
+    expect(STD_OPERATORS.or.params?.[0].type).toBe('boolean');
+    expect(STD_OPERATORS.default.params?.[0].type).toEqual({ kind: 'var', name: 'T' });
     expect(STD_OPERATORS.not.params?.[0].type).toBe('boolean');
     expect(STD_OPERATORS['<'].params?.[0].type).toEqual({ kind: 'var', name: 'T', bound: { kind: 'union', of: ['number', 'string'] } });
   });

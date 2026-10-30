@@ -9,7 +9,7 @@ orbital RetryOrbital {
     id : string!
     key : CallKey @description "The call key every attempt runs under; set by START."
     attempt : number @description "The attempt in flight or last made; 0 while idle." = 0
-    dueAt : number @description "Epoch milliseconds at which the next attempt starts; 0 when none is scheduled." = 0
+    dueAt : instant? @description "The instant at which the next attempt starts; null when none is scheduled." = null
   }
 
   trait Retry -> @rebindable RetryRun [optimistic] {
@@ -18,27 +18,27 @@ orbital RetryOrbital {
     state idle {
       INIT -> idle
         (set @entity.attempt 0)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
       START -> running
-        @ensures (and (= @entity.attempt 1) (= @entity.dueAt 0))
+        @ensures (and (= @entity.attempt 1) (= @entity.dueAt null))
         (set @entity.key ?key)
         (set @entity.attempt 1)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
         (emit ATTEMPT { key: ?key, attempt: 1 })
     }
 
     state running {
       INIT -> idle
         (set @entity.attempt 0)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
       SUCCEEDED -> idle when (== ?key @entity.key)
         @ensures (= @entity.attempt 0)
         (emit COMPLETED { key: @entity.key, attempts: @entity.attempt })
         (set @entity.attempt 0)
       FAILED -> backoff when (and (== ?key @entity.key) (< @entity.attempt @config.maxAttempts))
         @ensures (= @entity.attempt @fromEntity.attempt)
-        (set @entity.dueAt (+ @now (math/min @config.maxDelayMs (* @config.baseDelayMs (or (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs)))))
-        (emit RETRY_SCHEDULED { key: @entity.key, attempt: @entity.attempt, delayMs: (math/min @config.maxDelayMs (* @config.baseDelayMs (or (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))), error: ?error })
+        (set @entity.dueAt (time/add @now (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))) "ms"))
+        (emit RETRY_SCHEDULED { key: @entity.key, attempt: @entity.attempt, delayMs: (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))), error: ?error })
       FAILED -> idle when (and (== ?key @entity.key) (>= @entity.attempt @config.maxAttempts))
         (emit GAVE_UP { key: @entity.key, attempts: @entity.attempt, error: ?error })
         (set @entity.attempt 0)
@@ -51,15 +51,15 @@ orbital RetryOrbital {
     state backoff {
       INIT -> idle
         (set @entity.attempt 0)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
       TIMER_DUE -> running
-        @ensures (and (= @entity.attempt (+ @fromEntity.attempt 1)) (= @entity.dueAt 0))
+        @ensures (and (= @entity.attempt (+ @fromEntity.attempt 1)) (= @entity.dueAt null))
         (set @entity.attempt (+ @entity.attempt 1))
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
         (emit ATTEMPT { key: @entity.key, attempt: @entity.attempt })
       CANCEL -> idle
         (set @entity.attempt 0)
-        (set @entity.dueAt 0)
+        (set @entity.dueAt null)
     }
 
     emits {
@@ -122,7 +122,7 @@ orbital RetryOrbital {
 
     ticks {
       backoffCheck every 100ms [background]
-        when (and (> @entity.dueAt 0) (>= @now @entity.dueAt))
+        when (and (!= @entity.dueAt null) (not (time/isBefore @now (default @entity.dueAt @now))))
         (emit TIMER_DUE { })
     }
 

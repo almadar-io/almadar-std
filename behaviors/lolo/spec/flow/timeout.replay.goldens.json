@@ -1,0 +1,164 @@
+{
+ "atom": "flow/atoms/std-timeout.lolo",
+ "trait": "Timeout",
+ "note": "@now is ISO text (G-STD-212): deadline is an instant armed with time/add; the deadline tick is a host answer played as TIMER_DUE",
+ "cases": [
+  {
+   "id": "start-arms-the-deadline",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "ASK_STARTED",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "success-before-the-deadline-completes",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "k1"
+     },
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "failure-before-the-deadline-is-reported",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "FAILED",
+     "payload": {
+      "key": "k1",
+      "error": "boom"
+     },
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASK_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "deadline-passing-times-the-ask-out",
+   "now": 1760531400000,
+   "config": {
+    "timeoutMs": 2000
+   },
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ],
+   "note": "the step ends at its keyed cancel-call, an ask awaiting the host (EXEC-QUEUE-8), so TIMED_OUT after it is not observable in one replay step; the state and the armed deadline's disarming are"
+  },
+  {
+   "id": "control-outcome-for-another-key-is-ignored",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "other"
+     },
+     "from": "running",
+     "expect": {
+      "neverEmits": [
+       "COMPLETED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancel-abandons-without-a-deadline-outcome",
+   "now": 1760531400000,
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "CANCEL",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "TIMED_OUT",
+       "COMPLETED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
