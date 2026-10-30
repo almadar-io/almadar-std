@@ -1,9 +1,10 @@
 app std-http-client [
   version: "1.0.0",
-  net: { "api.example.test:80": [tcp], "api.example.test:443": [tcp] },
-  description: "std-http-client — an HTTP/1.1 client in .lolo over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: one call per frame, the wire of the retired runtime drivers/http_request loop. HTTP_SEND { key, host, port, tls, serverName, method, target, headers, body, stream } opens a socket (tls true: the kernel runs the TLS handshake and offers http/1.1), writes the request with connection: close, reads the head (an interim 1xx head is skipped), then the body by the head (none, content-length, chunked with trailers skipped, or until the peer closes), and answers HTTP_REPLIED { key, status, headers, body } for any status. stream sse or jsonl answers each complete frame as HTTP_STREAM_EVENT { key, data, event, id } while the body is still arriving. A request the atom will not write answers HTTP_FAILED kind refused before any socket opens; a transport failure keeps kind denied, timeout or tls (a handshake or certificate failure), else io. Nothing follows a redirect. One call is in flight per frame; the store seam gives every ask its own frame (EXEC-STORE-4)."
+  net: { "api.example.test:80": [tcp] },
+  description: "std-http-client — an HTTP/1.1 client in .lolo over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: one call per frame, the wire of the retired runtime drivers/http_request loop. HTTP_SEND { key, host, port, tls, serverName, method, target, headers, body, stream } opens a socket (tls true: the kernel runs the TLS handshake and offers http/1.1), writes the request with connection: close, reads the head (an interim 1xx head is skipped), then the body by the head (none, content-length, chunked with trailers skipped, or until the peer closes), and answers HTTP_REPLIED { key, status, headers, body } for any status. stream sse or jsonl answers each complete frame as HTTP_STREAM_EVENT { key, data, event, id } while the body is still arriving. The framing is std-http-frame, composed in this atom as the sibling trait ClientFrame: a program that asks for a stream composes ClientFrame beside this trait. A request the atom will not write answers HTTP_FAILED kind refused before any socket opens; a transport failure keeps kind denied, timeout or tls (a handshake or certificate failure), else io. HTTP_CANCEL { key } aborts the call in flight: its socket is closed, a connect that answers late is closed, a send or read that answers late is dropped, and nothing is answered. A credential header (the credential, credentialHeader, credentialPrefix and credentialOptional knobs) is written after the host header as an os/send credential segment, so the value never enters program data; a credential that is not held fails the send as denied, or is skipped when credentialOptional. Nothing follows a redirect. One call is in flight per frame; the store seam gives every ask its own frame (EXEC-STORE-4)."
 ]
 uses Spec from "almadar-std/http-client"
+uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
 
 orbital HttpClientOrbital {
@@ -13,7 +14,9 @@ orbital HttpClientOrbital {
     sock : number @description "The open socket, -1 when none." = -1
     stage : string @description "head, length, chunk-size, chunk-data, trailer, close, done." = "head"
     stream : string @description "none, sse or jsonl." = "none"
-    request : bytes @description "The request as written." = ""
+    request : bytes @description "The request as written; with a credential header, the part after the credential value." = ""
+    head : bytes @description "With a credential header, the request up to the credential value, which the host fills into the send; empty otherwise." = ""
+    credUse : boolean @description "The request carries the credential header." = false
     buf : bytes @description "Bytes read and not yet consumed." = ""
     dec : bytes @description "Decoded body bytes not yet framed (a stream) or the whole body." = ""
     status : number @description "The status of the final head." = 0
@@ -26,6 +29,12 @@ orbital HttpClientOrbital {
     keep : boolean @description "The final head allows the socket to be kept for the next call." = false
     headOnly : boolean @description "The reply to this request has no body whatever the head says." = false
     @invariant (>= @entity.total 0)
+  }
+
+  trait ClientFrame = Frame.traits.HttpFrame {
+    listens {
+      HttpClient.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait HttpClient -> HttpFlight [optimistic] {
@@ -104,6 +113,22 @@ orbital HttpClientOrbital {
         @label "Statuses with no body"
         @description "A reply with one of these statuses has no body."
         @tier "domain"
+      credential : secret = ""
+        @label "Credential"
+        @description "The credential the request header carries: the host fills its value into the send at the boundary, so the program, the journal and the answer never hold it. Read only when credentialHeader names a header."
+        @tier "infra"
+      credentialHeader : string = ""
+        @label "Credential header"
+        @description "The header that carries the credential on every request, for example authorization or x-api-key; empty sends none."
+        @tier "infra"
+      credentialPrefix : string = ""
+        @label "Credential prefix"
+        @description "The text written before the credential value, for example Bearer followed by a space."
+        @tier "infra"
+      credentialOptional : boolean = false
+        @label "Credential optional"
+        @description "True sends the request without the header when the credential is not held; false fails the send as denied before a byte is written."
+        @tier "infra"
       credentialHeaders : [string] = ["authorization", "proxy-authorization", "cookie", "x-api-key"]
         @label "Credential headers"
         @description "Header names that carry a credential. A payload never carries one: credentials ride a secret slot (the request builder), so a call that sets one here is refused."
@@ -117,6 +142,12 @@ orbital HttpClientOrbital {
     state ready {
       INIT -> ready
       HC_CLOSED -> ready
+      HTTP_CANCEL -> ready
+      HC_CONNECTED -> ready
+        (os/close @payload.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
+      HC_SENT -> ready
+      HC_READ -> ready
+      HC_IO_FAILED -> ready
 
       HTTP_SEND -> ready when (not (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (not (array/includes @config.credentialHeaders (str/lower @h.name))))))))
         (emit HTTP_FAILED { key: @payload.key, error: "the request cannot be written: a method, header, target, port, host or stream is not allowed, or a header names framing the atom writes or carries a credential", kind: "refused" })
@@ -134,14 +165,18 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
-        (emit HC_BUILT { request: (bytes/concat [
-          (bytes/from-string (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"
-            (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
-            (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
-            (if (= @payload.stream "none") "" "connection: close\r\n")
-            "\r\n")),
-          @payload.body
-        ])})
+        (set @entity.credUse (and (!= @config.credentialHeader "") (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
+        (emit HC_BUILT {
+          head: (bytes/from-string (if @entity.credUse (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n" @config.credentialHeader ": " @config.credentialPrefix) "")),
+          request: (bytes/concat [
+            (bytes/from-string (str/concat (if @entity.credUse "\r\n" (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+              (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
+              (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
+              (if (= @payload.stream "none") "" "connection: close\r\n")
+              "\r\n")),
+            @payload.body
+          ])
+        })
         (set @entity.sock @entity.idle)
         (set @entity.idle -1)
         (set @entity.reused true)
@@ -158,14 +193,18 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
-        (emit HC_BUILT { request: (bytes/concat [
-          (bytes/from-string (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"
-            (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
-            (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
-            (if (= @payload.stream "none") "" "connection: close\r\n")
-            "\r\n")),
-          @payload.body
-        ])})
+        (set @entity.credUse (and (!= @config.credentialHeader "") (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
+        (emit HC_BUILT {
+          head: (bytes/from-string (if @entity.credUse (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n" @config.credentialHeader ": " @config.credentialPrefix) "")),
+          request: (bytes/concat [
+            (bytes/from-string (str/concat (if @entity.credUse "\r\n" (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+              (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
+              (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
+              (if (= @payload.stream "none") "" "connection: close\r\n")
+              "\r\n")),
+            @payload.body
+          ])
+        })
         (set @entity.reused false)
         (os/tcp-connect @config.host @config.port { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
       HTTP_SEND -> connecting when (and @config.tls (and (< @entity.idle 0) (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (not (array/includes @config.credentialHeaders (str/lower @h.name)))))))))
@@ -181,14 +220,18 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
-        (emit HC_BUILT { request: (bytes/concat [
-          (bytes/from-string (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"
-            (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
-            (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
-            (if (= @payload.stream "none") "" "connection: close\r\n")
-            "\r\n")),
-          @payload.body
-        ])})
+        (set @entity.credUse (and (!= @config.credentialHeader "") (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
+        (emit HC_BUILT {
+          head: (bytes/from-string (if @entity.credUse (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n" @config.credentialHeader ": " @config.credentialPrefix) "")),
+          request: (bytes/concat [
+            (bytes/from-string (str/concat (if @entity.credUse "\r\n" (str/concat @payload.method " " @payload.target " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+              (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
+              (if (or (> (bytes/length @payload.body) 0) (array/includes @config.bodyMethods @payload.method)) (str/concat "content-length: " (bytes/length @payload.body) "\r\n") "")
+              (if (= @payload.stream "none") "" "connection: close\r\n")
+              "\r\n")),
+            @payload.body
+          ])
+        })
         (set @entity.reused false)
         (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
 
@@ -201,23 +244,39 @@ orbital HttpClientOrbital {
     state connecting {
       INIT -> connecting
       HC_BUILT -> connecting
+        (set @entity.head @payload.head)
         (set @entity.request @payload.request)
       HTTP_SEND -> connecting
         (emit HTTP_FAILED { key: @payload.key, error: "a call is in flight on this frame", kind: "refused" })
-      HC_CONNECTED -> sending
+      HTTP_CANCEL -> ready when (= @payload.key @entity.key)
+        (set @entity.sock -1)
+      HTTP_CANCEL -> connecting when (!= @payload.key @entity.key)
+      HC_CONNECTED -> sending when (not @entity.credUse)
         (set @entity.sock @payload.sock)
         (os/send @payload.sock @entity.request { key: "send" emit: { success: HC_SENT, failure: HC_IO_FAILED } })
+      HC_CONNECTED -> sending when @entity.credUse
+        (set @entity.sock @payload.sock)
+        (os/send @payload.sock [{ bytes: @entity.head, credential: @config.credential }, { bytes: @entity.request, credential: "" }] { key: "send" emit: { success: HC_SENT, failure: HC_IO_FAILED } })
       HC_IO_FAILED -> ready
         (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "timeout", "tls"] @payload.kind) @payload.kind "io") })
     }
 
     state sending {
       INIT -> sending
-      HC_BUILT -> sending
+      HC_BUILT -> sending when (not @entity.credUse)
+        (set @entity.head @payload.head)
         (set @entity.request @payload.request)
         (os/send @entity.sock @payload.request { key: "send" emit: { success: HC_SENT, failure: HC_IO_FAILED } })
+      HC_BUILT -> sending when @entity.credUse
+        (set @entity.head @payload.head)
+        (set @entity.request @payload.request)
+        (os/send @entity.sock [{ bytes: @payload.head, credential: @config.credential }, { bytes: @payload.request, credential: "" }] { key: "send" emit: { success: HC_SENT, failure: HC_IO_FAILED } })
       HTTP_SEND -> sending
         (emit HTTP_FAILED { key: @payload.key, error: "a call is in flight on this frame", kind: "refused" })
+      HTTP_CANCEL -> ready when (= @payload.key @entity.key)
+        (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
+        (set @entity.sock -1)
+      HTTP_CANCEL -> sending when (!= @payload.key @entity.key)
       HC_SENT -> reading
         (os/recv @entity.sock @config.recvBytes { key: "read" emit: { success: HC_READ, failure: HC_IO_FAILED } })
       HC_IO_FAILED -> connecting when (and (not @config.tls) @entity.reused)
@@ -243,6 +302,10 @@ orbital HttpClientOrbital {
       HC_CLOSED -> reading
       HTTP_SEND -> reading
         (emit HTTP_FAILED { key: @payload.key, error: "a call is in flight on this frame", kind: "refused" })
+      HTTP_CANCEL -> ready when (= @payload.key @entity.key)
+        (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
+        (set @entity.sock -1)
+      HTTP_CANCEL -> reading when (!= @payload.key @entity.key)
 
       HC_IO_FAILED -> connecting when (and (not @config.tls) (and @entity.reused (= @entity.stage "head") (= (bytes/length @entity.buf) 0)))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
@@ -392,51 +455,21 @@ orbital HttpClientOrbital {
         (emit HTTP_FAILED { key: @entity.key, error: "the body is past the largest body", kind: "io" })
       HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "none"))
         (emit HC_AFTER { n: (+ @entity.total (bytes/length @entity.buf)) })
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "jsonl") (< (bytes/index-of @entity.dec (bytes/from-string "\n") 0) 0))
+      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (!= @entity.stream "none"))
+        (emit HC_FRAME { key: @entity.key, stream: @entity.stream, data: @entity.dec, final: false })
+      HC_DRAINED -> reading
+        (set @entity.dec @payload.rest)
         (emit HC_AFTER { n: (+ @entity.total (bytes/length @entity.buf)) })
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "jsonl") (>= (bytes/index-of @entity.dec (bytes/from-string "\n") 0) 0) (== (bytes/to-string (bytes/slice @entity.dec 0 (bytes/index-of @entity.dec (bytes/from-string "\n") 0))) null))
+      HC_FRAME_EVENT -> reading
+        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id })
+      HC_FRAME_FAILED -> reading
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
-        (emit HTTP_FAILED { key: @entity.key, error: "a stream line is not valid UTF-8", kind: "encoding" })
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "jsonl") (>= (bytes/index-of @entity.dec (bytes/from-string "\n") 0) 0) (!= (bytes/to-string (bytes/slice @entity.dec 0 (bytes/index-of @entity.dec (bytes/from-string "\n") 0))) null))
-        (let ((end (bytes/index-of @entity.dec (bytes/from-string "\n") 0)))
-          (let ((line (str/trimEnd (default (bytes/to-string (bytes/slice @entity.dec 0 @end)) ""))))
-            (do
-              (set @entity.dec (bytes/slice @entity.dec (+ @end 1)))
-              (if (!= @line "") (emit HTTP_STREAM_EVENT { key: @entity.key, data: @line, event: null, id: null }) (emit HC_NOOP {}))
-              (emit HC_FRAMED { n: (+ @entity.total (bytes/length @entity.dec)) }))))
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "sse") (let ((a (bytes/index-of @entity.dec (bytes/from-string "\n\n") 0)) (b (bytes/index-of @entity.dec (bytes/from-string "\r\n\r\n") 0))) (and (< @a 0) (< @b 0))))
-        (emit HC_AFTER { n: (+ @entity.total (bytes/length @entity.buf)) })
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "sse") (let ((a (bytes/index-of @entity.dec (bytes/from-string "\n\n") 0)) (b (bytes/index-of @entity.dec (bytes/from-string "\r\n\r\n") 0))) (and (or (>= @a 0) (>= @b 0)) (== (bytes/to-string (bytes/slice @entity.dec 0 (if (< @a 0) @b (if (< @b 0) @a (if (< @a @b) @a @b))))) null))))
-        (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
-        (set @entity.sock -1)
-        (emit HTTP_FAILED { key: @entity.key, error: "a stream block is not valid UTF-8", kind: "encoding" })
-      HC_FRAMED -> reading when (and (<= @entity.total @config.maxBody) (= @entity.stream "sse") (let ((a (bytes/index-of @entity.dec (bytes/from-string "\n\n") 0)) (b (bytes/index-of @entity.dec (bytes/from-string "\r\n\r\n") 0))) (and (or (>= @a 0) (>= @b 0)) (!= (bytes/to-string (bytes/slice @entity.dec 0 (if (< @a 0) @b (if (< @b 0) @a (if (< @a @b) @a @b))))) null))))
-        (let ((a (bytes/index-of @entity.dec (bytes/from-string "\n\n") 0)) (b (bytes/index-of @entity.dec (bytes/from-string "\r\n\r\n") 0)))
-          (let ((useA (or (< @b 0) (and (>= @a 0) (< @a @b)))))
-            (let ((end (if @useA @a @b)))
-              (do
-                (emit HC_BLOCK { block: (str/replaceAll (default (bytes/to-string (bytes/slice @entity.dec 0 @end)) "") "\r\n" "\n") })
-                (set @entity.dec (bytes/slice @entity.dec (+ @end (if @useA 2 4))))
-                (emit HC_FRAMED { n: (+ @entity.total (bytes/length @entity.dec)) })))))
-
-      HC_BLOCK -> reading when (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":")))))))
-        (array/some @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))))
-        (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":"))))))
-              (value (fn l (let ((v (str/join (array/drop (str/split @l ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))))
-          (emit HTTP_STREAM_EVENT {
-            key: @entity.key,
-            data: (str/join (array/map (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))) (fn l (let ((v (str/join (array/drop (str/split @l ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))) "\n"),
-            event: (let ((ev (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "event")))))) (if (== @ev null) null (let ((v (str/join (array/drop (str/split @ev ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))),
-            id: (let ((iv (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "id")))))) (if (== @iv null) null (let ((v (str/join (array/drop (str/split @iv ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v))))
-          }))
-      HC_BLOCK -> reading
-      HC_NOOP -> reading
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: @payload.kind })
 
       HC_ADVANCE -> reading when (and (= @entity.stage "done") (!= @entity.stream "none") (> (bytes/length @entity.dec) 0))
         (set @entity.stage "flush")
-        (set @entity.dec (bytes/concat [@entity.dec, (bytes/from-string (if (= @entity.stream "sse") "\n\n" "\n"))]))
-        (emit HC_FRAMED { n: (+ @entity.total (bytes/length @entity.dec)) })
+        (emit HC_FRAME { key: @entity.key, stream: @entity.stream, data: @entity.dec, final: true })
       HC_AFTER -> reading when (= @entity.stage "flush")
         (set @entity.stage "final")
         (set @entity.dec (bytes/from-string ""))
@@ -480,6 +513,7 @@ orbital HttpClientOrbital {
         @description "The call produced no response: kind refused (nothing opened), denied, timeout, tls or io."
         @tier "primary"
       HC_BUILT -> internal {
+        head : bytes!
         request : bytes!
       }
         @description "Internal: the request as it goes on the wire."
@@ -513,14 +547,13 @@ orbital HttpClientOrbital {
       }
         @description "Internal: body bytes were decoded; frame a stream or go on."
         @tier "internal"
-      HC_BLOCK -> internal {
-        block : string!
+      HC_FRAME {
+        key : string!
+        stream : string!
+        data : bytes!
+        final : boolean!
       }
-        @description "Internal: one event stream block to deliver."
-        @tier "internal"
-      HC_NOOP -> internal {
-      }
-        @description "Internal: nothing to deliver."
+        @description "Internal: the unframed stream bytes, for the framer."
         @tier "internal"
       HC_CONNECTED {
         sock : number!
@@ -554,6 +587,10 @@ orbital HttpClientOrbital {
     listens {
       HTTP_CLOSE {
       }
+      HTTP_CANCEL {
+        key : string!
+      }
+        @description "Abort the call with this key: its socket is closed (a connect that answers late is closed too; a send or read that answers late is dropped) and no HTTP_REPLIED, HTTP_STREAM_EVENT or HTTP_FAILED follows. A key that is not the call in flight, or no call, is a no-op."
       HTTP_SEND {
         key : string!
         method : string!
@@ -579,8 +616,25 @@ orbital HttpClientOrbital {
       }
       HC_CLOSED {
       }
+      HC_FRAME_EVENT {
+        key : string!
+        data : string!
+        event : string?
+        id : string?
+      }
+      HC_DRAINED {
+        rest : bytes!
+      }
+      HC_FRAME_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+      ClientFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ClientFrame.FRAME_DRAINED -> HC_DRAINED
+      ClientFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
-  page boot as HttpClientPage -> HttpClient
+  page boot as HttpClientPage -> HttpClient, ClientFrame
 }

@@ -1,709 +1,695 @@
 {
- "atom": "net/atoms/std-sidecar-fetch.lolo",
- "trait": "SidecarFetch",
- "source": "orbital-cli/src/commands/sidecar_fetch.rs tests",
- "note": "Byte payloads are base64. The replay kernel answers every os and http call with an unsupported failure, so a step's cascade runs through those failure events; the digest is computed for real by std-sha256. A keyed os effect is reported by program/step and neither run nor failed (G-ORB-459), so the store-step cases assert the reported effect (type and key) with expect.effects.",
- "cases": [
-  {
-   "id": "cache-hit-does-not-fetch",
-   "steps": [
+  "atom": "net/atoms/std-sidecar-fetch.lolo",
+  "trait": "SidecarFetch",
+  "source": "orbital-cli/src/commands/sidecar_fetch.rs tests",
+  "note": "Byte payloads are base64. The replay kernel answers every os call with an unsupported failure; the download is an SC_GET the composed std-http-client answers, so a step's cascade runs through those failure events; the digest is computed for real by std-sha256. A keyed os effect is reported by program/step and neither run nor failed (G-ORB-459), so the store-step cases assert the reported effect (type and key) with expect.effects.",
+  "cases": [
     {
-     "event": "SIDECAR_PROBED",
-     "payload": {
-      "ok": true
-     },
-     "from": "probing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_RESOLVED",
-        "payload": {
-         "requestId": "r1",
-         "path": "~/.almadar/sidecars/abc123"
+      "id": "cache-hit-does-not-fetch",
+      "steps": [
+        {
+          "event": "SIDECAR_PROBED",
+          "payload": {
+            "ok": true
+          },
+          "from": "probing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_RESOLVED",
+                "payload": {
+                  "requestId": "r1",
+                  "path": "~/.almadar/sidecars/abc123"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_REFUSED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_REFUSED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "cache-miss-is-fetched-once",
-   "steps": [
-    {
-     "event": "SIDECAR_PROBED",
-     "payload": {
-      "ok": false
-     },
-     "from": "probing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
-      ]
-     }
     },
     {
-     "event": "SIDECAR_PROBED_MISSING",
-     "payload": {
-      "error": "x",
-      "kind": "not-found"
-     },
-     "from": "probing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "resolve-pinned-probes-the-cache-first",
-   "steps": [
-    {
-     "event": "SIDECAR_RESOLVE",
-     "payload": {
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "pinned": true,
-      "sha256": "abc123",
-      "bytes": 13,
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "file-not-in-the-lock-is-returned-untouched",
-   "steps": [
-    {
-     "event": "SIDECAR_RESOLVE",
-     "payload": {
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "pinned": false,
-      "sha256": "",
-      "bytes": 13,
-      "url": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_RESOLVED",
-        "payload": {
-         "requestId": "r1",
-         "path": "dist/vectors.vec"
+      "id": "cache-miss-is-fetched-once",
+      "steps": [
+        {
+          "event": "SIDECAR_PROBED",
+          "payload": {
+            "ok": false
+          },
+          "from": "probing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ],
+            "emits": [
+              {
+                "event": "SC_GET",
+                "payload": {
+                  "key": "sidecar",
+                  "method": "GET",
+                  "target": "/o/x?token=TOPSECRETTOKEN",
+                  "headers": [],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SIDECAR_PROBED_MISSING",
+          "payload": {
+            "error": "x",
+            "kind": "not-found"
+          },
+          "from": "probing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ],
+            "emits": [
+              {
+                "event": "SC_GET",
+                "payload": {
+                  "key": "sidecar",
+                  "method": "GET",
+                  "target": "/o/x?token=TOPSECRETTOKEN",
+                  "headers": [],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_REFUSED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "nothing-declared-answers-an-empty-path",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_RESOLVE",
-     "payload": {
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "",
-      "pinned": false,
-      "sha256": "abc123",
-      "bytes": 13,
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_RESOLVED",
-        "payload": {
-         "requestId": "r1",
-         "path": ""
+      "id": "resolve-pinned-probes-the-cache-first",
+      "steps": [
+        {
+          "event": "SIDECAR_RESOLVE",
+          "payload": {
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "pinned": true,
+            "sha256": "abc123",
+            "bytes": 13,
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "fetch-failure-reports-origin-and-file-not-token",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCH_FAILED",
-     "payload": {
-      "error": "boom https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "kind": "failed"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "fetch-failed",
-         "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: transport error failed"
+      "id": "file-not-in-the-lock-is-returned-untouched",
+      "steps": [
+        {
+          "event": "SIDECAR_RESOLVE",
+          "payload": {
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "pinned": false,
+            "sha256": "",
+            "bytes": 13,
+            "url": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_RESOLVED",
+                "payload": {
+                  "requestId": "r1",
+                  "path": "dist/vectors.vec"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_REFUSED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "http-error-status-is-reported-without-the-url",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCHED",
-     "payload": {
-      "status": 403,
-      "headers": {},
-      "body": "",
-      "key": "sidecar"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "fetch-failed",
-         "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: HTTP 403"
+      "id": "nothing-declared-answers-an-empty-path",
+      "steps": [
+        {
+          "event": "SIDECAR_RESOLVE",
+          "payload": {
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "",
+            "pinned": false,
+            "sha256": "abc123",
+            "bytes": 13,
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_RESOLVED",
+                "payload": {
+                  "requestId": "r1",
+                  "path": ""
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "url-outside-the-origin-is-refused",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_PROBED",
-     "payload": {
-      "ok": false
-     },
-     "from": "probing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://evil.example.test/o/x"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "source"
+      "id": "fetch-failure-reports-origin-and-file-not-token",
+      "steps": [
+        {
+          "event": "SIDECAR_FETCH_FAILED",
+          "payload": {
+            "error": "boom https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "kind": "failed"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "fetch-failed",
+                  "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: transport error failed"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "ask-during-a-fetch-is-refused-busy",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_RESOLVE",
-     "payload": {
-      "requestId": "r2",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "pinned": true,
-      "sha256": "abc123",
-      "bytes": 13,
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r2",
-         "code": "busy"
+      "id": "http-error-status-is-reported-without-the-url",
+      "steps": [
+        {
+          "event": "SIDECAR_FETCHED",
+          "payload": {
+            "status": 403,
+            "headers": {},
+            "body": "",
+            "key": "sidecar"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "fetch-failed",
+                  "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: HTTP 403"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "matching-digest-is-stored",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCHED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "YWJj",
-      "key": "sidecar"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SC_HASH",
-        "payload": {
-         "requestId": "r1",
-         "data": "YWJj",
-         "encoding": "hex"
+      "id": "url-outside-the-origin-is-refused",
+      "steps": [
+        {
+          "event": "SIDECAR_PROBED",
+          "payload": {
+            "ok": false
+          },
+          "from": "probing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://evil.example.test/o/x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "source"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       },
-       {
-        "event": "SHA256_DIGESTED",
-        "payload": {
-         "requestId": "r1",
-         "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      ]
+    },
+    {
+      "id": "ask-during-a-fetch-is-refused-busy",
+      "steps": [
+        {
+          "event": "SIDECAR_RESOLVE",
+          "payload": {
+            "requestId": "r2",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "pinned": true,
+            "sha256": "abc123",
+            "bytes": 13,
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "abc123",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r2",
+                  "code": "busy"
+                }
+              }
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_REFUSED",
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "different-digest-is-refused-and-nothing-is-written",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCHED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "YWJj",
-      "key": "sidecar"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SHA256_DIGESTED",
-        "payload": {
-         "requestId": "r1",
-         "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      "id": "matching-digest-is-stored",
+      "steps": [
+        {
+          "event": "SIDECAR_FETCHED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "YWJj",
+            "key": "sidecar"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SC_HASH",
+                "payload": {
+                  "requestId": "r1",
+                  "data": "YWJj",
+                  "encoding": "hex"
+                }
+              },
+              {
+                "event": "SHA256_DIGESTED",
+                "payload": {
+                  "requestId": "r1",
+                  "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_REFUSED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       },
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "hash-mismatch",
-         "error": "ORB_SIDECAR_HASH_MISMATCH: pkg-a@1.0.0 dist/vectors.vec hashed to ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad, the lock pins 0000000000000000000000000000000000000000000000000000000000000000; nothing was stored"
+      ]
+    },
+    {
+      "id": "different-digest-is-refused-and-nothing-is-written",
+      "steps": [
+        {
+          "event": "SIDECAR_FETCHED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "YWJj",
+            "key": "sidecar"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SHA256_DIGESTED",
+                "payload": {
+                  "requestId": "r1",
+                  "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+                }
+              },
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "hash-mismatch",
+                  "error": "ORB_SIDECAR_HASH_MISMATCH: pkg-a@1.0.0 dist/vectors.vec hashed to ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad, the lock pins 0000000000000000000000000000000000000000000000000000000000000000; nothing was stored"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SC_STORE_FAILED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SC_STORE_FAILED",
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "one-flipped-byte-in-the-download-is-refused",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCHED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "YWJk",
-      "key": "sidecar"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "hash-mismatch"
+      "id": "one-flipped-byte-in-the-download-is-refused",
+      "steps": [
+        {
+          "event": "SIDECAR_FETCHED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "YWJk",
+            "key": "sidecar"
+          },
+          "from": "fetching",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "hash-mismatch"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SC_STORE_FAILED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SC_STORE_FAILED",
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "matching-digest-asks-for-the-store-directory",
-   "steps": [
+    },
     {
-     "event": "SC_DIGESTED",
-     "payload": {
-      "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-     },
-     "from": "verifying",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": "YWJj"
-     },
-     "expect": {
-      "effects": [
-       {
-        "type": "os/mkdir",
-        "key": "dir"
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_REFUSED",
-       "SIDECAR_RESOLVED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-different-digest-asks-for-no-directory",
-   "steps": [
-    {
-     "event": "SC_DIGESTED",
-     "payload": {
-      "digest": "007816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-     },
-     "from": "verifying",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": "YWJj"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "code": "hash-mismatch"
+      "id": "matching-digest-asks-for-the-store-directory",
+      "steps": [
+        {
+          "event": "SC_DIGESTED",
+          "payload": {
+            "digest": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+          },
+          "from": "verifying",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": "YWJj"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/mkdir",
+                "key": "dir"
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_REFUSED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "verified-file-is-written-to-a-part-file-first",
-   "steps": [
+    },
     {
-     "event": "SC_DIR",
-     "payload": {},
-     "from": "storing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": "YWJj"
-     },
-     "expect": {
-      "effects": [
-       {
-        "type": "os/write-file",
-        "key": "part"
-       }
-      ],
-      "fired": true,
-      "neverEmits": [
-       "SIDECAR_REFUSED",
-       "SIDECAR_RESOLVED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "part-file-is-renamed-into-place",
-   "steps": [
-    {
-     "event": "SC_WROTE",
-     "payload": {
-      "bytes": 3
-     },
-     "from": "storing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": "YWJj"
-     },
-     "expect": {
-      "effects": [
-       {
-        "type": "os/rename",
-        "key": "final"
-       }
-      ],
-      "fired": true,
-      "neverEmits": [
-       "SIDECAR_REFUSED",
-       "SIDECAR_RESOLVED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "stored-file-is-answered-by-its-cache-path",
-   "steps": [
-    {
-     "event": "SC_STORED",
-     "payload": {},
-     "from": "storing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_RESOLVED",
-        "payload": {
-         "requestId": "r1",
-         "path": "~/.almadar/sidecars/ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      "id": "control-different-digest-asks-for-no-directory",
+      "steps": [
+        {
+          "event": "SC_DIGESTED",
+          "payload": {
+            "digest": "007816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+          },
+          "from": "verifying",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": "YWJj"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "code": "hash-mismatch"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_REFUSED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "store-failure-is-refused-and-not-resolved",
-   "steps": [
+    },
     {
-     "event": "SC_STORE_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "denied"
-     },
-     "from": "storing",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
-      "body": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "store-failed"
+      "id": "verified-file-is-written-to-a-part-file-first",
+      "steps": [
+        {
+          "event": "SC_DIR",
+          "payload": {},
+          "from": "storing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": "YWJj"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/write-file",
+                "key": "part"
+              }
+            ],
+            "fired": true,
+            "neverEmits": [
+              "SIDECAR_REFUSED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SIDECAR_RESOLVED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-200-body-that-is-not-base64-is-refused",
-   "steps": [
+    },
     {
-     "event": "SIDECAR_FETCHED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "!!not base64!!",
-      "key": "sidecar"
-     },
-     "from": "fetching",
-     "entity": {
-      "id": "s",
-      "requestId": "r1",
-      "name": "pkg-a",
-      "version": "1.0.0",
-      "declared": "dist/vectors.vec",
-      "sha256": "abc123",
-      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SIDECAR_REFUSED",
-        "payload": {
-         "requestId": "r1",
-         "code": "fetch-failed",
-         "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: the body is not valid base64"
+      "id": "part-file-is-renamed-into-place",
+      "steps": [
+        {
+          "event": "SC_WROTE",
+          "payload": {
+            "bytes": 3
+          },
+          "from": "storing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": "YWJj"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/rename",
+                "key": "final"
+              }
+            ],
+            "fired": true,
+            "neverEmits": [
+              "SIDECAR_REFUSED",
+              "SIDECAR_RESOLVED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "SC_HASH",
-       "SIDECAR_RESOLVED"
       ]
-     }
+    },
+    {
+      "id": "stored-file-is-answered-by-its-cache-path",
+      "steps": [
+        {
+          "event": "SC_STORED",
+          "payload": {},
+          "from": "storing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_RESOLVED",
+                "payload": {
+                  "requestId": "r1",
+                  "path": "~/.almadar/sidecars/ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "store-failure-is-refused-and-not-resolved",
+      "steps": [
+        {
+          "event": "SC_STORE_FAILED",
+          "payload": {
+            "error": "x",
+            "kind": "denied"
+          },
+          "from": "storing",
+          "entity": {
+            "id": "s",
+            "requestId": "r1",
+            "name": "pkg-a",
+            "version": "1.0.0",
+            "declared": "dist/vectors.vec",
+            "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN",
+            "body": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIDECAR_REFUSED",
+                "payload": {
+                  "requestId": "r1",
+                  "code": "store-failed"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIDECAR_RESOLVED"
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

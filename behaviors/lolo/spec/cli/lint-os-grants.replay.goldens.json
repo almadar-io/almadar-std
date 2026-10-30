@@ -1,0 +1,2250 @@
+{
+  "atom": "cli/atoms/std-orb-lint-os-grants.lolo",
+  "trait": "OrbLintOsGrants",
+  "note": "Cases are the oracle of the retired validate_os_grants (orbital-compiler tests/host_effects_validation.rs `os_grants::`, archived): the kernel's program/os-grants findings (the answers of the Rust host, core base os_grants::static_check tests) become ORB_OS_GRANT_MISSING / _UNUSED / _ENTRY_INVALID and ORB_OS_TARGET_NOT_STATIC at the site the kernel names; the finished-program pass answers as the rule os-grants-final.",
+  "cases": [
+    {
+      "id": "a call outside the orbital's grants is missing a grant, at the call's site, with the entry that would cover it",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/read-file",
+                  "entry": "fs \"/etc/passwd\" read",
+                  "grant": "fs: { \"/etc/passwd\": [read] }",
+                  "app": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it",
+                      "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a write where only read is granted is missing a grant",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/write-file",
+                  "entry": "fs \"/data/a\" write",
+                  "grant": "fs: { \"/data/a\": [write] }",
+                  "app": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/write-file` needs fs \"/data/a\" write but orbital Orders does not grant it",
+                      "suggestion": "Add `fs: { \"/data/a\": [write] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a call with no grant at all names the entry the orbital bracket takes (not the app's)",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/memory-info",
+                  "entry": "sys memory",
+                  "grant": "sys: [memory]",
+                  "app": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/memory-info` needs sys memory but orbital Orders does not grant it",
+                      "suggestion": "Add `sys: [memory]` to the orbital's bracket",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a spawn that inherits a variable needs its env grant",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/spawn",
+                  "entry": "env \"PATH\"",
+                  "grant": "env: [\"PATH\"]",
+                  "app": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/spawn` needs env \"PATH\" but orbital Orders does not grant it",
+                      "suggestion": "Add `env: [\"PATH\"]` to the orbital's bracket",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a computed directory prefix outside its grant still needs a tree grant",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/read-file",
+                  "entry": "fs \"/etc/**\" read",
+                  "grant": "fs: { \"/etc/**\": [read] }",
+                  "app": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/read-file` needs fs \"/etc/**\" read but orbital Orders does not grant it",
+                      "suggestion": "Add `fs: { \"/etc/**\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a grant the orbital's own calls do not use is a warning at its entry",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "unused",
+                  "site": "orbitals[0 (Orders)].osGrants.fs[0]",
+                  "entry": "fs \"/data/a\" write",
+                  "orbital": "Orders"
+                },
+                {
+                  "code": "unused",
+                  "site": "orbitals[0 (Orders)].osGrants.exec[0]",
+                  "entry": "exec \"git\"",
+                  "orbital": "Orders"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_UNUSED",
+                      "path": "orbitals[0 (Orders)].osGrants.fs[0]",
+                      "message": "`fs \"/data/a\" write` is granted to orbital Orders but no `os/` call there uses it",
+                      "suggestion": "Remove the entry: an unused grant is authority the program does not need",
+                      "severity": "warning"
+                    },
+                    {
+                      "code": "ORB_OS_GRANT_UNUSED",
+                      "path": "orbitals[0 (Orders)].osGrants.exec[0]",
+                      "message": "`exec \"git\"` is granted to orbital Orders but no `os/` call there uses it",
+                      "suggestion": "Remove the entry: an unused grant is authority the program does not need",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app-level entry no orbital uses is a warning for the program",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "unused",
+                  "site": "osGrants.fs[0]",
+                  "entry": "fs \"/data/**\" read"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_UNUSED",
+                      "path": "osGrants.fs[0]",
+                      "message": "`fs \"/data/**\" read` is granted to the program but no `os/` call there uses it",
+                      "suggestion": "Remove the entry: an unused grant is authority the program does not need",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an entry that can match nothing is invalid",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "entry-invalid",
+                  "site": "orbitals[0 (Orders)].osGrants.fs[0].glob",
+                  "entry": "`glob` \"data/**\" must be an absolute path",
+                  "orbital": "Orders"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_ENTRY_INVALID",
+                      "path": "orbitals[0 (Orders)].osGrants.fs[0].glob",
+                      "message": "`glob` \"data/**\" must be an absolute path",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid app-level entry",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "entry-invalid",
+                  "site": "osGrants.exec[0]",
+                  "entry": "`exec` entry \"\" is empty"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_ENTRY_INVALID",
+                      "path": "osGrants.exec[0]",
+                      "message": "`exec` entry \"\" is empty",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a computed path is not static",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "target-not-static",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/read-file",
+                  "argument": 1
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_TARGET_NOT_STATIC",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/read-file` argument 1 is computed — an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a computed command and a computed port are not static",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "target-not-static",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/spawn",
+                  "argument": 1
+                },
+                {
+                  "code": "target-not-static",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/tcp-connect",
+                  "argument": 2
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_TARGET_NOT_STATIC",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/spawn` argument 1 is computed — an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_OS_TARGET_NOT_STATIC",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/tcp-connect` argument 2 is computed — an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a config value the finished program can hold, not granted, is a final-only finding",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/spawn",
+                  "entry": "exec \"git\"",
+                  "grant": "exec: [\"git\"]",
+                  "app": false,
+                  "via": "config"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_GRANT_MISSING",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/spawn` can be given exec \"git\" by its config, but orbital Orders does not grant it",
+                      "suggestion": "Add `exec: [\"git\"]` to the orbital's bracket",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a config read the finished program cannot resolve is final-only",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "target-not-static",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/spawn",
+                  "argument": 1,
+                  "via": "config-unresolvable"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_TARGET_NOT_STATIC",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/spawn` argument 1 is read from config in a way the finished program cannot resolve, so its grant cannot be checked",
+                      "suggestion": "Read the target with `@config.<knob>`, `array/nth` and `object/get`, or write it as a literal; a `str/concat` directory prefix must be string knobs and literals ending in `/`",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a computed path past a config prefix is final-only",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "target-not-static",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "orbital": "Orders",
+                  "call": "os/read-file",
+                  "argument": 1,
+                  "via": "computed-path"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_OS_TARGET_NOT_STATIC",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "`os/read-file` argument 1 is a computed path the grant cannot cover: only a file path may be a `str/concat`",
+                      "suggestion": "Write the target as a literal",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a covered program has no finding in either pass",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a file the kernel could not resolve or check answers nothing (validate reports that failure itself)",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_GRANTS_FAILED",
+          "from": "reading",
+          "payload": {
+            "error": "program/os-grants: Failed to read /w/shop.orb"
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cli: no file is the usage",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint os-grants <file>"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cli: a clean file answers clean after both passes",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "waiting"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_FOUND",
+          "from": "waiting",
+          "payload": {
+            "rule": "os-grants",
+            "scope": "",
+            "findings": []
+          },
+          "expect": {
+            "state": "waiting"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_FOUND",
+          "from": "waiting",
+          "payload": {
+            "rule": "os-grants-final",
+            "scope": "",
+            "findings": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "lint os-grants: clean"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cli: findings of either pass print and answer status 500",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "waiting"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_FOUND",
+          "from": "waiting",
+          "payload": {
+            "rule": "os-grants",
+            "scope": "",
+            "findings": [
+              {
+                "code": "ORB_OS_GRANT_MISSING",
+                "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                "message": "`os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it",
+                "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                "severity": "error"
+              }
+            ]
+          },
+          "expect": {
+            "state": "waiting"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrantsCli",
+          "event": "LINT_FOUND",
+          "from": "waiting",
+          "payload": {
+            "rule": "os-grants-final",
+            "scope": "",
+            "findings": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "[ORB_OS_GRANT_MISSING] orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]: `os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it\n  suggestion: Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    }
+  ]
+}

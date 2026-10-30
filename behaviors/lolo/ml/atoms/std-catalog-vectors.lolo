@@ -1,0 +1,223 @@
+app std-catalog-vectors [
+  version: "1.0.0",
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  exec: ["kill"],
+  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
+  description: "std-catalog-vectors — the ONE std flow that owns catalog rows with vectors. CATALOG_VECTORS_ASK { paths, exposure, traits } lists the installed behaviors under the registry folders with the facts their embedding texts read (`behavior/catalog` with texts: true), builds each row's organism and capability texts (std-behavior-texts), reads where the vectors live and which embedding provider is configured (std-vector-sources), and resolves every text package snapshot first, then the user store, then the configured provider for what no store holds (std-vector-resolve, which writes what it embeds back to the user store), then answers CATALOG_VECTORS_ROWS { rows, model }: each row with its `vectors` keyed `description` and, when the behavior declares capabilities, `capabilities`. A host never attaches vectors to a catalog row, so a consumer that ranks by meaning (a search, a retrieval ladder, a scope listing) asks this atom and never reads `vectors` off a plain `behavior/catalog` answer. Nothing is answered empty: a row whose description has no vector, a package that cannot be read, no vector in any store with no provider configured, or a provider failure answers CATALOG_VECTORS_REFUSED { code, detail }, and the consumer shows it. The provider call is std-llm over std-http-request and std-http-client; a keyed provider's key rides the HttpClient credential knobs, which the host fills into the os/send at the boundary. The composer declares the same fs, env, exec and net grants as this app."
+]
+uses Texts from "std/behaviors/std-behavior-texts"
+uses Sources from "std/behaviors/std-vector-sources"
+uses ResolveAtom from "std/behaviors/std-vector-resolve"
+
+type WantedText = { key : string!, text : string! }
+type KeyedVector = { key : string!, vector : [number]! }
+type CatalogFactsRow = {
+  behavior : string!
+  package : string!
+  topic : string!
+  level : string!
+  exposure : string
+  description : string!
+  capabilities : [string]
+  traits : [trait]
+  value : behavior!
+  vectors : Map string [number]
+  model : string
+  name : string
+  rank : number
+  textOrder : number
+  defaultEntityName : string
+  connectableEvents : [string]
+  capabilitiesText : string
+  pattern : string
+}
+type CatalogVectorRow = {
+  behavior : string!
+  package : string!
+  topic : string!
+  level : string!
+  exposure : string
+  pattern : string
+  description : string!
+  capabilities : [string]
+  traits : [trait]
+  value : behavior!
+  vectors : Map string [number]!
+}
+type CatalogPackage = { root : string!, prefix : string!, vectors : string }
+
+orbital CatalogVectorsOrbital {
+  entity CatalogVectorsRun [runtime] {
+    id : string!
+    paths : [string] = []
+    exposure : [string] = []
+    traits : boolean = true
+    rows : [CatalogFactsRow] = []
+    wanted : [WantedText] = []
+  }
+
+  trait CvTexts = Texts.traits.BehaviorTexts {
+    listens {
+      CatalogVectors.CV_ENTRY_TEXTS -> BUILD_ENTRY_TEXTS
+    }
+  }
+
+  trait CvSources = Sources.traits.VectorSources {
+    listens {
+      CatalogVectors.CV_SOURCES -> SOURCES
+    }
+  }
+
+  trait CatalogVectors -> CatalogVectorsRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CATALOG_VECTORS_ASK -> listing
+        (set @entity.paths @payload.paths)
+        (set @entity.exposure @payload.exposure)
+        (set @entity.traits @payload.traits)
+        (behavior/catalog { paths: @payload.paths, exposure: @payload.exposure } {
+          traits: @payload.traits
+          texts: true
+          emit: { success: CV_LISTED, failure: CV_FAILED }
+        })
+    }
+
+    state listing {
+      INIT -> listing
+      CV_LISTED -> texting
+        (set @entity.rows @payload.result)
+        (emit CV_ENTRY_TEXTS { rows: @payload.result })
+      CV_FAILED -> idle
+        (emit CATALOG_VECTORS_REFUSED { code: "ORB_CATALOG_UNREAD", detail: @payload.error })
+    }
+
+    state texting {
+      INIT -> texting
+      ENTRY_TEXTS_BUILT -> packaging
+        (set @entity.wanted @payload.wanted)
+        (behavior/packages { emit: { success: CV_PACKAGES, failure: CV_FAILED } })
+      CV_FAILED -> idle
+        (emit CATALOG_VECTORS_REFUSED { code: "ORB_CATALOG_UNREAD", detail: @payload.error })
+    }
+
+    state packaging {
+      INIT -> packaging
+      CV_PACKAGES -> sourcing
+        (emit CV_SOURCES { paths: (array/filter (array/map (array/filter @payload.result (fn p (array/some @entity.rows (fn r (= (array/first (str/split @r.behavior "/")) @p.prefix))))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))) })
+      CV_FAILED -> idle
+        (emit CATALOG_VECTORS_REFUSED { code: "ORB_CATALOG_UNREAD", detail: @payload.error })
+    }
+
+    state sourcing {
+      INIT -> sourcing
+      SOURCES_READY -> resolving
+        (emit CV_RESOLVE { wanted: @entity.wanted, snapshots: @payload.snapshots, snapshotPaths: @payload.snapshotPaths, userDir: @payload.userDir, userAnchor: @payload.userAnchor, providerModel: @payload.providerModel, providerKind: @payload.providerKind, embedModel: @payload.embedModel })
+      SOURCES_REFUSED -> idle
+        (emit CATALOG_VECTORS_REFUSED { code: @payload.code, detail: @payload.detail })
+    }
+
+    state resolving {
+      INIT -> resolving
+      VECTORS_REFUSED -> idle
+        (emit CATALOG_VECTORS_REFUSED { code: @payload.code, detail: @payload.detail })
+      VECTORS_ANSWERED -> idle when (array/some @entity.rows (fn r (= (array/find @payload.vectors (fn v (= @v.key @r.behavior))) null)))
+        (emit CATALOG_VECTORS_REFUSED { code: "ORB_VECTOR_ROW_UNEMBEDDED", detail: (str/concat "no vector for the description of " (object/get (default (array/find @entity.rows (fn r (= (array/find @payload.vectors (fn v (= @v.key @r.behavior))) null))) {}) "behavior" "")) })
+      VECTORS_ANSWERED -> idle when (not (array/some @entity.rows (fn r (= (array/find @payload.vectors (fn v (= @v.key @r.behavior))) null))))
+        (emit CATALOG_VECTORS_ROWS {
+          model: @payload.model
+          rows: (array/map @entity.rows (fn r (object/merge (object/pick @r ["behavior", "package", "topic", "level", "exposure", "pattern", "description", "capabilities", "traits", "value"]) { vectors: (default (object/fromEntries (array/concat [["description", (object/get (default (array/find @payload.vectors (fn v (= @v.key @r.behavior))) {}) "vector" [])]] (let ((hit (array/find @payload.vectors (fn v (= @v.key (str/concat @r.behavior "#capabilities")))))) (if (= @hit null) [] [["capabilities", @hit.vector]])))) {}) })))
+        })
+    }
+
+    emits {
+      CV_ENTRY_TEXTS {
+        rows : [CatalogFactsRow]!
+      }
+        @description "Internal: ask std-behavior-texts for the embedding texts of these catalog rows."
+        @tier "internal"
+      CV_SOURCES {
+        paths : [string]!
+      }
+        @description "Internal: ask std-vector-sources for the package snapshots and the configured provider."
+        @tier "internal"
+      CV_RESOLVE -> external {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @description "Internal: ask std-vector-resolve for the vectors of the wanted texts."
+        @tier "internal"
+      CATALOG_VECTORS_ROWS -> external {
+        rows : [CatalogVectorRow]!
+        model : string!
+      }
+        @description "The catalog rows asked for, each with its description vector and, when the behavior declares capabilities, its capabilities vector, and the model that made them."
+        @synonyms "catalog with vectors, rows with embeddings"
+        @tier "primary"
+      CATALOG_VECTORS_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "The rows cannot be answered with vectors: the catalog or a package cannot be read, a row's description has no vector, no store holds a vector and no provider is configured, or the provider failed. The code names which."
+        @tier "primary"
+    }
+
+    listens {
+      CATALOG_VECTORS_ASK -> input {
+        paths : [string]!
+        exposure : [string]!
+        traits : boolean!
+      }
+        @description "List the behaviors under these registry folders (narrowed by exposure) with their vectors."
+        @synonyms "catalog with vectors, search index rows"
+      CV_LISTED {
+        result : [CatalogFactsRow]!
+      }
+      CV_PACKAGES {
+        result : [CatalogPackage]!
+      }
+      CV_FAILED {
+        error : string!
+      }
+      CvTexts.ENTRY_TEXTS_BUILT -> ENTRY_TEXTS_BUILT
+      ENTRY_TEXTS_BUILT {
+        organism : [{ key : string!, text : string!, hash : string! }]!
+        capability : [{ key : string!, text : string!, hash : string! }]!
+        wanted : [WantedText]!
+      }
+      CvSources.SOURCES_READY -> SOURCES_READY
+      SOURCES_READY {
+        snapshots : [bytes]!
+        snapshotPaths : [string]!
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string!
+        embedModel : string!
+      }
+      CvSources.SOURCES_REFUSED -> SOURCES_REFUSED
+      SOURCES_REFUSED {
+        code : string!
+        detail : string!
+      }
+      VECTORS_ANSWERED {
+        model : string!
+        vectors : [KeyedVector]!
+      }
+      VECTORS_REFUSED {
+        code : string!
+        detail : string!
+      }
+    }
+  }
+
+  page boot as CatalogVectorsPage -> CatalogVectors, CvTexts, CvSources
+}

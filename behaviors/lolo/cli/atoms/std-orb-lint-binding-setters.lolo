@@ -4,32 +4,38 @@ app std-orb-lint-binding-setters [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-binding-setters - the `orb lint binding-setters <file>` command, the port of the write-side binding rules of binding.rs: ORB_BINDING_ENTITY_FIELD_NEVER_SET, ORB_BINDING_PERSIST_ROW_ID_NEVER_SET (validate_entity_fields_have_setters), ORB_BINDING_EMBED_READS_ARM_WRITE (validate_embed_reads_arm_writes) and the call-site capture half of ORB_BINDING_PAYLOAD_FIELD_UNDECLARED (validate_callsite_payload_captures). It lowers the file with program/read and, per orbital, indexes the sites where a transition renders an embedded trait (`@trait.<Child>` in its guard or effects) with the fields that transition sets, the values it sets and the payload its event declares. Every @entity.<field> a trait reads (guard, effects, tick effects) must be set by a (set @entity.<field> ...) somewhere in the trait, unless the field is intrinsic or has a declared default, a trait on the same [shared] entity sets it, or a rendering parent on the same entity sets it. A persist update or delete of the whole @entity needs a (set @entity.id ...). A render-only child of a persistent, non-shared entity that reads an @entity field its composing transition writes shows the value from before the write. A @callsitePayload.<path> capture must resolve in the payload of some composing event up the embed chain. The lifecycle events the bus never delivers are read from LINT_OPERATOR_SEMANTICS. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-setters: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-binding-setters - the `orb lint binding-setters <file>` command, the port of the write-side binding rules of binding.rs: ORB_BINDING_ENTITY_FIELD_NEVER_SET, ORB_BINDING_PERSIST_ROW_ID_NEVER_SET (validate_entity_fields_have_setters), ORB_BINDING_EMBED_READS_ARM_WRITE (validate_embed_reads_arm_writes) and the call-site capture half of ORB_BINDING_PAYLOAD_FIELD_UNDECLARED (validate_callsite_payload_captures). It lowers the file with program/read, asks std-orb-lint-input's OrbLintExprNodes for the flat typed nodes of every guard, effect, tick effect and config default (LINT_EXPR_ASK / LINT_EXPR_NODES), reads the whole bindings (`@entity.<field>`, `@trait.<Child>`, `@callsitePayload.<path>`) and the `set` and `persist` calls from those nodes, and, per orbital, indexes the sites where a transition renders an embedded trait (`@trait.<Child>` in its guard or effects) with the fields that transition sets, the values it sets and the payload its event declares. Every @entity.<field> a trait reads (guard, effects, tick effects) must be set by a (set @entity.<field> ...) somewhere in the trait, unless the field is intrinsic or has a declared default, a trait on the same [shared] entity sets it, or a rendering parent on the same entity sets it. A persist update or delete of the whole @entity needs a (set @entity.id ...). A render-only child of a persistent, non-shared entity that reads an @entity field its composing transition writes shows the value from before the write. A @callsitePayload.<path> capture must resolve in the payload of some composing event up the embed chain. The lifecycle events the bus never delivers are read from LINT_OPERATOR_SEMANTICS. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-setters: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-binding-setters"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type SsShape = string | number | boolean | [SsShape?] | Map string SsShape?
+type SsExpr = string | number | boolean | [SsExpr?] | Map string SsExpr?
 type SsField = { name : string, properties : [SsField]? }
 type SsEvent = { key : string, payloadSchema : [SsField]? }
-type SsTr = { event : string, guard : SsShape?, effects : [SsShape] }
-type SsTick = { effects : [SsShape] }
+type SsTr = { event : string, guard : SsExpr, effects : [SsExpr] }
+type SsTick = { effects : [SsExpr] }
 type SsMachine = { transitions : [SsTr], events : [SsEvent] }
-type SsCfg = { default : SsShape? }
+type SsCfg = { default : SsExpr }
 type SsTrait = { name : string, linkedEntity : string, stateMachine : SsMachine, ticks : [SsTick], config : Map string SsCfg }
 type SsName = { name : string, intrinsic : boolean }
 type SsEntity = { name : string, shared : boolean, persistence : string, fields : [SsName] }
 type SsOrbital = { name : string, entity : SsEntity, auxiliaryEntities : [SsEntity], traits : [SsTrait] }
 type SsProgram = { orbitals : [SsOrbital] }
 type SsDef = { shared : boolean, persistent : boolean, exempt : [string] }
-type SsX = { w : string, j : number, x : SsShape? }
-type SsXT = { w : string, j : number, t : [string] }
+type SsAsk = { oi : number!, ti : number!, w : string!, j : number!, x : SsExpr? }
+type SsExprItem = { e : SsExpr?, eff : boolean! }
+type SsNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type SsXT = { k : string!, t : [string]! }
 type SsRow = { ev : string, g : [string], e : [string] }
-type SsT = { n : string, l : string, tp : string, trs : [SsRow], tk : [string], cfg : [string], hasCfg : boolean, ro : boolean, pls : Map string [SsField] }
+type SsPay = { schema : [SsField]? }
+type SsT = { oi : number!, n : string, l : string, tp : string, trs : [SsRow], tk : [string], cfg : [string], hasCfg : boolean, ro : boolean, pls : Map string SsPay }
 type SsSite = { pn : string, pl : string, ev : string, sf : [string], ss : Map string string, pay : [SsField]?, hasPay : boolean }
 type SsLink = { c : string, i : number }
 type SsPair = { f : string, ev : string }
 type SsAnc = { stack : [string], seen : [string], res : [number] }
+type SsWalkSlot = { kind : string!, args : [number] }
+type SsWalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type SsWalk = { lv : [SsField], miss : string, stop : boolean }
 type SsSiteC = { emb : [string], site : SsSite }
 type SsSets = { n : string, s : [string] }
 
@@ -45,6 +51,10 @@ orbital OrbLintBindingSettersOrbital {
     findings : [OrbFinding] = []
     busExcluded : [string] = []
     semanticsHeard : boolean = false
+    orbitals : [SsOrbital] = []
+    asks : [SsAsk] = []
+    toks : [SsXT] = []
+    rows : [SsT] = []
   }
 
   trait OrbLintBindingSetters -> OrbLintBindingSettersRun [optimistic] {
@@ -57,209 +67,193 @@ orbital OrbLintBindingSettersOrbital {
         (set @entity.semanticsHeard true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nostr : [string] []) (nonum : [number] []) (nof : [OrbFinding] []) (nosc : [SsSiteC] []) (noxs : [SsX] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nolinks : [SsLink] []) (busEx : [string] @entity.busExcluded) (eP : string (str/concat (quote "@") "entity.")) (eB : string (str/concat (quote "@") "entity")) (tP2 : string (str/concat (quote "@") "trait.")) (pP : string (str/concat (quote "@") "payload.")) (cP : string (str/concat (quote "@") "callsitePayload.")) (cpP : string (str/concat (quote "@") "callsitePayload.")) (orbitals : [SsOrbital] (object/get @payload.program "orbitals" [])))
-  (let ((entIdx : Map string SsDef (default (object/fromEntries
-  (array/flatten (array/map @orbitals (fn o
-    (array/map
-      (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e)))
-      (fn e [(object/get @e "name" ""), { shared: (object/get @e "shared" false), persistent: (= (object/get @e "persistence" "persistent") "persistent"), exempt: (array/map (array/filter (object/get @e "fields" []) (fn f (or (object/get @f "intrinsic" false) (object/has @f "default")))) (fn f (object/get @f "name" ""))) }]))))))
-  {})))
-    (array/flatten
-      (array/map (array/range 0 (array/len @orbitals))
-        (fn oi
-          (let ((o (array/nth @orbitals @oi)))
-  (let ((trts : [SsTrait] (object/get @o "traits" [])))
-    (let ((rows : [SsT] (array/map (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (array/nth @trts @ti) "stateMachine")))
-  (fn ti
-    (let ((t (array/nth @trts @ti)) (cfgm : Map string SsCfg (object/get (array/nth @trts @ti) "config" {})))
-      (let ((trs : [SsTr] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [SsTick] (object/get @t "ticks" [])))
-        (let ((xs : [SsX] (array/concat
-                (array/concat
-                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn j
-                    (let ((g (object/get (array/nth @trs @j) "guard" null)) (effs : [SsShape] (object/get (array/nth @trs @j) "effects" [])))
-                      (array/concat
-                        (if (!= @g null) [{ w: "g", j: @j, x: @g }] @noxs)
-                        (array/map @effs (fn ef { w: "e", j: @j, x: @ef })))))))
-                  (array/flatten (array/map @tks (fn tk (array/map (object/get @tk "effects" []) (fn ef { w: "t", j: 0, x: @ef }))))))
-                (array/flatten (array/map (object/keys @cfgm) (fn kn (if (= (object/get (object/get @cfgm @kn) "default" null) null) @noxs [{ w: "c", j: 0, x: (object/get (object/get @cfgm @kn) "default" null) }])))))))
-          (let ((tx : [SsXT] (array/map @xs (fn q { w: (object/get @q "w" ""), j: (object/get @q "j" 0), t: (default (tree/fold (object/get @q "x" null) (fn (n k) (if (validate/string @n)
-  (if (str/startsWith @n @eP)
-    (let ((fld (array/first (str/split (array/first (str/split (str/slice @n 8) ".")) "["))))
-      (array/concat
-        (if (and (!= @fld "") (not (array/includes ["id", "createdAt", "updatedAt"] @fld))) [(str/concat "r:" @fld)] @nostr)
-        [(str/concat "e:" (array/first (str/split (str/slice @n 8) ".")))]))
-    (if (= @n @eB)
-      ["e:*"]
-      (if (str/startsWith @n @tP2)
-        (let ((tnm (str/slice @n 7)))
-          (if (and (!= @tnm "") (not (str/includes @tnm "."))) [(str/concat "t:" @tnm)] @nostr))
-        (if (and (str/startsWith @n @cP) (> (str/len @n) 17))
-          [(str/concat "c:" (str/slice @n 17))]
-          @nostr))))
-  (if (validate/array @n)
-    (let ((len (array/len @n)) (o0 (if (> (array/len @n) 0) (array/nth @n 0) "")) (o1 (if (> (array/len @n) 1) (array/nth @n 1) "")) (o3 (if (> (array/len @n) 3) (array/nth @n 3) "")) (o2 (if (> (array/len @n) 2) (array/nth @n 2) "")))
-      (array/concat
-        (if (and (>= @len 2) (validate/string @o0) (validate/string @o1))
-          (array/concat
-            (if (and (= @o0 "set") (str/startsWith @o1 @eP))
-              (array/concat
-                (let ((sf (array/first (str/split (array/first (str/split (str/slice @o1 8) ".")) "["))))
-                  (if (!= @sf "") [(str/concat "s:" @sf)] @nostr))
-                (if (>= @len 3)
-                  [(str/concat "v:" (array/first (str/split (str/slice @o1 8) ".")) "|" (if (validate/string @o2) (if (str/startsWith @o2 @pP) (str/concat "?" (str/slice @o2 9)) "") ""))]
-                  @nostr))
-              @nostr)
-            (if (and (= @o0 "persist") (>= @len 4) (or (= @o1 "update") (= @o1 "delete")) (validate/string @o3) (= @o3 @eB)) ["p:1"] @nostr))
-          @nostr)
-        (array/flatten (array/map @k (fn r (let ((rr : [string]? @r)) (if (validate/array @rr) @rr @nostr)))))))
-    (if (validate/object @n)
-      (array/flatten (array/map (object/values @k) (fn r (let ((rr : [string]? @r)) (if (validate/array @rr) @rr @nostr)))))
-      @nostr)))) SsShape) @nostr) }))))
-            { n: (object/get @t "name" ""),
-              l: (object/get @t "linkedEntity" ""),
-              tp: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"),
-              trs: (array/map (array/range 0 (array/len @trs)) (fn j { ev: (object/get (array/nth @trs @j) "event" ""),
-                     g: (array/flatten (array/map (array/filter @tx (fn q (and (= (object/get @q "w" "") "g") (= (object/get @q "j" 0) @j)))) (fn q (object/get @q "t" @nostr)))),
-                     e: (array/flatten (array/map (array/filter @tx (fn q (and (= (object/get @q "w" "") "e") (= (object/get @q "j" 0) @j)))) (fn q (object/get @q "t" @nostr)))) })),
-              tk: (array/flatten (array/map (array/filter @tx (fn q (= (object/get @q "w" "") "t"))) (fn q (object/get @q "t" @nostr)))),
-              cfg: (array/flatten (array/map (array/filter @tx (fn q (= (object/get @q "w" "") "c"))) (fn q (object/get @q "t" @nostr)))),
-              hasCfg: (object/has @t "config"),
-              pls: (default (object/fromEntries (array/flatten (array/map (object/get (object/get @t "stateMachine" { events: [] }) "events" []) (fn e (if (object/has @e "payloadSchema") [[(object/get @e "key" ""), (object/get @e "payloadSchema")]] []))))) {}),
-              ro: (array/every @trs (fn tr (array/includes @busEx (object/get @tr "event" "")))) }))))))))
-      (let ((names : [string] (array/map @rows (fn r (object/get @r "n" ""))))
-            (setsRows : [SsSets] (array/map @rows (fn r { n: (object/get @r "n" ""), s: (array/unique (array/map (array/filter (array/concat (array/flatten (array/map (object/get @r "trs" []) (fn tr (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr))))) (object/get @r "tk" @nostr)) (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))) })))
-            (roByName : Map string boolean (default (object/fromEntries (array/map @rows (fn r [(object/get @r "n" ""), (object/get @r "ro" false)]))) {})))
-        (let ((setsByName : Map string [SsSets] (array/groupBy @setsRows "n"))
-              (sc : [SsSiteC] (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
-        (let ((rw (array/nth @rows @k)))
-          (array/flatten (array/map (object/get @rw "trs" []) (fn tr
-            (let ((toks : [string] (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr))))
-              (let ((emb (array/unique (array/map (array/filter @toks (fn q (str/startsWith @q "t:"))) (fn q (str/slice @q 2))))))
-                (if (= (array/len @emb) 0)
-                  @nosc
-                  [{ emb: @emb,
-                     site: { pn: (object/get @rw "n" ""), pl: (object/get @rw "l" ""), ev: (object/get @tr "ev" ""),
-                             sf: (array/unique (array/map (array/filter @toks (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))),
-                             ss: (default (object/fromEntries (array/map (array/filter (object/get @tr "e" @nostr) (fn q (str/startsWith @q "v:"))) (fn q [(array/first (str/split (str/slice @q 2) "|")), (str/slice (str/slice @q 2) (+ 1 (str/len (array/first (str/split (str/slice @q 2) "|")))))]))) {}),
-                             pay: (object/get (object/get @rw "pls" {}) (object/get @tr "ev" "") null),
-                             hasPay: (object/has (object/get @rw "pls" {}) (object/get @tr "ev" "")) } }])))))))))))
-      (sites : [SsSite] (array/map @sc (fn c (object/get @c "site" @nosite))))
-      (parentsOf : Map string [SsLink] (array/groupBy (array/flatten (array/map (array/range 0 (array/len @sc)) (fn i (array/map (object/get (array/nth @sc @i) "emb") (fn c { c: @c, i: @i }))))) "c")))
-          (array/concat
-  (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k (let ((rw (array/nth @rows @k)))
-  (if (= (object/get @rw "l" "") "")
-    @nof
-    (let ((l (object/get @rw "l" "")) (def (object/get @entIdx (object/get @rw "l" "") null)) (tp (object/get @rw "tp" "")) (tname (object/get @rw "n" "")))
-      (let ((sets : [string] (object/get (array/nth @setsRows @k) "s" @nostr)) (rtrs : [SsRow] (object/get @rw "trs" [])))
-        (let ((exempt : [string] (if (= @def null) @nostr (object/get @def "exempt" @nostr)))
-              (groupSets : [string] (if (and (!= @def null) (object/get @def "shared" false))
-                 (array/unique (array/flatten (array/map (array/range 0 (array/len @rows)) (fn j (if (= (object/get (array/nth @rows @j) "l") @l) (object/get (array/nth @setsRows @j) "s" @nostr) @nostr)))))
-                 @nostr))
-              (credit : [string] (array/flatten (array/map (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) { stack: [(object/get @rw "n" "")], seen: @nostr, res: @nonum }
-  (fn (acc st)
-    (let ((stack (object/get @acc "stack" @nostr)) (seen (object/get @acc "seen" @nostr)) (res (object/get @acc "res" @nonum)))
-      (if (= (array/len @stack) 0)
-        @acc
-        (let ((nm (array/last @stack)) (rest (array/dropLast @stack 1)))
-          (if (array/includes @seen @nm)
-            { stack: @rest, seen: @seen, res: @res }
-            (let ((idxs (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0)))))
-              { stack: (array/concat @rest (array/map @idxs (fn i (object/get (array/nth @sites @i) "pn")))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) }))))))) "res") (fn i (let ((site (array/nth @sites @i))) (if (= (object/get @site "pl" "") @l) (array/concat (object/get @site "sf" @nostr) (let ((sg (object/get @setsByName (object/get @site "pn" "") @nosets))) (if (= (array/len @sg) 0) @nostr (object/get (array/last @sg) "s" @nostr)))) @nostr)))))))
-          (let ((pairs : [SsPair] (array/concat
-                   (array/flatten (array/map @rtrs (fn tr (array/map (array/unique (array/map (array/filter (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr)) (fn q (str/startsWith @q "r:"))) (fn q (str/slice @q 2)))) (fn f { f: @f, ev: (object/get @tr "ev" "") })))))
-                   (array/map (array/unique (array/map (array/filter (object/get @rw "tk" @nostr) (fn q (str/startsWith @q "r:"))) (fn q (str/slice @q 2)))) (fn f { f: @f, ev: "TICK" })))))
-            (let ((byF : Map string [SsPair] (array/groupBy @pairs "f")))
-              (let ((pev (array/find @rtrs (fn tr (array/includes (object/get @tr "e" @nostr) "p:1")))))
-                (array/concat
-                  (if (and (not (array/includes @sets "id")) (!= @pev null) (not (array/includes @groupSets "id")) (not (array/includes @credit "id")))
-                    [{ code: @config.codes.bindingPersistRowIdNeverSet.code, path: @tp, message: (str/concat "trait \"" @tname "\" runs (persist update|delete " @l " " @eB ") on event \"" (object/get @pev "ev" "") "\" but no transition runs (set " @eP "id <value>); the row key resolves empty, and the runtime refuses the write and reports success without ever touching a row"), suggestion: (str/concat "Bind the row key before the write — (set " @eP "id ?row.id) on the transition that selects the " @l " row, or ?data.id on the fetch success that loaded it"), severity: "error" }]
-                    @nof)
-                  (array/flatten
-                    (array/map (array/unique (array/map @pairs (fn q (object/get @q "f" ""))))
-                      (fn f
-                        (if (or (array/includes @exempt @f) (array/includes @sets @f) (array/includes @groupSets @f) (array/includes @credit @f))
-                          @nof
-                          (let ((ev (object/get (array/first (object/get @byF @f)) "ev")))
-                            [{ code: @config.codes.bindingEntityFieldNeverSet.code, path: @tp, message: (str/concat "trait \"" @tname "\" reads " @eP @f " (first seen on event \"" @ev "\") but no transition runs (set " @eP @f " <value>); per the explicit-binding rule, every " @eP "X must be set explicitly or it stays undefined"), suggestion: (str/concat "Add (set " @eP @f " <default-or-payload>) in the trait's INIT transition or in a transition that runs before the read on entity \"" @l "\""), severity: "error" }])))))))))))))))))
-  (array/concat
-    (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k (let ((rw (array/nth @rows @k)))
-  (let ((l (object/get @rw "l" "")) (def (object/get @entIdx (object/get @rw "l" "") null)) (child (object/get @rw "n" "")))
-    (if (or (not (object/get @rw "hasCfg" false)) (= @l "") (= @def null) (not (object/get @def "persistent" false)) (object/get @def "shared" false) (not (object/get @rw "ro" false)))
-      @nof
-      (let ((cfgToks : [string] (object/get @rw "cfg" @nostr)))
-        (let ((whole (array/includes @cfgToks "e:*")) (flds : [string] (array/unique (array/map (array/filter @cfgToks (fn q (and (str/startsWith @q "e:") (!= @q "e:*")))) (fn q (str/slice @q 2))))))
-          (if (and (= (array/len @flds) 0) (not @whole))
+        (set @entity.orbitals (let ((nProg : SsProgram { orbitals: [] })) (object/get (default @payload.program @nProg) "orbitals" [])))
+        (emit BS_ASK { asks: (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nProg : SsProgram { orbitals: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nxs : [SsAsk] []))
+          (let ((orbitals : [SsOrbital] (object/get (default @payload.program @nProg) "orbitals" [])))
+            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+              (let ((o : SsOrbital (default (array/nth @orbitals @oi) @nOrb)))
+                (let ((trts : [SsTrait] (object/get @o "traits" [])))
+                  (array/flatten (array/map (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (default (array/nth @trts @ti) @nTrait) "stateMachine"))) (fn ti
+                    (let ((t : SsTrait (default (array/nth @trts @ti) @nTrait)))
+                      (let ((trs : [SsTr] (object/get (object/get @t "stateMachine" @nMach) "transitions" [])) (tks : [SsTick] (object/get @t "ticks" [])) (cfgm : Map string SsCfg (object/get @t "config" {})))
+                        (array/concat
+                          (array/concat
+                            (array/flatten (array/map (array/range 0 (array/len @trs)) (fn j
+                              (let ((tr : SsTr (default (array/nth @trs @j) @nTr)))
+                                (let ((effs : [SsExpr] (object/get @tr "effects" [])))
+                                  (array/concat
+                                    (if (object/has @tr "guard") [{ oi: @oi, ti: @ti, w: "g", j: @j, x: (object/get @tr "guard") }] @nxs)
+                                    (array/map @effs (fn ef { oi: @oi, ti: @ti, w: "e", j: @j, x: @ef }))))))))
+                            (array/flatten (array/map @tks (fn tk (array/map (object/get @tk "effects" []) (fn ef { oi: @oi, ti: @ti, w: "t", j: 0, x: @ef }))))))
+                          (array/flatten (array/map (object/values @cfgm) (fn cf (if (object/has @cf "default") [{ oi: @oi, ti: @ti, w: "c", j: 0, x: (object/get @cf "default") }] @nxs))))))))))))))))) })
+      BS_ASK -> ready
+        (set @entity.asks @payload.asks)
+        (emit LINT_EXPR_ASK { requestId: (str/concat "binding-setters:" @entity.scope), items: (array/map @payload.asks (fn a { e: (object/get @a "x"), eff: (or (= (object/get @a "w") "e") (= (object/get @a "w") "t")) })) })
+      LINT_EXPR_NODES -> ready when (= @payload.requestId (str/concat "binding-setters:" @entity.scope))
+        (set @entity.toks (let ((nn : SsNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null }) (nostr : [string] []) (nofl : [SsNode] []) (nask : SsAsk { oi: 0, ti: 0, w: "", j: 0, x: null }))
+          (array/map (array/range 0 (array/len @entity.asks)) (fn xi
+            (let ((a : SsAsk (default (array/nth @entity.asks @xi) @nask)) (fl : [SsNode] (default (array/nth @payload.nodes @xi) @nofl)))
+              (let ((toks : [string] (array/flatten (array/map (array/range 0 (array/len @fl)) (fn i
+                (let ((nd : SsNode (default (array/nth @fl @i) @nn)))
+                  (let ((kind : string (object/get @nd "k")) (nm : string (object/get @nd "nm")) (pa : [string] (object/get @nd "pa")))
+                    (if (and (= @kind "bind") (= (object/get @nd "wh") "w"))
+                      (let ((p0 : string (default (array/first @pa) "")))
+                        (if (= @nm "entity")
+                          (if (= (array/len @pa) 0)
+                            ["e:*"]
+                            (array/concat
+                              (let ((fld : string (default (array/first (str/split @p0 "[")) "")))
+                                (if (and (!= @fld "") (not (array/includes ["id", "createdAt", "updatedAt"] @fld))) [(str/concat "r:" @fld)] @nostr))
+                              [(str/concat "e:" @p0)]))
+                          (if (and (= @nm "trait") (= (array/len @pa) 1) (!= @p0 ""))
+                            [(str/concat "t:" @p0)]
+                            (if (and (= @nm "callsitePayload") (= (object/get @nd "bd") -1) (> (array/len @pa) 0) (!= (str/join @pa ".") ""))
+                              [(str/concat "c:" (str/join @pa "."))]
+                              @nostr))))
+                      (if (array/includes ["call", "arr", "proj", "rui"] @kind)
+                        (let ((ks : [number] (object/get @nd "ks")))
+                          (let ((cn : number (array/len @ks)) (st : number (- @i (array/sum @ks))))
+                            (let ((roots : [number] (array/map (array/range 0 @cn) (fn j (- (+ @st (array/sum (array/take @ks (+ @j 1)))) 1)))))
+                              (let ((c0 : SsNode (default (array/nth @fl (default (array/nth @roots 0) 0)) @nn)) (c1 : SsNode (default (array/nth @fl (default (array/nth @roots 1) 0)) @nn)) (c2 : SsNode (default (array/nth @fl (default (array/nth @roots 2) 0)) @nn)) (c3 : SsNode (default (array/nth @fl (default (array/nth @roots 3) 0)) @nn)))
+                                (let ((h0 : string (if (= (object/get @c0 "k") "nil") (default (array/first (default (object/get @c0 "lv") @nostr)) "") "")) (h1 : string (if (= (object/get @c1 "k") "nil") (default (array/first (default (object/get @c1 "lv") @nostr)) "") "")))
+                                  (if (and (= @h0 "set") (>= @cn 2) (= (object/get @c1 "k") "bind") (= (object/get @c1 "nm") "entity") (= (object/get @c1 "wh") "w") (> (array/len (object/get @c1 "pa")) 0))
+                                    (let ((seg : string (default (array/first (object/get @c1 "pa")) "")))
+                                      (array/concat
+                                        (let ((sf : string (default (array/first (str/split @seg "[")) "")))
+                                          (if (!= @sf "") [(str/concat "s:" @sf)] @nostr))
+                                        (if (>= @cn 3)
+                                          [(str/concat "v:" @seg "|" (if (and (= (object/get @c2 "k") "bind") (= (object/get @c2 "nm") "payload") (= (object/get @c2 "wh") "w") (> (array/len (object/get @c2 "pa")) 0)) (str/concat "?" (str/join (object/get @c2 "pa") ".")) ""))]
+                                          @nostr)))
+                                    (if (and (= @h0 "persist") (>= @cn 4) (or (= @h1 "update") (= @h1 "delete")) (= (object/get @c3 "k") "bind") (= (object/get @c3 "nm") "entity") (= (object/get @c3 "wh") "w") (= (array/len (object/get @c3 "pa")) 0))
+                                      ["p:1"]
+                                      @nostr)))))))
+                        @nostr)))))))))
+                (let ((tk : SsXT { k: (str/concat (object/get @a "oi") "|" (object/get @a "ti") "|" (object/get @a "w") "|" (object/get @a "j")), t: @toks })) @tk)))))))
+        (emit BS_ROWS { })
+      BS_ROWS -> ready
+        (set @entity.rows (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nostr : [string] []) (busEx : [string] @entity.busExcluded) (byKey : Map string [SsXT] (default (array/groupBy @entity.toks "k") {})))
+          (array/flatten (array/map (array/range 0 (array/len @entity.orbitals)) (fn oi
+            (let ((o : SsOrbital (default (array/nth @entity.orbitals @oi) @nOrb)))
+              (let ((trts : [SsTrait] (object/get @o "traits" [])))
+                (array/map (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (default (array/nth @trts @ti) @nTrait) "stateMachine"))) (fn ti
+                  (let ((t : SsTrait (default (array/nth @trts @ti) @nTrait)))
+                    (let ((trs : [SsTr] (object/get (object/get @t "stateMachine" @nMach) "transitions" [])) (evs : [SsEvent] (object/get (object/get @t "stateMachine" @nMach) "events" [])))
+                      (let ((r : SsT { oi: @oi, n: (object/get @t "name" ""), l: (object/get @t "linkedEntity" ""), tp: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"),
+                            trs: (array/map (array/range 0 (array/len @trs)) (fn j { ev: (object/get (default (array/nth @trs @j) @nTr) "event" ""),
+                                  g: (array/flatten (array/map (default (object/get @byKey (str/concat @oi "|" @ti "|g|" @j)) []) (fn q (object/get @q "t")))),
+                                  e: (array/flatten (array/map (default (object/get @byKey (str/concat @oi "|" @ti "|e|" @j)) []) (fn q (object/get @q "t")))) })),
+                            tk: (array/flatten (array/map (default (object/get @byKey (str/concat @oi "|" @ti "|t|0")) []) (fn q (object/get @q "t")))),
+                            cfg: (array/flatten (array/map (default (object/get @byKey (str/concat @oi "|" @ti "|c|0")) []) (fn q (object/get @q "t")))),
+                            hasCfg: (object/has @t "config"),
+                            pls: (default (object/fromEntries (array/flatten (array/map @evs (fn e (if (object/has @e "payloadSchema") [[(object/get @e "key" ""), { schema: (object/get @e "payloadSchema") }]] []))))) {}),
+                            ro: (array/every @trs (fn tr (array/includes @busEx (object/get @tr "event" "")))) })) @r))))))))))))
+        (emit BS_FIND { })
+      BS_FIND -> ready
+        (set @entity.findings (let ((nof : [OrbFinding] []) (nosc : [SsSiteC] []) (nopairs : [SsPair] []) (npair : SsPair { f: "", ev: "" }) (nostr : [string] []) (nonum : [number] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nolinks : [SsLink] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nrow : SsT { oi: 0, n: "", l: "", tp: "", trs: [], tk: [], cfg: [], hasCfg: false, ro: false, pls: {} }) (ntr : SsRow { ev: "", g: [], e: [] }) (nsc : SsSiteC { emb: [], site: { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false } }) (nSets : SsSets { n: "", s: [] }) (nDef : SsDef { shared: false, persistent: false, exempt: [] }) (nPay : SsPay { schema: null }) (nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (ncl : SsLink { c: "", i: 0 }) (nf : SsField { name: "", properties: null }) (nfm : SsWalk { lv: [], miss: "", stop: false })
+              (busEx : [string] @entity.busExcluded) (eP : string (str/concat (quote "@") "entity.")) (eB : string (str/concat (quote "@") "entity")) (cpP : string (str/concat (quote "@") "callsitePayload."))
+              (entIdx : Map string SsDef (default (object/fromEntries (array/flatten (array/map @entity.orbitals (fn o (array/map (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e))) (fn e [(object/get @e "name" ""), { shared: (object/get @e "shared" false), persistent: (= (object/get @e "persistence" "persistent") "persistent"), exempt: (array/map (array/filter (object/get @e "fields" []) (fn f (or (object/get @f "intrinsic" false) (object/has @f "default")))) (fn f (object/get @f "name" ""))) }])))))) {})))
+          (array/flatten (array/map (array/range 0 (array/len @entity.orbitals)) (fn oi
+            (let ((rows : [SsT] (array/filter @entity.rows (fn r (= (object/get @r "oi") @oi)))))
+              (let ((names : [string] (array/map @rows (fn r (object/get @r "n" ""))))
+                    (setsRows : [SsSets] (array/map @rows (fn r { n: (object/get @r "n" ""), s: (array/unique (array/map (array/filter (array/concat (array/flatten (array/map (object/get @r "trs" []) (fn tr (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr))))) (object/get @r "tk" @nostr)) (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))) })))
+                    (roByName : Map string boolean (default (object/fromEntries (array/map @rows (fn r [(object/get @r "n" ""), (object/get @r "ro" false)]))) {})))
+                (let ((setsByName : Map string [SsSets] (default (array/groupBy @setsRows "n") {}))
+                      (sc : [SsSiteC] (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
+                        (let ((rw : SsT (default (array/nth @rows @k) @nrow)))
+                          (array/flatten (array/map (object/get @rw "trs" []) (fn tr
+                            (let ((toks : [string] (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr))))
+                              (let ((emb : [string] (array/unique (array/map (array/filter @toks (fn q (str/startsWith @q "t:"))) (fn q (str/slice @q 2))))) (pay : SsPay (default (object/get (object/get @rw "pls" {}) (object/get @tr "ev" "")) @nPay)))
+                                (if (= (array/len @emb) 0)
+                                  @nosc
+                                  [{ emb: @emb,
+                                     site: { pn: (object/get @rw "n" ""), pl: (object/get @rw "l" ""), ev: (object/get @tr "ev" ""),
+                                             sf: (array/unique (array/map (array/filter @toks (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))),
+                                             ss: (default (object/fromEntries (array/map (array/filter (object/get @tr "e" @nostr) (fn q (str/startsWith @q "v:"))) (fn q [(default (array/first (str/split (str/slice @q 2) "|")) ""), (str/slice (str/slice @q 2) (+ 1 (str/len (default (array/first (str/split (str/slice @q 2) "|")) ""))))]))) {}),
+                                             pay: (object/get @pay "schema" null),
+                                             hasPay: (object/has (object/get @rw "pls" {}) (object/get @tr "ev" "")) } }]))))))))))))
+                  (let ((sites : [SsSite] (array/map @sc (fn c (object/get @c "site" @nosite))))
+                        (parentsOf : Map string [SsLink] (default (array/groupBy (array/flatten (array/map (array/range 0 (array/len @sc)) (fn i (array/map (object/get (default (array/nth @sc @i) @nsc) "emb" @nostr) (fn c { c: @c, i: @i }))))) "c") {})))
+                    (array/concat
+                      (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
+        (let ((rw : SsT (default (array/nth @rows @k) @nrow)))
+          (if (= (object/get @rw "l" "") "")
             @nof
-            (let ((composing (array/unique (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) { stack: [@child], seen: @nostr, res: @nonum }
-                      (fn (acc st)
-                        (let ((stack (object/get @acc "stack" @nostr)) (seen (object/get @acc "seen" @nostr)) (res (object/get @acc "res" @nonum)))
-                          (if (= (array/len @stack) 0)
-                            @acc
-                            (let ((nm (array/last @stack)) (rest (array/dropLast @stack 1)))
-                              (if (array/includes @seen @nm)
-                                { stack: @rest, seen: @seen, res: @res }
-                                (let ((idxs (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0)))))
-                                  { stack: (array/concat @rest (array/filter (array/map @idxs (fn i (object/get (array/nth @sites @i) "pn"))) (fn pn (object/get @roByName @pn false)))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) }))))))) "res"))))
-              (array/flatten
-                (array/map @composing
-                  (fn i
-                    (let ((site (array/nth @sites @i)))
-                      (if (or (array/includes @busEx (object/get @site "ev" "")) (!= (object/get @site "pl" "") @l))
-                        @nof
-                        (let ((ssm : Map string string (object/get @site "ss" {})))
-                          (let ((stale : [string] (array/filter (array/sort (object/keys @ssm)) (fn f (or @whole (array/includes @flds @f))))))
-                            (if (= (array/len @stale) 0)
-                              @nof
-                              (let ((reads (str/join (array/map @stale (fn f (str/concat @eP @f))) ", ")) (host (object/get @site "pn" "")) (ev (object/get @site "ev" "")) (allCapt (array/every @stale (fn f (!= (object/get @ssm @f "") "")))))
-                                [{ code: @config.codes.bindingEmbedReadsArmWrite.code, path: (str/concat "orbitals[" @oi "] (embeds " @child ": " @reads ")"), message: (str/concat "`" @host "." @ev "` writes " @reads " and renders " @child ", which reads it when it mounts: it shows the value from before `" @ev "`"), suggestion: (if @allCapt (str/concat "Read what `" @ev "` used, as a call-site capture: " (str/join (array/map @stale (fn f (str/concat @eP @f " → " (object/get @ssm @f "")))) ", ")) (str/concat "Pass what `" @ev "` writes into `" @child "` through a call-site capture instead of reading it as `" @eB "`")), severity: "error" }])))))))))))))))))))
-    (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k (let ((rw (array/nth @rows @k)))
-  (let ((paths : [string] (array/map (array/filter (object/get @rw "cfg" @nostr) (fn q (str/startsWith @q "c:"))) (fn q (str/slice @q 2)))) (child (object/get @rw "n" "")))
-    (if (= (array/len @paths) 0)
-      @nof
-      (let ((anc : [number] (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) { stack: [(object/get @rw "n" "")], seen: @nostr, res: @nonum }
-  (fn (acc st)
-    (let ((stack (object/get @acc "stack" @nostr)) (seen (object/get @acc "seen" @nostr)) (res (object/get @acc "res" @nonum)))
-      (if (= (array/len @stack) 0)
-        @acc
-        (let ((nm (array/last @stack)) (rest (array/dropLast @stack 1)))
-          (if (array/includes @seen @nm)
-            { stack: @rest, seen: @seen, res: @res }
-            (let ((idxs (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0)))))
-              { stack: (array/concat @rest (array/map @idxs (fn i (object/get (array/nth @sites @i) "pn")))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) }))))))) "res")))
-        (if (= (array/len @anc) 0)
-          @nof
-          (array/flatten
-            (array/map @paths
-              (fn fp
-                (let ((segs : [string] (array/filter (array/map (str/split @fp ".") (fn q (array/first (str/split @q "[")))) (fn q (!= @q "")))))
-                  (if (= (array/len @segs) 0)
+            (let ((l : string (object/get @rw "l" "")) (hasDef : boolean (object/has @entIdx (object/get @rw "l" ""))) (def : SsDef (default (object/get @entIdx (object/get @rw "l" "")) @nDef)) (tp : string (object/get @rw "tp" "")) (tname : string (object/get @rw "n" "")))
+              (let ((sets : [string] (object/get (default (array/nth @setsRows @k) @nSets) "s" @nostr)) (rtrs : [SsRow] (object/get @rw "trs" [])))
+                (let ((exempt : [string] (if @hasDef (object/get @def "exempt" @nostr) @nostr))
+                      (groupSets : [string] (if (and @hasDef (object/get @def "shared" false))
+                        (array/unique (array/flatten (array/map (array/range 0 (array/len @rows)) (fn j (if (= (object/get (default (array/nth @rows @j) @nrow) "l") @l) (object/get (default (array/nth @setsRows @j) @nSets) "s" @nostr) @nostr)))))
+                        @nostr))
+                      (credit : [string] (array/flatten (array/map (let ((anc0 : SsAnc { stack: [(object/get @rw "n" "")], seen: @nostr, res: @nonum })) (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) @anc0 (fn (acc st) (let ((stack : [string] (object/get @acc "stack" @nostr)) (seen : [string] (object/get @acc "seen" @nostr)) (res : [number] (object/get @acc "res" @nonum))) (if (= (array/len @stack) 0) @acc (let ((nm : string (default (array/last @stack) "")) (rest : [string] (array/dropLast @stack 1))) (if (array/includes @seen @nm) (let ((a1 : SsAnc { stack: @rest, seen: @seen, res: @res })) @a1) (let ((idxs : [number] (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0))))) (let ((a2 : SsAnc { stack: (array/concat @rest (array/map @idxs (fn i (object/get (default (array/nth @sites @i) @nosite) "pn" "")))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) })) @a2)))))))) "res" @nonum)) (fn i
+                        (let ((site : SsSite (default (array/nth @sites @i) @nosite)) )
+                          (if (= (object/get @site "pl" "") @l)
+                            (array/concat (object/get @site "sf" @nostr) (let ((sg : [SsSets] (object/get @setsByName (object/get @site "pn" "") @nosets))) (if (= (array/len @sg) 0) @nostr (object/get (default (array/last @sg) @nSets) "s" @nostr))))
+                            @nostr)))))))
+                  (let ((pairs : [SsPair] (array/concat
+                           (array/flatten (array/map @rtrs (fn tr (array/map (array/unique (array/map (array/filter (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr)) (fn q (str/startsWith @q "r:"))) (fn q (str/slice @q 2)))) (fn f { f: @f, ev: (object/get @tr "ev" "") })))))
+                           (array/map (array/unique (array/map (array/filter (object/get @rw "tk" @nostr) (fn q (str/startsWith @q "r:"))) (fn q (str/slice @q 2)))) (fn f { f: @f, ev: "TICK" })))))
+                    (let ((byF : Map string [SsPair] (default (array/groupBy @pairs "f") {})))
+                      (let ((pev : SsRow? (array/find @rtrs (fn tr (array/includes (object/get @tr "e" @nostr) "p:1")))))
+                        (array/concat
+                          (if (and (not (array/includes @sets "id")) (!= @pev null) (not (array/includes @groupSets "id")) (not (array/includes @credit "id")))
+                            [{ code: @config.codes.bindingPersistRowIdNeverSet.code, path: @tp, message: (str/concat "trait \"" @tname "\" runs (persist update|delete " @l " " @eB ") on event \"" (object/get (default @pev @ntr) "ev" "") "\" but no transition runs (set " @eP "id <value>); the row key resolves empty, and the runtime refuses the write and reports success without ever touching a row"), suggestion: (str/concat "Bind the row key before the write — (set " @eP "id ?row.id) on the transition that selects the " @l " row, or ?data.id on the fetch success that loaded it"), severity: "error" }]
+                            @nof)
+                          (array/flatten
+                            (array/map (array/unique (array/map @pairs (fn q (object/get @q "f" ""))))
+                              (fn f
+                                (if (or (array/includes @exempt @f) (array/includes @sets @f) (array/includes @groupSets @f) (array/includes @credit @f))
+                                  @nof
+                                  (let ((ev : string (object/get (default (array/first (default (object/get @byF @f) @nopairs)) @npair) "ev" "")))
+                                    [{ code: @config.codes.bindingEntityFieldNeverSet.code, path: @tp, message: (str/concat "trait \"" @tname "\" reads " @eP @f " (first seen on event \"" @ev "\") but no transition runs (set " @eP @f " <value>); per the explicit-binding rule, every " @eP "X must be set explicitly or it stays undefined"), suggestion: (str/concat "Add (set " @eP @f " <default-or-payload>) in the trait's INIT transition or in a transition that runs before the read on entity \"" @l "\""), severity: "error" }])))))))))))))))))
+                      (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
+        (let ((rw : SsT (default (array/nth @rows @k) @nrow)))
+          (let ((l : string (object/get @rw "l" "")) (hasDef : boolean (object/has @entIdx (object/get @rw "l" ""))) (def : SsDef (default (object/get @entIdx (object/get @rw "l" "")) @nDef)) (child : string (object/get @rw "n" "")))
+            (if (or (not (object/get @rw "hasCfg" false)) (= @l "") (not @hasDef) (not (object/get @def "persistent" false)) (object/get @def "shared" false) (not (object/get @rw "ro" false)))
+              @nof
+              (let ((cfgToks : [string] (object/get @rw "cfg" @nostr)))
+                (let ((whole : boolean (array/includes @cfgToks "e:*")) (flds : [string] (array/unique (array/map (array/filter @cfgToks (fn q (and (str/startsWith @q "e:") (!= @q "e:*")))) (fn q (str/slice @q 2))))))
+                  (if (and (= (array/len @flds) 0) (not @whole))
                     @nof
-                    (let ((satisfied (array/some @anc (fn i (let ((site (array/nth @sites @i))) (and (object/get @site "hasPay" false) (= (object/get (array/reduce @segs { lv: (object/get @site "pay" null), miss: "", stop: false } (fn (acc sg)
-                       (if (or (object/get @acc "stop" false) (!= (object/get @acc "miss" "") ""))
-                         @acc
-                         (let ((fm (array/find (object/get @acc "lv" @nofields) (fn q (= (object/get @q "name") @sg)))))
-                           (if (= @fm null)
-                             { lv: (object/get @acc "lv" @nofields), miss: @sg, stop: false }
-                             (let ((props (object/get @fm "properties" null)))
-                               (if (= @props null) { lv: (object/get @acc "lv" @nofields), miss: "", stop: true } { lv: @props, miss: "", stop: false }))))))) "miss") "")))))))
-                      (if @satisfied
-                        @nof
-                        (let ((withPay (array/find @anc (fn i (object/get (array/nth @sites @i) "hasPay" false)))))
-                          (let ((target (array/nth @sites (if (= @withPay null) (array/first @anc) @withPay))))
-                            (let ((ev (object/get @target "ev" "")) (f0 (array/first @segs)) (p (str/concat "orbitals[" @oi "] (embeds " @child ": " @cpP @fp ")")) (restPath (str/join (array/slice @segs 1 (array/len @segs)) ".")))
-                              (let ((schema : [SsField]? (object/get @target "pay" null)))
-                                (let ((hybrid (and (>= (array/len @segs) 2) (= @f0 "payload") (or (= @schema null) (= (array/len (array/filter @schema (fn q (= (object/get @q "name") "payload")))) 0)))))
-                                  (if (object/get @target "hasPay" false)
-                                    (let ((res (array/reduce @segs { lv: @schema, miss: "", stop: false } (fn (acc sg)
-                       (if (or (object/get @acc "stop" false) (!= (object/get @acc "miss" "") ""))
-                         @acc
-                         (let ((fm (array/find (object/get @acc "lv" @nofields) (fn q (= (object/get @q "name") @sg)))))
-                           (if (= @fm null)
-                             { lv: (object/get @acc "lv" @nofields), miss: @sg, stop: false }
-                             (let ((props (object/get @fm "properties" null)))
-                               (if (= @props null) { lv: (object/get @acc "lv" @nofields), miss: "", stop: true } { lv: @props, miss: "", stop: false })))))))))
-                                      [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Payload field '" (object/get @res "miss" "") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss" "") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }])
-                                    [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add a payload schema to the '" @ev "' event definition, or bind a field the event declares")), severity: "error" }]))))))))))))))))))))))))))))))))))
+                    (let ((composing : [number] (array/unique (let ((anc0 : SsAnc { stack: [@child], seen: @nostr, res: @nonum })) (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) @anc0 (fn (acc st) (let ((stack : [string] (object/get @acc "stack" @nostr)) (seen : [string] (object/get @acc "seen" @nostr)) (res : [number] (object/get @acc "res" @nonum))) (if (= (array/len @stack) 0) @acc (let ((nm : string (default (array/last @stack) "")) (rest : [string] (array/dropLast @stack 1))) (if (array/includes @seen @nm) (let ((a1 : SsAnc { stack: @rest, seen: @seen, res: @res })) @a1) (let ((idxs : [number] (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0))))) (let ((a2 : SsAnc { stack: (array/concat @rest (array/filter (array/map @idxs (fn i (object/get (default (array/nth @sites @i) @nosite) "pn" ""))) (fn pn (object/get @roByName @pn false)))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) })) @a2)))))))) "res" @nonum)))))
+                      (array/flatten
+                        (array/map @composing
+                          (fn i
+                            (let ((site : SsSite (default (array/nth @sites @i) @nosite)))
+                              (if (or (array/includes @busEx (object/get @site "ev" "")) (!= (object/get @site "pl" "") @l))
+                                @nof
+                                (let ((ssm : Map string string (object/get @site "ss" {})))
+                                  (let ((stale : [string] (array/filter (array/sort (object/keys @ssm)) (fn f (or @whole (array/includes @flds @f))))))
+                                    (if (= (array/len @stale) 0)
+                                      @nof
+                                      (let ((reads : string (str/join (array/map @stale (fn f (str/concat @eP @f))) ", ")) (host : string (object/get @site "pn" "")) (ev : string (object/get @site "ev" "")) (allCapt : boolean (array/every @stale (fn f (!= (object/get @ssm @f "") "")))))
+                                        [{ code: @config.codes.bindingEmbedReadsArmWrite.code, path: (str/concat "orbitals[" @oi "] (embeds " @child ": " @reads ")"), message: (str/concat "`" @host "." @ev "` writes " @reads " and renders " @child ", which reads it when it mounts: it shows the value from before `" @ev "`"), suggestion: (if @allCapt (str/concat "Read what `" @ev "` used, as a call-site capture: " (str/join (array/map @stale (fn f (str/concat @eP @f " → " (object/get @ssm @f "")))) ", ")) (str/concat "Pass what `" @ev "` writes into `" @child "` through a call-site capture instead of reading it as `" @eB "`")), severity: "error" }])))))))))))))))))))
+                      (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
+        (let ((rw : SsT (default (array/nth @rows @k) @nrow)))
+          (let ((paths : [string] (array/map (array/filter (object/get @rw "cfg" @nostr) (fn q (str/startsWith @q "c:"))) (fn q (str/slice @q 2)))) (child : string (object/get @rw "n" "")))
+            (if (= (array/len @paths) 0)
+              @nof
+              (let ((anc : [number] (let ((anc0 : SsAnc { stack: [(object/get @rw "n" "")], seen: @nostr, res: @nonum })) (object/get (array/reduce (array/range 0 (+ (array/len @names) 2)) @anc0 (fn (acc st) (let ((stack : [string] (object/get @acc "stack" @nostr)) (seen : [string] (object/get @acc "seen" @nostr)) (res : [number] (object/get @acc "res" @nonum))) (if (= (array/len @stack) 0) @acc (let ((nm : string (default (array/last @stack) "")) (rest : [string] (array/dropLast @stack 1))) (if (array/includes @seen @nm) (let ((a1 : SsAnc { stack: @rest, seen: @seen, res: @res })) @a1) (let ((idxs : [number] (array/map (object/get @parentsOf @nm @nolinks) (fn lk (object/get @lk "i" 0))))) (let ((a2 : SsAnc { stack: (array/concat @rest (array/map @idxs (fn i (object/get (default (array/nth @sites @i) @nosite) "pn" "")))), seen: (array/append @seen @nm), res: (array/concat @res @idxs) })) @a2)))))))) "res" @nonum))))
+                (if (= (array/len @anc) 0)
+                  @nof
+                  (array/flatten
+                    (array/map @paths
+                      (fn fp
+                        (let ((segs : [string] (array/filter (array/map (str/split @fp ".") (fn q (default (array/first (str/split @q "[")) ""))) (fn q (!= @q "")))))
+                          (if (= (array/len @segs) 0)
+                            @nof
+                            (let ((satisfied : boolean (array/some @anc (fn i (let ((site : SsSite (default (array/nth @sites @i) @nosite)) (w0 : SsWalk { lv: (default (object/get (default (array/nth @sites @i) @nosite) "pay" null) @nofields), miss: "", stop: false })) (and (object/get @site "hasPay" false) (= (object/get (array/reduce @segs @w0 (fn (acc sg) (if (or (object/get @acc "stop" false) (!= (object/get @acc "miss" "") "")) @acc (let ((fm : SsField? (array/find (object/get @acc "lv" @nofields) (fn q (= (object/get @q "name") @sg))))) (if (= @fm null) (let ((w1 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: @sg, stop: false })) @w1) (let ((props : [SsField]? (object/get (default @fm @nf) "properties" null))) (if (= @props null) (let ((w2 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: "", stop: true })) @w2) (let ((w3 : SsWalk { lv: (default @props @nofields), miss: "", stop: false })) @w3)))))))) "miss" "") "")))))))
+                              (if @satisfied
+                                @nof
+                                (let ((withPay : number? (array/find @anc (fn i (object/get (default (array/nth @sites @i) @nosite) "hasPay" false)))))
+                                  (let ((target : SsSite (default (array/nth @sites (default @withPay (default (array/first @anc) 0))) @nosite)))
+                                    (let ((ev : string (object/get @target "ev" "")) (f0 : string (default (array/first @segs) "")) (p : string (str/concat "orbitals[" @oi "] (embeds " @child ": " @cpP @fp ")")) (restPath : string (str/join (array/slice @segs 1 (array/len @segs)) ".")))
+                                      (let ((schema : [SsField]? (object/get @target "pay" null)))
+                                        (let ((hybrid : boolean (and (>= (array/len @segs) 2) (= @f0 "payload") (or (= @schema null) (= (array/len (array/filter (default @schema @nofields) (fn q (= (object/get @q "name") "payload")))) 0)))))
+                                          (if (object/get @target "hasPay" false)
+                                            (let ((w0 : SsWalk { lv: (default @schema @nofields), miss: "", stop: false }))
+                                              (let ((res : SsWalk (array/reduce @segs @w0 (fn (acc sg) (if (or (object/get @acc "stop" false) (!= (object/get @acc "miss" "") "")) @acc (let ((fm : SsField? (array/find (object/get @acc "lv" @nofields) (fn q (= (object/get @q "name") @sg))))) (if (= @fm null) (let ((w1 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: @sg, stop: false })) @w1) (let ((props : [SsField]? (object/get (default @fm @nf) "properties" null))) (if (= @props null) (let ((w2 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: "", stop: true })) @w2) (let ((w3 : SsWalk { lv: (default @props @nofields), miss: "", stop: false })) @w3))))))))))
+                                                [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Payload field '" (object/get @res "miss" "") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss" "") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
+                                            [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add a payload schema to the '" @ev "' event definition, or bind a field the event declares")), severity: "error" }])))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-setters", scope: @entity.scope, findings: @entity.findings })
@@ -272,16 +266,30 @@ orbital OrbLintBindingSettersOrbital {
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
         @tier "internal"
-
+      BS_ASK { asks : [SsAsk]! }
+        @description "Internal: the expressions of every guard, effect, tick and config default, to be flattened."
+        @tier "internal"
+      BS_ROWS { }
+        @description "Internal: the tokens of each expression are held; gather them per trait."
+        @tier "internal"
+      BS_FIND { }
+        @description "Internal: the per-trait rows are held; decide the findings."
+        @tier "internal"
+      LINT_EXPR_ASK -> external { requestId : string!  items : [SsExprItem]! }
+        @description "Ask the expression nodes of std-orb-lint-input to flatten these expressions."
+        @tier "internal"
     }
 
     listens {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SsProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+      SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the lifecycle events the bus never delivers (the emit operator's busExcluded list)."
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+      LINT_EXPR_NODES { requestId : string!  nodes : [[SsNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked expression."
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
     }
     config {
       codes : LintBindingSettersCodes = { bindingPersistRowIdNeverSet: { code: "ORB_BINDING_PERSIST_ROW_ID_NEVER_SET", category: "binding", description: "A persist update or delete runs on an event but no transition sets the row id, so the write never touches a row" }, bindingEntityFieldNeverSet: { code: "ORB_BINDING_ENTITY_FIELD_NEVER_SET", category: "binding", description: "A trait reads an entity binding field but no transition ever sets it, so it stays undefined" }, bindingEmbedReadsArmWrite: { code: "ORB_BINDING_EMBED_READS_ARM_WRITE", category: "binding", description: "A transition writes a value and renders a child that reads it on mount, so the child shows the stale value" }, bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" } }
@@ -348,6 +356,22 @@ orbital OrbLintBindingSettersOrbital {
   }
   trait Packs = Input.traits.Packs {
   }
+  trait OrbLintExprNodes = Input.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string SsWalkSlot!  projections : Map string SsWalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [SsExprItem]! }
+        @description "A rule asks to flatten expressions."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbLintBindingSetters.LINT_EXPR_ASK -> LINT_EXPR_ASK
+    }
+  }
   trait OrbLintInput = Input.traits.OrbLintInput {
     listens {
       OrbLintBindingSettersCli.LINT_REQUEST -> LINT_REQUEST
@@ -363,5 +387,5 @@ orbital OrbLintBindingSettersOrbital {
     }
   }
 
-  page boot as OrbLintBindingSettersOrbitalStart -> OrbLintBindingSetters, OrbLintBindingSettersCli, OrbLintInput, Packs, Versions
+  page boot as OrbLintBindingSettersOrbitalStart -> OrbLintBindingSetters, OrbLintBindingSettersCli, OrbLintInput, OrbLintExprNodes, Packs, Versions
 }

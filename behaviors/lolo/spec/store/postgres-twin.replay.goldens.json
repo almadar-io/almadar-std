@@ -451,7 +451,7 @@
    "note": "R0 .. ReadyForQuery, then the parked ROW_READ is sent"
   },
   {
-   "id": "good-cleartext-login-answers-the-password",
+   "id": "good-cleartext-login-sends-the-head-and-the-host-fills-the-password",
    "steps": [
     {
      "event": "ROW_READ",
@@ -521,7 +521,7 @@
          "stage": "password",
          "sql": "",
          "params": [],
-         "frame": "cAAAAAtzZWNyZXQA"
+         "frame": "cAAAAAs="
         }
        }
       ]
@@ -553,7 +553,97 @@
       ]
      }
     }
-   ]
+   ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
+   "note": "the cleartext message is the head (kind byte, length from the credential's byte length) then the credential then NUL; the program and the PG_WIRE_SENT diagnostic show the head alone"
+  },
+  {
+   "id": "bad-cleartext-login-without-the-password-credential-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     }
+    },
+    {
+     "event": "PG_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "negotiating",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "ssl-request",
+         "sql": "",
+         "params": [],
+         "frame": "AAAACATSFi8="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "Tg==",
+      "eof": false
+     },
+     "expect": {
+      "state": "startup",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "startup",
+         "sql": "",
+         "params": [],
+         "frame": "AAAAVwADAAB1c2VyAGFwcABkYXRhYmFzZQBhcHAAY2xpZW50X2VuY29kaW5nAFVURjgAb3B0aW9ucwAtYyBzdGF0ZW1lbnRfdGltZW91dD0xMDAwMAAA"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "UgAAAAgAAAAD",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server asks for a password and the password credential is not held"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ],
+      "effects": [
+       {
+        "type": "os/close"
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the cleartext message needs the credential's bytes; none is held, so the login ends before any password byte is framed"
   },
   {
    "id": "good-md5-login-answers-md5-of-md5-password-user-and-salt",
@@ -643,7 +733,91 @@
      }
     }
    ],
-   "note": "md5 + hex(md5(hex(md5(password+user)) + salt)), the recorded fixtures/postgres/md5-login salt"
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
+   "note": "md5 + hex(md5(hex(md5(password+user)) + salt)), the recorded fixtures/postgres/md5-login salt; the kernel derives it from the credential (hash/md5-credential)"
+  },
+  {
+   "id": "bad-md5-login-without-the-password-credential-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     }
+    },
+    {
+     "event": "PG_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "negotiating",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "ssl-request",
+         "sql": "",
+         "params": [],
+         "frame": "AAAACATSFi8="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "Tg==",
+      "eof": false
+     },
+     "expect": {
+      "state": "startup",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "startup",
+         "sql": "",
+         "params": [],
+         "frame": "AAAAVwADAAB1c2VyAGFwcABkYXRhYmFzZQBhcHAAY2xpZW50X2VuY29kaW5nAFVURjgAb3B0aW9ucwAtYyBzdGF0ZW1lbnRfdGltZW91dD0xMDAwMAAA"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "UgAAAAwAAAAFr8AzHQ==",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server asks for a password and the password credential is not held"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "the md5 proof derives from the credential; none is held"
   },
   {
    "id": "good-scram-sha-256-login-sends-first-then-proof-and-verifies-the-server",
@@ -788,7 +962,10 @@
      }
     }
    ],
-   "note": "client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; proof computed with pbkdf2/hmac (no hmac-over-bytes operator, so the atom builds HMAC from hash/sha256 bytes)"
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
+   "note": "client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; the kernel derives the proof and the server signature from the credential (hash/pbkdf2 and hmac/sha256-bytes slots)"
   },
   {
    "id": "bad-scram-server-first-that-is-not-text-is-store-failed",
@@ -904,6 +1081,9 @@
      }
     }
    ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
    "note": "the server-first message must decode as text before r, s and i are read; undecodable bytes end the login with the proof error, never an empty string"
   },
   {
@@ -1042,10 +1222,13 @@
      }
     }
    ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
    "note": "Scram::verify text"
   },
   {
-   "id": "bad-scram-wrong-password-fails-with-the-server-message",
+   "id": "bad-scram-server-first-without-the-password-credential-is-store-failed",
    "steps": [
     {
      "event": "ROW_READ",
@@ -1143,15 +1326,111 @@
       "eof": false
      },
      "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server asks for a password and the password credential is not held"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "SCRAM-SHA-256 starts without the password (client-first names the user), and the proof after server-first needs it; none is held"
+  },
+  {
+   "id": "bad-scram-wrong-password-fails-with-the-server-message",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     }
+    },
+    {
+     "event": "PG_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "negotiating",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "ssl-request",
+         "sql": "",
+         "params": [],
+         "frame": "AAAACATSFi8="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "Tg==",
+      "eof": false
+     },
+     "expect": {
       "state": "startup",
       "emits": [
        {
         "event": "PG_WIRE_SENT",
         "payload": {
-         "stage": "scram-final",
+         "stage": "startup",
          "sql": "",
          "params": [],
-         "frame": "cAAAAGxjPWJpd3Mscj1BUUlEQkFVR0J3Z0pDZ3NNRFE0UEVCRVNKTlh1YmNaM2I4cURRYzhZT1poRExDc1gscD1KZTluempQUlBpYXBNUC9wcUExdWZrRDdXL005aFVvTkJWUExTc2g3a3pzPQ=="
+         "frame": "AAAAVwADAAB1c2VyAGFwcABkYXRhYmFzZQBhcHAAY2xpZW50X2VuY29kaW5nAFVURjgAb3B0aW9ucwAtYyBzdGF0ZW1lbnRfdGltZW91dD0xMDAwMAAA"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "UgAAABcAAAAKU0NSQU0tU0hBLTI1NgAA",
+      "eof": false
+     },
+     "expect": {
+      "state": "drawing",
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_NONCE_DRAWN",
+     "payload": {
+      "value": "AQIDBAUGBwgJCgsMDQ4PEBES"
+     },
+     "from": "drawing",
+     "expect": {
+      "state": "startup",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "scram-first",
+         "sql": "",
+         "params": [],
+         "frame": "cAAAADlTQ1JBTS1TSEEtMjU2AAAAACNuLCxuPWFwcCxyPUFRSURCQVVHQndnSkNnc01EUTRQRUJFUw=="
         }
        }
       ]
@@ -1357,7 +1636,7 @@
      }
     }
    ],
-   "note": "expect STORE_FAILED `the server asks for a password and DATABASE_URL has none` after R3/R5/R10 with a url without a password",
+   "note": "covered by the three bad-*-without-the-password-credential cases",
    "skip": "needs the server's answer frames (R3/R5/R10) scripted, with config.url without a password"
   },
   {
@@ -8454,6 +8733,9 @@
      }
     }
    ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
    "note": "every server byte here was produced by a real Postgres 16 (SCRAM-SHA-256 server-first with its own salt and nonce, the login tail with its parameter statuses, the statement reply); the atom's startup (with the options pair), SCRAM proof and statement frames were sent to that server and accepted"
   },
   {
@@ -8559,6 +8841,9 @@
      }
     }
    ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
    "note": "the statement reply a real Postgres 16 sent for the seeded ticket"
   },
   {
@@ -9045,6 +9330,9 @@
      }
     }
    ],
+   "credentials": {
+    "POSTGRES_PASSWORD": "secret"
+   },
    "note": "ROWS_SQL on one held session against a real Postgres 16: a parameterised read (jsonb stays text, timestamptz is UTC ISO), the scalar types (null, bool, float, int8 past 2^53 as text, jsonb as text, int[], bytea as base64, numeric as text), an empty result with its column, a text[] bind sent as an array literal, and a server error with its SQLSTATE"
   }
  ]

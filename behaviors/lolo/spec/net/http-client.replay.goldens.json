@@ -3525,6 +3525,821 @@
    "entity": {
     "idle": 5
    }
+  },
+  {
+   "id": "a-credential-header-is-written-by-the-host-as-a-send-segment-after-its-prefix",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Accept",
+        "value": "text/plain"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQphY2NlcHQ6IHRleHQvcGxhaW4NCg0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "EMBEDDING_API_KEY",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer "
+   }
+  },
+  {
+   "id": "control-without-a-credential-header-the-request-is-one-plain-send",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Accept",
+        "value": "text/plain"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "",
+         "request": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYWNjZXB0OiB0ZXh0L3BsYWluDQoNCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": "@entity.request"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-x-api-key-header-with-no-prefix-writes-the-credential-alone",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KeC1hcGkta2V5OiA=",
+         "request": "DQoNCg=="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "ANTHROPIC_API_KEY",
+    "credentialHeader": "x-api-key"
+   }
+  },
+  {
+   "id": "an-optional-credential-that-is-not-held-sends-no-header",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "",
+         "request": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KDQo="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "EMBEDDING_API_KEY",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer ",
+    "credentialOptional": true
+   }
+  },
+  {
+   "id": "control-a-required-credential-that-is-not-held-still-builds-the-segments-so-the-host-fails-the-send-as-denied",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQoNCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_IO_FAILED",
+     "payload": {
+      "error": "credential not held",
+      "kind": "denied",
+      "key": "send"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "denied",
+         "error": "credential not held"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "EMBEDDING_API_KEY",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer "
+   }
+  },
+  {
+   "id": "a-payload-header-naming-a-credential-is-still-refused-when-a-credential-header-is-configured",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Authorization",
+        "value": "Bearer x"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "EMBEDDING_API_KEY",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer "
+   }
+  },
+  {
+   "id": "a-cancel-while-reading-closes-the-socket-and-answers-nothing",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close",
+        "arg0": "@entity.sock"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpjb250ZW50LWxlbmd0aDogMg0KDQpoaQ==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT",
+       "HC_ADVANCE"
+      ],
+      "effects": []
+     }
+    },
+    {
+     "event": "HC_IO_FAILED",
+     "payload": {
+      "error": "closed",
+      "kind": "closed",
+      "key": "read"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-while-sending-closes-the-socket-and-answers-nothing",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close",
+        "arg0": "@entity.sock"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-before-the-connect-answers-closes-the-late-socket",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 7,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close",
+        "arg0": "@payload.sock"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancelled-stream-answers-no-further-frames",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "sse"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpjb250ZW50LXR5cGU6IHRleHQvZXZlbnQtc3RyZWFtDQoNCmRhdGE6IGEKCg==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_STREAM_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "a"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/close",
+        "arg0": "@entity.sock"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "ZGF0YTogYgoK",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT",
+       "HC_ADVANCE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-cancel-for-another-key-leaves-the-call-in-flight",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "other"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpjb250ZW50LWxlbmd0aDogMg0KDQpoaQ==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "aGk="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-cancel-with-no-call-in-flight-is-a-no-op",
+   "steps": [
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": [],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED",
+       "HTTP_STREAM_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-call-sent-after-a-cancel-runs-whole",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "state": "ready"
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k2",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 6,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpjb250ZW50LWxlbmd0aDogMg0KDQpvaw==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k2",
+         "status": 200,
+         "headers": {
+          "content-length": "2"
+         },
+         "body": "b2s="
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

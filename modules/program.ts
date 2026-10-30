@@ -33,6 +33,12 @@ const ValidationReport = shape({
 const PROVE_PROPOSITION = shape({ kind: STRING, entity: STRING, trait: STRING, state: STRING, from: STRING, event: STRING, to: STRING, expr: SEXPR }, ['entity', 'trait', 'state', 'from', 'event', 'to']);
 const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: openShape({}), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
 
+const OS_GRANT_FINDING = shape({
+  code: union(lit('missing'), lit('unused'), lit('entry-invalid'), lit('target-not-static')),
+  orbital: STRING, call: STRING, entry: STRING, site: STRING, grant: STRING, app: BOOLEAN, argument: NUMBER,
+  via: union(lit('config'), lit('config-unresolvable'), lit('computed-path')),
+}, ['orbital', 'call', 'entry', 'grant', 'app', 'argument', 'via']);
+
 const GENERATE_OPTIONS = openShape({
   path: STRING,
   output: STRING,
@@ -128,6 +134,21 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       EMIT_OPTIONS,
     ],
     example: '["program/prove", "@entity.program", { "emit": { "success": "PROVED", "failure": "PROVE_FAILED" } }]',
+  },
+  'program/os-grants': {
+    module: 'program', category: 'std-program',
+    minArity: 1, maxArity: 3,
+    description: 'Check the `os/` grants of a program statically with the kernel\'s own requirement derivation and coverage, and answer typed findings: `{ findings }`, each `{ code, orbital?, call?, entry?, site, grant?, app?, argument?, via? }`. `code` is `missing` (the call at `site` needs `entry` and the grants of `orbital` do not cover it; `grant` is the entry that would, `app` says the app-level bracket takes it too), `unused` (the granted `entry` is used by no call of `orbital`, or of the program when `orbital` is absent), `entry-invalid` (`entry` is the problem with a declared entry that can match nothing) or `target-not-static` (argument number `argument` of `call` is computed, so its grant cannot be checked). With `{ final: true }` the finished program is checked, where a config-fed target is a literal: `via` is `config` for a missing grant of a value the knob can hold, `config-unresolvable` for a read of config the pass cannot resolve, `computed-path` for a computed path no grant can cover. The program is checked as given, or with `{ path }` (absolute) the file is resolved first and the program argument is not read.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: shape({ findings: list(OS_GRANT_FINDING) }),
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted, resolved program (null when `path` names the file)' },
+      { name: 'options', type: shape({ path: STRING, final: BOOLEAN }, ['path', 'final']), description: 'Optional `{ path?, final? }`: the absolute path of the file to resolve and check; `final` checks the finished program', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/os-grants", "@entity.program", { "emit": { "success": "GRANTS_CHECKED", "failure": "GRANTS_FAILED" } }]',
   },
   'program/step': {
     module: 'program', category: 'std-program',

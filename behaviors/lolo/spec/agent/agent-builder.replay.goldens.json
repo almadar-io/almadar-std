@@ -1,0 +1,94 @@
+{
+ "atom": "agent/organisms/std-agent-builder.lolo",
+ "trait": "BuilderPipeline",
+ "cases": [
+  {
+   "id": "a-catalog-tier-over-rows-without-vectors-fails-the-build-naming-the-row",
+   "steps": [
+    {
+     "from": "searching",
+     "entity": {
+      "id": "b",
+      "queryVector": [
+       1,
+       0
+      ],
+      "step": 0
+     },
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "description": "d",
+        "traits": [],
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {}
+       }
+      ]
+     },
+     "expect": {
+      "state": "failed",
+      "emits": [
+       {
+        "event": "BUILD_REJECTED",
+        "payload": {
+         "error": "candidate std/a has no embedding vector: a plain behavior/catalog listing carries none, and a tier ranks by meaning only over rows from std-catalog-vectors",
+         "errors": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "RANKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-catalog-tier-over-rows-with-vectors-ranks-them",
+   "steps": [
+    {
+     "from": "searching",
+     "entity": {
+      "id": "b",
+      "queryVector": [
+       1,
+       0
+      ],
+      "step": 0
+     },
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "description": "d",
+        "traits": [],
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {
+         "description": [
+          1,
+          0
+         ]
+        }
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RANKED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

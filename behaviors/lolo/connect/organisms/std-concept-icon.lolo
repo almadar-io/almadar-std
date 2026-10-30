@@ -195,42 +195,32 @@ orbital ConceptIconOrbital {
     }
   }
 
+  trait ConceptIconFetch = IconApi.traits.IconifyFetch {
+    listens {
+      ConceptIconApi.ICONIFY_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
   trait ConceptIconApi = IconApi.traits.IconifyClient {
     listens {
       ConceptIconResolver.ICONIFY_SVG_EXISTS -> ICONIFY_SVG_EXISTS
       ConceptIconResolver.ICONIFY_SEARCH -> ICONIFY_SEARCH
       ConceptIconResolver.ICONIFY_GET_ICON_BODY -> ICONIFY_GET_ICON_BODY
-      ICONIFY_SVG_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-      ICONIFY_SVG_FAILED {
-        error : string!
-        kind : string!
-      }
-      ICONIFY_SEARCH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-      ICONIFY_SEARCH_FAILED {
-        error : string!
-        kind : string!
-      }
-      ICONIFY_BODY_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      ICONIFY_REPLIED {
         key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
       }
-      ICONIFY_BODY_FAILED {
+      ICONIFY_FAILED {
+        key : string
         error : string!
         kind : string!
-        key : string!
       }
+      ConceptIconFetch.HTTP_REPLIED -> ICONIFY_REPLIED
+      ConceptIconFetch.HTTP_FAILED -> ICONIFY_FAILED
     }
   }
 
-  page boot as ConceptIconPage -> ConceptIconResolver, ConceptIconApi
+  page boot as ConceptIconPage -> ConceptIconResolver, ConceptIconApi, ConceptIconFetch
 }

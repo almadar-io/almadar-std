@@ -1,0 +1,37 @@
+app http-fetch-spec [
+  version: "1.0.0",
+  description: "Design contract for the HTTP client of a program that runs in a browser host, which has no sockets: the same HTTP_SEND in and HTTP_REPLIED or HTTP_FAILED out as std-http-client, performed by one os/fetch ask the host answers raw. HTTP_SEND { key, method, target, headers, body, stream } is answered HTTP_REPLIED { key, status, headers, body } for any status, or HTTP_FAILED { key, error, kind } (refused for a request the atom will not write; denied, timeout or io from the host). A stream of sse or jsonl asks os/fetch with stream true and reads the response handle with os/recv, answering each frame as HTTP_STREAM_EVENT { key, data, event, id } like std-http-client, then HTTP_REPLIED with an empty body."
+]
+
+type HttpHeader = { name : string!, value : string! }
+
+orbital HttpFetchSpec {
+  expects entity HttpFetchFlight [runtime] {
+    id : string!
+    key : string
+    stream : string
+    handle : number
+    status : number
+    headers : [HttpHeader]
+  }
+  expects trait HttpFetch {
+    state ready {
+      HTTP_SEND -> ready
+    }
+    state opening {
+      HF_HEAD -> streaming
+      HF_HEAD_FAILED -> ready
+    }
+    state streaming {
+      HF_READ -> streaming
+      HF_AFTER -> ready
+      HF_IO_FAILED -> ready
+    }
+    emits {
+      HTTP_STREAM_EVENT { key : string!  data : string!  event : string  id : string }
+      HTTP_REPLIED { key : string!  status : number!  headers : Map string string  body : bytes! }
+      HTTP_FAILED { key : string!  error : string!  kind : string! }
+    }
+  }
+  expects page boot -> HttpFetch
+}

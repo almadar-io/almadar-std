@@ -1,0 +1,21 @@
+app lint-viewer-stranded-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint viewer-stranded <file>`, the port of ORB_CIRCUIT_VIEWER_STRANDED. Findings are reported at the owner trait transition (status 500, exit 1). A clean program answers `lint viewer-stranded: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2); a file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintViewerStrandedSpec {
+  expects trait OrbLintViewerStranded {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintViewerStrandedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintViewerStranded, OrbLintViewerStrandedCli
+}

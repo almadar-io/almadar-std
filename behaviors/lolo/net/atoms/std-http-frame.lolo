@@ -1,0 +1,110 @@
+app std-http-frame [
+  version: "1.0.0",
+  description: "std-http-frame — the one stream framer of the HTTP clients (spec/net/http-frame.lolo): std-http-client and std-http-fetch each compose it beside their client trait. FRAME_RUN { key, stream, data, final } frames the unframed body bytes: sse cuts blocks at a blank line (LF LF or CRLF CRLF, whichever comes first), joins the data lines with LF, takes the last event and id line, skips comment lines and a block with no data line; jsonl cuts lines at LF and skips an empty line. Each complete frame answers FRAME_EVENT { key, data, event, id } in order, then FRAME_DRAINED { key, rest } answers the bytes not yet framed. A block or line that is not valid UTF-8 answers FRAME_FAILED { key, error, kind encoding } and nothing after it is framed. final true closes an unterminated tail with the stream's terminator so it is delivered once. The framer keeps nothing between calls; the caller owns the buffer."
+]
+uses Spec from "almadar-std/http-frame"
+
+orbital HttpFrameOrbital {
+  entity HttpFrameRun [runtime] {
+    id : string!
+  }
+
+  trait HttpFrame -> HttpFrameRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      FRAME_RUN -> ready
+        (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (if (and @payload.final (> (bytes/length @payload.data) 0)) (bytes/concat [@payload.data, (bytes/from-string (if (= @payload.stream "sse") "\n\n" "\n"))]) @payload.data) })
+
+      FRAME_STEP -> ready when (and (= @payload.stream "jsonl") (< (bytes/index-of @payload.data (bytes/from-string "\n") 0) 0))
+        (emit FRAME_DRAINED { key: @payload.key, rest: @payload.data })
+      FRAME_STEP -> ready when (and (= @payload.stream "jsonl") (>= (bytes/index-of @payload.data (bytes/from-string "\n") 0) 0) (== (bytes/to-string (bytes/slice @payload.data 0 (bytes/index-of @payload.data (bytes/from-string "\n") 0))) null))
+        (emit FRAME_FAILED { key: @payload.key, error: "a stream line is not valid UTF-8", kind: "encoding" })
+      FRAME_STEP -> ready when (and (= @payload.stream "jsonl") (>= (bytes/index-of @payload.data (bytes/from-string "\n") 0) 0) (!= (bytes/to-string (bytes/slice @payload.data 0 (bytes/index-of @payload.data (bytes/from-string "\n") 0))) null))
+        (let ((end (bytes/index-of @payload.data (bytes/from-string "\n") 0)))
+          (let ((line (str/trimEnd (default (bytes/to-string (bytes/slice @payload.data 0 @end)) ""))))
+            (do
+              (if (!= @line "") (emit FRAME_EVENT { key: @payload.key, data: @line, event: null, id: null }) (emit FRAME_NOOP {}))
+              (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (bytes/slice @payload.data (+ @end 1)) }))))
+      FRAME_STEP -> ready when (and (= @payload.stream "sse") (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0))) (and (< @a 0) (< @b 0))))
+        (emit FRAME_DRAINED { key: @payload.key, rest: @payload.data })
+      FRAME_STEP -> ready when (and (= @payload.stream "sse") (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0))) (and (or (>= @a 0) (>= @b 0)) (== (bytes/to-string (bytes/slice @payload.data 0 (if (< @a 0) @b (if (< @b 0) @a (if (< @a @b) @a @b))))) null))))
+        (emit FRAME_FAILED { key: @payload.key, error: "a stream block is not valid UTF-8", kind: "encoding" })
+      FRAME_STEP -> ready when (and (= @payload.stream "sse") (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0))) (and (or (>= @a 0) (>= @b 0)) (!= (bytes/to-string (bytes/slice @payload.data 0 (if (< @a 0) @b (if (< @b 0) @a (if (< @a @b) @a @b))))) null))))
+        (let ((a (bytes/index-of @payload.data (bytes/from-string "\n\n") 0)) (b (bytes/index-of @payload.data (bytes/from-string "\r\n\r\n") 0)))
+          (let ((useA (or (< @b 0) (and (>= @a 0) (< @a @b)))))
+            (let ((end (if @useA @a @b)))
+              (do
+                (emit FRAME_BLOCK { key: @payload.key, block: (str/replaceAll (default (bytes/to-string (bytes/slice @payload.data 0 @end)) "") "\r\n" "\n") })
+                (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (bytes/slice @payload.data (+ @end (if @useA 2 4))) })))))
+
+      FRAME_BLOCK -> ready when (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":")))))))
+        (array/some @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))))
+        (let ((rows (array/filter (str/split @payload.block "\n") (fn l (and (!= @l "") (not (str/startsWith @l ":")))))))
+          (emit FRAME_EVENT {
+            key: @payload.key,
+            data: (str/join (array/map (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "data"))) (fn l (let ((v (str/join (array/drop (str/split @l ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))) "\n"),
+            event: (let ((ev (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "event")))))) (if (== @ev null) null (let ((v (str/join (array/drop (str/split @ev ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v)))),
+            id: (let ((iv (array/last (array/filter @rows (fn l (= (default (array/first (str/split @l ":")) "") "id")))))) (if (== @iv null) null (let ((v (str/join (array/drop (str/split @iv ":") 1) ":"))) (if (str/startsWith @v " ") (str/slice @v 1) @v))))
+          }))
+      FRAME_BLOCK -> ready
+      FRAME_NOOP -> ready
+    }
+
+    emits {
+      FRAME_EVENT -> external {
+        key : string!
+        data : string!
+        event : string?
+        id : string?
+      }
+        @description "One complete frame of the stream, in order."
+        @tier "primary"
+      FRAME_DRAINED -> external {
+        key : string!
+        rest : bytes!
+      }
+        @description "No complete frame is left: the bytes not yet framed."
+        @tier "primary"
+      FRAME_FAILED -> external {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "A block or line is not valid UTF-8 (kind encoding); nothing after it is framed."
+        @tier "primary"
+      FRAME_STEP -> internal {
+        key : string!
+        stream : string!
+        data : bytes!
+      }
+        @description "Internal: frame the next block or line of the bytes."
+        @tier "internal"
+      FRAME_BLOCK -> internal {
+        key : string!
+        block : string!
+      }
+        @description "Internal: one event stream block to deliver."
+        @tier "internal"
+      FRAME_NOOP -> internal {
+      }
+        @description "Internal: nothing to deliver."
+        @tier "internal"
+    }
+
+    listens {
+      FRAME_RUN {
+        key : string!
+        stream : string!
+        data : bytes!
+        final : boolean!
+      }
+        @description "Frame the unframed body bytes of a stream (sse or jsonl); final closes an unterminated tail."
+        @synonyms "frame stream, split event stream, sse framer, json lines framer"
+    }
+  }
+
+  page boot as HttpFramePage -> HttpFrame
+}

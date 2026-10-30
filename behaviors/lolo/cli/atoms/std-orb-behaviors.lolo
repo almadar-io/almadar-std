@@ -4,16 +4,18 @@ app std-orb-behaviors [
   fs: { "/dev/fd/0": [read], cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   exec: ["kill", "orb"],
-  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
   description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` (`--topics` lists each package and topic once with its count, counted here over the rows) lists the installed behaviors under the scopes (`behavior/catalog`, which lists no vectors; `--no-vectors` reads no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector; a whole-behavior description carries each orbital's `forwards`, the unhandled controls its `emitsScope external` traits leave for the embedder, from the control-unhandled analysis over std-orb-fired-events); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (built by std-behavior-texts; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). With vectors, the catalog lists rows asked for with `texts: true`, builds the organism and capability texts (std-behavior-texts), reads the packages' snapshots and the environment (std-vector-sources) and resolves every text's vector (std-vector-resolve: snapshots, then the user store, then the configured provider); `describe --knob-vectors` does the same for the trait's knob texts, and `texts` builds every kind itself, package by package in first-mention order and path order. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 uses Texts from "std/behaviors/std-behavior-texts"
 uses ControlUnhandled from "std/behaviors/std-orb-lint-control-unhandled"
+uses Borrows from "std/behaviors/std-behavior-borrows"
 uses Fired from "std/behaviors/std-orb-fired-events"
 uses Chain from "std/behaviors/std-orb-embed-chain"
 uses LintInput from "std/behaviors/std-orb-lint-input"
 uses Sources from "std/behaviors/std-vector-sources"
+uses Cv from "std/behaviors/std-catalog-vectors"
 uses Resolve from "std/behaviors/std-vector-resolve"
 uses Store from "std/behaviors/std-vector-store"
 uses Llm from "std/behaviors/std-llm"
@@ -21,6 +23,8 @@ uses Write from "std/behaviors/std-vector-write"
 uses Quantize from "std/behaviors/std-vector-quantize"
 uses F32 from "std/behaviors/std-f32"
 uses Delay from "std/behaviors/std-delay"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 uses Sig6 from "std/behaviors/std-sig6"
 uses BigCmp from "std/behaviors/std-bigcmp"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -100,6 +104,7 @@ type OrbBehaviorsDescription = {
   orbitals : [DescribedOrbital]
 }
 
+type WalkSlot = { kind : string!, args : [number] }
 orbital OrbBehaviorsOrbital {
   uses Args from "std/behaviors/std-args"
 
@@ -202,103 +207,84 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  trait BvLlmOrShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORS
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOrShared = Resolve.traits.ResolveLlmOrShared {
     listens {
       BvResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+      ResolveOrSharedWait.WAITED_ORS -> LLM_EMBED_WAITED
+      ResolveOrSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait BvLlmOrOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORO
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPEN_ROUTER_API_KEY"
-    }
+  trait ResolveLlmOrOwn = Resolve.traits.ResolveLlmOrOwn {
     listens {
       BvResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+      ResolveOrOwnWait.WAITED_ORO -> LLM_EMBED_WAITED
+      ResolveOrOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait BvLlmOaShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAS
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOaShared = Resolve.traits.ResolveLlmOaShared {
     listens {
       BvResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+      ResolveOaSharedWait.WAITED_OAS -> LLM_EMBED_WAITED
+      ResolveOaSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait BvLlmOaOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAO
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPENAI_API_KEY"
-    }
+  trait ResolveLlmOaOwn = Resolve.traits.ResolveLlmOaOwn {
     listens {
       BvResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+      ResolveOaOwnWait.WAITED_OAO -> LLM_EMBED_WAITED
+      ResolveOaOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait BvLlmLm = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_LM
-    }
-    config {
-      embedProvider: lmstudio
-      embedOrigin: "http://127.0.0.1:1234"
-      embedBasePath: "/v1"
-      embedModel: "text-embedding-bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmLm = Resolve.traits.ResolveLlmLm {
     listens {
       BvResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+      ResolveLmWait.WAITED_LM -> LLM_EMBED_WAITED
+      ResolveLmRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
+  trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
+  trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest {}
+  trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp {}
+  trait ResolveOrOwnWait = Resolve.traits.ResolveOrOwnWait {}
+  trait ResolveOrOwnRequest = Resolve.traits.ResolveOrOwnRequest {}
+  trait ResolveOrOwnHttp = Resolve.traits.ResolveOrOwnHttp {}
+  trait ResolveOaSharedWait = Resolve.traits.ResolveOaSharedWait {}
+  trait ResolveOaSharedRequest = Resolve.traits.ResolveOaSharedRequest {}
+  trait ResolveOaSharedHttp = Resolve.traits.ResolveOaSharedHttp {}
+  trait ResolveOaOwnWait = Resolve.traits.ResolveOaOwnWait {}
+  trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest {}
+  trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp {}
+  trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmRequest = Resolve.traits.ResolveLmRequest {}
+  trait ResolveLmHttp = Resolve.traits.ResolveLmHttp {}
 
   trait BvResolve = Resolve.traits.VectorResolve {
     listens {
       OrbBehaviors.BV_RESOLVE -> RESOLVE
+      CatalogVectors.CV_RESOLVE -> RESOLVE
       BvSources.USER_STORE_READ -> USER_STORE_READ
       BvStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
       BvStore.VECTOR_REFUSED -> VECTOR_REFUSED
-      BvLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      BvLlmOrShared.LLM_FAILED -> LLM_FAILED
-      BvLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      BvLlmOrOwn.LLM_FAILED -> LLM_FAILED
-      BvLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      BvLlmOaShared.LLM_FAILED -> LLM_FAILED
-      BvLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      BvLlmOaOwn.LLM_FAILED -> LLM_FAILED
-      BvLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      BvLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
       BvWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       BvWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -344,6 +330,7 @@ orbital OrbBehaviorsOrbital {
   trait BvTexts = Texts.traits.BehaviorTexts {
     listens {
       OrbBehaviors.BV_ENTRY_TEXTS -> BUILD_ENTRY_TEXTS
+      CatalogVectors.CV_ENTRY_TEXTS -> BUILD_ENTRY_TEXTS
       OrbBehaviors.BV_KNOB_TEXTS -> BUILD_KNOB_TEXTS
     }
   }
@@ -351,7 +338,19 @@ orbital OrbBehaviorsOrbital {
   trait BvSources = Sources.traits.VectorSources {
     listens {
       OrbBehaviors.BV_SOURCES -> SOURCES
+      CatalogVectors.CV_SOURCES -> SOURCES
       BvResolve.USER_STORE_NEEDED -> USER_STORE_NEEDED
+    }
+  }
+
+  trait CatalogVectors = Cv.traits.CatalogVectors {
+    listens {
+      OrbBehaviors.BV_CATALOG_VECTORS -> CATALOG_VECTORS_ASK
+      BvTexts.ENTRY_TEXTS_BUILT -> ENTRY_TEXTS_BUILT
+      BvSources.SOURCES_READY -> SOURCES_READY
+      BvSources.SOURCES_REFUSED -> SOURCES_REFUSED
+      BvResolve.VECTORS_ANSWERED -> VECTORS_ANSWERED
+      BvResolve.VECTORS_REFUSED -> VECTORS_REFUSED
     }
   }
 
@@ -360,6 +359,14 @@ orbital OrbBehaviorsOrbital {
   trait Versions = LintInput.traits.Versions {
   }
   trait Packs = LintInput.traits.Packs {
+  }
+  trait BehaviorBorrows = Borrows.traits.BehaviorBorrows {
+    listens {
+      OrbBehaviors.BV_BORROWS_DESCRIBE -> BORROWS_DESCRIBE
+      OrbLintOrbitalRefClosure.LINT_FOUND -> BORROWS_FOUND
+    }
+  }
+  trait OrbLintOrbitalRefClosure = Borrows.traits.OrbLintOrbitalRefClosure {
   }
   trait OrbLintInput = LintInput.traits.OrbLintInput {
     listens {
@@ -379,12 +386,15 @@ orbital OrbBehaviorsOrbital {
     listens {
       FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
-      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      FIRED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> FIRED_WALK_HEARD
       OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
     }
   }
@@ -489,19 +499,7 @@ orbital OrbBehaviorsOrbital {
           emit: { success: CATALOG_LISTED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_CATALOG -> working when (and (not @entity.topics) (not @entity.noVectors))
-        (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
-          traits: (not @entity.noTraits)
-          texts: true
-          emit: { success: CATALOG_FACTS, failure: BEHAVIORS_FAILED }
-        })
-      CATALOG_FACTS -> working
-        (set @entity.rows @payload.result)
-        (emit BV_ENTRY_TEXTS { rows: @payload.result })
-      ENTRY_TEXTS_BUILT -> working when (= @entity.sub "catalog")
-        (set @entity.wanted @payload.wanted)
-        (behavior/packages { emit: { success: PACKAGES_LISTED, failure: BEHAVIORS_FAILED } })
-      PACKAGES_LISTED -> working when (= @entity.sub "catalog")
-        (emit BV_SOURCES { paths: (array/filter (array/map (array/filter @payload.result (fn p (array/some @entity.rows (fn r (= (array/first (str/split @r.behavior "/")) @p.prefix))))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))) })
+        (emit BV_CATALOG_VECTORS { paths: @entity.paths, exposure: @entity.exposure, traits: (not @entity.noTraits) })
       BEHAVIORS_CATALOG -> working when @entity.topics
         (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
           traits: false
@@ -518,9 +516,7 @@ orbital OrbBehaviorsOrbital {
           emit: { success: KNOB_BASE_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_DESCRIBE -> working when (not (str/includes @entity.spec ".traits."))
-        (behavior/describe { behavior: @entity.spec } {
-          emit: { success: BEHAVIOR_DESCRIBED, failure: BEHAVIORS_FAILED }
-        })
+        (emit BV_BORROWS_DESCRIBE { behavior: @entity.spec })
       BEHAVIOR_DESCRIBED -> working
         (set @entity.raw @payload.result)
         (behavior/source { behavior: (array/first (str/split @entity.spec ".orbitals.")) } {
@@ -643,14 +639,16 @@ orbital OrbBehaviorsOrbital {
         (emit TX_KNOB { at: @entity.ri })
       KNOB_TEXTS_REFUSED -> ready
         (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: @payload.error })
-      SOURCES_READY -> working
+      SOURCES_READY -> working when (!= @entity.sub "catalog")
         (emit BV_RESOLVE { wanted: @entity.wanted, snapshots: @payload.snapshots, snapshotPaths: @payload.snapshotPaths, userDir: @payload.userDir, userAnchor: @payload.userAnchor, providerModel: @payload.providerModel, providerKind: @payload.providerKind, embedModel: @payload.embedModel })
-      SOURCES_REFUSED -> ready
+      SOURCES_REFUSED -> ready when (!= @entity.sub "catalog")
         (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat @payload.code ": " @payload.detail) })
-      VECTORS_REFUSED -> ready
+      VECTORS_REFUSED -> ready when (!= @entity.sub "catalog")
         (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat @payload.code ": " @payload.detail) })
-      VECTORS_ANSWERED -> working when (= @entity.sub "catalog")
-        (emit CATALOG_ATTACHED { result: (array/map @entity.rows (fn r (object/merge (object/pick @r ["behavior", "package", "topic", "level", "exposure", "pattern", "description", "capabilities", "traits", "value"]) { vectors: (default (object/fromEntries (array/concat (let ((hit (array/find @payload.vectors (fn v (= @v.key @r.behavior))))) (if (= @hit null) [] [["description", (default @hit.vector [])]])) (let ((hit (array/find @payload.vectors (fn v (= @v.key (str/concat @r.behavior "#capabilities")))))) (if (= @hit null) [] [["capabilities", (default @hit.vector [])]])))) {}), model: @payload.model }))) })
+      CATALOG_VECTORS_ROWS -> working
+        (emit CATALOG_ATTACHED { result: (array/map @payload.rows (fn r (object/merge @r { model: @payload.model }))) })
+      CATALOG_VECTORS_REFUSED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat @payload.code ": " @payload.detail) })
       VECTORS_ANSWERED -> working when (and (= @entity.sub "describe") (validate/required @entity.base))
         (emit TRAIT_ATTACHED { result: (object/merge @entity.base { model: @payload.model, knobs: (array/map (default @entity.base.knobs []) (fn k (let ((hit (array/find @payload.vectors (fn v (= @v.key (str/concat @entity.stem "/" (default (array/first (array/map (array/filter (default @entity.whole.orbitals []) (fn o (array/some (default @o.traits []) (fn t (= @t.trait @entity.trait))))) (fn o (default @o.value.orbital "")))) "") "/" @entity.trait "/" @k.key)))))) (if (= @hit null) @k (object/merge @k { vector: @hit.vector }))))) }) })
       BEHAVIORS_EXPECTS -> working when (str/startsWith @entity.spec "/")
@@ -716,6 +714,16 @@ orbital OrbBehaviorsOrbital {
         @tier "internal"
       BV_LINT_REQUEST -> external {
         file : string!
+      }
+        @tier "secondary"
+      BV_BORROWS_DESCRIBE -> external {
+        behavior : string!
+      }
+        @tier "secondary"
+      BV_CATALOG_VECTORS -> external {
+        paths : [string]!
+        exposure : [string]!
+        traits : boolean!
       }
         @tier "secondary"
       BV_ENTRY_TEXTS -> external {
@@ -849,6 +857,8 @@ orbital OrbBehaviorsOrbital {
       ArgsCli.ARGS_PARSED -> BEHAVIORS_ARGS_DONE
       BEHAVIORS_CATALOG { }
         @description "Self: list the behaviors."
+      BehaviorBorrows.BORROWS_DESCRIBED -> BEHAVIOR_DESCRIBED
+      BehaviorBorrows.BORROWS_FAILED -> BEHAVIORS_FAILED
       FORWARDS_PATH_RESOLVED {
         result : OrbBehaviorsSourceFile!
       }
@@ -873,10 +883,16 @@ orbital OrbBehaviorsOrbital {
         at : number!
       }
         @description "Self: knob texts of the next behavior."
-      CATALOG_FACTS {
-        result : [OrbBehaviorsCatalogHit]!
+      CatalogVectors.CATALOG_VECTORS_ROWS -> CATALOG_VECTORS_ROWS
+      CATALOG_VECTORS_ROWS {
+        rows : [OrbBehaviorsCatalogHit]!
+        model : string!
       }
-        @description "behavior/catalog's success with `texts: true`."
+      CatalogVectors.CATALOG_VECTORS_REFUSED -> CATALOG_VECTORS_REFUSED
+      CATALOG_VECTORS_REFUSED {
+        code : string!
+        detail : string!
+      }
       CATALOG_TOPIC_ROWS {
         result : [OrbBehaviorsCatalogHit]!
       }
@@ -1025,5 +1041,5 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, OrbLintControlUnhandled, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions, ArgsCli, BvTexts, BvSources, BvResolve, BvStore, BvWrite, BvQuantize, BvF32, BvSig6, BvBigCmp, BvDelay, BvLlmOrShared, BvLlmOrOwn, BvLlmOaShared, BvLlmOaOwn, BvLlmLm
+  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, OrbLintControlUnhandled, BehaviorBorrows, OrbLintOrbitalRefClosure, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions, ArgsCli, CatalogVectors, BvTexts, BvSources, BvResolve, BvStore, BvWrite, BvQuantize, BvF32, BvSig6, BvBigCmp, BvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
 }

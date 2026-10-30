@@ -1,0 +1,189 @@
+app std-orb-lint-os-grants [
+  version: "1.0.0",
+  inbound: ["cli-lint-os-grants"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-os-grants — the `orb lint os-grants <file>` command, the static os-grant check. It asks the kernel (`program/os-grants`, twice: the program as written, then the finished program) for the typed findings of the file's resolved program and words them: ORB_OS_GRANT_MISSING (an `os/` call the grants of its orbital do not cover), ORB_OS_GRANT_UNUSED (a warning: a granted entry no call uses), ORB_OS_GRANT_ENTRY_INVALID (an entry that can match nothing) and ORB_OS_TARGET_NOT_STATIC (a computed target, so its grant cannot be checked), at the site the kernel names. The finished-program pass answers as the rule os-grants-final, which belongs to `orb validate --final` only. Clean answers `lint os-grants: clean` (status 200, exit 0); findings are status 500, exit 1. Anything but one file argument is the usage (status 400, exit 2); a file the compiler cannot resolve is skipped here: validate reports that failure itself."
+]
+uses Spec from "almadar-std/lint-os-grants"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GrNode = string | number | boolean | [GrNode?] | Map string GrNode?
+type GrFinding = { code : string!, orbital : string, call : string, entry : string, site : string!, grant : string, app : boolean, argument : number, via : string }
+type GrAnswer = { findings : [GrFinding]! }
+type GrTagged = { final : boolean!, f : GrFinding! }
+type GrMapped = { final : boolean!, finding : OrbFinding! }
+type RcRefRow = { kind : string!, path : string!, callSite : GrNode!, declaration : GrNode! }
+type RcKept = { orbital : number!, traits : [string]! }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintOsGrantsCodes = { missing : LintCodeDecl, unused : LintCodeDecl, entryInvalid : LintCodeDecl, targetNotStatic : LintCodeDecl }
+
+orbital OrbLintOsGrantsOrbital {
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+
+  entity OrbLintOsGrantsRun [runtime] {
+    id : string!
+    file : string = ""
+    pass : string = "written"
+    written : [GrFinding] = []
+    tagged : [GrTagged] = []
+    mapped : [GrMapped] = []
+    findings : [OrbFinding] = []
+    finalFindings : [OrbFinding] = []
+    shown : [OrbFinding] = []
+  }
+
+  trait OrbLintOsGrants -> OrbLintOsGrantsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES -> reading
+        (set @entity.file @payload.file)
+        (set @entity.pass "written")
+        (os/realpath { anchor: "cwd" path: "." } { key: "os-grants-cwd" emit: { success: LINT_CWD, failure: LINT_GRANTS_FAILED } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "os-grants", scope: "", findings: @entity.findings })
+        (emit LINT_FOUND { rule: "os-grants-final", scope: "", findings: @entity.finalFindings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_CWD -> checking
+        (set @entity.file (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @payload.path @entity.file)))
+        (program/os-grants null { path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @payload.path @entity.file)), final: false } { key: "os-grants-written" emit: { success: LINT_CHECKED, failure: LINT_GRANTS_FAILED } })
+      LINT_GRANTS_FAILED -> ready
+        (set @entity.findings [])
+        (set @entity.finalFindings [])
+        (emit LINT_FINISH { })
+    }
+
+    state checking {
+      INIT -> checking
+      LINT_CHECKED -> checking when (= @entity.pass "written")
+        (set @entity.written (object/get @payload.result "findings"))
+        (set @entity.pass "final")
+        (program/os-grants null { path: @entity.file, final: true } { key: "os-grants-final" emit: { success: LINT_CHECKED, failure: LINT_GRANTS_FAILED } })
+      LINT_CHECKED -> mapping when (= @entity.pass "final")
+        (set @entity.tagged (array/concat (array/map @entity.written (fn f { final: false, f: @f })) (array/map (object/get @payload.result "findings") (fn f { final: true, f: @f }))))
+        (emit LINT_MAP { })
+      LINT_GRANTS_FAILED -> ready
+        (set @entity.findings [])
+        (set @entity.finalFindings [])
+        (emit LINT_FINISH { })
+    }
+
+    state mapping {
+      INIT -> mapping
+      LINT_MAP -> mapping
+        (set @entity.mapped (array/map @entity.tagged (fn x (let ((f (object/get @x "f")) (via (object/get (object/get @x "f") "via" "")) (code (object/get (object/get @x "f") "code")) (orbital (object/get (object/get @x "f") "orbital" "")) (call (object/get (object/get @x "f") "call" "")) (entry (object/get (object/get @x "f") "entry" "")) (arg (object/get (object/get @x "f") "argument" 0))) { final: (object/get @x "final"), finding: { code: (if (= @code "missing") @config.codes.missing.code (if (= @code "unused") @config.codes.unused.code (if (= @code "entry-invalid") @config.codes.entryInvalid.code @config.codes.targetNotStatic.code))), path: (object/get @f "site"), severity: (if (= @code "unused") "warning" "error"), message: (if (= @code "missing") (str/concat "`" @call "` " (if (= @via "config") "can be given " "needs ") @entry (if (= @via "config") " by its config, but orbital " " but orbital ") @orbital " does not grant it") (if (= @code "unused") (str/concat "`" @entry "` is granted to " (if (= @orbital "") "the program" (str/concat "orbital " @orbital)) " but no `os/` call there uses it") (if (= @code "entry-invalid") @entry (if (= @via "config-unresolvable") (str/concat "`" @call "` argument " @arg " is read from config in a way the finished program cannot resolve, so its grant cannot be checked") (if (= @via "computed-path") (str/concat "`" @call "` argument " @arg " is a computed path the grant cannot cover: only a file path may be a `str/concat`") (str/concat "`" @call "` argument " @arg " is computed — an `os/` target must be a literal so the grant can be checked at build time")))))), suggestion: (if (= @code "missing") (str/concat "Add `" (object/get @f "grant" "") (if (object/get @f "app" false) "` to the orbital's bracket (`orbital Name [ … ]`) or the app's" "` to the orbital's bracket")) (if (= @code "unused") "Remove the entry: an unused grant is authority the program does not need" (if (= @code "entry-invalid") "" (if (= @via "config-unresolvable") "Read the target with `@config.<knob>`, `array/nth` and `object/get`, or write it as a literal; a `str/concat` directory prefix must be string knobs and literals ending in `/`" (if (= @via "computed-path") "Write the target as a literal" "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`"))))) } }))))
+        (emit LINT_SPLIT { })
+      LINT_SPLIT -> ready
+        (set @entity.findings (array/map (array/filter @entity.mapped (fn m (not (object/get @m "final")))) (fn m (object/get @m "finding"))))
+        (set @entity.finalFindings (array/map (array/filter @entity.mapped (fn m (object/get @m "final"))) (fn m (object/get @m "finding"))))
+        (emit LINT_FINISH { })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella: the program as written under rule os-grants, the finished program under os-grants-final."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdicts."
+        @tier "internal"
+      LINT_MAP { }
+        @description "Internal: word the kernel's findings."
+        @tier "internal"
+      LINT_SPLIT { }
+        @description "Internal: split the worded findings by pass."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALL_SITES { file : string!  program : GrNode!  kept : [RcKept]!  references : [RcRefRow]!  stamped : GrNode? }
+        @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
+      LINT_CWD { path : string! }
+        @description "Internal: the working directory."
+      LINT_CHECKED { result : GrAnswer! }
+        @description "Internal: the kernel's findings for one pass."
+      LINT_GRANTS_FAILED { error : string }
+        @description "Internal: the file could not be resolved or checked."
+      LINT_MAP { }
+        @description "Internal: word the kernel's findings."
+      LINT_SPLIT { }
+        @description "Internal: split the worded findings by pass."
+      LINT_FINISH { }
+        @description "Internal: answer with the verdicts."
+    }
+    config {
+      codes : LintOsGrantsCodes = { missing: { code: "ORB_OS_GRANT_MISSING", category: "os", description: "An os/ call that the grants of its orbital (app level plus its own) do not cover" }, unused: { code: "ORB_OS_GRANT_UNUSED", category: "os", description: "A granted entry that no os/ call of the orbital (or of the program, at app level) uses; a warning" }, entryInvalid: { code: "ORB_OS_GRANT_ENTRY_INVALID", category: "os", description: "A declared grant entry that can match nothing" }, targetNotStatic: { code: "ORB_OS_TARGET_NOT_STATIC", category: "os", description: "An os/ call target that is computed, so its grant cannot be checked at build time" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintOsGrantsCli -> OrbLintOsGrantsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint os-grants <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit LINT_CALL_SITES_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""), stamp: false, references: true })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> waiting when (= @payload.rule "os-grants")
+        (set @entity.shown @payload.findings)
+      LINT_FOUND -> ready when (and (= @payload.rule "os-grants-final") (= (array/len (array/concat @entity.shown @payload.findings)) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint os-grants: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "os-grants-final") (> (array/len (array/concat @entity.shown @payload.findings)) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map (array/concat @entity.shown @payload.findings) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_CALL_SITES_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint os-grants: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-os-grants" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint os-grants` with its arguments and working directory."
+        @synonyms "orb lint os-grants"
+      OrbLintOsGrants.LINT_FOUND -> LINT_FOUND
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
+    }
+  }
+
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintOsGrantsCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+
+  page boot as OrbLintOsGrantsOrbitalStart -> OrbLintOsGrants, OrbLintOsGrantsCli, CallSiteInput
+}

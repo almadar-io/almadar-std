@@ -1,0 +1,179 @@
+app llm-wire-fixture [
+  version: "1.0.0",
+  net: { "api.anthropic.com:443": [tcp], "127.0.0.1:1234": [tcp] },
+  description: "Replay fixture for std-llm on the wire: an anthropic chat (x-api-key credential, Messages body, sse stream) and a keyless LM Studio chat (no authorization header), each composed with std-http-request and std-http-client the way a consumer composes them."
+]
+uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
+
+orbital LlmWireFixtureOrbital {
+  entity WireCall [runtime] {
+    id : string!
+    text : string = ""
+    failure : string = ""
+  }
+
+  trait WireDriver -> WireCall [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ASK_ANTHROPIC -> idle
+        (emit LLM_GENERATE_ANTHROPIC { userPrompt: ?prompt, key: ?key, stream: ?stream })
+      ASK_LOCAL -> idle
+        (emit LLM_GENERATE_LOCAL { userPrompt: ?prompt, key: ?key })
+      CANCEL_CALL -> idle
+        (emit LLM_CANCEL_ANTHROPIC { key: ?key })
+      ANSWERED -> idle
+        (set @entity.text ?content)
+      FAILED -> idle
+        (set @entity.failure ?message)
+      CANCELLED -> idle
+      CHUNK -> idle
+    }
+
+    emits {
+      LLM_GENERATE_ANTHROPIC -> external {
+        userPrompt : string!
+        key : string
+        stream : boolean
+      }
+        @description "Ask the anthropic chat."
+        @tier "secondary"
+      LLM_GENERATE_LOCAL -> external {
+        userPrompt : string!
+        key : string
+      }
+        @description "Ask the local chat."
+        @tier "secondary"
+      LLM_CANCEL_ANTHROPIC -> external {
+        key : string!
+      }
+        @description "Cancel the keyed anthropic chat."
+        @tier "secondary"
+    }
+
+    listens {
+      AnthropicLlm.LLM_GENERATE_RESULT -> ANSWERED
+      LocalLlm.LLM_GENERATE_RESULT -> ANSWERED
+      AnthropicLlm.LLM_FAILED -> FAILED
+      LocalLlm.LLM_FAILED -> FAILED
+      AnthropicLlm.LLM_CANCELLED -> CANCELLED
+      AnthropicLlm.LLM_GENERATE_DELTA -> CHUNK
+      ASK_ANTHROPIC {
+        prompt : string!
+        key : string
+        stream : boolean
+      }
+      ASK_LOCAL {
+        prompt : string!
+        key : string
+      }
+      CANCEL_CALL {
+        key : string!
+      }
+      ANSWERED {
+        content : string!
+      }
+      FAILED {
+        code : string
+        message : string!
+        key : string
+      }
+      CANCELLED {
+        key : string!
+      }
+      CHUNK {
+        key : string
+        delta : string
+      }
+    }
+  }
+
+  trait AnthropicLlm = Llm.traits.LlmClient {
+    config {
+      provider: anthropic
+      basePath: "/v1"
+      model: "claude-sonnet-4-5"
+    }
+    events {
+      LLM_GENERATE: LLM_GENERATE_ANTHROPIC
+      LLM_CANCEL: LLM_CANCEL_ANTHROPIC
+    }
+    listens {
+      WireDriver.LLM_GENERATE_ANTHROPIC -> LLM_GENERATE_ANTHROPIC
+      WireDriver.LLM_CANCEL_ANTHROPIC -> LLM_CANCEL_ANTHROPIC
+      AnthropicRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      AnthropicRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      AnthropicRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      AnthropicHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait AnthropicRequest = Req.traits.HttpRequest {
+    listens {
+      AnthropicLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      AnthropicLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      AnthropicHttp.HTTP_REPLIED -> HTTP_REPLIED
+      AnthropicHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait AnthropicHttp = Http.traits.HttpClient {
+    config {
+      host: "api.anthropic.com"
+      port: 443
+      tls: true
+      serverName: "api.anthropic.com"
+      credential: "ANTHROPIC_API_KEY"
+      credentialHeader: "x-api-key"
+    }
+    listens {
+      AnthropicRequest.HTTP_SEND -> HTTP_SEND
+      AnthropicRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait LocalLlm = Llm.traits.LlmClient {
+    config {
+      provider: lmstudio
+      basePath: "/v1"
+      model: "qwen3-30b-a3b"
+    }
+    events {
+      LLM_GENERATE: LLM_GENERATE_LOCAL
+    }
+    listens {
+      WireDriver.LLM_GENERATE_LOCAL -> LLM_GENERATE_LOCAL
+      LocalRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      LocalRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      LocalRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      LocalHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait LocalRequest = Req.traits.HttpRequest {
+    listens {
+      LocalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      LocalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      LocalHttp.HTTP_REPLIED -> HTTP_REPLIED
+      LocalHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LocalHttp = Http.traits.HttpClient {
+    config {
+      host: "127.0.0.1"
+      port: 1234
+      tls: false
+      serverName: "127.0.0.1"
+    }
+    listens {
+      LocalRequest.HTTP_SEND -> HTTP_SEND
+      LocalRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  page boot as LlmWireFixturePage -> WireDriver, AnthropicLlm, AnthropicRequest, AnthropicHttp, LocalLlm, LocalRequest, LocalHttp
+}

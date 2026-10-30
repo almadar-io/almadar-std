@@ -1,7 +1,7 @@
 app std-agent-tool-loop [
   version: "3.0.0",
   description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through std-llm's tool loop. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`, optionally with the `payload` the model is shown and held to) and entities to read. The program reflects its own inputs (`program/inputs`); each tool call the model makes fires as the signed-in user through the ordinary dispatch (`program/dispatch`: guards, grants and entity policies apply) and each read returns only the rows the caller may read (`persist/read-named`); a refused or unknown tool is answered to the model as an explicit refusal. Headless: the conversation UI (std-agent-session) shows the reply; a failure is emitted as ASSISTANT_REPLY_FAILED for the embedder to present (`quiet` is for a background run nobody is watching: no live steps). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. The model side is a std-llm LlmClient trait that listens to the loop's LLM_CALL_TOOLS and LLM_TOOLS_ANSWERED and is heard through LLM_TOOLS_REQUESTED, LLM_TOOLS_STEP, LLM_CALL_TOOLS_RESULT and LLM_FAILED; a composer wires its own. CANCEL aborts the model call at its provider (std-llm's LLM_CANCEL, under the key `agent-tool-loop`) and stops any tool call not yet started; nothing is replied and no failure is reported, and a new CONVERSE is refused until std-llm confirms the cancel (LLM_CANCELLED). Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 type AgentToolScope = {
@@ -128,6 +128,8 @@ type AgentReadArguments = {
 
 uses Spec from "almadar-std/tool-loop"
 uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -159,6 +161,35 @@ orbital AgentToolLoopOrbital {
       AgentToolLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       AgentToolLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       AgentToolLoop.LLM_CANCEL -> LLM_CANCEL
+      LoopChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      LoopChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      LoopChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      LoopChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait LoopChatRequest = Req.traits.HttpRequest {
+    listens {
+      LoopLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      LoopLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      LoopChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      LoopChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LoopChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LoopChatRequest.HTTP_SEND -> HTTP_SEND
+      LoopChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -521,5 +552,5 @@ orbital AgentToolLoopOrbital {
     }
   }
 
-  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm
+  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatHttp
 }

@@ -6,15 +6,18 @@ import { OS_SYS_PAYLOADS } from '../modules/os-sys.js';
 
 const OS_PURE = ['os/path-base', 'os/path-dir', 'os/path-ext', 'os/path-is-absolute', 'os/path-join', 'os/path-normalize', 'os/path-relative'];
 const OS_EFFECTS = [
-  'os/ac-power', 'os/access', 'os/append-file', 'os/battery-status', 'os/brightness-get', 'os/brightness-set', 'os/chdir', 'os/chmod', 'os/chown', 'os/clock-monotonic', 'os/close', 'os/copy',
+  'os/ac-power', 'os/access', 'os/append-file', 'os/battery-status', 'os/brightness-get', 'os/brightness-set', 'os/chdir', 'os/chmod', 'os/chown', 'os/clock-monotonic', 'os/copy',
   'os/cpu-usage', 'os/current-exe', 'os/cwd', 'os/default-gateway', 'os/disk-io', 'os/disk-usage', 'os/dns-resolve', 'os/environ', 'os/exists', 'os/fsync', 'os/getenv', 'os/gid', 'os/glob', 'os/group-of',
   'os/hibernate', 'os/hostname', 'os/irq-ack', 'os/irq-wait', 'os/isatty', 'os/kill', 'os/link', 'os/list-dir', 'os/load-avg', 'os/lstat', 'os/memory-info', 'os/mkdir', 'os/mktemp', 'os/mmio-read', 'os/mmio-write', 'os/mounts', 'os/network-connected',
-  'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recv', 'os/recvfrom', 'os/remove',
+  'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recvfrom', 'os/remove',
   'os/rename', 'os/rmdir', 'os/seek', 'os/send', 'os/sendto', 'os/setenv', 'os/shutdown', 'os/spawn', 'os/speak', 'os/stat', 'os/stderr-write', 'os/stdin-read', 'os/stdout-write',
   'os/suspend', 'os/symlink', 'os/tcp-connect', 'os/tcp-listen', 'os/tls-upgrade', 'os/thermal-zones', 'os/truncate', 'os/tty-size', 'os/udp-bind', 'os/uid', 'os/uname', 'os/unsetenv', 'os/uptime',
   'os/username', 'os/utimes', 'os/volume-get', 'os/volume-mute', 'os/volume-set', 'os/wait', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-port',
   'os/watch-process', 'os/watch-signal', 'os/write', 'os/write-file',
 ];
+
+// Effects either side runs: the browser's HTTP port and the stream handles it answers (EXEC-HTTP).
+const OS_ANY = ['os/close', 'os/fetch', 'os/recv'];
 
 const effects = Object.entries(STD_OPERATORS).filter(([, m]) => m.hasSideEffects);
 
@@ -28,9 +31,9 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'behavior/texts', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/print', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes', 'redis',
+      'persist', 'persist/read-named', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());
   });
 
@@ -74,7 +77,11 @@ describe('runsOn', () => {
 
   it('the os family is exactly the contract: effects run on the server, path math is pure, os/debounce is gone', () => {
     const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('os/')).sort();
-    expect(declared).toEqual([...OS_EFFECTS, ...OS_PURE].sort());
+    expect(declared).toEqual([...OS_EFFECTS, ...OS_PURE, ...OS_ANY].sort());
+    for (const name of OS_ANY) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('any');
+    }
     for (const name of OS_EFFECTS) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
       expect(STD_OPERATORS[name].runsOn, name).toBe('server');
@@ -85,7 +92,7 @@ describe('runsOn', () => {
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();
     }
     expect(STD_OPERATORS['os/debounce']).toBeUndefined();
-    expect(JSON.stringify(Object.entries(STD_OPERATORS).filter(([k]) => k.startsWith('os/')))).not.toMatch(/"(any|unknown|json)"/);
+    expect(JSON.stringify(Object.entries(STD_OPERATORS).filter(([k]) => k.startsWith('os/')), (key, value) => (key === 'runsOn' ? undefined : value))).not.toMatch(/"(any|unknown|json)"/);
   });
 
   it('every os/ sys payload is a closed shape documented in its description', () => {
@@ -117,9 +124,11 @@ describe('runsOn', () => {
 
   it('os/ binary data params are bytes; paths and names stay string', () => {
     const typeOf = (op: string, name: string) => STD_OPERATORS[op].params?.find((p) => p.name === name)?.type;
-    for (const op of ['os/write-file', 'os/append-file', 'os/write', 'os/send', 'os/sendto', 'os/stdout-write', 'os/stderr-write']) {
+    for (const op of ['os/write-file', 'os/append-file', 'os/write', 'os/sendto', 'os/stdout-write', 'os/stderr-write']) {
       expect(typeOf(op, 'data'), op).toBe('bytes');
     }
+    // os/send also takes credential segments the host resolves at the boundary (EXEC-CRYPTO).
+    expect(typeOf('os/send', 'data')).toEqual({ kind: 'union', of: ['bytes', { kind: 'array', of: { kind: 'object', fields: { bytes: 'bytes', credential: 'string' } } }] });
     const anchored = { kind: 'object', fields: { anchor: { kind: 'union', of: [{ kind: 'literal', value: 'cwd' }, { kind: 'literal', value: 'exe-dir' }, { kind: 'object', fields: { env: 'string' } }] }, path: 'string' } };
     expect(typeOf('os/write-file', 'path')).toEqual({ kind: 'union', of: ['string', anchored] });
     expect(typeOf('os/sendto', 'port')).toEqual({ kind: 'union', of: ['number', { kind: 'object', fields: { anchor: { kind: 'object', fields: { env: 'string' } } } }] });

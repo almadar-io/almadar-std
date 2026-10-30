@@ -115,6 +115,9 @@ interface CanonicalOperatorEntry {
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
     entityArgPosition?: number;
     pattern?: string;
+    /** Derived by orbital-core (`OPERATOR_WALK_METADATA_WRITE=<file> cargo test -p orbital-compiler --test runs_on_drift`), merged into the table, never authored here; pinned by that test. */
+    valueSourceSlots?: unknown;
+    fieldProjection?: unknown;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
     title?: string;
     params?: { name: string; type: unknown; description?: string; optional?: boolean; defaultValue?: unknown }[];
@@ -190,6 +193,8 @@ function toCanonicalEntry(
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;
     }
+    if (existing?.valueSourceSlots !== undefined) entry.valueSourceSlots = existing.valueSourceSlots;
+    if (existing?.fieldProjection !== undefined) entry.fieldProjection = existing.fieldProjection;
     // Docs enrichment: existing curated fields win; the module source's
     // `example` is the fallback so regeneration never drops enrichment.
     // `params` is the type contract both evaluators check (D-12), so the module source always wins.

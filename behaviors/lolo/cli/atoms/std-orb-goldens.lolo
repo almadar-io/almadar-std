@@ -2,7 +2,7 @@ app std-orb-goldens [
   version: "1.0.0",
   inbound: ["cli-goldens"],
   fs: { cwd: "**": [read], "/**": [read] },
-  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error. An expect may carry emitCounts ({ EVENT: n }, the event is emitted exactly n times in the step; 0 means never) and exactEmits, the step's complete ordered emit list: it must have as many emits as the step produced and each, in position, must match by event name and the payload keys it names, so an early incomplete emit is not masked by a later full one. A case is checked against the schema before it is played: an unknown case, step or expect key (note and golden are doc-only case strings, never asserted), an expect.entity (program/step answers no post-step entity row) each fail the case with a message. A case entity seeds the first step and a step entity seeds that step, through program/step's per-request entity; now is forwarded likewise, and a case config sets the knobs of the default trait on each of its steps."
+  description: "std-orb-goldens — the `orb goldens <file.goldens.json>` command, the parity-golden replay as a std program. The file names an atom (a path under the std lolo root, resolved three levels above the file: spec/<topic>/<file>), a default trait and cases; each case is a list of steps { trait, from, event, payload, expect { fired, state, emits [{ event, payload }], neverEmits [event] } }. It reads the file and the atom (os/read-file, program/read) and plays each case's steps in ONE program/step call, a fresh kernel per case. An expected emit matches the emit at the same position by event name and by every payload key it names (a nested value compares whole). One line per case, `pass` or `fail`, the unmet expectations indented under a fail, then `N passed, M failed`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); a failed read, parse or step answers 500 with its error. An expect may carry emitCounts ({ EVENT: n }, the event is emitted exactly n times in the step; 0 means never) and exactEmits, the step's complete ordered emit list: it must have as many emits as the step produced and each, in position, must match by event name and the payload keys it names, so an early incomplete emit is not masked by a later full one. A case is checked against the schema before it is played: an unknown case, step or expect key (note and golden are doc-only case strings, never asserted), an expect.entity (program/step answers no post-step entity row) each fail the case with a message. A case entity seeds the first step and a step entity seeds that step, through program/step's per-request entity; now is forwarded likewise, and a case config sets the knobs of the default trait on each of its steps. When a case fails, the failure also names each trait that fired in a step's cascade (other than the step's own trait) which no earlier step of the case plays and the case's `defaults` (a list of trait names that run on their entity defaults on purpose) does not list; a passing case is never annotated. A case credentials map (credential name to value) is test-only: the replay holds those credentials for each step of the case, answering the kernel's credential asks, and they are never journaled or printed; a name the map does not give is not held."
 ]
 uses Spec from "almadar-std/orb-goldens"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -12,7 +12,7 @@ type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
 type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
 type GoldenStep = { keep : string, keepField : string, now : number | string, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
-type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number | string, id : string!, steps : [GoldenStep]! }
+type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, credentials : Map string string, defaults : [string], now : number | string, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenEntry = { name : string!, kind : string! }
 type GoldenFull = { orbitals : [orbital] }
@@ -21,7 +21,7 @@ type GoldenOrbitalRef = { name : string!, traits : [GoldenTraitRef] }
 type GoldenProgramRef = { orbitals : [GoldenOrbitalRef]! }
 type GoldenState = { before : string, after : string }
 type GoldenEffect = { type : string, args : [GoldenValue?]!, status : string, error : string }
-type GoldenOutcome = { emitted : [GoldenEmitted], emits : [GoldenEmitted] }
+type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted], emits : [GoldenEmitted] }
 type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect] }
 type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult!, outcomes : [GoldenOutcome] }
 
@@ -124,7 +124,7 @@ orbital GoldensOrbital {
       GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (not (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip")))
         (set @entity.curCase (array/nth (object/get @entity.golden "cases") @entity.cursor))
         (set @entity.fails (let ((cc @entity.curCase)) (array/concat
-          (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
+          (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "credentials", "defaults", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
           (array/flatten (array/reduce (object/get @cc "steps") [] (fn acc s
             (array/append @acc (array/concat
               (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
@@ -152,7 +152,8 @@ orbital GoldensOrbital {
                 (if (= (array/len (object/keys @seed)) 0) {} { entity: @seed }))
               (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has @cc "now") { now: (object/get @cc "now") } {}))
               (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {})
-              (if (and (object/has @cc "config") (= (object/get @s "trait" (object/get @gf "trait")) (object/get @gf "trait"))) { config: (object/get @cc "config") } {}))))))
+              (if (and (object/has @cc "config") (= (object/get @s "trait" (object/get @gf "trait")) (object/get @gf "trait"))) { config: (object/get @cc "config") } {})
+              (if (object/has @cc "credentials") { credentials: (object/get @cc "credentials") } {}))))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
       GOLDENS_STEPPED -> running when (and (array/some (object/get @entity.curCase "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get @entity.curCase "steps"))))
         (set @entity.vars (let ((st (array/nth (object/get @entity.curCase "steps") @entity.upto))) (if (object/has @st "keep")
@@ -190,6 +191,12 @@ orbital GoldensOrbital {
                         (array/filter (array/range 0 (array/len @wantX)) (fn i (let ((a (array/nth @allEm @i)) (x (array/nth @wantX @i))) (not (and (!= @a null) (= (object/get @a "type") (object/get @x "event")) (array/every (object/keys (object/get @x "payload" {})) (fn key (let ((av (object/get (object/get @a "payload" {}) @key)) (xv (object/get (object/get @x "payload" {}) @key))) (or (= (json/stringify @av) (json/stringify @xv)) (and (str/startsWith (json/stringify @av) "{") (str/startsWith (json/stringify @xv) "{") (= @av @xv)) (and (str/startsWith (json/stringify @av) "[") (str/startsWith (json/stringify @xv) "[") (= @av @xv))))))))))) 
                         (fn i (str/concat "step " (array/len @acc) ": exactEmits entry " @i " expected " (object/get (array/nth @wantX @i) "event") " " (json/stringify (object/get (array/nth @wantX @i) "payload" {})) " got " (if (== (array/nth @allEm @i) null) "nothing" (str/concat (object/get (array/nth @allEm @i) "type") " " (json/stringify (object/get (array/nth @allEm @i) "payload" {}))))))))))
                 (array/map (array/filter (object/get @ex "neverEmits" []) (fn n (array/some @allEm (fn em (= (object/get @em "type") @n))))) (fn n (str/concat "step " (array/len @acc) ": emitted " @n " in " (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))))))))))) (fn m (!= @m ""))))
+        (set @entity.fails (if (= (array/len @entity.fails) 0) @entity.fails (array/concat @entity.fails (array/flatten (array/reduce (object/get @entity.curCase "steps") [] (fn acc s
+          (array/append @acc
+            (let ((pp (array/nth @payload.result (array/len @acc)))) (let ((outs (if (== @pp null) null (object/get (object/get @pp "result") "outcomes" (object/get @pp "outcomes" null))))
+                  (own (object/get @s "trait" (object/get @entity.golden "trait")))
+                  (declared (array/concat (array/map (array/take (object/get @entity.curCase "steps") (array/len @acc)) (fn p (object/get @p "trait" (object/get @entity.golden "trait")))) (object/get @entity.curCase "defaults" []))))
+              (array/map (array/unique (array/map (array/filter (if (== @outs null) [] @outs) (fn oc (and (= (object/get @oc "fired") true) (!= (object/get @oc "trait") @own) (not (array/includes @declared (object/get @oc "trait")))))) (fn oc (object/get @oc "trait")))) (fn n (str/concat "step " (array/len @acc) ": trait " @n " ran on unseeded defaults: no earlier step of the case plays it and the case's defaults does not list it"))))))))))))
         (set @entity.lines (array/concat @entity.lines [(str/concat (if (= (array/len @entity.fails) 0) "pass" "fail") "  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT {})

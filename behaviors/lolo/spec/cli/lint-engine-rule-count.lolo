@@ -1,0 +1,21 @@
+app lint-engine-rule-count-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint engine-rule-count <file>`; see the atom: a lint engine whose ruleCount knob differs from the LINT_FOUND answers it routes is refused."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEngineRuleCountSpec {
+  expects trait OrbLintEngineRuleCount {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEngineRuleCountCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEngineRuleCount, OrbLintEngineRuleCountCli
+}

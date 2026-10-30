@@ -1,0 +1,149 @@
+app std-orb-compose [
+  version: "1.0.0",
+  inbound: ["cli-compose"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-compose — the `orb compose --app-name <name> [--layout <strategy>] [--theme <theme>] <program>…` command (spec/cli/orb-compose.lolo). It reads each program file (os/read-file, a relative path under the working directory or an absolute one) in the order given, parses it with program/read and answers the programs composed into one app program by program/compose, printed as JSON. The shells that cannot run the Rust composer in process (the node host's program/compose) shell out to this command, so there is one composer. A missing app name, no program file, or an unreadable or unparsable file answers a status 400 usage or a status 500 error."
+]
+uses Spec from "almadar-std/orb-compose"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+
+orbital OrbComposeOrbital {
+  entity ComposeRun [runtime] {
+    id : string!
+    cwd : string = ""
+    files : [string] = []
+    cursor : number = 0
+    file : string = ""
+    programs : [behavior] = []
+    appName : string = ""
+    layout : string = ""
+    theme : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbCompose.COMPOSE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbCompose -> ComposeRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      COMPOSE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit COMPOSE_ANSWERED { status: 400, body: "", stderr: "usage: orb compose --app-name <name> [--layout <strategy>] [--theme <theme>] <program>…" })
+      COMPOSE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (emit COMPOSE_ARGS_PARSE { stage: "compose" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "app-name" aliases: [] takesValue: true repeatable: false }, { name: "layout" aliases: [] takesValue: true repeatable: false }, { name: "theme" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      COMPOSE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (array/len (default (object/get @payload.flags "app-name") [])) 0))
+        (emit COMPOSE_ANSWERED { status: 400, body: "", stderr: "usage: orb compose --app-name <name> [--layout <strategy>] [--theme <theme>] <program>…" })
+      COMPOSE_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (> (array/len (default (object/get @payload.flags "app-name") [])) 0))
+        (set @entity.files @payload.positionals)
+        (set @entity.cursor 0)
+        (set @entity.programs [])
+        (set @entity.appName (default (array/first (default (object/get @payload.flags "app-name") [])) ""))
+        (set @entity.layout (default (array/first (default (object/get @payload.flags "layout") [])) ""))
+        (set @entity.theme (default (array/first (default (object/get @payload.flags "theme") [])) ""))
+        (emit COMPOSE_NEXT { })
+    }
+
+    state reading {
+      INIT -> reading
+      COMPOSE_NEXT -> reading when (< @entity.cursor (array/len @entity.files))
+        (set @entity.file (default (array/nth @entity.files @entity.cursor) ""))
+        (emit COMPOSE_OPEN { })
+      COMPOSE_OPEN -> reading when (not (os/path-is-absolute @entity.file))
+        (os/read-file { anchor: "cwd" path: @entity.file } { key: "program" emit: { success: COMPOSE_READ, failure: COMPOSE_READ_FAILED } })
+      COMPOSE_OPEN -> reading when (os/path-is-absolute @entity.file)
+        (os/read-file (str/concat "/" (str/slice @entity.file 1 (str/len @entity.file))) { key: "program" emit: { success: COMPOSE_READ, failure: COMPOSE_READ_FAILED } })
+      COMPOSE_NEXT -> composing when (>= @entity.cursor (array/len @entity.files))
+        (program/compose @entity.programs (let ((named { appName: @entity.appName }) (laid (if (!= @entity.layout "") (object/set @named "layout" @entity.layout) @named))) (if (!= @entity.theme "") (object/set @laid "theme" @entity.theme) @laid)) { emit: { success: COMPOSE_COMPOSED, failure: COMPOSE_FAILED } })
+      COMPOSE_READ_FAILED -> ready
+        (emit COMPOSE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Could not read " @entity.file ": " (default @payload.error "")) })
+      COMPOSE_READ -> reading
+        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: COMPOSE_PROGRAM, failure: COMPOSE_PROGRAM_FAILED } })
+      COMPOSE_PROGRAM_FAILED -> ready
+        (emit COMPOSE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @entity.file ": " (default @payload.error "")) })
+      COMPOSE_PROGRAM -> reading
+        (set @entity.programs (array/append @entity.programs @payload.result))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit COMPOSE_NEXT { })
+    }
+
+    state composing {
+      INIT -> composing
+      COMPOSE_FAILED -> ready
+        (emit COMPOSE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
+      COMPOSE_COMPOSED -> ready
+        (emit COMPOSE_ANSWERED { status: 200, body: (json/stringify @payload.result), stderr: "" })
+    }
+
+    emits {
+      COMPOSE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      COMPOSE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      COMPOSE_NEXT { }
+        @description "Internal: read the next program file, or compose when all are read."
+        @tier "internal"
+      COMPOSE_OPEN { }
+        @description "Internal: the file at the cursor is open for reading."
+        @tier "internal"
+      COMPOSE_READ { data : bytes! }
+        @description "A program file read."
+        @tier "internal"
+      COMPOSE_READ_FAILED { error : string }
+        @description "A program file could not be read."
+        @tier "internal"
+      COMPOSE_PROGRAM { result : behavior! }
+        @description "A program file parsed."
+        @tier "internal"
+      COMPOSE_PROGRAM_FAILED { error : string }
+        @description "A program file could not be parsed."
+        @tier "internal"
+      COMPOSE_COMPOSED { result : behavior! }
+        @description "The programs composed into one app program."
+        @tier "internal"
+      COMPOSE_FAILED { error : string }
+        @description "The composer refused."
+        @tier "internal"
+    }
+
+    listens {
+      COMPOSE_CALLED -> inbound "cli-compose" answers COMPOSE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb compose`."
+        @synonyms "orb compose, compose programs into an app, assemble an app program from files"
+      COMPOSE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> COMPOSE_ARGS_DONE
+    }
+  }
+
+  page boot as OrbComposeOrbitalStart -> OrbCompose, ArgsCli
+}

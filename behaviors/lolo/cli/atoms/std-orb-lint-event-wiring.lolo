@@ -34,6 +34,7 @@ type PatternEventProp = { pattern : string!, prop : string!, field : string! }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintEventWiringCodes = { xOrphanListener : LintCodeDecl , xUnusedEmission : LintCodeDecl , emitUnroutedToHandler : LintCodeDecl }
 
+type WalkSlot = { kind : string!, args : [number] }
 orbital OrbLintEventWiringOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -350,19 +351,24 @@ orbital OrbLintEventWiringOrbital {
     listens {
       FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
-      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      FIRED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> FIRED_WALK_HEARD
       OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
     }
   }
   trait OrbProducedEvents = Produced.traits.OrbProducedEvents {
     listens {
-      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_SEMANTICS_HEARD { functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      PRODUCED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
       PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
@@ -371,6 +377,7 @@ orbital OrbLintEventWiringOrbital {
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> PRODUCED_WALK_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
       OrbLintInput.LINT_INPUT -> PRODUCED_INPUT_HEARD
     }

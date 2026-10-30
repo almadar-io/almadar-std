@@ -1,0 +1,63 @@
+app std-orb-os-grants [
+  version: "1.0.0",
+  inbound: ["cli-os-grants"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-os-grants — the `orb os-grants <file> [--final]` command: the kernel's answer to `program/os-grants` for the file, resolved, printed as 2-space pretty JSON `{ findings }` (status 200). Each finding is `{ code, orbital?, call?, entry?, site, grant?, app?, argument?, via? }`: `missing`, `unused`, `entry-invalid` or `target-not-static`. With --final the finished program is checked, where a config-fed target is a literal. The node host answers its own `program/os-grants` through this command. A file the host cannot read or resolve prints `Error: <reason>` on stderr (status 500). Anything but one file argument, optionally followed by --final, is the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-os-grants"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OsGrantFinding = { code : string!, orbital : string, call : string, entry : string, site : string!, grant : string, app : boolean, argument : number, via : string }
+type OsGrantsAnswer = { findings : [OsGrantFinding]! }
+
+orbital OrbOsGrantsOrbital {
+  entity OsGrantsRun [runtime] {
+    id : string!
+    cwd : string = ""
+  }
+
+  trait OrbOsGrants -> OsGrantsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      GRANTS_CALLED -> ready when (not (let ((a (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final")))))))
+        (emit GRANTS_ANSWERED { status: 400, body: "", stderr: "usage: orb os-grants <FILE> [--final]" })
+      GRANTS_CALLED -> checking when (let ((a (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final"))))))
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (program/os-grants null { path: (let ((f (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") @f))), final: (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2) } { key: "os-grants" emit: { success: GRANTS_DONE, failure: GRANTS_REFUSED } })
+    }
+
+    state checking {
+      INIT -> checking
+      GRANTS_DONE -> ready
+        (emit GRANTS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }), stderr: "" })
+      GRANTS_REFUSED -> ready
+        (emit GRANTS_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "program/os-grants was refused")) })
+    }
+
+    emits {
+      GRANTS_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+    }
+
+    listens {
+      GRANTS_CALLED -> inbound "cli-os-grants" answers GRANTS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb os-grants`."
+        @synonyms "orb os-grants, prove the invariants of a program, check holds and ensures"
+      GRANTS_DONE { result : OsGrantsAnswer! }
+        @description "Internal: the kernel's findings for the file."
+      GRANTS_REFUSED { error : string }
+        @description "Internal: the host could not read, resolve or prove the file."
+    }
+  }
+
+  page boot as OrbOsGrantsPage -> OrbOsGrants
+}

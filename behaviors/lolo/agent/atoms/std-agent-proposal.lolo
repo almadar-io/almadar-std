@@ -1,7 +1,7 @@
 app std-agent-proposal [
   version: "1.0.0",
   description: "std-agent-proposal — an agent that reads what the person hands over, works out a structured proposal, and commits nothing until they approve it. The app starts it with PROPOSAL_REQUESTED { input, context } (any trait emitting it, or the person typing into the start form when `showInputForm` is on). A second std-agent-tool-loop answers with `instructions`, `prompt` and `tools` as the signed-in person — `quiet`, its reply and failure renamed PROPOSAL_LOOP_REPLIED / PROPOSAL_LOOP_FAILED so they never reach the assistant's chat — and submits its proposal through one declared input, PROPOSE (its @description is the tool text): a summary and a list of items, each a flat map of scalar values the app names. The person reviews it (the summary, the items drawn with `itemPattern` and `itemFields`) and chooses: Approve emits PROPOSAL_APPROVED { proposal } for the app to commit (the app owns the commit; this atom writes nothing); Revise sends their written feedback back to the agent, which proposes again; Discard emits PROPOSAL_DISCARDED. Cancel while the agent works aborts its model call and emits PROPOSAL_CANCELLED. A run that fails, or ends without proposing, shows its error with Retry and Discard. The panel renders into `panelSlot`. Import the orbital once per app: `orbital Proposal = Proposal.orbitals.AgentProposalOrbital { config { instructions: \"…\", prompt: \"…\", itemFields: […] } }`, restating `tools` with PROPOSE addressed by its local orbital name (`{ event: Proposal.AgentProposalWorkflow.PROPOSE }`). Instructions, prompts, item fields and labels are the app's vocabulary, declared in config.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 ;; @capabilities "agent proposal, review before commit, human approval of agent output, approve or revise agent suggestions, structured proposal review, ai drafts for approval, extract then confirm"
 
@@ -93,6 +93,8 @@ type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 orbital AgentProposalOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Llm from "std/behaviors/std-llm"
+  uses Req from "std/behaviors/std-http-request"
+  uses Http from "std/behaviors/std-http-client"
 
   config {
     instructions : string = "You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise."
@@ -737,8 +739,37 @@ orbital AgentProposalOrbital {
       AgentProposalLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       AgentProposalLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       AgentProposalLoop.LLM_CANCEL -> LLM_CANCEL
+      ProposalChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      ProposalChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      ProposalChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      ProposalChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
     }
   }
 
-  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop, AgentProposalLlm
+  trait ProposalChatRequest = Req.traits.HttpRequest {
+    listens {
+      AgentProposalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      AgentProposalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ProposalChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ProposalChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ProposalChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ProposalChatRequest.HTTP_SEND -> HTTP_SEND
+      ProposalChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop, AgentProposalLlm, ProposalChatRequest, ProposalChatHttp
 }

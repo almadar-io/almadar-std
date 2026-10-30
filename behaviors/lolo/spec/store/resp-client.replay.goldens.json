@@ -1,7 +1,7 @@
 {
  "atom": "store/atoms/std-resp-client.lolo",
  "trait": "RespClient",
- "note": "parity oracle: the recorded fixtures of orbital-integration-tests/fixtures/redis (recorded against Redis 7 by fixtures/redis/record.py) without a password; the AUTH cases wait for the secret knob",
+ "note": "parity oracle: the recorded fixtures of orbital-integration-tests/fixtures/redis (recorded against Redis 7 by fixtures/redis/record.py) without a password; the AUTH cases hold the password as a test-only case credential",
  "cases": [
   {
    "id": "delete-existing",
@@ -1485,7 +1485,358 @@
    ]
   },
   {
-   "id": "an-authenticated-call-is-unconfigured-until-the-secret-knob-feeds-os-send",
+   "id": "an-authenticated-call-sends-auth-with-the-held-password-then-the-command",
+   "note": "AUTH password rides an os/send credential segment: RESP_WIRE_SENT shows the frame without the password bytes (length 7 in the frame head) and the replay holds the password only as the case's test credential",
+   "config": {
+    "authenticated": true
+   },
+   "credentials": {
+    "REDIS_PASSWORD": "hunter2"
+   },
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "authorizing",
+      "emits": [
+       {
+        "event": "RESP_AUTH_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "k",
+         "stage": "handshake",
+         "bytes": "KjINCiQ0DQpBVVRIDQokNw0KDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 27
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "k",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQprDQo="
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED",
+       "RESP_REPLIED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYxDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "k",
+         "kind": "bulk",
+         "text": "v1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-acl-user-and-a-database-send-auth-user-password-then-select-before-the-command",
+   "note": "the ACL form AUTH user password, pipelined with SELECT db; both replies must be +OK before the command goes out",
+   "config": {
+    "authenticated": true,
+    "user": "app",
+    "db": 2
+   },
+   "credentials": {
+    "REDIS_PASSWORD": "hunter2"
+   },
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "authorizing",
+      "emits": [
+       {
+        "event": "RESP_AUTH_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "k",
+         "stage": "handshake",
+         "bytes": "KjMNCiQ0DQpBVVRIDQokMw0KYXBwDQokNw0KDQoqMg0KJDYNClNFTEVDVA0KJDENCjINCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 59
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "neverEmits": [
+       "RESP_FAILED",
+       "RESP_REPLIED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "k",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQprDQo="
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED",
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wrong-password-reply-fails-the-call-with-the-servers-error-word",
+   "note": "the handshake error answers every key in flight with kind redis and the first word as code",
+   "config": {
+    "authenticated": true
+   },
+   "credentials": {
+    "REDIS_PASSWORD": "hunter2"
+   },
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "authorizing",
+      "emits": [
+       {
+        "event": "RESP_AUTH_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "k",
+         "stage": "handshake",
+         "bytes": "KjINCiQ0DQpBVVRIDQokNw0KDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 27
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LVdST05HUEFTUyBpbnZhbGlkIHVzZXJuYW1lLXBhc3N3b3JkIHBhaXIgb3IgdXNlciBpcyBkaXNhYmxlZC4NCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "redis",
+         "code": "WRONGPASS"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-authenticated-call-with-no-credential-held-is-unconfigured-before-any-connect",
+   "note": "control: the password credential is not held, so the call fails before any connect",
+   "config": {
+    "authenticated": true
+   },
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_AUTH_READ",
+        "payload": {}
+       },
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "unconfigured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-authenticated-call-whose-credential-is-held-under-another-name-is-unconfigured",
+   "note": "control: only REDIS_PASSWORD is the password knob's credential",
+   "config": {
+    "authenticated": true
+   },
+   "credentials": {
+    "OTHER": "hunter2"
+   },
    "steps": [
     {
      "event": "RESP_RUN",
@@ -1506,13 +1857,13 @@
         }
        }
       ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ],
       "effects": []
      }
     }
-   ],
-   "config": {
-    "authenticated": true
-   }
+   ]
   },
   {
    "id": "two-overlapping-keys-share-one-connection-and-are-answered-in-order",

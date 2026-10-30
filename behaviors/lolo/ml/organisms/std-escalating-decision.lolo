@@ -1,7 +1,8 @@
 app std-escalating-decision [
   version: "1.0.0",
   description: "std-escalating-decision — the intelligence ladder itself, as one reusable composition. One request enters at DECIDE and falls through the rungs in order — R0 exact check, R1 table lookup, R3 retrieval, R4 learned inference, R5 generative classification — each rung handing off to the next by abstaining, until one proves the answer. Exits DECIDED, tagged with which rung answered (rung, confidence, matched, reasoning), or DECISION_FAILED if even the generative floor could not serve it. The escalation is a chain, not a hub: each rung listens directly to the rung above it and projects its own inputs out of the carried request, so the trait graph is a DAG and no event ever returns to a rung that already ran. Domain-agnostic: it knows about candidates and categories, not students or quizzes — grading, routing, matching, moderation, and duplicate detection are all this same molecule with different knobs. R2 (the Beta posterior) is deliberately not in this chain: it is the 'decide what to do next' half of a turn and already lives in std-knowledge-tracing."
-  egress: ["http://localhost:3000", "https://api.openai.com", "https://openrouter.ai"]
+  egress: ["http://localhost:3000"],
+  net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
 ]
 
 ;; @exposure both
@@ -12,6 +13,9 @@ orbital EscalatingDecisionOrbital {
   uses Rung3 from "std/behaviors/std-ml-similarity"
   uses Rung4 from "std/behaviors/std-ml-infer"
   uses Rung5 from "std/behaviors/std-ml-classify"
+  uses Delay from "std/behaviors/std-delay"
+  uses Req from "std/behaviors/std-http-request"
+  uses Http from "std/behaviors/std-http-client"
 
   ;; The whole DECIDE payload, echoed untouched down the chain so each rung
   ;; can project its own inputs out of it (object/get "accepted"/"categories"/"candidate").
@@ -189,8 +193,51 @@ orbital EscalatingDecisionOrbital {
     listens {
       ClassifyRung.LLM_CLASSIFY -> LLM_CLASSIFY
       SimilarityRung.LLM_EMBED -> LLM_EMBED
+      EscEmbedWait.ESC_EMBED_WAITED -> LLM_EMBED_WAITED
+      EscEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      EscEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      EscEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+      ClassifyChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      ClassifyChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      ClassifyChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
     }
   }
+
+  trait EscEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: ESC_EMBED_WAITED
+    }
+    listens {
+      ClassifyLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait EscEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      ClassifyLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ClassifyLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      EscEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      EscEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait EscEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      EscEmbedRequest.HTTP_SEND -> HTTP_SEND
+      EscEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+  trait ClassifyChatRequest = Rung5.traits.ClassifyChatRequest {}
+  trait ClassifyChatHttp = Rung5.traits.ClassifyChatHttp {}
 
   ;; The sink. Listens to every rung's success plus the generative floor's
   ;; failure, and emits the one public verdict. Nothing listens to it, so it
@@ -219,5 +266,5 @@ orbital EscalatingDecisionOrbital {
     }
   }
 
-  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, LadderVerdictSink
+  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, EscEmbedWait, EscEmbedRequest, EscEmbedHttp, ClassifyChatRequest, ClassifyChatHttp, LadderVerdictSink
 }

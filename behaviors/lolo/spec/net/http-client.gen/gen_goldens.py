@@ -200,6 +200,75 @@ tcase("a-tls-idle-socket-is-reused-by-the-next-call-without-a-new-connect",
  [dict(send(key="k2"),expect={"state":"sending","emits":[{"event":"HC_BUILT"}],"neverEmits":["HTTP_FAILED"],"effects":[]},**{"from":"ready"})],
  entity={"idle":5})
 
+# credential header: the host fills the value into the send at the boundary (os/send credential segments)
+CRED={"credential":"EMBEDDING_API_KEY","credentialHeader":"authorization","credentialPrefix":"Bearer "}
+def cbuilt(head,req): return {"event":"HC_BUILT","payload":{"head":b(head),"request":b(req)}}
+case("a-credential-header-is-written-by-the-host-as-a-send-segment-after-its-prefix",[
+ dict(send(headers=[{"name":"Accept","value":"text/plain"}]),expect={"state":"connecting","effects":[{"type":"os/tcp-connect","arg0":"api.example.test","arg1":80}],"emits":[cbuilt("GET /x?a=1 HTTP/1.1\r\nhost: api.example.test\r\nauthorization: Bearer ","\r\naccept: text/plain\r\n\r\n")]}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":[{"bytes":"@entity.head","credential":"@config.credential"},{"bytes":"@entity.request","credential":""}]}]})])
+cases[-1]["config"]=CRED
+case("control-without-a-credential-header-the-request-is-one-plain-send",[
+ dict(send(headers=[{"name":"Accept","value":"text/plain"}]),expect={"state":"connecting","emits":[cbuilt("","GET /x?a=1 HTTP/1.1\r\nhost: api.example.test\r\naccept: text/plain\r\n\r\n")]}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":"@entity.request"}]})])
+case("an-x-api-key-header-with-no-prefix-writes-the-credential-alone",[
+ dict(send(),expect={"state":"connecting","emits":[cbuilt("GET /x?a=1 HTTP/1.1\r\nhost: api.example.test\r\nx-api-key: ","\r\n\r\n")]})])
+cases[-1]["config"]={"credential":"ANTHROPIC_API_KEY","credentialHeader":"x-api-key"}
+case("an-optional-credential-that-is-not-held-sends-no-header",[
+ dict(send(),expect={"state":"connecting","emits":[cbuilt("","GET /x?a=1 HTTP/1.1\r\nhost: api.example.test\r\n\r\n")]})])
+cases[-1]["config"]=dict(CRED,credentialOptional=True)
+case("control-a-required-credential-that-is-not-held-still-builds-the-segments-so-the-host-fails-the-send-as-denied",[
+ dict(send(),expect={"state":"connecting","emits":[cbuilt("GET /x?a=1 HTTP/1.1\r\nhost: api.example.test\r\nauthorization: Bearer ","\r\n\r\n")]}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send"}]}),
+ step("HC_IO_FAILED",{"error":"credential not held","kind":"denied","key":"send"},{"state":"ready","emits":[failed("k1","denied","credential not held")]})])
+cases[-1]["config"]=CRED
+case("a-payload-header-naming-a-credential-is-still-refused-when-a-credential-header-is-configured",[
+ dict(send(headers=[{"name":"Authorization","value":"Bearer x"}]),expect={"state":"ready","emits":[failed("k1","refused")],"neverEmits":["HC_BUILT"]})])
+cases[-1]["config"]=CRED
+
+# cancel: HTTP_CANCEL aborts the call in flight; nothing is answered
+CAN=lambda key="k1": {"event":"HTTP_CANCEL","payload":{"key":key}}
+NOANS=["HTTP_REPLIED","HTTP_FAILED","HTTP_STREAM_EVENT"]
+case("a-cancel-while-reading-closes-the-socket-and-answers-nothing",[
+ dict(send(),expect={"state":"connecting"}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending"}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading","effects":[{"type":"os/recv"}]}),
+ dict(CAN(),expect={"state":"ready","effects":[{"type":"os/close","arg0":"@entity.sock"}],"neverEmits":NOANS}),
+ step("HC_READ",read(head(200,"OK",[("content-length","2")])+"hi"),{"state":"ready","neverEmits":NOANS+["HC_ADVANCE"],"effects":[]}),
+ step("HC_IO_FAILED",{"error":"closed","kind":"closed","key":"read"},{"state":"ready","neverEmits":NOANS})])
+case("a-cancel-while-sending-closes-the-socket-and-answers-nothing",[
+ dict(send(),expect={"state":"connecting"}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending"}),
+ dict(CAN(),expect={"state":"ready","effects":[{"type":"os/close","arg0":"@entity.sock"}],"neverEmits":NOANS}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"ready","effects":[],"neverEmits":NOANS})])
+case("a-cancel-before-the-connect-answers-closes-the-late-socket",[
+ dict(send(),expect={"state":"connecting"}),
+ dict(CAN(),expect={"state":"ready","effects":[],"neverEmits":NOANS}),
+ step("HC_CONNECTED",{"sock":7,"key":"connect"},{"state":"ready","effects":[{"type":"os/close","arg0":"@payload.sock"}],"neverEmits":NOANS})])
+case("a-cancelled-stream-answers-no-further-frames",[
+ dict(send(stream="sse"),expect={"state":"connecting"}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending"}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading"}),
+ step("HC_READ",read(head(200,"OK",[("content-type","text/event-stream")])+"data: a\n\n"),{"emits":[{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":"a"}}]}),
+ dict(CAN(),expect={"state":"ready","effects":[{"type":"os/close","arg0":"@entity.sock"}],"neverEmits":NOANS}),
+ step("HC_READ",read("data: b\n\n"),{"state":"ready","neverEmits":NOANS+["HC_ADVANCE"]})])
+case("control-a-cancel-for-another-key-leaves-the-call-in-flight",[
+ dict(send(),expect={"state":"connecting"}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending"}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading"}),
+ dict(CAN("other"),expect={"state":"reading","effects":[],"neverEmits":NOANS}),
+ step("HC_READ",read(head(200,"OK",[("content-length","2")])+"hi"),{"emits":[replied("k1",200,{"content-length":"2"},"hi")]})])
+case("control-a-cancel-with-no-call-in-flight-is-a-no-op",[
+ dict(CAN(),expect={"state":"ready","effects":[],"neverEmits":NOANS})])
+case("a-call-sent-after-a-cancel-runs-whole",[
+ dict(send(),expect={"state":"connecting"}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending"}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading"}),
+ dict(CAN(),expect={"state":"ready"}),
+ dict(send(key="k2"),expect={"state":"connecting","effects":[{"type":"os/tcp-connect"}]}),
+ step("HC_CONNECTED",{"sock":6,"key":"connect"},{"state":"sending"}),
+ step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading"}),
+ step("HC_READ",read(head(200,"OK",[("content-length","2")])+"ok"),{"emits":[replied("k2",200,{"content-length":"2"},"ok")]})])
+
 # body limit
 json.dump({"atom":"net/atoms/std-http-client.lolo","trait":"HttpClient","spec":"spec/net/http-client.lolo","note":"parity oracle: the retired drivers/http_request wire loop; request composition, framing, streaming, refusals and failure kinds","cases":cases},open(out,'w'),indent=1)
 print(len(cases))

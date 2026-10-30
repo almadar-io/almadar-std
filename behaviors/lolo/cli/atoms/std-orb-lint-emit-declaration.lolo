@@ -4,20 +4,20 @@ app std-orb-lint-emit-declaration [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-emit-declaration — the `orb lint emit-declaration <file>` command, the port of validate_emit_against_declaration (effect/emit_declaration.rs). It lowers the file with program/read and checks each `emit` effect of every inline trait transition and tick, however nested in do, if, when and let (std-orb-effect-leaves flattens them): an event the trait's `emits` array does not declare is ORB_T_EVT_UNDECLARED, and an emit of a declared external event that carries a payload object missing a required payload field (or carries a non-object payload while the event has required fields) is ORB_X_PAYLOAD_MISMATCH, each with the Rust path, message and suggestion (status 500, exit 1). ORB_EFF_MISSING_REQUIRED_EMIT (validate_required_emit_success) is not here: no operator in the table sets requiresEmitSuccess, so the Rust pass is inert. Clean answers `lint emit-declaration: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-emit-declaration — the `orb lint emit-declaration <file>` command, the port of validate_emit_against_declaration (effect/emit_declaration.rs). It lowers the file with program/read and checks each `emit` effect of every inline trait transition and tick, however nested in do, if, when and let (std-orb-effect-leaves flattens them): an event the trait's `emits` array does not declare is ORB_T_EVT_UNDECLARED, and an emit of a declared external event that carries a payload object missing a required payload field (or carries a non-object payload while the event has required fields) is ORB_X_PAYLOAD_MISMATCH, each with the Rust path, message and suggestion (status 500, exit 1). ORB_EFF_MISSING_REQUIRED_EMIT (validate_required_emit_success) is not here: no operator in the table sets requiresEmitSuccess, so the Rust pass is inert. The rule asks std-orb-effect-leaves for the emit effects (heads: emit) and reads the event name and the payload object's keys from their flat typed nodes. Clean answers `lint emit-declaration: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-emit-declaration"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type EmdVal = string | number | boolean | [EmdVal?] | Map string EmdVal?
-type EmdTransition = { effects : [EmdVal?] }
-type EmdMachine = { transitions : [EmdTransition] }
-type EmdTick = { effects : [EmdVal?] }
 type EmdField = { name : string, required : boolean }
 type EmdEmit = { event : string, scope : string, payloadSchema : [EmdField] }
-type EmdTrait = { name : string, stateMachine : EmdMachine, ticks : [EmdTick], emits : [EmdEmit] }
+type EmdTrait = { name : string, emits : [EmdEmit] }
 type EmdOrbital = { name : string, traits : [EmdTrait] }
-type EmdLeaf = { p : string!, e : EmdVal!, oi : number!, ti : number! }
+type EmdNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type EmdLeaf = { p : string!, n : [EmdNode]!, oi : number!, ti : number! }
+type EmdWalkSlot = { kind : string!, args : [number] }
+type EmdWalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type EmdExprItem = { eff : boolean! }
 type EmdProgram = { orbitals : [EmdOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -42,28 +42,9 @@ orbital OrbLintEmitDeclarationOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.orbitals (object/get @payload.program "orbitals" []))
-        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emitdecl" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emitdecl" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: ["emit"] })
       EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "emitdecl" @entity.scope))
-        (set @entity.findings (let ((orbitals @entity.orbitals) (nof : [OrbFinding] []))
-          (let ((idx (object/fromEntries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                  (array/map (array/range 0 (array/len (object/get (array/nth @orbitals @oi) "traits" []))) (fn ti
-                    [(str/concat @oi "-" @ti), (object/get (array/nth (object/get (array/nth @orbitals @oi) "traits" []) @ti) "emits" [])]))))))))
-          (array/flatten (array/map @payload.leaves (fn l
-            (let ((e (object/get @l "e")) (p (object/get @l "p")))
-              (if (not (and (validate/array @e) (>= (array/len @e) 2) (= (array/nth @e 0) "emit"))) @nof
-                (let ((ev (array/nth @e 1)))
-                  (if (not (validate/string @ev)) @nof
-                    (let ((decls (array/filter (object/get @idx (str/concat (object/get @l "oi") "-" (object/get @l "ti")) []) (fn d (= (object/get @d "event" "") @ev)))))
-                      (if (= (array/len @decls) 0)
-                        [{ code: @config.codes.tEvtUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' is emitted but not declared in trait's emits array"), suggestion: "Add the event to the trait's 'emits' array with proper payload schema", severity: "error" }]
-                        (let ((d (array/first @decls)))
-                          (if (not (and (= (object/get @d "scope" "") "external") (>= (array/len @e) 3))) @nof
-                            (let ((req (array/map (array/filter (object/get @d "payloadSchema" []) (fn f (= (object/get @f "required" false) true))) (fn f (object/get @f "name" "")))) (pl (array/nth @e 2)))
-                              (if (validate/object @pl)
-                                (array/map (array/filter @req (fn r (not (object/has @pl @r)))) (fn r
-                                  { code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' is missing required payload field '" @r "'"), suggestion: (str/concat "Add the '" @r "' field to the emit payload"), severity: "error" }))
-                                (if (= (array/len @req) 0) @nof
-                                  [{ code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' requires payload with fields: [" (str/join (array/map @req (fn r (json/stringify @r))) ", ") "]"), suggestion: "Add a payload object with the required fields", severity: "error" }])))))))))))))))))
+        (set @entity.findings (let ((orbitals @entity.orbitals) (nof : [OrbFinding] []) (nn : EmdNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (let ((idx (object/fromEntries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (array/map (array/range 0 (array/len (object/get (array/nth @orbitals @oi) "traits" []))) (fn ti [(str/concat @oi "-" @ti), (object/get (array/nth (object/get (array/nth @orbitals @oi) "traits" []) @ti) "emits" [])])))))) ) ) (array/flatten (array/map @payload.leaves (fn l (let ((n : [EmdNode] (object/get @l "n" [])) (p (object/get @l "p"))) (let ((rti (- (array/len @n) 1)) (rt : EmdNode (default (array/nth @n @rti) @nn))) (let ((rtks : [number] (object/get @rt "ks"))) (let ((rtcr : [number] (array/map (array/range 0 (array/len @rtks)) (fn j (- (+ (- @rti (array/sum @rtks)) (array/sum (array/take @rtks (+ @j 1)))) 1))))) (if (not (and (array/includes ["call", "arr", "proj", "rui"] (object/get @rt "k")) (>= (array/len @rtks) 2) (= (default (array/first (default (object/get (default (array/nth @n (default (array/nth @rtcr 0) 0)) @nn) "lv") [])) "") "emit"))) @nof (let ((xi (default (array/nth @rtcr 1) 0)) (x : EmdNode (default (array/nth @n @xi) @nn))) (if (or (and (= (object/get @x "k") "nil") (!= (object/get @x "lv") null)) (and (= (object/get @x "k") "bind") (= (object/get @x "wh") "w")) (= (object/get @x "k") "cat")) (let ((ev : string (if (= (object/get @x "k") "nil") (default (array/first (default (object/get @x "lv") [])) "") (if (= (object/get @x "k") "bind") (object/get @x "tx") (object/get (default (array/nth @n (- @xi 1)) @nn) "tx"))))) (let ((decls (array/filter (object/get @idx (str/concat (object/get @l "oi") "-" (object/get @l "ti")) []) (fn d (= (object/get @d "event" "") @ev))))) (if (= (array/len @decls) 0) [{ code: @config.codes.tEvtUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' is emitted but not declared in trait's emits array"), suggestion: "Add the event to the trait's 'emits' array with proper payload schema", severity: "error" }] (let ((d (array/first @decls))) (if (not (and (= (object/get @d "scope" "") "external") (>= (array/len @rtks) 3))) @nof (let ((req (array/map (array/filter (object/get @d "payloadSchema" []) (fn f (= (object/get @f "required" false) true))) (fn f (object/get @f "name" ""))))) (let ((pli (default (array/nth @rtcr 2) 0)) (pl : EmdNode (default (array/nth @n @pli) @nn))) (if (= (object/get @pl "k") "obj") (let ((keys : [string] (object/get @pl "nms"))) (array/map (array/filter @req (fn r (not (array/includes @keys @r)))) (fn r { code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' is missing required payload field '" @r "'"), suggestion: (str/concat "Add the '" @r "' field to the emit payload"), severity: "error" }))) (if (= (array/len @req) 0) @nof [{ code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' requires payload with fields: [" (str/join (array/map @req (fn r (json/stringify @r))) ", ") "]"), suggestion: "Add a payload object with the required fields", severity: "error" }]))))))))) @nof)))))))))))))
         (emit LINT_FINISH { })
 
       LINT_FINISH -> ready
@@ -71,7 +52,7 @@ orbital OrbLintEmitDeclarationOrbital {
     }
 
     emits {
-      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmdOrbital]! }
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmdOrbital]!  heads : [string]! }
         @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
@@ -153,9 +134,28 @@ orbital OrbLintEmitDeclarationOrbital {
 
   trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
     listens {
-      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmdOrbital]! }
-        @description "Flatten the effects of every inline trait."
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmdOrbital]!  heads : [string]! }
+        @description "Flatten the effects of every inline trait whose head is asked."
+      LINT_EXPR_NODES { requestId : string!  nodes : [[EmdNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
       OrbLintEmitDeclaration.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
+    }
+  }
+  trait OrbLintExprNodes = Input.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string EmdWalkSlot!  projections : Map string EmdWalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [EmdExprItem]! }
+        @description "A rule asks to flatten expressions."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbEffectLeaves.LINT_EXPR_ASK -> LINT_EXPR_ASK
     }
   }
 
@@ -178,5 +178,5 @@ orbital OrbLintEmitDeclarationOrbital {
     }
   }
 
-  page boot as OrbLintEmitDeclarationOrbitalStart -> OrbLintEmitDeclaration, OrbLintEmitDeclarationCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
+  page boot as OrbLintEmitDeclarationOrbitalStart -> OrbLintEmitDeclaration, OrbLintEmitDeclarationCli, OrbLintInput, Packs, OrbEffectLeaves, OrbLintExprNodes, Versions
 }

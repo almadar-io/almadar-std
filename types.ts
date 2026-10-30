@@ -230,8 +230,6 @@ export interface OperatorMeta {
   targetOptions?: string[];
   /** What the call needs from the program's grants, one entry per need; `[]` for a call on a handle, whose grant was checked where the handle was made. Set on every `os/` and `kv/` operator. */
   grant?: OsGrantNeed[];
-  /** The default port of each URL scheme the operator connects under (`redis`, `postgres`). */
-  defaultPorts?: Record<string, number>;
   /** Set on the host effects (`random-bytes`, `access-check`, `credential-*`): the call's shape is closed. */
   closedCall?: ClosedCallMeta;
   /** The `oauth-client` auth ops and endpoint words (on `http`). */
@@ -296,8 +294,11 @@ export const STD_MODULES = [
   'base64',
   'hash',
   'hmac',
+  'credential',
   'rsa',
   'ecdsa',
+  'ecdh',
+  'aes-gcm',
   'gzip',
   'brotli',
   'xml',
@@ -430,8 +431,6 @@ export interface OperatorEffectMeta {
     | 'set'
     | 'call-service'
     | 'http'
-    | 'redis'
-    | 'postgres'
     | 'cancel-call'
     | 'random-bytes'
     | 'credential-status'

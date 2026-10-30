@@ -1,0 +1,167 @@
+{
+  "atom": "agent/atoms/std-agent-pool.lolo",
+  "trait": "AgentPoolLlm",
+  "note": "one embed round trip: request bytes to the keyed HttpClient (head up to the credential, tail after it), the recorded provider reply as vectors",
+  "cases": [
+    {
+      "id": "the request is written to openrouter with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "trait": "AgentPoolLlm",
+          "event": "LLM_EMBED",
+          "payload": {
+            "texts": [
+              "zz"
+            ],
+            "model": "baai/bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/api/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"baai/bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/api/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvYXBpL3YxL2VtYmVkZGluZ3MgSFRUUC8xLjENCmhvc3Q6IG9wZW5yb3V0ZXIuYWkNCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6ICovKg0KY29udGVudC10eXBlOiBhcHBsaWNhdGlvbi9qc29uDQpjb250ZW50LWxlbmd0aDogNDgNCg0KeyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the provider reply to the request this client wrote comes back as vectors",
+      "entity": {
+        "embedInflight": [
+          {
+            "key": "",
+            "httpKey": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "AgentPoolLlm",
+          "event": "LLM_EMBED_WIRE_RESULT",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+            "status": 200,
+            "headers": {
+              "content-type": "application/json",
+              "content-length": "170"
+            },
+            "body": "eyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoiYmFhaS9iZ2UtYmFzZS1lbi12MS41IiwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MSwidG90YWxfdG9rZW5zIjoxfX0=",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_RESULT",
+                "payload": {
+                  "embeddings": [
+                    [
+                      0.5,
+                      -0.25,
+                      0.125,
+                      1
+                    ]
+                  ],
+                  "usage": {
+                    "promptTokens": 1,
+                    "totalTokens": 1
+                  },
+                  "key": "",
+                  "model": "baai/bge-base-en-v1.5"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED",
+              "LLM_EMBED_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a reply for a request this client did not write is dropped",
+      "entity": {
+        "embedInflight": [
+          {
+            "key": "",
+            "httpKey": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "AgentPoolLlm",
+          "event": "LLM_EMBED_WIRE_RESULT",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"x\",\"texts\":[\"nope\"],\"callKey\":\"\"}",
+            "status": 200,
+            "headers": {
+              "content-type": "application/json",
+              "content-length": "170"
+            },
+            "body": "eyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoiYmFhaS9iZ2UtYmFzZS1lbi12MS41IiwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MSwidG90YWxfdG9rZW5zIjoxfX0=",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "neverEmits": [
+              "LLM_EMBED_RESULT",
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

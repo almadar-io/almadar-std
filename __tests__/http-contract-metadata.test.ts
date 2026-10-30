@@ -49,7 +49,7 @@ describe('HTTP contract metadata', () => {
     const grantRequest = auth.grantRequest;
     expect(grantRequest).toBeDefined();
     expect(grantRequest).not.toHaveProperty('open', true);
-    expect(Object.keys(fields(grantRequest)).sort()).toEqual(['headers', 'retry', 'timeoutMs']);
+    expect(Object.keys(fields(grantRequest)).sort()).toEqual(['headers', 'method', 'retry', 'timeoutMs']);
     expect(parts.grantRequest).toBeUndefined();
     expect(fields(auth.body).grantRequest).toBeUndefined();
     const scheme = auth.scheme;
@@ -145,7 +145,7 @@ describe('OAuth and OS grant metadata', () => {
 
   it('declares a grant on every os/ and kv/ effect, and on nothing else', () => {
     const host = Object.entries(STD_OPERATORS).filter(([, m]) => m.host === 'os' || m.host === 'kv');
-    expect(host.length).toBe(100);
+    expect(host.length).toBe(102);
     for (const [name, meta] of host) expect(meta.grant, name).toBeDefined();
     expect(Object.entries(STD_OPERATORS).filter(([, m]) => m.grant && m.host !== 'os' && m.host !== 'kv')).toEqual([]);
   });
@@ -191,15 +191,15 @@ describe('host effect and key metadata', () => {
     for (const name of ['access-check', 'credential-status', 'oauth-connection-status', 'oauth-connection-forget']) expect(optionsOf(name).key, name).toBeUndefined();
   });
 
-  it('declares program/compose options as the app name, layout and theme, not the emit envelope', () => {
+  it('declares program/compose options as the app name, layout, theme and overrides, not the emit envelope', () => {
     const options = STD_OPERATORS['program/compose'].params?.[1]?.type;
-    expect(options).toMatchObject({ kind: 'object', optional: ['layout', 'theme'] });
-    expect(Object.keys(fields(options))).toEqual(['appName', 'layout', 'theme']);
+    expect(options).toMatchObject({ kind: 'object', optional: ['layout', 'theme', 'overrides'] });
+    expect(Object.keys(fields(options))).toEqual(['appName', 'layout', 'theme', 'overrides']);
   });
 
-  it('carries a key only on the ask families that echo one: call/http/redis/postgres, random-bytes, oauth-authorize, os/, kv/, browser/, auth/sign-in and the program host', () => {
+  it('carries a key only on the ask families that echo one: call/http, random-bytes, oauth-authorize, os/, kv/, browser/, auth/sign-in and the program host', () => {
     const keyed = Object.entries(STD_OPERATORS).filter(([, m]) => m.params?.some((p) => typeof p.type === 'object' && p.type.kind === 'object' && 'key' in p.type.fields)).map(([name]) => name);
-    const allowed = new Set(['call-service', 'http', 'redis', 'postgres', 'random-bytes', 'oauth-authorize']);
+    const allowed = new Set(['call-service', 'http', 'random-bytes', 'oauth-authorize']);
     for (const name of keyed) {
       const m = STD_OPERATORS[name];
       expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || name === 'auth/sign-in' || m.host === 'program', name).toBe(true);
@@ -208,11 +208,9 @@ describe('host effect and key metadata', () => {
   });
 });
 
-describe('URL scheme default ports', () => {
-  it('declares them on the operators that connect under the scheme, and nowhere else', () => {
-    expect(STD_OPERATORS.redis.defaultPorts).toEqual({ redis: 6379, rediss: 6379 });
-    expect(STD_OPERATORS.postgres.defaultPorts).toEqual({ postgres: 5432, postgresql: 5432 });
-    expect(Object.entries(STD_OPERATORS).filter(([, m]) => m.defaultPorts).map(([name]) => name).sort()).toEqual(['postgres', 'redis']);
-    expect(canonical.operators.redis.defaultPorts).toEqual(STD_OPERATORS.redis.defaultPorts);
+describe('retired protocol operators', () => {
+  it('keeps no protocol operator: the std drivers speak over os/tcp-connect', () => {
+    expect(STD_OPERATORS.redis).toBeUndefined();
+    expect(canonical.operators.redis).toBeUndefined();
   });
 });

@@ -11,7 +11,9 @@ type AssetDocValue = string | number | boolean | [AssetDocValue] | Map string As
 type AssetKnob = { default : AssetDocValue }
 type AssetUse = { from : string, as : string }
 type AssetEntity = { instances : AssetDocValue }
-type AssetTrait = { name : string, ref : string, config : Map string AssetKnob }
+type AssetListenSource = { trait : string }
+type AssetListen = { event : string, source : AssetListenSource }
+type AssetTrait = { name : string, ref : string, config : Map string AssetKnob, listens : [AssetListen] }
 type AssetOrbital = { name : string, traits : [AssetTrait], uses : [AssetUse], entity : AssetEntity }
 type AssetProgram = { orbitals : [AssetOrbital] }
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -40,7 +42,8 @@ orbital OrbLintAssetInlineUrlOrbital {
             (let ((orb (array/nth @orbitals @oi)))
               (let ((trs (object/get @orb "traits" [])) (oname (object/get @orb "name" "")))
                 (let ((packAliases (array/map (array/filter (object/get @orb "uses" []) (fn u (= (object/get @u "from" "") "std/behaviors/std-asset-pack"))) (fn u (object/get @u "as" "")))) (isPack (array/map @trs (fn td (and (validate/object @td) (let ((parts (str/split (object/get @td "ref" "") "."))) (and (= (array/len @parts) 3) (array/includes @packAliases (array/nth @parts 0))))))))
-                      (hasKnob (array/map @trs (fn td (and (validate/object @td) (validate/object (object/get @td "config" null)) (object/has (object/get @td "config") "assetPack"))))))
+                      (hasKnob (array/map @trs (fn td (and (validate/object @td) (validate/object (object/get @td "config" null)) (object/has (object/get @td "config") "assetPack")))))
+                      (packNames (array/map (array/filter (array/range 0 (array/len @trs)) (fn i (array/nth @hasKnob @i))) (fn i (object/get (array/nth @trs @i) "name" "")))))
                   (if (not (or (array/some @isPack (fn b @b)) (array/some @hasKnob (fn b @b))))
                     []
                     (let ((where (str/concat "orbitals[" @oi " (" @oname ")]"))
@@ -49,7 +52,7 @@ orbital OrbLintAssetInlineUrlOrbital {
                               (let ((td (array/nth @trs @ti)))
                                 (if (or (array/nth @isPack @ti) (not (validate/object (object/get @td "config" null))))
                                   []
-                                  (array/map (array/filter (object/keys (object/get @td "config")) (fn k (not (and (= @k "origin") (array/nth @hasKnob @ti))))) (fn k
+                                  (array/map (array/filter (object/keys (object/get @td "config")) (fn k (not (and (= @k "origin") (or (array/nth @hasKnob @ti) (array/some (object/get @td "listens" []) (fn l (array/includes @packNames (object/get (object/get @l "source" {}) "trait" ""))))))))) (fn k
                                     { path: (str/concat @where ".traits[" @ti " (" (object/get @td "name" "") ")].config." @k ".default"), ti: @ti, kn: @k })))))))
                             (if (validate/object (object/get @orb "entity" null))
                               [{ path: (str/concat @where ".entity.instances"), ti: -1, kn: "" }]

@@ -5,6 +5,8 @@ app std-cloud-run-board [
   env: ["PATH", "HOME"],
   egress: ["https://monitoring.googleapis.com"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/cloud-run-board"
 type CrCondition = { type : string, status : string }
 type CrStatus = { url : string, conditions : [CrCondition], latestReadyRevisionName : string, latestCreatedRevisionName : string }
@@ -82,6 +84,17 @@ orbital CloudRunBoardOrbital {
     }
   }
 
+  trait CrMonitoring = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://monitoring.googleapis.com"
+      timeoutMs: 30000
+      credentialHeaders: []
+    }
+    listens {
+      CloudRunStatus.CR_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
   trait CloudRunStatus -> CloudRunBoard [client] {
     initial: idle
 
@@ -134,25 +147,17 @@ orbital CloudRunBoardOrbital {
 
       CR_RAN -> reading when (and (= @payload.stage "token") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
         (set @entity.token (str/trim @payload.stdout))
-        (http GET "https://monitoring.googleapis.com" (str/concat "/v3/projects/" @config.project "/timeSeries") {
-          query: { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" },
-          headers: { Authorization: (str/concat "Bearer " @entity.token) },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: CR_TIME_REPLIED, failure: CR_MONITORING_UNREACHABLE } })
+        (emit CR_HTTP_SEND { key: "time", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [{ name: "Authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none" })
       CR_RAN -> reading when (and (= @payload.stage "token") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
         (emit CR_COST { })
-      CR_TIME_REPLIED -> reading
-        (set @entity.instanceSeconds (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)) (array/filter (array/map (object/get (json/parse @payload.body CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
-        (http GET "https://monitoring.googleapis.com" (str/concat "/v3/projects/" @config.project "/timeSeries") {
-          query: { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" },
-          headers: { Authorization: (str/concat "Bearer " @entity.token) },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: CR_REQUESTS_REPLIED, failure: CR_MONITORING_UNREACHABLE } })
-      CR_REQUESTS_REPLIED -> reading
-        (set @entity.requests (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)) (array/filter (array/map (object/get (json/parse @payload.body CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
+      CR_REPLIED -> reading when (= @payload.key "time")
+        (set @entity.instanceSeconds (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid (default (bytes/to-string @payload.body) ""))) (array/filter (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
+        (emit CR_HTTP_SEND { key: "requests", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [{ name: "Authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none" })
+      CR_REPLIED -> reading when (= @payload.key "requests")
+        (set @entity.requests (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid (default (bytes/to-string @payload.body) ""))) (array/filter (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
         (set @entity.usageAvailable true)
         (emit CR_COST { })
-      CR_MONITORING_UNREACHABLE -> reading
+      CR_FAILED -> reading
         (set @entity.instanceSeconds [])
         (set @entity.requests [])
         (set @entity.usageAvailable false)
@@ -296,26 +301,6 @@ orbital CloudRunBoardOrbital {
       CLOUD_RUN_LOAD -> internal { }
         @description "Internal: the load a page opening with loadOnInit asks for."
         @tier "internal"
-      CR_TIME_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: Cloud Monitoring's billable instance time reply."
-        @tier "internal"
-      CR_REQUESTS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: Cloud Monitoring's request count reply."
-        @tier "internal"
-      CR_MONITORING_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: Cloud Monitoring could not be reached."
-        @tier "internal"
       CR_GCLOUD {
         stage : string!
         argv : [string]!
@@ -339,6 +324,16 @@ orbital CloudRunBoardOrbital {
         @tier "internal"
       CR_ANSWER -> internal { }
         @description "Internal: answer the board."
+        @tier "internal"
+      CR_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: one request, for the HTTP fetch."
         @tier "internal"
     }
 
@@ -364,27 +359,23 @@ orbital CloudRunBoardOrbital {
         code : string!
       }
         @description "A std-cli CLI_FAILED: gcloud or bq could not run."
-      CR_TIME_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Cloud Monitoring's billable instance time reply."
-      CR_REQUESTS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Cloud Monitoring's request count reply."
-      CR_MONITORING_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Cloud Monitoring could not be reached."
       CrGcloud.CLI_DONE -> CR_RAN
       CrGcloud.CLI_FAILED -> CR_CLI_FAILED
       CrBq.CLI_DONE -> CR_RAN
       CrBq.CLI_FAILED -> CR_CLI_FAILED
+      CR_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+      CR_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+      CrMonitoring.HTTP_REPLIED -> CR_REPLIED
+      CrMonitoring.HTTP_FAILED -> CR_FAILED
     }
 
     config {
@@ -452,9 +443,6 @@ orbital CloudRunBoardOrbital {
       defaultConcurrency : number = 80
         @description "Cloud Run's concurrency when a service sets none."
         @tier "domain"
-      timeoutMs : number = 30000
-        @description "Milliseconds each Cloud Monitoring call may take."
-        @tier "infra"
       cacheTtlMs : number = 600000
         @label "Cache window"
         @description "Milliseconds a read board is answered without reading again."
@@ -462,5 +450,5 @@ orbital CloudRunBoardOrbital {
     }
   }
 
-  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CrGcloud, CrBq
+  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CrMonitoring, CrGcloud, CrBq
 }

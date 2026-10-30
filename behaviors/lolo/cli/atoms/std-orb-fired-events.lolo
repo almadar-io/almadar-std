@@ -1,6 +1,6 @@
 app std-orb-fired-events [
   version: "1.0.0",
-  description: "std-orb-fired-events — the one place a lint run decides which event names a composition produces, the port of the compiler's collect_schema_fired_events. For every inline trait of the lowered program it walks the transition effects, the tick effects and the config defaults and answers FIRED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the event of an `(emit EVENT)` effect and every string under an `emit` config of an operator call; byControl holds the string leaves of the event-bearing props of a rendered pattern (LINT_EVENT_PROPS names, the leaves read through the operators' declared returnSemantics) and the leaves of the values of an event-map prop, never a binding. A branch whose condition is provably false, folding the trait's literal config knobs into the condition, contributes nothing; the walk of a value's leaves skips a provably false branch without the knobs. The rules that ask whether something is fired compose this trait and read FIRED_EVENTS; they never walk effects themselves."
+  description: "std-orb-fired-events — the one place a lint run decides which event names a composition produces, the port of the compiler's collect_schema_fired_events. For every inline trait of the lowered program it walks the transition effects, the tick effects and the config defaults and answers FIRED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the event of an `(emit EVENT)` effect and every string under an `emit` config of an operator call; byControl holds the string leaves of the event-bearing props of a rendered pattern (LINT_EVENT_PROPS names, the leaves read through the operators' value-source slots) and the leaves of the values of an event-map prop, never a binding. A branch whose condition is provably false, folding the trait's literal config knobs into the condition, contributes nothing; the walk of a value's leaves skips a provably false branch without the knobs. The rules that ask whether something is fired compose this trait and read FIRED_EVENTS; they never walk effects themselves."
 ]
 uses Spec from "almadar-std/fired-events"
 type FiredItem = { k : string!, h : string!, site : string!, kind : string!, src : string! }
@@ -21,13 +21,14 @@ type FiredControl = { event : string!, sites : [string]! }
 type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
 type FiredOrbital = { traits : [FiredTrait] }
 type FiredProgram = { orbitals : [FiredOrbital] }
+type WalkSlot = { kind : string!, args : [number] }
 
 orbital OrbFiredEventsOrbital {
   entity OrbFiredEventsRun [runtime] {
     id : string!
     names : [string] = []
     maps : [string] = []
-    semantics : Map string string = {}
+    walk : Map string WalkSlot = {}
     functions : [string] = []
     busExcluded : [string] = []
     targetOptions : [string] = []
@@ -43,13 +44,14 @@ orbital OrbFiredEventsOrbital {
         (set @entity.names @payload.names)
         (set @entity.maps @payload.maps)
         (set @entity.ctl (default (object/fromEntries (array/map @payload.controls (fn c [(str/replaceAll (str/replaceAll (str/concat (object/get @c "pattern") "." (object/get @c "prop")) "~" "~t") "." "~d"), (if (= (object/get @c "kind") "event-list") (if (object/get @c "notification") "ln" "ly") (if (object/get @c "notification") "n" "y"))]))) {}))
+      FIRED_WALK_HEARD -> ready
+        (set @entity.walk @payload.slots)
       FIRED_SEMANTICS_HEARD -> ready
-        (set @entity.semantics @payload.semantics)
         (set @entity.functions @payload.functions)
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.targetOptions @payload.targetOptions)
       FIRED_INPUT_HEARD -> ready
-        (let ((sem @entity.semantics) (names @entity.names) (maps @entity.maps) (ctl @entity.ctl) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (default (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (names @entity.names) (maps @entity.maps) (ctl @entity.ctl) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (default (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((cfg (object/get @t "config" {})))
@@ -138,9 +140,9 @@ orbital OrbFiredEventsOrbital {
       (if (= @len 0) @ns
         (let ((h (array/nth @n 0)))
           (let ((hasOp (validate/string @h)))
-            (let ((sm (if @hasOp (object/get @sem @h "") "")) (argc (- @len 1)))
+            (let ((sl (if @hasOp (default (object/get @sem @h) @noslot) @noslot)) (sm (object/get @sl "kind" "")) (argc (- @len 1)))
               (let ((kk (array/map @k (fn r (if (= @r null) @ns @r)))))
-                (let ((plainDead (and (= @sm "branch-union") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
+                (let ((plainDead (and (= @sm "branches") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
   (if (validate/array @m)
     (let ((len2 (array/len @m)))
       (if (= @len2 0) { f: true, t: false, lit: false, v: "" }
@@ -162,17 +164,17 @@ orbital OrbFiredEventsOrbital {
           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
-                  (let ((s (if (= @sm "branch-union")
+                  (let ((s (if (= @sm "branches")
                              (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
-                             (if (or (= @sm "union-of-args") (= @sm "coalesce"))
+                             (if (= @sm "args")
                                (array/flatten (array/map (array/drop @kk 1) (fn x (object/get @x "s" []))))
-                               (if (= @sm "last-of-args")
+                               (if (= @sm "last")
                                  (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) [])
-                                 (if (= @sm "lambda-result")
+                                 (if (= @sm "lambdaResult")
                                    (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
                                      (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get @lc "ls" [])) []))
-                                   (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<"))
-                                     (let ((picked (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v))))))
+                                   (if (= @sm "listed")
+                                     (let ((picked (object/get @sl "args" [])))
                                        (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc))))))
                                          (array/flatten (array/map @picked (fn i (let ((pc (array/nth @kk (+ @i 1)))) (object/get @pc "s" [])))))
                                          []))
@@ -187,9 +189,9 @@ orbital OrbFiredEventsOrbital {
       (if (= @len 0) @ns
         (let ((h (array/nth @n 0)))
           (let ((hasOp (validate/string @h)))
-            (let ((sm (if @hasOp (object/get @sem @h "") "")) (argc (- @len 1)))
+            (let ((sl (if @hasOp (default (object/get @sem @h) @noslot) @noslot)) (sm (object/get @sl "kind" "")) (argc (- @len 1)))
               (let ((kk (array/map @k (fn r (if (= @r null) @ns @r)))))
-                (let ((plainDead (and (= @sm "branch-union") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
+                (let ((plainDead (and (= @sm "branches") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
   (if (validate/array @m)
     (let ((len2 (array/len @m)))
       (if (= @len2 0) { f: true, t: false, lit: false, v: "" }
@@ -211,17 +213,17 @@ orbital OrbFiredEventsOrbital {
           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
-                  (let ((s (if (= @sm "branch-union")
+                  (let ((s (if (= @sm "branches")
                              (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
-                             (if (or (= @sm "union-of-args") (= @sm "coalesce"))
+                             (if (= @sm "args")
                                (array/flatten (array/map (array/drop @kk 1) (fn x (object/get @x "s" []))))
-                               (if (= @sm "last-of-args")
+                               (if (= @sm "last")
                                  (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) [])
-                                 (if (= @sm "lambda-result")
+                                 (if (= @sm "lambdaResult")
                                    (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
                                      (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get @lc "ls" [])) []))
-                                   (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<"))
-                                     (let ((picked (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v))))))
+                                   (if (= @sm "listed")
+                                     (let ((picked (object/get @sl "args" [])))
                                        (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc))))))
                                          (array/flatten (array/map @picked (fn i (let ((pc (array/nth @kk (+ @i 1)))) (object/get @pc "s" [])))))
                                          []))
@@ -257,8 +259,10 @@ orbital OrbFiredEventsOrbital {
     listens {
       FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]!  controls : [ControlProp]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
-      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators, the bus-excluded events and the dispatch target options."
+      FIRED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
     }

@@ -1,0 +1,259 @@
+{
+  "atom": "store/atoms/std-semantic-index.lolo",
+  "trait": "SemanticIndexLlm",
+  "note": "one embed round trip through std-http-request and std-http-client from a recorded provider transcript",
+  "cases": [
+    {
+      "id": "one embed round trip: the request is written to the wire, the recorded provider reply comes back as vectors",
+      "steps": [
+        {
+          "trait": "SemanticIndexLlm",
+          "event": "LLM_EMBED",
+          "payload": {
+            "texts": [
+              "zz"
+            ],
+            "model": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "state": "sending",
+            "effects": [
+              {
+                "type": "os/send"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 177,
+            "key": "send"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/recv"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL2pzb24NCkNvbnRlbnQtTGVuZ3RoOiAxODANCg0KeyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoidGV4dC1lbWJlZGRpbmctYmdlLWJhc2UtZW4tdjEuNSIsInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsInRvdGFsX3Rva2VucyI6MX19",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_RESULT",
+                "payload": {
+                  "embeddings": [
+                    [
+                      0.5,
+                      -0.25,
+                      0.125,
+                      1
+                    ]
+                  ],
+                  "usage": {
+                    "promptTokens": 1,
+                    "totalTokens": 1
+                  },
+                  "key": "",
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED",
+              "LLM_EMBED_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a 500 reply is an attempt that failed and gives no vectors",
+      "steps": [
+        {
+          "trait": "SemanticIndexLlm",
+          "event": "LLM_EMBED",
+          "payload": {
+            "texts": [
+              "zz"
+            ],
+            "model": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "state": "sending",
+            "effects": [
+              {
+                "type": "os/send"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 177,
+            "key": "send"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/recv"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "SemIdxEmbedHttp",
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgNTAwIEludGVybmFsIFNlcnZlciBFcnJvcg0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQpDb250ZW50LUxlbmd0aDogMzgNCg0KeyJlcnJvciI6eyJtZXNzYWdlIjoibW9kZWwgdW5sb2FkZWQifX0=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_ERROR",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 500,
+                  "message": "EmbeddingClient: lmstudio returned 500 Internal Server Error: {\"error\":{\"message\":\"model unloaded\"}}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED_RESULT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

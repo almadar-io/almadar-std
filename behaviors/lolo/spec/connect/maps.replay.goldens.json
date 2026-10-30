@@ -1,0 +1,189 @@
+{
+  "atom": "connect/atoms/std-maps.lolo",
+  "trait": "MapsClient",
+  "note": "Converted from orbital-integration-tests fixtures/maps (service parity); validation and unknown-action cases belong to the retired service layer and are not carried. The request is the atom's HTTP fetch send; the reply is the composed fetch's answer.",
+  "cases": [
+    {
+      "id": "distance-paris-london",
+      "steps": [
+        {
+          "event": "DISTANCE",
+          "payload": {
+            "fromLat": 48.8566,
+            "fromLng": 2.3522,
+            "toLat": 51.5074,
+            "toLng": -0.1278
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "MAPS_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "DISTANCE_COMPUTED",
+                "payload": {
+                  "distanceKm": 343.557
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "geocode-blank-address-sends-nothing",
+      "steps": [
+        {
+          "event": "GEOCODE",
+          "payload": {
+            "address": "   "
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "MAPS_HTTP_SEND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "geocode-not-found",
+      "steps": [
+        {
+          "event": "GEOCODE",
+          "payload": {
+            "address": "zzqqxxnotaplace"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "MAPS_HTTP_SEND",
+                "payload": {
+                  "key": "geocode",
+                  "method": "GET",
+                  "target": "/search?format=json&limit=1&q=zzqqxxnotaplace",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MAPS_REPLIED",
+          "payload": {
+            "key": "geocode",
+            "status": 200,
+            "headers": {},
+            "body": "W10="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "MAPS_FAILURE",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "geocode",
+      "steps": [
+        {
+          "event": "GEOCODE",
+          "payload": {
+            "address": "10 Downing Street, London"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "MAPS_HTTP_SEND",
+                "payload": {
+                  "key": "geocode",
+                  "method": "GET",
+                  "target": "/search?format=json&limit=1&q=10%20Downing%20Street%2C%20London",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MAPS_REPLIED",
+          "payload": {
+            "key": "geocode",
+            "status": 200,
+            "headers": {},
+            "body": "W3sicGxhY2VfaWQiOjI4MDUyMjg3MSwibGljZW5jZSI6IkRhdGEgwqkgT3BlblN0cmVldE1hcCBjb250cmlidXRvcnMsIE9EYkwgMS4wLiBodHRwOi8vb3NtLm9yZy9jb3B5cmlnaHQiLCJvc21fdHlwZSI6InJlbGF0aW9uIiwib3NtX2lkIjoxODc5ODQyLCJsYXQiOiI1MS41MDM0ODc4IiwibG9uIjoiLTAuMTI3Njk2NSIsImNsYXNzIjoib2ZmaWNlIiwidHlwZSI6ImdvdmVybm1lbnQiLCJwbGFjZV9yYW5rIjozMCwiaW1wb3J0YW5jZSI6MC41NTA1NzQ0NTM5MTY5Mzk4LCJhZGRyZXNzdHlwZSI6Im9mZmljZSIsIm5hbWUiOiIxMCBEb3duaW5nIFN0cmVldCIsImRpc3BsYXlfbmFtZSI6IjEwIERvd25pbmcgU3RyZWV0LCAxMCwgRG93bmluZyBTdHJlZXQsIFdlc3RtaW5zdGVyLCBDb3ZlbnQgR2FyZGVuLCBDaXR5IG9mIFdlc3RtaW5zdGVyLCBHcmVhdGVyIExvbmRvbiwgRW5nbGFuZCwgU1cxQSAyQUEsIFVuaXRlZCBLaW5nZG9tIiwiYm91bmRpbmdib3giOlsiNTEuNTAzMzA3NCIsIjUxLjUwMzY5MTMiLCItMC4xMjc3OTkxIiwiLTAuMTI3MzA4OCJdfV0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GEOCODED",
+                "payload": {
+                  "lat": 51.5034878,
+                  "lng": -0.1276965,
+                  "formattedAddress": "10 Downing Street, 10, Downing Street, Westminster, Covent Garden, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reverse-geocode",
+      "steps": [
+        {
+          "event": "REVERSE_GEOCODE",
+          "payload": {
+            "lat": 51.5034878,
+            "lng": -0.1276965
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "MAPS_HTTP_SEND",
+                "payload": {
+                  "key": "reverse",
+                  "method": "GET",
+                  "target": "/reverse?format=json&lat=51.5034878&lon=-0.1276965",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "MAPS_REPLIED",
+          "payload": {
+            "key": "reverse",
+            "status": 200,
+            "headers": {},
+            "body": "eyJwbGFjZV9pZCI6MjgxMjU1NjU4LCJsaWNlbmNlIjoiRGF0YSDCqSBPcGVuU3RyZWV0TWFwIGNvbnRyaWJ1dG9ycywgT0RiTCAxLjAuIGh0dHA6Ly9vc20ub3JnL2NvcHlyaWdodCIsIm9zbV90eXBlIjoicmVsYXRpb24iLCJvc21faWQiOjE4Nzk4NDIsImxhdCI6IjUxLjUwMzQ4NzgiLCJsb24iOiItMC4xMjc2OTY1IiwiY2xhc3MiOiJvZmZpY2UiLCJ0eXBlIjoiZ292ZXJubWVudCIsInBsYWNlX3JhbmsiOjMwLCJpbXBvcnRhbmNlIjowLjU1MDU3NDQ1MzkxNjkzOTgsImFkZHJlc3N0eXBlIjoib2ZmaWNlIiwibmFtZSI6IjEwIERvd25pbmcgU3RyZWV0IiwiZGlzcGxheV9uYW1lIjoiMTAgRG93bmluZyBTdHJlZXQsIDEwLCBEb3duaW5nIFN0cmVldCwgV2VzdG1pbnN0ZXIsIENvdmVudCBHYXJkZW4sIENpdHkgb2YgV2VzdG1pbnN0ZXIsIEdyZWF0ZXIgTG9uZG9uLCBFbmdsYW5kLCBTVzFBIDJBQSwgVW5pdGVkIEtpbmdkb20iLCJhZGRyZXNzIjp7Im9mZmljZSI6IjEwIERvd25pbmcgU3RyZWV0IiwiaG91c2VfbnVtYmVyIjoiMTAiLCJyb2FkIjoiRG93bmluZyBTdHJlZXQiLCJxdWFydGVyIjoiV2VzdG1pbnN0ZXIiLCJzdWJ1cmIiOiJDb3ZlbnQgR2FyZGVuIiwiY2l0eSI6IkNpdHkgb2YgV2VzdG1pbnN0ZXIiLCJJU08zMTY2LTItbHZsOCI6IkdCLVdTTSIsInN0YXRlIjoiRW5nbGFuZCIsIklTTzMxNjYtMi1sdmw0IjoiR0ItRU5HIiwicG9zdGNvZGUiOiJTVzFBIDJBQSIsImNvdW50cnkiOiJVbml0ZWQgS2luZ2RvbSIsImNvdW50cnlfY29kZSI6ImdiIn0sImJvdW5kaW5nYm94IjpbIjUxLjUwMzMwNzQiLCI1MS41MDM2OTEzIiwiLTAuMTI3Nzk5MSIsIi0wLjEyNzMwODgiXX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "REVERSE_GEOCODED",
+                "payload": {
+                  "address": "10 Downing Street, 10, Downing Street, Westminster, Covent Garden, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom",
+                  "formattedAddress": "10 Downing Street, 10, Downing Street, Westminster, Covent Garden, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

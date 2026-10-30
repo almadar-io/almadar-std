@@ -1,12 +1,12 @@
 app std-llm [
   version: "1.0.0",
-  description: "std-llm — text generation, classification, summarization, embeddings and Jev decisions over OpenAI-compatible and Anthropic chat endpoints. The provider, its origin, base path and default model are config knobs, never inferred; credentials are secret knobs naming the host env var. A request that cannot be answered ends in LLM_FAILED. extract returns the reply's JSON text for the caller to read under its own shape; call-tools runs the model's tool loop and hands each batch of tool calls to the caller, which runs them and answers. A classify, classifyMany or embed that carries a key can be cancelled by LLM_CANCEL while it waits for its provider: it ends in LLM_CANCELLED and a reply that arrives later is dropped.",
-  egress: ["https://api.openai.com", "https://api.anthropic.com", "https://api.deepseek.com", "https://api.moonshot.ai", "https://openrouter.ai", "http://127.0.0.1:1234"]
+  description: "std-llm — text generation, classification, summarization, embeddings and Jev decisions over OpenAI-compatible and Anthropic chat endpoints. The provider, its origin, base path and default model are config knobs, never inferred; credentials are secret knobs naming the host env var. A request that cannot be answered ends in LLM_FAILED. extract returns the reply's JSON text for the caller to read under its own shape; call-tools runs the model's tool loop and hands each batch of tool calls to the caller, which runs them and answers. A call that carries a key can be cancelled by LLM_CANCEL while it waits for its provider: its request is aborted on the wire (LLM_CHAT_WIRE_CANCEL, LLM_EMBED_WIRE_CANCEL), it ends in LLM_CANCELLED, and the aborted request answers nothing (std-http-request and std-http-client drop a late reply). Each request carries the wire's deadline (the composed std-http-request timeoutMs).",
 ]
 uses Spec from "almadar-std/llm-provider"
 type LlmImage = { mediaType : string!, data : string! }
 type LlmJob = { stream : boolean, action : string!, attempt : number!, system : string!, user : string!, base : string!, model : string!, temperature : number!, maxTokens : number!, categories : [string], itemIds : [string], callKey : string, images : [LlmImage] }
-type LlmInFlight = { key : string!, httpKey : string! }
+type WireKey = { kind : string!, id : string! }
+type LlmInFlight = { key : string!, httpKey : string!, wireKey : string! }
 type LlmStreamed = { key : string!, text : string!, inputTokens : number, outputTokens : number }
 type StreamDelta = { content : string, text : string }
 type StreamChoice = { delta : StreamDelta }
@@ -31,6 +31,7 @@ type EmbedDatum = { index : number, embedding : [number] }
 type EmbedErrorObject = { message : string }
 type EmbedUsage = { prompt_tokens : number, total_tokens : number }
 type EmbedReply = { data : [EmbedDatum], error : EmbedErrorObject, usage : EmbedUsage }
+type LlmWirePart = { headers : Map string string!, text : string?, bytes : bytes? }
 type EmbedJob = { generic : number!, limited : number!, model : string!, texts : [string]!, callKey : string, delayMs : number }
 type JevJob = { values : [string] }
 type JevAnswer = { type : string, choice : string, confidence : number }
@@ -60,19 +61,16 @@ orbital LlmOrbital {
   entity LlmCall [runtime] {
     id : string!
     inflight : [LlmInFlight] = []
+    embedInflight : [LlmInFlight] = []
+    embedWaiting : [string] = []
     streamed : [LlmStreamed] = []
-    embedKeyed : boolean = false
   }
 
   trait LlmClient -> @rebindable LlmCall [optimistic] {
     initial: idle
 
     state idle {
-      INIT -> idle when (= @config.embedProvider "lmstudio")
-        (credential-status { credential: @config.embedApiKey, scope: app } { emit: { success: LLM_EMBED_KEY_PROBED } })
       INIT -> idle
-      LLM_EMBED_KEY_PROBED -> idle
-        (set @entity.embedKeyed @payload.connected)
 
       LLM_GENERATE -> idle
         (emit LLM_CHAT_SEND {
@@ -148,7 +146,7 @@ orbital LlmOrbital {
         })
 
       LLM_CHAT_SEND -> idle when (= @config.provider "anthropic")
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job LlmJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job }))))
+        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job LlmJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job, wireKey: (json/stringify { kind: "chat", id: @payload.job }) }))))
         (emit LLM_CHAT_DISPATCH {
           job: @payload.job,
           body: (let ((j (default (json/parse @payload.job LlmJob) {})))
@@ -171,7 +169,7 @@ orbital LlmOrbital {
               })))
         })
       LLM_CHAT_SEND -> idle when (!= @config.provider "anthropic")
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job LlmJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job }))))
+        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job LlmJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job, wireKey: (json/stringify { kind: "chat", id: @payload.job }) }))))
         (emit LLM_CHAT_DISPATCH {
           job: @payload.job,
           body: (let ((j (default (json/parse @payload.job LlmJob) {})))
@@ -211,50 +209,47 @@ orbital LlmOrbital {
                     })))))))
         })
 
-      LLM_CHAT_DISPATCH -> idle when (and (= @config.provider "anthropic") (not (object/get (default (json/parse @payload.job LlmJob) {}) stream false)))
-        (http POST @config.origin (str/concat @config.basePath "/messages") {
-          headers: { Accept: "application/json", Content-Type: "application/json", anthropic-version: "2023-06-01" },
-          text: @payload.body,
-          auth: { scheme: api-key, credential: @config.apiKey, name: "x-api-key", in: header },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED } })
-      LLM_CHAT_DISPATCH -> idle when (and (or (= @config.provider "lmstudio") (= @config.provider "orbgen")) (not (object/get (default (json/parse @payload.job LlmJob) {}) stream false)))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Accept: "application/json", Content-Type: "application/json", Authorization: "Bearer not-needed" },
-          text: @payload.body,
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED } })
-      LLM_CHAT_DISPATCH -> idle when (and (!= @config.provider "anthropic") (!= @config.provider "lmstudio") (!= @config.provider "orbgen") (not (object/get (default (json/parse @payload.job LlmJob) {}) stream false)))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: @payload.body,
-          auth: { scheme: bearer, credential: @config.apiKey },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED } })
+      LLM_CHAT_DISPATCH -> idle
+        (emit LLM_CHAT_WIRE {
+          key: (json/stringify { kind: "chat", id: @payload.job }),
+          method: "POST",
+          path: (str/concat @config.basePath (if (= @config.provider "anthropic") "/messages" "/chat/completions")),
+          query: {},
+          headers: (object/merge { Accept: (if (object/get (default (json/parse @payload.job LlmJob) {}) stream false) "text/event-stream" "application/json") } (if (= @config.provider "anthropic") { anthropic-version: "2023-06-01" } {})),
+          json: @payload.body,
+          form: {}, multipartParts: [], stream: (if (object/get (default (json/parse @payload.job LlmJob) {}) stream false) "sse" "none"),
+          retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
+        })
 
-      LLM_CHAT_DISPATCH -> idle when (and (= @config.provider "anthropic") (object/get (default (json/parse @payload.job LlmJob) {}) stream false))
-        (http POST @config.origin (str/concat @config.basePath "/messages") {
-          headers: { Accept: "text/event-stream", Content-Type: "application/json", anthropic-version: "2023-06-01" },
-          text: @payload.body,
-          auth: { scheme: api-key, credential: @config.apiKey, name: "x-api-key", in: header },
-          timeoutMs: @config.timeoutMs,
-          stream: sse
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED, onMessage: LLM_CHAT_STREAM_MSG } })
-      LLM_CHAT_DISPATCH -> idle when (and (or (= @config.provider "lmstudio") (= @config.provider "orbgen")) (object/get (default (json/parse @payload.job LlmJob) {}) stream false))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Accept: "text/event-stream", Content-Type: "application/json", Authorization: "Bearer not-needed" },
-          text: @payload.body,
-          timeoutMs: @config.timeoutMs,
-          stream: sse
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED, onMessage: LLM_CHAT_STREAM_MSG } })
-      LLM_CHAT_DISPATCH -> idle when (and (!= @config.provider "anthropic") (!= @config.provider "lmstudio") (!= @config.provider "orbgen") (object/get (default (json/parse @payload.job LlmJob) {}) stream false))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Accept: "text/event-stream", Content-Type: "application/json" },
-          text: @payload.body,
-          auth: { scheme: bearer, credential: @config.apiKey },
-          timeoutMs: @config.timeoutMs,
-          stream: sse
-        } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED, onMessage: LLM_CHAT_STREAM_MSG } })
+      LLM_CHAT_WIRE_RESULT -> idle when (and (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "chat") (!= (bytes/to-string @payload.body) null))
+        (emit LLM_CHAT_HTTP_OK { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_RESULT -> idle when (and (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "chat") (= (bytes/to-string @payload.body) null))
+        (emit LLM_CHAT_HTTP_FAILED { error: "the reply is not UTF-8 text", kind: "io", key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_RESULT -> idle when (and (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "tools") (!= (bytes/to-string @payload.body) null))
+        (emit LLM_TOOLS_REPLIED { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_RESULT -> idle when (and (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "tools") (= (bytes/to-string @payload.body) null))
+        (emit LLM_TOOLS_UNREACHABLE { error: "the reply is not UTF-8 text", kind: "io", key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_RESULT -> idle
+      LLM_CHAT_WIRE_FAILED -> idle when (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "chat")
+        (emit LLM_CHAT_HTTP_FAILED { error: @payload.error, kind: @payload.kind, key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_FAILED -> idle when (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "tools")
+        (emit LLM_TOOLS_UNREACHABLE { error: @payload.error, kind: @payload.kind, key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_FAILED -> idle
+      LLM_CHAT_WIRE_REFUSED -> idle when (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "chat")
+        (emit LLM_CHAT_HTTP_FAILED { error: @payload.error, kind: "refused", key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_REFUSED -> idle when (= (object/get (default (json/parse @payload.key WireKey) {}) kind "") "tools")
+        (emit LLM_TOOLS_UNREACHABLE { error: @payload.error, kind: "refused", key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_CHAT_WIRE_REFUSED -> idle
+      LLM_CHAT_WIRE_STREAM -> idle
+        (emit LLM_CHAT_STREAM_MSG { data: @payload.data, key: (object/get (default (json/parse @payload.key WireKey) {}) id "") })
+      LLM_JEV_WIRE_RESULT -> idle when (!= (bytes/to-string @payload.body) null)
+        (emit LLM_JEV_REPLIED { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: @payload.key })
+      LLM_JEV_WIRE_RESULT -> idle when (= (bytes/to-string @payload.body) null)
+        (emit LLM_JEV_UNREACHABLE { error: "the reply is not UTF-8 text", kind: "io", key: @payload.key })
+      LLM_JEV_WIRE_FAILED -> idle
+        (emit LLM_JEV_UNREACHABLE { error: @payload.error, kind: @payload.kind, key: @payload.key })
+      LLM_JEV_WIRE_REFUSED -> idle
+        (emit LLM_JEV_UNREACHABLE { error: @payload.error, kind: "refused", key: @payload.key })
 
       LLM_CHAT_STREAM_MSG -> idle when (and (= @config.provider "anthropic") (> (str/len (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) text "")) 0))
         (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) text "")), inputTokens: (if (= @cur null) null @cur.inputTokens), outputTokens: (if (= @cur null) null @cur.outputTokens) })))
@@ -280,13 +275,8 @@ orbital LlmOrbital {
         (set @entity.streamed (array/filter @entity.streamed (fn c (!= @c.key @payload.key))))
         (emit LLM_CHAT_ERROR {
           job: @payload.key,
-          message: (if (= @payload.kind "timeout") (str/concat "LLM call timed out after " @config.timeoutMs "ms") (str/concat "Connection error: " @payload.error))
+          message: (if (= @payload.kind "timeout") "LLM call timed out" (str/concat "Connection error: " @payload.error))
         })
-      LLM_CHAT_HTTP_CANCELLED -> idle
-        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (set @entity.streamed (array/filter @entity.streamed (fn c (!= @c.key @payload.key))))
-        (emit LLM_CANCELLED { key: (object/get (default (json/parse @payload.key LlmJob) {}) callKey "") })
-
       LLM_CHAT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= @config.provider "anthropic") (= (json/parse @payload.body OpenaiReply) null))
         (emit LLM_CHAT_ERROR { job: @payload.key, message: (str/concat (object/get (default (json/parse @payload.key LlmJob) {}) model "") " returned an unreadable body") })
       LLM_CHAT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= @config.provider "anthropic") (!= (json/parse @payload.body OpenaiReply) null) (= (array/len (object/get (default (json/parse @payload.body OpenaiReply) {}) choices [])) 0))
@@ -522,16 +512,18 @@ orbital LlmOrbital {
       LLM_CHOOSE -> idle when (and (>= (array/len @payload.options) 2) (!= (array/len (array/unique (array/map @payload.options (fn o @o.value)))) (array/len @payload.options)))
         (emit LLM_FAILED { code: "", message: "[\n  {\n    \"code\": \"custom\",\n    \"message\": \"choose options need distinct values\",\n    \"path\": [\n      \"options\"\n    ]\n  }\n]" })
       LLM_CHOOSE -> idle when (and (>= (array/len @payload.options) 2) (= (array/len (array/unique (array/map @payload.options (fn o @o.value)))) (array/len @payload.options)))
-        (http POST @config.jevOrigin "/api/alpha/decisions" {
+        (emit LLM_JEV_WIRE {
+          key: (json/stringify { values: (array/map @payload.options (fn o @o.value)) }),
+          method: "POST", path: "/api/alpha/decisions", query: {},
           headers: { Accept: "*/*" },
-          json: {
+          json: (json/stringify {
             model: "typesafe/jev-1.13",
             state: @payload.state,
             questions: { pick: { type: "choice", instructions: @payload.instructions, criteria: (object/fromEntries (array/map @payload.options (fn o [@o.value @o.description]))) } }
-          },
-          auth: { scheme: bearer, credential: @config.jevApiKey },
-          timeoutMs: 30000
-        } { key: (json/stringify { values: (array/map @payload.options (fn o @o.value)) }), emit: { success: LLM_JEV_REPLIED, failure: LLM_JEV_UNREACHABLE } })
+          }),
+          form: {}, multipartParts: [], stream: "none",
+          retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
+        })
       LLM_JEV_UNREACHABLE -> idle
         (emit LLM_FAILED { code: "", message: (if (= @payload.kind "timeout") "Jev decide timed out after 30000ms" (str/concat "Jev decide request failed: " @payload.error)) })
       LLM_JEV_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
@@ -626,28 +618,29 @@ orbital LlmOrbital {
         })
 
       LLM_TOOLS_DISPATCH -> idle when (or (= @config.provider "lmstudio") (= @config.provider "orbgen"))
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.session ToolsSession) {}) key ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.session }))))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Content-Type: "application/json", Authorization: "Bearer not-needed" },
-          text: @payload.body,
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.session, emit: { success: LLM_TOOLS_REPLIED, failure: LLM_TOOLS_UNREACHABLE, cancelled: LLM_TOOLS_CANCELLED } })
+        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.session ToolsSession) {}) key ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.session, wireKey: (json/stringify { kind: "tools", id: @payload.session }) }))))
+        (emit LLM_CHAT_WIRE {
+          key: (json/stringify { kind: "tools", id: @payload.session }),
+          method: "POST", path: (str/concat @config.basePath "/chat/completions"), query: {},
+          headers: { Accept: "application/json" },
+          json: @payload.body,
+          form: {}, multipartParts: [], stream: "none",
+          retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
+        })
       LLM_TOOLS_DISPATCH -> idle when (and (!= @config.provider "lmstudio") (!= @config.provider "orbgen"))
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.session ToolsSession) {}) key ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.session }))))
-        (http POST @config.origin (str/concat @config.basePath "/chat/completions") {
-          headers: { Content-Type: "application/json" },
-          text: @payload.body,
-          auth: { scheme: bearer, credential: @config.apiKey },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.session, emit: { success: LLM_TOOLS_REPLIED, failure: LLM_TOOLS_UNREACHABLE, cancelled: LLM_TOOLS_CANCELLED } })
+        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.session ToolsSession) {}) key ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.session, wireKey: (json/stringify { kind: "tools", id: @payload.session }) }))))
+        (emit LLM_CHAT_WIRE {
+          key: (json/stringify { kind: "tools", id: @payload.session }),
+          method: "POST", path: (str/concat @config.basePath "/chat/completions"), query: {},
+          headers: { Accept: "application/json" },
+          json: @payload.body,
+          form: {}, multipartParts: [], stream: "none",
+          retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
+        })
 
       LLM_TOOLS_UNREACHABLE -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (if (= @payload.kind "timeout") (str/concat "LLMClient.callWithTools timed out after " @config.timeoutMs "ms") "fetch failed") })
-
-      LLM_TOOLS_CANCELLED -> idle
-        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_CANCELLED { key: (object/get (default (json/parse @payload.key ToolsSession) {}) key "") })
+        (emit LLM_FAILED { code: "", message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed") })
 
       LLM_TOOLS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
@@ -767,37 +760,50 @@ orbital LlmOrbital {
             callKey: (if (object/has @payload "key") @payload.key "")
           })
         })
-      LLM_EMBED_SEND -> idle when (and (= @config.embedProvider "lmstudio") (not @entity.embedKeyed))
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job EmbedJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job }))))
-        (http POST @config.embedOrigin (str/concat @config.embedBasePath "/embeddings") {
-          headers: { Accept: "*/*", Authorization: "Bearer not-needed" },
-          json: (let ((j (default (json/parse @payload.job EmbedJob) {}))) { model: @j.model, input: @j.texts }),
-          delayMs: (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0),
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.job, emit: { success: LLM_EMBED_HTTP_OK, failure: LLM_EMBED_HTTP_FAILED, cancelled: LLM_EMBED_HTTP_CANCELLED } })
-      LLM_EMBED_SEND -> idle when (or (!= @config.embedProvider "lmstudio") @entity.embedKeyed)
-        (set @entity.inflight (let ((k (object/get (default (json/parse @payload.job EmbedJob) {}) callKey ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.job }))))
-        (http POST @config.embedOrigin (str/concat @config.embedBasePath "/embeddings") {
+      LLM_EMBED_SEND -> idle when (> (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0) 0)
+        (set @entity.embedWaiting (array/append @entity.embedWaiting @payload.job))
+        (emit LLM_EMBED_WAIT { delayMs: (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0) })
+      LLM_EMBED_SEND -> idle when (<= (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0) 0)
+        (emit LLM_EMBED_DISPATCH { job: @payload.job })
+      LLM_EMBED_WAITED -> idle when (> (array/len @entity.embedWaiting) 0)
+        (emit LLM_EMBED_DISPATCH { job: (default (array/first @entity.embedWaiting) "") })
+        (set @entity.embedWaiting (array/drop @entity.embedWaiting 1))
+      LLM_EMBED_WAITED -> idle
+      LLM_EMBED_DISPATCH -> idle
+        (set @entity.embedInflight (let ((k (object/get (default (json/parse @payload.job EmbedJob) {}) callKey ""))) (array/append (if (= @k "") @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.key @k)))) { key: @k, httpKey: @payload.job, wireKey: @payload.job })))
+        (emit LLM_EMBED_WIRE {
+          key: @payload.job, method: "POST", path: (str/concat @config.embedBasePath "/embeddings"), query: {},
           headers: { Accept: "*/*" },
-          json: (let ((j (default (json/parse @payload.job EmbedJob) {}))) { model: @j.model, input: @j.texts }),
-          auth: { scheme: bearer, credential: @config.embedApiKey },
-          delayMs: (object/get (default (json/parse @payload.job EmbedJob) {}) delayMs 0),
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.job, emit: { success: LLM_EMBED_HTTP_OK, failure: LLM_EMBED_HTTP_FAILED, cancelled: LLM_EMBED_HTTP_CANCELLED } })
-      LLM_EMBED_HTTP_OK -> idle
-        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_EMBED_REPLIED { status: @payload.status, headers: @payload.headers, body: @payload.body, key: @payload.key })
-      LLM_EMBED_HTTP_FAILED -> idle
-        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
+          json: (let ((j (default (json/parse @payload.job EmbedJob) {}))) (json/stringify { model: @j.model, input: @j.texts })),
+          form: {}, multipartParts: [], stream: "none", retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
+        })
+      LLM_EMBED_WIRE_RESULT -> idle when (and (> (array/count @entity.embedInflight (fn c (= @c.httpKey @payload.key))) 0) (!= (bytes/to-string @payload.body) null))
+        (set @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.httpKey @payload.key))))
+        (emit LLM_EMBED_REPLIED { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: @payload.key })
+      LLM_EMBED_WIRE_RESULT -> idle when (and (> (array/count @entity.embedInflight (fn c (= @c.httpKey @payload.key))) 0) (= (bytes/to-string @payload.body) null))
+        (set @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.httpKey @payload.key))))
+        (emit LLM_EMBED_ERROR { job: @payload.key, status: 0, message: (str/concat "EmbeddingClient: " @config.embedProvider " returned a body that is not UTF-8 text") })
+      LLM_EMBED_WIRE_RESULT -> idle
+      LLM_EMBED_WIRE_FAILED -> idle when (> (array/count @entity.embedInflight (fn c (= @c.httpKey @payload.key))) 0)
+        (set @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_EMBED_ERROR {
           job: @payload.key, status: 0,
           message: (if (= @payload.kind "timeout") "fetch failed: the request timed out" (str/concat "fetch failed: " @payload.error))
         })
-      LLM_EMBED_HTTP_CANCELLED -> idle
-        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_CANCELLED { key: (object/get (default (json/parse @payload.key EmbedJob) {}) callKey "") })
+      LLM_EMBED_WIRE_FAILED -> idle
+      LLM_EMBED_WIRE_REFUSED -> idle when (> (array/count @entity.embedInflight (fn c (= @c.httpKey @payload.key))) 0)
+        (set @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.httpKey @payload.key))))
+        (emit LLM_FAILED { code: "", message: (str/concat "EmbeddingClient: the request could not be written: " @payload.error), key: (object/get (default (json/parse @payload.key EmbedJob) {}) callKey "") })
+      LLM_EMBED_WIRE_REFUSED -> idle
+      LLM_CANCEL -> idle when (> (array/count @entity.embedInflight (fn c (= @c.key @payload.key))) 0)
+        (emit LLM_EMBED_WIRE_CANCEL { key: (object/get (default (array/find @entity.embedInflight (fn c (= @c.key @payload.key))) {}) wireKey "") })
+        (set @entity.embedInflight (array/filter @entity.embedInflight (fn c (!= @c.key @payload.key))))
+        (emit LLM_CANCELLED { key: @payload.key })
       LLM_CANCEL -> idle when (> (array/count @entity.inflight (fn c (= @c.key @payload.key))) 0)
-        (cancel-call (object/get (default (array/find @entity.inflight (fn c (= @c.key @payload.key))) {}) httpKey ""))
+        (emit LLM_CHAT_WIRE_CANCEL { key: (object/get (default (array/find @entity.inflight (fn c (= @c.key @payload.key))) {}) wireKey "") })
+        (set @entity.streamed (array/filter @entity.streamed (fn c (!= @c.key (object/get (default (array/find @entity.inflight (fn x (= @x.key @payload.key))) {}) httpKey ""))))) 
+        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.key @payload.key))))
+        (emit LLM_CANCELLED { key: @payload.key })
       LLM_CANCEL -> idle
       LLM_EMBED_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit LLM_EMBED_ERROR {
@@ -952,7 +958,7 @@ orbital LlmOrbital {
       LLM_CANCELLED -> external {
         key : string!
       }
-        @description "A keyed generate, classify, classifyMany, summarize, extract, embed or call-tools run was cancelled by LLM_CANCEL before it answered: the key it carried. It ends in no result and no LLM_FAILED, and a reply that arrives later is dropped."
+        @description "A keyed generate, classify, classifyMany, summarize, extract, embed or call-tools run was cancelled by LLM_CANCEL before it answered: the key it carried. It ends in no result and no LLM_FAILED: the request is aborted on the wire and answers nothing."
         @synonyms "llm cancelled, request aborted"
         @tier "primary"
       LLM_FAILED -> external {
@@ -996,11 +1002,6 @@ orbital LlmOrbital {
         key : string!
       }
         @description "Internal: the chat call never produced a reply."
-        @tier "secondary"
-      LLM_CHAT_HTTP_CANCELLED {
-        key : string!
-      }
-        @description "Internal: the chat call was cancelled by LLM_CANCEL."
         @tier "secondary"
       LLM_CHAT_STREAM_MSG {
         data : string!
@@ -1099,11 +1100,6 @@ orbital LlmOrbital {
       }
         @description "Internal: the tool-calling request's HTTP reply."
         @tier "secondary"
-      LLM_TOOLS_CANCELLED {
-        key : string!
-      }
-        @description "Internal: the tool-calling request was cancelled by LLM_CANCEL."
-        @tier "secondary"
       LLM_TOOLS_UNREACHABLE {
         error : string!
         kind : string!
@@ -1135,30 +1131,82 @@ orbital LlmOrbital {
       }
         @description "Internal: the embeddings call's HTTP reply."
         @tier "secondary"
-      LLM_EMBED_HTTP_OK {
-        status : number!
-        headers : Map string string
-        body : string!
+      LLM_EMBED_WAIT -> external {
+        delayMs : number!
+      }
+        @description "Internal: start the delay before a retried embeddings attempt is written (std-delay START); LLM_EMBED_WAITED answers."
+        @tier "secondary"
+      LLM_EMBED_DISPATCH {
+        job : string!
+      }
+        @description "Internal: write one embeddings attempt to the HTTP wire."
+        @tier "secondary"
+      LLM_EMBED_WIRE -> external {
+        key : string!
+        method : string!
+        path : string!
+        query : Map string string!
+        headers : Map string string!
+        json : string?
+        form : Map string string!
+        multipartParts : [LlmWirePart]!
+        stream : string!
+        retryMax : number!
+        retryOn : [number]!
+        retryOnFailure : [string]!
+        retryDelaysMs : [number]!
+        paginate : string!
+        maxPages : number!
+      }
+        @description "The embeddings call as a std-http-request HTTP_REQUEST, keyed by its JSON job. The composer wires it to std-http-request and std-http-client; the server is the HttpClient host, port and tls knobs, and a keyed provider's credential is the HttpClient credential knobs, filled in by the host at the os/send boundary."
+        @tier "secondary"
+      LLM_CHAT_WIRE -> external {
+        key : string!
+        method : string!
+        path : string!
+        query : Map string string!
+        headers : Map string string!
+        json : string?
+        form : Map string string!
+        multipartParts : [LlmWirePart]!
+        stream : string!
+        retryMax : number!
+        retryOn : [number]!
+        retryOnFailure : [string]!
+        retryDelaysMs : [number]!
+        paginate : string!
+        maxPages : number!
+      }
+        @description "The chat and tool-calling requests as a std-http-request HTTP_REQUEST, keyed by a JSON { kind, id }: the composer wires it to std-http-request and std-http-client; the server and the credential are the HttpClient knobs."
+        @tier "secondary"
+      LLM_EMBED_WIRE_CANCEL -> external {
         key : string!
       }
-        @description "Internal: the embeddings call's HTTP reply, before the call leaves the in-flight list."
+        @description "Abort the embeddings request keyed by this wire key: the composer routes it to std-http-request HTTP_REQUEST_CANCEL, which aborts the wire call in flight."
         @tier "secondary"
-      LLM_EMBED_HTTP_FAILED {
-        error : string!
-        kind : string!
+      LLM_CHAT_WIRE_CANCEL -> external {
         key : string!
       }
-        @description "Internal: the embeddings call never produced a reply."
+        @description "Abort the chat or tool-calling request keyed by this wire key: the composer routes it to std-http-request HTTP_REQUEST_CANCEL, which aborts the wire call in flight."
         @tier "secondary"
-      LLM_EMBED_HTTP_CANCELLED {
+      LLM_JEV_WIRE -> external {
         key : string!
+        method : string!
+        path : string!
+        query : Map string string!
+        headers : Map string string!
+        json : string?
+        form : Map string string!
+        multipartParts : [LlmWirePart]!
+        stream : string!
+        retryMax : number!
+        retryOn : [number]!
+        retryOnFailure : [string]!
+        retryDelaysMs : [number]!
+        paginate : string!
+        maxPages : number!
       }
-        @description "Internal: the embeddings call was cancelled by LLM_CANCEL."
-        @tier "secondary"
-      LLM_EMBED_KEY_PROBED {
-        connected : boolean!
-      }
-        @description "Internal: whether the embeddings API key is configured, so a keyless provider such as LM Studio sends it when it is."
+        @description "The Jev decision call as a std-http-request HTTP_REQUEST, keyed by its JSON option list; the composer wires it to its own std-http-request and std-http-client."
         @tier "secondary"
       LLM_EMBED_ERROR {
         job : string!
@@ -1171,9 +1219,76 @@ orbital LlmOrbital {
     }
 
     listens {
-      LLM_EMBED_KEY_PROBED {
-        connected : boolean!
+      LLM_CHAT_WIRE_RESULT {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+        attempts : number!
+        pages : number!
       }
+        @description "The wire's answer: std-http-request HTTP_RESULT."
+      LLM_CHAT_WIRE_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "The wire produced no response: std-http-request HTTP_REQUEST_FAILED."
+      LLM_CHAT_WIRE_REFUSED {
+        key : string!
+        error : string!
+      }
+        @description "The wire refused to write the request: std-http-request HTTP_REQUEST_REFUSED."
+      LLM_JEV_WIRE_RESULT {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+        attempts : number!
+        pages : number!
+      }
+        @description "The wire's answer: std-http-request HTTP_RESULT."
+      LLM_JEV_WIRE_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "The wire produced no response: std-http-request HTTP_REQUEST_FAILED."
+      LLM_JEV_WIRE_REFUSED {
+        key : string!
+        error : string!
+      }
+        @description "The wire refused to write the request: std-http-request HTTP_REQUEST_REFUSED."
+      LLM_CHAT_WIRE_STREAM {
+        key : string!
+        data : string!
+        event : string?
+        id : string?
+      }
+        @description "One complete frame of a streamed reply: std-http-client HTTP_STREAM_EVENT."
+      LLM_EMBED_WAITED {
+        waitedMs : number!
+      }
+      LLM_EMBED_WIRE_RESULT {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+        attempts : number!
+        pages : number!
+      }
+        @description "The wire's answer to LLM_EMBED_WIRE: std-http-request HTTP_RESULT."
+      LLM_EMBED_WIRE_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "The wire produced no response: std-http-request HTTP_REQUEST_FAILED."
+      LLM_EMBED_WIRE_REFUSED {
+        key : string!
+        error : string!
+      }
+        @description "The wire refused to write the request: std-http-request HTTP_REQUEST_REFUSED."
       LLM_GENERATE -> input {
         systemPrompt : string
         userPrompt : string!
@@ -1266,11 +1381,6 @@ orbital LlmOrbital {
         @description "The chat provider; it picks the wire format (Anthropic Messages or OpenAI chat completions), the keyless providers (lmstudio, orbgen) and the provider-specific body fields (kimi, openrouter)."
         @synonyms "llm provider, model vendor"
         @tier "infra"
-      origin : url = "https://api.openai.com"
-        @label "Chat origin"
-        @description "The chat API origin (scheme://host, no path); it must be declared in the app egress list."
-        @synonyms "api host, endpoint origin"
-        @tier "infra"
       basePath : string = "/v1"
         @label "Chat base path"
         @description "The path before /chat/completions (or /messages for Anthropic), for example /v1 or /api/v1."
@@ -1281,25 +1391,10 @@ orbital LlmOrbital {
         @description "The model used when a request names none."
         @synonyms "default model, model id"
         @tier "infra"
-      apiKey : secret = "OPENAI_API_KEY"
-        @label "Chat API key"
-        @description "The name of the host environment variable holding the chat API key."
-        @synonyms "api key, credential"
-        @tier "infra"
-      timeoutMs : number = 300000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each chat or embeddings request may take."
-        @synonyms "timeout, request deadline"
-        @tier "infra"
       embedProvider : "openrouter" | "openai" | "lmstudio" = openrouter
         @label "Embedding provider"
-        @description "The embeddings provider; lmstudio is keyless."
+        @description "The embeddings provider, named in its failure messages; the server and the credential are the composed HttpClient knobs."
         @synonyms "embedding vendor"
-        @tier "infra"
-      embedOrigin : url = "https://openrouter.ai"
-        @label "Embeddings origin"
-        @description "The embeddings API origin (scheme://host, no path); it must be declared in the app egress list."
-        @synonyms "embedding host"
         @tier "infra"
       embedBasePath : string = "/api/v1"
         @label "Embeddings base path"
@@ -1310,21 +1405,6 @@ orbital LlmOrbital {
         @label "Embedding model"
         @description "The embedding model used when a request names none."
         @synonyms "embedding model id"
-        @tier "infra"
-      jevOrigin : url = "https://openrouter.ai"
-        @label "Jev origin"
-        @description "The origin of the Jev decisions endpoint (scheme://host, no path); it must be declared in the app egress list."
-        @synonyms "decision host"
-        @tier "infra"
-      jevApiKey : secret = "OPEN_ROUTER_API_KEY"
-        @label "Jev API key"
-        @description "The name of the host environment variable holding the key for the Jev decisions endpoint."
-        @synonyms "decision credential"
-        @tier "infra"
-      embedApiKey : secret = "EMBEDDING_API_KEY"
-        @label "Embeddings API key"
-        @description "The name of the host environment variable holding the embeddings API key."
-        @synonyms "embedding credential"
         @tier "infra"
     }
   }

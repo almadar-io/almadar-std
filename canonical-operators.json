@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-29T17:26:58.697Z",
+  "generated": "2026-10-29T22:11:55.726Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -783,6 +783,92 @@
       ],
       "docsSource": "generated"
     },
+    "aes-gcm/open": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "AES-128-GCM open (NIST SP 800-38D) of ciphertext followed by its 16-byte tag. Answers null when the tag does not verify (a forged or altered sealed value, another key, nonce or aad), the key or nonce is the wrong size, or an operand is not canonical padded base64.",
+      "module": "aes-gcm",
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The 16-byte key"
+        },
+        {
+          "name": "nonce",
+          "type": "bytes",
+          "description": "The 12-byte nonce the value was sealed under"
+        },
+        {
+          "name": "sealed",
+          "type": "bytes",
+          "description": "The ciphertext followed by the 16-byte tag"
+        },
+        {
+          "name": "aad",
+          "type": "bytes",
+          "description": "The additional authenticated data the value was sealed with"
+        }
+      ],
+      "examples": [
+        "(aes-gcm/open \"<key16>\" \"<nonce12>\" \"<ciphertext||tag>\" \"<aad>\") // => \"<plaintext>\""
+      ],
+      "docsSource": "generated"
+    },
+    "aes-gcm/seal": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "AES-128-GCM seal (NIST SP 800-38D): the ciphertext followed by the 16-byte tag. The key is 16 bytes and the nonce 12; a key or nonce of another size, or an operand that is not canonical padded base64, answers null. The key is a program value (a content key derived from an ECDH secret), never a credential.",
+      "module": "aes-gcm",
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The 16-byte key"
+        },
+        {
+          "name": "nonce",
+          "type": "bytes",
+          "description": "The 12-byte nonce, never reused under one key"
+        },
+        {
+          "name": "plaintext",
+          "type": "bytes",
+          "description": "The bytes to seal"
+        },
+        {
+          "name": "aad",
+          "type": "bytes",
+          "description": "Additional authenticated data, bound to the tag and not sealed"
+        }
+      ],
+      "examples": [
+        "(aes-gcm/seal \"<key16>\" \"<nonce12>\" \"<plaintext>\" \"<aad>\") // => \"<ciphertext||tag>\""
+      ],
+      "docsSource": "generated"
+    },
     "and": {
       "category": "logic",
       "minArity": 2,
@@ -929,6 +1015,13 @@
       "description": "Add item to end (returns new array)",
       "module": "array",
       "returnSemantics": "union-of-args<0,1>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0,
+          1
+        ]
+      },
       "title": "Append",
       "params": [
         {
@@ -1015,6 +1108,9 @@
       "description": "Concatenate arrays",
       "module": "array",
       "returnSemantics": "union-of-args",
+      "valueSourceSlots": {
+        "kind": "args"
+      },
       "title": "Concat",
       "params": [
         {
@@ -1132,6 +1228,12 @@
       "description": "Skip first n elements",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Drop",
       "params": [
         {
@@ -1170,6 +1272,12 @@
       "description": "Skip last n elements",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Drop Last",
       "params": [
         {
@@ -1250,6 +1358,12 @@
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
       "lambdaArgPosition": 1,
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Filter",
       "params": [
         {
@@ -1591,6 +1705,13 @@
       "description": "Insert item at index (returns new array)",
       "module": "array",
       "returnSemantics": "union-of-args<0,2>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0,
+          2
+        ]
+      },
       "title": "Insert",
       "params": [
         {
@@ -1703,6 +1824,9 @@
       "module": "array",
       "returnSemantics": "lambda-result",
       "lambdaArgPosition": 1,
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      },
       "title": "Map",
       "params": [
         {
@@ -2008,6 +2132,13 @@
       "description": "Add item to start (returns new array)",
       "module": "array",
       "returnSemantics": "union-of-args<0,1>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0,
+          1
+        ]
+      },
       "title": "Prepend",
       "params": [
         {
@@ -2080,6 +2211,9 @@
       "module": "array",
       "returnSemantics": "lambda-result",
       "lambdaArgPosition": 2,
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      },
       "title": "Reduce",
       "params": [
         {
@@ -2143,6 +2277,12 @@
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
       "lambdaArgPosition": 1,
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Reject",
       "params": [
         {
@@ -2190,6 +2330,12 @@
       "description": "Remove item at index (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Remove",
       "params": [
         {
@@ -2228,6 +2374,12 @@
       "description": "Remove first matching item (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Remove Item",
       "params": [
         {
@@ -2269,6 +2421,12 @@
       "description": "Reverse array order (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Reverse",
       "params": [
         {
@@ -2302,6 +2460,12 @@
       "description": "Randomly shuffle array (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Shuffle",
       "params": [
         {
@@ -2335,6 +2499,12 @@
       "description": "Extract subarray",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Slice",
       "params": [
         {
@@ -2420,6 +2590,12 @@
       "description": "Sort array (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Sort",
       "params": [
         {
@@ -2516,6 +2692,12 @@
       "description": "Take first n elements",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Take",
       "params": [
         {
@@ -2554,6 +2736,12 @@
       "description": "Take last n elements",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Take Last",
       "params": [
         {
@@ -2592,6 +2780,12 @@
       "description": "Remove duplicates (returns new array)",
       "module": "array",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Unique",
       "params": [
         {
@@ -2970,6 +3164,12 @@
       "description": "Record overrides on a behavior value and return the new value of the same kind. A trait value takes the §8 trait-reference surface (config, events and fields merge key-wise, the later value winning; listens, emitsScope and linkedEntity replace); an orbital value takes the §8b import body (maps merge key-wise, traits per trait, extend and retype by field name, the rest replaces). Nothing is resolved until the value is bound or evaluated.",
       "module": "behavior",
       "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "params": [
         {
           "name": "value",
@@ -6377,6 +6577,25 @@
       ],
       "docsSource": "generated"
     },
+    "bytes/valid-utf8": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "boolean",
+      "description": "Whether the bytes are well-formed UTF-8 text. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to check"
+        }
+      ],
+      "examples": [
+        "(bytes/valid-utf8 \"aGVsbG8=\") // => true"
+      ],
+      "docsSource": "generated"
+    },
     "bytes/write-uint": {
       "category": "std-codec",
       "minArity": 3,
@@ -7119,6 +7338,34 @@
       ],
       "docsSource": "generated"
     },
+    "credential/byte-length": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "The length in UTF-8 bytes of a credential's value, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel",
+      "module": "credential",
+      "params": [
+        {
+          "name": "credential",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the value"
+        }
+      ],
+      "examples": [
+        "(credential/byte-length @config.password) // => 8 when the credential holds password"
+      ],
+      "docsSource": "generated"
+    },
     "csv/parse": {
       "category": "std-csv",
       "minArity": 1,
@@ -7156,6 +7403,9 @@
       "description": "The value, or the fallback (evaluated only then) when the value is null",
       "module": "core",
       "returnSemantics": "coalesce",
+      "valueSourceSlots": {
+        "kind": "args"
+      },
       "params": [
         {
           "name": "value",
@@ -7216,6 +7466,9 @@
       "description": "Sequential execution of multiple effects/expressions",
       "module": "core",
       "returnSemantics": "last-of-args",
+      "valueSourceSlots": {
+        "kind": "last"
+      },
       "title": "Do",
       "params": [
         {
@@ -7288,6 +7541,73 @@
       ],
       "examples": [
         "(ease/smoothstep 0.5 0 1) // => 0.5"
+      ],
+      "docsSource": "generated"
+    },
+    "ecdh/p256-ephemeral": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          {
+            "kind": "object",
+            "fields": {
+              "public": "bytes",
+              "shared": "bytes"
+            }
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "ECDH over P-256 (SEC 1, NIST SP 800-56A) with an ephemeral key generated inside the operator: answers the 65-byte uncompressed public key of that key and the 32-byte shared x coordinate with the peer. The ephemeral secret never leaves the operator: its randomness is fresh host entropy that is never journaled, the journal records only the public key and the shared secret the program sees, and a replay answers with them without running the operator. The peer is a SEC 1 point; one that is not on the curve, or an operand that is not canonical padded base64, answers null.",
+      "module": "ecdh",
+      "params": [
+        {
+          "name": "peer",
+          "type": "bytes",
+          "description": "The peer public key, a SEC 1 point (65 bytes uncompressed)"
+        }
+      ],
+      "examples": [
+        "(ecdh/p256-ephemeral \"<peerPublic>\") // => { public: \"<65 bytes>\", shared: \"<32 bytes>\" }"
+      ],
+      "docsSource": "generated"
+    },
+    "ecdsa/p256-sign": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Sign a message with ECDSA over P-256 and SHA-256 (FIPS 186-4 section 6.4.1) using the deterministic nonce of RFC 6979 and constant-time scalar arithmetic; the signature is 64 raw bytes r||s, what JWS ES256 and VAPID need. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not a P-256 key. Runs only in the kernel.",
+      "module": "ecdsa",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the PEM private key"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign, hashed as its UTF-8 bytes"
+        }
+      ],
+      "examples": [
+        "(ecdsa/p256-sign @config.signingKey \"header.payload\") // => \"<64 bytes r||s>\""
       ],
       "docsSource": "generated"
     },
@@ -8635,6 +8955,56 @@
       ],
       "docsSource": "generated"
     },
+    "hash/md5-credential": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "MD5 (RFC 1321) of a credential's value followed by a UTF-8 suffix, as lower-case hex or standard base64: the first step of a challenge login that hashes the password with the user name, whose password never becomes a program value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel",
+      "module": "hash",
+      "params": [
+        {
+          "name": "credential",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the value"
+        },
+        {
+          "name": "suffix",
+          "type": "string",
+          "description": "The text hashed after the value (the user name)"
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        }
+      ],
+      "examples": [
+        "(hash/md5-credential @config.password \"app\" \"hex\") // => md5 of the password followed by app"
+      ],
+      "docsSource": "generated"
+    },
     "hash/pbkdf2": {
       "category": "std-codec",
       "minArity": 4,
@@ -8649,14 +9019,14 @@
           }
         ]
       },
-      "description": "PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid",
+      "description": "PBKDF2 with HMAC-SHA256 (RFC 8018) of a credential, answering length derived bytes (a bytes value is a standard padded base64 string at run time). The password argument is a credential slot: a secret-typed @config knob naming the credential whose value (its UTF-8 bytes) the kernel resolves into the evaluation, so the program never receives the password; the derived bytes are the program's. Iterations and length are whole numbers from 1. The result is null when the credential is not held, the salt is not canonical base64 or a count is not valid. Runs only in the kernel",
       "module": "hash",
       "failable": {},
       "params": [
         {
           "name": "password",
-          "type": "bytes",
-          "description": "The password bytes"
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the password"
         },
         {
           "name": "salt",
@@ -8788,14 +9158,23 @@
       "category": "std-codec",
       "minArity": 3,
       "maxArity": 3,
-      "returnType": "string",
-      "description": "HMAC-SHA256 of a message under a key (both UTF-8), as lower-case hex or standard base64 (RFC 4231)",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a key, as lower-case hex or standard base64. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the key. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held. Runs only in the kernel.",
       "module": "hmac",
       "params": [
         {
           "name": "key",
           "type": "string",
-          "description": "The secret key"
+          "description": "A secret-typed @config knob naming the credential that holds the key"
         },
         {
           "name": "message",
@@ -8822,6 +9201,56 @@
       ],
       "examples": [
         "(hmac/sha256 \"Jefe\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
+      ],
+      "docsSource": "generated"
+    },
+    "hmac/sha256-bytes": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a bytes key that is a program value, as lower-case hex or standard base64: a key derived inside the program, such as one step of a SigV4 signing chain. A key that comes from a credential goes through hmac/sha256, never here. An operand that is not canonical padded base64 answers null.",
+      "module": "hmac",
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The derived key, bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign"
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        }
+      ],
+      "examples": [
+        "(hmac/sha256-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
       ],
       "docsSource": "generated"
     },
@@ -10093,6 +10522,9 @@
       "description": "Conditional expression (ternary). Both branches have the same type, which is the result type.",
       "module": "core",
       "returnSemantics": "branch-union",
+      "valueSourceSlots": {
+        "kind": "branches"
+      },
       "title": "If",
       "params": [
         {
@@ -10664,6 +11096,12 @@
       "description": "Bind local variables for a body expression",
       "module": "core",
       "returnSemantics": "identity-of-arg<1>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          1
+        ]
+      },
       "title": "Let",
       "params": [
         {
@@ -12719,6 +13157,11 @@
       },
       "description": "Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key)",
       "module": "object",
+      "fieldProjection": {
+        "sourceArg": 0,
+        "keyArg": 1,
+        "defaultArg": 2
+      },
       "title": "Get",
       "params": [
         {
@@ -13974,7 +14417,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Close a file descriptor or a socket handle (grant fs for a descriptor, net for a socket). Success payload: {}.",
+      "description": "Close a file descriptor, a socket handle or the handle of a streamed os/fetch response (grant fs for a descriptor, net for a socket). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
       "effect": {
@@ -13990,7 +14433,7 @@
         }
       },
       "grant": [],
-      "runsOn": "server",
+      "runsOn": "any",
       "host": "os",
       "params": [
         {
@@ -14770,6 +15213,116 @@
       ],
       "examples": [
         "(os/exists \"/data/a.txt\" {\"emit\":{\"success\":\"EXISTENCE_CHECKED\",\"failure\":\"DIR_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/fetch": {
+      "category": "std-os",
+      "minArity": 2,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Ask a browser host to perform one HTTP fetch (the host owns no protocol: the kernel hands it the method, the url and the request bytes, and it answers the status, the response headers and the body bytes). The url's origin must be one the program declares in egress, else the kernel answers denied without asking the host. A non-2xx status is a success answer. A host with no fetch (every native host, which speaks HTTP over os/tcp-connect and os/tls-upgrade) answers kind unsupported. With request.stream true the host answers as soon as the head arrives: { status, headers, body: empty, handle }, and the body is read afterwards with os/recv on the handle (each answer { data, eof }, eof true once the body ended) and the handle is released with os/close; a native host answers unsupported either way. Success payload: { status, headers, body, handle? }.",
+      "module": "os",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "status": "number",
+            "headers": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "name": "string",
+                  "value": "string"
+                }
+              }
+            },
+            "body": "bytes",
+            "handle": "number",
+            "key": "string"
+          },
+          "optional": [
+            "handle",
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "method",
+          "type": "string",
+          "description": "HTTP method, e.g. GET"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "description": "Absolute url; its origin is checked against egress"
+        },
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "headers": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "name": "string",
+                    "value": "string"
+                  }
+                }
+              },
+              "body": "bytes",
+              "timeoutMs": "number",
+              "stream": "boolean"
+            },
+            "optional": [
+              "headers",
+              "body",
+              "timeoutMs",
+              "stream"
+            ]
+          },
+          "description": "Optional request: { headers?, body?, timeoutMs?, stream? }; body is bytes; timeoutMs bounds the wait for the head when stream is true",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/fetch \"GET\" \"https://api.example.com/items\" {\"headers\":[{\"name\":\"accept\",\"value\":\"application/json\"}]} {\"emit\":{\"success\":\"FETCHED\",\"failure\":\"FETCH_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -17607,7 +18160,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Receive from a connected socket (grant net). Success payload: { data: bytes, eof }.",
+      "description": "Receive from a connected socket (grant net), or the next bytes of a streamed os/fetch response (a browser host answers its handle; eof is true once the body ended). Success payload: { data: bytes, eof }.",
       "module": "os",
       "hasSideEffects": true,
       "effect": {
@@ -17625,7 +18178,7 @@
         }
       },
       "grant": [],
-      "runsOn": "server",
+      "runsOn": "any",
       "host": "os",
       "params": [
         {
@@ -18174,7 +18727,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
+      "description": "Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "hasSideEffects": true,
       "effect": {
@@ -18201,8 +18754,23 @@
         },
         {
           "name": "data",
-          "type": "bytes",
-          "description": "Content to send"
+          "type": {
+            "kind": "union",
+            "of": [
+              "bytes",
+              {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "bytes": "bytes",
+                    "credential": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "description": "Content to send: bytes, or a list of { bytes, credential } segments"
         },
         {
           "name": "options",
@@ -18632,7 +19200,16 @@
                   {
                     "kind": "map",
                     "key": "string",
-                    "value": "string"
+                    "value": {
+                      "kind": "union",
+                      "of": [
+                        "string",
+                        {
+                          "kind": "literal",
+                          "value": null
+                        }
+                      ]
+                    }
                   },
                   {
                     "kind": "literal",
@@ -19305,9 +19882,9 @@
     "os/tcp-connect": {
       "category": "std-os",
       "minArity": 2,
-      "maxArity": 3,
+      "maxArity": 4,
       "returnType": "void",
-      "description": "Open a TCP connection (grant net: tcp). Success payload: { sock }.",
+      "description": "Open a TCP connection (grant net: tcp). Success payload: { sock }. With a third argument { serverName, ca?, alpn? } the kernel runs the TLS client handshake over the connected socket before answering (as os/tls-upgrade does) and the payload also carries alpn, the protocol the peer chose, when it chose one; a handshake or certificate failure answers { error, kind: \"tls\" } and closes the socket.",
       "module": "os",
       "hasSideEffects": true,
       "effect": {
@@ -19316,9 +19893,11 @@
           "kind": "object",
           "fields": {
             "sock": "number",
+            "alpn": "string",
             "key": "string"
           },
           "optional": [
+            "alpn",
             "key"
           ]
         }
@@ -19377,6 +19956,26 @@
             ]
           },
           "description": "Port"
+        },
+        {
+          "name": "tls",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "serverName": "string",
+              "ca": "string",
+              "alpn": {
+                "kind": "array",
+                "of": "string"
+              }
+            },
+            "optional": [
+              "ca",
+              "alpn"
+            ]
+          },
+          "description": "Optional TLS: { serverName, ca?, alpn? }. serverName is verified against the certificate and must be a host the net grant names; ca is PEM roots, else the web roots; alpn lists protocol names in offer order",
+          "optional": true
         },
         {
           "name": "options",
@@ -19583,6 +20182,90 @@
       ],
       "examples": [
         "(os/thermal-zones {\"emit\":{\"success\":\"SYSTEM_READ\",\"failure\":\"SYSTEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/tls-upgrade": {
+      "category": "std-os",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Turn a connected socket into a TLS stream the kernel owns (serverName must be a host the net grant names). The kernel runs the client handshake as a journaled sequence of raw os/send and os/recv asks; a replay is byte-identical. Success payload: { sock, alpn? }, alpn being the protocol the peer chose from those offered; a handshake or certificate failure answers { error, kind: \"tls\" } and closes the socket. Afterwards os/send, os/recv and os/close on the socket carry plaintext; one os/send and one os/recv may be outstanding together.",
+      "module": "os",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "sock": "number",
+            "alpn": "string",
+            "key": "string"
+          },
+          "optional": [
+            "alpn",
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "sock",
+          "type": "number",
+          "description": "Socket handle"
+        },
+        {
+          "name": "tls",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "serverName": "string",
+              "ca": "string",
+              "alpn": {
+                "kind": "array",
+                "of": "string"
+              }
+            },
+            "optional": [
+              "ca",
+              "alpn"
+            ]
+          },
+          "description": "TLS: { serverName, ca?, alpn? }. serverName is verified against the certificate; ca is PEM roots, else the web roots; alpn lists protocol names in offer order"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/tls-upgrade @payload.sock {\"serverName\":\"db.internal\"} {\"emit\":{\"success\":\"TLS_READY\",\"failure\":\"NET_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -21555,295 +22238,6 @@
       ],
       "docsSource": "generated"
     },
-    "postgres": {
-      "category": "effect",
-      "minArity": 3,
-      "maxArity": 5,
-      "returnType": "void",
-      "description": "Run one read-only SQL statement through the shared kernel: (postgres origin sql params options? options?). The kernel speaks the Postgres wire protocol over the host's raw TCP (an in-band SSLRequest and the kernel TLS when tls is true); the origin must be a postgres:// or postgresql:// origin declared in egress. sql is exactly one SELECT (or WITH ... SELECT): the kernel's read-only guard, the same one orb validate applies to a literal statement, refuses anything else before it connects. params are the bind values $1, $2, ... sent as text for the server to type. options: auth (a secret-typed knob naming the password credential; cleartext, MD5 and SCRAM-SHA-256 logins), user (required), database (default: the user), tls, timeoutMs (the statement timeout), key, emit: { success, failure }. One call is one connection. The success payload is { rows, rowCount, columns, key }: rows are maps of column name to value (booleans, numbers, null, text, lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type as the text Postgres prints; timestamptz as UTC ISO text; bytea as base64), columns are { name, typeOid }. The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant, the read-only guard or an invalid call), unconfigured, timeout, failed, protocol, unsupported or postgres (the server answered an error; code is its SQLSTATE such as 42P01).",
-      "module": "core",
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "postgres",
-        "produces": {
-          "kind": "object",
-          "fields": {
-            "rows": {
-              "kind": "array",
-              "of": {
-                "kind": "map",
-                "key": "string",
-                "value": {
-                  "kind": "union",
-                  "of": [
-                    {
-                      "kind": "union",
-                      "of": [
-                        "string",
-                        "number",
-                        "boolean",
-                        {
-                          "kind": "literal",
-                          "value": null
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "array",
-                      "of": {
-                        "kind": "union",
-                        "of": [
-                          {
-                            "kind": "union",
-                            "of": [
-                              "string",
-                              "number",
-                              "boolean",
-                              {
-                                "kind": "literal",
-                                "value": null
-                              }
-                            ]
-                          },
-                          {
-                            "kind": "array",
-                            "of": {
-                              "kind": "union",
-                              "of": [
-                                {
-                                  "kind": "union",
-                                  "of": [
-                                    "string",
-                                    "number",
-                                    "boolean",
-                                    {
-                                      "kind": "literal",
-                                      "value": null
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "array",
-                                  "of": {
-                                    "kind": "union",
-                                    "of": [
-                                      "string",
-                                      "number",
-                                      "boolean",
-                                      {
-                                        "kind": "literal",
-                                        "value": null
-                                      }
-                                    ]
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            "rowCount": "number",
-            "columns": {
-              "kind": "array",
-              "of": {
-                "kind": "object",
-                "fields": {
-                  "name": "string",
-                  "typeOid": "number"
-                }
-              }
-            },
-            "key": {
-              "kind": "union",
-              "of": [
-                "string",
-                {
-                  "kind": "literal",
-                  "value": null
-                }
-              ]
-            }
-          }
-        }
-      },
-      "defaultPorts": {
-        "postgres": 5432,
-        "postgresql": 5432
-      },
-      "emitKeys": [
-        "success",
-        "failure"
-      ],
-      "runsOn": "server",
-      "params": [
-        {
-          "name": "origin",
-          "type": "string",
-          "description": "A postgres:// or postgresql:// origin: a string literal or a url-typed @config knob"
-        },
-        {
-          "name": "sql",
-          "type": "string",
-          "description": "One read-only SELECT statement, with $1, $2, ... placeholders"
-        },
-        {
-          "name": "params",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "union",
-              "of": [
-                {
-                  "kind": "union",
-                  "of": [
-                    "string",
-                    "number",
-                    "boolean",
-                    {
-                      "kind": "literal",
-                      "value": null
-                    }
-                  ]
-                },
-                {
-                  "kind": "array",
-                  "of": {
-                    "kind": "union",
-                    "of": [
-                      "string",
-                      "number",
-                      "boolean",
-                      {
-                        "kind": "literal",
-                        "value": null
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          },
-          "description": "The bind values for the placeholders, in order; null is SQL NULL, a list a Postgres array, an object JSON"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "auth": {
-                "kind": "union",
-                "of": [
-                  "string",
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "credential": "string",
-                      "scope": {
-                        "kind": "union",
-                        "of": [
-                          {
-                            "kind": "literal",
-                            "value": "app"
-                          },
-                          {
-                            "kind": "literal",
-                            "value": "user"
-                          }
-                        ]
-                      }
-                    },
-                    "open": true
-                  }
-                ]
-              },
-              "user": "string",
-              "database": "string",
-              "tls": "boolean",
-              "timeoutMs": "number",
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Options: auth (secret knob), user (required), database, tls, timeoutMs, key, emit: { success, failure }",
-          "optional": true
-        },
-        {
-          "name": "more",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "auth": {
-                "kind": "union",
-                "of": [
-                  "string",
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "credential": "string",
-                      "scope": {
-                        "kind": "union",
-                        "of": [
-                          {
-                            "kind": "literal",
-                            "value": "app"
-                          },
-                          {
-                            "kind": "literal",
-                            "value": "user"
-                          }
-                        ]
-                      }
-                    },
-                    "open": true
-                  }
-                ]
-              },
-              "user": "string",
-              "database": "string",
-              "tls": "boolean",
-              "timeoutMs": "number",
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional second options object; the two share one namespace, so a key may sit in either",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(postgres \"postgres://db.internal:5432\" \"SELECT id, name FROM users WHERE id = $1\" [\"@payload.id\"] {\"auth\":\"@config.password\",\"user\":\"app\"} {\"emit\":{\"success\":\"ROWS\",\"failure\":\"QUERY_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
     "prob/beta": {
       "category": "std-prob",
       "minArity": 2,
@@ -23027,6 +23421,139 @@
       ],
       "docsSource": "generated"
     },
+    "program/os-grants": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "findings": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "code": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "missing"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "unused"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "entry-invalid"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "target-not-static"
+                    }
+                  ]
+                },
+                "orbital": "string",
+                "call": "string",
+                "entry": "string",
+                "site": "string",
+                "grant": "string",
+                "app": "boolean",
+                "argument": "number",
+                "via": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "config"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "config-unresolvable"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "computed-path"
+                    }
+                  ]
+                }
+              },
+              "optional": [
+                "orbital",
+                "call",
+                "entry",
+                "grant",
+                "app",
+                "argument",
+                "via"
+              ]
+            }
+          }
+        }
+      },
+      "description": "Check the `os/` grants of a program statically with the kernel's own requirement derivation and coverage, and answer typed findings: `{ findings }`, each `{ code, orbital?, call?, entry?, site, grant?, app?, argument?, via? }`. `code` is `missing` (the call at `site` needs `entry` and the grants of `orbital` do not cover it; `grant` is the entry that would, `app` says the app-level bracket takes it too), `unused` (the granted `entry` is used by no call of `orbital`, or of the program when `orbital` is absent), `entry-invalid` (`entry` is the problem with a declared entry that can match nothing) or `target-not-static` (argument number `argument` of `call` is computed, so its grant cannot be checked). With `{ final: true }` the finished program is checked, where a config-fed target is a literal: `via` is `config` for a missing grant of a value the knob can hold, `config-unresolvable` for a read of config the pass cannot resolve, `computed-path` for a computed path no grant can cover. The program is checked as given, or with `{ path }` (absolute) the file is resolved first and the program argument is not read.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted, resolved program (null when `path` names the file)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "path": "string",
+              "final": "boolean"
+            },
+            "optional": [
+              "path",
+              "final"
+            ]
+          },
+          "description": "Optional `{ path?, final? }`: the absolute path of the file to resolve and check; `final` checks the finished program",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/os-grants @entity.program {\"emit\":{\"success\":\"GRANTS_CHECKED\",\"failure\":\"GRANTS_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/print": {
       "category": "std-program",
       "minArity": 1,
@@ -23911,233 +24438,6 @@
       ],
       "docsSource": "generated"
     },
-    "redis": {
-      "category": "effect",
-      "minArity": 2,
-      "maxArity": 4,
-      "returnType": "void",
-      "description": "Run one redis command through the shared kernel: (redis origin command options? options?). The kernel speaks RESP over the host's raw TCP (TLS for rediss://); the origin must be a redis:// or rediss:// origin declared in egress. command is a list of text items (the command name first). One connection serves one call: AUTH (an ACL user with auth + user) and SELECT (db) go out as one pipeline whose replies are checked before the command runs. The success payload is { reply, key }: reply is the server's answer as text, a number or null, or a list of those nested up to 3 lists deep (a deeper reply fails). The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant or an invalid call), unconfigured (the auth credential is not held), timeout, failed, protocol, unsupported or redis (the server answered an error; code is its error word such as WRONGTYPE).",
-      "module": "core",
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "redis",
-        "produces": {
-          "kind": "object",
-          "fields": {
-            "reply": {
-              "kind": "union",
-              "of": [
-                {
-                  "kind": "union",
-                  "of": [
-                    "string",
-                    "number",
-                    {
-                      "kind": "literal",
-                      "value": null
-                    }
-                  ]
-                },
-                {
-                  "kind": "array",
-                  "of": {
-                    "kind": "union",
-                    "of": [
-                      {
-                        "kind": "union",
-                        "of": [
-                          "string",
-                          "number",
-                          {
-                            "kind": "literal",
-                            "value": null
-                          }
-                        ]
-                      },
-                      {
-                        "kind": "array",
-                        "of": {
-                          "kind": "union",
-                          "of": [
-                            {
-                              "kind": "union",
-                              "of": [
-                                "string",
-                                "number",
-                                {
-                                  "kind": "literal",
-                                  "value": null
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "array",
-                              "of": {
-                                "kind": "union",
-                                "of": [
-                                  "string",
-                                  "number",
-                                  {
-                                    "kind": "literal",
-                                    "value": null
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "key": {
-              "kind": "union",
-              "of": [
-                "string",
-                {
-                  "kind": "literal",
-                  "value": null
-                }
-              ]
-            }
-          }
-        }
-      },
-      "defaultPorts": {
-        "redis": 6379,
-        "rediss": 6379
-      },
-      "emitKeys": [
-        "success",
-        "failure"
-      ],
-      "runsOn": "server",
-      "params": [
-        {
-          "name": "origin",
-          "type": "string",
-          "description": "A redis:// or rediss:// origin: a string literal or a url-typed @config knob"
-        },
-        {
-          "name": "command",
-          "type": {
-            "kind": "array",
-            "of": "string"
-          },
-          "description": "The command as text items, name first: [\"SET\", \"k\", \"v\", \"PX\", \"1000\"]"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "auth": {
-                "kind": "union",
-                "of": [
-                  "string",
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "credential": "string",
-                      "scope": {
-                        "kind": "union",
-                        "of": [
-                          {
-                            "kind": "literal",
-                            "value": "app"
-                          },
-                          {
-                            "kind": "literal",
-                            "value": "user"
-                          }
-                        ]
-                      }
-                    },
-                    "open": true
-                  }
-                ]
-              },
-              "user": "string",
-              "db": "number",
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional trailing options: auth (a secret-typed knob naming the password credential), user (the ACL user), db (the database to SELECT), key (a non-empty string echoed as key), emit: { success, failure }",
-          "optional": true
-        },
-        {
-          "name": "more",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "auth": {
-                "kind": "union",
-                "of": [
-                  "string",
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "credential": "string",
-                      "scope": {
-                        "kind": "union",
-                        "of": [
-                          {
-                            "kind": "literal",
-                            "value": "app"
-                          },
-                          {
-                            "kind": "literal",
-                            "value": "user"
-                          }
-                        ]
-                      }
-                    },
-                    "open": true
-                  }
-                ]
-              },
-              "user": "string",
-              "db": "number",
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional second options object; the two share one namespace, so a key may sit in either",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(redis \"redis://cache.internal:6379\" [\"GET\",\"@payload.key\"] {\"auth\":\"@config.password\"} {\"emit\":{\"success\":\"GOT\",\"failure\":\"GET_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
     "render-ui": {
       "category": "effect",
       "minArity": 2,
@@ -24224,6 +24524,39 @@
       ],
       "examples": [
         "(row/matches {\"kind\":\"compare\",\"field\":\"status\",\"op\":\"==\",\"value\":\"open\"} {\"id\":\"t1\",\"status\":\"open\"}) // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "rsa/sign": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Sign a message with RSASSA-PKCS1-v1_5 and SHA-256 (RFC 8017 section 8.2.1, what JWS RS256 needs); the private operation is blinded and the signature is as long as the modulus. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key of at least 2048 bits. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it; the blinding randomness is fresh host entropy that is never journaled (the journal records the signature, and a replay answers with it without signing again). The result is null when the credential is not held or is not such a key. Runs only in the kernel.",
+      "module": "rsa",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the PEM private key"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign, hashed as its UTF-8 bytes"
+        }
+      ],
+      "examples": [
+        "(rsa/sign @config.signingKey \"header.payload\") // => \"<signature>\""
       ],
       "docsSource": "generated"
     },
@@ -27010,6 +27343,9 @@
         ]
       },
       "lambdaArgPosition": 1,
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      },
       "params": [
         {
           "name": "value",

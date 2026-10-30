@@ -1,7 +1,7 @@
 app std-agent-memory [
   version: "2.0.0",
   description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall is headless (failures show as toasts); AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "openrouter.ai:443": [tcp] },
 ]
 
 type AgentChatMessage = {
@@ -37,6 +37,12 @@ type AgentMemoryRow = {
 
 uses Llm from "std/behaviors/std-llm"
 
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+uses Delay from "std/behaviors/std-delay"
+
 orbital AgentMemoryOrbital {
   type AgentMemoriesLoaded = Event { data : [AgentMemory]!, totalCount : number } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
@@ -59,6 +65,44 @@ orbital AgentMemoryOrbital {
   trait AgentMemoryLlm = Llm.traits.LlmClient {
     listens {
       AgentMemoryRecall.LLM_EMBED -> LLM_EMBED
+      MemEmbedWait.MEM_EMBED_WAITED -> LLM_EMBED_WAITED
+      MemEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      MemEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      MemEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait MemEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: MEM_EMBED_WAITED
+    }
+    listens {
+      AgentMemoryLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait MemEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      AgentMemoryLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      AgentMemoryLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      MemEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      MemEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait MemEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      MemEmbedRequest.HTTP_SEND -> HTTP_SEND
+      MemEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -341,5 +385,5 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryLlm
+  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryLlm, MemEmbedWait, MemEmbedRequest, MemEmbedHttp
 }

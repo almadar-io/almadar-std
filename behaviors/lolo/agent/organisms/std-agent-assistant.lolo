@@ -1,7 +1,7 @@
 app std-agent-assistant [
   version: "2.0.0",
   description: "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. Each section's floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works; /assistant is the same conversation as a full page, in the app's own shell (pass `appName` and `navItems`); past conversations and what the assistant remembers open in place from its toolbar (Back returns to the chat), on either surface. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through std-llm's tool loop, firing only the inputs and reading only the entities its `tools` allow, as the signed-in user → ASSISTANT_REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). By default the tools are the program's own declarations: every `-> external` input (its @description is the tool text) and a read over every persisted entity, so composing building blocks composes the assistant's abilities. Any section's page gets the assistant with two traits, `XAssistant = AgentSession.traits.AgentConversation` and a std-panel-launcher dock: the conversation speaks the ASSISTANT_* contract from any orbital, so the assistant needs no per-section wiring. Import the orbital once per app: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: …, AgentChat: … }`. The conversation is kept across pages and reloads (each person's most recently used conversation is the current one);",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] },
 ]
 
 type AgentToolScope = {
@@ -86,6 +86,9 @@ orbital AgentAssistantOrbital {
   uses Context from "std/behaviors/std-agent-context"
   uses Memory from "std/behaviors/std-agent-memory"
   uses Llm from "std/behaviors/std-llm"
+  uses Req from "std/behaviors/std-http-request"
+  uses Http from "std/behaviors/std-http-client"
+  uses Delay from "std/behaviors/std-delay"
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Trace from "std/behaviors/std-agent-trace"
   uses Shell from "std/behaviors/std-app-layout"
@@ -201,6 +204,73 @@ orbital AgentAssistantOrbital {
       AssistantLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       AssistantLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       AssistantLoop.LLM_CANCEL -> LLM_CANCEL
+      AsstEmbedWait.ASST_EMBED_WAITED -> LLM_EMBED_WAITED
+      AsstEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      AsstEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      AsstEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+      AsstChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      AsstChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      AsstChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      AsstChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait AsstEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: ASST_EMBED_WAITED
+    }
+    listens {
+      AssistantLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait AsstEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      AssistantLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      AssistantLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      AsstEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      AsstEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait AsstEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      AsstEmbedRequest.HTTP_SEND -> HTTP_SEND
+      AsstEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait AsstChatRequest = Req.traits.HttpRequest {
+    listens {
+      AssistantLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      AssistantLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      AsstChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      AsstChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait AsstChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      AsstChatRequest.HTTP_SEND -> HTTP_SEND
+      AsstChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -266,7 +336,7 @@ orbital AgentAssistantOrbital {
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLlm, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedHttp, AsstChatRequest, AsstChatHttp, AssistantLoop, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

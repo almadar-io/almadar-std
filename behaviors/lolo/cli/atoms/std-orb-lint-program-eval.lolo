@@ -4,19 +4,19 @@ app std-orb-lint-program-eval [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-program-eval — the `orb lint program-eval <file>` command, the port of validate_program_eval (effect/program_eval.rs). It lowers the file with program/read and walks the effects of every inline trait transition and tick, descending through do, if, when and let, and checks each `program/eval` call: its `emit` option may carry only success and failure (ORB_EFF_EMIT_KEY_INVALID), each value must be a string identifier (ORB_EFF_EMIT_INVALID_NAME) declared in the trait's emits (ORB_EFF_EMIT_UNDECLARED_EVENT), and a call with no non-empty `emit.failure` drops the validator's errors (ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING), each with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint program-eval: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-program-eval — the `orb lint program-eval <file>` command, the port of validate_program_eval (effect/program_eval.rs). It lowers the file with program/read and walks the effects of every inline trait transition and tick, descending through do, if, when and let, and checks each `program/eval` call: its `emit` option may carry only success and failure (ORB_EFF_EMIT_KEY_INVALID), each value must be a string identifier (ORB_EFF_EMIT_INVALID_NAME) declared in the trait's emits (ORB_EFF_EMIT_UNDECLARED_EVENT), and a call with no non-empty `emit.failure` drops the validator's errors (ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING), each with the Rust path, message and suggestion (status 500, exit 1). The rule asks std-orb-effect-leaves for the program/eval effects (heads: program/eval) and reads the emit objects' keys and values from their flat typed nodes. Clean answers `lint program-eval: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-program-eval"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type PevVal = string | number | boolean | [PevVal?] | Map string PevVal?
-type PevLeaf = { p : string!, e : PevVal!, oi : number!, ti : number! }
-type PevOpts = { emit : Map string PevVal? }
+type PevNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type PevLeaf = { p : string!, n : [PevNode]!, oi : number!, ti : number! }
+type PevWalkSlot = { kind : string!, args : [number] }
+type PevWalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type PevExprItem = { eff : boolean! }
 type PevEmit = { event : string }
-type PevTransition = { effects : [PevVal?] }
-type PevMachine = { transitions : [PevTransition] }
-type PevTick = { effects : [PevVal?] }
-type PevTrait = { name : string, stateMachine : PevMachine, ticks : [PevTick], emits : [PevEmit] }
+type PevEo = { keys : [string]!, vis : [number]! }
+type PevTrait = { name : string, emits : [PevEmit] }
 type PevOrbital = { name : string, traits : [PevTrait] }
 type PevProgram = { orbitals : [PevOrbital] }
 
@@ -42,33 +42,16 @@ orbital OrbLintProgramEvalOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.orbitals (object/get @payload.program "orbitals" []))
-        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "program-eval" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "program-eval" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: ["program/eval"] })
       EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "program-eval" @entity.scope))
-        (set @entity.findings (let ((orbitals @entity.orbitals))
-          (let ((ls @payload.leaves))
-          (array/flatten (array/map @ls (fn l
-            (let ((e (object/get @l "e")) (p (object/get @l "p")))
-              (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "program/eval"))) []
-                (let ((declared (array/map (object/get (array/nth (object/get (array/nth @orbitals (object/get @l "oi")) "traits" []) (object/get @l "ti")) "emits" []) (fn d (object/get @d "event" ""))))
-                      (opts (array/filter (array/map (array/filter (array/drop @e 1) (fn a (validate/object @a))) (fn a (as @a PevOpts))) (fn o (and (!= @o null) (object/has @o "emit"))))))
-                  (let ((emitobjs (array/map @opts (fn a (object/get @a "emit")))))
-                    (array/concat
-                      (array/flatten (array/map @emitobjs (fn eo
-                        (array/flatten (array/map (object/keys @eo) (fn k
-                          (let ((v (object/get @eo @k)))
-                            (if (not (array/includes ["success", "failure"] @k)) [{ code: @config.codes.effEmitKeyInvalid.code, path: @p, message: (str/concat "emit." @k " is not supported on this operator (allowed: success, failure)"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
-                              (if (validate/string @v)
-                                (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
-                                  (if (array/includes @declared @v) [] [{ code: @config.codes.effEmitUndeclaredEvent.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))
-                                [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))
-                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: @config.codes.effProgramEvalFailureMissing.code, path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }]))))))))))))
+        (set @entity.findings (let ((orbitals @entity.orbitals) (nn : PevNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/flatten (array/map @payload.leaves (fn l (let ((n : [PevNode] (object/get @l "n" [])) (p (object/get @l "p"))) (let ((rti (- (array/len @n) 1)) (rt : PevNode (default (array/nth @n @rti) @nn))) (let ((rtks : [number] (object/get @rt "ks"))) (let ((rtcr : [number] (array/map (array/range 0 (array/len @rtks)) (fn j (- (+ (- @rti (array/sum @rtks)) (array/sum (array/take @rtks (+ @j 1)))) 1))))) (if (not (and (array/includes ["call", "arr", "proj", "rui"] (object/get @rt "k")) (> (array/len @rtks) 0) (= (default (array/first (default (object/get (default (array/nth @n (default (array/nth @rtcr 0) 0)) @nn) "lv") [])) "") "program/eval"))) [] (let ((declared (array/map (object/get (array/nth (object/get (array/nth @orbitals (object/get @l "oi")) "traits" []) (object/get @l "ti")) "emits" []) (fn d (object/get @d "event" ""))))) (let ((nEo : PevEo { keys: [], vis: [] }) (eos : [PevEo] (array/flatten (array/map (array/range 1 (array/len @rtks)) (fn j (let ((ai (default (array/nth @rtcr @j) 0)) (a : PevNode (default (array/nth @n @ai) @nn))) (if (and (= (object/get @a "k") "obj") (array/includes (object/get @a "nms") "emit")) (let ((aks : [number] (object/get @a "ks"))) (let ((acr : [number] (array/map (array/range 0 (array/len @aks)) (fn j (- (+ (- @ai (array/sum @aks)) (array/sum (array/take @aks (+ @j 1)))) 1))))) (let ((ei (array/findIndex (object/get @a "nms") (fn q (= @q "emit"))))) (let ((ei (default (array/nth @acr @ei) 0)) (e : PevNode (default (array/nth @n @ei) @nn))) (if (= (object/get @e "k") "obj") (let ((eks : [number] (object/get @e "ks"))) (let ((ecr : [number] (array/map (array/range 0 (array/len @eks)) (fn j (- (+ (- @ei (array/sum @eks)) (array/sum (array/take @eks (+ @j 1)))) 1))))) [{ keys: (object/get @e "nms"), vis: @ecr }])) []))))) []))))))) (array/concat (array/flatten (array/map (array/range 0 (array/len @eos)) (fn q (let ((eo : PevEo (default (array/nth @eos @q) @nEo))) (array/flatten (array/map (array/range 0 (array/len (object/get @eo "keys"))) (fn m (let ((k (default (array/nth (object/get @eo "keys") @m) ""))) (if (not (array/includes ["success", "failure"] @k)) [{ code: @config.codes.effEmitKeyInvalid.code, path: @p, message: (str/concat "emit." @k " is not supported on this operator (allowed: success, failure)") , suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }] (let ((vni (default (array/nth (object/get @eo "vis") @m) 0)) (vn : PevNode (default (array/nth @n @vni) @nn))) (if (or (and (= (object/get @vn "k") "nil") (!= (object/get @vn "lv") null)) (and (= (object/get @vn "k") "bind") (= (object/get @vn "wh") "w")) (= (object/get @vn "k") "cat")) (let ((v : string (if (= (object/get @vn "k") "nil") (default (array/first (default (object/get @vn "lv") [])) "") (if (= (object/get @vn "k") "bind") (object/get @vn "tx") (object/get (default (array/nth @n (- @vni 1)) @nn) "tx"))))) (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier") , suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }] (if (array/includes @declared @v) [] [{ code: @config.codes.effEmitUndeclaredEvent.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array") , suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))) [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " must be a string event name") , suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))))  (if (array/some (array/range 0 (array/len @eos)) (fn q (let ((eo : PevEo (default (array/nth @eos @q) @nEo))) (array/some (array/range 0 (array/len (object/get @eo "keys"))) (fn m (and (= (default (array/nth (object/get @eo "keys") @m) "") "failure") (let ((vni (default (array/nth (object/get @eo "vis") @m) 0)) (vn : PevNode (default (array/nth @n @vni) @nn))) (and (or (and (= (object/get @vn "k") "nil") (!= (object/get @vn "lv") null)) (and (= (object/get @vn "k") "bind") (= (object/get @vn "wh") "w")) (= (object/get @vn "k") "cat")) (!= (if (= (object/get @vn "k") "nil") (default (array/first (default (object/get @vn "lv") [])) "") (if (= (object/get @vn "k") "bind") (object/get @vn "tx") (object/get (default (array/nth @n (- @vni 1)) @nn) "tx"))) ""))))))))) [] [{ code: @config.codes.effProgramEvalFailureMissing.code, path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }]))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "program-eval", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [PevOrbital]! }
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [PevOrbital]!  heads : [string]! }
         @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
@@ -150,9 +133,28 @@ orbital OrbLintProgramEvalOrbital {
 
   trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
     listens {
-      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [PevOrbital]! }
-        @description "Flatten the effects of every inline trait."
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [PevOrbital]!  heads : [string]! }
+        @description "Flatten the effects of every inline trait whose head is asked."
+      LINT_EXPR_NODES { requestId : string!  nodes : [[PevNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
       OrbLintProgramEval.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
+    }
+  }
+  trait OrbLintExprNodes = Input.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string PevWalkSlot!  projections : Map string PevWalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [PevExprItem]! }
+        @description "A rule asks to flatten expressions."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbEffectLeaves.LINT_EXPR_ASK -> LINT_EXPR_ASK
     }
   }
   trait Versions = Input.traits.Versions {
@@ -174,5 +176,5 @@ orbital OrbLintProgramEvalOrbital {
     }
   }
 
-  page boot as OrbLintProgramEvalOrbitalStart -> OrbLintProgramEval, OrbLintProgramEvalCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
+  page boot as OrbLintProgramEvalOrbitalStart -> OrbLintProgramEval, OrbLintProgramEvalCli, OrbLintInput, Packs, OrbEffectLeaves, OrbLintExprNodes, Versions
 }

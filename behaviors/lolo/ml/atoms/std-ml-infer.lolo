@@ -36,6 +36,14 @@ orbital MlInferOrbital {
   trait InferMl = Ml.traits.MlClient {
     listens {
       InferenceRun.ML_INFER -> ML_INFER
+      InferMlFetch.HTTP_REPLIED -> ML_REPLIED
+      InferMlFetch.HTTP_FAILED -> ML_CALL_FAILED
+    }
+  }
+
+  trait InferMlFetch = Ml.traits.MlFetch {
+    listens {
+      InferMl.ML_HTTP_SEND -> HTTP_SEND
     }
   }
 
@@ -181,5 +189,5 @@ orbital MlInferOrbital {
     }
   }
 
-  page "/ml-infer" as MlInferPage -> InferenceRun, InferMl
+  page "/ml-infer" as MlInferPage -> InferenceRun, InferMl, InferMlFetch
 }

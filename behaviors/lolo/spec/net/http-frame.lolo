@@ -1,0 +1,21 @@
+app http-frame-spec [
+  version: "1.0.0",
+  description: "Design contract for the one stream framer both HTTP clients compose (std-http-client over sockets, std-http-fetch over os/fetch), the framing of the retired runtime drivers/http_request stream loop. FRAME_RUN { key, stream, data, final } frames the unframed body bytes data: stream sse cuts blocks at a blank line (LF LF or CRLF CRLF, whichever comes first), joins the data lines with LF, takes the last event and id line, skips comment lines and a block with no data line; stream jsonl cuts lines at LF and skips an empty line (a trailing CR is trimmed). Each complete frame answers FRAME_EVENT { key, data, event, id } in order; when no complete frame is left FRAME_DRAINED { key, rest } answers the bytes not yet framed. A block or line that is not valid UTF-8 answers FRAME_FAILED { key, error, kind encoding } and nothing after it is framed. final true ends the body: the framer closes an unterminated tail with the stream's terminator (LF LF for sse, LF for jsonl) before framing, so the cut tail is delivered once and rest is empty. The framer keeps nothing between calls: the caller owns the buffer."
+]
+
+orbital HttpFrameSpec {
+  expects entity HttpFrameRun [runtime] {
+    id : string!
+  }
+  expects trait HttpFrame {
+    state ready {
+      FRAME_RUN -> ready
+    }
+    emits {
+      FRAME_EVENT { key : string!  data : string!  event : string  id : string }
+      FRAME_DRAINED { key : string!  rest : bytes! }
+      FRAME_FAILED { key : string!  error : string!  kind : string! }
+    }
+  }
+  expects page boot -> HttpFrame
+}

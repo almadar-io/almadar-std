@@ -95,8 +95,9 @@ def ask(event, payload, entity, state, emits, effects=SEND_RECV, nev=("STORE_FAI
     return {"event": event, "payload": payload, "from": "ready", "entity": entity, "expect": ex}
 
 cases = []
-def case(id, steps, note=None, skip=None):
+def case(id, steps, note=None, skip=None, credentials=None):
     c = {"id": id, "steps": steps}
+    if credentials: c["credentials"] = credentials
     if note: c["note"] = note
     if skip: c["skip"] = skip
     cases.append(c)
@@ -147,16 +148,30 @@ ok_session = R(0) + S("server_version", "16.2") + S("client_encoding", "UTF8") +
 case("good-trusted-login-runs-the-parked-ask",
      to_startup() + [recv(ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])], "neverEmits": ["STORE_FAILED"]})],
      note="R0 .. ReadyForQuery, then the parked ROW_READ is sent")
-case("good-cleartext-login-answers-the-password",
-     to_startup() + [recv(R(3), expect={"state": "startup", "emits": [wire("password", "", [], msg(b"p", cstr(PASSWORD)))]}),
-                     recv(ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])]})])
+PW_MISSING = "the server asks for a password and the password credential is not held"
+# A case holds no credential unless it names some: the bad-*-without-the-password-credential cases are the controls of the good-* logins,
+# which hold the password as the case's test-only credentials (the replay answers the kernel's credential asks from them).
+PG_CRED = {"POSTGRES_PASSWORD": PASSWORD}
+CLEAR_FRAME = b"p" + struct.pack(">I", len(PASSWORD) + 5)
+case("good-cleartext-login-sends-the-head-and-the-host-fills-the-password",
+     to_startup() + [recv(R(3), expect={"state": "startup", "emits": [wire("password", "", [], CLEAR_FRAME)]}),
+                     recv(ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])]})],
+     credentials=PG_CRED,
+     note="the cleartext message is the head (kind byte, length from the credential's byte length) then the credential then NUL; the program and the PG_WIRE_SENT diagnostic show the head alone")
+case("bad-cleartext-login-without-the-password-credential-is-store-failed",
+     to_startup() + [recv(R(3), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=PW_MISSING)], "neverEmits": ["ROW_FOUND"], "effects": [{"type": "os/close"}]})],
+     note="the cleartext message needs the credential's bytes; none is held, so the login ends before any password byte is framed")
 salt = bytes([0xaf, 0xc0, 0x33, 0x1d])
 md5hex = lambda b: hashlib.md5(b).hexdigest()
 md5pw = "md5" + md5hex((md5hex((PASSWORD + USER).encode())).encode() + salt)
 case("good-md5-login-answers-md5-of-md5-password-user-and-salt",
      to_startup() + [recv(R(5, salt), expect={"state": "startup", "emits": [wire("password", "", [], msg(b"p", cstr(md5pw)))]}),
                      recv(ok_session, expect={"state": "running"})],
-     note="md5 + hex(md5(hex(md5(password+user)) + salt)), the recorded fixtures/postgres/md5-login salt")
+     credentials=PG_CRED,
+     note="md5 + hex(md5(hex(md5(password+user)) + salt)), the recorded fixtures/postgres/md5-login salt; the kernel derives it from the credential (hash/md5-credential)")
+case("bad-md5-login-without-the-password-credential-is-store-failed",
+     to_startup() + [recv(R(5, salt), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=PW_MISSING)], "neverEmits": ["ROW_FOUND"]})],
+     note="the md5 proof derives from the credential; none is held")
 
 # SCRAM: recorded server-first from fixtures/postgres/scram-wrong-password-fails
 NONCE_BYTES = bytes(range(1, 19)); NONCE = b64(NONCE_BYTES)
@@ -164,6 +179,13 @@ server_first = "r=AQIDBAUGBwgJCgsMDQ4PEBESJNXubcZ3b8qDQc8YOZhDLCsX,s=nKHGkexFELM
 client_first_bare = f"n={USER},r={NONCE}"
 client_first = "n,,"+client_first_bare
 first_body = cstr("SCRAM-SHA-256") + struct.pack(">I", len(client_first)) + client_first.encode()
+
+def scram_to_first():
+    return to_startup() + [
+        recv(R(10, cstr("SCRAM-SHA-256") + b"\0"), expect={"state": "drawing", "effects": [{"type": "let"}]}),
+        {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing",
+         "expect": {"state": "startup", "emits": [wire("scram-first", "", [], msg(b"p", first_body))]}},
+        ]
 salt_s = base64.b64decode("nKHGkexFELM/hS7LviqlRg==")
 sp = hashlib.pbkdf2_hmac("sha256", PASSWORD.encode(), salt_s, 4096)
 H = lambda k, m: hm.new(k, m, hashlib.sha256).digest()
@@ -178,29 +200,32 @@ server_key = H(sp, b"Server Key"); server_sig = H(server_key, auth_message.encod
 server_final = "v=" + b64(server_sig)
 
 def scram_to_proof():
-    return to_startup() + [
-        recv(R(10, cstr("SCRAM-SHA-256") + b"\0"), expect={"state": "drawing", "effects": [{"type": "let"}]}),
-        {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing",
-         "expect": {"state": "startup", "emits": [wire("scram-first", "", [], msg(b"p", first_body))]}},
+    return scram_to_first() + [
         recv(R(11, server_first.encode()), expect={"state": "startup", "emits": [wire("scram-final", "", [], msg(b"p", client_final.encode()))]})]
 case("good-scram-sha-256-login-sends-first-then-proof-and-verifies-the-server",
      scram_to_proof() + [recv(R(12, server_final.encode()) + ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])], "neverEmits": ["STORE_FAILED"]})],
-     note="client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; proof computed with pbkdf2/hmac (no hmac-over-bytes operator, so the atom builds HMAC from hash/sha256 bytes)")
+     credentials=PG_CRED,
+     note="client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; the kernel derives the proof and the server signature from the credential (hash/pbkdf2 and hmac/sha256-bytes slots)")
 case("bad-scram-server-first-that-is-not-text-is-store-failed",
-     scram_to_proof()[:-1] + [recv(R(11, b"\xff\xfe"), expect={"emits": [emit("STORE_FAILED", key="k", message="the SCRAM server-first message is not text")], "neverEmits": ["ROW_FOUND"]})],
+     scram_to_first() + [recv(R(11, b"\xff\xfe"), expect={"emits": [emit("STORE_FAILED", key="k", message="the SCRAM server-first message is not text")], "neverEmits": ["ROW_FOUND"]})],
+     credentials=PG_CRED,
      note="the server-first message must decode as text before r, s and i are read; undecodable bytes end the login with the proof error, never an empty string")
 case("bad-scram-server-signature-mismatch-fails",
      scram_to_proof() + [recv(R(12, ("v="+b64(bytes(32))).encode()) + ok_session, expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the SCRAM server signature does not match: the server does not know the password")], "neverEmits": ["ROW_FOUND"]})],
+     credentials=PG_CRED,
      note="Scram::verify text")
+case("bad-scram-server-first-without-the-password-credential-is-store-failed",
+     scram_to_first() + [recv(R(11, server_first.encode()), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=PW_MISSING)], "neverEmits": ["ROW_FOUND"]})],
+     note="SCRAM-SHA-256 starts without the password (client-first names the user), and the proof after server-first needs it; none is held")
 case("bad-scram-wrong-password-fails-with-the-server-message",
-     scram_to_proof() + [recv(E("28P01", f'password authentication failed for user "{USER}"', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=f'password authentication failed for user "{USER}"')], "effects": [{"type": "let"}], "neverEmits": ["ROW_FOUND"]})],
+     scram_to_first() + [recv(E("28P01", f'password authentication failed for user "{USER}"', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=f'password authentication failed for user "{USER}"')], "effects": [{"type": "let"}], "neverEmits": ["ROW_FOUND"]})],
      note="E 28P01 recorded in scram-wrong-password-fails; the row-store message is the server message only")
 case("bad-unsupported-authentication-method",
      to_startup() + [recv(R(7), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="unsupported authentication method 7")]})])
 case("bad-startup-database-missing-fails-with-the-server-message",
      to_startup() + [recv(E("3D000", 'database "app" does not exist', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message='database "app" does not exist')]})])
 case("skip-password-required-but-none-in-the-url", [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}}],
-     note="expect STORE_FAILED `the server asks for a password and DATABASE_URL has none` after R3/R5/R10 with a url without a password",
+     note="covered by the three bad-*-without-the-password-credential cases",
      skip="needs the server's answer frames (R3/R5/R10) scripted, with config.url without a password")
 case("skip-sslmode-require-and-server-answers-n", [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}}],
      note="expect STORE_FAILED `the server does not support TLS and sslmode requires it` after answer N",
@@ -576,6 +601,7 @@ case("good-real-postgres-16-scram-login-and-read-recorded-from-the-server",
       recv(rb("serverFirst"), expect={"state": "startup", "emits": [wire("scram-final", "", [], rb("scramFinal"))]}),
       recv(rb("login"), expect={"state": "running", "emits": [wire("statement", READ_SQL, ["t1"], rb("stageFrame"))], "neverEmits": ["STORE_FAILED"]}),
       ],
+     credentials=PG_CRED,
      note="every server byte here was produced by a real Postgres 16 (SCRAM-SHA-256 server-first with its own salt and nonce, the login tail with its parameter statuses, the statement reply); the atom's startup (with the options pair), SCRAM proof and statement frames were sent to that server and accepted")
 case("good-real-postgres-16-row-decode-recorded-from-the-server",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
@@ -584,6 +610,7 @@ case("good-real-postgres-16-row-decode-recorded-from-the-server",
       {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing"},
       recv(rb("serverFirst")), recv(rb("login")),
       recv(rb("stageReply"), expect={"emits": [emit("ROW_FOUND", key="k", row=ticket_row("t1", "Fix login", "open", 3, ["a", "b"]))], "neverEmits": ["STORE_FAILED"]})],
+     credentials=PG_CRED,
      note="the statement reply a real Postgres 16 sent for the seeded ticket")
 
 # ---- ROWS_SQL on a real Postgres 16 (record_real_sql.py): one held session, five statements
@@ -607,6 +634,7 @@ for i, st in enumerate(SQLREC["statements"]):
         sql_steps += [dict(sql_ask(i, st), **{"from": "ready", "expect": {"state": "running", "emits": [sql_wire(st)], "neverEmits": ["STORE_FAILED"]}}), reply]
 case("good-real-postgres-16-rows-sql-answers-rows-count-columns-and-the-server-error",
      sql_steps,
+     credentials=PG_CRED,
      note="ROWS_SQL on one held session against a real Postgres 16: a parameterised read (jsonb stays text, timestamptz is UTC ISO), the scalar types (null, bool, float, int8 past 2^53 as text, jsonb as text, int[], bytea as base64, numeric as text), an empty result with its column, a text[] bind sent as an array literal, and a server error with its SQLSTATE")
 doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",

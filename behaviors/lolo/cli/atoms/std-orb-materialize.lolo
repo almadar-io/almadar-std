@@ -1,0 +1,319 @@
+app std-orb-materialize [
+  version: "1.0.0",
+  inbound: ["cli-materialize"],
+  fs: { cwd: "**": [read], env ALMADAR_DERIVED_CACHE: "**": [read, write, create, remove] },
+  description: "std-orb-materialize — the `orb materialize <OUT>` command (spec/cli/orb-materialize.lolo): the registry mirror of a live behavior package. The working directory is the package's source tree; OUT is a relative path under the directory `ALMADAR_DERIVED_CACHE` names (the derived cache), so neither side is an arbitrary absolute path. Every `.lolo` under the working directory is lowered by program/read into OUT as the `.orb` at the same relative path (one compact JSON program, as `orb lower` prints it), and every locale catalog (`locales/<locale>/<name>.json`) is copied. A source whose sha256 equals the one in OUT/.hashes.json and whose output exists is not touched; an output whose source is gone is removed; OUT/.hashes.json is then rewritten with every source's sha256. The body is OUT. A file that is unreadable or does not lower answers status 500 naming it. Any other number of paths or an unknown flag answers the usage (status 400, exit 2). Replaces the lowering loop of @almadar/core behavior-package.ts behaviorRegistryDir; the cache key, the mirror eviction and the stat shortcut (an unchanged tree cost one stat per file there) are not here: every source is read and hashed."
+]
+uses Spec from "almadar-std/orb-materialize"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ProgramJson = string | number | boolean | [ProgramJson?] | Map string ProgramJson?
+type HashStamps = Map string string?
+
+orbital OrbMaterializeOrbital {
+  entity MaterializeRun [runtime] {
+    id : string!
+    out : string = ""
+    sources : [string] = []
+    items : [string] = []
+    cursor : number = 0
+    rel : string = ""
+    dest : string = ""
+    data : bytes = ""
+    sha : string? = null
+    prevKeys : [string] = []
+    prevValues : [string?] = []
+    known : string = ""
+    curKeys : [string] = []
+    curEntries : [[string]] = []
+    stale : [string] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbMaterialize.MATERIALIZE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbMaterialize -> MaterializeRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MATERIALIZE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: "Error: orb materialize: the command arguments could not be read" })
+      MATERIALIZE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit MATERIALIZE_ARGS_PARSE { stage: "materialize" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      MATERIALIZE_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit MATERIALIZE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (default (array/first @payload.errors) "") "\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'.") })
+      MATERIALIZE_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
+        (emit MATERIALIZE_ANSWERED { status: 400, body: "", stderr: "error: expected <OUT>\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'." })
+      MATERIALIZE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
+        (set @entity.out (default (array/first @payload.positionals) ""))
+        (emit MATERIALIZE_START { out: (default (array/first @payload.positionals) "") })
+    }
+
+    state working {
+      INIT -> working
+      MATERIALIZE_DONE -> ready
+        (emit MATERIALIZE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
+    }
+
+    emits {
+      MATERIALIZE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      MATERIALIZE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      MATERIALIZE_START {
+        out : string!
+      }
+        @description "Internal: mirror the working directory into OUT."
+        @tier "internal"
+    }
+
+    listens {
+      MATERIALIZE_CALLED -> inbound "cli-materialize" answers MATERIALIZE_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb materialize`."
+        @synonyms "orb materialize, mirror a live behavior package into lowered orb programs, registry mirror"
+      MATERIALIZE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> MATERIALIZE_ARGS_DONE
+      MaterializeEngine.MATERIALIZE_ANSWERED -> MATERIALIZE_DONE
+      MATERIALIZE_DONE { status : number!  body : string!  stderr : string }
+        @description "Internal: the engine's answer, relayed to the hook by its handler."
+        @tier "internal"
+    }
+  }
+
+  trait MaterializeEngine -> MaterializeRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MATERIALIZE_START -> mkdir
+        (set @entity.out @payload.out)
+        (os/mkdir { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: @payload.out } true { key: "mkdir", emit: { success: MAT_OUT_READY, failure: MAT_FAILED } })
+    }
+
+    state mkdir {
+      INIT -> mkdir
+      MAT_OUT_READY -> globbing
+        (os/glob { anchor: "cwd" path: "**/*.lolo" } { key: "glob-lolo", emit: { success: MAT_SOURCES, failure: MAT_FAILED } })
+      MAT_FAILED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
+    }
+
+    state globbing {
+      INIT -> globbing
+      MAT_SOURCES -> globbing_catalogs
+        (set @entity.sources (array/sort @payload.paths))
+        (os/glob { anchor: "cwd" path: "**/locales/**/*.json" } { key: "glob-catalogs", emit: { success: MAT_CATALOGS, failure: MAT_FAILED } })
+      MAT_FAILED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
+    }
+
+    state globbing_catalogs {
+      INIT -> globbing_catalogs
+      MAT_CATALOGS -> loading
+        (set @entity.items (array/concat @entity.sources (array/sort @payload.paths)))
+        (os/read-file { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/.hashes.json") } { key: "hashes", emit: { success: MAT_PREV, failure: MAT_NO_PREV } })
+      MAT_FAILED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
+    }
+
+    state loading {
+      INIT -> loading
+      MAT_PREV -> idle when (= (json/parse (default (bytes/to-string @payload.data) "") HashStamps) null)
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " @entity.out "/.hashes.json is not a map of source hashes") })
+      MAT_PREV -> scanning when (!= (json/parse (default (bytes/to-string @payload.data) "") HashStamps) null)
+        (set @entity.prevKeys (object/keys (default (json/parse (default (bytes/to-string @payload.data) "") HashStamps) {})))
+        (set @entity.prevValues (object/values (default (json/parse (default (bytes/to-string @payload.data) "") HashStamps) {})))
+        (set @entity.cursor 0)
+        (emit MAT_NEXT { })
+      MAT_NO_PREV -> scanning
+        (set @entity.cursor 0)
+        (emit MAT_NEXT { })
+    }
+
+    state scanning {
+      INIT -> scanning
+      MAT_NEXT -> pruning when (>= @entity.cursor (array/len @entity.items))
+        (set @entity.stale (array/filter @entity.prevKeys (fn key (not (array/includes @entity.curKeys @key)))))
+        (set @entity.cursor 0)
+        (emit MAT_PRUNE_NEXT { })
+      MAT_NEXT -> scanning when (< @entity.cursor (array/len @entity.items))
+        (set @entity.rel (default (array/nth @entity.items @entity.cursor) ""))
+        (os/read-file { anchor: "cwd" path: (default (array/nth @entity.items @entity.cursor) "") } { key: (str/concat "read-" @entity.cursor), emit: { success: MAT_READ, failure: MAT_FAILED } })
+      MAT_READ -> scanning
+        (set @entity.data @payload.data)
+        (set @entity.sha (hash/sha256 @payload.data "hex" "bytes"))
+        (set @entity.dest (str/concat @entity.out "/" (str/replace @entity.rel ".lolo" ".orb")))
+        (set @entity.known (if (>= (array/indexOf @entity.prevKeys @entity.rel) 0) (default (array/nth @entity.prevValues (array/indexOf @entity.prevKeys @entity.rel)) "") ""))
+        (emit MAT_HASHED { })
+      MAT_HASHED -> scanning
+        (os/exists { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: @entity.dest } { key: (str/concat "exists-" @entity.cursor), emit: { success: MAT_EXISTS, failure: MAT_FAILED } })
+      MAT_EXISTS -> scanning when (and @payload.ok (= @entity.known (default @entity.sha "")))
+        (set @entity.curKeys (array/append @entity.curKeys @entity.rel))
+        (set @entity.curEntries (array/append @entity.curEntries [@entity.rel (default @entity.sha "")]))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit MAT_NEXT { })
+      MAT_EXISTS -> scanning when (not (and @payload.ok (= @entity.known (default @entity.sha ""))))
+        (os/mkdir { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (os/path-dir @entity.dest) } true { key: (str/concat "dir-" @entity.cursor), emit: { success: MAT_DIR, failure: MAT_FAILED } })
+      MAT_DIR -> scanning when (str/endsWith @entity.rel ".lolo")
+        (program/read (default (bytes/to-string @entity.data) "") { key: (str/concat "lower-" @entity.cursor), emit: { success: MAT_LOWERED, failure: MAT_UNLOWERED } })
+      MAT_DIR -> scanning when (not (str/endsWith @entity.rel ".lolo"))
+        (os/write-file { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: @entity.dest } @entity.data { key: (str/concat "write-" @entity.cursor), emit: { success: MAT_WRITTEN, failure: MAT_FAILED } })
+      MAT_LOWERED -> scanning
+        (os/write-file { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: @entity.dest } (bytes/from-string (json/stringify @payload.result)) { key: (str/concat "write-" @entity.cursor), emit: { success: MAT_WRITTEN, failure: MAT_FAILED } })
+      MAT_WRITTEN -> scanning
+        (set @entity.curKeys (array/append @entity.curKeys @entity.rel))
+        (set @entity.curEntries (array/append @entity.curEntries [@entity.rel (default @entity.sha "")]))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit MAT_NEXT { })
+      MAT_UNLOWERED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " @entity.rel " does not lower: " (default @payload.error "no program")) })
+      MAT_FAILED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " @entity.rel ": " (default @payload.error "failed")) })
+    }
+
+    state pruning {
+      INIT -> pruning
+      MAT_PRUNE_NEXT -> saving when (>= @entity.cursor (array/len @entity.stale))
+        (os/write-file { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/.hashes.json") } (bytes/from-string (json/stringify (default (object/fromEntries @entity.curEntries) {}))) { key: "save", emit: { success: MAT_SAVED, failure: MAT_FAILED } })
+      MAT_PRUNE_NEXT -> pruning when (< @entity.cursor (array/len @entity.stale))
+        (os/remove { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/" (str/replace (default (array/nth @entity.stale @entity.cursor) "") ".lolo" ".orb")) } { key: (str/concat "prune-" @entity.cursor), emit: { success: MAT_PRUNED, failure: MAT_PRUNED } })
+      MAT_PRUNED -> pruning
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit MAT_PRUNE_NEXT { })
+    }
+
+    state saving {
+      INIT -> saving
+      MAT_SAVED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 200, body: (str/concat @entity.out "\n") })
+      MAT_FAILED -> idle
+        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
+    }
+
+    emits {
+      MATERIALIZE_ANSWERED -> external {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      MAT_NEXT {
+      }
+        @description "Internal: take the source at the cursor."
+        @tier "internal"
+      MAT_HASHED {
+      }
+        @description "Internal: the source at the cursor is read and hashed."
+        @tier "internal"
+      MAT_PRUNE_NEXT {
+      }
+        @description "Internal: remove the output at the cursor when its source is gone."
+        @tier "internal"
+      MAT_OUT_READY {
+      }
+        @description "os/mkdir: OUT exists."
+        @tier "internal"
+      MAT_SOURCES {
+        paths : [string]!
+      }
+        @description "os/glob: the `.lolo` sources."
+        @tier "internal"
+      MAT_CATALOGS {
+        paths : [string]!
+      }
+        @description "os/glob: the locale catalogs."
+        @tier "internal"
+      MAT_PREV {
+        data : bytes!
+      }
+        @description "os/read-file: the previous hashes."
+        @tier "internal"
+      MAT_NO_PREV {
+        error : string
+      }
+        @description "OUT holds no hashes yet."
+        @tier "internal"
+      MAT_READ {
+        data : bytes!
+      }
+        @description "os/read-file: the source."
+        @tier "internal"
+      MAT_EXISTS {
+        ok : boolean!
+      }
+        @description "os/exists: the output."
+        @tier "internal"
+      MAT_DIR {
+      }
+        @description "os/mkdir: the output's directory."
+        @tier "internal"
+      MAT_LOWERED {
+        result : ProgramJson!
+      }
+        @description "program/read: the lowered, stamped program."
+        @tier "internal"
+      MAT_UNLOWERED {
+        error : string
+      }
+        @description "The source does not lower."
+        @tier "internal"
+      MAT_WRITTEN {
+      }
+        @description "os/write-file: the output."
+        @tier "internal"
+      MAT_PRUNED {
+      }
+        @description "os/remove: the stale output (absent is fine)."
+        @tier "internal"
+      MAT_SAVED {
+      }
+        @description "os/write-file: the hashes."
+        @tier "internal"
+      MAT_FAILED {
+        error : string
+      }
+        @description "A read, write or listing failed."
+        @tier "internal"
+    }
+
+    listens {
+      MATERIALIZE_START {
+        out : string!
+      }
+        @description "Mirror the working directory into OUT."
+      OrbMaterialize.MATERIALIZE_START -> MATERIALIZE_START
+    }
+  }
+
+  page boot as OrbMaterializePage -> OrbMaterialize, ArgsCli, MaterializeEngine
+}

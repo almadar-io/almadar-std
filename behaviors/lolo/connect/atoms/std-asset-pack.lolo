@@ -3,6 +3,8 @@ app std-asset-pack [
   description: "AssetPackLoader — SOLE writer of the asset-pack fields on a board frame's entity. A board declares its pack (assetPack, packPath, transport); at INIT the atom reads <packPath> (an AssetPackManifest: pack, version, base, assets = a list of Asset rows keyed by their key field, group/name) over http (origin knob, must be in the app's egress) or os/read-file (assetsRoot anchor), resolves every entry url against base, and publishes assetByKey (flat) plus assetManifest (nested by the groups knob). Until the load answers, and after a failed load, every expectedKeys entry is a visible placeholder; every key the pack lacks is a placeholder and gets one ASSET_PACK_MISSING { pack, key }.",
   egress: ["https://almadar-kflow-assets.web.app"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/asset-pack"
 
 orbital StdAssetPackOrbital {
@@ -37,6 +39,16 @@ orbital StdAssetPackOrbital {
     assetPackCursor : number = 0
   }
 
+  trait AssetPackFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://almadar-kflow-assets.web.app"
+      timeoutMs: 8000
+    }
+    listens {
+      AssetPackLoader.PACK_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
   trait AssetPackLoader -> @rebindable StdAssetPack [client] {
     initial: idle
 
@@ -46,10 +58,7 @@ orbital StdAssetPackOrbital {
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
         (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
-        (http GET @config.origin @config.packPath {
-          headers: { Accept: "application/json" },
-          timeoutMs: @config.timeoutMs
-        } { key: "pack", emit: { success: PACK_HTTP_REPLIED, failure: PACK_LOAD_FAILED } })
+        (emit PACK_HTTP_SEND { key: "pack", method: "GET", target: @config.packPath, headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "file"))
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
@@ -58,9 +67,9 @@ orbital StdAssetPackOrbital {
 
     state loading {
       INIT -> loading
-      PACK_HTTP_REPLIED -> loading when (and (= @payload.status 200) (json/valid @payload.body))
-        (emit PACK_TEXT { text: @payload.body })
-      PACK_HTTP_REPLIED -> failed when (not (and (= @payload.status 200) (json/valid @payload.body)))
+      PACK_HTTP_REPLIED -> loading when (and (= @payload.status 200) (json/valid (default (bytes/to-string @payload.body) "")))
+        (emit PACK_TEXT { text: (default (bytes/to-string @payload.body) "") })
+      PACK_HTTP_REPLIED -> failed when (not (and (= @payload.status 200) (json/valid (default (bytes/to-string @payload.body) ""))))
         (set @entity.assetPackStatus "failed")
         (set @entity.assetPackMissing @config.expectedKeys)
         (set @entity.assetPackCursor 0)
@@ -144,21 +153,36 @@ orbital StdAssetPackOrbital {
       PACK_TEXT { text : string! }
         @description "Internal: the pack manifest text, from either transport."
         @tier "internal"
-      PACK_HTTP_REPLIED { status : number!  headers : Map string string  body : string! }
-        @description "Internal: the http reply for the pack manifest."
-        @tier "internal"
-      PACK_LOAD_FAILED { error : string!  kind : string }
-        @description "Internal: the pack manifest could not be fetched or read."
+      PACK_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: one request, for the HTTP fetch."
         @tier "internal"
     }
 
     listens {
-      PACK_HTTP_REPLIED { status : number!  headers : Map string string  body : string! }
       PACK_FILE_READ { data : bytes! }
-      PACK_LOAD_FAILED { error : string!  kind : string }
       PACK_TEXT { text : string! }
       ASSET_PACK_PUBLISH { }
       ASSET_PACK_REPORT_NEXT { cursor : number! }
+      PACK_HTTP_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+      PACK_LOAD_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+      AssetPackFetch.HTTP_REPLIED -> PACK_HTTP_REPLIED
+      AssetPackFetch.HTTP_FAILED -> PACK_LOAD_FAILED
     }
 
     config {
@@ -170,10 +194,6 @@ orbital StdAssetPackOrbital {
         @label "Transport"
         @description "http (web and any host with egress) or file (native/server hosts with the assets checkout)."
         @tier "domain"
-      origin : url = "https://almadar-kflow-assets.web.app"
-        @label "Origin"
-        @description "http origin serving the pack; must be in the embedding app's egress."
-        @tier "domain"
       assetsRoot : string = ""
         @label "Assets Root"
         @description "file transport: cwd-relative directory of the brand assets checkout (e.g. almadar-assets/kflow-assets)."
@@ -182,10 +202,6 @@ orbital StdAssetPackOrbital {
         @label "Pack Path"
         @description "Path of the pack manifest under the origin or assetsRoot, starting with / (e.g. /shared/ui-battle-board/assets.json)."
         @tier "domain"
-      timeoutMs : number = 8000
-        @label "Timeout (ms)"
-        @description "http timeout for the manifest request."
-        @tier "presentation"
       groups : [string] = ["terrains", "units", "features", "effects", "ui"]
         @label "Groups"
         @description "Key prefixes the nested assetManifest is built from (key group/name -> assetManifest.group.name)."
@@ -239,5 +255,5 @@ orbital StdAssetPackOrbital {
     }
   }
 
-  page "/std-asset-pack" as StdAssetPackPage -> AssetPackLoader, AssetPackFileReader
+  page "/std-asset-pack" as StdAssetPackPage -> AssetPackLoader, AssetPackFetch, AssetPackFileReader
 }

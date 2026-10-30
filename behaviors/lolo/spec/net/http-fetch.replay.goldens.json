@@ -1,0 +1,2443 @@
+{
+  "atom": "net/atoms/std-http-fetch.lolo",
+  "trait": "HttpFetch",
+  "spec": "spec/net/http-fetch.lolo",
+  "note": "parity oracle: std-http-client's request refusals and HTTP_REPLIED/HTTP_FAILED shapes (http-client.replay.goldens.json); the stream framing is std-http-client's (http-client.gen); the transport is one os/fetch (stream true for sse and jsonl: the host answers at the head with a handle, os/recv reads it, os/close releases it) the browser host answers raw (twins: exec_http os_effects a_fetch_*, runtime/kernel os-fetch-port.test.ts)",
+  "cases": [
+    {
+      "id": "a-get-is-fetched-and-a-reply-is-answered",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": "text/plain"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_REPLIED",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": "aGVsbG8="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/plain"
+                  },
+                  "body": "aGVsbG8="
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-request-body-and-headers-reach-the-fetch-as-given",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "POST",
+            "target": "/items",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "eyJhIjoxfQ==",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-non-2xx-status-is-a-reply-not-a-failure",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_REPLIED",
+          "payload": {
+            "key": "k1",
+            "status": 404,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": "bm9wZQ=="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 404,
+                  "headers": {
+                    "content-type": "text/plain"
+                  },
+                  "body": "bm9wZQ=="
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeated-response-headers-join-with-a-comma-and-a-space-and-names-lower-case",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_REPLIED",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Set-Cookie",
+                "value": "a=1"
+              },
+              {
+                "name": "set-cookie",
+                "value": "b=2"
+              },
+              {
+                "name": "X-One",
+                "value": "1"
+              }
+            ],
+            "body": "aGVsbG8="
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "set-cookie": "a=1, b=2",
+                    "x-one": "1"
+                  },
+                  "body": "aGVsbG8="
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-body-is-answered-empty",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "HEAD",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_REPLIED",
+          "payload": {
+            "key": "k1",
+            "status": 204,
+            "headers": [],
+            "body": ""
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 204,
+                  "headers": {},
+                  "body": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-failure-of-kind-denied-is-answered-denied",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: denied",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "denied",
+                  "error": "os/fetch: denied"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-failure-of-kind-timeout-is-answered-timeout",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: timeout",
+            "kind": "timeout"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "timeout",
+                  "error": "os/fetch: timeout"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-failure-of-kind-io-is-answered-io",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: io",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "io",
+                  "error": "os/fetch: io"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-failure-of-kind-unsupported-is-answered-io",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: unsupported",
+            "kind": "unsupported"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "io",
+                  "error": "os/fetch: unsupported"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-failure-of-kind-invalid-is-answered-io",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: invalid",
+            "kind": "invalid"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "io",
+                  "error": "os/fetch: invalid"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-method-that-is-not-a-token-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GE T",
+            "target": "/x?a=1",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-target-without-a-leading-slash-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "x",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-target-with-a-space-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/a b",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-header-name-that-is-not-a-token-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "X Bad",
+                "value": "1"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-header-value-with-a-control-character-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "X-Bad",
+                "value": "a\u0001b"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-framing-header-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "Content-Length",
+                "value": "3"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-header-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "Host",
+                "value": "evil.test"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-credential-header-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer x"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cookie-header-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "cookie",
+                "value": "s=1"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_REPLIED"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "controls-a-tab-in-a-header-value-and-a-custom-header-are-written",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/x?a=1",
+            "headers": [
+              {
+                "name": "X-Custom",
+                "value": "a\tb"
+              }
+            ],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg1": [
+                  "str/concat",
+                  "https://api.example.test",
+                  "@payload.target"
+                ],
+                "arg0": "@payload.method"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-stream-other-than-none-sse-or-jsonl-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "xml"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HF_HEAD"
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-stream-fetches-with-stream-true-and-frames-each-block-as-it-arrives",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "ZGF0YTogYQoKZGF0YTogYgoK",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "a",
+                  "event": null,
+                  "id": null
+                }
+              },
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "b",
+                  "event": null,
+                  "id": null
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-block-split-across-reads-is-framed-when-complete",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "ZGF0YTogaGU=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [],
+            "neverEmits": [
+              "HTTP_STREAM_EVENT",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "bGxvCgo=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "hello",
+                  "event": null,
+                  "id": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-block-carries-event-id-multi-line-data-comments-and-crlf",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "OiBrZWVwYWxpdmUNCmV2ZW50OiB0aWNrDQppZDogNw0KZGF0YTogeA0KZGF0YTogeQ0KDQo=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "x\ny",
+                  "event": "tick",
+                  "id": "7"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-block-with-no-data-line-delivers-nothing",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "OiBqdXN0IGEgY29tbWVudAoK",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [],
+            "neverEmits": [
+              "HTTP_STREAM_EVENT"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-block-left-unterminated-at-the-end-is-framed-then-replied",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "ZGF0YTogbGFzdA==",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "last",
+                  "event": null,
+                  "id": null
+                }
+              },
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-jsonl-stream-frames-each-line-and-skips-empty-lines",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "jsonl"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/x-ndjson"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "eyJhIjoxfQoKeyJiIg==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "{\"a\":1}",
+                  "event": null,
+                  "id": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "OjJ9Cg==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "{\"b\":2}",
+                  "event": null,
+                  "id": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "application/x-ndjson"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-jsonl-line-left-unterminated-at-the-end-is-framed",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "jsonl"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "eyJhIjoxfQ==",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_STREAM_EVENT",
+                "payload": {
+                  "key": "k1",
+                  "data": "{\"a\":1}",
+                  "event": null,
+                  "id": null
+                }
+              },
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-sse-block-that-is-not-utf-8-fails-encoding-and-closes-the-handle",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "//4KCg==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "encoding"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-jsonl-line-that-is-not-utf-8-fails-encoding-and-closes-the-handle",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "jsonl"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "//4K",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "encoding"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-read-closes-the-handle-and-fails-with-its-kind",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_IO_FAILED",
+          "payload": {
+            "error": "os/recv: boom",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "io",
+                  "error": "os/recv: boom"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "os/close",
+                "arg0": "@entity.handle"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-failure-of-kind-timeout-keeps-the-kind",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_IO_FAILED",
+          "payload": {
+            "error": "os/recv: late",
+            "kind": "timeout"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "timeout",
+                  "error": "os/recv: late"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-streamed-fetch-the-host-refuses-is-answered-with-its-kind",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "os/fetch: denied",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "denied",
+                  "error": "os/fetch: denied"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-streamed-fetch-the-host-answers-with-no-handle-fails-io",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [],
+            "body": ""
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "kind": "io"
+                }
+              }
+            ],
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-second-call-while-a-stream-is-opening-or-open-is-refused",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k2",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "opening",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k2",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "effects": []
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k3",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "streaming",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "k3",
+                  "kind": "refused"
+                }
+              }
+            ],
+            "effects": []
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "controls-a-whole-body-call-after-a-stream-is-fetched-without-stream",
+      "steps": [
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k1",
+            "method": "GET",
+            "target": "/events",
+            "headers": [],
+            "body": "",
+            "stream": "sse"
+          },
+          "expect": {
+            "state": "opening",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg0": "@payload.method",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000,
+                  "stream": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "HF_HEAD",
+          "payload": {
+            "key": "k1",
+            "status": 200,
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": "",
+            "handle": 4
+          },
+          "expect": {
+            "state": "streaming",
+            "effects": [
+              {
+                "type": "os/recv",
+                "arg0": "@payload.handle"
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED",
+              "HTTP_REPLIED"
+            ]
+          }
+        },
+        {
+          "event": "HF_READ",
+          "payload": {
+            "data": "",
+            "eof": true,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "k1",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "text/event-stream"
+                  },
+                  "body": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "HTTP_SEND",
+          "payload": {
+            "key": "k2",
+            "method": "GET",
+            "target": "/x",
+            "headers": [],
+            "body": "",
+            "stream": "none"
+          },
+          "expect": {
+            "state": "ready",
+            "effects": [
+              {
+                "type": "os/fetch",
+                "arg2": {
+                  "headers": "@payload.headers",
+                  "body": "@payload.body",
+                  "timeoutMs": 30000
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,8 @@ app std-arxiv [
   description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed of papers that contain every word of the query (each word searched in all fields, joined with AND); a blank query or a non-2xx reply answers an empty result list. A 2xx feed is read with xml/parse into the paper list; a failed call or a 2xx body that is not well-formed XML answers ARXIV_SEARCH_ERROR { error, kind } (kind: timeout, failed, refused, unconfigured or malformed).",
   egress: ["https://export.arxiv.org"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type ArxivAuthor = { name : string }
 type ArxivLink = { "@href" : string, "@rel" : string }
 type ArxivEntry = { id : string, title : string, summary : string, published : string, author : [ArxivAuthor], link : [ArxivLink] }
@@ -13,6 +15,16 @@ orbital ArxivOrbital {
     id : string!
   }
 
+  trait ArxivFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://export.arxiv.org"
+      timeoutMs: 10000
+    }
+    listens {
+      ArxivClient.ARXIV_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
   trait ArxivClient -> ArxivLookup [client] {
     initial: idle
 
@@ -20,23 +32,21 @@ orbital ArxivOrbital {
       INIT -> idle
 
       ARXIV_SEARCH -> idle when (!= (str/trim @payload.query) "")
-        (http GET @config.origin "/api/query" {
-          query: {
-            search_query: (str/join (array/map (array/filter (str/split (str/trim @payload.query) " ") (fn w (!= @w ""))) (fn w (str/concat "all:" @w))) " AND "),
-            start: 0,
-            max_results: (default @payload.maxResults 8),
-            sortBy: "relevance"
-          },
-          headers: { Accept: "application/atom+xml" },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: ARXIV_SEARCH_REPLIED, failure: ARXIV_SEARCH_FAILED } })
+        (emit ARXIV_HTTP_SEND {
+          key: "search",
+          method: "GET",
+          target: (str/concat "/api/query?search_query=" (str/encode-uri-component (str/join (array/map (array/filter (str/split (str/trim @payload.query) " ") (fn w (!= @w ""))) (fn w (str/concat "all:" @w))) " AND ")) "&start=0&max_results=" (default @payload.maxResults 8) "&sortBy=relevance"),
+          headers: [{ name: "Accept", value: "application/atom+xml" }],
+          body: (bytes/from-string ""),
+          stream: "none"
+        })
       ARXIV_SEARCH -> idle when (= (str/trim @payload.query) "")
         (emit ARXIV_SEARCH_RESULT { results: [] })
-      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (xml/valid @payload.body))
+      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (xml/valid (default (bytes/to-string @payload.body) "")))
         (emit ARXIV_SEARCH_RESULT {
           results: (array/map
             (array/filter
-              (let ((feed (xml/parse @payload.body ArxivFeed))) (if (validate/object @feed) (object/get @feed entry []) []))
+              (let ((feed (xml/parse (default (bytes/to-string @payload.body) "") ArxivFeed))) (if (validate/object @feed) (object/get @feed entry []) []))
               (fn e (or (!= (object/get @e id "") "") (!= (object/get @e title "") ""))))
             (fn e {
               id: (object/get @e id ""),
@@ -52,7 +62,7 @@ orbital ArxivOrbital {
                 (if (!= @alt null) (object/get @alt (quote "@href") "") (object/get @e id "")))
             }))
         })
-      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (xml/valid @payload.body)))
+      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (xml/valid (default (bytes/to-string @payload.body) ""))))
         (emit ARXIV_SEARCH_ERROR { error: "arXiv returned a malformed Atom feed", kind: "malformed" })
       ARXIV_SEARCH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit ARXIV_SEARCH_RESULT { results: [] })
@@ -74,19 +84,16 @@ orbital ArxivOrbital {
         @description "The search failed: the call timed out, failed, was refused or unconfigured, or the 2xx body is not a well-formed XML document; no paper list is produced."
         @synonyms "malformed feed, arxiv parse failure"
         @tier "primary"
-      ARXIV_SEARCH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      ARXIV_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the search call's HTTP reply."
-        @tier "secondary"
-      ARXIV_SEARCH_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the search call never produced a reply."
-        @tier "secondary"
+        @description "Internal: the search request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -97,29 +104,20 @@ orbital ArxivOrbital {
         @description "Search arXiv by relevance across all fields; maxResults defaults to 8."
         @synonyms "find papers, search preprints, look up research"
       ARXIV_SEARCH_REPLIED {
+        key : string
         status : number!
         headers : Map string string
-        body : string!
+        body : bytes!
       }
       ARXIV_SEARCH_FAILED {
+        key : string
         error : string!
         kind : string!
       }
-    }
-
-    config {
-      origin : url = "https://export.arxiv.org"
-        @label "arXiv API origin"
-        @description "The arXiv API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "arxiv url, api host"
-        @tier "infra"
-      timeoutMs : number = 10000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each arXiv request may take before it counts as failed."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
+      ArxivFetch.HTTP_REPLIED -> ARXIV_SEARCH_REPLIED
+      ArxivFetch.HTTP_FAILED -> ARXIV_SEARCH_FAILED
     }
   }
 
-  page boot as ArxivPage -> ArxivClient
+  page boot as ArxivPage -> ArxivClient, ArxivFetch
 }

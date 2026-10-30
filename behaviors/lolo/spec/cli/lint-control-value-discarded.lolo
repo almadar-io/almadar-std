@@ -1,0 +1,21 @@
+app lint-control-value-discarded-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint control-value-discarded <file>`, the port of ORB_CONTROL_VALUE_DISCARDED. Findings are reported at the composed trait (status 500, exit 1). A clean program answers `lint control-value-discarded: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2); a file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintControlValueDiscardedSpec {
+  expects trait OrbLintControlValueDiscarded {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintControlValueDiscardedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintControlValueDiscarded, OrbLintControlValueDiscardedCli
+}

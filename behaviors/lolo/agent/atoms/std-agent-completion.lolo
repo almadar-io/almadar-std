@@ -1,11 +1,13 @@
 app std-agent-completion [
   version: "1.0.0",
   description: "Takes a prompt, returns generated text through std-llm (LLM_GENERATE).",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 uses Spec from "almadar-std/completion"
 uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 
 orbital AgentCompletionOrbital {
 
@@ -18,6 +20,35 @@ orbital AgentCompletionOrbital {
   trait CompletionLlm = Llm.traits.LlmClient {
     listens {
       CompletionGeneration.LLM_GENERATE -> LLM_GENERATE
+      CompletionChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      CompletionChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      CompletionChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      CompletionChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait CompletionChatRequest = Req.traits.HttpRequest {
+    listens {
+      CompletionLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      CompletionLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      CompletionChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      CompletionChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CompletionChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      CompletionChatRequest.HTTP_SEND -> HTTP_SEND
+      CompletionChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -107,5 +138,5 @@ orbital AgentCompletionOrbital {
     }
   }
 
-  page boot as AgentCompletionPage -> CompletionGeneration, CompletionReady, CompletionLlm
+  page boot as AgentCompletionPage -> CompletionGeneration, CompletionReady, CompletionLlm, CompletionChatRequest, CompletionChatHttp
 }

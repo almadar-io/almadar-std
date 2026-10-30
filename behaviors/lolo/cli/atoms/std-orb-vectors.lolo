@@ -4,7 +4,7 @@ app std-orb-vectors [
   fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   exec: ["kill"],
-  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
   description: "std-orb-vectors — the `orb behaviors vectors snapshot --package <dir> [--out <path>]` command. It finds the installed package (its root, its prefix and its locked snapshot path), takes the package's organism texts then its capability texts, reads the environment the Rust command reads (ALMADAR_VECTORS_DIR or HOME for the user store; EMBEDDING_PROVIDER, EMBEDDING_API_KEY, OPENAI_API_KEY, OPEN_ROUTER_API_KEY and EMBEDDING_MODEL for the provider model, empty when no provider is configured), and hands the texts to std-vector-snapshot, which resolves, embeds and persists what is missing and writes the snapshot (default <package>/dist/vectors.vec). It answers `<prefix>: <n> vectors (<model>) -> <out>`. The legacy `vectors import` command is retired and has no program. The package and the texts arrive as VECTORS_PACKAGE_NEEDED / VECTORS_TEXTS_NEEDED requests answered by behavior/packages and by std-behavior-texts over behavior/catalog rows; until they are routed the answers are the events VECTORS_PACKAGE_FOUND, ORGANISM_TEXTS_FOUND and CAPABILITY_TEXTS_FOUND."
 ]
 uses Spec from "almadar-std/orb-vectors"
@@ -16,6 +16,8 @@ uses Write from "std/behaviors/std-vector-write"
 uses Quantize from "std/behaviors/std-vector-quantize"
 uses F32 from "std/behaviors/std-f32"
 uses Delay from "std/behaviors/std-delay"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 uses Sig6 from "std/behaviors/std-sig6"
 uses BigCmp from "std/behaviors/std-bigcmp"
 
@@ -118,86 +120,66 @@ orbital OrbVectorsOrbital {
     }
   }
 
-  trait VcLlmOrShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORS
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOrShared = Resolve.traits.ResolveLlmOrShared {
     listens {
       VcResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+      ResolveOrSharedWait.WAITED_ORS -> LLM_EMBED_WAITED
+      ResolveOrSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait VcLlmOrOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORO
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPEN_ROUTER_API_KEY"
-    }
+  trait ResolveLlmOrOwn = Resolve.traits.ResolveLlmOrOwn {
     listens {
       VcResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+      ResolveOrOwnWait.WAITED_ORO -> LLM_EMBED_WAITED
+      ResolveOrOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait VcLlmOaShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAS
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOaShared = Resolve.traits.ResolveLlmOaShared {
     listens {
       VcResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+      ResolveOaSharedWait.WAITED_OAS -> LLM_EMBED_WAITED
+      ResolveOaSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait VcLlmOaOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAO
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPENAI_API_KEY"
-    }
+  trait ResolveLlmOaOwn = Resolve.traits.ResolveLlmOaOwn {
     listens {
       VcResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+      ResolveOaOwnWait.WAITED_OAO -> LLM_EMBED_WAITED
+      ResolveOaOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait VcLlmLm = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_LM
-    }
-    config {
-      embedProvider: lmstudio
-      embedOrigin: "http://127.0.0.1:1234"
-      embedBasePath: "/v1"
-      embedModel: "text-embedding-bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmLm = Resolve.traits.ResolveLlmLm {
     listens {
       VcResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+      ResolveLmWait.WAITED_LM -> LLM_EMBED_WAITED
+      ResolveLmRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
+  trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
+  trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest {}
+  trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp {}
+  trait ResolveOrOwnWait = Resolve.traits.ResolveOrOwnWait {}
+  trait ResolveOrOwnRequest = Resolve.traits.ResolveOrOwnRequest {}
+  trait ResolveOrOwnHttp = Resolve.traits.ResolveOrOwnHttp {}
+  trait ResolveOaSharedWait = Resolve.traits.ResolveOaSharedWait {}
+  trait ResolveOaSharedRequest = Resolve.traits.ResolveOaSharedRequest {}
+  trait ResolveOaSharedHttp = Resolve.traits.ResolveOaSharedHttp {}
+  trait ResolveOaOwnWait = Resolve.traits.ResolveOaOwnWait {}
+  trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest {}
+  trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp {}
+  trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmRequest = Resolve.traits.ResolveLmRequest {}
+  trait ResolveLmHttp = Resolve.traits.ResolveLmHttp {}
 
   trait VcResolve = Resolve.traits.VectorResolve {
     listens {
@@ -205,16 +187,16 @@ orbital OrbVectorsOrbital {
       VcSnapshot.USER_STORE_READ -> USER_STORE_READ
       VcStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
       VcStore.VECTOR_REFUSED -> VECTOR_REFUSED
-      VcLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      VcLlmOrShared.LLM_FAILED -> LLM_FAILED
-      VcLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      VcLlmOrOwn.LLM_FAILED -> LLM_FAILED
-      VcLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      VcLlmOaShared.LLM_FAILED -> LLM_FAILED
-      VcLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      VcLlmOaOwn.LLM_FAILED -> LLM_FAILED
-      VcLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      VcLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
       VcWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       VcWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -551,5 +533,5 @@ orbital OrbVectorsOrbital {
     }
   }
 
-  page boot as OrbVectorsPage -> OrbVectors, ArgsCli, VcSnapshot, VcResolve, VcStore, VcWrite, VcQuantize, VcF32, VcSig6, VcBigCmp, VcDelay, VcLlmOrShared, VcLlmOrOwn, VcLlmOaShared, VcLlmOaOwn, VcLlmLm
+  page boot as OrbVectorsPage -> OrbVectors, ArgsCli, VcSnapshot, VcResolve, VcStore, VcWrite, VcQuantize, VcF32, VcSig6, VcBigCmp, VcDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
 }

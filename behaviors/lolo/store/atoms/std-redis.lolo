@@ -1,7 +1,7 @@
 app std-redis [
   version: "1.0.0",
   net: { "redis.example.test:6379": [tcp] },
-  description: "std-redis — a cache, counter, lock and message channel on a real Redis server: each call becomes one RESP command for std-resp-client, which speaks RESP over os/tcp-connect, os/send, os/recv and os/close. REDIS_GET, REDIS_SET (ttl in seconds), REDIS_DELETE, REDIS_INCREMENT (INCRBY), REDIS_EXPIRE (seconds, PEXPIRE), REDIS_PUBLISH, REDIS_LOCK (SET NX PX, ttl in milliseconds; the lock id is drawn from the host CSPRNG) and REDIS_UNLOCK (EVAL of the compare-and-delete script, so only the holder releases). Values are text. Every failure answers REDIS_FAILED with the action, the failure kind (refused, timeout, failed, protocol, unsupported, redis), the server's error word when it answered one, and the message. Calls overlap: the wire pipelines them over one connection and answers each in order. Not carried yet: AUTH and the ACL user (they wait for the secret knob that lets a declared secret feed an os/send argument; authenticated true answers REDIS_FAILED unconfigured), TLS (rediss), and subscribing (G-ORB-307). The server is the host and port knobs, which the net grant names."
+  description: "std-redis — a cache, counter, lock and message channel on a real Redis server: each call becomes one RESP command for std-resp-client, which speaks RESP over os/tcp-connect, os/send, os/recv and os/close. REDIS_GET, REDIS_SET (ttl in seconds), REDIS_DELETE, REDIS_INCREMENT (INCRBY), REDIS_EXPIRE (seconds, PEXPIRE), REDIS_PUBLISH, REDIS_LOCK (SET NX PX, ttl in milliseconds; the lock id is drawn from the host CSPRNG) and REDIS_UNLOCK (EVAL of the compare-and-delete script, so only the holder releases). Values are text. Every failure answers REDIS_FAILED with the action, the failure kind (refused, timeout, failed, protocol, unsupported, redis), the server's error word when it answered one, and the message. Calls overlap: the wire pipelines them over one connection and answers each in order. AUTH and the ACL user ride the RedisWire knobs: authenticated true sends AUTH [user] password ahead of the command, the password being the credential the password secret knob names (default REDIS_PASSWORD), filled into the send by the host so the atom never holds it; a credential that is not held answers REDIS_FAILED unconfigured. Not carried yet: TLS (rediss) and subscribing (G-ORB-307). The server is the host and port knobs, which the net grant names."
 ]
 uses Resp from "std/behaviors/std-resp-client"
 
@@ -41,6 +41,8 @@ orbital RedisOrbital {
       host: "redis.example.test"
       port: 6379
       authenticated: false
+      user: ""
+      password: "REDIS_PASSWORD"
       db: 0
     }
   }

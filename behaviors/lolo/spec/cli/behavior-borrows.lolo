@@ -1,0 +1,20 @@
+app behavior-borrows-spec [
+  version: "1.0.0",
+  description: "Design contract for a behavior described with what an import of each of its orbitals borrows: for a BORROWS_DESCRIBE { behavior } it describes the whole behavior, reads the behavior resolved, builds one probe row per orbital imported with no `entities {}`, asks std-orb-lint-orbital-ref-closure, and answers BORROWS_DESCRIBED { result } with each orbital's `borrows` (the entities a sibling owns that it references) set from the ORB_O_ENTITY_UNMAPPED findings. A behavior with a lazy import borrows nothing. A failure answers BORROWS_FAILED { error }."
+]
+type BorrowsResult = { behavior : string!, orbitals : [BorrowsOrbital] }
+type BorrowsOrbital = { borrows : [string]! }
+
+orbital BehaviorBorrowsSpec {
+  expects trait BehaviorBorrows {
+    state ready {
+      BORROWS_DESCRIBE -> working
+    }
+    state working
+    emits {
+      BORROWS_DESCRIBED { result : BorrowsResult! }
+      BORROWS_FAILED { error : string! }
+    }
+  }
+  expects page boot -> BehaviorBorrows
+}

@@ -1,11 +1,13 @@
 app std-agent-planner [
   version: "1.0.0",
   description: "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context through std-llm (LLM_GENERATE).",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 uses Spec from "almadar-std/planner"
 uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 
 type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
 
@@ -21,6 +23,35 @@ orbital AgentPlannerOrbital {
   trait PlannerLlm = Llm.traits.LlmClient {
     listens {
       PlannerExecution.LLM_GENERATE -> LLM_GENERATE
+      PlannerChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      PlannerChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      PlannerChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      PlannerChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait PlannerChatRequest = Req.traits.HttpRequest {
+    listens {
+      PlannerLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      PlannerLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      PlannerChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      PlannerChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PlannerChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      PlannerChatRequest.HTTP_SEND -> HTTP_SEND
+      PlannerChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -132,5 +163,5 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm
+  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm, PlannerChatRequest, PlannerChatHttp
 }

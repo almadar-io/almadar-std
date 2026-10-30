@@ -29,6 +29,8 @@ type PoRec = { n : string!, cf : [string]!, ct : [string]!, ov : [string]!, w : 
 type PoAdj = Map string [string]
 type PoCall = { path : string!, node : [PoNode?]! }
 type PoIdx = Map string [PoCall]
+type PoRow = { oi : number!, pj : number!, kind : string!, names : [string]!, findings : [OrbFinding]! }
+type PageOwner = { orbital : number!, page : number!, kind : string!, names : [string]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintPageContentOwnerCodes = { pageAmbiguousContentOwner : LintCodeDecl , pageSecondContentBody : LintCodeDecl , pageControlOutsideShell : LintCodeDecl }
@@ -43,6 +45,8 @@ orbital OrbLintPageContentOwnerOrbital {
     program : PoProgram = {}
     roots : Map string [string] = {}
     patterns : Map string PoPattern = {}
+    rows : [PoRow] = []
+    owners : [PageOwner] = []
     findings : [OrbFinding] = []
   }
 
@@ -58,7 +62,7 @@ orbital OrbLintPageContentOwnerOrbital {
       LINT_INPUT -> ready
         (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nos : [string] [])
+        (set @entity.rows (let ((norows : [PoRow] []) (nos : [string] [])
                 (nof : [OrbFinding] [])
                 (notd : [PoTrait] [])
                 (nopg : [PoPage] [])
@@ -73,7 +77,7 @@ orbital OrbLintPageContentOwnerOrbital {
                 (ctlMap (default (object/fromEntries (array/map (object/keys @entity.patterns) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), (array/filter (object/keys (object/get (object/get @entity.patterns @pn {}) "props" {})) (fn pr (array/includes ["event" "event-ref"] (object/get (default (object/get (object/get (object/get @entity.patterns @pn {}) "props" {}) @pr) {}) "kind" ""))))]))) {})))
   (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
     (let ((trs0 : [PoTrait] (object/get @o "traits" @notd)) (pgs (object/get @o "pages" @nopg)))
-      (if (= (array/len @pgs) 0) @nof
+      (if (= (array/len @pgs) 0) @norows
         (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine")))))
           (let ((recs : [PoRec] (array/map @inlK (fn ti
                   (let ((t (array/nth @trs0 @ti)))
@@ -110,7 +114,7 @@ orbital OrbLintPageContentOwnerOrbital {
                   (let ((claimed (array/unique (array/flatten (array/map @bound (fn b (object/get @embFwd @b @nos)))))))
                     (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                       (let ((p (array/nth @pgs @pj)))
-                        (if (not (validate/object @p)) @nof
+                        (if (not (validate/object @p)) @norows
                           (let ((declared (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" "")))))
                                 (path (object/get @p "path" "")))
                             (let ((chanCand (array/filter (let ((seed (array/unique (array/flatten (array/map @declared (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos))))))))) (fn c (and (object/has @inl @c) (object/has @wr @c))))))
@@ -122,7 +126,7 @@ orbital OrbLintPageContentOwnerOrbital {
                                                      (if (= (array/len @distinct) 1) { kind: "sole", names: @distinct }
                                                        { kind: "ambiguous", names: (array/sort @distinct) })))))))
                                   (let ((ok (object/get @owner "kind")) (on (object/get @owner "names")) (shell (and (= @ok "channel") (array/some @declared (fn cand (and (object/has @inl @cand) (array/some (let ((seed (array/unique (array/flatten (array/map [@cand] (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos))))))))) (fn rr (array/includes @on @rr))) (let ((tt (array/first (array/filter @trs0 (fn x (= (object/get @x "name" "") @cand)))))) (array/some (array/map (array/filter (object/get (default (as (tree/index (array/flatten (array/map (object/get @tt "stateMachine.transitions" @notr) (fn x (array/filter (object/get @x "effects" []) (fn r (validate/array @r)))))) ["render-ui"]) PoIdx) {}) "render-ui" []) (fn c (and (not (str/includes (object/get @c "path" "") ".")) (let ((n (object/get @c "node" null))) (and (>= (array/len @n) 3) (validate/string (array/nth @n 1)) (object/has @mainSet (array/nth @n 1))))))) (fn c (array/nth (object/get @c "node" null) 2))) (fn b (array/some (let ((nn (as (json/nodes @b) LNodes))) (if (= @nn null) @lnone @nn)) (fn nd (if (validate/object @nd) (let ((ty (object/get @nd "type" null))) (if (validate/string @ty) (let ((pt (if (str/startsWith @ty (quote "@config.")) (let ((dv (object/get (object/get (object/get @tt "config" {}) (str/slice @ty 8) {}) "default" null))) (if (validate/string @dv) @dv "")) @ty))) (if (!= @pt "") (object/has @tmplSet (str/replaceAll (str/replaceAll @pt "~" "~t") "." "~d")) false)) false)) false))))))))))))
-                                    (array/concat
+                                    [{ oi: @oi, pj: @pj, kind: @ok, names: @on, findings: (array/concat
                                       (if (= @ok "ambiguous")
                                         (let ((rivals (array/filter @on (fn x (not (array/includes @claimed @x))))))
                                           (if (> (array/len @rivals) 1)
@@ -135,15 +139,21 @@ orbital OrbLintPageContentOwnerOrbital {
                                             (if (and (not (object/has @wr @nm)) (not (and @shell (let ((tt (array/first (array/filter @trs0 (fn x (= (object/get @x "name" "") @nm)))))) (array/some (array/map (array/filter (object/get (default (as (tree/index (array/concat (array/flatten (array/map (object/get @tt "stateMachine.transitions" @notr) (fn x (array/filter (object/get @x "effects" []) (fn r (validate/array @r)))))) (array/flatten (array/map (object/get @tt "ticks" @notk) (fn x (array/filter (object/get @x "effects" []) (fn r (validate/array @r))))))) ["render-ui"]) PoIdx) {}) "render-ui" []) (fn c (and (not (str/includes (object/get @c "path" "") ".")) (let ((n (object/get @c "node" null))) (and (>= (array/len @n) 3) (validate/string (array/nth @n 1)) (object/has @mainSet (array/nth @n 1))))))) (fn c (array/nth (object/get @c "node" null) 2))) (fn b (array/some (let ((nn (as (json/nodes @b) LNodes))) (if (= @nn null) @lnone @nn)) (fn nd (if (validate/object @nd) (if (validate/string (object/get @nd "type" null)) (array/some (object/get @ctlMap (str/replaceAll (str/replaceAll (object/get @nd "type" null) "~" "~t") "." "~d") @nos) (fn pn (let ((v (object/get @nd @pn null))) (if (validate/string @v) (!= @v "") false)))) false) false))))))))) @nof
                                             (if (array/some @on (fn ow (= (array/len (let ((cs [@ow, @nm])) (let ((rcs (default (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos)))))))))]))) {})) (res (default (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @embFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @embFwd @x @nos)))))))))]))) {}))) (let ((dropped (array/flatten (array/map @cs (fn a (array/flatten (array/map (array/filter @cs (fn b (!= @a @b))) (fn b (if (array/includes (object/get @rcs @a @nos) @b) [@a] (if (array/includes (object/get @res @a @nos) @b) [@b] @nos)))))))))) (array/filter @cs (fn c (not (array/includes @dropped @c)))))))) 1))) @nof
                                               [(if (object/has @wr @nm) { code: @config.codes.pageSecondContentBody.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "]"), message: (str/concat "page \"" @path "\": " @nm " renders a content body into slot 'main' while " (str/join @on " / ") " already owns this page's content — a second, stacked UI if this is not a deliberate dedicated-feature page"), suggestion: (str/concat "embed <trait." @nm "> in the composer's render or a config slot (contentTrait/idleContent), or remove " @nm " from the page decl if it only hosts dialogs/logic"), severity: "error" } { code: @config.codes.pageControlOutsideShell.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "]"), message: (str/concat "page \"" @path "\": " @nm " paints into slot 'main', but the page's shell shows " (str/join @on " / ") " as its content and nothing there embeds " @nm " — it stacks below the shell's layout instead of inside it"), suggestion: (str/concat "embed <trait." @nm "> in the content the shell shows (a stack set as its contentTrait), or remove " @nm " from the page"), severity: "error" })]))))))
-                                        @nof)))))))))))))))))))))))))
+                                        @nof))}])))))))))))))))))))))))
+        (set @entity.findings (array/flatten (array/map @entity.rows (fn r (object/get @r "findings")))))
+        (set @entity.owners (array/map @entity.rows (fn r { orbital: (object/get @r "oi"), page: (object/get @r "pj"), kind: (object/get @r "kind"), names: (object/get @r "names") })))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-content-owner", scope: @entity.scope, findings: @entity.findings })
+        (emit PAGE_OWNERS { scope: @entity.scope, owners: @entity.owners })
     }
 
     emits {
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      PAGE_OWNERS -> external { scope : string!  owners : [PageOwner]! }
+        @description "The content owner of each page of the program, per orbital index and page index: kind channel (a content-grade main writer designated through the channel), sole (the one page-declared writer), ambiguous or none, with the owner names. Offered to the rules that read the owner (viewer-stranded)."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."

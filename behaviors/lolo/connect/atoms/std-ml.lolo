@@ -3,17 +3,30 @@ app std-ml [
   description: "std-ml — model inference through a deployed serving orbital. ML_INFER posts the INFER event to the serving orbital's per-trait /events route and answers ML_INFERRED with the model output, confidence and contract violations, or ML_INFER_FAILED with a code and message when the host is unconfigured, unreachable, answers non-2xx, reports a failure or returns no valid inference result.",
   egress: ["http://localhost:3000"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type MlLabelledOutput = { label : string, scores : Map string number }
 type MlInput = Map string [number] | [[number]]
 type MlOutput = number | [number] | MlLabelledOutput
 type MlViolation = { rule : string, field : string, type : string, expected : [number], actual : [number], dim : number, min : number, max : number, actualMin : number, actualMax : number, actualType : string }
-type MlInferPayload = { output : MlOutput, confidence : number, violations : [MlViolation] }
-type MlEmitData = { event : string, payload : MlInferPayload }
+type MlInferPayload = { output : MlOutput?!, confidence : number!, violations : [MlViolation]! }
+type MlNode = string | number | boolean | [MlNode?] | Map string MlNode?
+type MlEmitData = { event : string, payload : MlNode? }
 type MlEffectResult = { effect : string, success : boolean, error : string, data : MlEmitData }
 type MlReply = { success : boolean, error : string, effectResults : [MlEffectResult] }
 orbital MlOrbital {
   entity MlInference [runtime] {
     id : string!
+  }
+
+  trait MlFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "http://localhost:3000"
+      timeoutMs: 60000
+    }
+    listens {
+      MlClient.ML_HTTP_SEND -> HTTP_SEND
+    }
   }
 
   trait MlClient -> MlInference [client] {
@@ -25,39 +38,38 @@ orbital MlOrbital {
       ML_INFER -> idle when (= @config.traitName "")
         (emit ML_INFER_FAILED { message: "ML integration requires MASAR_URL (serving orbital host) and MASAR_ML_TRAIT (kebab-case trait name of its /events route) to be configured" })
       ML_INFER -> idle when (!= @config.traitName "")
-        (http POST @config.origin (str/concat "/api/" @config.traitName "/events") {
-          headers: { Accept: "*/*" },
-          json: { event: "INFER", payload: { model: @payload.model, input: @payload.input } },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: ML_REPLIED, failure: ML_CALL_FAILED } })
+        (emit ML_HTTP_SEND { key: "infer", method: "POST", target: (str/concat "/api/" @config.traitName "/events"), headers: [{ name: "Accept", value: "*/*" }, { name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { event: "INFER", payload: { model: @payload.model, input: @payload.input } })), stream: "none" })
 
       ML_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service responded with status " @payload.status) })
-      ML_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body MlReply) null))
-        (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: "ML service returned a malformed response body" })
-      ML_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body MlReply) null) (!= (object/get (json/parse @payload.body MlReply) success false) true))
-        (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service reported failure: " (default (object/get (json/parse @payload.body MlReply) error null) "unknown error")) })
-      ML_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.body MlReply) success false) true))
-        (let ((results (default (object/get (json/parse @payload.body MlReply) effectResults []) [])))
-          (if (array/some @results (fn r (and (= (object/get @r effect "") "emit") (= (object/get (object/get @r data {}) event "") "INFER_FAILED"))))
-            (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service could not infer: " (default (object/get (array/find @results (fn r (and (= (object/get @r effect "") "emit") (= (object/get (object/get @r data {}) event "") "INFER_FAILED")))) error null) "model unavailable")) })
-            (let ((hit (array/find @results (fn r (and (= (object/get @r effect "") "emit") (= (object/get @r success false) true) (= (object/get (object/get @r data {}) event "") "INFERRED"))))))
-              (if (and (!= @hit null) (object/has (object/get (object/get @hit data {}) payload {}) "output") (validate/number (object/get (object/get (object/get @hit data {}) payload {}) confidence null)) (validate/array (object/get (object/get (object/get @hit data {}) payload {}) violations null)))
-                (emit ML_INFERRED {
-                  output: (object/get (object/get (object/get @hit data {}) payload {}) output null),
-                  confidence: (object/get (object/get (object/get @hit data {}) payload {}) confidence 0),
-                  violations: (object/get (object/get (object/get @hit data {}) payload {}) violations [])
-                })
-                (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: "ML service response did not include a valid inference result" })))))
+      ML_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((reply (json/parse (default (bytes/to-string @payload.body) "") MlReply)))
+          (if (= @reply null)
+            (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: "ML service returned a malformed response body" })
+            (if (!= (object/get @reply success false) true)
+              (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service reported failure: " (default (object/get @reply error null) "unknown error")) })
+              (let ((results (default (object/get @reply effectResults []) []))
+                    (failed (array/find (default (object/get @reply effectResults []) []) (fn r (and (= (object/get @r effect "") "emit") (= (object/get (object/get @r data {}) event "") "INFER_FAILED"))))))
+                (if (!= @failed null)
+                  (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service could not infer: " (default (object/get (default @failed {}) error null) "model unavailable")) })
+                  (let ((hit (array/find @results (fn r (and (= (object/get @r effect "") "emit") (= (object/get @r success false) true) (= (object/get (object/get @r data {}) event "") "INFERRED"))))))
+                    (let ((inferred (if (= @hit null) null (json/parse (json/stringify (object/get (object/get @hit data {}) payload null)) MlInferPayload))))
+                      (if (= @inferred null)
+                        (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: "ML service response did not include a valid inference result" })
+                        (emit ML_INFERRED {
+                          output: (object/get @inferred output null),
+                          confidence: (object/get @inferred confidence 0),
+                          violations: (object/get @inferred violations [])
+                        })))))))))
       ML_CALL_FAILED -> idle when (= @payload.kind "timeout")
-        (emit ML_INFER_FAILED { code: "TIMEOUT_ERROR", message: (str/concat "ML service request timed out after " @config.timeoutMs "ms (model may be cold-starting)") })
+        (emit ML_INFER_FAILED { code: "TIMEOUT_ERROR", message: "ML service request timed out (model may be cold-starting)" })
       ML_CALL_FAILED -> idle when (!= @payload.kind "timeout")
         (emit ML_INFER_FAILED { code: "NETWORK_ERROR", message: "ML service request failed: fetch failed" })
     }
 
     emits {
       ML_INFERRED -> external {
-        output : MlOutput
+        output : MlOutput?
         confidence : number!
         violations : [MlViolation]!
       }
@@ -71,19 +83,16 @@ orbital MlOrbital {
         @description "The inference did not produce a result: code is null when the host is unconfigured, otherwise SERVICE_ERROR, TIMEOUT_ERROR or NETWORK_ERROR, with the reason in message."
         @synonyms "inference failed, model unavailable, ml error"
         @tier "primary"
-      ML_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      ML_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the serving orbital's HTTP reply."
-        @tier "secondary"
-      ML_CALL_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the call never produced a reply."
-        @tier "secondary"
+        @description "Internal: one request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -94,34 +103,28 @@ orbital MlOrbital {
         @description "Run inference: model is hf:<id> for off-the-shelf weights or a masar checkpoint id; input is the tensor-shaped payload the model expects."
         @synonyms "infer, predict, run model"
       ML_REPLIED {
+        key : string!
         status : number!
         headers : Map string string
-        body : string!
+        body : bytes!
       }
       ML_CALL_FAILED {
+        key : string
         error : string!
         kind : string!
       }
+      MlFetch.HTTP_REPLIED -> ML_REPLIED
+      MlFetch.HTTP_FAILED -> ML_CALL_FAILED
     }
 
     config {
-      origin : url = "http://localhost:3000"
-        @label "Serving orbital origin"
-        @description "Origin (scheme://host[:port], no path) of the deployed model-serving orbital. Must be declared in the app egress list."
-        @synonyms "masar url, serving host, model host"
-        @tier "infra"
       traitName : string = ""
         @label "Serving trait"
         @description "Kebab-case trait name the serving orbital exposes its /events route under; empty means the host is unconfigured."
         @synonyms "masar ml trait, events route, serving trait"
         @tier "infra"
-      timeoutMs : number = 60000
-        @label "Request timeout (ms)"
-        @description "Milliseconds an inference request may take before it fails with TIMEOUT_ERROR (models can cold-start)."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
     }
   }
 
-  page boot as MlPage -> MlClient
+  page boot as MlPage -> MlClient, MlFetch
 }

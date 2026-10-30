@@ -1,0 +1,527 @@
+{
+  "atom": "connect/atoms/std-wikimedia.lolo",
+  "trait": "WikimediaClient",
+  "note": "Converted from orbital-integration-tests fixtures/wikimedia (service parity); validation and unknown-action cases belong to the retired service layer and are not carried. The request is the atom's HTTP fetch send; the reply is the composed fetch's answer.",
+  "cases": [
+    {
+      "id": "get-page-blank-title-sends-nothing",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "   "
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "WIKIMEDIA_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-custom-user-agent",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Ada Lovelace"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Ada%20Lovelace",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiOTc0Ijp7InBhZ2VpZCI6OTc0LCJucyI6MCwidGl0bGUiOiJBZGEgTG92ZWxhY2UiLCJkZXNjcmlwdGlvbiI6IkVuZ2xpc2ggbWF0aGVtYXRpY2lhbiAoMTgxNS0xODUyKSIsImV4dHJhY3QiOiJBdWd1c3RhIEFkYSBLaW5nLCBDb3VudGVzcyBvZiBMb3ZlbGFjZSB3YXMgYW4gRW5nbGlzaCBtYXRoZW1hdGljaWFuIGFuZCB3cml0ZXIuIFNoZSB3b3JrZWQgb24gQ2hhcmxlcyBCYWJiYWdlJ3MgQW5hbHl0aWNhbCBFbmdpbmUuIiwidGh1bWJuYWlsIjp7InNvdXJjZSI6Imh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2NvbW1vbnMvdGh1bWIvYS9hNC9BZGFfTG92ZWxhY2VfcG9ydHJhaXQuanBnLzI0MHB4LUFkYV9Mb3ZlbGFjZV9wb3J0cmFpdC5qcGciLCJ3aWR0aCI6MjQwLCJoZWlnaHQiOjMwMH19fX19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "Ada Lovelace",
+                  "description": "English mathematician (1815-1852)",
+                  "portraitUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/240px-Ada_Lovelace_portrait.jpg",
+                  "extract": "Augusta Ada King, Countess of Lovelace was an English mathematician and writer. She worked on Charles Babbage's Analytical Engine."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-description-from-the-first-sentence",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Tea"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Tea",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiMSI6eyJwYWdlaWQiOjEsInRpdGxlIjoiVGVhIiwiZXh0cmFjdCI6IlRlYSBpcyBhbiBhcm9tYXRpYyBiZXZlcmFnZS4gSXQgaXMgcHJlcGFyZWQgZnJvbSBsZWF2ZXMuIn19fX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "Tea",
+                  "description": "Tea is an aromatic beverage",
+                  "extract": "Tea is an aromatic beverage. It is prepared from leaves."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-empty-pages",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=x",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnt9fX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-extract-is-capped-and-trimmed",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Long"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Long",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiMyI6eyJwYWdlaWQiOjMsInRpdGxlIjoiTG9uZyIsImRlc2NyaXB0aW9uIjpudWxsLCJleHRyYWN0Ijoid29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgd29yZCB3b3JkIHdvcmQgdGFpbCJ9fX19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "Long",
+                  "description": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word tail",
+                  "extract": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-http-429-yields-an-empty-page",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=x",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 429,
+            "headers": {},
+            "body": "eyJlcnJvciI6InNsb3cgZG93biJ9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-http-500-yields-an-empty-page",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=x",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 500,
+            "headers": {},
+            "body": "b29wcw=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-missing",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Nonexistent page xyz"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Nonexistent%20page%20xyz",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiLTEiOnsibnMiOjAsInRpdGxlIjoiTm9uZXhpc3RlbnQgcGFnZSB4eXoiLCJtaXNzaW5nIjoiIn19fX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-no-pages",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=x",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIn0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-title-needs-encoding",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "  AT&T / Bell Labs: \"café\"  "
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=AT%26T%20%2F%20Bell%20Labs%3A%20%22caf%C3%A9%22",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiNCI6eyJwYWdlaWQiOjQsInRpdGxlIjoiQVQmVCIsImRlc2NyaXB0aW9uIjoiVGVsZWNvbSJ9fX19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "AT&T",
+                  "description": "Telecom"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page-without-extract-or-thumbnail",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Stub"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Stub",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiMiI6eyJwYWdlaWQiOjIsInRpdGxlIjoiU3R1YiIsImRlc2NyaXB0aW9uIjoiQSBzdHViIn19fX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "Stub",
+                  "description": "A stub"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-page",
+      "steps": [
+        {
+          "event": "WIKIMEDIA_GET_PAGE",
+          "payload": {
+            "title": "Ada Lovelace"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_HTTP_SEND",
+                "payload": {
+                  "key": "page",
+                  "method": "GET",
+                  "target": "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=Ada%20Lovelace",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "WIKIMEDIA_PAGE_REPLIED",
+          "payload": {
+            "key": "page",
+            "status": 200,
+            "headers": {},
+            "body": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiOTc0Ijp7InBhZ2VpZCI6OTc0LCJucyI6MCwidGl0bGUiOiJBZGEgTG92ZWxhY2UiLCJkZXNjcmlwdGlvbiI6IkVuZ2xpc2ggbWF0aGVtYXRpY2lhbiAoMTgxNS0xODUyKSIsImV4dHJhY3QiOiJBdWd1c3RhIEFkYSBLaW5nLCBDb3VudGVzcyBvZiBMb3ZlbGFjZSB3YXMgYW4gRW5nbGlzaCBtYXRoZW1hdGljaWFuIGFuZCB3cml0ZXIuIFNoZSB3b3JrZWQgb24gQ2hhcmxlcyBCYWJiYWdlJ3MgQW5hbHl0aWNhbCBFbmdpbmUuIiwidGh1bWJuYWlsIjp7InNvdXJjZSI6Imh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2NvbW1vbnMvdGh1bWIvYS9hNC9BZGFfTG92ZWxhY2VfcG9ydHJhaXQuanBnLzI0MHB4LUFkYV9Mb3ZlbGFjZV9wb3J0cmFpdC5qcGciLCJ3aWR0aCI6MjQwLCJoZWlnaHQiOjMwMH19fX19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WIKIMEDIA_PAGE_RESULT",
+                "payload": {
+                  "title": "Ada Lovelace",
+                  "description": "English mathematician (1815-1852)",
+                  "portraitUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/240px-Ada_Lovelace_portrait.jpg",
+                  "extract": "Augusta Ada King, Countess of Lovelace was an English mathematician and writer. She worked on Charles Babbage's Analytical Engine."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

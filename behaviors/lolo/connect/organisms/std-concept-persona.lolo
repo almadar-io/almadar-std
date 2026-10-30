@@ -1,11 +1,14 @@
 app std-concept-persona [
   version: "1.0.0",
   description: "std-concept-persona — turns a concept label into the real person behind it, for an in-character chat. CONCEPT_PERSONA drafts the originator with the model (DeepSeek), asks again when the draft echoes the concept, grounds the person on their Wikipedia page (description, Commons portrait, lead extract) and answers CONCEPT_PERSONA_RESULT with name, description, portraitUrl, greeting and the chat's system instructions. A draft that still echoes the concept becomes a tutor persona with no Wikipedia lookup. Every persona is cached per label and subject, so a repeat is answered from the cache.",
-  egress: ["https://api.deepseek.com", "https://en.wikipedia.org", "https://openrouter.ai"]
+  egress: ["https://en.wikipedia.org"],
+  net: { "api.deepseek.com:443": [tcp] },
 ]
 type PersonaDraft = { name : string, description : string, greeting : string }
 orbital ConceptPersonaOrbital {
   uses Llm from "std/behaviors/std-llm"
+  uses Req from "std/behaviors/std-http-request"
+  uses Http from "std/behaviors/std-http-client"
   uses WikiApi from "std/behaviors/std-wikimedia"
 
   entity ConceptPersonaLookup [runtime] {
@@ -263,13 +266,50 @@ orbital ConceptPersonaOrbital {
   trait PersonaLlmApi = Llm.traits.LlmClient {
     config {
       provider: deepseek
-      origin: "https://api.deepseek.com"
       basePath: "/v1"
       model: "deepseek-v4-flash"
-      apiKey: "DEEPSEEK_API_KEY"
     }
     listens {
       ConceptPersonaResolver.LLM_EXTRACT -> LLM_EXTRACT
+      PersonaChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      PersonaChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      PersonaChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      PersonaChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait PersonaChatRequest = Req.traits.HttpRequest {
+    listens {
+      PersonaLlmApi.LLM_CHAT_WIRE -> HTTP_REQUEST
+      PersonaLlmApi.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      PersonaChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      PersonaChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PersonaChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.deepseek.com"
+      port: 443
+      tls: true
+      serverName: "api.deepseek.com"
+      credential: "DEEPSEEK_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      PersonaChatRequest.HTTP_SEND -> HTTP_SEND
+      PersonaChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait PersonaWikiFetch = WikiApi.traits.WikimediaFetch {
+    events {
+      HTTP_REPLIED: PERSONA_WIKI_REPLIED
+      HTTP_FAILED: PERSONA_WIKI_FAILED
+    }
+    listens {
+      PersonaWikiApi.WIKIMEDIA_HTTP_SEND -> HTTP_SEND
     }
   }
 
@@ -277,16 +317,20 @@ orbital ConceptPersonaOrbital {
     listens {
       ConceptPersonaResolver.WIKIMEDIA_GET_PAGE -> WIKIMEDIA_GET_PAGE
       WIKIMEDIA_PAGE_REPLIED {
+        key : string!
         status : number!
         headers : Map string string
-        body : string!
+        body : bytes!
       }
       WIKIMEDIA_PAGE_FAILED {
+        key : string
         error : string!
         kind : string!
       }
+      PersonaWikiFetch.PERSONA_WIKI_REPLIED -> WIKIMEDIA_PAGE_REPLIED
+      PersonaWikiFetch.PERSONA_WIKI_FAILED -> WIKIMEDIA_PAGE_FAILED
     }
   }
 
-  page boot as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaWikiApi
+  page boot as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaChatRequest, PersonaChatHttp, PersonaWikiApi, PersonaWikiFetch
 }

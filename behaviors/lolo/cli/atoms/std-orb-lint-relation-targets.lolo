@@ -9,7 +9,7 @@ app std-orb-lint-relation-targets [
 uses Spec from "almadar-std/lint-relation-targets"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type FieldShape = string | number | boolean | [FieldShape?] | Map string FieldShape?
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 
 type RelTargetsExpect = { kind : string, name : string }
 type RelTargetsEntity = { name : string, fields : [FieldShape] }
@@ -73,8 +73,8 @@ orbital OrbLintRelationTargetsOrbital {
                             (if (object/get @h "miss")
                               (if (and (object/get @eb "e") (!= (object/get @h "rel") "")) [{ code: @config.codes.eInvalidRelation.code, path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }] [])
                               (array/concat
-                              (if (object/get @eb "e") [{ code: @config.codes.eInvalidRelation.code, path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }] [])
-                              [{ code: @config.codes.xUnresolvedRelationTarget.code, path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }]))))))))))))))))))))))
+                              (if (object/get @eb "e") [{ code: @config.codes.eInvalidRelation.code, path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), entity: (object/get @h "tg"), suggestion: "Ensure the related entity is defined in the schema", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }] [])
+                              [{ code: @config.codes.xUnresolvedRelationTarget.code, path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), entity: (object/get @h "tg"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "relation-targets", scope: @entity.scope, findings: @entity.findings })

@@ -40,37 +40,6 @@ const HOST_CALL_ENVELOPE: OperatorTypeRef = openShape({
   emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
 });
 
-const RESP_SCALAR: OperatorTypeRef = union(STRING, NUMBER, lit(null));
-
-/** A redis reply: a scalar or a list nested up to three levels (`REDIS_REPLY_DEPTH` in the kernel). */
-const REDIS_REPLY: OperatorTypeRef = union(RESP_SCALAR, list(union(RESP_SCALAR, list(union(RESP_SCALAR, list(RESP_SCALAR))))));
-
-const REDIS_OPTIONS: OperatorTypeRef = openShape({
-  auth: union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) })),
-  user: STRING,
-  db: NUMBER,
-  key: STRING,
-  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
-});
-
-const PG_SCALAR: OperatorTypeRef = union(STRING, NUMBER, BOOLEAN, lit(null));
-
-/** A postgres result value: a scalar or an array nested up to three levels (`POSTGRES_ARRAY_DEPTH` in the kernel). */
-const PG_VALUE: OperatorTypeRef = union(PG_SCALAR, list(union(PG_SCALAR, list(union(PG_SCALAR, list(PG_SCALAR))))));
-
-/** A bind value: a scalar, or a list of them (a Postgres array). */
-const PG_BIND: OperatorTypeRef = union(PG_SCALAR, list(PG_SCALAR));
-
-const PG_OPTIONS: OperatorTypeRef = openShape({
-  auth: union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) })),
-  user: STRING,
-  database: STRING,
-  tls: BOOLEAN,
-  timeoutMs: NUMBER,
-  key: STRING,
-  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
-});
-
 const OAUTH_PROVIDER: OperatorTypeRef = union(lit('google'), lit('github'), lit('auth0'));
 
 const OAUTH_CLIENT: OperatorTypeRef = openShape({
@@ -1031,71 +1000,6 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       kind: 'http',
       produces: shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING, key: union(STRING, lit(null)) }),
     },
-  },
-  redis: {
-    module: 'core',
-    // emit key order: effect/redis.rs:17
-    emitKeys: ['success', 'failure'],
-    category: 'effect',
-    defaultPorts: { redis: 6379, rediss: 6379 },
-    minArity: 2,
-    maxArity: 4,
-    description:
-      'Run one redis command through the shared kernel: (redis origin command options? options?). The kernel speaks RESP over the host\'s raw TCP (TLS for rediss://); the origin must be a redis:// or rediss:// origin declared in egress. command is a list of text items (the command name first). One connection serves one call: AUTH (an ACL user with auth + user) and SELECT (db) go out as one pipeline whose replies are checked before the command runs. The success payload is { reply, key }: reply is the server\'s answer as text, a number or null, or a list of those nested up to 3 lists deep (a deeper reply fails). The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant or an invalid call), unconfigured (the auth credential is not held), timeout, failed, protocol, unsupported or redis (the server answered an error; code is its error word such as WRONGTYPE).',
-    hasSideEffects: true,
-    runsOn: 'server',
-    returnType: 'void',
-    params: [
-      { name: 'origin', type: STRING, description: 'A redis:// or rediss:// origin: a string literal or a url-typed @config knob' },
-      { name: 'command', type: list(STRING), description: 'The command as text items, name first: ["SET", "k", "v", "PX", "1000"]' },
-      {
-        name: 'options',
-        type: REDIS_OPTIONS,
-        description: 'Optional trailing options: auth (a secret-typed knob naming the password credential), user (the ACL user), db (the database to SELECT), key (a non-empty string echoed as key), emit: { success, failure }',
-        optional: true,
-      },
-      {
-        name: 'more',
-        type: REDIS_OPTIONS,
-        description: 'Optional second options object; the two share one namespace, so a key may sit in either',
-        optional: true,
-      },
-    ],
-    example: '["redis", "redis://cache.internal:6379", ["GET", "@payload.key"], { "auth": "@config.password" }, { "emit": { "success": "GOT", "failure": "GET_FAILED" } }]',
-    effect: { kind: 'redis', produces: shape({ reply: REDIS_REPLY, key: nullable(STRING) }) },
-  },
-  postgres: {
-    module: 'core',
-    // emit key order: effect/postgres.rs:19
-    emitKeys: ['success', 'failure'],
-    category: 'effect',
-    defaultPorts: { postgres: 5432, postgresql: 5432 },
-    minArity: 3,
-    maxArity: 5,
-    description:
-      'Run one read-only SQL statement through the shared kernel: (postgres origin sql params options? options?). The kernel speaks the Postgres wire protocol over the host\'s raw TCP (an in-band SSLRequest and the kernel TLS when tls is true); the origin must be a postgres:// or postgresql:// origin declared in egress. sql is exactly one SELECT (or WITH ... SELECT): the kernel\'s read-only guard, the same one orb validate applies to a literal statement, refuses anything else before it connects. params are the bind values $1, $2, ... sent as text for the server to type. options: auth (a secret-typed knob naming the password credential; cleartext, MD5 and SCRAM-SHA-256 logins), user (required), database (default: the user), tls, timeoutMs (the statement timeout), key, emit: { success, failure }. One call is one connection. The success payload is { rows, rowCount, columns, key }: rows are maps of column name to value (booleans, numbers, null, text, lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type as the text Postgres prints; timestamptz as UTC ISO text; bytea as base64), columns are { name, typeOid }. The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant, the read-only guard or an invalid call), unconfigured, timeout, failed, protocol, unsupported or postgres (the server answered an error; code is its SQLSTATE such as 42P01).',
-    hasSideEffects: true,
-    runsOn: 'server',
-    returnType: 'void',
-    params: [
-      { name: 'origin', type: STRING, description: 'A postgres:// or postgresql:// origin: a string literal or a url-typed @config knob' },
-      { name: 'sql', type: STRING, description: 'One read-only SELECT statement, with $1, $2, ... placeholders' },
-      { name: 'params', type: list(PG_BIND), description: 'The bind values for the placeholders, in order; null is SQL NULL, a list a Postgres array, an object JSON' },
-      {
-        name: 'options',
-        type: PG_OPTIONS,
-        description: 'Options: auth (secret knob), user (required), database, tls, timeoutMs, key, emit: { success, failure }',
-        optional: true,
-      },
-      {
-        name: 'more',
-        type: PG_OPTIONS,
-        description: 'Optional second options object; the two share one namespace, so a key may sit in either',
-        optional: true,
-      },
-    ],
-    example: '["postgres", "postgres://db.internal:5432", "SELECT id, name FROM users WHERE id = $1", ["@payload.id"], { "auth": "@config.password", "user": "app" }, { "emit": { "success": "ROWS", "failure": "QUERY_FAILED" } }]',
-    effect: { kind: 'postgres', produces: shape({ rows: list(mapOf(STRING, PG_VALUE)), rowCount: NUMBER, columns: list(shape({ name: STRING, typeOid: NUMBER })), key: nullable(STRING) }) },
   },
   'cancel-call': {
     module: 'core',

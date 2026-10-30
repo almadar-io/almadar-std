@@ -1,0 +1,744 @@
+{
+  "atom": "connect/atoms/std-iconify.lolo",
+  "trait": "IconifyClient",
+  "note": "Converted from orbital-integration-tests fixtures/iconify (service parity); validation and unknown-action cases belong to the retired service layer and are not carried. The request is the atom's HTTP fetch send; the reply is the composed fetch's answer.",
+  "cases": [
+    {
+      "id": "get-icon-body-collection-missing",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "nope:thing"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "body|nope:thing",
+                  "method": "GET",
+                  "target": "/nope.json?icons=thing",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "body|nope:thing",
+            "status": 404,
+            "headers": {},
+            "body": "eyJlcnJvciI6Im5vdCBmb3VuZCJ9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body-empty-name-sends-nothing",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "mdi:"
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "ICONIFY_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body-extra-colon-segments",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "mdi:home:outline"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "body|mdi:home:outline",
+                  "method": "GET",
+                  "target": "/mdi.json?icons=home",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "body|mdi:home:outline",
+            "status": 200,
+            "headers": {},
+            "body": "eyJpY29ucyI6eyJob21lIjp7ImJvZHkiOiI8Zy8+In19fQ=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": "<g/>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body-no-colon-sends-nothing",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "home"
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "ICONIFY_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body-through-an-alias",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "mdi:house"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "body|mdi:house",
+                  "method": "GET",
+                  "target": "/mdi.json?icons=house",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "body|mdi:house",
+            "status": 200,
+            "headers": {},
+            "body": "eyJwcmVmaXgiOiJtZGkiLCJpY29ucyI6e30sImFsaWFzZXMiOnsiaG91c2UiOnsicGFyZW50IjoiaG9tZSIsImJvZHkiOiI8cGF0aCBkPVwiTTEgMVwiLz4ifX19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": "<path d=\"M1 1\"/>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body-unknown-icon",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "mdi:ghost"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "body|mdi:ghost",
+                  "method": "GET",
+                  "target": "/mdi.json?icons=ghost",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "body|mdi:ghost",
+            "status": 200,
+            "headers": {},
+            "body": "eyJwcmVmaXgiOiJtZGkiLCJpY29ucyI6e30sIm5vdF9mb3VuZCI6WyJnaG9zdCJdfQ=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-icon-body",
+      "steps": [
+        {
+          "event": "ICONIFY_GET_ICON_BODY",
+          "payload": {
+            "iconId": "mdi:home"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "body|mdi:home",
+                  "method": "GET",
+                  "target": "/mdi.json?icons=home",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "body|mdi:home",
+            "status": 200,
+            "headers": {},
+            "body": "eyJwcmVmaXgiOiJtZGkiLCJpY29ucyI6eyJob21lIjp7ImJvZHkiOiI8cGF0aCBkPVwiTTEwIDIwdi02aDR2NlwiLz4ifX0sIndpZHRoIjoyNCwiaGVpZ2h0IjoyNH0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_ICON_BODY_RESULT",
+                "payload": {
+                  "body": "<path d=\"M10 20v-6h4v6\"/>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-default-limit-and-encoding",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": "a b&c/ü"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/search?query=a%20b%26c%2F%C3%BC&limit=1",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "eyJpY29ucyI6WyJtZGk6YWxwaGEiXX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": [
+                    "mdi:alpha"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-empty-query-sends-nothing",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": ""
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "ICONIFY_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-http-error-yields-none",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/search?query=x&limit=1",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 429,
+            "headers": {},
+            "body": "eyJlcnJvciI6InJhdGUgbGltaXRlZCJ9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-no-icons-field",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": "zzz"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/search?query=zzz&limit=1",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "eyJ0b3RhbCI6MH0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-unreadable-reply-yields-none",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/search?query=x&limit=1",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "PGh0bWw+bWFpbnRlbmFuY2U8L2h0bWw+"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "steps": [
+        {
+          "event": "ICONIFY_SEARCH",
+          "payload": {
+            "query": "github",
+            "limit": 3
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/search?query=github&limit=3",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "eyJpY29ucyI6WyJsb2dvczpnaXRodWItaWNvbiIsIm1kaTpnaXRodWIiLCJyaTpnaXRodWItZmlsbCJdLCJ0b3RhbCI6MywibGltaXQiOjMsInN0YXJ0IjowLCJjb2xsZWN0aW9ucyI6e319"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SEARCH_RESULT",
+                "payload": {
+                  "icons": [
+                    "logos:github-icon",
+                    "mdi:github",
+                    "ri:github-fill"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "svg-exists-custom-user-agent",
+      "steps": [
+        {
+          "event": "ICONIFY_SVG_EXISTS",
+          "payload": {
+            "path": "mdi/home.svg"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "svg",
+                  "method": "GET",
+                  "target": "/mdi/home.svg",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 200,
+            "headers": {},
+            "body": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iY3VycmVudENvbG9yIiBkPSJNMTIgMkwyIDdsMTAgNSAxMC01eiIvPjwvc3ZnPg=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "svg-exists-empty-path-sends-nothing",
+      "steps": [
+        {
+          "event": "ICONIFY_SVG_EXISTS",
+          "payload": {
+            "path": ""
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "ICONIFY_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "svg-exists-found",
+      "steps": [
+        {
+          "event": "ICONIFY_SVG_EXISTS",
+          "payload": {
+            "path": "logos/github-icon.svg"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "svg",
+                  "method": "GET",
+                  "target": "/logos/github-icon.svg",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 200,
+            "headers": {},
+            "body": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iY3VycmVudENvbG9yIiBkPSJNMTIgMkwyIDdsMTAgNSAxMC01eiIvPjwvc3ZnPg=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "svg-exists-not-found",
+      "steps": [
+        {
+          "event": "ICONIFY_SVG_EXISTS",
+          "payload": {
+            "path": "logos/nope.svg"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "svg",
+                  "method": "GET",
+                  "target": "/logos/nope.svg",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 404,
+            "headers": {},
+            "body": "NDA0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "svg-exists-server-error",
+      "steps": [
+        {
+          "event": "ICONIFY_SVG_EXISTS",
+          "payload": {
+            "path": "logos/boom.svg"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_HTTP_SEND",
+                "payload": {
+                  "key": "svg",
+                  "method": "GET",
+                  "target": "/logos/boom.svg",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ICONIFY_REPLIED",
+          "payload": {
+            "key": "svg",
+            "status": 502,
+            "headers": {},
+            "body": "YmFkIGdhdGV3YXk="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ICONIFY_SVG_EXISTS_RESULT",
+                "payload": {
+                  "exists": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

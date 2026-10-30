@@ -1,0 +1,87 @@
+{
+  "atom": "net/atoms/std-webhook.lolo",
+  "trait": "WebhookClient",
+  "cases": [
+    {
+      "id": "a send to a url that is not http or https is refused before any attempt",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "url": "ftp://hooks.example.test/x",
+            "event": "order.created",
+            "payload": "{\"id\":1}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "message": "Invalid URL",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL a send to an https url is handed to the retry under its call key",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "url": "https://hooks.example.test/x",
+            "event": "order.created",
+            "payload": "{\"id\":1}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_START",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a send with an empty event name is refused",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "url": "https://hooks.example.test/x",
+            "event": "",
+            "payload": "{\"id\":1}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "message": "Invalid URL",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

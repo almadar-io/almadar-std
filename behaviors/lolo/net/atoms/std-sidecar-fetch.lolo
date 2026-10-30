@@ -1,10 +1,12 @@
 app std-sidecar-fetch [
   version: "1.0.0",
   fs: { "~/.almadar/sidecars/**": [read, write, create, remove], "~/.almadar/sidecars": [create] },
-  egress: ["https://storage.googleapis.com"],
-  description: "std-sidecar-fetch — the network half of the sidecar store (spec/net/sidecar-fetch.lolo; golden: orbital-cli sidecar_fetch.rs). SIDECAR_RESOLVE { requestId, name, version, declared, pinned, sha256, bytes, url } answers SIDECAR_RESOLVED { requestId, path }: path is empty when declared is empty, declared as is when the lock does not pin it (pinned false), and ~/.almadar/sidecars/<sha256> when it does and that file exists (no fetch). A missing pinned file is fetched with one GET of url under the origin knob (a url outside the origin is refused source). A fetched file is hashed as bytes by std-sha256 and stored (written to <sha256>.part under the cache, then renamed) only when its digest equals the pinned sha256; a different digest is refused hash-mismatch (ORB_SIDECAR_HASH_MISMATCH) and nothing is written; the hash runs interpreted, so it fits files of tens of kilobytes. A failed fetch is refused fetch-failed with an error naming the package, the file and the origin, never the url (the query holds the capability token). One ask at a time; an ask during another is refused busy."
+  net: { "storage.googleapis.com:443": [tcp] },
+  description: "std-sidecar-fetch — the network half of the sidecar store (spec/net/sidecar-fetch.lolo; golden: orbital-cli sidecar_fetch.rs). SIDECAR_RESOLVE { requestId, name, version, declared, pinned, sha256, bytes, url } answers SIDECAR_RESOLVED { requestId, path }: path is empty when declared is empty, declared as is when the lock does not pin it (pinned false), and ~/.almadar/sidecars/<sha256> when it does and that file exists (no fetch). A missing pinned file is fetched with one GET of url under the origin knob (std-http-client over TLS to the same host) (a url outside the origin is refused source). A fetched file is hashed as bytes by std-sha256 and stored (written to <sha256>.part under the cache, then renamed) only when its digest equals the pinned sha256; a different digest is refused hash-mismatch (ORB_SIDECAR_HASH_MISMATCH) and nothing is written; the hash runs interpreted, so it fits files of tens of kilobytes. A failed fetch is refused fetch-failed with an error naming the package, the file and the origin, never the url (the query holds the capability token). One ask at a time; an ask during another is refused busy."
 ]
 uses Spec from "almadar-std/sidecar-fetch"
+uses Http from "std/behaviors/std-http-client"
+type HttpHeader = { name : string!, value : string! }
 
 orbital SidecarFetchOrbital {
   uses Sha from "std/behaviors/std-sha256"
@@ -17,12 +19,24 @@ orbital SidecarFetchOrbital {
     declared : string = ""
     sha256 : string = ""
     url : string = ""
-    body : string = ""
+    body : bytes = ""
   }
 
   trait Digest = Sha.traits.Sha256 {
     listens {
       SidecarFetch.SC_HASH -> SHA256_DIGEST
+    }
+  }
+
+  trait SidecarHttp = Http.traits.HttpClient {
+    config {
+      host: "storage.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "storage.googleapis.com"
+    }
+    listens {
+      SidecarFetch.SC_GET -> HTTP_SEND
     }
   }
 
@@ -52,11 +66,11 @@ orbital SidecarFetchOrbital {
       SIDECAR_PROBED -> idle when @payload.ok
         (emit SIDECAR_RESOLVED { requestId: @entity.requestId, path: (str/concat "~/.almadar/sidecars/" @entity.sha256) })
       SIDECAR_PROBED -> fetching when (and (not @payload.ok) (str/startsWith @entity.url @config.origin))
-        (http GET @config.origin (str/slice @entity.url (str/len @config.origin) (str/len @entity.url)) { responseAs: "bytes" } { key: "sidecar", emit: { success: SIDECAR_FETCHED, failure: SIDECAR_FETCH_FAILED } })
+        (emit SC_GET { key: "sidecar", method: "GET", target: (str/slice @entity.url (str/len @config.origin) (str/len @entity.url)), headers: [], body: (bytes/from-string ""), stream: "none" })
       SIDECAR_PROBED -> idle when (and (not @payload.ok) (not (str/startsWith @entity.url @config.origin)))
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "source", error: (str/concat "ORB_SIDECAR_SOURCE: " @entity.name (quote "@") @entity.version " " @entity.declared " is pinned outside " @config.origin) })
       SIDECAR_PROBED_MISSING -> fetching when (str/startsWith @entity.url @config.origin)
-        (http GET @config.origin (str/slice @entity.url (str/len @config.origin) (str/len @entity.url)) { responseAs: "bytes" } { key: "sidecar", emit: { success: SIDECAR_FETCHED, failure: SIDECAR_FETCH_FAILED } })
+        (emit SC_GET { key: "sidecar", method: "GET", target: (str/slice @entity.url (str/len @config.origin) (str/len @entity.url)), headers: [], body: (bytes/from-string ""), stream: "none" })
       SIDECAR_PROBED_MISSING -> idle when (not (str/startsWith @entity.url @config.origin))
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "source", error: (str/concat "ORB_SIDECAR_SOURCE: " @entity.name (quote "@") @entity.version " " @entity.declared " is pinned outside " @config.origin) })
     }
@@ -65,11 +79,9 @@ orbital SidecarFetchOrbital {
       INIT -> idle
       SIDECAR_RESOLVE -> fetching
         (emit SIDECAR_REFUSED { requestId: @payload.requestId, code: "busy", error: (str/concat "the sidecar store is fetching " @entity.declared) })
-      SIDECAR_FETCHED -> idle when (and (= @payload.status 200) (= (bytes/from-base64 @payload.body) null))
-        (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "fetch-failed", error: (str/concat "ORB_SIDECAR_FETCH_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared " from " @config.origin ": the body is not valid base64") })
-      SIDECAR_FETCHED -> verifying when (and (= @payload.status 200) (!= (bytes/from-base64 @payload.body) null))
+      SIDECAR_FETCHED -> verifying when (= @payload.status 200)
         (set @entity.body @payload.body)
-        (emit SC_HASH { requestId: @entity.requestId, data: (bytes/from-base64 @payload.body), encoding: "hex" })
+        (emit SC_HASH { requestId: @entity.requestId, data: @payload.body, encoding: "hex" })
       SIDECAR_FETCHED -> idle when (!= @payload.status 200)
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "fetch-failed", error: (str/concat "ORB_SIDECAR_FETCH_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared " from " @config.origin ": HTTP " @payload.status) })
       SIDECAR_FETCH_FAILED -> idle
@@ -81,12 +93,12 @@ orbital SidecarFetchOrbital {
       SIDECAR_RESOLVE -> verifying
         (emit SIDECAR_REFUSED { requestId: @payload.requestId, code: "busy", error: (str/concat "the sidecar store is fetching " @entity.declared) })
       SC_DIGESTED -> idle when (!= @payload.digest @entity.sha256)
-        (set @entity.body "")
+        (set @entity.body (bytes/from-string ""))
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "hash-mismatch", error: (str/concat "ORB_SIDECAR_HASH_MISMATCH: " @entity.name (quote "@") @entity.version " " @entity.declared " hashed to " @payload.digest ", the lock pins " @entity.sha256 "; nothing was stored") })
       SC_DIGESTED -> storing when (= @payload.digest @entity.sha256)
         (os/mkdir "~/.almadar/sidecars" true { key: "dir" emit: { success: SC_DIR, failure: SC_STORE_FAILED } })
       SC_REFUSED -> idle
-        (set @entity.body "")
+        (set @entity.body (bytes/from-string ""))
         (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "hash-unavailable", error: (str/concat "ORB_SIDECAR_HASH_UNAVAILABLE: " @entity.name (quote "@") @entity.version " " @entity.declared " could not be hashed: " @payload.reason) })
     }
 
@@ -99,11 +111,11 @@ orbital SidecarFetchOrbital {
       SC_WROTE -> storing
         (os/rename (str/concat "~/.almadar/sidecars/" @entity.sha256 ".part") (str/concat "~/.almadar/sidecars/" @entity.sha256) { key: "final" emit: { success: SC_STORED, failure: SC_STORE_FAILED } })
       SC_STORED -> idle
-        (set @entity.body "")
+        (set @entity.body (bytes/from-string ""))
         (emit SIDECAR_RESOLVED { requestId: @entity.requestId, path: (str/concat "~/.almadar/sidecars/" @entity.sha256) })
       SC_STORE_FAILED -> idle
-        (set @entity.body "")
-        (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "store-failed", error: (str/concat "ORB_SIDECAR_STORE_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared ": " @payload.kind) })
+        (set @entity.body (bytes/from-string ""))
+        (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "store-failed", error: (str/concat "ORB_SIDECAR_STORE_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared ": " (default @payload.kind "")) })
     }
 
     emits {
@@ -134,11 +146,8 @@ orbital SidecarFetchOrbital {
       SIDECAR_PROBED_MISSING { error : string  kind : string }
         @description "Internal: the cache probe found nothing."
         @tier "internal"
-      SIDECAR_FETCHED { status : number!  headers : Map string string  body : string!  key : string }
-        @description "Internal: the download reply."
-        @tier "internal"
-      SIDECAR_FETCH_FAILED { error : string  kind : string! }
-        @description "Internal: the download never produced a reply."
+      SC_GET { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the download request, for the HTTP client."
         @tier "internal"
     }
 
@@ -147,6 +156,12 @@ orbital SidecarFetchOrbital {
         @description "Internal: the download's SHA-256."
       SC_REFUSED { requestId : string  reason : string! }
         @description "Internal: the download could not be hashed."
+      SIDECAR_FETCHED { status : number!  headers : Map string string  body : bytes!  key : string }
+        @description "Internal: the download reply."
+      SIDECAR_FETCH_FAILED { error : string  kind : string! }
+        @description "Internal: the download never produced a reply."
+      SidecarHttp.HTTP_REPLIED -> SIDECAR_FETCHED
+      SidecarHttp.HTTP_FAILED -> SIDECAR_FETCH_FAILED
       Digest.SHA256_DIGESTED -> SC_DIGESTED
       Digest.SHA256_REFUSED -> SC_REFUSED
       SIDECAR_RESOLVE { requestId : string!  name : string!  version : string!  declared : string!  pinned : boolean!  sha256 : string!  bytes : number!  url : string! }
@@ -157,11 +172,11 @@ orbital SidecarFetchOrbital {
     config {
       origin : url = "https://storage.googleapis.com"
         @label "Sidecar origin"
-        @description "The origin every pinned url must sit under (scheme://host, no trailing slash); declared in egress."
+        @description "The origin every pinned url must sit under (scheme://host, no trailing slash); its host and port are the net grant and the SidecarHttp host knob."
         @synonyms "storage host"
         @tier "infra"
     }
   }
 
-  page boot as SidecarFetchPage -> SidecarFetch, Digest
+  page boot as SidecarFetchPage -> SidecarFetch, SidecarHttp, Digest
 }

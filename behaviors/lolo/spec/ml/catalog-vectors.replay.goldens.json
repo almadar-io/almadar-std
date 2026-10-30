@@ -1,0 +1,410 @@
+{
+ "atom": "ml/atoms/std-catalog-vectors.lolo",
+ "trait": "CatalogVectors",
+ "note": "the controller of the one catalog-with-vectors flow; host answers are fed as the operators' success and failure events, the embed round trip itself is vector-embed-wire.replay.goldens.json",
+ "cases": [
+  {
+   "id": "an ask lists the catalog with texts and, when it cannot be read, refuses with the reason (no host here)",
+   "steps": [
+    {
+     "event": "CATALOG_VECTORS_ASK",
+     "payload": {
+      "paths": [
+       "almadar-std/ml"
+      ],
+      "exposure": [],
+      "traits": true
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ],
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_CATALOG_UNREAD",
+         "detail": "no substrate host configured for behavior/catalog"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "packages with a vectors snapshot and a row under them are sourced, and a package with no row is not",
+   "steps": [
+    {
+     "from": "packaging",
+     "event": "CV_PACKAGES",
+     "entity": {
+      "rows": [
+       {
+        "behavior": "almadar-std/std-a",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-a",
+        "value": {
+         "behavior": "almadar-std/std-a"
+        },
+        "name": "std-a",
+        "capabilities": [
+         "read"
+        ]
+       },
+       {
+        "behavior": "almadar-std/std-b",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-b",
+        "value": {
+         "behavior": "almadar-std/std-b"
+        },
+        "name": "std-b"
+       }
+      ]
+     },
+     "payload": {
+      "result": [
+       {
+        "root": "/p/std",
+        "prefix": "almadar-std",
+        "vectors": "/p/std/orb.vectors"
+       },
+       {
+        "root": "/p/other",
+        "prefix": "other",
+        "vectors": "/p/other/orb.vectors"
+       },
+       {
+        "root": "/p/bare",
+        "prefix": "almadar-std"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CV_SOURCES",
+        "payload": {
+         "paths": [
+          "/p/std/orb.vectors"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the sources are handed to the resolver with the wanted texts",
+   "steps": [
+    {
+     "from": "sourcing",
+     "event": "SOURCES_READY",
+     "entity": {
+      "wanted": [
+       {
+        "key": "std-a",
+        "text": "t"
+       }
+      ]
+     },
+     "payload": {
+      "snapshots": [],
+      "snapshotPaths": [],
+      "userDir": "/u",
+      "userAnchor": "home",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CV_RESOLVE",
+        "payload": {
+         "wanted": [
+          {
+           "key": "std-a",
+           "text": "t"
+          }
+         ],
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/u",
+         "userAnchor": "home",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "every row is answered with its description vector and, when it declares capabilities, its capabilities vector",
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "VECTORS_ANSWERED",
+     "entity": {
+      "rows": [
+       {
+        "behavior": "almadar-std/std-a",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-a",
+        "value": {
+         "behavior": "almadar-std/std-a"
+        },
+        "name": "std-a",
+        "capabilities": [
+         "read"
+        ]
+       },
+       {
+        "behavior": "almadar-std/std-b",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-b",
+        "value": {
+         "behavior": "almadar-std/std-b"
+        },
+        "name": "std-b"
+       }
+      ]
+     },
+     "payload": {
+      "model": "m",
+      "vectors": [
+       {
+        "key": "almadar-std/std-a",
+        "vector": [
+         1,
+         0
+        ]
+       },
+       {
+        "key": "almadar-std/std-a#capabilities",
+        "vector": [
+         0,
+         1
+        ]
+       },
+       {
+        "key": "almadar-std/std-b",
+        "vector": [
+         0.5,
+         0.5
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_ROWS",
+        "payload": {
+         "model": "m",
+         "rows": [
+          {
+           "behavior": "almadar-std/std-a",
+           "package": "almadar-std",
+           "topic": "ml",
+           "level": "atom",
+           "description": "does std-a",
+           "capabilities": [
+            "read"
+           ],
+           "value": {
+            "behavior": "almadar-std/std-a"
+           },
+           "vectors": {
+            "description": [
+             1,
+             0
+            ],
+            "capabilities": [
+             0,
+             1
+            ]
+           }
+          },
+          {
+           "behavior": "almadar-std/std-b",
+           "package": "almadar-std",
+           "topic": "ml",
+           "level": "atom",
+           "description": "does std-b",
+           "value": {
+            "behavior": "almadar-std/std-b"
+           },
+           "vectors": {
+            "description": [
+             0.5,
+             0.5
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "CATALOG_VECTORS_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control a row whose description has no vector refuses and names it, never answering it without one",
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "VECTORS_ANSWERED",
+     "entity": {
+      "rows": [
+       {
+        "behavior": "almadar-std/std-a",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-a",
+        "value": {
+         "behavior": "almadar-std/std-a"
+        },
+        "name": "std-a",
+        "capabilities": [
+         "read"
+        ]
+       },
+       {
+        "behavior": "almadar-std/std-b",
+        "package": "almadar-std",
+        "topic": "ml",
+        "level": "atom",
+        "description": "does std-b",
+        "value": {
+         "behavior": "almadar-std/std-b"
+        },
+        "name": "std-b"
+       }
+      ]
+     },
+     "payload": {
+      "model": "m",
+      "vectors": [
+       {
+        "key": "almadar-std/std-a",
+        "vector": [
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_ROW_UNEMBEDDED",
+         "detail": "no vector for the description of almadar-std/std-b"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CATALOG_VECTORS_ROWS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no vector in any store and no provider configured is refused with the resolver's code, not answered empty",
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "VECTORS_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_PROVIDER_MISSING",
+      "detail": "2 embedding text(s) have no stored vector"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_PROVIDER_MISSING",
+         "detail": "2 embedding text(s) have no stored vector"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CATALOG_VECTORS_ROWS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a source that cannot be read is refused with its code",
+   "steps": [
+    {
+     "from": "sourcing",
+     "event": "SOURCES_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_IO",
+      "detail": "/p: unreadable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_IO",
+         "detail": "/p: unreadable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a package list that cannot be read is refused",
+   "steps": [
+    {
+     "from": "packaging",
+     "event": "CV_FAILED",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CATALOG_VECTORS_REFUSED",
+        "payload": {
+         "code": "ORB_CATALOG_UNREAD",
+         "detail": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

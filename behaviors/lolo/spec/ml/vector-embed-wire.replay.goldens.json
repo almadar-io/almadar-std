@@ -1,0 +1,1449 @@
+{
+  "atom": "ml/atoms/std-vector-resolve.lolo",
+  "trait": "VectorResolve",
+  "note": "embed-on-miss through the lmstudio instance over std-http-request and std-http-client, replayed from a recorded provider transcript (request wire bytes in HC_BUILT, response bytes in HC_READ); keyed providers write the credential as an os/send segment",
+  "cases": [
+    {
+      "id": "lmstudio embed-on-miss runs the recorded provider transcript end to end: store miss, request, socket bytes, reply, vectors",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "state": "sending",
+            "effects": [
+              {
+                "type": "os/send"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 177,
+            "key": "send"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/recv"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL2pzb24NCkNvbnRlbnQtTGVuZ3RoOiAxODANCg0KeyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoidGV4dC1lbWJlZGRpbmctYmdlLWJhc2UtZW4tdjEuNSIsInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsInRvdGFsX3Rva2VucyI6MX19",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "application/json",
+                    "content-length": "180"
+                  },
+                  "body": "eyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoidGV4dC1lbWJlZGRpbmctYmdlLWJhc2UtZW4tdjEuNSIsInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsInRvdGFsX3Rva2VucyI6MX19"
+                }
+              },
+              {
+                "event": "HTTP_RESULT",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 200,
+                  "headers": {
+                    "content-type": "application/json",
+                    "content-length": "180"
+                  },
+                  "body": "eyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoidGV4dC1lbWJlZGRpbmctYmdlLWJhc2UtZW4tdjEuNSIsInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsInRvdGFsX3Rva2VucyI6MX19",
+                  "attempts": 1,
+                  "pages": 1
+                }
+              },
+              {
+                "event": "LLM_EMBED_REPLIED",
+                "payload": {
+                  "status": 200,
+                  "headers": {
+                    "content-type": "application/json",
+                    "content-length": "180"
+                  },
+                  "body": "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"embedding\":[0.5,-0.25,0.125,1.0],\"index\":0}],\"model\":\"text-embedding-bge-base-en-v1.5\",\"usage\":{\"prompt_tokens\":1,\"total_tokens\":1}}",
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_RESULT",
+                "payload": {
+                  "embeddings": [
+                    [
+                      0.5,
+                      -0.25,
+                      0.125,
+                      1
+                    ]
+                  ],
+                  "usage": {
+                    "promptTokens": 1,
+                    "totalTokens": 1
+                  },
+                  "key": "",
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "VECTORS_EMBEDDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "texts": [
+                    "zz"
+                  ],
+                  "vectors": [
+                    [
+                      0.5,
+                      -0.25,
+                      0.125,
+                      1
+                    ]
+                  ]
+                }
+              },
+              {
+                "event": "VECTOR_WRITE",
+                "payload": {
+                  "path": "/u/baai_bge-base-en-v1.5.vec",
+                  "anchor": "home",
+                  "model": "baai/bge-base-en-v1.5",
+                  "records": [
+                    {
+                      "text": "zz",
+                      "vector": [
+                        0.5,
+                        -0.25,
+                        0.125,
+                        1
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED",
+              "LLM_EMBED_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control a 500 reply is an attempt that failed: it waits 500 ms, then writes the request again",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_CONNECTED",
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "state": "sending",
+            "effects": [
+              {
+                "type": "os/send"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_SENT",
+          "payload": {
+            "bytes": 177,
+            "key": "send"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/recv"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLmHttp",
+          "event": "HC_READ",
+          "payload": {
+            "data": "SFRUUC8xLjEgNTAwIEludGVybmFsIFNlcnZlciBFcnJvcg0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQpDb250ZW50LUxlbmd0aDogMzgNCg0KeyJlcnJvciI6eyJtZXNzYWdlIjoibW9kZWwgdW5sb2FkZWQifX0=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 500,
+                  "headers": {
+                    "content-type": "application/json",
+                    "content-length": "38"
+                  },
+                  "body": "eyJlcnJvciI6eyJtZXNzYWdlIjoibW9kZWwgdW5sb2FkZWQifX0="
+                }
+              },
+              {
+                "event": "LLM_EMBED_REPLIED",
+                "payload": {
+                  "status": 500,
+                  "headers": {
+                    "content-type": "application/json",
+                    "content-length": "38"
+                  },
+                  "body": "{\"error\":{\"message\":\"model unloaded\"}}",
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_ERROR",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 500,
+                  "message": "EmbeddingClient: lmstudio returned 500 Internal Server Error: {\"error\":{\"message\":\"model unloaded\"}}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":1,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\",\"delayMs\":500}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WAIT",
+                "payload": {
+                  "delayMs": 500
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED_RESULT",
+              "LLM_FAILED",
+              "LLM_EMBED_DISPATCH"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLlmLm",
+          "event": "LLM_EMBED_WAITED",
+          "payload": {
+            "waitedMs": 500
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":1,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\",\"delayMs\":500}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":1,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\",\"delayMs\":500}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":1,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\",\"delayMs\":500}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a openrouter embed writes its request to openrouter.ai with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "openrouter-shared",
+            "embedModel": "baai/bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/api/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"baai/bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/api/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvYXBpL3YxL2VtYmVkZGluZ3MgSFRUUC8xLjENCmhvc3Q6IG9wZW5yb3V0ZXIuYWkNCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6ICovKg0KY29udGVudC10eXBlOiBhcHBsaWNhdGlvbi9qc29uDQpjb250ZW50LWxlbmd0aDogNDgNCg0KeyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a openrouter (own key) embed writes its request to openrouter.ai with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "openrouter-own",
+            "embedModel": "baai/bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/api/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"baai/bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/api/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvYXBpL3YxL2VtYmVkZGluZ3MgSFRUUC8xLjENCmhvc3Q6IG9wZW5yb3V0ZXIuYWkNCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6ICovKg0KY29udGVudC10eXBlOiBhcHBsaWNhdGlvbi9qc29uDQpjb250ZW50LWxlbmd0aDogNDgNCg0KeyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a openai embed writes its request to api.openai.com with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "openai-shared",
+            "embedModel": "baai/bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"baai/bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvdjEvZW1iZWRkaW5ncyBIVFRQLzEuMQ0KaG9zdDogYXBpLm9wZW5haS5jb20NCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6ICovKg0KY29udGVudC10eXBlOiBhcHBsaWNhdGlvbi9qc29uDQpjb250ZW50LWxlbmd0aDogNDgNCg0KeyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a openai (own key) embed writes its request to api.openai.com with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "openai-own",
+            "embedModel": "baai/bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"baai/bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"baai/bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvdjEvZW1iZWRkaW5ncyBIVFRQLzEuMQ0KaG9zdDogYXBpLm9wZW5haS5jb20NCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6ICovKg0KY29udGVudC10eXBlOiBhcHBsaWNhdGlvbi9qc29uDQpjb250ZW50LWxlbmd0aDogNDgNCg0KeyJtb2RlbCI6ImJhYWkvYmdlLWJhc2UtZW4tdjEuNSIsImlucHV0IjpbInp6Il19"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a request the wire refuses ends the embed with its reason and is not retried",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLlmLm",
+          "event": "LLM_EMBED_WIRE_REFUSED",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+            "error": "the request cannot be built"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "",
+                  "message": "EmbeddingClient: the request could not be written: the request cannot be built",
+                  "key": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control a reply for a request this client did not write is dropped",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLlmLm",
+          "event": "LLM_EMBED_WIRE_RESULT",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"x\",\"texts\":[\"nope\"],\"callKey\":\"\"}",
+            "status": 200,
+            "headers": {},
+            "body": "eyJvYmplY3QiOiJsaXN0IiwiZGF0YSI6W3sib2JqZWN0IjoiZW1iZWRkaW5nIiwiZW1iZWRkaW5nIjpbMC41LC0wLjI1LDAuMTI1LDEuMF0sImluZGV4IjowfV0sIm1vZGVsIjoidGV4dC1lbWJlZGRpbmctYmdlLWJhc2UtZW4tdjEuNSIsInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsInRvdGFsX3Rva2VucyI6MX19",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "neverEmits": [
+              "LLM_EMBED_REPLIED",
+              "LLM_EMBED_RESULT",
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a reply body that is not UTF-8 text is an attempt that failed",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLlmLm",
+          "event": "LLM_EMBED_WIRE_RESULT",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+            "status": 200,
+            "headers": {},
+            "body": "//4A",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_ERROR",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 0,
+                  "message": "EmbeddingClient: lmstudio returned a body that is not UTF-8 text"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a transport failure is an attempt that failed",
+      "steps": [
+        {
+          "event": "RESOLVE",
+          "payload": {
+            "wanted": [
+              {
+                "key": "k1",
+                "text": "zz"
+              }
+            ],
+            "snapshots": [
+              "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw=="
+            ],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "baai/bge-base-en-v1.5",
+            "providerKind": "lmstudio",
+            "embedModel": "text-embedding-bge-base-en-v1.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "USER_STORE_NEEDED",
+                "payload": {
+                  "model": "baai/bge-base-en-v1.5",
+                  "path": "/u/baai_bge-base-en-v1.5.vec"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "USER_STORE_READ",
+          "payload": {
+            "data": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_LM",
+                "payload": {
+                  "texts": [
+                    "zz"
+                  ],
+                  "model": "text-embedding-bge-base-en-v1.5"
+                }
+              },
+              {
+                "event": "LLM_EMBED_SEND",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_DISPATCH",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}"
+                }
+              },
+              {
+                "event": "LLM_EMBED_WIRE",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "path": "/v1/embeddings",
+                  "query": {},
+                  "headers": {
+                    "Accept": "*/*"
+                  },
+                  "json": "{\"model\":\"text-embedding-bge-base-en-v1.5\",\"input\":[\"zz\"]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "method": "POST",
+                  "target": "/v1/embeddings",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6InRleHQtZW1iZWRkaW5nLWJnZS1iYXNlLWVuLXYxLjUiLCJpbnB1dCI6WyJ6eiJdfQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "VECTORS_REFUSED",
+              "LLM_FAILED"
+            ]
+          }
+        },
+        {
+          "trait": "ResolveLlmLm",
+          "event": "LLM_EMBED_WIRE_FAILED",
+          "payload": {
+            "key": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+            "error": "connection refused",
+            "kind": "denied"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED_ERROR",
+                "payload": {
+                  "job": "{\"generic\":0,\"limited\":0,\"model\":\"text-embedding-bge-base-en-v1.5\",\"texts\":[\"zz\"],\"callKey\":\"\"}",
+                  "status": 0,
+                  "message": "fetch failed: connection refused"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

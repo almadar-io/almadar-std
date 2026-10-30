@@ -1,0 +1,363 @@
+app std-orb-lint-viewer-stranded [
+  version: "1.0.0",
+  inbound: ["cli-lint-viewer-stranded"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-viewer-stranded - the `orb lint viewer-stranded <file>` command, the port of ORB_CIRCUIT_VIEWER_STRANDED (circuit/closed_circuit.rs validate_viewer_stranded_for_owner). For each page whose content owner std-orb-lint-page-content-owner resolves to a channel or a sole writer, an arm of the owner that is a user-triggered affordance (an event some trait of the orbital fires by a control or an effect, emits or listens for, closed over listens routes; async-result events of fetch and persist and bus-excluded events are no affordance) and repaints a main slot with a body that offers no way on is ORB_CIRCUIT_VIEWER_STRANDED. A body offers a way on when it holds a content-body pattern (a pattern with an entity-kind prop), a pattern node whose event, event-ref, event-listen, callback or event-map prop (or the eventField of an event-list item) holds a live value (a binding, or a non-empty name the bus delivers), an @trait.X embed of a trait that is not inline in the orbital or whose own main bodies offer a way on (the least fixed point over the embed graph, so a cycle earns no credit), or an @entity.f or @config.k binding with no same-arm literal source (a set before the render-ui in the same arm, through let, do and if, or a tree-shaped config default), whose literal trees are read the same way. An arm that runs its own fetch or persist, a null body, an arm that leaves for a state with another producible arm, and a second arm of an event already reported are silent. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint viewer-stranded: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-viewer-stranded"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type VstrNode = string | number | boolean | [VstrNode?] | Map string VstrNode?
+type VstrNodes = [VstrNode?]
+type VsTrans = { from : string | [string], to : string, event : string, effects : [VstrNode?] }
+type VsMachine = { transitions : [VsTrans] }
+type VsTick = { effects : [VstrNode?] }
+type VsField = { default : VstrNode? }
+type VsEmit = { event : string }
+type VsListen = { event : string, triggers : string }
+type VsTrait = { name : string, stateMachine : VsMachine, ticks : [VsTick], config : Map string VsField?, emits : [VsEmit], listens : [VsListen] }
+type VsOrbital = { name : string, traits : [VsTrait] }
+type VsProgram = { orbitals : [VsOrbital] }
+type VsPatProp = { kind : string? }
+type VsPattern = { props : Map string VsPatProp? }
+type VsByPattern = { pattern : string, prop : string, field : string }
+type VsOutlet = { prop : string, field : string }
+type VsUnit = { oi : number!, ti : number!, tn : string!, src : string!, li : number!, e : number!, event : string!, body : VstrNode?, pre : [VstrNode?]! }
+type VsHit = { at : number, path : string, node : [VstrNode?] }
+type VsStr = string
+type VsObj = Map string VstrNode?
+type VsAcc = { lets : VsLets!, fields : VsCand! }
+type VsRes = { leaves : [VstrNode?]!, pend : [VsPend]! }
+type VsPend = { e : VstrNode?, ll : VsLets }
+type VsLets = Map string VstrNode?
+type VsCand = Map string [VstrNode?]
+type VsFact = { direct : boolean!, embeds : [string]! }
+type VsPoolSt = { pool : [VstrNode?]!, re : [string]!, rc : [string]!, rt : [string]! }
+type VsWay = { w : Map string boolean, uw : [boolean] }
+type VsAffRow = { aff : [string], prod : [string] }
+type VsAff = Map string VsAffRow
+type VsOrbitals = [VsOrbital]
+type VsOwner = { orbital : number, page : number, kind : string, names : [string] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintViewerStrandedCodes = { circuitViewerStranded : LintCodeDecl }
+
+type WalkSlot = { kind : string!, args : [number] }
+orbital OrbLintViewerStrandedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+  uses Owner from "std/behaviors/std-orb-lint-page-content-owner"
+
+  entity OrbLintViewerStrandedRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : VsProgram! = {}
+    patterns : Map string VsPattern = {}
+    byPattern : [VsByPattern] = []
+    busExcluded : [string] = []
+    byControl : Map string [string] = {}
+    byEffect : Map string [string] = {}
+    owners : [VsOwner] = []
+    haveFired : boolean = false
+    haveOwners : boolean = false
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintViewerStranded -> OrbLintViewerStrandedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PATTERNS_HEARD -> ready
+        (set @entity.patterns @payload.patterns)
+      PROPS_HEARD -> ready
+        (set @entity.byPattern @payload.byPattern)
+      SEMANTICS_HEARD -> ready
+        (set @entity.busExcluded @payload.busExcluded)
+      LINT_INPUT -> ready
+        (set @entity.program (default (as @payload.program VsProgram) @entity.program))
+        (set @entity.scope @payload.scope)
+      FIRED_HEARD -> ready when @entity.haveOwners
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+        (emit LINT_COMPUTE { })
+      FIRED_HEARD -> ready when (not @entity.haveOwners)
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+      OWNERS_HEARD -> ready when @entity.haveFired
+        (set @entity.owners @payload.owners)
+        (set @entity.haveOwners true)
+        (emit LINT_COMPUTE { })
+      OWNERS_HEARD -> ready when (not @entity.haveFired)
+        (set @entity.owners @payload.owners)
+        (set @entity.haveOwners true)
+      LINT_COMPUTE -> ready
+        (set @entity.findings (let ((noe : [VstrNode?] []) (nos : [string] []) (nob : [boolean] []) (nobm : Map string boolean {}) (nobp : VsByPattern {}) (noh : [VsHit] []) (noli : [VsListen] []) (noem : [VsEmit] []) (notrs : [VsTrans] []) (notks : [VsTick] []) (notraits : [VsTrait] []) (noorbs : [VsOrbital] []) (noorb : VsOrbital {}) (notrait : VsTrait {}) (notrans : VsTrans {}) (notick : VsTick {}) (nou1 : VsUnit { oi: 0, ti: 0, tn: "", src: "", li: 0, e: 0, event: "", body: null, pre: [] }) (nofact : VsFact { direct: false, embeds: [] }) (noobj : VsObj {}) (nolet : VsLets {}) (nocand : VsCand {}) (nopend : [VsPend] []) (nocfg : Map string VsField {}) (nofield : VsField {}) (noo : [VsOutlet] []) (noaff : VsAffRow { aff: [], prod: [] }) (nof : [OrbFinding] []) (nopat : VsPattern {}) (nopat2 : Map string VsPatProp {}) (nopp : VsPatProp {})) (let ((strandOrbs : [number] (array/unique (array/map (array/filter @entity.owners (fn w (array/includes ["channel", "sole"] (object/get @w "kind" "")))) (fn w (object/get @w "orbital" 0)))))) (let ((orbs : [VsOrbital] (default (as (object/get @entity.program "orbitals" null) VsOrbitals) @noorbs))) (let ((outlets : Map string [VsOutlet] (default (object/fromEntries (array/map (object/keys @entity.patterns) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), (array/flatten (array/map (object/keys (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2)) (fn pr
+  (let ((kd (object/get (object/get (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2) @pr @nopp) "kind" "")))
+    (if (array/includes ["event", "event-ref", "event-listen", "callback", "event-map"] @kd) [{ prop: @pr, field: "" }]
+      (if (= @kd "event-list") [{ prop: @pr, field: (object/get (default (array/find @entity.byPattern (fn bp (and (= (object/get @bp "pattern" "") @pn) (= (object/get @bp "prop" "") @pr)))) @nobp) "field" "event") }] @noo))))))]))) {}))) (let ((contentTypes : Map string boolean (default (object/fromEntries (array/map (array/filter (object/keys @entity.patterns) (fn pn (array/some (object/values (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2)) (fn pr (= (object/get (default @pr @nopp) "kind" "") "entity"))))) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), true]))) {}))) (let ((inlines : Map string boolean (default (object/fromEntries (array/flatten (array/map @strandOrbs (fn oi (array/map (array/filter (object/get (default (array/nth @orbs @oi) @noorb) "traits" @notraits) (fn t (object/has @t "stateMachine"))) (fn t [(str/concat @oi "|" (object/get @t "name" "")), true])))))) {}))) (let ((units : [VsUnit] (let ((nou : [VsUnit] []))
+  (array/flatten (array/map @strandOrbs (fn oi
+    (let ((trs (object/get (default (array/nth @orbs @oi) @noorb) "traits" [])))
+      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+        (let ((t (default (array/nth @trs @ti) @notrait)))
+          (if (not (object/has @t "stateMachine")) @nou
+            (let ((trans (object/get @t "stateMachine.transitions" [])) (tks (object/get @t "ticks" [])))
+              (let ((lists (array/concat
+                  (array/map (array/range 0 (array/len @trans)) (fn i { src: "t", li: @i, event: (object/get (default (array/nth @trans @i) @notrans) "event" ""), effects: (object/get (default (array/nth @trans @i) @notrans) "effects" @noe) }))
+                  (array/map (array/range 0 (array/len @tks)) (fn i { src: "k", li: @i, event: "", effects: (object/get (default (array/nth @tks @i) @notick) "effects" @noe) })))))
+                (array/flatten (array/map @lists (fn l
+                  (let ((effs (object/get @l "effects")))
+                    (array/flatten (array/map (array/range 0 (array/len @effs)) (fn e
+                      (let ((x (array/nth @effs @e)))
+                        (if (and (validate/array @x) (>= (array/len @x) 3) (= (array/nth @x 0) "render-ui") (validate/string (array/nth @x 1)) (array/includes @config.mainSlots (array/nth @x 1)) (!= (array/nth @x 2) null))
+                          [{ oi: @oi, ti: @ti, tn: (object/get @t "name" ""), src: (object/get @l "src"), li: (object/get @l "li"), e: @e, event: (object/get @l "event"), body: (array/nth @x 2), pre: (array/slice @effs 0 @e) }]
+                          @nou))))))))))))))))))))))) (let ((cands : [VsCand] (array/map @units (fn u
+  (let ((body (object/get @u "body" null)))
+    (if (not (array/some (array/flatten (object/values (tree/index @body ["let"] { prefixes: [(quote "@entity.")] }))) (fn hh (validate/string (object/get @hh "node" null))))) @nocand
+      (let ((ix (tree/index (object/get @u "pre" @noe) ["let", "set"])))
+        (let ((acc0 : VsAcc { lets: @nolet, fields: @nocand })) (object/get (array/reduce (array/sort (array/flatten (object/values @ix)) "at") @acc0
+          (fn (acc h)
+            (let ((n (default (as (object/get @h "node") VstrNodes) @noe)))
+              (if (= (array/nth @n 0) "let")
+                { lets: (object/merge (object/get @acc "lets") (default (default (object/fromEntries (array/map (array/filter (default (as (array/nth @n 1) VstrNodes) @noe) (fn bp (let ((bpa (default (as @bp VstrNodes) @noe))) (and (>= (array/len @bpa) 2) (!= (as (array/nth @bpa 0) VsStr) null))))) (fn bp [(default (as (array/nth (default (as @bp VstrNodes) @noe) 0) VsStr) ""), (array/nth (default (as @bp VstrNodes) @noe) 1)]))) {}) {})), fields: (object/get @acc "fields") }
+                (let ((tg (as (array/nth @n 1) VsStr)))
+                  (if (and (!= @tg null) (>= (array/len @n) 3) (str/startsWith @tg (quote "@entity.")) (not (str/includes (str/slice @tg 8) ".")) (not (str/includes (str/slice @tg 8) "[")))
+                    (let ((cs (let ((res0 : VsRes { leaves: @noe, pend: [{ e: (array/nth @n 2), ll: (object/get @acc "lets") }] })) (object/get (array/reduce (array/range 0 33) @res0 (fn (st rr)
+  (let ((rs (array/map (object/get @st "pend") (fn p (let ((x (object/get @p "e" null)) (ll (object/get @p "ll" @nolet)))
+  (let ((xo (as @x VsObj)) (xs (as @x VsStr)) (xa (as @x VstrNodes)))
+  (if (!= @xo null)
+    (if (object/has @xo "type") { leaf: [@x], next: @nopend } { leaf: @noe, next: @nopend })
+    (if (!= @xs null)
+      (let ((nmv (str/slice @xs 1)))
+        (if (and (str/startsWith @xs (quote "@")) (not (str/includes @nmv ".")) (not (str/includes @nmv "[")) (object/has @ll @nmv))
+          { leaf: @noe, next: [{ e: (object/get @ll @nmv null), ll: @ll }] }
+          { leaf: @noe, next: @nopend }))
+      (if (!= @xa null)
+        (let ((hd (array/nth @xa 0)) (ln (array/len @xa)))
+          (if (= @hd "if") { leaf: @noe, next: (array/concat (if (> @ln 2) [{ e: (array/nth @xa 2), ll: @ll }] @nopend) (if (> @ln 3) [{ e: (array/nth @xa 3), ll: @ll }] @nopend)) }
+            (if (= @hd "do") { leaf: @noe, next: [{ e: (array/last @xa), ll: @ll }] }
+              (if (= @hd "let") { leaf: @noe, next: (if (>= @ln 3) [{ e: (array/last @xa), ll: (object/merge @ll (default (default (object/fromEntries (array/map (array/filter (default (as (array/nth @xa 1) VstrNodes) @noe) (fn bp (let ((bpa (default (as @bp VstrNodes) @noe))) (and (>= (array/len @bpa) 2) (!= (as (array/nth @bpa 0) VsStr) null))))) (fn bp [(default (as (array/nth (default (as @bp VstrNodes) @noe) 0) VsStr) ""), (array/nth (default (as @bp VstrNodes) @noe) 1)]))) {}) {})) }] @nopend) }
+                (if (let ((tsx @x)) (array/every (array/reduce (array/range 0 (array/len (default (as (json/nodes @tsx) VstrNodes) @noe))) [@tsx] (fn (ta tr1) (array/flatten (array/map @ta (fn tq (let ((tqa (as @tq VstrNodes))) (if (!= @tqa null) @tqa [@tq])))))))  (fn tq (let ((tqo (as @tq VsObj))) (and (!= @tqo null) (object/has @tqo "type")))))) { leaf: [@x], next: @nopend } { leaf: @noe, next: @nopend })))))
+        { leaf: @noe, next: @nopend })))) )))))
+    { leaves: (array/concat (object/get @st "leaves") (array/flatten (array/map @rs (fn r (object/get @r "leaf"))))), pend: (array/flatten (array/map @rs (fn r (object/get @r "next")))) }))) "leaves"))))
+                      (if (> (array/len @cs) 0)
+                        { lets: (object/get @acc "lets"), fields: (object/merge (object/get @acc "fields") (default (default (object/fromEntries [[(str/slice @tg 8), @cs]]) {}) {})) }
+                        @acc))
+                    @acc)))))) "fields"))))))))) (let ((facts : [VsFact] (array/map (array/range 0 (array/len @units)) (fn ui
+  (let ((u (default (array/nth @units @ui) @nou1)) (cand (default (array/nth @cands @ui) @nocand)))
+    (let ((oi (object/get @u "oi" 0)) (ti (object/get @u "ti" 0)) (body (object/get @u "body" null)))
+      (let ((t (default (array/nth (object/get (default (array/nth @orbs @oi) @noorb) "traits" @notraits) @ti) @notrait)))
+        (let ((cfg (object/get @t "config" @nocfg)) (nodes0 (default (as (json/nodes @body) VstrNodes) @noe)))
+          (let ((nk (+ (+ (array/len (object/keys @cand)) (array/len (object/keys @cfg))) 2))
+                (cshape (default (object/fromEntries (array/map (object/keys @cfg) (fn k [@k, (let ((dv (object/get (object/get @cfg @k @nofield) "default" null))) (let ((tsx @dv)) (array/every (array/reduce (array/range 0 (array/len (default (as (json/nodes @tsx) VstrNodes) @noe))) [@tsx] (fn (ta tr2) (array/flatten (array/map @ta (fn tq (let ((tqa (as @tq VstrNodes))) (if (!= @tqa null) @tqa [@tq])))))))  (fn tq (let ((tqo (as @tq VsObj))) (and (!= @tqo null) (object/has @tqo "type")))))))]))) {})))
+            (let ((st0 : VsPoolSt { pool: @nodes0, re: @nos, rc: @nos, rt: @nos }))
+              (let ((st (array/reduce (array/range 0 @nk) @st0
+                  (fn (acc r)
+                    (let ((ss (array/filter (array/map (object/get @acc "pool") (fn q (default (as @q VsStr) ""))) (fn q (!= @q "")))))
+                      (let ((re (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@entity.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 8) ".")) "") "[")) "")))))
+                            (rc (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@config.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 8) ".")) "") "[")) "")))))
+                            (rt (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@trait.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 7) ".")) "") "[")) ""))))))
+                        { re: @re, rc: @rc, rt: @rt,
+                          pool: (array/concat @nodes0
+                            (array/flatten (array/map @re (fn f (array/flatten (array/map (object/get @cand @f @noe) (fn c (default (as (json/nodes @c) VstrNodes) @noe)))))))
+                            (array/flatten (array/map @rc (fn k (if (object/get @cshape @k false) (default (as (json/nodes (object/get (object/get @cfg @k @nofield) "default" null)) VstrNodes) @noe) @noe))))) }))))))
+                { direct: (or
+                    (array/some (object/get @st "re") (fn f (and (!= @f "") (not (object/has @cand @f)))))
+                    (array/some (object/get @st "rc") (fn k (and (!= @k "") (not (object/get @cshape @k false)))))
+                    (array/some (object/get @st "rt") (fn x (and (!= @x "") (not (object/has @inlines (str/concat @oi "|" @x))))))
+                    (array/some (object/get @st "pool") (fn q (let ((qo (as @q VsObj))) (and (!= @qo null)
+                      (let ((ty (as (object/get @qo "type" null) VsStr))) (and (!= @ty null)
+                        (or (object/has @contentTypes (str/replaceAll (str/replaceAll @ty "~" "~t") "." "~d"))
+                            (array/some (object/get @outlets (str/replaceAll (str/replaceAll @ty "~" "~t") "." "~d") @noo) (fn o
+                              (let ((vv (object/get @qo (object/get @o "prop" "") null)))
+                                (let ((vs (if (= (object/get @o "field" "") "") [@vv] (let ((vva (as @vv VstrNodes))) (if (!= @vva null) (array/map (array/filter @vva (fn d (!= (as @d VsObj) null))) (fn d (object/get (default (as @d VsObj) @noobj) (object/get @o "field" "") null))) @noe)))))
+                                  (array/some @vs (fn w (array/some (default (as (json/nodes @w) VstrNodes) @noe) (fn z (let ((zs (as @z VsStr))) (and (!= @zs null) (or (str/startsWith @zs (quote "@")) (and (!= @zs "") (not (array/includes @entity.busExcluded @zs)))))))))))))))))))))),
+                  embeds: (array/filter (object/get @st "rt") (fn x (and (!= @x "") (object/has @inlines (str/concat @oi "|" @x))))) }))))))))))) (let ((wayOn : VsWay (array/reduce (array/range 0 (+ (array/len @units) 2)) { w: @nobm, uw: @nob }
+  (fn (st r)
+    (let ((uw (array/map (array/range 0 (array/len @units)) (fn ui
+        (let ((f (default (array/nth @facts @ui) @nofact)) (oi (object/get (default (array/nth @units @ui) @nou1) "oi")))
+          (or (object/get @f "direct") (array/some (object/get @f "embeds") (fn x (object/has (object/get @st "w") (str/concat @oi "|" @x))))))))))
+      { uw: @uw, w: (default (object/fromEntries (array/map (array/filter (array/range 0 (array/len @units)) (fn ui (= (default (array/nth @uw @ui) false) true))) (fn ui [(str/concat (object/get (default (array/nth @units @ui) @nou1) "oi") "|" (object/get (default (array/nth @units @ui) @nou1) "tn")), true]))) {}) }))))) (let ((affs : Map string VsAffRow (default (object/fromEntries (array/map @strandOrbs (fn oi
+  (let ((inl (array/filter (object/get (default (array/nth @orbs @oi) @noorb) "traits" []) (fn t (object/has @t "stateMachine")))))
+    (let ((asy (array/flatten (array/map (array/flatten (array/map @inl (fn t
+                  (let ((effs (array/filter (array/concat (array/flatten (array/map (object/get @t "stateMachine.transitions" @notrs) (fn x (object/get @x "effects" @noe)))) (array/flatten (array/map (object/get @t "ticks" @notks) (fn x (object/get @x "effects" @noe))))) (fn r (validate/array @r)))))
+                    (let ((ix (tree/index @effs ["fetch", "persist"])))
+                      (array/flatten (object/values @ix))))))) (fn h
+                  (array/flatten (array/map (default (as (object/get @h "node") VstrNodes) @noe) (fn it (let ((io (as @it VsObj))) (if (!= @io null) (let ((em (as (object/get @io "emit" null) VsObj))) (if (!= @em null) (array/filter (array/map (object/values @em) (fn q (default (as @q VsStr) ""))) (fn q (!= @q ""))) @nos)) @nos)))))))))
+          (lis (array/flatten (array/map @inl (fn t (object/get @t "listens" @noli))))))
+      (let ((fired (array/flatten (array/map @inl (fn t (array/concat (object/get @entity.byControl (object/get @t "name" "") @nos) (object/get @entity.byEffect (object/get @t "name" "") @nos))))))
+            (ems (array/map (array/flatten (array/map @inl (fn t (object/get @t "emits" @noem)))) (fn x (object/get @x "event" "")))))
+        (let ((aff0 (array/unique (array/filter (array/concat @fired @ems (array/map @lis (fn l (object/get @l "event" "")))) (fn e (and (!= @e "") (not (array/includes @asy @e)) (not (array/includes @entity.busExcluded @e))))))))
+          [(str/concat @oi ""), { aff: (array/reduce (array/range 0 (+ (array/len @lis) 1)) @aff0 (fn (a r) (array/unique (array/concat @a (array/map (array/filter @lis (fn l (and (array/includes @a (object/get @l "event" "")) (validate/string (object/get @l "triggers" null))))) (fn l (object/get @l "triggers"))))))),
+            prod: (array/unique (array/concat @asy @fired @ems (array/map (array/filter @lis (fn l (validate/string (object/get @l "triggers" null)))) (fn l (object/get @l "triggers"))))) }]))))))) {}))) (array/flatten (array/map (array/filter @entity.owners (fn w (array/includes ["channel", "sole"] (object/get @w "kind")))) (fn w
+  (let ((oi (object/get @w "orbital" 0)) (on (default (array/first (object/get @w "names" @nos)) "")))
+    (let ((o (default (array/nth @orbs @oi) @noorb)))
+      (let ((trs (object/get @o "traits" @notraits)))
+        (let ((ti (array/findIndex @trs (fn t (and (object/has @t "stateMachine") (= (object/get @t "name" "") @on))))))
+          (if (< @ti 0) @nof
+            (let ((t (default (array/nth @trs @ti) @notrait)) (fa (object/get @affs (str/concat @oi "") @noaff)))
+              (let ((trans (object/get @t "stateMachine.transitions" @notrs)))
+                (let ((hits (array/map (array/range 0 (array/len @trans)) (fn k
+                    (let ((arm (default (array/nth @trans @k) @notrans)))
+                      (let ((ev (object/get @arm "event" "")) (effs (object/get @arm "effects" @noe)) (fr (object/get @arm "from" "")) (to (object/get @arm "to" "")))
+                        (if (or (array/includes @entity.busExcluded @ev) (not (array/includes (object/get @fa "aff" @nos) @ev))) false
+                          (if (array/some @effs (fn x (and (validate/array @x) (array/includes ["fetch", "persist"] (array/nth @x 0))))) false
+                            (if (and (not (and (validate/string @fr) (= @fr @to)))
+                                     (array/some @trans (fn q (and (!= (object/get @q "event" "") @ev) (not (array/includes @entity.busExcluded (object/get @q "event" ""))) (array/includes (object/get @fa "prod" @nos) (object/get @q "event" ""))
+                                                                   (let ((qf (object/get @q "from" ""))) (if (validate/string @qf) (= @qf @to) (array/includes @qf @to)))))))
+                              false
+                              (array/some (array/range 0 (array/len @units)) (fn ui
+                                (let ((u (default (array/nth @units @ui) @nou1)))
+                                  (and (= (object/get @u "oi") @oi) (= (object/get @u "ti") @ti) (= (object/get @u "src") "t") (= (object/get @u "li") @k)
+                                       (not (default (array/nth (object/get @wayOn "uw" @nob) @ui) false)))))))))))))))
+                  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn k
+                    (let ((ev (object/get (default (array/nth @trans @k) @notrans) "event" "")))
+                      (if (and (default (array/nth @hits @k) false) (not (array/some (array/range 0 @k) (fn j (and (default (array/nth @hits @j) false) (= (object/get (default (array/nth @trans @j) @notrans) "event" "") @ev))))))
+                        [{ code: @config.codes.circuitViewerStranded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" @on ")].stateMachine.transitions[" @k "]"), message: (str/concat "'" @on "' owns this page's content region, and '" @ev "' repaints it with a body that carries no data surface, no wired control and no sibling embed — the screen the viewer came from is gone and there is nothing to click"), suggestion: "render this OVER the page instead of replacing it: move the body into a dedicated overlay trait writing only 'modal' (a modal-close arm rendered from the trait that owns 'main' is rejected by CIRCUIT_MODAL_EXIT_INCOMPLETE, which is why it needs its own trait), or give the arm a wired control back to the state it came from", severity: "error" }]
+                        @nof))))))))))))))))))))))))))))
+        (set @entity.haveFired false)
+        (set @entity.haveOwners false)
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "viewer-stranded", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_COMPUTE { }
+        @description "Internal: the program, the fired events and the page owners are in, compute the findings."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      codes : LintViewerStrandedCodes = { circuitViewerStranded: { code: "ORB_CIRCUIT_VIEWER_STRANDED", category: "circuit", description: "A page's content owner repaints its region on a user-triggered event with a body that offers no way on" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+      mainSlots : [string] = ["main", "content", "screen"]
+        @label "Main slots"
+        @description "The inline content slots a state paints."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : VsProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      PATTERNS_HEARD { patterns : Map string VsPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry's props, each with its kind."
+      PROPS_HEARD { byPattern : [VsByPattern]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event props per pattern, an event-list prop with its eventField."
+      SEMANTICS_HEARD { busExcluded : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      OWNERS_HEARD { scope : string!  owners : [VsOwner]! }
+        @description "std-orb-lint-page-content-owner's PAGE_OWNERS: the content owner of each page."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_PATTERNS -> PATTERNS_HEARD
+      OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbLintPageContentOwner.PAGE_OWNERS -> OWNERS_HEARD
+    }
+  }
+
+  trait OrbLintViewerStrandedCli -> OrbLintViewerStrandedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint viewer-stranded <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "viewer-stranded") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint viewer-stranded: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "viewer-stranded") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint viewer-stranded: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-viewer-stranded" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint viewer-stranded` with its arguments and working directory."
+        @synonyms "orb lint viewer-stranded"
+      OrbLintViewerStranded.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      FIRED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : VsProgram!  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> FIRED_WALK_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait OrbLintPageContentOwner = Owner.traits.OrbLintPageContentOwner {
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintViewerStrandedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintViewerStrandedOrbitalStart -> OrbLintViewerStranded, OrbLintViewerStrandedCli, OrbLintInput, OrbFiredEvents, OrbLintPageContentOwner, Packs, Versions
+}

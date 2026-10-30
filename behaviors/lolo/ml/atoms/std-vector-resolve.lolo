@@ -1,7 +1,7 @@
 app std-vector-resolve [
   version: "1.0.0",
   description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, userAnchor, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
-  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
   fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
@@ -12,6 +12,8 @@ uses Write from "std/behaviors/std-vector-write"
 uses Quantize from "std/behaviors/std-vector-quantize"
 uses F32 from "std/behaviors/std-f32"
 uses Delay from "std/behaviors/std-delay"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 uses Sig6 from "std/behaviors/std-sig6"
 uses BigCmp from "std/behaviors/std-bigcmp"
 
@@ -106,13 +108,15 @@ orbital VectorResolveOrbital {
     }
     config {
       embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
       embedBasePath: "/api/v1"
       embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
     }
     listens {
       VectorResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+      ResolveOrSharedWait.WAITED_ORS -> LLM_EMBED_WAITED
+      ResolveOrSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
 
@@ -122,13 +126,15 @@ orbital VectorResolveOrbital {
     }
     config {
       embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
       embedBasePath: "/api/v1"
       embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPEN_ROUTER_API_KEY"
     }
     listens {
       VectorResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+      ResolveOrOwnWait.WAITED_ORO -> LLM_EMBED_WAITED
+      ResolveOrOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
 
@@ -138,13 +144,15 @@ orbital VectorResolveOrbital {
     }
     config {
       embedProvider: openai
-      embedOrigin: "https://api.openai.com"
       embedBasePath: "/v1"
       embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
     }
     listens {
       VectorResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+      ResolveOaSharedWait.WAITED_OAS -> LLM_EMBED_WAITED
+      ResolveOaSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
 
@@ -154,13 +162,15 @@ orbital VectorResolveOrbital {
     }
     config {
       embedProvider: openai
-      embedOrigin: "https://api.openai.com"
       embedBasePath: "/v1"
       embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPENAI_API_KEY"
     }
     listens {
       VectorResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+      ResolveOaOwnWait.WAITED_OAO -> LLM_EMBED_WAITED
+      ResolveOaOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
 
@@ -170,13 +180,187 @@ orbital VectorResolveOrbital {
     }
     config {
       embedProvider: lmstudio
-      embedOrigin: "http://127.0.0.1:1234"
       embedBasePath: "/v1"
       embedModel: "text-embedding-bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
     }
     listens {
       VectorResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+      ResolveLmWait.WAITED_LM -> LLM_EMBED_WAITED
+      ResolveLmRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+
+  trait ResolveOrSharedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_ORS
+    }
+    listens {
+      ResolveLlmOrShared.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveOrSharedRequest = Req.traits.HttpRequest {
+    listens {
+      ResolveLlmOrShared.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmOrShared.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveOrSharedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveOrSharedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOrSharedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ResolveOrSharedRequest.HTTP_SEND -> HTTP_SEND
+      ResolveOrSharedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait ResolveOrOwnWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_ORO
+    }
+    listens {
+      ResolveLlmOrOwn.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveOrOwnRequest = Req.traits.HttpRequest {
+    listens {
+      ResolveLlmOrOwn.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmOrOwn.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveOrOwnHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveOrOwnHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOrOwnHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "OPEN_ROUTER_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ResolveOrOwnRequest.HTTP_SEND -> HTTP_SEND
+      ResolveOrOwnRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait ResolveOaSharedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_OAS
+    }
+    listens {
+      ResolveLlmOaShared.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveOaSharedRequest = Req.traits.HttpRequest {
+    listens {
+      ResolveLlmOaShared.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmOaShared.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveOaSharedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveOaSharedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOaSharedHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ResolveOaSharedRequest.HTTP_SEND -> HTTP_SEND
+      ResolveOaSharedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait ResolveOaOwnWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_OAO
+    }
+    listens {
+      ResolveLlmOaOwn.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveOaOwnRequest = Req.traits.HttpRequest {
+    listens {
+      ResolveLlmOaOwn.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmOaOwn.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveOaOwnHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveOaOwnHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOaOwnHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ResolveOaOwnRequest.HTTP_SEND -> HTTP_SEND
+      ResolveOaOwnRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait ResolveLmWait = Delay.traits.Delay {
+    events {
+      ELAPSED: WAITED_LM
+    }
+    listens {
+      ResolveLlmLm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait ResolveLmRequest = Req.traits.HttpRequest {
+    listens {
+      ResolveLlmLm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      ResolveLlmLm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ResolveLmHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ResolveLmHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveLmHttp = Http.traits.HttpClient {
+    config {
+      host: "127.0.0.1"
+      port: 1234
+      tls: false
+      serverName: "127.0.0.1"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+      credentialOptional: true
+    }
+    listens {
+      ResolveLmRequest.HTTP_SEND -> HTTP_SEND
+      ResolveLmRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -398,5 +582,5 @@ orbital VectorResolveOrbital {
     }
   }
 
-  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm
+  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
 }

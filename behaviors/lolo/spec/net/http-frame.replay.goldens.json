@@ -1,0 +1,414 @@
+{
+ "atom": "net/atoms/std-http-frame.lolo",
+ "trait": "HttpFrame",
+ "spec": "spec/net/http-frame.lolo",
+ "note": "parity oracle: the retired drivers/http_request stream framing, carried by the http-client twin cases (event stream, json lines, non-UTF-8, multibyte) before the framer was extracted",
+ "cases": [
+  {
+   "id": "an-event-stream-delivers-each-complete-block-and-skips-comments",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTogb25lCgpldmVudDogcGluZwppZDogNwpkYXRhOiB0d28KZGF0YTogbGluZXMKCjogY29tbWVudAoK",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "one"
+        }
+       },
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "two\nlines",
+         "event": "ping",
+         "id": "7"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ],
+      "emitCounts": {
+       "FRAME_EVENT": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unterminated-event-block-is-drained-until-final-closes-it",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTogdGFpbA==",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": "ZGF0YTogdGFpbA=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTogdGFpbA==",
+      "final": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "tail"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-final-on-an-empty-rest-delivers-nothing",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "",
+      "final": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-crlf-block-and-an-lf-block-are-both-cut",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTogYQ0KDQpkYXRhOiBiCgo=",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "a"
+        }
+       },
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "b"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ],
+      "emitCounts": {
+       "FRAME_EVENT": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-multibyte-sse-block-is-delivered",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTogaMOpbGxvDQoNCg==",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "h\u00e9llo"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-sse-block-that-is-not-utf-8-fails-encoding",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZGF0YTog/woK",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "encoding"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_DRAINED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-block-without-a-data-line-delivers-nothing",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "sse",
+      "data": "ZXZlbnQ6IHBpbmcKCg==",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "json-lines-deliver-each-complete-line-and-drain-the-cut-one",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "jsonl",
+      "data": "eyJhIjoxfQp7ImIiOjJ9CnsiYyI6",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "{\"a\":1}"
+        }
+       },
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "{\"b\":2}"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": "eyJjIjo="
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ],
+      "emitCounts": {
+       "FRAME_EVENT": 2
+      }
+     }
+    },
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "jsonl",
+      "data": "eyJjIjozfQ==",
+      "final": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "{\"c\":3}"
+        }
+       },
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-json-line-delivers-nothing",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "jsonl",
+      "data": "Cg==",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_DRAINED",
+        "payload": {
+         "key": "k1",
+         "rest": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-jsonl-line-that-is-not-utf-8-fails-encoding",
+   "steps": [
+    {
+     "event": "FRAME_RUN",
+     "payload": {
+      "key": "k1",
+      "stream": "jsonl",
+      "data": "/wo=",
+      "final": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FRAME_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "encoding"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FRAME_EVENT",
+       "FRAME_DRAINED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

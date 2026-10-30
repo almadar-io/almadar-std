@@ -850,6 +850,218 @@
       ]
     },
     {
+      "id": "the-origin-of-the-transport-that-serves-the-pack-loader-is-exempt",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Board",
+                  "uses": [
+                    {
+                      "from": "std/behaviors/std-asset-pack",
+                      "as": "Pack"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "AssetPack",
+                      "ref": "Pack.traits.AssetPackLoader",
+                      "config": {
+                        "origin": {
+                          "type": "unknown",
+                          "default": "https://almadar-kflow-assets.web.app"
+                        },
+                        "assetPack": {
+                          "type": "unknown",
+                          "default": "kflow/x"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Render",
+                      "config": {
+                        "sprite": {
+                          "type": "string",
+                          "default": "features/marker"
+                        }
+                      }
+                    },
+                    {
+                      "name": "PackFetch",
+                      "config": {
+                        "origin": {
+                          "type": "unknown",
+                          "default": "https://almadar-kflow-assets.web.app"
+                        }
+                      },
+                      "listens": [
+                        {
+                          "event": "PACK_HTTP_SEND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "AssetPack",
+                            "traitId": "t"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "E"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "asset-inline-url",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-origin-of-a-trait-serving-no-pack-loader-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Board",
+                  "uses": [
+                    {
+                      "from": "std/behaviors/std-asset-pack",
+                      "as": "Pack"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "AssetPack",
+                      "ref": "Pack.traits.AssetPackLoader",
+                      "config": {
+                        "origin": {
+                          "type": "unknown",
+                          "default": "https://almadar-kflow-assets.web.app"
+                        },
+                        "assetPack": {
+                          "type": "unknown",
+                          "default": "kflow/x"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Render",
+                      "config": {
+                        "sprite": {
+                          "type": "string",
+                          "default": "features/marker"
+                        }
+                      }
+                    },
+                    {
+                      "name": "PackFetch",
+                      "config": {
+                        "origin": {
+                          "type": "unknown",
+                          "default": "https://almadar-kflow-assets.web.app"
+                        }
+                      },
+                      "listens": [
+                        {
+                          "event": "PACK_HTTP_SEND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Render",
+                            "traitId": "t"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": {
+                    "name": "E"
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "asset-inline-url",
+                  "findings": [
+                    {
+                      "code": "ORB_ASSET_INLINE_URL",
+                      "path": "orbitals[0 (Board)].traits[2 (PackFetch)].config.origin.default",
+                      "message": "Orbital 'Board' composes std-asset-pack but carries the literal asset url 'https://almadar-kflow-assets.web.app'",
+                      "suggestion": "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "control-key-defaults",
       "steps": [
         {

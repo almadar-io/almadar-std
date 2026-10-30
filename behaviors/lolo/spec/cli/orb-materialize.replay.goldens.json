@@ -1,0 +1,482 @@
+{
+ "atom": "cli/atoms/std-orb-materialize.lolo",
+ "trait": "MaterializeEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with no flags",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "ready",
+     "event": "MATERIALIZE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"reg/x\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ARGS_PARSE",
+        "payload": {
+         "stage": "materialize",
+         "argv": [
+          "reg/x"
+         ],
+         "flags": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one path is the mirror's destination",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "MATERIALIZE_START",
+        "payload": {
+         "out": "reg/x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no path is the usage",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: expected <OUT>\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "MATERIALIZE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two paths are the usage",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: expected <OUT>\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "MATERIALIZE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [
+       "unknown flag: --x"
+      ],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: unknown flag: --x\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "MATERIALIZE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable command body answers 500",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "ready",
+     "event": "MATERIALIZE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "not json"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb materialize: the command arguments could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the engine makes OUT first",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "idle",
+     "event": "MATERIALIZE_START",
+     "payload": {
+      "out": "reg/x"
+     },
+     "expect": {
+      "state": "mkdir"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unchanged source with its output present is recorded without being written",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_EXISTS",
+     "payload": {
+      "ok": true
+     },
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "MAT_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo"
+    ],
+    "cursor": 0,
+    "rel": "a.lolo",
+    "sha": "h1",
+    "known": "h1",
+    "curKeys": [],
+    "curEntries": []
+   }
+  },
+  {
+   "id": "control: a changed source is written",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_EXISTS",
+     "payload": {
+      "ok": true
+     },
+     "expect": {
+      "state": "scanning",
+      "neverEmits": [
+       "MAT_NEXT"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo"
+    ],
+    "cursor": 0,
+    "rel": "a.lolo",
+    "out": "reg/x",
+    "dest": "reg/x/a.orb",
+    "sha": "h2",
+    "known": "h1",
+    "curKeys": [],
+    "curEntries": []
+   }
+  },
+  {
+   "id": "control: a missing output is written even when the hash is known",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_EXISTS",
+     "payload": {
+      "ok": false
+     },
+     "expect": {
+      "state": "scanning",
+      "neverEmits": [
+       "MAT_NEXT"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo"
+    ],
+    "cursor": 0,
+    "rel": "a.lolo",
+    "out": "reg/x",
+    "dest": "reg/x/a.orb",
+    "sha": "h1",
+    "known": "h1",
+    "curKeys": [],
+    "curEntries": []
+   }
+  },
+  {
+   "id": "a written source is recorded and the next is taken",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_WRITTEN",
+     "payload": {},
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "MAT_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo",
+     "b.lolo"
+    ],
+    "cursor": 0,
+    "rel": "a.lolo",
+    "sha": "h1",
+    "curKeys": [],
+    "curEntries": []
+   }
+  },
+  {
+   "id": "past the last source the outputs of vanished sources are pruned",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "pruning",
+      "emits": [
+       {
+        "event": "MAT_PRUNE_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo"
+    ],
+    "cursor": 1,
+    "prevKeys": [
+     "a.lolo",
+     "gone.lolo"
+    ],
+    "curKeys": [
+     "a.lolo"
+    ]
+   }
+  },
+  {
+   "id": "control: before the last source nothing is pruned",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "scanning",
+      "neverEmits": [
+       "MAT_PRUNE_NEXT"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "items": [
+     "a.lolo",
+     "b.lolo"
+    ],
+    "cursor": 0,
+    "out": "reg/x"
+   }
+  },
+  {
+   "id": "past the last pruned output the hashes are saved",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "pruning",
+     "event": "MAT_PRUNE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "saving"
+     }
+    }
+   ],
+   "entity": {
+    "out": "reg/x",
+    "stale": [
+     "gone.lolo"
+    ],
+    "cursor": 1,
+    "curEntries": [
+     [
+      "a.lolo",
+      "h1"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "a saved mirror answers its directory",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "saving",
+     "event": "MAT_SAVED",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "reg/x\n"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "out": "reg/x"
+   }
+  },
+  {
+   "id": "control: a source that does not lower answers 500 naming it",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "scanning",
+     "event": "MAT_UNLOWERED",
+     "payload": {
+      "error": "unexpected token"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "rel": "bad.lolo"
+   }
+  }
+ ]
+}

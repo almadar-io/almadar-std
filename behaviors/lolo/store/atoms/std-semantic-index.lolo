@@ -1,7 +1,7 @@
 app std-semantic-index [
   version: "1.0.0",
   description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds texts and answers every pair at or above the pair floor. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
-  egress: ["http://127.0.0.1:1234", "https://openrouter.ai", "https://api.openai.com"]
+  net: { "127.0.0.1:1234": [tcp] }
 ]
 
 type SemanticItem = { id : string!, graphId : string, nodeType : string!, name : string, texts : Map string string, numbers : Map string number, lists : Map string [string] }
@@ -19,6 +19,9 @@ type SemanticStrings = [string]
 type SemanticRowShape = { id : string!, graphId : string, nodeId : string, nodeType : string, name : string, embedding : [number], embeddedText : string, embeddingModel : string }
 
 uses Llm from "std/behaviors/std-llm"
+uses Delay from "std/behaviors/std-delay"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 
 orbital SemanticIndexOrbital {
   config {
@@ -26,11 +29,6 @@ orbital SemanticIndexOrbital {
       @label "Embedding provider"
       @description "The embeddings provider the composed std-llm uses; lmstudio is keyless and local, production sets openrouter."
       @synonyms "embedding vendor"
-      @tier "infra"
-    embedOrigin : url = "http://127.0.0.1:1234"
-      @label "Embeddings origin"
-      @description "The embeddings API origin (scheme://host, no path); it must be declared in the app egress list."
-      @synonyms "embedding host"
       @tier "infra"
     embedBasePath : string = "/v1"
       @label "Embeddings base path"
@@ -94,12 +92,50 @@ orbital SemanticIndexOrbital {
   trait SemanticIndexLlm = Llm.traits.LlmClient {
     config {
       embedProvider: @config.embedProvider
-      embedOrigin: @config.embedOrigin
       embedBasePath: @config.embedBasePath
       embedModel: @config.embedModel
     }
     listens {
       SemanticIndex.LLM_EMBED -> LLM_EMBED
+      SemIdxEmbedWait.SEMIDX_EMBED_WAITED -> LLM_EMBED_WAITED
+      SemIdxEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      SemIdxEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      SemIdxEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait SemIdxEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: SEMIDX_EMBED_WAITED
+    }
+    listens {
+      SemanticIndexLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait SemIdxEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      SemanticIndexLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      SemanticIndexLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      SemIdxEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      SemIdxEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait SemIdxEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "127.0.0.1"
+      port: 1234
+      tls: false
+      serverName: "127.0.0.1"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+      credentialOptional: true
+    }
+    listens {
+      SemIdxEmbedRequest.HTTP_SEND -> HTTP_SEND
+      SemIdxEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -526,5 +562,5 @@ orbital SemanticIndexOrbital {
     }
   }
 
-  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm
+  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm, SemIdxEmbedWait, SemIdxEmbedRequest, SemIdxEmbedHttp
 }

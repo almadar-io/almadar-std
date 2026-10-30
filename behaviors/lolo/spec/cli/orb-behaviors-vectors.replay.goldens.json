@@ -4,474 +4,6 @@
  "note": "The vector flows of `orb behaviors catalog|describe --knob-vectors|texts`: the host answers (behavior/catalog with texts, behavior/packages, behavior/describe, behavior/source) and the composed std traits' answers (text builder, sources, resolver) are fed as events. Cases are built from the retired orbital-cli behaviors_catalog.rs (catalog_with, describe_with) and behaviors_texts.rs (texts) and the Rust cases of tests/behaviors_catalog.rs, which also drive the real command end to end.",
  "cases": [
   {
-   "id": "catalog with vectors: the facts go to the text builder",
-   "entity": {
-    "sub": "catalog"
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "CATALOG_FACTS",
-     "payload": {
-      "result": [
-       {
-        "behavior": "alpha/alpha-card",
-        "package": "alpha",
-        "topic": "ui/core",
-        "level": "atom",
-        "description": "A card.",
-        "capabilities": [
-         "display"
-        ],
-        "traits": [],
-        "value": {
-         "behavior": "alpha/alpha-card"
-        },
-        "vectors": {},
-        "model": "",
-        "name": "alpha-card",
-        "rank": 0,
-        "textOrder": 0,
-        "defaultEntityName": "Card",
-        "connectableEvents": [
-         "OPEN"
-        ],
-        "capabilitiesText": "display"
-       },
-       {
-        "behavior": "beta/beta-card",
-        "package": "beta",
-        "topic": "ui/core",
-        "level": "atom",
-        "description": "A card.",
-        "capabilities": [
-         "display"
-        ],
-        "traits": [],
-        "value": {
-         "behavior": "beta/beta-card"
-        },
-        "vectors": {},
-        "model": "",
-        "name": "beta-card",
-        "rank": 0,
-        "textOrder": 0,
-        "defaultEntityName": "Card",
-        "connectableEvents": [
-         "OPEN"
-        ],
-        "capabilitiesText": "display"
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "BV_ENTRY_TEXTS",
-        "payload": {
-         "rows": [
-          {
-           "behavior": "alpha/alpha-card",
-           "package": "alpha",
-           "topic": "ui/core",
-           "level": "atom",
-           "description": "A card.",
-           "capabilities": [
-            "display"
-           ],
-           "traits": [],
-           "value": {
-            "behavior": "alpha/alpha-card"
-           },
-           "vectors": {},
-           "model": "",
-           "name": "alpha-card",
-           "rank": 0,
-           "textOrder": 0,
-           "defaultEntityName": "Card",
-           "connectableEvents": [
-            "OPEN"
-           ],
-           "capabilitiesText": "display"
-          },
-          {
-           "behavior": "beta/beta-card",
-           "package": "beta",
-           "topic": "ui/core",
-           "level": "atom",
-           "description": "A card.",
-           "capabilities": [
-            "display"
-           ],
-           "traits": [],
-           "value": {
-            "behavior": "beta/beta-card"
-           },
-           "vectors": {},
-           "model": "",
-           "name": "beta-card",
-           "rank": 0,
-           "textOrder": 0,
-           "defaultEntityName": "Card",
-           "connectableEvents": [
-            "OPEN"
-           ],
-           "capabilitiesText": "display"
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "catalog with vectors: only the packages the listing came from, and only those that declare a snapshot, are read",
-   "entity": {
-    "sub": "catalog",
-    "rows": [
-     {
-      "behavior": "alpha/alpha-card",
-      "package": "alpha",
-      "topic": "ui/core",
-      "level": "atom",
-      "description": "A card.",
-      "capabilities": [
-       "display"
-      ],
-      "traits": [],
-      "value": {
-       "behavior": "alpha/alpha-card"
-      },
-      "vectors": {},
-      "model": "",
-      "name": "alpha-card",
-      "rank": 0,
-      "textOrder": 0,
-      "defaultEntityName": "Card",
-      "connectableEvents": [
-       "OPEN"
-      ],
-      "capabilitiesText": "display"
-     },
-     {
-      "behavior": "beta/beta-card",
-      "package": "beta",
-      "topic": "ui/core",
-      "level": "atom",
-      "description": "A card.",
-      "capabilities": [
-       "display"
-      ],
-      "traits": [],
-      "value": {
-       "behavior": "beta/beta-card"
-      },
-      "vectors": {},
-      "model": "",
-      "name": "beta-card",
-      "rank": 0,
-      "textOrder": 0,
-      "defaultEntityName": "Card",
-      "connectableEvents": [
-       "OPEN"
-      ],
-      "capabilitiesText": "display"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "PACKAGES_LISTED",
-     "payload": {
-      "result": [
-       {
-        "root": "/p/alpha",
-        "prefix": "alpha",
-        "vectors": "/p/alpha/dist/vectors.vec"
-       },
-       {
-        "root": "/p/beta",
-        "prefix": "beta"
-       },
-       {
-        "root": "/p/gamma",
-        "prefix": "gamma",
-        "vectors": "/p/gamma/dist/vectors.vec"
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "BV_SOURCES",
-        "payload": {
-         "paths": [
-          "/p/alpha/dist/vectors.vec"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the sources and the wanted texts go to the resolver",
-   "entity": {
-    "sub": "catalog",
-    "wanted": [
-     {
-      "key": "alpha/alpha-card",
-      "text": "t1"
-     },
-     {
-      "key": "alpha/alpha-card#capabilities",
-      "text": "t2"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "SOURCES_READY",
-     "payload": {
-      "snapshots": [
-       "AAAA"
-      ],
-      "snapshotPaths": [
-       "/p/alpha/dist/vectors.vec"
-      ],
-      "userDir": "/u",
-      "userAnchor": "home",
-      "providerModel": "",
-      "providerKind": "",
-      "embedModel": ""
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "BV_RESOLVE",
-        "payload": {
-         "wanted": [
-          {
-           "key": "alpha/alpha-card",
-           "text": "t1"
-          },
-          {
-           "key": "alpha/alpha-card#capabilities",
-           "text": "t2"
-          }
-         ],
-         "snapshots": [
-          "AAAA"
-         ],
-         "snapshotPaths": [
-          "/p/alpha/dist/vectors.vec"
-         ],
-         "userDir": "/u",
-         "userAnchor": "home",
-         "providerModel": "",
-         "providerKind": "",
-         "embedModel": ""
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the resolved vectors are attached under description and capabilities with the model, the text-builder facts dropped",
-   "entity": {
-    "sub": "catalog",
-    "rows": [
-     {
-      "behavior": "alpha/alpha-card",
-      "package": "alpha",
-      "topic": "ui/core",
-      "level": "atom",
-      "description": "A card.",
-      "capabilities": [
-       "display"
-      ],
-      "traits": [],
-      "value": {
-       "behavior": "alpha/alpha-card"
-      },
-      "vectors": {},
-      "model": "",
-      "name": "alpha-card",
-      "rank": 0,
-      "textOrder": 0,
-      "defaultEntityName": "Card",
-      "connectableEvents": [
-       "OPEN"
-      ],
-      "capabilitiesText": "display"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "VECTORS_ANSWERED",
-     "payload": {
-      "model": "m1",
-      "vectors": [
-       {
-        "key": "alpha/alpha-card",
-        "vector": [
-         1,
-         2
-        ]
-       },
-       {
-        "key": "alpha/alpha-card#capabilities",
-        "vector": [
-         3
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "CATALOG_ATTACHED",
-        "payload": {
-         "result": [
-          {
-           "behavior": "alpha/alpha-card",
-           "package": "alpha",
-           "topic": "ui/core",
-           "level": "atom",
-           "description": "A card.",
-           "capabilities": [
-            "display"
-           ],
-           "traits": [],
-           "value": {
-            "behavior": "alpha/alpha-card"
-           },
-           "vectors": {
-            "description": [
-             1,
-             2
-            ],
-            "capabilities": [
-             3
-            ]
-           },
-           "model": "m1"
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a behavior with no stored capability vector carries only its description vector",
-   "entity": {
-    "sub": "catalog",
-    "rows": [
-     {
-      "behavior": "alpha/alpha-card",
-      "package": "alpha",
-      "topic": "ui/core",
-      "level": "atom",
-      "description": "A card.",
-      "capabilities": [
-       "display"
-      ],
-      "traits": [],
-      "value": {
-       "behavior": "alpha/alpha-card"
-      },
-      "vectors": {},
-      "model": "",
-      "name": "alpha-card",
-      "rank": 0,
-      "textOrder": 0,
-      "defaultEntityName": "Card",
-      "connectableEvents": [
-       "OPEN"
-      ],
-      "capabilitiesText": "display"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "VECTORS_ANSWERED",
-     "payload": {
-      "model": "m1",
-      "vectors": [
-       {
-        "key": "alpha/alpha-card",
-        "vector": [
-         1,
-         2
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "CATALOG_ATTACHED",
-        "payload": {
-         "result": [
-          {
-           "behavior": "alpha/alpha-card",
-           "package": "alpha",
-           "topic": "ui/core",
-           "level": "atom",
-           "description": "A card.",
-           "capabilities": [
-            "display"
-           ],
-           "traits": [],
-           "value": {
-            "behavior": "alpha/alpha-card"
-           },
-           "vectors": {
-            "description": [
-             1,
-             2
-            ]
-           },
-           "model": "m1"
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "attached entries print as pretty JSON",
    "entity": {
     "sub": "catalog",
@@ -511,68 +43,6 @@
         "payload": {
          "status": 200,
          "body": "[\n  {\n    \"behavior\": \"alpha/alpha-card\",\n    \"package\": \"alpha\",\n    \"topic\": \"ui/core\",\n    \"level\": \"atom\",\n    \"description\": \"A card.\",\n    \"capabilities\": [\n      \"display\"\n    ],\n    \"traits\": [],\n    \"value\": {\n      \"behavior\": \"alpha/alpha-card\"\n    },\n    \"vectors\": {},\n    \"model\": \"m1\"\n  }\n]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a refused resolve answers its code and detail on stderr (500)",
-   "entity": {
-    "sub": "catalog"
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "VECTORS_REFUSED",
-     "payload": {
-      "code": "ORB_VECTOR_MODEL_MISMATCH",
-      "detail": "m1 vs m2"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "BEHAVIORS_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "ORB_VECTOR_MODEL_MISMATCH: m1 vs m2"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an unreadable source answers its code and detail on stderr (500)",
-   "entity": {
-    "sub": "catalog"
-   },
-   "steps": [
-    {
-     "trait": "OrbBehaviors",
-     "from": "working",
-     "event": "SOURCES_REFUSED",
-     "payload": {
-      "code": "ORB_VECTOR_IO",
-      "detail": "/p/x.vec: denied"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "BEHAVIORS_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "ORB_VECTOR_IO: /p/x.vec: denied"
         }
        }
       ]
@@ -1248,6 +718,216 @@
          "stderr": "describe -: --knob-vectors is not carried for a value read from stdin"
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog with vectors is asked of std-catalog-vectors, the one owner, with the scope, the exposure and the trait flag",
+   "entity": {
+    "sub": "catalog",
+    "paths": [
+     "alpha"
+    ],
+    "exposure": [],
+    "topics": false,
+    "noVectors": false,
+    "noTraits": false
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_CATALOG",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_CATALOG_VECTORS",
+        "payload": {
+         "paths": [
+          "alpha"
+         ],
+         "exposure": [],
+         "traits": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "BV_ENTRY_TEXTS",
+       "BV_SOURCES",
+       "BV_RESOLVE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: --no-traits is carried to the one owner",
+   "entity": {
+    "sub": "catalog",
+    "paths": [
+     "alpha"
+    ],
+    "exposure": [],
+    "topics": false,
+    "noVectors": false,
+    "noTraits": true
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_CATALOG",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "BV_CATALOG_VECTORS",
+        "payload": {
+         "paths": [
+          "alpha"
+         ],
+         "exposure": [],
+         "traits": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the rows std-catalog-vectors answers are attached with the model",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_VECTORS_ROWS",
+     "payload": {
+      "rows": [
+       {
+        "behavior": "alpha/alpha-card",
+        "package": "alpha",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "A card.",
+        "capabilities": [
+         "display"
+        ],
+        "traits": [],
+        "value": {
+         "behavior": "alpha/alpha-card"
+        },
+        "vectors": {
+         "description": [
+          1,
+          2
+         ],
+         "capabilities": [
+          3
+         ]
+        }
+       }
+      ],
+      "model": "m1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "CATALOG_ATTACHED",
+        "payload": {
+         "result": [
+          {
+           "behavior": "alpha/alpha-card",
+           "package": "alpha",
+           "topic": "ui/core",
+           "level": "atom",
+           "description": "A card.",
+           "capabilities": [
+            "display"
+           ],
+           "traits": [],
+           "value": {
+            "behavior": "alpha/alpha-card"
+           },
+           "vectors": {
+            "description": [
+             1,
+             2
+            ],
+            "capabilities": [
+             3
+            ]
+           },
+           "model": "m1"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refusal of std-catalog-vectors answers its code and detail on stderr (500)",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_VECTORS_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_MODEL_MISMATCH",
+      "detail": "m1 vs m2"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "ORB_VECTOR_MODEL_MISMATCH: m1 vs m2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the resolver's refusal during a catalog is not answered a second time",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "VECTORS_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_MODEL_MISMATCH",
+      "detail": "m1 vs m2"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "BEHAVIORS_ANSWERED"
       ]
      }
     }

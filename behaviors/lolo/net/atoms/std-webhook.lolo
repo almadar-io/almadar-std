@@ -1,6 +1,6 @@
 app std-webhook [
   version: "1.0.0",
-  description: "std-webhook — a signed outbound webhook POST. WEBHOOK_SEND carries the destination url, the event name, the payload as JSON text and an optional per-call signing secret; the atom posts {event, payload, timestamp} as JSON with X-Almadar-Event, signed X-Almadar-Signature: sha256=<hex HMAC-SHA256 of the exact body> when a per-call secret is given. Without one, the signingSecret credential signs the body the same way when `signed` is on. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. Apps declare every destination origin in their own egress list; the entry in this file is a placeholder, and a send to an undeclared origin is refused at send time by the kernel and answers WEBHOOK_FAILED (the atom does not check origins itself).",
+  description: "std-webhook — a signed outbound webhook POST. WEBHOOK_SEND carries the destination url, the event name and the payload as JSON text; the atom posts {event, payload, timestamp} as JSON with X-Almadar-Event, and when `signed` is on the signingSecret credential signs the exact body as X-Almadar-Signature: sha256=<hex HMAC-SHA256>. A signing secret is never a send value: only the credential's name is configured. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. Apps declare every destination origin in their own egress list; the entry in this file is a placeholder, and a send to an undeclared origin is refused at send time by the kernel and answers WEBHOOK_FAILED (the atom does not check origins itself).",
   egress: ["https://hooks.example.test"]
 ]
 orbital WebhookOrbital {
@@ -13,7 +13,6 @@ orbital WebhookOrbital {
     url : string @description "The destination URL of the send in flight." = ""
     event : string @description "The event name of the send in flight." = ""
     payload : string @description "The payload of the send in flight, as JSON text." = "{}"
-    secret : string @description "The per-call signing secret of the send in flight; empty when none." = ""
     attempts : number @description "Attempts made for the send in flight." = 0
     lastError : string @description "The latest attempt's error message." = ""
     startedAt : number @description "Epoch milliseconds at which the latest attempt was sent." = 0
@@ -45,7 +44,6 @@ orbital WebhookOrbital {
         (set @entity.url @payload.url)
         (set @entity.event @payload.event)
         (set @entity.payload (json/stringify @payload.payload))
-        (set @entity.secret (default @payload.secret ""))
         (set @entity.attempts 0)
         (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey) })
       WEBHOOK_SEND -> idle when (not (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")))
@@ -55,16 +53,7 @@ orbital WebhookOrbital {
     state sending {
       INIT -> idle
 
-      WEBHOOK_ATTEMPT -> sending when (!= @entity.secret "")
-        (set @entity.startedAt @now)
-        (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
-          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
-            headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event, X-Almadar-Signature: (str/concat "sha256=" (hmac/sha256 @entity.secret @body "hex")) },
-            text: @body,
-            timeoutMs: @config.timeoutMs
-          } { key: @entity.key, emit: { success: WEBHOOK_REPLIED, failure: WEBHOOK_UNREACHABLE } }))
-      WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") @config.signed)
+      WEBHOOK_ATTEMPT -> sending when @config.signed
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
         (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
@@ -74,7 +63,7 @@ orbital WebhookOrbital {
             auth: { scheme: hmac-sha256, credential: @config.signingSecret, name: "X-Almadar-Signature", signs: @body, encoding: hex, prefix: "sha256=" },
             timeoutMs: @config.timeoutMs
           } { key: @entity.key, emit: { success: WEBHOOK_REPLIED, failure: WEBHOOK_UNREACHABLE } }))
-      WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") (not @config.signed))
+      WEBHOOK_ATTEMPT -> sending when (not @config.signed)
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
         (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
@@ -150,9 +139,8 @@ orbital WebhookOrbital {
         url : string!
         event : string!
         payload : p!
-        secret : string
       }
-        @description "Post one webhook: the destination url, the event name, the payload (any type the caller binds to `p` with `::`, stringified into the body) and an optional per-call signing secret."
+        @description "Post one webhook: the destination url, the event name and the payload (any type the caller binds to `p` with `::`, stringified into the body)."
         @synonyms "send webhook, notify endpoint, post event"
       WebhookRetry.ATTEMPT -> WEBHOOK_ATTEMPT
       WebhookRetry.GAVE_UP -> WEBHOOK_GAVE_UP
@@ -161,7 +149,7 @@ orbital WebhookOrbital {
     config {
       signed : boolean = false
         @label "Sign with the configured secret"
-        @description "Sign sends that carry no per-call secret with the signingSecret credential. Off sends them unsigned."
+        @description "Sign every send with the signingSecret credential. Off sends them unsigned."
         @synonyms "sign requests, hmac, signature"
         @tier "infra"
       signingSecret : secret = "WEBHOOK_SIGNING_SECRET"

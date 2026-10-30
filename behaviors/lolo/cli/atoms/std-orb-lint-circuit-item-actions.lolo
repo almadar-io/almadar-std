@@ -31,6 +31,7 @@ type CiSiteV = { oi : number!, ti : number!, tj : number!, ej : number!, prop : 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintCircuitItemActionsCodes = { circuitOrphanEvent : LintCodeDecl , circuitDeadHandler : LintCodeDecl , circuitDuplicateEvent : LintCodeDecl , circuitActionComponentMismatch : LintCodeDecl }
 
+type WalkSlot = { kind : string!, args : [number] }
 orbital OrbLintCircuitItemActionsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Leaves from "std/behaviors/std-orb-value-leaves"
@@ -312,11 +313,14 @@ orbital OrbLintCircuitItemActionsOrbital {
 
   trait OrbValueLeaves = Leaves.traits.OrbValueLeaves {
     listens {
-      VALUE_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      VALUE_SEMANTICS_HEARD { functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      VALUE_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       VALUE_LEAVES_ASK { requestId : string!  values : [CiNode?]! }
         @description "The rule offers the values whose leaves it needs."
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> VALUE_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> VALUE_WALK_HEARD
       OrbLintCircuitItemActions.VALUE_LEAVES_ASK -> VALUE_LEAVES_ASK
     }
   }

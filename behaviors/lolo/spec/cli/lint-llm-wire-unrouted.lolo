@@ -1,0 +1,21 @@
+app lint-llm-wire-unrouted-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint llm-wire-unrouted <file>`; a composed std-llm trait that a route reaches a wire event from, with no trait listening to that wire event, is reported once per trait and wire event (ORB_X_LLM_WIRE_UNROUTED, status 500, exit 1). A clean program answers `lint llm-wire-unrouted: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintLlmWireUnroutedSpec {
+  expects trait OrbLintLlmWireUnrouted {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintLlmWireUnroutedCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintLlmWireUnrouted, OrbLintLlmWireUnroutedCli
+}

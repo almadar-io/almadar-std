@@ -33,13 +33,16 @@ export const OS_FS_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [arg('path', OS_PATH, 'File path'), arg('flags', STRING, 'Open flags'), arg('mode', OS_PERMISSION_BITS, 'Permission bits for a created file', true)],
     example: '["os/open", "/data/in.txt", "r", { "emit": { "success": "FILE_OPENED", "failure": "FILE_FAILED" } }]',
   }),
-  'os/close': osEffect({
-    answer: shape({}),
-    grant: [],
-    description: 'Close a file descriptor or a socket handle (grant fs for a descriptor, net for a socket). Success payload: {}.',
-    params: [arg('handle', OS_HANDLE, 'The fd or sock handle')],
-    example: '["os/close", "@payload.fd", { "emit": { "success": "HANDLE_CLOSED", "failure": "FILE_FAILED" } }]',
-  }),
+  'os/close': {
+    ...osEffect({
+      answer: shape({}),
+      grant: [],
+      description: 'Close a file descriptor, a socket handle or the handle of a streamed os/fetch response (grant fs for a descriptor, net for a socket). Success payload: {}.',
+      params: [arg('handle', OS_HANDLE, 'The fd or sock handle')],
+      example: '["os/close", "@payload.fd", { "emit": { "success": "HANDLE_CLOSED", "failure": "FILE_FAILED" } }]',
+    }),
+    runsOn: 'any',
+  },
   'os/read': osEffect({
     answer: shape({ data: BYTES, eof: BOOLEAN }),
     grant: [],

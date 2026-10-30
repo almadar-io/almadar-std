@@ -1,7 +1,7 @@
 app std-agent-context [
   version: "2.0.0",
   description: "std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with std-llm (LLM_SUMMARIZE) into one leading note and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, with a visible warning — a summarizer outage never blocks the assistant. Headless. Nothing is persisted: the conversation itself lives in std-agent-session.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 type AgentChatMessage = {
@@ -38,6 +38,10 @@ type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 
 uses Llm from "std/behaviors/std-llm"
 
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
 orbital AgentContextOrbital {
 
   entity AgentContextWindow [runtime] {
@@ -52,6 +56,35 @@ orbital AgentContextOrbital {
   trait ContextSummarizerLlm = Llm.traits.LlmClient {
     listens {
       AgentContextCompactor.LLM_SUMMARIZE -> LLM_SUMMARIZE
+      CtxChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      CtxChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      CtxChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      CtxChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait CtxChatRequest = Req.traits.HttpRequest {
+    listens {
+      ContextSummarizerLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      ContextSummarizerLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      CtxChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      CtxChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CtxChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      CtxChatRequest.HTTP_SEND -> HTTP_SEND
+      CtxChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -139,5 +172,5 @@ orbital AgentContextOrbital {
     }
   }
 
-  page "/agent-context" as AgentContextPage -> AgentContextCompactor, ContextSummarizerLlm
+  page "/agent-context" as AgentContextPage -> AgentContextCompactor, ContextSummarizerLlm, CtxChatRequest, CtxChatHttp
 }

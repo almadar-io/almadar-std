@@ -1,0 +1,156 @@
+{
+  "atom": "agent/atoms/std-agent-completion.lolo",
+  "trait": "CompletionLlm",
+  "note": "one chat round trip over std-http-request and std-http-client: request bytes to the keyed HttpClient, the recorded provider reply",
+  "cases": [
+    {
+      "id": "the chat request is written to the keyed wire with the key as a credential segment, never as payload",
+      "steps": [
+        {
+          "trait": "CompletionLlm",
+          "event": "LLM_GENERATE",
+          "payload": {
+            "userPrompt": "hi",
+            "model": "gpt-4o"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CHAT_WIRE",
+                "payload": {
+                  "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"gpt-4o\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+                  "method": "POST",
+                  "path": "/v1/chat/completions",
+                  "query": {},
+                  "headers": {
+                    "Accept": "application/json"
+                  },
+                  "json": "{\"model\":\"gpt-4o\",\"temperature\":0.7,\"stream\":false,\"max_tokens\":1024,\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"hi\"}]}",
+                  "form": {},
+                  "multipartParts": [],
+                  "stream": "none",
+                  "retryMax": 0,
+                  "retryOn": [],
+                  "retryOnFailure": [],
+                  "retryDelaysMs": [],
+                  "paginate": "none",
+                  "maxPages": 1
+                }
+              },
+              {
+                "event": "HTTP_SEND",
+                "payload": {
+                  "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"gpt-4o\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+                  "method": "POST",
+                  "target": "/v1/chat/completions",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJtb2RlbCI6ImdwdC00byIsInRlbXBlcmF0dXJlIjowLjcsInN0cmVhbSI6ZmFsc2UsIm1heF90b2tlbnMiOjEwMjQsIm1lc3NhZ2VzIjpbeyJyb2xlIjoic3lzdGVtIiwiY29udGVudCI6IllvdSBhcmUgYSBoZWxwZnVsIGFzc2lzdGFudC4ifSx7InJvbGUiOiJ1c2VyIiwiY29udGVudCI6ImhpIn1dfQ==",
+                  "stream": "none"
+                }
+              },
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvdjEvY2hhdC9jb21wbGV0aW9ucyBIVFRQLzEuMQ0KaG9zdDogYXBpLm9wZW5haS5jb20NCmF1dGhvcml6YXRpb246IEJlYXJlciA=",
+                  "request": "DQphY2NlcHQ6IGFwcGxpY2F0aW9uL2pzb24NCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24vanNvbg0KY29udGVudC1sZW5ndGg6IDE3Mg0KDQp7Im1vZGVsIjoiZ3B0LTRvIiwidGVtcGVyYXR1cmUiOjAuNywic3RyZWFtIjpmYWxzZSwibWF4X3Rva2VucyI6MTAyNCwibWVzc2FnZXMiOlt7InJvbGUiOiJzeXN0ZW0iLCJjb250ZW50IjoiWW91IGFyZSBhIGhlbHBmdWwgYXNzaXN0YW50LiJ9LHsicm9sZSI6InVzZXIiLCJjb250ZW50IjoiaGkifV19"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the recorded provider reply comes back as the generated text",
+      "steps": [
+        {
+          "trait": "CompletionLlm",
+          "event": "LLM_CHAT_WIRE_RESULT",
+          "payload": {
+            "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"gpt-4o\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+            "status": 200,
+            "headers": {
+              "content-type": "application/json",
+              "content-length": "114"
+            },
+            "body": "eyJjaG9pY2VzIjpbeyJtZXNzYWdlIjp7InJvbGUiOiJhc3Npc3RhbnQiLCJjb250ZW50IjoiaGVsbG8ifX1dLCJ1c2FnZSI6eyJwcm9tcHRfdG9rZW5zIjozLCJjb21wbGV0aW9uX3Rva2VucyI6MX19",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_RESULT"
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a 401 reply is a failure and gives no text",
+      "steps": [
+        {
+          "trait": "CompletionLlm",
+          "event": "LLM_CHAT_WIRE_RESULT",
+          "payload": {
+            "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"gpt-4o\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+            "status": 401,
+            "headers": {
+              "content-type": "application/json",
+              "content-length": "31"
+            },
+            "body": "eyJlcnJvciI6eyJtZXNzYWdlIjoiYmFkIGtleSJ9fQ==",
+            "attempts": 1,
+            "pages": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "LLM_GENERATE_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a request the wire refuses is a failure and gives no text",
+      "steps": [
+        {
+          "trait": "CompletionLlm",
+          "event": "LLM_CHAT_WIRE_REFUSED",
+          "payload": {
+            "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"gpt-4o\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+            "error": "the request cannot be built"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "LLM_GENERATE_RESULT"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

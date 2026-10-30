@@ -1,0 +1,23 @@
+app orb-materialize-spec [
+  version: "1.0.0",
+  inbound: ["cli-materialize"],
+  description: "Design contract for `orb materialize <SOURCE> <OUT>`: the registry mirror of a live behavior package. Both paths are absolute. Every `.lolo` under SOURCE is lowered into OUT as the `.orb` program at the same relative path, and every locale catalog (`locales/<locale>/<name>.json`) is copied. A file whose content hash equals the one in OUT/.hashes.json and whose output exists is not touched; an output whose source is gone is removed; OUT/.hashes.json then records every source's sha256. The answer's body is OUT (status 200). A file that does not lower answers status 500 naming it. Fewer or more than two paths, a relative path or an unknown flag answers the usage (status 400, exit 2)."
+]
+
+orbital OrbMaterializeSpec {
+  expects trait OrbMaterialize {
+    state ready
+    state parsing
+    state working
+    emits {
+      MATERIALIZE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects trait MaterializeEngine {
+    state idle
+    emits {
+      MATERIALIZE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page boot -> OrbMaterialize
+}

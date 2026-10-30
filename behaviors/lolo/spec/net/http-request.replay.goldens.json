@@ -2146,6 +2146,1057 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-request-with-its-own-timeout-arms-that-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-without-a-timeout-arms-the-configured-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 1500
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "timeoutMs": 1500
+   }
+  },
+  {
+   "id": "control-a-timeout-of-zero-arms-no-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TIMEOUT_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-configured-timeout-of-zero-arms-no-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TIMEOUT_START"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "timeoutMs": 0
+   }
+  },
+  {
+   "id": "a-reply-disarms-the-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "b2s="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMEOUT_STOP"
+       },
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failure-disarms-the-deadline",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "r1",
+      "error": "e",
+      "kind": "denied"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMEOUT_STOP"
+       },
+       {
+        "event": "HTTP_REQUEST_FAILED",
+        "payload": {
+         "kind": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-passed-deadline-aborts-the-wire-call-and-fails-the-request-as-a-timeout",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TIMEOUT_ELAPSED",
+     "payload": {
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_CANCEL",
+        "payload": {
+         "key": "r1"
+        }
+       },
+       {
+        "event": "HTTP_REQUEST_FAILED",
+        "payload": {
+         "key": "r1",
+         "kind": "timeout",
+         "error": "the request timed out"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_RESULT",
+       "RETRY_WAIT"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "bGF0ZQ=="
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-passed-deadline-is-retried-when-retry-on-failure-names-timeout",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 1,
+      "retryOn": [],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10
+      ],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TIMEOUT_ELAPSED",
+     "payload": {
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "waiting",
+      "emits": [
+       {
+        "event": "HTTP_CANCEL",
+        "payload": {
+         "key": "r1"
+        }
+       },
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "state": "awaiting",
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "TIMEOUT_ELAPSED",
+     "payload": {
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_CANCEL",
+        "payload": {
+         "key": "r1"
+        }
+       },
+       {
+        "event": "HTTP_REQUEST_FAILED",
+        "payload": {
+         "kind": "timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-deadline-that-passes-when-no-request-waits-does-nothing",
+   "steps": [
+    {
+     "event": "TIMEOUT_ELAPSED",
+     "payload": {
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_CANCEL",
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-aborts-the-wire-call-disarms-the-deadline-and-answers-nothing",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TIMEOUT_STOP"
+       },
+       {
+        "event": "HTTP_CANCEL",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "bGF0ZQ=="
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "r1",
+      "error": "e",
+      "kind": "io"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE",
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-cancel-for-another-key-leaves-the-request-in-flight",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "timeoutMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "TIMEOUT_START",
+        "payload": {
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "other"
+     },
+     "expect": {
+      "state": "awaiting",
+      "neverEmits": [
+       "HTTP_CANCEL",
+       "TIMEOUT_STOP",
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "b2s="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-while-waiting-to-retry-disarms-the-retry-delay",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "waiting",
+      "emits": [
+       {
+        "event": "RETRY_WAIT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RETRY_STOP"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_CANCEL",
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_SEND",
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-while-paging-ends-the-request-silently",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "caller",
+      "maxPages": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "cDE="
+     },
+     "expect": {
+      "state": "paging"
+     }
+    },
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_RESULT",
+       "HTTP_CANCEL"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_NEXT",
+     "payload": {
+      "key": "r1",
+      "query": {
+       "page": "2"
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_SEND",
+       "HTTP_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-cancel-with-no-request-is-a-no-op",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "HTTP_CANCEL",
+       "HTTP_RESULT",
+       "HTTP_REQUEST_FAILED",
+       "HTTP_REQUEST_REFUSED",
+       "HTTP_PAGE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-after-a-cancel-runs-whole",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REQUEST_CANCEL",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready"
+     }
+    },
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r2",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r2",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "b2s="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

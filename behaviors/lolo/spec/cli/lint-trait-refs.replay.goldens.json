@@ -1,1695 +1,1699 @@
 {
- "atom": "cli/atoms/std-orb-lint-trait-refs.lolo",
- "trait": "OrbLintTraitRefs",
- "note": "Cases built from traits/trait_validator.rs: validate_trait_reference (undefined trait, missing ref/name, undeclared linked entity), validate_trait_definition (empty name, undeclared linked entity), validate_entity_rebind (unresolved target, atom not @rebindable, contract fields missing) and validate_trait_uniqueness (a name defined twice). Each program is an .orb fixture and the expected findings are the ones `orb validate --json` reports for these codes. The paired controls are in the same programs: a std/ reference, a reference to a defined trait, a rebindable atom whose contract is met, a rebind to the atom's own entity and a contract-free same-entity trait.",
- "cases": [
-  {
-   "id": "reference-to-an-undefined-trait",
-   "steps": [
+  "atom": "cli/atoms/std-orb-lint-trait-refs.lolo",
+  "trait": "OrbLintTraitRefs",
+  "note": "Cases built from traits/trait_validator.rs: validate_trait_reference (undefined trait, missing ref/name, undeclared linked entity), validate_trait_definition (empty name, undeclared linked entity), validate_entity_rebind (unresolved target, atom not @rebindable, contract fields missing) and validate_trait_uniqueness (a name defined twice). Each program is an .orb fixture and the expected findings are the ones `orb validate --json` reports for these codes. The paired controls are in the same programs: a std/ reference, a reference to a defined trait, a rebindable atom whose contract is met, a rebind to the atom's own entity and a contract-free same-entity trait.",
+  "cases": [
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_a",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "reference-to-an-undefined-trait",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_a",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "ref": "Nope"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "ref": "Nope"
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNDEFINED_TRAIT",
+                      "path": "orbitals[0 (O)].traits[1 (Nope)]",
+                      "message": "Trait 'Nope' is not defined",
+                      "suggestion": "Define traits inline within orbitals or use a std library trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_T_UNDEFINED_TRAIT",
-           "path": "orbitals[0 (O)].traits[1 (Nope)]",
-           "message": "Trait 'Nope' is not defined",
-           "suggestion": "Define traits inline within orbitals or use a std library trait",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "reference-named-by-name-only",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_b",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "reference-named-by-name-only",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_b",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "X"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "name": "X"
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNDEFINED_TRAIT",
+                      "path": "orbitals[0 (O)].traits[1 (X)]",
+                      "message": "Trait 'X' is not defined",
+                      "suggestion": "Define traits inline within orbitals or use a std library trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_T_UNDEFINED_TRAIT",
-           "path": "orbitals[0 (O)].traits[1 (X)]",
-           "message": "Trait 'X' is not defined",
-           "suggestion": "Define traits inline within orbitals or use a std library trait",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "reference-controls-and-linked-entity",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_c",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "reference-controls-and-linked-entity",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_c",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "ref": "std/Form",
+                      "linkedEntity": "Nope"
+                    },
+                    {
+                      "ref": "std/Form",
+                      "name": "F2",
+                      "linkedEntity": "Task"
+                    },
+                    {
+                      "ref": "T"
+                    },
+                    {
+                      "ref": "Q",
+                      "name": "T2"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_RELATION",
+                      "path": "orbitals[0 (O)].traits[1 (std/Form)].linkedEntity",
+                      "message": "Linked entity 'Nope' does not exist",
+                      "suggestion": "Ensure the linked entity is defined in the schema",
+                      "severity": "error",
+                      "entity": "Nope"
+                    },
+                    {
+                      "code": "ORB_T_UNDEFINED_TRAIT",
+                      "path": "orbitals[0 (O)].traits[4 (T2)]",
+                      "message": "Trait 'Q' is not defined",
+                      "suggestion": "Define traits inline within orbitals or use a std library trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
             ]
-           }
-          },
-          {
-           "ref": "std/Form",
-           "linkedEntity": "Nope"
-          },
-          {
-           "ref": "std/Form",
-           "name": "F2",
-           "linkedEntity": "Task"
-          },
-          {
-           "ref": "T"
-          },
-          {
-           "ref": "Q",
-           "name": "T2"
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_E_INVALID_RELATION",
-           "path": "orbitals[0 (O)].traits[1 (std/Form)].linkedEntity",
-           "message": "Linked entity 'Nope' does not exist",
-           "suggestion": "Ensure the linked entity is defined in the schema",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_UNDEFINED_TRAIT",
-           "path": "orbitals[0 (O)].traits[4 (T2)]",
-           "message": "Trait 'Q' is not defined",
-           "suggestion": "Define traits inline within orbitals or use a std library trait",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "inline-trait-links-an-undeclared-entity",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_d",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "inline-trait-links-an-undeclared-entity",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Nope",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_d",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Nope",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_RELATION",
+                      "path": "orbitals[0 (O)].traits[0 (T)].linkedEntity",
+                      "message": "Linked entity 'Nope' does not exist",
+                      "suggestion": "Ensure the linked entity is defined in the schema",
+                      "severity": "error",
+                      "entity": "Nope"
+                    }
+                  ]
+                }
+              }
             ]
-           }
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_E_INVALID_RELATION",
-           "path": "orbitals[0 (O)].traits[0 (T)].linkedEntity",
-           "message": "Linked entity 'Nope' does not exist",
-           "suggestion": "Ensure the linked entity is defined in the schema",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "inline-trait-without-a-name",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_e",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "inline-trait-without-a-name",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_e",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_UNDEFINED_TRAIT",
+                      "path": "orbitals[0 (O)].traits[0 ()].name",
+                      "message": "Trait name is required",
+                      "suggestion": "Add a descriptive name for the trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
             ]
-           }
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_T_UNDEFINED_TRAIT",
-           "path": "orbitals[0 (O)].traits[0 ()].name",
-           "message": "Trait name is required",
-           "suggestion": "Add a descriptive name for the trait",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "reference-with-neither-ref-nor-name",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_f",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "reference-with-neither-ref-nor-name",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "linkedEntity": "Task"
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_f",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "linkedEntity": "Task"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_INVALID_FORMAT",
+                      "path": "orbitals[0 (O)].traits[0 (<anonymous>)]",
+                      "message": "Trait reference must have 'ref' or 'name' property",
+                      "suggestion": "Add ref: 'TraitName' to reference a defined trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_T_INVALID_FORMAT",
-           "path": "orbitals[0 (O)].traits[0 (<anonymous>)]",
-           "message": "Trait reference must have 'ref' or 'name' property",
-           "suggestion": "Add ref: 'TraitName' to reference a defined trait",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "duplicate-trait-names-across-and-within-orbitals",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_dup",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "duplicate-trait-names-across-and-within-orbitals",
+      "steps": [
         {
-         "name": "A",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_dup",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "U",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "U",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Other",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "V",
+                      "linkedEntity": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "C",
+                  "entity": {
+                    "name": "Third",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Third",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "name": "U",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_DUPLICATE_NAME",
+                      "path": "orbitals",
+                      "message": "Trait 'T' is defined in multiple orbitals: [\"A\", \"B\", \"C\"]",
+                      "suggestion": "Use unique trait names per orbital or define traits inline within orbitals",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_DUPLICATE_NAME",
+                      "path": "orbitals",
+                      "message": "Trait 'U' is defined in multiple orbitals: [\"A\", \"A\"]",
+                      "suggestion": "Use unique trait names per orbital or define traits inline within orbitals",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
             ]
-           }
-          },
-          {
-           "name": "U",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
           }
-         ]
-        },
-        {
-         "name": "B",
-         "entity": {
-          "name": "Other",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Other",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
-          },
-          {
-           "name": "V",
-           "linkedEntity": "Other",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
-          }
-         ]
-        },
-        {
-         "name": "C",
-         "entity": {
-          "name": "Third",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Third",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
-          }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_T_DUPLICATE_NAME",
-           "path": "orbitals",
-           "message": "Trait 'T' is defined in multiple orbitals: [\"A\", \"B\", \"C\"]",
-           "suggestion": "Use unique trait names per orbital or define traits inline within orbitals",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_DUPLICATE_NAME",
-           "path": "orbitals",
-           "message": "Trait 'U' is defined in multiple orbitals: [\"A\", \"A\"]",
-           "suggestion": "Use unique trait names per orbital or define traits inline within orbitals",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "rebind-target-contract-and-rebindable",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_rb1",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "rebind-target-contract-and-rebindable",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "a",
-            "type": "string"
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "R1",
-           "linkedEntity": "Nope",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R1"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_rb1",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "a",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "R1",
+                      "linkedEntity": "Nope",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R1"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R2",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R2"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": false,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R3",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R3"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R4",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R4"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "a",
+                          "b",
+                          "c"
+                        ]
+                      }
+                    },
+                    {
+                      "name": "R5",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R5"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "name": "R6",
+                      "linkedEntity": "Orig",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R6"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R7",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R7"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Task",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "zz"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "O2",
+                  "entity": {
+                    "name": "Orig",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Z",
+                      "linkedEntity": "Orig",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "name": "R2",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_RELATION",
+                      "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
+                      "message": "Linked entity 'Nope' does not exist",
+                      "suggestion": "Ensure the linked entity is defined in the schema",
+                      "severity": "error",
+                      "entity": "Nope"
+                    },
+                    {
+                      "code": "ORB_T_REBIND_TARGET_UNRESOLVED",
+                      "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
+                      "message": "Trait 'R1' (from std/behaviors/x) rebinds to 'Nope', which names no primary or auxiliary entity anywhere in this schema; the merge has no target to land its fields on.",
+                      "suggestion": "Fix the linkedEntity rebind target's spelling, or declare/import the entity it should name.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_ENTITY_NOT_REBINDABLE",
+                      "path": "orbitals[0 (O)].traits[1 (R2)].linkedEntity",
+                      "message": "Trait 'R2' (from std/behaviors/x) has a fixed entity binding and cannot be rebound to 'Task'; the atom's binding is not marked `@rebindable`.",
+                      "suggestion": "Mark the atom trait's binding `-> @rebindable Entity` in its .lolo source, or remove the linkedEntity rebind.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_ENTITY_NOT_REBINDABLE",
+                      "path": "orbitals[0 (O)].traits[2 (R3)].linkedEntity",
+                      "message": "Trait 'R3' (from std/behaviors/x) has a fixed entity binding and cannot be rebound to 'Task'; the atom's binding is not marked `@rebindable`.",
+                      "suggestion": "Mark the atom trait's binding `-> @rebindable Entity` in its .lolo source, or remove the linkedEntity rebind.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_REBIND_MISSING_FIELDS",
+                      "path": "orbitals[0 (O)].traits[3 (R4)].linkedEntity",
+                      "message": "Entity 'Task' is missing fields required by trait 'R4': b, c",
+                      "suggestion": "Add the missing fields to the entity, or rebind to an entity that already has them.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
             ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R2"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": false,
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
-          },
-          {
-           "name": "R3",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R3"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
-          },
-          {
-           "name": "R4",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R4"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "a",
-             "b",
-             "c"
-            ]
-           }
-          },
-          {
-           "name": "R5",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R5"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "a"
-            ]
-           }
-          },
-          {
-           "name": "R6",
-           "linkedEntity": "Orig",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R6"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
-          },
-          {
-           "name": "R7",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R7"
-           },
-           "sourceEntityDefinition": {
-            "name": "Task",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "zz"
-            ]
-           }
           }
-         ]
-        },
-        {
-         "name": "O2",
-         "entity": {
-          "name": "Orig",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "Z",
-           "linkedEntity": "Orig",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
-          }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_E_INVALID_RELATION",
-           "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
-           "message": "Linked entity 'Nope' does not exist",
-           "suggestion": "Ensure the linked entity is defined in the schema",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_REBIND_TARGET_UNRESOLVED",
-           "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
-           "message": "Trait 'R1' (from std/behaviors/x) rebinds to 'Nope', which names no primary or auxiliary entity anywhere in this schema; the merge has no target to land its fields on.",
-           "suggestion": "Fix the linkedEntity rebind target's spelling, or declare/import the entity it should name.",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_ENTITY_NOT_REBINDABLE",
-           "path": "orbitals[0 (O)].traits[1 (R2)].linkedEntity",
-           "message": "Trait 'R2' (from std/behaviors/x) has a fixed entity binding and cannot be rebound to 'Task'; the atom's binding is not marked `@rebindable`.",
-           "suggestion": "Mark the atom trait's binding `-> @rebindable Entity` in its .lolo source, or remove the linkedEntity rebind.",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_ENTITY_NOT_REBINDABLE",
-           "path": "orbitals[0 (O)].traits[2 (R3)].linkedEntity",
-           "message": "Trait 'R3' (from std/behaviors/x) has a fixed entity binding and cannot be rebound to 'Task'; the atom's binding is not marked `@rebindable`.",
-           "suggestion": "Mark the atom trait's binding `-> @rebindable Entity` in its .lolo source, or remove the linkedEntity rebind.",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_REBIND_MISSING_FIELDS",
-           "path": "orbitals[0 (O)].traits[3 (R4)].linkedEntity",
-           "message": "Entity 'Task' is missing fields required by trait 'R4': b, c",
-           "suggestion": "Add the missing fields to the entity, or rebind to an entity that already has them.",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "rebind-into-a-sibling-orbital-entity",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_rb2",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "rebind-into-a-sibling-orbital-entity",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "a",
-            "type": "string"
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "R1",
-           "linkedEntity": "Aux",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R1"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_rb2",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "a",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "R1",
+                      "linkedEntity": "Aux",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R1"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R2",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R2"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "a"
+                        ]
+                      }
+                    }
+                  ],
+                  "auxiliary_entities": null
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "name": "R2",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_E_INVALID_RELATION",
+                      "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
+                      "message": "Linked entity 'Aux' does not exist",
+                      "suggestion": "Ensure the linked entity is defined in the schema",
+                      "severity": "error",
+                      "entity": "Aux"
+                    },
+                    {
+                      "code": "ORB_T_REBIND_TARGET_UNRESOLVED",
+                      "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
+                      "message": "Trait 'R1' (from std/behaviors/x) rebinds to 'Aux', which names no primary or auxiliary entity anywhere in this schema; the merge has no target to land its fields on.",
+                      "suggestion": "Fix the linkedEntity rebind target's spelling, or declare/import the entity it should name.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
             ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R2"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "a"
-            ]
-           }
           }
-         ],
-         "auxiliary_entities": null
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": [
-          {
-           "code": "ORB_E_INVALID_RELATION",
-           "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
-           "message": "Linked entity 'Aux' does not exist",
-           "suggestion": "Ensure the linked entity is defined in the schema",
-           "severity": "error"
-          },
-          {
-           "code": "ORB_T_REBIND_TARGET_UNRESOLVED",
-           "path": "orbitals[0 (O)].traits[0 (R1)].linkedEntity",
-           "message": "Trait 'R1' (from std/behaviors/x) rebinds to 'Aux', which names no primary or auxiliary entity anywhere in this schema; the merge has no target to land its fields on.",
-           "suggestion": "Fix the linkedEntity rebind target's spelling, or declare/import the entity it should name.",
-           "severity": "error"
-          }
-         ]
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-clean-references-and-rebinds",
-   "steps": [
+    },
     {
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "typeContractVersion": 1,
-       "name": "tr_ok",
-       "version": "1.0.0",
-       "orbitals": [
+      "id": "control-clean-references-and-rebinds",
+      "steps": [
         {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "a",
-            "type": "string"
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "tr_ok",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "a",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "ref": "T"
+                    },
+                    {
+                      "ref": "std/Form",
+                      "linkedEntity": "Task"
+                    },
+                    {
+                      "name": "R5",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R5"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "a"
+                        ]
+                      }
+                    },
+                    {
+                      "name": "R6",
+                      "linkedEntity": "Orig",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R6"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Orig",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": []
+                      }
+                    },
+                    {
+                      "name": "R7",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/x",
+                        "originalName": "R7"
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "Task",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "entityRebindable": true,
+                      "entityContract": {
+                        "provides": [],
+                        "requires": [
+                          "zz"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "O2",
+                  "entity": {
+                    "name": "Orig",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Z",
+                      "linkedEntity": "Orig",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
           },
-          {
-           "ref": "T"
-          },
-          {
-           "ref": "std/Form",
-           "linkedEntity": "Task"
-          },
-          {
-           "name": "R5",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "trait-refs",
+                  "scope": "",
+                  "findings": []
+                }
+              }
             ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R5"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "a"
-            ]
-           }
-          },
-          {
-           "name": "R6",
-           "linkedEntity": "Orig",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R6"
-           },
-           "sourceEntityDefinition": {
-            "name": "Orig",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": []
-           }
-          },
-          {
-           "name": "R7",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           },
-           "sourceBehavior": {
-            "alias": "A",
-            "behavior": "std/behaviors/x",
-            "originalName": "R7"
-           },
-           "sourceEntityDefinition": {
-            "name": "Task",
-            "persistence": "runtime",
-            "fields": [
-             {
-              "name": "id",
-              "type": "string"
-             }
-            ]
-           },
-           "entityRebindable": true,
-           "entityContract": {
-            "provides": [],
-            "requires": [
-             "zz"
-            ]
-           }
           }
-         ]
-        },
-        {
-         "name": "O2",
-         "entity": {
-          "name": "Orig",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "Z",
-           "linkedEntity": "Orig",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             }
-            ],
-            "events": [
-             {
-              "key": "E"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "E",
-              "effects": []
-             }
-            ]
-           }
-          }
-         ]
         }
-       ]
-      },
-      "scope": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "trait-refs",
-         "scope": "",
-         "findings": []
-        }
-       }
       ]
-     }
     }
-   ]
-  }
- ]
+  ]
 }

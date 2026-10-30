@@ -1,6 +1,6 @@
 app std-orb-produced-events [
   version: "1.0.0",
-  description: "std-orb-produced-events - the one place a lint run decides which event names an effect tree produces, the port of the compiler's collect_effect_produced_events. For every inline trait of the offered program it walks the transition effects and the tick effects (not the config defaults) and answers PRODUCED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the string slots of every operator call's `emit` map that the operator table names (PRODUCED_SLOTS_HEARD, from std-orb-lint-input's LINT_OPERATOR_SEMANTICS emitSlots) and the string `emit: \"X\"` form. byControl holds, for each rendered pattern, the leaves of its own event props and the eventField of its own event-list props (PRODUCED_PATTERNS_HEARD, from LINT_EVENT_PROPS byPattern); leaves are read through the operators' declared returnSemantics with every branch counted. `(emit X)` is not an effect tree's production, no bus-excluded event is dropped, and an empty name or a binding is never credited. It is not std-orb-fired-events with a flag: a program that composes both needs two distinct traits, because the composed address of a trait is its source trait's name."
+  description: "std-orb-produced-events - the one place a lint run decides which event names an effect tree produces, the port of the compiler's collect_effect_produced_events. For every inline trait of the offered program it walks the transition effects and the tick effects (not the config defaults) and answers PRODUCED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the string slots of every operator call's `emit` map that the operator table names (PRODUCED_SLOTS_HEARD, from std-orb-lint-input's LINT_OPERATOR_SEMANTICS emitSlots) and the string `emit: \"X\"` form. byControl holds, for each rendered pattern, the leaves of its own event props and the eventField of its own event-list props (PRODUCED_PATTERNS_HEARD, from LINT_EVENT_PROPS byPattern); leaves are read through the operators' value-source slots (LINT_OPERATOR_WALK) with every branch counted. `(emit X)` is not an effect tree's production, no bus-excluded event is dropped, and an empty name or a binding is never credited. It is not std-orb-fired-events with a flag: a program that composes both needs two distinct traits, because the composed address of a trait is its source trait's name."
 ]
 uses Spec from "almadar-std/produced-events"
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
@@ -16,12 +16,13 @@ type FiredNodes = [FiredNode?]
 type FiredMap = Map string FiredNode?
 type FiredItem = [string]
 type FiredLf = { lf : [string]!, ll : [string]! }
+type WalkSlot = { kind : string!, args : [number] }
 type FiredPatternProp = { pattern : string!, prop : string!, field : string! }
 
 orbital OrbProducedEventsOrbital {
   entity OrbProducedEventsRun [runtime] {
     id : string!
-    semantics : Map string string = {}
+    walk : Map string WalkSlot = {}
     functions : [string] = []
     rows : [FiredPatternProp] = []
     slots : [string] = []
@@ -33,14 +34,15 @@ orbital OrbProducedEventsOrbital {
     state ready {
       INIT -> ready
       PRODUCED_SEMANTICS_HEARD -> ready
-        (set @entity.semantics @payload.semantics)
         (set @entity.functions @payload.functions)
+      PRODUCED_WALK_HEARD -> ready
+        (set @entity.walk @payload.slots)
       PRODUCED_PATTERNS_HEARD -> ready
         (set @entity.rows @payload.byPattern)
       PRODUCED_SLOTS_HEARD -> ready
         (set @entity.slots @payload.emitSlots)
       PRODUCED_INPUT_HEARD -> ready
-        (let ((slots @entity.slots) (sem @entity.semantics) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (rowsBy (default (array/groupBy @entity.rows (fn row (str/replaceAll (str/replaceAll (object/get @row "pattern") "~" "~t") "." "~d"))) {})))
+        (let ((slots @entity.slots) (sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (rowsBy (default (array/groupBy @entity.rows (fn row (str/replaceAll (str/replaceAll (object/get @row "pattern") "~" "~t") "." "~d"))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((effs (array/concat
@@ -72,15 +74,15 @@ orbital OrbProducedEventsOrbital {
   (if (validate/array @n)
     (let ((len (array/len @n)) (kk (array/map @k (fn r (if (= @r null) @nl @r)))))
       (let ((argc (- @len 1)))
-        (let ((sm (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (object/get @sem @h "") ""))))
-          (let ((lamIdx (if (= @sm "lambda-result") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
-                (picked (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<")) (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v)))) [])))
-            (let ((sel (if (= @sm "branch-union") (if (< @argc 2) null (array/flatten (array/map (array/range 2 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                         (if (or (= @sm "union-of-args") (= @sm "coalesce")) (if (< @argc 1) null (array/flatten (array/map (array/range 1 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                           (if (= @sm "last-of-args") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
-                             (if (= @sm "lambda-result") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
+        (let ((sl (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (default (object/get @sem @h) @noslot) @noslot))) (sm (object/get @sl "kind" "")))
+          (let ((lamIdx (if (= @sm "lambdaResult") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
+                (picked (if (= @sm "listed") (object/get @sl "args" []) [])))
+            (let ((sel (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/range 2 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
+                         (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map (array/range 1 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
+                           (if (= @sm "last") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
+                             (if (= @sm "lambdaResult") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
                                (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc)))))) (array/flatten (array/map @picked (fn i (object/get (array/nth @kk (+ @i 1)) "lf")))) null)))))))
-              { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branch-union")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
+              { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
     { lf: [(json/stringify @n)], ll: [] })) "FiredNode"))) (object/get @sr "lf" [])) (if (= @v null) [] [(json/stringify @v)])))))
         (if (= @field "")
           (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "\"") (default (json/parse (str/concat "[" @lf "]") FiredNames) []) [])))) (fn x ["c", @x]))
@@ -106,8 +108,10 @@ orbital OrbProducedEventsOrbital {
     }
 
     listens {
-      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_SEMANTICS_HEARD { functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      PRODUCED_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
       PRODUCED_PATTERNS_HEARD { byPattern : [FiredPatternProp]! }
         @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
       PRODUCED_SLOTS_HEARD { emitSlots : [string]! }

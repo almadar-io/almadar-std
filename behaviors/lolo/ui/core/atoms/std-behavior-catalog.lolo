@@ -1,7 +1,7 @@
 app std-behavior-catalog [
   version: "1.4.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), With perTopic, listing (the start, CATALOG_LOAD or a SCOPE) reads only each topic's count, then the held topic's entries when the listing still has it, and a TOPIC reads that topic's entries. TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (a plain listing carries no vectors and a host never attaches them, so a search refuses with a toast naming that unless the rows it lists carry a description vector, which only std-catalog-vectors attaches; a search lists the current topic's registry folder, or the whole scope, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), With perTopic, listing (the start, CATALOG_LOAD or a SCOPE) reads only each topic's count, then the held topic's entries when the listing still has it, and a TOPIC reads that topic's entries. TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  net: { "openrouter.ai:443": [tcp] },
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
 
@@ -51,6 +51,12 @@ type BehaviorCatalogDescription = {
 
 uses Llm from "std/behaviors/std-llm"
 
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+uses Delay from "std/behaviors/std-delay"
+
 orbital BehaviorCatalogOrbital {
 
   entity BehaviorCatalogView [runtime] {
@@ -58,7 +64,7 @@ orbital BehaviorCatalogOrbital {
     query : string = ""
     entries : [BehaviorCatalogHit] = []
     topics : [BehaviorCatalogTopic] @description "Every listed package and topic with its count, as CATALOG_TOPICS last announced them." = []
-    searchHits : [BehaviorCatalogHit] @description "The behaviors a search ranks, listed with their vectors: the current topic's registry folder, or the whole scope." = []
+    searchHits : [BehaviorCatalogHit] @description "The behaviors a search ranks, listed with their description vectors: the current topic's registry folder, or the whole scope." = []
     rows : [BehaviorCatalogRow] = []
     detail : string = ""
     knobs : [BehaviorCatalogKnobField] = []
@@ -74,6 +80,44 @@ orbital BehaviorCatalogOrbital {
   trait BehaviorCatalogLlm = Llm.traits.LlmClient {
     listens {
       BehaviorCatalog.LLM_EMBED -> LLM_EMBED
+      CatEmbedWait.CAT_EMBED_WAITED -> LLM_EMBED_WAITED
+      CatEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      CatEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      CatEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait CatEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: CAT_EMBED_WAITED
+    }
+    listens {
+      BehaviorCatalogLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait CatEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      BehaviorCatalogLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      BehaviorCatalogLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      CatEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      CatEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CatEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      CatEmbedRequest.HTTP_SEND -> HTTP_SEND
+      CatEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -408,7 +452,12 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { traits: false emit: { success: TOPIC_ROWS, failure: LIST_FAILED } })
-      SEARCH_LISTED -> searching
+      SEARCH_LISTED -> ready when (> (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
+        (set @entity.error "The listed behaviors carry no embedding vectors: a plain behavior/catalog listing has none, and a search needs rows from std-catalog-vectors")
+        (set @entity.status ready)
+        (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the listed behaviors carry no embedding vectors." })
+        (emit CATALOG_SHOWN {})
+      SEARCH_LISTED -> searching when (= (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
         (set @entity.searchHits ?result)
         (emit LLM_EMBED { texts: (array/prepend [] @entity.query) })
       SEARCH_LIST_FAILED -> ready
@@ -598,5 +647,5 @@ orbital BehaviorCatalogOrbital {
     }
   }
 
-  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalog, BehaviorCatalogLlm
+  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalog, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp
 }

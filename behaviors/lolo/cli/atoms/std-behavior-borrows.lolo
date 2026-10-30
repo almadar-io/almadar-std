@@ -1,0 +1,128 @@
+app std-behavior-borrows [
+  version: "1.0.0",
+  description: "std-behavior-borrows — a behavior described with what an import of each of its orbitals borrows. For a BORROWS_DESCRIBE { behavior } it describes the whole behavior (behavior/describe), reads the behavior's file resolved (behavior/source, program/read), builds one probe row per orbital imported with no `entities {}`, and asks std-orb-lint-orbital-ref-closure (the one owner of the entity-closure rule). Each ORB_O_ENTITY_UNMAPPED finding names an entity a sibling owns that the orbital references: the orbital's `borrows`. It answers BORROWS_DESCRIBED { result } with the description and every orbital's `borrows` (a behavior with a lazy import borrows nothing: it loads on its own), or BORROWS_FAILED { error }."
+]
+uses Spec from "almadar-std/behavior-borrows"
+uses RefClosure from "std/behaviors/std-orb-lint-orbital-ref-closure"
+type BwNode = string | number | boolean | [BwNode?] | Map string BwNode?
+type BwEntity = { name : string }
+type BwTrait = { name : string! }
+type BwOrbital = { name : string!, entity : BwEntity, traits : [BwTrait] }
+type BwProgram = { orbitals : [BwOrbital] }
+type BwRead = { program : BwProgram!, lazy : [BwNode?] }
+type BwKept = { orbital : number!, traits : [string]! }
+type BwFinding = { code : string!, path : string!, entity : string }
+type BwSource = { path : string!, source : string! }
+type BwValueRef = { behavior : string!, orbital : string! }
+type BwDescOrbital = { value : BwValueRef! }
+type BwValue = { behavior : string!, orbitals : [BwDescOrbital] }
+type BwRefCall = { ref : string! }
+type BwProbeOrbital = { name : string!, entity : string!, reference : BwProbeRef! }
+type BwProbeRef = { ref : string!, entity : string! }
+type BwProbeProgram = { orbitals : [BwProbeOrbital]! }
+type BwRow = { kind : string!, path : string!, callSite : BwRefCall!, declaration : BwOrbital!, aliasOrbitals : [BwOrbital]! }
+
+orbital BehaviorBorrowsOrbital {
+  entity BehaviorBorrowsRun [runtime] {
+    id : string!
+    behavior : string = ""
+    file : string = ""
+    raw : BwValue = { behavior: "", orbitals: [] }
+    names : [string] = []
+    orbs : [BwOrbital] = []
+  }
+
+  trait BehaviorBorrows -> BehaviorBorrowsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      BORROWS_DESCRIBE -> working
+        (set @entity.behavior @payload.behavior)
+        (behavior/describe { behavior: @payload.behavior } {
+          emit: { success: BORROWS_BEHAVIOR_DESCRIBED, failure: BORROWS_OPERATOR_FAILED }
+        })
+    }
+
+    state working {
+      INIT -> working
+      BORROWS_BEHAVIOR_DESCRIBED -> working when (!= (json/parse (json/stringify @payload.result) BwValue) null)
+        (set @entity.raw (default (json/parse (json/stringify @payload.result) BwValue) @entity.raw))
+        (behavior/source { behavior: (array/first (str/split @entity.behavior ".orbitals.")) } {
+          file: true
+          emit: { success: BORROWS_PATH_RESOLVED, failure: BORROWS_OPERATOR_FAILED }
+        })
+      BORROWS_BEHAVIOR_DESCRIBED -> ready when (= (json/parse (json/stringify @payload.result) BwValue) null)
+        (emit BORROWS_FAILED { error: "behavior/describe: the description is not a behavior description" })
+      BORROWS_PATH_RESOLVED -> working
+        (set @entity.file @payload.result.path)
+        (program/read "" { resolve: true text: false path: @payload.result.path } {
+          key: "behavior-borrows"
+          emit: { success: BORROWS_PROGRAM_READ, failure: BORROWS_OPERATOR_FAILED }
+        })
+      BORROWS_PROGRAM_READ -> working when (> (array/len (default @payload.result.lazy [])) 0)
+        (emit BORROWS_FOUND { rule: "", scope: "", findings: [] })
+      BORROWS_PROGRAM_READ -> working when (= (array/len (default @payload.result.lazy [])) 0)
+        (set @entity.orbs (default @payload.result.program.orbitals []))
+        (set @entity.names (array/map @entity.orbs (fn o @o.name)))
+        (emit BORROWS_PROBE {
+          file: @entity.file
+          program: { orbitals: (array/map @entity.orbs (fn o { name: @o.name, entity: (str/concat "Source.orbitals." @o.name ".entity"), reference: { ref: (str/concat "Source.orbitals." @o.name), entity: (default @o.entity.name "") } })) }
+          kept: (array/map @entity.orbs (fn o { orbital: (array/indexOf @entity.orbs @o), traits: (array/map (default @o.traits []) (fn t @t.name)) }))
+          references: (array/map @entity.orbs (fn o { kind: "orbital", path: (str/concat "orbitals[" (array/indexOf @entity.orbs @o) "]"), callSite: { ref: (str/concat "Source.orbitals." @o.name) }, declaration: @o, aliasOrbitals: @entity.orbs }))
+          stamped: null
+        })
+      BORROWS_FOUND -> ready
+        (emit BORROWS_DESCRIBED { result: (object/merge @entity.raw { orbitals: (array/map (default @entity.raw.orbitals []) (fn o (object/merge @o { borrows: (let ((i (array/indexOf @entity.names @o.value.orbital))) (array/sort (array/unique (array/map (array/filter @payload.findings (fn f (and (= @f.code "ORB_O_ENTITY_UNMAPPED") (str/startsWith @f.path (str/concat "orbitals[" @i "]"))))) (fn f (default @f.entity "")))))) }))) }) })
+      BORROWS_OPERATOR_FAILED -> ready
+        (emit BORROWS_FAILED { error: @payload.error })
+    }
+
+    emits {
+      BORROWS_DESCRIBED -> external { result : BwValue! }
+        @description "The behavior description with each orbital's `borrows` set."
+        @tier "secondary"
+      BORROWS_FAILED -> external { error : string! }
+        @description "The behavior could not be described or read."
+        @tier "secondary"
+      BORROWS_FOUND { rule : string!  scope : string!  findings : [BwFinding]! }
+        @description "Internal: the closure's verdict, or an empty one for a behavior with a lazy import."
+        @tier "internal"
+      BORROWS_PROBE -> external {
+        file : string!
+        program : BwProbeProgram!
+        kept : [BwKept]!
+        references : [BwRow]!
+        stamped : BwNode?
+      }
+        @description "The probe rows handed to std-orb-lint-orbital-ref-closure."
+        @tier "internal"
+    }
+
+    listens {
+      BORROWS_DESCRIBE { behavior : string! }
+        @description "Describe the behavior with what an import of each orbital borrows."
+      BORROWS_BEHAVIOR_DESCRIBED { result : BwValue! }
+        @description "behavior/describe's success."
+      BORROWS_PATH_RESOLVED { result : BwSource! }
+        @description "behavior/source's success with file: true."
+      BORROWS_PROGRAM_READ { result : BwRead! }
+        @description "program/read's success with `resolve`: the behavior resolved."
+      BORROWS_OPERATOR_FAILED { error : string! }
+        @description "A reflection operator's failure."
+      OrbLintOrbitalRefClosure.LINT_FOUND -> BORROWS_FOUND
+      BORROWS_FOUND { rule : string!  scope : string!  findings : [BwFinding]! }
+        @description "std-orb-lint-orbital-ref-closure's LINT_FOUND for the probe rows."
+    }
+  }
+
+  trait OrbLintOrbitalRefClosure = RefClosure.traits.OrbLintOrbitalRefClosure {
+    listens {
+      LINT_CALL_SITES { file : string!  program : BwProbeProgram!  kept : [BwKept]!  references : [BwRow]!  stamped : BwNode? }
+        @description "The probe rows of a described behavior: every orbital imported with no `entities {}`."
+      BehaviorBorrows.BORROWS_PROBE -> LINT_CALL_SITES
+    }
+  }
+
+  page boot as BehaviorBorrowsOrbitalStart -> BehaviorBorrows, OrbLintOrbitalRefClosure
+}

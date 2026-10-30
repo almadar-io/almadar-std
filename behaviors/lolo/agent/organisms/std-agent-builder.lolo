@@ -1,7 +1,7 @@
 app std-agent-builder [
   version: "3.0.0",
   description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did. A ladder step out of range, a missing fill target, or a fill tool that cannot be built from the knobs ends in BUILD_REJECTED with a named error.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] },
 ]
 ;; @capabilities "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation"
 
@@ -150,6 +150,12 @@ uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 
 uses Llm from "std/behaviors/std-llm"
 
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+uses Delay from "std/behaviors/std-delay"
+
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
 type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
@@ -265,6 +271,12 @@ orbital AgentBuilderOrbital {
         (set @entity.error "No tier of the ladder could serve the request")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "No tier of the ladder could serve the request", errors: [] })
+      CATALOG_LISTED -> failed when (> (array/len (array/filter ?result (fn e (= (array/len (object/get (default @e.vectors {}) description [])) 0)))) 0)
+        (let ((msg (str/concat "candidate " (object/get (default (array/first (array/filter ?result (fn e (= (array/len (object/get (default @e.vectors {}) description [])) 0)))) {}) behavior "") " has no embedding vector: a plain behavior/catalog listing carries none, and a tier ranks by meaning only over rows from std-catalog-vectors")))
+          (do
+            (set @entity.error @msg)
+            (set @entity.status failed)
+            (emit BUILD_REJECTED { error: @msg, errors: [] })))
       CATALOG_LISTED -> failed when (> (array/len (array/filter (array/filter ?result (fn e (> (array/len (object/get (default @e.vectors {}) description [])) 0))) (fn e (= (array/cosine (object/get (default @e.vectors {}) description []) @entity.queryVector) null)))) 0)
         (let ((bad (array/first (array/filter (array/filter ?result (fn e (> (array/len (object/get (default @e.vectors {}) description [])) 0))) (fn e (= (array/cosine (object/get (default @e.vectors {}) description []) @entity.queryVector) null))))))
           (let ((msg (str/concat "candidate " (object/get @bad behavior) " was embedded with " (array/len (object/get (default @bad.vectors {}) description [])) " dims, the query with " (array/len @entity.queryVector))))
@@ -669,6 +681,100 @@ orbital AgentBuilderOrbital {
       BuilderTools.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       BuilderTools.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       BuilderTools.LLM_CANCEL -> LLM_CANCEL
+      BldEmbedWait.BLD_EMBED_WAITED -> LLM_EMBED_WAITED
+      BldEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      BldEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      BldEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+      BldChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      BldChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      BldChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      BldChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+      BldJevRequest.HTTP_RESULT -> LLM_JEV_WIRE_RESULT
+      BldJevRequest.HTTP_REQUEST_FAILED -> LLM_JEV_WIRE_FAILED
+      BldJevRequest.HTTP_REQUEST_REFUSED -> LLM_JEV_WIRE_REFUSED
+    }
+  }
+
+  trait BldEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: BLD_EMBED_WAITED
+    }
+    listens {
+      BuilderLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait BldEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      BuilderLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      BuilderLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      BldEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      BldEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      BldEmbedRequest.HTTP_SEND -> HTTP_SEND
+      BldEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait BldChatRequest = Req.traits.HttpRequest {
+    listens {
+      BuilderLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      BuilderLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      BldChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      BldChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      BldChatRequest.HTTP_SEND -> HTTP_SEND
+      BldChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait BldJevRequest = Req.traits.HttpRequest {
+    listens {
+      BuilderLlm.LLM_JEV_WIRE -> HTTP_REQUEST
+      BldJevHttp.HTTP_REPLIED -> HTTP_REPLIED
+      BldJevHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldJevHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "OPEN_ROUTER_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      BldJevRequest.HTTP_SEND -> HTTP_SEND
+      BldJevRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -706,5 +812,5 @@ orbital AgentBuilderOrbital {
     }
   }
 
-  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm
+  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm, BldEmbedWait, BldEmbedRequest, BldEmbedHttp, BldChatRequest, BldChatHttp, BldJevRequest, BldJevHttp
 }

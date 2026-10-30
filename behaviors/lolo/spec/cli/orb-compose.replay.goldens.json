@@ -1,0 +1,198 @@
+{
+ "atom": "cli/atoms/std-orb-compose.lolo",
+ "trait": "OrbCompose",
+ "cases": [
+  {
+   "id": "a call hands its words to the parser with the three value flags",
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "ready",
+     "event": "COMPOSE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\": [\"--app-name\", \"A\", \"a.orb\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "COMPOSE_ARGS_PARSE",
+        "payload": {
+         "stage": "compose",
+         "argv": [
+          "--app-name",
+          "A",
+          "a.orb"
+         ],
+         "flags": [
+          {
+           "name": "app-name",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "layout",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "theme",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no app name is a usage error",
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "parsing",
+     "event": "COMPOSE_ARGS_DONE",
+     "payload": {
+      "stage": "compose",
+      "flags": {},
+      "positionals": [
+       "a.orb"
+      ],
+      "errors": [],
+      "words": [
+       "a.orb"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPOSE_ANSWERED",
+        "payload": {
+         "status": 400
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an app name and a file start the reads",
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "parsing",
+     "event": "COMPOSE_ARGS_DONE",
+     "payload": {
+      "stage": "compose",
+      "flags": {
+       "app-name": [
+        "A"
+       ]
+      },
+      "positionals": [
+       "a.orb"
+      ],
+      "errors": [],
+      "words": [
+       "a.orb"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "COMPOSE_NEXT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a relative file is opened under the working directory",
+   "entity": {
+    "files": [
+     "a.orb",
+     "b.orb"
+    ],
+    "cursor": 0
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "reading",
+     "event": "COMPOSE_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "COMPOSE_OPEN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "all files read composes the programs",
+   "entity": {
+    "files": [
+     "a.orb"
+    ],
+    "cursor": 1,
+    "appName": "A"
+   },
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "reading",
+     "event": "COMPOSE_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "composing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the composer's refusal answers status 500",
+   "steps": [
+    {
+     "trait": "OrbCompose",
+     "from": "composing",
+     "event": "COMPOSE_FAILED",
+     "payload": {
+      "error": "program/compose: layout must be one of x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPOSE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "stderr": "Error: program/compose: layout must be one of x"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

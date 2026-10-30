@@ -97,12 +97,45 @@ def mk(id,payload,expect,config=None):
     cases.append(c)
 mk("an-empty-command-is-refused-before-any-ask",{"key":"k","argv":[]},{"emits":[{"event":"RESP_FAILED","payload":{"key":"k","kind":"refused"}}],"effects":[]})
 mk("an-empty-command-item-is-refused-before-any-ask",{"key":"k","argv":["GET",""]},{"emits":[{"event":"RESP_FAILED","payload":{"key":"k","kind":"refused"}}],"effects":[]})
-mk("an-authenticated-call-is-unconfigured-until-the-secret-knob-feeds-os-send",{"key":"k","argv":["GET","k"]},{"emits":[{"event":"RESP_FAILED","payload":{"key":"k","kind":"unconfigured"}}],"effects":[]},{"authenticated":True})
-
 import base64 as _b
 def _b64(s): return _b.b64encode(s.encode()).decode()
 def _cmd(*a): return "*%d\r\n"%len(a)+"".join("$%d\r\n%s\r\n"%(len(x.encode()),x) for x in a)
 RUN=lambda k,*a:{"event":"RESP_RUN","payload":{"key":k,"argv":list(a)}}
+def _auth_head(user,n): return "*3\r\n$4\r\nAUTH\r\n$%d\r\n%s\r\n$%d\r\n"%(len(user),user,n) if user else "*2\r\n$4\r\nAUTH\r\n$%d\r\n"%n
+def _auth_frame(user,pw): return (_cmd("AUTH",user,pw) if user else _cmd("AUTH",pw))
+PW="hunter2"
+def auth_case(id,user,db,reply,tail,note,pw=PW,held=True):
+    head=_auth_head(user,len(pw))
+    hello=_cmd("SELECT",str(db)) if db else ""
+    cfg={"authenticated":True}
+    if user: cfg["user"]=user
+    if db: cfg["db"]=db
+    c={"id":id,"note":note,"config":cfg}
+    if held: c["credentials"]={"REDIS_PASSWORD":pw}
+    handshake=[{"event":"RESP_RUN","payload":{"key":"k","argv":["GET","k"]},"expect":{"state":"authorizing","emits":[{"event":"RESP_AUTH_READ","payload":{}}],"neverEmits":["RESP_FAILED"]}},
+      {"event":"RESP_CONNECTED","payload":{"sock":3},"expect":{"state":"open","emits":[{"event":"RESP_WIRE_SENT","payload":{"key":"k","stage":"handshake","bytes":_b64(head+"\r\n"+hello)}}]}},
+      {"event":"RESP_SENT","payload":{"bytes":len(_auth_frame(user,pw))+len(hello)},"expect":{"state":"open"}}]
+    c["steps"]=handshake+tail
+    cases.append(c)
+cmd_get=_cmd("GET","k")
+ok_all="+OK\r\n"*(2 if True else 1)
+auth_case("an-authenticated-call-sends-auth-with-the-held-password-then-the-command",None,0,None,
+  [{"event":"RESP_READ","payload":{"data":_b64("+OK\r\n"),"eof":False,"key":"read3"},"expect":{"emits":[{"event":"RESP_WIRE_SENT","payload":{"key":"k","stage":"command","bytes":_b64(cmd_get)}}],"neverEmits":["RESP_FAILED","RESP_REPLIED"]}},
+   {"event":"RESP_SENT","payload":{"bytes":len(cmd_get)},"expect":{"state":"open"}},
+   {"event":"RESP_READ","payload":{"data":_b64("$2\r\nv1\r\n"),"eof":False,"key":"read3"},"expect":{"emits":[{"event":"RESP_REPLIED","payload":{"key":"k","kind":"bulk","text":"v1"}}],"neverEmits":["RESP_FAILED"]}}],
+  "AUTH password rides an os/send credential segment: RESP_WIRE_SENT shows the frame without the password bytes (length 7 in the frame head) and the replay holds the password only as the case's test credential")
+auth_case("an-acl-user-and-a-database-send-auth-user-password-then-select-before-the-command","app",2,None,
+  [{"event":"RESP_READ","payload":{"data":_b64("+OK\r\n"),"eof":False,"key":"read3"},"expect":{"neverEmits":["RESP_FAILED","RESP_REPLIED"]}},
+   {"event":"RESP_READ","payload":{"data":_b64("+OK\r\n"),"eof":False,"key":"read3"},"expect":{"emits":[{"event":"RESP_WIRE_SENT","payload":{"key":"k","stage":"command","bytes":_b64(cmd_get)}}],"neverEmits":["RESP_FAILED","RESP_REPLIED"]}}],
+  "the ACL form AUTH user password, pipelined with SELECT db; both replies must be +OK before the command goes out")
+auth_case("a-wrong-password-reply-fails-the-call-with-the-servers-error-word",None,0,None,
+  [{"event":"RESP_READ","payload":{"data":_b64("-WRONGPASS invalid username-password pair or user is disabled.\r\n"),"eof":False,"key":"read3"},"expect":{"state":"open","emits":[{"event":"RESP_FAILED","payload":{"key":"k","kind":"redis","code":"WRONGPASS"}}],"neverEmits":["RESP_REPLIED"]}}],
+  "the handshake error answers every key in flight with kind redis and the first word as code")
+cases.append({"id":"an-authenticated-call-with-no-credential-held-is-unconfigured-before-any-connect","note":"control: the password credential is not held, so the call fails before any connect","config":{"authenticated":True},"steps":[
+    {"event":"RESP_RUN","payload":{"key":"k","argv":["GET","k"]},"expect":{"emits":[{"event":"RESP_AUTH_READ","payload":{}},{"event":"RESP_FAILED","payload":{"key":"k","kind":"unconfigured"}}],"neverEmits":["RESP_REPLIED"],"effects":[]}}]})
+cases.append({"id":"an-authenticated-call-whose-credential-is-held-under-another-name-is-unconfigured","note":"control: only REDIS_PASSWORD is the password knob's credential","config":{"authenticated":True},"credentials":{"OTHER":"hunter2"},"steps":[
+    {"event":"RESP_RUN","payload":{"key":"k","argv":["GET","k"]},"expect":{"emits":[{"event":"RESP_FAILED","payload":{"key":"k","kind":"unconfigured"}}],"neverEmits":["RESP_REPLIED"],"effects":[]}}]})
+
 cases.append({"id":"two-overlapping-keys-share-one-connection-and-are-answered-in-order","note":"pipelined: the second command is written while the first is in flight, replies are matched to keys in write order",
  "steps":[dict(RUN("a","GET","x"),expect={"state":"connecting"}),
   dict(RUN("b","GET","y"),expect={"state":"connecting","effects":[]}),
@@ -142,5 +175,5 @@ cases.append({"id":"a-stale-read-of-a-closed-socket-is-ignored",
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from real_case import real_case
 cases.append(real_case())
-json.dump({"atom":"store/atoms/std-resp-client.lolo","trait":"RespClient","note":"parity oracle: the recorded fixtures of orbital-integration-tests/fixtures/redis (recorded against Redis 7 by fixtures/redis/record.py) without a password; the AUTH cases wait for the secret knob","cases":cases},open(OUT,'w'),indent=1)
+json.dump({"atom":"store/atoms/std-resp-client.lolo","trait":"RespClient","note":"parity oracle: the recorded fixtures of orbital-integration-tests/fixtures/redis (recorded against Redis 7 by fixtures/redis/record.py) without a password; the AUTH cases hold the password as a test-only case credential","cases":cases},open(OUT,'w'),indent=1)
 print(len(cases))

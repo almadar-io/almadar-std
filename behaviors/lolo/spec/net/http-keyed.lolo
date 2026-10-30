@@ -1,0 +1,31 @@
+app http-keyed-spec [
+  version: "1.0.0",
+  description: "Design contract for concurrent HTTP calls by key (std-http-client stays one call per frame): HTTP_SEND { key, method, target, headers, body, stream } is answered HTTP_REPLIED { key, status, headers, body } or HTTP_FAILED { key, error, kind } carrying the same key, with a stream of sse or jsonl framed as HTTP_STREAM_EVENT { key, data, event, id }. Each in-flight key holds one slot of std-http-client, so its own socket; a call with no free slot waits in arrival order and takes the slot an answer frees; an empty key, or a key already in flight or waiting, answers HTTP_FAILED kind refused. HTTP_CANCEL { key } drops a waiting call or closes the in-flight one's socket, and no answer follows."
+]
+
+type HttpHeader = { name : string!, value : string! }
+type KeyedAsk = { key : string!, method : string!, target : string!, headers : [HttpHeader]!, body : bytes!, stream : string! }
+
+orbital HttpKeyedSpec {
+  expects entity KeyedFlights [runtime] {
+    id : string!
+    slots : [string]
+    queue : [KeyedAsk]
+  }
+  expects trait HttpKeyed {
+    state ready {
+      HTTP_SEND -> ready
+      HTTP_CANCEL -> ready
+      KS_REPLIED -> ready
+      KS_FAILED -> ready
+      KS_STREAM -> ready
+      KEYED_PUMP -> ready
+    }
+    emits {
+      HTTP_REPLIED { key : string!  status : number!  headers : Map string string  body : bytes! }
+      HTTP_STREAM_EVENT { key : string!  data : string!  event : string  id : string }
+      HTTP_FAILED { key : string!  error : string!  kind : string! }
+    }
+  }
+  expects page boot -> HttpKeyed
+}

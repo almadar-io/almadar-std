@@ -1,0 +1,290 @@
+{
+  "atom": "connect/atoms/std-arxiv.lolo",
+  "trait": "ArxivClient",
+  "note": "Converted from orbital-integration-tests fixtures/arxiv (service parity); validation and unknown-action cases belong to the retired service layer and are not carried. The arXiv request writes every word as all:<word> joined with AND, which the older fixture url did not; the golden pins the atom. The request is the atom's HTTP fetch send; the reply is the composed fetch's answer.",
+  "cases": [
+    {
+      "id": "search-blank-query-sends-nothing",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "   "
+          },
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "ARXIV_HTTP_SEND"
+            ],
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-empty-feed",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "zzzzqqqq"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/api/query?search_query=all%3Azzzzqqqq&start=0&max_results=8&sortBy=relevance",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARXIV_SEARCH_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSI+CiAgPGlkPmh0dHA6Ly9hcnhpdi5vcmcvYXBpL2ZlZWQ8L2lkPgogIDx0aXRsZT5BclhpdiBRdWVyeTwvdGl0bGU+CjwvZmVlZD4K"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-http-400-yields-no-results",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/api/query?search_query=all%3Ax&start=0&max_results=8&sortBy=relevance",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARXIV_SEARCH_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 400,
+            "headers": {},
+            "body": "PGZlZWQ+PGVudHJ5PjxpZD5lPC9pZD48L2VudHJ5PjwvZmVlZD4="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-http-503-yields-no-results",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/api/query?search_query=all%3Ax&start=0&max_results=8&sortBy=relevance",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARXIV_SEARCH_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 503,
+            "headers": {},
+            "body": "ZG93bg=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-max-results-and-reserved-characters",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "  ti:\"graph & node\" (2024)  ",
+            "maxResults": 3
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/api/query?search_query=all%3Ati%3A%22graph%20AND%20all%3A%26%20AND%20all%3Anode%22%20AND%20all%3A(2024)&start=0&max_results=3&sortBy=relevance",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARXIV_SEARCH_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSI+CiAgPGlkPmh0dHA6Ly9hcnhpdi5vcmcvYXBpL2ZlZWQ8L2lkPgogIDx0aXRsZT5BclhpdiBRdWVyeTwvdGl0bGU+CiAgPGVudHJ5PgogICAgPGlkPmh0dHA6Ly9hcnhpdi5vcmcvYWJzLzE3MDYuMDM3NjJ2NzwvaWQ+CiAgICA8dXBkYXRlZD4yMDIzLTA4LTAyVDAwOjQxOjE4WjwvdXBkYXRlZD4KICAgIDxwdWJsaXNoZWQ+MjAxNy0wNi0xMlQxNzo1NzozNFo8L3B1Ymxpc2hlZD4KICAgIDx0aXRsZT5BdHRlbnRpb24gSXMgQWxsCiAgICAgIFlvdSBOZWVkPC90aXRsZT4KICAgIDxzdW1tYXJ5PiAgVGhlIGRvbWluYW50IHNlcXVlbmNlIHRyYW5zZHVjdGlvbiBtb2RlbHMKICAgIGFyZSBiYXNlZCBvbiBjb21wbGV4IHJlY3VycmVudCBuZXR3b3Jrcy4gIDwvc3VtbWFyeT4KICAgIDxhdXRob3I+CiAgICAgIDxuYW1lPkFzaGlzaCBWYXN3YW5pPC9uYW1lPgogICAgPC9hdXRob3I+CiAgICA8YXV0aG9yPjxuYW1lPiBOb2FtIFNoYXplZXIgPC9uYW1lPjwvYXV0aG9yPgogICAgPGxpbmsgaHJlZj0iaHR0cDovL2FyeGl2Lm9yZy9hYnMvMTcwNi4wMzc2MnY3IiByZWw9ImFsdGVybmF0ZSIgdHlwZT0idGV4dC9odG1sIi8+CiAgICA8bGluayB0aXRsZT0icGRmIiBocmVmPSJodHRwOi8vYXJ4aXYub3JnL3BkZi8xNzA2LjAzNzYydjciIHJlbD0icmVsYXRlZCIgdHlwZT0iYXBwbGljYXRpb24vcGRmIi8+CiAgICA8YXJ4aXY6cHJpbWFyeV9jYXRlZ29yeSB4bWxuczphcnhpdj0iaHR0cDovL2FyeGl2Lm9yZy9zY2hlbWFzL2F0b20iIHRlcm09ImNzLkNMIiBzY2hlbWU9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIi8+CiAgPC9lbnRyeT4KPC9mZWVkPgo="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": [
+                    {
+                      "id": "http://arxiv.org/abs/1706.03762v7",
+                      "title": "Attention Is All You Need",
+                      "summary": "The dominant sequence transduction models are based on complex recurrent networks.",
+                      "authors": [
+                        "Ashish Vaswani",
+                        "Noam Shazeer"
+                      ],
+                      "published": "2017-06-12T17:57:34Z",
+                      "url": "http://arxiv.org/abs/1706.03762v7"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "steps": [
+        {
+          "event": "ARXIV_SEARCH",
+          "payload": {
+            "query": "attention transformer"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_HTTP_SEND",
+                "payload": {
+                  "key": "search",
+                  "method": "GET",
+                  "target": "/api/query?search_query=all%3Aattention%20AND%20all%3Atransformer&start=0&max_results=8&sortBy=relevance",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "ARXIV_SEARCH_REPLIED",
+          "payload": {
+            "key": "search",
+            "status": 200,
+            "headers": {},
+            "body": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSI+CiAgPGlkPmh0dHA6Ly9hcnhpdi5vcmcvYXBpL2ZlZWQ8L2lkPgogIDx0aXRsZT5BclhpdiBRdWVyeTwvdGl0bGU+CiAgPGVudHJ5PgogICAgPGlkPmh0dHA6Ly9hcnhpdi5vcmcvYWJzLzE3MDYuMDM3NjJ2NzwvaWQ+CiAgICA8dXBkYXRlZD4yMDIzLTA4LTAyVDAwOjQxOjE4WjwvdXBkYXRlZD4KICAgIDxwdWJsaXNoZWQ+MjAxNy0wNi0xMlQxNzo1NzozNFo8L3B1Ymxpc2hlZD4KICAgIDx0aXRsZT5BdHRlbnRpb24gSXMgQWxsCiAgICAgIFlvdSBOZWVkPC90aXRsZT4KICAgIDxzdW1tYXJ5PiAgVGhlIGRvbWluYW50IHNlcXVlbmNlIHRyYW5zZHVjdGlvbiBtb2RlbHMKICAgIGFyZSBiYXNlZCBvbiBjb21wbGV4IHJlY3VycmVudCBuZXR3b3Jrcy4gIDwvc3VtbWFyeT4KICAgIDxhdXRob3I+CiAgICAgIDxuYW1lPkFzaGlzaCBWYXN3YW5pPC9uYW1lPgogICAgPC9hdXRob3I+CiAgICA8YXV0aG9yPjxuYW1lPiBOb2FtIFNoYXplZXIgPC9uYW1lPjwvYXV0aG9yPgogICAgPGxpbmsgaHJlZj0iaHR0cDovL2FyeGl2Lm9yZy9hYnMvMTcwNi4wMzc2MnY3IiByZWw9ImFsdGVybmF0ZSIgdHlwZT0idGV4dC9odG1sIi8+CiAgICA8bGluayB0aXRsZT0icGRmIiBocmVmPSJodHRwOi8vYXJ4aXYub3JnL3BkZi8xNzA2LjAzNzYydjciIHJlbD0icmVsYXRlZCIgdHlwZT0iYXBwbGljYXRpb24vcGRmIi8+CiAgICA8YXJ4aXY6cHJpbWFyeV9jYXRlZ29yeSB4bWxuczphcnhpdj0iaHR0cDovL2FyeGl2Lm9yZy9zY2hlbWFzL2F0b20iIHRlcm09ImNzLkNMIiBzY2hlbWU9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIi8+CiAgPC9lbnRyeT4KICA8ZW50cnk+CiAgICA8aWQ+aHR0cDovL2FyeGl2Lm9yZy9hYnMvMjAwMS4wMDAwMXYxPC9pZD4KICAgIDxwdWJsaXNoZWQ+MjAyMC0wMS0wMVQwMDowMDowMFo8L3B1Ymxpc2hlZD4KICAgIDx0aXRsZT5BIDxpPkJhcmU8L2k+IEVudHJ5PC90aXRsZT4KICAgIDxzdW1tYXJ5Pk9ubHkgYW4gaWQgbGluay48L3N1bW1hcnk+CiAgPC9lbnRyeT4KPC9mZWVkPgo="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ARXIV_SEARCH_RESULT",
+                "payload": {
+                  "results": [
+                    {
+                      "id": "http://arxiv.org/abs/1706.03762v7",
+                      "title": "Attention Is All You Need",
+                      "summary": "The dominant sequence transduction models are based on complex recurrent networks.",
+                      "authors": [
+                        "Ashish Vaswani",
+                        "Noam Shazeer"
+                      ],
+                      "published": "2017-06-12T17:57:34Z",
+                      "url": "http://arxiv.org/abs/1706.03762v7"
+                    },
+                    {
+                      "id": "http://arxiv.org/abs/2001.00001v1",
+                      "title": "A Bare Entry",
+                      "summary": "Only an id link.",
+                      "authors": [],
+                      "published": "2020-01-01T00:00:00Z",
+                      "url": "http://arxiv.org/abs/2001.00001v1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

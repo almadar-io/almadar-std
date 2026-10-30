@@ -1,15 +1,16 @@
 app std-orb-produced-program [
   version: "1.0.0",
-  description: "std-orb-produced-program - the one place a lint run decides which event names an effect tree produces, the port of the compiler's collect_effect_produced_events. For every inline trait of the offered program it walks the transition effects and the tick effects (not the config defaults) and answers PRODUCED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the string slots of every operator call's `emit` map that the operator table names (PRODUCED_SLOTS_HEARD, from std-orb-lint-input's LINT_OPERATOR_SEMANTICS emitSlots) and the string `emit: \"X\"` form. byControl holds, for each rendered pattern, the leaves of its own event props and the eventField of its own event-list props (PRODUCED_PATTERNS_HEARD, from LINT_EVENT_PROPS byPattern); leaves are read through the operators' declared returnSemantics with every branch counted. `(emit X)` is not an effect tree's production, no bus-excluded event is dropped, and an empty name or a binding is never credited. It is not std-orb-fired-events with a flag: a program that composes both needs two distinct traits, because the composed address of a trait is its source trait's name."
+  description: "std-orb-produced-program - the one place a lint run decides which event names an effect tree produces, the port of the compiler's collect_effect_produced_events. For every inline trait of the offered program it walks the transition effects and the tick effects (not the config defaults) and answers PRODUCED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the string slots of every operator call's `emit` map that the operator table names (PRODUCED_SLOTS_HEARD, from std-orb-lint-input's LINT_OPERATOR_SEMANTICS emitSlots) and the string `emit: \"X\"` form. byControl holds, for each rendered pattern, the leaves of its own event props and the eventField of its own event-list props (PRODUCED_PATTERNS_HEARD, from LINT_EVENT_PROPS byPattern); leaves are read through the operators' value-source slots with every branch counted. `(emit X)` is not an effect tree's production, no bus-excluded event is dropped, and an empty name or a binding is never credited. It is not std-orb-fired-events with a flag: a program that composes both needs two distinct traits, because the composed address of a trait is its source trait's name."
 ]
 uses Spec from "almadar-std/produced-program"
 type FiredPatternProp = { pattern : string!, prop : string!, field : string! }
+type WalkSlot = { kind : string!, args : [number] }
 
 orbital OrbProducedProgramOrbital {
   uses Base from "std/behaviors/std-orb-produced-events"
   entity OrbProducedProgramRun [runtime] {
     id : string!
-    semantics : Map string string = {}
+    walk : Map string WalkSlot = {}
     functions : [string] = []
     rows : [FiredPatternProp] = []
     slots : [string] = []

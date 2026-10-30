@@ -1,0 +1,744 @@
+{
+  "atom": "cli/atoms/std-orb-lint-engine-rule-count.lolo",
+  "trait": "OrbLintEngineRuleCount",
+  "note": "Prevention for a lint engine whose ruleCount knob differs from the rule traits it routes LINT_FOUND from (a larger knob never settles and orb validate reports a clean program). The lowered program lists the engine's composed traits as refs, so the count is the engine's own LINT_FOUND listens; multiAnswerCount (the engine's extra answers) is not part of it.",
+  "cases": [
+    {
+      "id": "a-knob-above-the-routed-answers-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R3"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 5
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.ruleCount",
+                      "message": "ruleCount is 5 but Engine routes 4 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
+                      "suggestion": "set ruleCount to 4",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-knob-below-the-routed-answers-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R3"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 3
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.ruleCount",
+                      "message": "ruleCount is 3 but Engine routes 4 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
+                      "suggestion": "set ruleCount to 4",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-knob-equal-to-the-routed-answers-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R3"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 4
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "only-LINT_FOUND-listens-are-counted",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R3"
+                          }
+                        },
+                        {
+                          "event": "LINT_LAZY",
+                          "triggers": "LINT_LAZY_HEARD",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "In"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 4
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-trait-with-no-ruleCount-knob-is-left-alone",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Plain",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        }
+                      ],
+                      "config": {}
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-engine-trait-is-checked-on-its-own",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "EngineA",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 2
+                        }
+                      }
+                    },
+                    {
+                      "name": "EngineB",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 9
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=EngineB].config.ruleCount",
+                      "message": "ruleCount is 9 but EngineB routes 3 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
+                      "suggestion": "set ruleCount to 3",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-orbitals",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": []
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-multiAnswerCount-does-not-change-the-count",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R2"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R3"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "ruleCount": {
+                          "default": 4
+                        },
+                        "multiAnswerCount": {
+                          "default": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

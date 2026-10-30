@@ -1,0 +1,759 @@
+{
+ "atom": "cli/atoms/std-orb-lint-egress-scheme-unused.lolo",
+ "trait": "OrbLintEgressSchemeUnused",
+ "note": "An app egress entry whose scheme (redis, rediss, postgres, postgresql) nothing uses since the TCP protocol-target grants were retired. Controls: http and https origins, a host that merely contains the word redis, no egress, an empty egress.",
+ "cases": [
+  {
+   "id": "redis-with-a-port-names-the-net-grant",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "redis://cache.internal:6379"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://cache.internal:6379' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"cache.internal:6379\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rediss-with-a-port-names-the-net-grant",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "rediss://cache.internal:6380"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'rediss://cache.internal:6380' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"cache.internal:6380\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "postgres-with-a-port-names-the-net-grant",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "postgres://db.internal:5432"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'postgres://db.internal:5432' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"db.internal:5432\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "postgresql-with-a-port-names-the-net-grant",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "postgresql://db.internal:5432"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'postgresql://db.internal:5432' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"db.internal:5432\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-uppercase-scheme-is-reported",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "REDIS://Cache.Internal:6379"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'REDIS://Cache.Internal:6379' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"Cache.Internal:6379\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-redis-entry-without-a-port-keeps-the-port-open-for-the-owner",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "redis://cache.internal"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://cache.internal' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"cache.internal:<port>\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-second-entry-is-indexed",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "https://a.com",
+        "redis://cache.internal:6379"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[1]",
+           "message": "egress entry 'redis://cache.internal:6379' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"cache.internal:6379\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-retired-entries-are-both-reported",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "redis://r.internal:6379",
+        "postgres://p.internal:5432"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[0]",
+           "message": "egress entry 'redis://r.internal:6379' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"r.internal:6379\": [tcp] }",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_OS_EGRESS_SCHEME_UNUSED",
+           "path": "egress[1]",
+           "message": "egress entry 'postgres://p.internal:5432' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired",
+           "suggestion": "Remove the entry and declare the socket as a net grant: net: { \"p.internal:5432\": [tcp] }",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-https-origin",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "https://a.com"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-http-origin-with-a-port",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "http://localhost:8080"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-mixed-https-and-http",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "https://a.com",
+        "http://127.0.0.1:9000"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-host-named-redis-under-https",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": [
+        "https://redis.example.com"
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-empty-egress",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "egress": []
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-egress",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {},
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEgressSchemeUnused",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "egress-scheme-unused",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbLintEgressSchemeUnusedCli",
+     "from": "ready",
+     "event": "LINT_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb lint egress-scheme-unused <file>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

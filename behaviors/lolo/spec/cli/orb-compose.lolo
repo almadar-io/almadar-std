@@ -1,0 +1,18 @@
+app orb-compose-spec [
+  version: "1.0.0",
+  inbound: ["cli-compose"],
+  description: "Design contract for `orb compose --app-name <name> [--layout <strategy>] [--theme <theme>] <program>…`: each program file is read and parsed in the order given, program/compose assembles them into one app program, and the answer is its JSON. The node host's program/compose runs this command, so the Rust composer is the only composer."
+]
+
+orbital OrbComposeSpec {
+  expects trait OrbCompose {
+    state ready
+    state parsing
+    state reading
+    state composing
+    emits {
+      COMPOSE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page boot -> OrbCompose
+}

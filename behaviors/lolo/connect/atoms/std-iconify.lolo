@@ -3,12 +3,24 @@ app std-iconify [
   description: "std-iconify — brand-logo and icon resolution through the keyless Iconify API (api.iconify.design). ICONIFY_SVG_EXISTS probes a logo path, ICONIFY_SEARCH lists matching icon ids, ICONIFY_GET_ICON_BODY resolves an icon id to its SVG body (through an alias when the set defines one). Every transport failure, non-2xx reply or unreadable body answers as not found (false / [] / null), never as an error.",
   egress: ["https://api.iconify.design"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type IconifySearchReply = { icons : [string], total : number, limit : number, start : number }
 type IconifyIcon = { body : string, parent : string, width : number, height : number }
 type IconifyIconSet = { prefix : string, icons : Map string IconifyIcon, aliases : Map string IconifyIcon, not_found : [string], width : number, height : number }
 orbital IconifyOrbital {
   entity IconifyLookup [runtime] {
     id : string!
+  }
+
+  trait IconifyFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://api.iconify.design"
+      timeoutMs: 6000
+    }
+    listens {
+      IconifyClient.ICONIFY_HTTP_SEND -> HTTP_SEND
+    }
   }
 
   trait IconifyClient -> IconifyLookup [client] {
@@ -18,51 +30,37 @@ orbital IconifyOrbital {
       INIT -> idle
 
       ICONIFY_SVG_EXISTS -> idle when (!= @payload.path "")
-        (http GET @config.origin (str/concat "/" @payload.path) {
-          headers: { Accept: "*/*", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: ICONIFY_SVG_REPLIED, failure: ICONIFY_SVG_FAILED } })
+        (emit ICONIFY_HTTP_SEND { key: "svg", method: "GET", target: (str/concat "/" @payload.path), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       ICONIFY_SVG_EXISTS -> idle when (= @payload.path "")
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
-      ICONIFY_SVG_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      ICONIFY_REPLIED -> idle when (and (= @payload.key "svg") (>= @payload.status 200) (< @payload.status 300))
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: true })
-      ICONIFY_SVG_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      ICONIFY_REPLIED -> idle when (and (= @payload.key "svg") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
-      ICONIFY_SVG_FAILED -> idle
+      ICONIFY_FAILED -> idle when (= @payload.key "svg")
         (emit ICONIFY_SVG_EXISTS_RESULT { exists: false })
 
       ICONIFY_SEARCH -> idle when (!= @payload.query "")
-        (http GET @config.origin "/search" {
-          query: { query: @payload.query, limit: (default @payload.limit 1) },
-          headers: { Accept: "*/*", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: ICONIFY_SEARCH_REPLIED, failure: ICONIFY_SEARCH_FAILED } })
+        (emit ICONIFY_HTTP_SEND { key: "search", method: "GET", target: (str/concat "/search?query=" (str/encode-uri-component @payload.query) "&limit=" (default @payload.limit 1)), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       ICONIFY_SEARCH -> idle when (= @payload.query "")
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
-      ICONIFY_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ICONIFY_SEARCH_RESULT { icons: (default (object/get (json/parse @payload.body IconifySearchReply) icons []) []) })
-      ICONIFY_SEARCH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      ICONIFY_REPLIED -> idle when (and (= @payload.key "search") (>= @payload.status 200) (< @payload.status 300))
+        (emit ICONIFY_SEARCH_RESULT { icons: (default (object/get (default (json/parse (default (bytes/to-string @payload.body) "") IconifySearchReply) {}) icons []) []) })
+      ICONIFY_REPLIED -> idle when (and (= @payload.key "search") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
-      ICONIFY_SEARCH_FAILED -> idle
+      ICONIFY_FAILED -> idle when (= @payload.key "search")
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
 
       ICONIFY_GET_ICON_BODY -> idle when (and (>= (array/len (str/split @payload.iconId ":")) 2) (!= (array/nth (str/split @payload.iconId ":") 0) "") (!= (array/nth (str/split @payload.iconId ":") 1) ""))
-        (http GET @config.origin (str/concat "/" (array/nth (str/split @payload.iconId ":") 0) ".json") {
-          query: { icons: (array/nth (str/split @payload.iconId ":") 1) },
-          headers: { Accept: "*/*", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.iconId, emit: { success: ICONIFY_BODY_REPLIED, failure: ICONIFY_BODY_FAILED } })
+        (emit ICONIFY_HTTP_SEND { key: (str/concat "body|" @payload.iconId), method: "GET", target: (str/concat "/" (default (array/nth (str/split @payload.iconId ":") 0) "") ".json?icons=" (str/encode-uri-component (default (array/nth (str/split @payload.iconId ":") 1) ""))), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       ICONIFY_GET_ICON_BODY -> idle when (or (< (array/len (str/split @payload.iconId ":")) 2) (= (array/nth (str/split @payload.iconId ":") 0) "") (= (array/nth (str/split @payload.iconId ":") 1) ""))
         (emit ICONIFY_ICON_BODY_RESULT {})
-      ICONIFY_BODY_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ICONIFY_ICON_BODY_RESULT {
-          body: (or
-            (object/get (object/get (object/get (json/parse @payload.body IconifyIconSet) icons {}) (array/nth (str/split @payload.key ":") 1) {}) body null)
-            (object/get (object/get (object/get (json/parse @payload.body IconifyIconSet) aliases {}) (array/nth (str/split @payload.key ":") 1) {}) body null))
-        })
-      ICONIFY_BODY_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      ICONIFY_REPLIED -> idle when (and (= (array/nth (str/split @payload.key "|") 0) "body") (>= @payload.status 200) (< @payload.status 300))
+        (let ((sets (default (json/parse (default (bytes/to-string @payload.body) "") IconifyIconSet) {})) (name (default (array/nth (str/split (default (array/nth (str/split @payload.key "|") 1) "") ":") 1) "")) (found (default (object/get (object/get (object/get @sets icons {}) @name {}) body null) (object/get (object/get (object/get @sets aliases {}) @name {}) body null))))
+          (if (= @found null) (emit ICONIFY_ICON_BODY_RESULT {}) (emit ICONIFY_ICON_BODY_RESULT { body: (default @found "") })))
+      ICONIFY_REPLIED -> idle when (and (= (array/nth (str/split @payload.key "|") 0) "body") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit ICONIFY_ICON_BODY_RESULT {})
-      ICONIFY_BODY_FAILED -> idle
+      ICONIFY_FAILED -> idle when (= (array/nth (str/split @payload.key "|") 0) "body")
         (emit ICONIFY_ICON_BODY_RESULT {})
     }
 
@@ -85,47 +83,16 @@ orbital IconifyOrbital {
         @description "The SVG body of the requested icon id, resolved through the set's aliases when the icon itself is absent; absent when the id is malformed, unknown or the call failed."
         @synonyms "icon svg body, icon markup, resolved icon"
         @tier "primary"
-      ICONIFY_SVG_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the svg-path probe's HTTP reply."
-        @tier "secondary"
-      ICONIFY_SVG_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the svg-path probe never produced a reply."
-        @tier "secondary"
-      ICONIFY_SEARCH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the search call's HTTP reply."
-        @tier "secondary"
-      ICONIFY_SEARCH_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the search call never produced a reply."
-        @tier "secondary"
-      ICONIFY_BODY_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      ICONIFY_HTTP_SEND {
         key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the icon-set lookup's HTTP reply."
-        @tier "secondary"
-      ICONIFY_BODY_FAILED {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the icon-set lookup never produced a reply."
-        @tier "secondary"
+        @description "Internal: one Iconify request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -145,55 +112,29 @@ orbital IconifyOrbital {
       }
         @description "Resolve an icon id (prefix:name) to its SVG body."
         @synonyms "get icon, icon svg, resolve icon"
-      ICONIFY_SVG_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-      ICONIFY_SVG_FAILED {
-        error : string!
-        kind : string!
-      }
-      ICONIFY_SEARCH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-      ICONIFY_SEARCH_FAILED {
-        error : string!
-        kind : string!
-      }
-      ICONIFY_BODY_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      ICONIFY_REPLIED {
         key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
       }
-      ICONIFY_BODY_FAILED {
+      ICONIFY_FAILED {
+        key : string!
         error : string!
         kind : string!
-        key : string!
       }
+      IconifyFetch.HTTP_REPLIED -> ICONIFY_REPLIED
+      IconifyFetch.HTTP_FAILED -> ICONIFY_FAILED
     }
 
     config {
-      origin : url = "https://api.iconify.design"
-        @label "Iconify API origin"
-        @description "The Iconify API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "iconify url, api host, icon service origin"
-        @tier "infra"
       userAgent : string = "Almadar/1.0 (https://almadar.dev)"
         @label "User-Agent"
         @description "User-Agent header sent with every Iconify request."
         @synonyms "user agent, client id, request identity"
         @tier "infra"
-      timeoutMs : number = 6000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each Iconify request may take before it counts as not found."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
     }
   }
 
-  page boot as IconifyPage -> IconifyClient
+  page boot as IconifyPage -> IconifyClient, IconifyFetch
 }

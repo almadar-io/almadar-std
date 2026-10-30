@@ -3,12 +3,24 @@ app std-maps [
   description: "std-maps — geocoding, reverse geocoding and great-circle distance through the keyless OpenStreetMap Nominatim API (nominatim.openstreetmap.org). GEOCODE answers GEOCODED with lat, lng and formattedAddress; REVERSE_GEOCODE answers REVERSE_GEOCODED with address and formattedAddress; DISTANCE answers DISTANCE_COMPUTED with the haversine distanceKm and makes no network call. A blank query, an empty result, a non-2xx reply or a transport failure answers MAPS_FAILURE with error and code. Nominatim's usage policy allows one request per second and requires an identifying User-Agent.",
   egress: ["https://nominatim.openstreetmap.org"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type NominatimPlace = { lat : string, lon : string, display_name : string }
 type NominatimPlaces = [NominatimPlace]
 type NominatimReverse = { lat : string, lon : string, display_name : string, error : string }
 orbital MapsOrbital {
   entity MapsLookup [runtime] {
     id : string!
+  }
+
+  trait MapsFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://nominatim.openstreetmap.org"
+      timeoutMs: 6000
+    }
+    listens {
+      MapsClient.MAPS_HTTP_SEND -> HTTP_SEND
+    }
   }
 
   trait MapsClient -> MapsLookup [client] {
@@ -18,16 +30,13 @@ orbital MapsOrbital {
       INIT -> idle
 
       GEOCODE -> idle when (!= (str/trim @payload.address) "")
-        (http GET @config.origin (str/concat "/search?format=json&limit=1&q=" (str/encode-uri-component (str/trim @payload.address))) {
-          headers: { Accept: "application/json", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: MAPS_GEOCODE_REPLIED, failure: MAPS_REQUEST_FAILED } })
+        (emit MAPS_HTTP_SEND { key: "geocode", method: "GET", target: (str/concat "/search?format=json&limit=1&q=" (str/encode-uri-component (str/trim @payload.address))), headers: [{ name: "Accept", value: "application/json" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       GEOCODE -> idle when (= (str/trim @payload.address) "")
         (emit MAPS_FAILURE { error: "address is blank", code: "invalid_input" })
-      MAPS_GEOCODE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      MAPS_REPLIED -> idle when (and (= @payload.key "geocode") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit MAPS_FAILURE { error: (str/concat "Nominatim answered HTTP " @payload.status), code: "http_error" })
-      MAPS_GEOCODE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((places (json/parse @payload.body NominatimPlaces)))
+      MAPS_REPLIED -> idle when (and (= @payload.key "geocode") (>= @payload.status 200) (< @payload.status 300))
+        (let ((places (json/parse (default (bytes/to-string @payload.body) "") NominatimPlaces)))
           (if (= @places null)
             (emit MAPS_FAILURE { error: "Nominatim answered a body that is not a list of places", code: "http_error" })
             (let ((place (array/first @places)))
@@ -36,14 +45,11 @@ orbital MapsOrbital {
                 (let ((lat (str/to-number (object/get @place lat "0"))) (lng (str/to-number (object/get @place lon "0")))) (if (or (= @lat null) (= @lng null)) (emit MAPS_FAILURE { error: "Nominatim answered a place whose coordinates are not numbers", code: "http_error" }) (emit GEOCODED { lat: @lat, lng: @lng, formattedAddress: (object/get @place display_name "") })))))))
 
       REVERSE_GEOCODE -> idle
-        (http GET @config.origin (str/concat "/reverse?format=json&lat=" @payload.lat "&lon=" @payload.lng) {
-          headers: { Accept: "application/json", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: MAPS_REVERSE_REPLIED, failure: MAPS_REQUEST_FAILED } })
-      MAPS_REVERSE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit MAPS_HTTP_SEND { key: "reverse", method: "GET", target: (str/concat "/reverse?format=json&lat=" @payload.lat "&lon=" @payload.lng), headers: [{ name: "Accept", value: "application/json" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
+      MAPS_REPLIED -> idle when (and (= @payload.key "reverse") (or (< @payload.status 200) (>= @payload.status 300)))
         (emit MAPS_FAILURE { error: (str/concat "Nominatim answered HTTP " @payload.status), code: "http_error" })
-      MAPS_REVERSE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((place (json/parse @payload.body NominatimReverse)))
+      MAPS_REPLIED -> idle when (and (= @payload.key "reverse") (>= @payload.status 200) (< @payload.status 300))
+        (let ((place (json/parse (default (bytes/to-string @payload.body) "") NominatimReverse)))
           (if (validate/required (object/get @place display_name null))
             (emit REVERSE_GEOCODED { address: (object/get @place display_name ""), formattedAddress: (object/get @place display_name "") })
             (emit MAPS_FAILURE { error: "no address at the coordinates", code: "not_found" })))
@@ -88,26 +94,16 @@ orbital MapsOrbital {
         @description "A geocode or reverse-geocode that produced no result: error text and code (invalid_input, not_found, http_error, or the transport kind timeout, failed, refused)."
         @synonyms "maps error, geocode failed, lookup failed"
         @tier "primary"
-      MAPS_GEOCODE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      MAPS_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the geocode call's HTTP reply."
-        @tier "secondary"
-      MAPS_REVERSE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the reverse-geocode call's HTTP reply."
-        @tier "secondary"
-      MAPS_REQUEST_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: a Nominatim call never produced a reply."
-        @tier "secondary"
+        @description "Internal: one request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -130,40 +126,29 @@ orbital MapsOrbital {
       }
         @description "Great-circle distance between two coordinate pairs, in kilometres."
         @synonyms "distance between, how far, haversine"
-      MAPS_GEOCODE_REPLIED {
+      MAPS_REPLIED {
+        key : string!
         status : number!
         headers : Map string string
-        body : string!
-      }
-      MAPS_REVERSE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+        body : bytes!
       }
       MAPS_REQUEST_FAILED {
+        key : string
         error : string!
         kind : string!
       }
+      MapsFetch.HTTP_REPLIED -> MAPS_REPLIED
+      MapsFetch.HTTP_FAILED -> MAPS_REQUEST_FAILED
     }
 
     config {
-      origin : url = "https://nominatim.openstreetmap.org"
-        @label "Nominatim origin"
-        @description "The Nominatim API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "nominatim url, geocoder host, api host"
-        @tier "infra"
       userAgent : string = "Almadar/1.0 (https://almadar.dev)"
         @label "User-Agent"
         @description "Identifying User-Agent header Nominatim's usage policy requires on every request."
         @synonyms "user agent, client id, request identity"
         @tier "infra"
-      timeoutMs : number = 6000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each Nominatim request may take before it counts as failed."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
     }
   }
 
-  page boot as MapsPage -> MapsClient
+  page boot as MapsPage -> MapsClient, MapsFetch
 }

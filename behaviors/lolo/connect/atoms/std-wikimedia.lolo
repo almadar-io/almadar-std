@@ -3,13 +3,25 @@ app std-wikimedia [
   description: "std-wikimedia — redirect-resolved Wikipedia page lookup through the keyless MediaWiki API (en.wikipedia.org). WIKIMEDIA_GET_PAGE answers WIKIMEDIA_PAGE_RESULT with the page title, a one-line description, the Commons thumbnail and the lead-section extract; a blank title, a missing page or a non-2xx reply answers an empty page.",
   egress: ["https://en.wikipedia.org"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type WikimediaThumbnail = { source : string, width : number, height : number }
-type WikimediaPage = { pageid : number, ns : number, title : string, description : string, extract : string, thumbnail : WikimediaThumbnail, missing : string }
+type WikimediaPage = { pageid : number, ns : number, title : string, description : string?, extract : string?, thumbnail : WikimediaThumbnail?, missing : string }
 type WikimediaQuery = { pages : Map string WikimediaPage }
 type WikimediaReply = { batchcomplete : string, query : WikimediaQuery }
 orbital WikimediaOrbital {
   entity WikimediaLookup [runtime] {
     id : string!
+  }
+
+  trait WikimediaFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "https://en.wikipedia.org"
+      timeoutMs: 6000
+    }
+    listens {
+      WikimediaClient.WIKIMEDIA_HTTP_SEND -> HTTP_SEND
+    }
   }
 
   trait WikimediaClient -> WikimediaLookup [client] {
@@ -19,16 +31,13 @@ orbital WikimediaOrbital {
       INIT -> idle
 
       WIKIMEDIA_GET_PAGE -> idle when (!= (str/trim @payload.title) "")
-        (http GET @config.origin (str/concat "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=" (str/encode-uri-component (str/trim @payload.title))) {
-          headers: { Accept: "*/*", User-Agent: @config.userAgent },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: WIKIMEDIA_PAGE_REPLIED, failure: WIKIMEDIA_PAGE_FAILED } })
+        (emit WIKIMEDIA_HTTP_SEND { key: "page", method: "GET", target: (str/concat "/w/api.php?action=query&format=json&redirects=1&prop=pageimages|description|extracts&explaintext=1&exintro=1&piprop=thumbnail&pithumbsize=240&titles=" (str/encode-uri-component (str/trim @payload.title))), headers: [{ name: "Accept", value: "*/*" }, { name: "User-Agent", value: @config.userAgent }], body: (bytes/from-string ""), stream: "none" })
       WIKIMEDIA_GET_PAGE -> idle when (= (str/trim @payload.title) "")
         (emit WIKIMEDIA_PAGE_RESULT {})
       WIKIMEDIA_PAGE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit WIKIMEDIA_PAGE_RESULT {})
       WIKIMEDIA_PAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((page (array/first (object/values (object/get (object/get (default (json/parse @payload.body WikimediaReply) {}) query {}) pages {})))))
+        (let ((page (array/first (object/values (object/get (object/get (default (json/parse (default (bytes/to-string @payload.body) "") WikimediaReply) {}) query {}) pages {})))))
           (emit WIKIMEDIA_PAGE_RESULT (if (or (= @page null) (object/has @page missing)) {}
             (object/merge
               (if (validate/required (object/get @page title null)) { title: (object/get @page title "") } {})
@@ -57,19 +66,16 @@ orbital WikimediaOrbital {
         @description "The Wikipedia call never produced a reply: error text and kind (timeout, failed or refused)."
         @synonyms "wikipedia unreachable, lookup failed"
         @tier "primary"
-      WIKIMEDIA_PAGE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      WIKIMEDIA_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the page lookup's HTTP reply."
-        @tier "secondary"
-      WIKIMEDIA_PAGE_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the page lookup never produced a reply."
-        @tier "secondary"
+        @description "Internal: one request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -79,34 +85,28 @@ orbital WikimediaOrbital {
         @description "Look up a Wikipedia page by title (redirects resolved)."
         @synonyms "lookup wikipedia, get article, find wikipedia page"
       WIKIMEDIA_PAGE_REPLIED {
+        key : string!
         status : number!
         headers : Map string string
-        body : string!
+        body : bytes!
       }
       WIKIMEDIA_PAGE_FAILED {
+        key : string
         error : string!
         kind : string!
       }
+      WikimediaFetch.HTTP_REPLIED -> WIKIMEDIA_PAGE_REPLIED
+      WikimediaFetch.HTTP_FAILED -> WIKIMEDIA_PAGE_FAILED
     }
 
     config {
-      origin : url = "https://en.wikipedia.org"
-        @label "Wikipedia API origin"
-        @description "The MediaWiki API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "wikipedia url, api host, wiki origin"
-        @tier "infra"
       userAgent : string = "Almadar/1.0 (https://almadar.dev)"
         @label "User-Agent"
         @description "Descriptive User-Agent header sent with every Wikipedia request."
         @synonyms "user agent, client id, request identity"
         @tier "infra"
-      timeoutMs : number = 6000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each Wikipedia request may take before it counts as failed."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
     }
   }
 
-  page boot as WikimediaPage -> WikimediaClient
+  page boot as WikimediaPage -> WikimediaClient, WikimediaFetch
 }

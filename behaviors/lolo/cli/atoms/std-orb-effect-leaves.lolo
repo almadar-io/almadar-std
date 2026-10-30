@@ -1,19 +1,28 @@
 app std-orb-effect-leaves [
   version: "1.0.0",
-  description: "std-orb-effect-leaves — the one place a lint run flattens the effect sequencing forms into the effects a rule checks. EFFECT_LEAVES_EXPAND { requestId, orbitals } takes the lowered program's orbitals and answers EFFECT_LEAVES_EXPANDED { requestId, leaves } with one { p, e, oi, ti } per effect that is not itself a do, if, when or let form, in program order: every inline trait's transition and tick effects, the effects inside a do, a then or else branch, a when body and a let body (a branch written as a list of effects adds an index), each with its path, the effect, and its orbital and trait index. A branch that is null, and anything that is not an effect list, is no leaf. The expansion is a structural tree/fold over the effect, one step per node, so the depth of nesting is not bounded by a count. A rule asks with its own requestId and scope and never walks control forms itself."
+  description: "std-orb-effect-leaves — the one place a lint run flattens the effect sequencing forms into the effects a rule checks, and types them. EFFECT_LEAVES_EXPAND { requestId, orbitals, heads } takes the lowered program's orbitals and the operator heads the asking rule checks, and answers EFFECT_LEAVES_EXPANDED { requestId, leaves } with one { p, n, oi, ti } per effect that is not itself a do, if, when or let form and whose head is one of those heads, in program order: every inline trait's transition and tick effects, the effects inside a do, a then or else branch, a when body and a let body (a branch written as a list of effects adds an index), each with its path, the flat typed nodes of the effect (std-orb-lint-input's OrbLintExprNodes, asked once per request with LINT_EXPR_ASK and heard as LINT_EXPR_NODES; the effect is the last node), and its orbital and trait index. A branch that is null, and anything that is not an effect list, is no leaf. The expansion is a structural tree/fold over the effect, one step per node, so the depth of nesting is not bounded by a count. A rule asks with its own requestId and scope and never walks control forms or raw effect values itself."
 ]
 uses Spec from "almadar-std/effect-leaves"
-type LeafVal = string | number | boolean | [LeafVal?] | Map string LeafVal?
-type LeafTransition = { effects : [LeafVal?] }
-type LeafTick = { effects : [LeafVal?] }
+type LeafExpr = string | number | boolean | [LeafExpr?] | Map string LeafExpr?
+type LeafTransition = { effects : [LeafExpr?] }
+type LeafTick = { effects : [LeafExpr?] }
 type LeafMachine = { transitions : [LeafTransition] }
 type LeafTrait = { name : string, stateMachine : LeafMachine, ticks : [LeafTick] }
 type LeafOrbital = { name : string, traits : [LeafTrait] }
-type EffectLeaf = { p : string!, e : LeafVal!, oi : number!, ti : number! }
+type LeafStr = string
+type LeafAt = { r : string!, e : LeafExpr }
+type LeafFold = { e : [LeafAt], s : [LeafAt] }
+type LeafRoot = { p : string!, e : LeafExpr!, oi : number!, ti : number! }
+type LeafHead = { p : string!, oi : number!, ti : number! }
+type LeafPending = { rid : string!, heads : [LeafHead] }
+type LeafNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type LeafExprItem = { e : LeafExpr?, eff : boolean! }
+type EffectLeaf = { p : string!, n : [LeafNode]!, oi : number!, ti : number! }
 
 orbital OrbEffectLeavesOrbital {
   entity OrbEffectLeavesRun [runtime] {
     id : string!
+    pending : Map string LeafPending = {}
   }
 
   trait OrbEffectLeaves -> OrbEffectLeavesRun [optimistic] {
@@ -22,48 +31,33 @@ orbital OrbEffectLeavesOrbital {
     state ready {
       INIT -> ready
       EFFECT_LEAVES_EXPAND -> ready
-        (emit EFFECT_LEAVES_EXPANDED { requestId: @payload.requestId, leaves: (let ((orbitals @payload.orbitals))
-          (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-      (let ((o (array/nth @orbitals @oi)))
-        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
-          (let ((td (array/nth (object/get @o "traits" []) @ti)))
-            (if (not (object/has @td "stateMachine")) []
-              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
-                (array/concat
-                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
-                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
-                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
-      (let ((r (tree/fold (object/get @x "e") (fn (n k)
-        (if (not (validate/array @n)) { e: [], s: [] }
-          (let ((len (array/len @n)) (hd (if (> (array/len @n) 0) (array/nth @n 0) null)))
-            (if (and (validate/string @hd) (array/includes ["do", "if", "when", "let"] @hd))
-              (let ((kids (array/flatten (array/map (array/filter (array/range 1 @len) (fn i (and (not (= (array/nth @n @i) null)) (if (= @hd "do") true (if (= @hd "if") (and (>= @i 2) (<= @i 3)) (>= @i 2)))))) (fn i
-                (let ((lbl (if (= @hd "do") (str/concat ".do[" (- @i 1) "]") (if (= @hd "if") (if (= @i 2) ".then" ".else") (if (= @hd "when") (str/concat ".then[" (- @i 2) "]") (str/concat ".body[" (- @i 2) "]")))))
-                      (kr (array/nth @k @i)))
-                  (array/map (object/get @kr "s") (fn lf { r: (str/concat @lbl (object/get @lf "r")), e: (object/get @lf "e") }))))))))
-                { e: @kids, s: @kids })
-              (let ((self [{ r: "", e: @n }]))
-                { e: @self, s: (if (and (> @len 0) (validate/array @hd))
-                  (array/flatten (array/map (array/range 0 @len) (fn j
-                    (let ((kr (array/nth @k @j)))
-                      (if (= (array/nth @n @j) null) []
-                        (array/map (object/get @kr "e") (fn lf { r: (str/concat "[" @j "]" (object/get @lf "r")), e: (object/get @lf "e") })))))))
-                  @self) }))))) "LeafVal")))
-        (if (= @r null) [] (array/map (object/get @r "e") (fn lf { p: (str/concat (object/get @x "p") (object/get @lf "r")), e: (object/get @lf "e"), oi: (object/get @x "oi"), ti: (object/get @x "ti") })))))))) })
+        (emit EFFECT_LEAVES_ROOTS { requestId: @payload.requestId, roots: (array/filter (let ((orbitals : [LeafOrbital] @payload.orbitals) (nOrb : LeafOrbital { name: "", traits: [] }) (nTrait : LeafTrait { name: "", stateMachine: { transitions: [] }, ticks: [] }) (nTr : LeafTransition { effects: [] }) (nTk : LeafTick { effects: [] }) (nFold : LeafFold { e: [], s: [] })) (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o : LeafOrbital (default (array/nth @orbitals @oi) @nOrb))) (let ((trts : [LeafTrait] (object/get @o "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trts)) (fn ti (let ((td : LeafTrait (default (array/nth @trts @ti) @nTrait))) (if (not (object/has @td "stateMachine")) [] (let ((tp : string (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs : [LeafTransition] (object/get (object/get @td "stateMachine" { transitions: [] }) "transitions" [])) (tks : [LeafTick] (object/get @td "ticks" []))) (array/concat (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj (let ((efs : [LeafExpr?] (object/get (default (array/nth @trs @tj) @nTr) "effects" []))) (array/map (array/range 0 (array/len @efs)) (fn ej (let ((r : LeafRoot { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (default (array/nth @efs @ej) ""), oi: @oi, ti: @ti })) @r))))))) (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj (let ((efs : [LeafExpr?] (object/get (default (array/nth @tks @kj) @nTk) "effects" []))) (array/map (array/range 0 (array/len @efs)) (fn ej (let ((r : LeafRoot { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (default (array/nth @efs @ej) ""), oi: @oi, ti: @ti })) @r))))))))))))))))))) (fn x (let ((r : LeafFold (default (tree/fold (object/get @x "e" "") (fn (n k) (if (not (validate/array @n)) @nFold (let ((len : number (array/len @n)) (hd : string (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0))) (default (as (array/nth @n 0) LeafStr) "") "")) (kk : [LeafFold] (array/map @k (fn q (if (= @q null) @nFold @q))))) (if (array/includes ["do", "if", "when", "let"] @hd) (let ((kids : [LeafAt] (array/flatten (array/map (array/filter (array/range 1 @len) (fn i (and (not (= (array/nth @n @i) null)) (if (= @hd "do") true (if (= @hd "if") (and (>= @i 2) (<= @i 3)) (>= @i 2)))))) (fn i (let ((lbl : string (if (= @hd "do") (str/concat ".do[" (- @i 1) "]") (if (= @hd "if") (if (= @i 2) ".then" ".else") (if (= @hd "when") (str/concat ".then[" (- @i 2) "]") (str/concat ".body[" (- @i 2) "]"))))) (kr : LeafFold (default (array/nth @kk @i) @nFold))) (array/map (object/get @kr "s" []) (fn lf (let ((a : LeafAt { r: (str/concat @lbl (object/get @lf "r" "")), e: (default (object/get @lf "e") "") })) @a))))))))) (let ((f : LeafFold { e: @kids, s: @kids })) @f)) (let ((self : [LeafAt] [{ r: "", e: @n }])) (let ((f : LeafFold { e: @self, s: (if (and (> @len 0) (validate/array (array/nth @n 0))) (array/flatten (array/map (array/range 0 @len) (fn j (let ((kr : LeafFold (default (array/nth @kk @j) @nFold))) (if (= (array/nth @n @j) null) [] (array/map (object/get @kr "e" []) (fn lf (let ((a : LeafAt { r: (str/concat (str/concat "[" @j "]") (object/get @lf "r" "")), e: (default (object/get @lf "e") "") })) @a)))))))) @self) })) @f)))))) "LeafExpr") @nFold))) (array/map (object/get @r "e" []) (fn lf { p: (str/concat (object/get @x "p" "") (object/get @lf "r" "")), e: (default (object/get @lf "e") ""), oi: (object/get @x "oi" 0), ti: (object/get @x "ti" 0) }))))))) (fn x (let ((e (object/get @x "e" []))) (and (validate/array @e) (> (array/len @e) 0) (validate/string (array/nth @e 0)) (array/includes @payload.heads (default (as (array/nth @e 0) LeafStr) "")))))) })
+      EFFECT_LEAVES_ROOTS -> ready
+        (set @entity.pending (default (object/set @entity.pending (str/concat "leaves:" @payload.requestId) { rid: @payload.requestId, heads: (array/map @payload.roots (fn r { p: (object/get @r "p"), oi: (object/get @r "oi"), ti: (object/get @r "ti") })) }) {}))
+        (emit LINT_EXPR_ASK { requestId: (str/concat "leaves:" @payload.requestId), items: (array/map @payload.roots (fn r { e: (object/get @r "e"), eff: true })) })
+      LINT_EXPR_NODES -> ready when (object/has @entity.pending @payload.requestId)
+        (emit EFFECT_LEAVES_EXPANDED { requestId: (object/get (object/get @entity.pending @payload.requestId) "rid"), leaves: (let ((hs : [LeafHead] (object/get (object/get @entity.pending @payload.requestId) "heads" [])) (nh : LeafHead { p: "", oi: 0, ti: 0 }) (nonodes : [LeafNode] [])) (array/map (array/range 0 (array/len @hs)) (fn i (let ((h : LeafHead (default (array/nth @hs @i) @nh))) { p: (object/get @h "p"), n: (default (array/nth @payload.nodes @i) @nonodes), oi: (object/get @h "oi"), ti: (object/get @h "ti") })))) })
+        (set @entity.pending (object/omit @entity.pending [@payload.requestId]))
     }
 
     emits {
+      EFFECT_LEAVES_ROOTS { requestId : string!  roots : [LeafRoot]! }
+        @description "Internal: the effects whose head the asking rule checks, flattened, before their nodes are asked."
+        @tier "internal"
+      LINT_EXPR_ASK -> external { requestId : string!  items : [LeafExprItem]! }
+        @description "Ask std-orb-lint-input's OrbLintExprNodes for the flat typed nodes of every effect to check."
+        @tier "internal"
       EFFECT_LEAVES_EXPANDED -> external { requestId : string!  leaves : [EffectLeaf]! }
-        @description "The effects to check, in program order, each with its path and its orbital and trait index."
+        @description "The effects to check, in program order, each with its path, its flat typed nodes (the effect is the last node) and its orbital and trait index."
         @tier "internal"
     }
 
     listens {
-      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LeafOrbital]! }
-        @description "Expand the effects of each inline trait's transitions and ticks into the leaves a rule checks."
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LeafOrbital]!  heads : [string]! }
+        @description "Expand the effects of each inline trait's transitions and ticks, whose head is one of the asked heads, into the leaves a rule checks."
+        @tier "internal"
+      LINT_EXPR_NODES { requestId : string!  nodes : [[LeafNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
         @tier "internal"
     }
   }

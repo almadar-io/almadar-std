@@ -1,13 +1,13 @@
 app std-http-request [
   version: "1.0.0",
-  description: "std-http-request — the request builder above std-http-client, the request-composition half of the retired runtime drivers/http_request (request.rs, retry and pagination of driver.rs). HTTP_REQUEST { key, method, path, query, headers, json, form, text, bytes, multipartKind, multipartBoundary, multipartParts, stream, retryMax, retryOn, retryOnFailure, retryDelaysMs, paginate, maxPages } becomes HTTP_SEND for the wire atom. The query is percent-encoded in map order (queryEncoding uri is encodeURIComponent, rfc3986 also escapes ! ' ( ) *); at most one body is given: json (text already serialised, application/json), form (a map, application/x-www-form-urlencoded; formEncoding html writes a space as +), text, bytes, or multipart (kind related or form-data, a boundary the caller declares, parts each with a header map and exactly one of text or bytes, written as --boundary CRLF headers CRLF CRLF content CRLF and closed by --boundary-- CRLF); a content-type the caller gave wins. Retry: a reply whose status is in retryOn, or a failure whose kind is in retryOnFailure, is sent again up to retryMax times after delaysMs[attempt] (the last entry repeats), the wait being std-delay composed here (RETRY_WAIT starts it, ELAPSED sends again). Pagination: paginate link-header follows the rel=next target of each reply's link header (its path and query on the same origin), paginate caller waits for HTTP_NEXT { key, query } or HTTP_STOP { key } after each page; both stop at maxPages. Each page answers HTTP_PAGE { key, page, status, headers, body }, the end HTTP_RESULT { key, status, headers, body, attempts, pages } (the last reply) after the last page, a transport failure HTTP_REQUEST_FAILED { key, error, kind }. A request that cannot be built answers HTTP_REQUEST_REFUSED { key, error } and sends nothing. Credentials are not built here: authorization, cookie and api-key headers are refused by the wire atom, and bearer, api-key, basic, aws-sigv4, oauth and jwt arms wait for the secret knob that lets a declared secret feed an os/send argument."
+  description: "std-http-request — the request builder above std-http-client, the request-composition half of the retired runtime drivers/http_request (request.rs, retry and pagination of driver.rs). HTTP_REQUEST { key, method, path, query, headers, json, form, text, bytes, multipartKind, multipartBoundary, multipartParts, stream, retryMax, retryOn, retryOnFailure, retryDelaysMs, paginate, maxPages } becomes HTTP_SEND for the wire atom. The query is percent-encoded in map order (queryEncoding uri is encodeURIComponent, rfc3986 also escapes ! ' ( ) *); at most one body is given: json (text already serialised, application/json), form (a map, application/x-www-form-urlencoded; formEncoding html writes a space as +), text, bytes, or multipart (kind related or form-data, a boundary the caller declares, parts each with a header map and exactly one of text or bytes, written as --boundary CRLF headers CRLF CRLF content CRLF and closed by --boundary-- CRLF); a content-type the caller gave wins. Retry: a reply whose status is in retryOn, or a failure whose kind is in retryOnFailure, is sent again up to retryMax times after delaysMs[attempt] (the last entry repeats), the wait being std-delay composed here (RETRY_WAIT starts it, ELAPSED sends again). Pagination: paginate link-header follows the rel=next target of each reply's link header (its path and query on the same origin), paginate caller waits for HTTP_NEXT { key, query } or HTTP_STOP { key } after each page; both stop at maxPages. Each page answers HTTP_PAGE { key, page, status, headers, body }, the end HTTP_RESULT { key, status, headers, body, attempts, pages } (the last reply) after the last page, a transport failure HTTP_REQUEST_FAILED { key, error, kind }. A request that cannot be built answers HTTP_REQUEST_REFUSED { key, error } and sends nothing. Credentials are not built here: authorization, cookie and api-key headers are refused by the wire atom; a bearer or api-key credential is the wire atom's credential knobs, filled into the os/send by the host. Each attempt has a deadline (the timeoutMs knob, or the request's own timeoutMs; 0 sets none): when it passes the wire call is aborted with HTTP_CANCEL and the attempt counts as a failure of kind timeout (retried when retryOnFailure names it, else HTTP_REQUEST_FAILED). HTTP_REQUEST_CANCEL { key } aborts the request in flight (wire call aborted, timers disarmed, nothing answered). Basic, aws-sigv4, oauth and jwt arms are not carried."
 ]
 uses Delay from "std/behaviors/std-delay"
 
 type HttpRequestHeader = { name : string!, value : string! }
 type HttpMultipartPart = { headers : Map string string!, text : string?, bytes : bytes? }
 type HttpWire = { key : string!, method : string!, target : string!, headers : [HttpRequestHeader]!, body : bytes!, stream : string! }
-type HttpReq = { key : string!, method : string!, path : string!, query : Map string string!, headers : Map string string!, json : string?, form : Map string string!, text : string?, bytes : bytes?, multipartKind : string?, multipartBoundary : string?, multipartParts : [HttpMultipartPart]!, stream : string!, retryMax : number!, retryOn : [number]!, retryOnFailure : [string]!, retryDelaysMs : [number]!, paginate : string!, maxPages : number! }
+type HttpReq = { key : string!, method : string!, path : string!, query : Map string string!, headers : Map string string!, json : string?, form : Map string string!, text : string?, bytes : bytes?, multipartKind : string?, multipartBoundary : string?, multipartParts : [HttpMultipartPart]!, stream : string!, retryMax : number!, retryOn : [number]!, retryOnFailure : [string]!, retryDelaysMs : [number]!, paginate : string!, maxPages : number!, timeoutMs : number? }
 
 orbital HttpRequestOrbital {
   entity HttpRequestFlight [runtime] {
@@ -22,6 +22,14 @@ orbital HttpRequestOrbital {
   trait RequestDelay = Delay.traits.Delay {
     listens {
       HttpRequest.RETRY_WAIT -> START
+      HttpRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait RequestDeadline = Delay.traits.Delay {
+    listens {
+      HttpRequest.TIMEOUT_START -> START
+      HttpRequest.TIMEOUT_STOP -> CANCEL
     }
   }
 
@@ -65,6 +73,10 @@ orbital HttpRequestOrbital {
         @label "Paginations"
         @description "The pagination modes a request may ask for."
         @tier "domain"
+      timeoutMs : number = 300000
+        @label "Request timeout"
+        @description "Milliseconds one attempt (one page, one retry) may wait for its reply before the call is aborted with HTTP_CANCEL and counted as a failure of kind timeout; a request that carries its own timeoutMs overrides it, 0 sets none. The deadline is a std-delay wait."
+        @tier "infra"
       nextMarkers : [string] = ["rel=\"next\"", "rel=next"]
         @label "Next markers"
         @description "What marks the rel=next entry of a link header."
@@ -73,12 +85,13 @@ orbital HttpRequestOrbital {
 
     state ready {
       INIT -> ready
+      HTTP_REQUEST_CANCEL -> ready
 
       HTTP_REQUEST -> ready when (or (not (str/startsWith @payload.path "/")) (> (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (array/some (object/keys @payload.query) (fn k (= @k ""))) (array/some (object/keys @payload.form) (fn k (= @k ""))) (not (array/includes @config.paginations @payload.paginate)) (and (!= @payload.multipartKind null) (not (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1)))))))
         (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "the request cannot be built: a path must start with /, at most one body may be given, a query or form key may not be empty, pagination must be known, and a multipart body needs a kind, a boundary and parts of exactly one of text or bytes" })
 
       HTTP_REQUEST -> awaiting when (and (str/startsWith @payload.path "/") (<= (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (not (array/some (object/keys @payload.query) (fn k (= @k "")))) (not (array/some (object/keys @payload.form) (fn k (= @k "")))) (array/includes @config.paginations @payload.paginate) (or (== @payload.multipartKind null) (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1))))))
-        (set @entity.req { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages })
+        (set @entity.req { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages, timeoutMs: @payload.timeoutMs })
         (set @entity.override "")
         (set @entity.attempt 0)
         (set @entity.page 1)
@@ -121,21 +134,44 @@ orbital HttpRequestOrbital {
           stream: @entity.req.stream
         })
         (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+        (emit HC_TIMER { delayMs: (default @entity.req.timeoutMs @config.timeoutMs) })
+
+      HC_TIMER -> awaiting when (> @payload.delayMs 0)
+        (emit TIMEOUT_START { delayMs: @payload.delayMs })
+      HC_TIMER -> awaiting when (<= @payload.delayMs 0)
+
+      HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
+        (emit TIMEOUT_STOP {})
+        (emit HTTP_CANCEL { key: @entity.req.key })
+      HTTP_REQUEST_CANCEL -> awaiting when (!= @payload.key @entity.req.key)
+
+      TIMEOUT_ELAPSED -> waiting when (and (array/includes @entity.req.retryOnFailure "timeout") (< @entity.attempt @entity.req.retryMax))
+        (emit HTTP_CANCEL { key: @entity.req.key })
+        (set @entity.attempt (+ @entity.attempt 1))
+        (emit RETRY_WAIT { delayMs: (default (array/nth @entity.req.retryDelaysMs (- @entity.attempt 1)) (default (array/last @entity.req.retryDelaysMs) 0)) })
+      TIMEOUT_ELAPSED -> ready when (not (and (array/includes @entity.req.retryOnFailure "timeout") (< @entity.attempt @entity.req.retryMax)))
+        (emit HTTP_CANCEL { key: @entity.req.key })
+        (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: "the request timed out", kind: "timeout" })
 
       HTTP_REPLIED -> waiting when (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))
+        (emit TIMEOUT_STOP {})
         (set @entity.attempt (+ @entity.attempt 1))
         (emit RETRY_WAIT { delayMs: (default (array/nth @entity.req.retryDelaysMs (- @entity.attempt 1)) (default (array/last @entity.req.retryDelaysMs) 0)) })
       HTTP_FAILED -> waiting when (and (array/includes @entity.req.retryOnFailure @payload.kind) (< @entity.attempt @entity.req.retryMax))
+        (emit TIMEOUT_STOP {})
         (set @entity.attempt (+ @entity.attempt 1))
         (emit RETRY_WAIT { delayMs: (default (array/nth @entity.req.retryDelaysMs (- @entity.attempt 1)) (default (array/last @entity.req.retryDelaysMs) 0)) })
 
       HTTP_FAILED -> ready when (not (and (array/includes @entity.req.retryOnFailure @payload.kind) (< @entity.attempt @entity.req.retryMax)))
+        (emit TIMEOUT_STOP {})
         (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: @payload.error, kind: @payload.kind })
 
       HTTP_REPLIED -> ready when (and (= @entity.req.paginate "none") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit TIMEOUT_STOP {})
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: 1 })
 
       HTTP_REPLIED -> awaiting when (and (= @entity.req.paginate "link-header") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit TIMEOUT_STOP {})
         (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
         (emit HC_LINK { next: (let ((raw (let ((entry (array/find (str/split (default (object/get (default @payload.headers {}) "link" "") "") ",") (fn e (array/some @config.nextMarkers (fn m (str/includes @e @m))))))) (if (== @entry null) "" (default (array/nth (str/split (default (array/nth (str/split @entry "<") 1) "") ">") 0) ""))))) (if (str/startsWith @raw "http") (str/concat "/" (str/join (array/drop (str/split @raw "/") 3) "/")) @raw)), status: @payload.status, headers: @payload.headers, body: @payload.body })
       HC_LINK -> awaiting when (and (!= @payload.next "") (< @entity.page @entity.req.maxPages))
@@ -147,8 +183,10 @@ orbital HttpRequestOrbital {
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
 
       HTTP_REPLIED -> paging when (and (= @entity.req.paginate "caller") (< @entity.page @entity.req.maxPages) (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit TIMEOUT_STOP {})
         (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
       HTTP_REPLIED -> ready when (and (= @entity.req.paginate "caller") (>= @entity.page @entity.req.maxPages) (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit TIMEOUT_STOP {})
         (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
         (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
     }
@@ -157,14 +195,20 @@ orbital HttpRequestOrbital {
       INIT -> waiting
       HTTP_REQUEST -> waiting
         (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a request is waiting to retry on this frame" })
+      HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
+        (emit RETRY_STOP {})
+      HTTP_REQUEST_CANCEL -> waiting when (!= @payload.key @entity.req.key)
       RETRY_ELAPSED -> awaiting
         (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+        (emit HC_TIMER { delayMs: (default @entity.req.timeoutMs @config.timeoutMs) })
     }
 
     state paging {
       INIT -> paging
       HTTP_REQUEST -> paging
         (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a paginated request is waiting for HTTP_NEXT or HTTP_STOP on this frame" })
+      HTTP_REQUEST_CANCEL -> ready when (= @payload.key @entity.req.key)
+      HTTP_REQUEST_CANCEL -> paging when (!= @payload.key @entity.req.key)
       HTTP_NEXT -> awaiting
         (set @entity.req (object/merge @entity.req { query: @payload.query }))
         (set @entity.override "")
@@ -226,6 +270,11 @@ orbital HttpRequestOrbital {
       }
         @description "Internal: the next link of the reply, empty when there is none."
         @tier "internal"
+      HC_TIMER -> internal {
+        delayMs : number!
+      }
+        @description "Internal: the deadline of the attempt just sent; 0 arms none."
+        @tier "internal"
       HC_BUILD -> internal {
         n : number!
       }
@@ -236,6 +285,24 @@ orbital HttpRequestOrbital {
       }
         @description "Start the retry delay (std-delay START)."
         @tier "secondary"
+      RETRY_STOP -> external {
+      }
+        @description "Disarm the retry delay (std-delay CANCEL) of a request cancelled while it waits to retry."
+        @tier "secondary"
+      TIMEOUT_START -> external {
+        delayMs : number!
+      }
+        @description "Arm the attempt's deadline (std-delay START)."
+        @tier "secondary"
+      TIMEOUT_STOP -> external {
+      }
+        @description "Disarm the attempt's deadline (std-delay CANCEL) once it is answered, failed or cancelled."
+        @tier "secondary"
+      HTTP_CANCEL -> external {
+        key : string!
+      }
+        @description "Abort the wire call in flight (std-http-client HTTP_CANCEL): sent when the request is cancelled or its deadline passes."
+        @tier "primary"
     }
 
     listens {
@@ -259,6 +326,7 @@ orbital HttpRequestOrbital {
         retryDelaysMs : [number]!
         paginate : string!
         maxPages : number!
+        timeoutMs : number?
       }
       HTTP_REPLIED {
         key : string!
@@ -278,12 +346,20 @@ orbital HttpRequestOrbital {
       HTTP_STOP {
         key : string!
       }
+      HTTP_REQUEST_CANCEL {
+        key : string!
+      }
+        @description "Abort the request with this key, whatever it is doing (awaiting a reply, waiting to retry, or between pages): the wire call is aborted, no timer is left armed, and no HTTP_RESULT, HTTP_PAGE, HTTP_REQUEST_FAILED or HTTP_REQUEST_REFUSED follows. A key that is not the request on this frame is a no-op."
       RequestDelay.ELAPSED -> RETRY_ELAPSED
+      RequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
+      TIMEOUT_ELAPSED {
+        waitedMs : number!
+      }
       RETRY_ELAPSED {
         waitedMs : number!
       }
     }
   }
 
-  page boot as HttpRequestPage -> HttpRequest, RequestDelay
+  page boot as HttpRequestPage -> HttpRequest, RequestDelay, RequestDeadline
 }

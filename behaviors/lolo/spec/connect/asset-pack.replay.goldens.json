@@ -16,17 +16,21 @@
               "ASSET_PACK_MISSING",
               "ASSET_PACK_FAILED"
             ],
-            "effects": [
+            "emits": [
               {
-                "type": "http",
-                "key": "pack",
-                "optionsAt": 4
+                "event": "PACK_HTTP_SEND",
+                "payload": {
+                  "key": "pack",
+                  "method": "GET",
+                  "target": "/shared/x/assets.json",
+                  "stream": "none"
+                }
               }
             ]
           }
         }
       ],
-      "note": "INIT issues the keyed (http GET origin packPath) ask and sets every expected key to a loading placeholder in assetByKey/assetManifest; the step reports the http effect (key pack) and the replay asserts it"
+      "note": "INIT sets every expected key to a loading placeholder in assetByKey/assetManifest and asks the composed AssetPackFetch for the pack manifest (PACK_HTTP_SEND, key pack, GET packPath)"
     },
     {
       "id": "load-answered",
@@ -35,7 +39,9 @@
           "event": "PACK_HTTP_REPLIED",
           "payload": {
             "status": 200,
-            "body": "{\"pack\": \"kflow/x\", \"version\": 1, \"base\": \"https://h\", \"assets\": [{\"key\": \"units/a\", \"url\": \"/u/a.png\", \"role\": \"npc\"}, {\"key\": \"units/b\", \"url\": \"/u/b.png\", \"role\": \"npc\"}, {\"key\": \"ui/c\", \"url\": \"/ui/c.png\", \"role\": \"ui\"}]}"
+            "body": "eyJwYWNrIjogImtmbG93L3giLCAidmVyc2lvbiI6IDEsICJiYXNlIjogImh0dHBzOi8vaCIsICJhc3NldHMiOiBbeyJrZXkiOiAidW5pdHMvYSIsICJ1cmwiOiAiL3UvYS5wbmciLCAicm9sZSI6ICJucGMifSwgeyJrZXkiOiAidW5pdHMvYiIsICJ1cmwiOiAiL3UvYi5wbmciLCAicm9sZSI6ICJucGMifSwgeyJrZXkiOiAidWkvYyIsICJ1cmwiOiAiL3VpL2MucG5nIiwgInJvbGUiOiAidWkifV19",
+            "key": "pack",
+            "headers": {}
           },
           "from": "loading",
           "expect": {
@@ -99,7 +105,9 @@
           "event": "PACK_HTTP_REPLIED",
           "payload": {
             "status": 404,
-            "body": "nope"
+            "body": "bm9wZQ==",
+            "key": "pack",
+            "headers": {}
           },
           "from": "loading",
           "expect": {

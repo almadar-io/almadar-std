@@ -1,11 +1,24 @@
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
 import { BOOLEAN, BYTES, NUMBER, STRING, list, lit, shape, union } from '../signature.js';
-import { OS_DATA, OS_HANDLE, OS_HOST, OS_PORT, arg, osEffect } from './os-common.js';
+import { OS_DATA, OS_HANDLE, OS_HOST, OS_PORT, OS_SEND_DATA, arg, osEffect } from './os-common.js';
 
 const TLS_SPEC: OperatorTypeRef = shape({ serverName: STRING, ca: STRING, alpn: list(STRING) }, ['ca', 'alpn']);
 const TLS_ANSWER: OperatorTypeRef = shape({ sock: NUMBER, alpn: STRING }, ['alpn']);
+const FETCH_HEADER: OperatorTypeRef = shape({ name: STRING, value: STRING });
+const FETCH_REQUEST: OperatorTypeRef = shape({ headers: list(FETCH_HEADER), body: BYTES, timeoutMs: NUMBER, stream: BOOLEAN }, ['headers', 'body', 'timeoutMs', 'stream']);
+const FETCH_ANSWER: OperatorTypeRef = shape({ status: NUMBER, headers: list(FETCH_HEADER), body: BYTES, handle: NUMBER }, ['handle']);
 
 export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
+  'os/fetch': {
+    ...osEffect({
+      answer: FETCH_ANSWER,
+      grant: [],
+      description: 'Ask a browser host to perform one HTTP fetch (the host owns no protocol: the kernel hands it the method, the url and the request bytes, and it answers the status, the response headers and the body bytes). The url\'s origin must be one the program declares in egress, else the kernel answers denied without asking the host. A non-2xx status is a success answer. A host with no fetch (every native host, which speaks HTTP over os/tcp-connect and os/tls-upgrade) answers kind unsupported. With request.stream true the host answers as soon as the head arrives: { status, headers, body: empty, handle }, and the body is read afterwards with os/recv on the handle (each answer { data, eof }, eof true once the body ended) and the handle is released with os/close; a native host answers unsupported either way. Success payload: { status, headers, body, handle? }.',
+      params: [arg('method', STRING, 'HTTP method, e.g. GET'), arg('url', STRING, 'Absolute url; its origin is checked against egress'), arg('request', FETCH_REQUEST, 'Optional request: { headers?, body?, timeoutMs?, stream? }; body is bytes; timeoutMs bounds the wait for the head when stream is true', true)],
+      example: '["os/fetch", "GET", "https://api.example.com/items", { "headers": [{ "name": "accept", "value": "application/json" }] }, { "emit": { "success": "FETCHED", "failure": "FETCH_FAILED" } }]',
+    }),
+    runsOn: 'any',
+  },
   'os/tcp-connect': osEffect({
     answer: TLS_ANSWER,
     grant: [{ kind: 'net', access: ['tcp'], host: 0, port: 1 }],
@@ -32,17 +45,20 @@ export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/send': osEffect({
     answer: shape({ bytes: NUMBER }),
     grant: [],
-    description: 'Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.',
-    params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('data', OS_DATA, 'Content to send')],
+    description: 'Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.',
+    params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('data', OS_SEND_DATA, 'Content to send: bytes, or a list of { bytes, credential } segments')],
     example: '["os/send", "@payload.sock", "cGluZw==", { "emit": { "success": "SOCK_SENT", "failure": "NET_FAILED" } }]',
   }),
-  'os/recv': osEffect({
-    answer: shape({ data: BYTES, eof: BOOLEAN }),
-    grant: [],
-    description: 'Receive from a connected socket (grant net). Success payload: { data: bytes, eof }.',
-    params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('count', NUMBER, 'Maximum bytes to receive')],
-    example: '["os/recv", "@payload.sock", 4096, { "emit": { "success": "SOCK_RECEIVED", "failure": "NET_FAILED" } }]',
-  }),
+  'os/recv': {
+    ...osEffect({
+      answer: shape({ data: BYTES, eof: BOOLEAN }),
+      grant: [],
+      description: 'Receive from a connected socket (grant net), or the next bytes of a streamed os/fetch response (a browser host answers its handle; eof is true once the body ended). Success payload: { data: bytes, eof }.',
+      params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('count', NUMBER, 'Maximum bytes to receive')],
+      example: '["os/recv", "@payload.sock", 4096, { "emit": { "success": "SOCK_RECEIVED", "failure": "NET_FAILED" } }]',
+    }),
+    runsOn: 'any',
+  },
   'os/udp-bind': osEffect({
     answer: shape({ sock: NUMBER }),
     grant: [{ kind: 'net', access: ['udp'], host: 0, port: 1 }],

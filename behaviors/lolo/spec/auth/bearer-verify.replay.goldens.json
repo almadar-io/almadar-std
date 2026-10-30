@@ -126,7 +126,6 @@
   {
    "id": "x509 format: the fetched document goes to std-x509 one certificate at a time",
    "config": {
-    "jwksOrigin": "https://www.googleapis.com",
     "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
     "issuer": "",
     "audience": "",
@@ -195,7 +194,6 @@
   {
    "id": "x509 format: a kid the document lacks is unknown-key",
    "config": {
-    "jwksOrigin": "https://www.googleapis.com",
     "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
     "issuer": "",
     "audience": "",
@@ -255,7 +253,6 @@
   {
    "id": "x509 format: std-x509 refusing a certificate is keys-unavailable",
    "config": {
-    "jwksOrigin": "https://www.googleapis.com",
     "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
     "issuer": "",
     "audience": "",
@@ -362,7 +359,8 @@
       ],
       "neverEmits": [
        "JWS_VERIFY",
-       "JWS_VERIFIED"
+       "JWS_VERIFIED",
+       "BV_GET"
       ]
      }
     }
@@ -396,6 +394,110 @@
       "neverEmits": [
        "JWS_VERIFY",
        "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a token with no cached key asks the HTTP client for the key set",
+   "entity": {
+    "queue": [
+     {
+      "requestId": 9,
+      "authorization": "Bearer eyJraWQiOiJrMSIsImFsZyI6IlJTMjU2In0.e30.c2ln"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BV_GET",
+        "payload": {
+         "key": "jwks",
+         "method": "GET",
+         "target": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+         "headers": [
+          {
+           "name": "Accept",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the client's reply body is read as text and handed on as the key document reply",
+   "entity": {
+    "kid": "k1",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_RAW",
+     "payload": {
+      "status": 200,
+      "headers": {
+       "cache-control": "max-age=60"
+      },
+      "body": "eyJrZXlzIjpbXX0=",
+      "key": "jwks"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWKS_REPLIED",
+        "payload": {
+         "status": 200,
+         "headers": {
+          "cache-control": "max-age=60"
+         },
+         "body": "{\"keys\":[]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a reply body that is not UTF-8 is handed on as an empty document",
+   "entity": {
+    "kid": "k1",
+    "token": "a.b.c",
+    "requestId": 3
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "JWKS_RAW",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "//4=",
+      "key": "jwks"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWKS_REPLIED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
       ]
      }
     }

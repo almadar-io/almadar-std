@@ -1,0 +1,139 @@
+app std-orb-lint-egress-scheme-unused [
+  version: "1.0.0",
+  inbound: ["cli-lint-egress-scheme-unused"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-egress-scheme-unused — the `orb lint egress-scheme-unused <file>` command, the os-grants-family check of the app `egress` list. The TCP protocol-target grants were retired (G-ORB-586): an entry with the scheme redis, rediss, postgres or postgresql grants nothing, because no operator or fetch uses it (the Redis and Postgres wires are std-resp-client and std-row-store-postgres over os/tcp-connect, and a socket is granted by a net entry). It lowers the file with program/read and reports each such entry, naming the net-grant replacement (net: { \"host:port\": [tcp] }, the entry's own host and port). Clean answers `lint egress-scheme-unused: clean` (status 200, exit 0); findings are status 500, exit 1. Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-egress-scheme-unused"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EgressSchemeProgram = { egress : [string] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEgressSchemeUnusedCodes = { egressSchemeUnused : LintCodeDecl }
+
+orbital OrbLintEgressSchemeUnusedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintEgressSchemeUnusedRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEgressSchemeUnused -> OrbLintEgressSchemeUnusedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((entries (object/get @payload.program "egress" [])))
+          (array/flatten (array/map (array/range 0 (array/len @entries)) (fn i
+            (let ((en (default (array/nth @entries @i) "")))
+              (if (validate/pattern @en "^([Rr][Ee][Dd][Ii][Ss][Ss]?|[Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]([Qq][Ll])?)://")
+                [{ code: @config.codes.egressSchemeUnused.code, path: (str/concat "egress[" @i "]"), message: (str/concat "egress entry '" @en "' has a scheme that nothing uses: it grants nothing since the TCP protocol-target grants were retired"), suggestion: (let ((rest (str/join (array/drop (str/split @en "://") 1) "://"))) (str/concat "Remove the entry and declare the socket as a net grant: net: { \"" (if (validate/pattern @rest ":[0-9]+$") @rest (str/concat @rest ":<port>")) "\": [tcp] }")), severity: "error" }]
+                [])))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "egress-scheme-unused", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EgressSchemeProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintEgressSchemeUnusedCodes = { egressSchemeUnused: { code: "ORB_OS_EGRESS_SCHEME_UNUSED", category: "os", description: "An egress entry whose scheme (redis, rediss, postgres, postgresql) no operator or fetch uses since the TCP protocol-target grants were retired; its net-grant replacement is named" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintEgressSchemeUnusedCli -> OrbLintEgressSchemeUnusedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint egress-scheme-unused <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "egress-scheme-unused") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint egress-scheme-unused: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "egress-scheme-unused") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint egress-scheme-unused: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-egress-scheme-unused" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint egress-scheme-unused` with its arguments and working directory."
+        @synonyms "orb lint egress-scheme-unused"
+      OrbLintEgressSchemeUnused.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEgressSchemeUnusedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEgressSchemeUnusedOrbitalStart -> OrbLintEgressSchemeUnused, OrbLintEgressSchemeUnusedCli, OrbLintInput, Packs, Versions
+}

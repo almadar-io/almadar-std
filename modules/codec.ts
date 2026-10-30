@@ -103,17 +103,46 @@ export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-codec',
     minArity: 4,
     maxArity: 4,
-    description: 'PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid',
+    description: 'PBKDF2 with HMAC-SHA256 (RFC 8018) of a credential, answering length derived bytes (a bytes value is a standard padded base64 string at run time). The password argument is a credential slot: a secret-typed @config knob naming the credential whose value (its UTF-8 bytes) the kernel resolves into the evaluation, so the program never receives the password; the derived bytes are the program\'s. Iterations and length are whole numbers from 1. The result is null when the credential is not held, the salt is not canonical base64 or a count is not valid. Runs only in the kernel',
     hasSideEffects: false,
     failable: {},
     returnType: nullable(BYTES),
     params: [
-      { name: 'password', type: BYTES, description: 'The password bytes' },
+      { name: 'password', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the password' },
       { name: 'salt', type: BYTES, description: 'The salt bytes' },
       { name: 'iterations', type: NUMBER, description: 'Round count, at least 1' },
       { name: 'length', type: NUMBER, description: 'Derived key length in bytes, at least 1' },
     ],
-    example: '["hash/pbkdf2", "cGFzc3dvcmQ=", "c2FsdA==", 1, 32] // => "Eg+2z/z4syxD5yJSVsT4N6hlSMkszDVICAWYfLcL4Xs="',
+    example: '["hash/pbkdf2", "@config.password", "c2FsdA==", 1, 32] // => "Eg+2z/z4syxD5yJSVsT4N6hlSMkszDVICAWYfLcL4Xs=" when the credential holds password',
+  },
+  'hash/md5-credential': {
+    module: 'hash',
+    category: 'std-codec',
+    minArity: 3,
+    maxArity: 3,
+    description: 'MD5 (RFC 1321) of a credential\'s value followed by a UTF-8 suffix, as lower-case hex or standard base64: the first step of a challenge login that hashes the password with the user name, whose password never becomes a program value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
+    hasSideEffects: false,
+    returnType: nullable(STRING),
+    params: [
+      { name: 'credential', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the value' },
+      { name: 'suffix', type: STRING, description: 'The text hashed after the value (the user name)' },
+      { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
+    ],
+    example: '["hash/md5-credential", "@config.password", "app", "hex"] // => md5 of the password followed by app',
+  },
+};
+
+export const CREDENTIAL_VALUE_OPERATORS: Record<string, StdOperatorMeta> = {
+  'credential/byte-length': {
+    module: 'credential',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'The length in UTF-8 bytes of a credential\'s value, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
+    hasSideEffects: false,
+    returnType: nullable(NUMBER),
+    params: [{ name: 'credential', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the value' }],
+    example: '["credential/byte-length", "@config.password"] // => 8 when the credential holds password',
   },
 };
 
@@ -123,15 +152,79 @@ export const HMAC_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-codec',
     minArity: 3,
     maxArity: 3,
-    description: 'HMAC-SHA256 of a message under a key (both UTF-8), as lower-case hex or standard base64 (RFC 4231)',
+    description: 'HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a key, as lower-case hex or standard base64. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the key. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held. Runs only in the kernel.',
     hasSideEffects: false,
-    returnType: 'string',
+    returnType: nullable(STRING),
     params: [
-      { name: 'key', type: STRING, description: 'The secret key' },
+      { name: 'key', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the key' },
       { name: 'message', type: STRING, description: 'The message to sign' },
       { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
     ],
-    example: '["hmac/sha256", "Jefe", "what do ya want for nothing?", "hex"] // => "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"',
+    example: '["hmac/sha256", "@config.signingKey", "what do ya want for nothing?", "hex"] // => "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843" when the credential holds Jefe',
+  },
+  'hmac/sha256-bytes': {
+    module: 'hmac',
+    category: 'std-codec',
+    minArity: 3,
+    maxArity: 3,
+    description: 'HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a bytes key that is a program value, as lower-case hex or standard base64: a key derived inside the program, such as one step of a SigV4 signing chain. A key that comes from a credential goes through hmac/sha256, never here. An operand that is not canonical padded base64 answers null.',
+    hasSideEffects: false,
+    returnType: nullable(STRING),
+    params: [
+      { name: 'key', type: BYTES, description: 'The derived key, bytes' },
+      { name: 'message', type: STRING, description: 'The message to sign' },
+      { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
+    ],
+    example: '["hmac/sha256-bytes", "SmVmZQ==", "what do ya want for nothing?", "hex"] // => "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"',
+  },
+};
+
+export const AES_GCM_OPERATORS: Record<string, StdOperatorMeta> = {
+  'aes-gcm/seal': {
+    module: 'aes-gcm',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: 'AES-128-GCM seal (NIST SP 800-38D): the ciphertext followed by the 16-byte tag. The key is 16 bytes and the nonce 12; a key or nonce of another size, or an operand that is not canonical padded base64, answers null. The key is a program value (a content key derived from an ECDH secret), never a credential.',
+    hasSideEffects: false,
+    returnType: nullable(BYTES),
+    params: [
+      { name: 'key', type: BYTES, description: 'The 16-byte key' },
+      { name: 'nonce', type: BYTES, description: 'The 12-byte nonce, never reused under one key' },
+      { name: 'plaintext', type: BYTES, description: 'The bytes to seal' },
+      { name: 'aad', type: BYTES, description: 'Additional authenticated data, bound to the tag and not sealed' },
+    ],
+    example: '["aes-gcm/seal", "<key16>", "<nonce12>", "<plaintext>", "<aad>"] // => "<ciphertext||tag>"',
+  },
+  'aes-gcm/open': {
+    module: 'aes-gcm',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: 'AES-128-GCM open (NIST SP 800-38D) of ciphertext followed by its 16-byte tag. Answers null when the tag does not verify (a forged or altered sealed value, another key, nonce or aad), the key or nonce is the wrong size, or an operand is not canonical padded base64.',
+    hasSideEffects: false,
+    returnType: nullable(BYTES),
+    params: [
+      { name: 'key', type: BYTES, description: 'The 16-byte key' },
+      { name: 'nonce', type: BYTES, description: 'The 12-byte nonce the value was sealed under' },
+      { name: 'sealed', type: BYTES, description: 'The ciphertext followed by the 16-byte tag' },
+      { name: 'aad', type: BYTES, description: 'The additional authenticated data the value was sealed with' },
+    ],
+    example: '["aes-gcm/open", "<key16>", "<nonce12>", "<ciphertext||tag>", "<aad>"] // => "<plaintext>"',
+  },
+};
+
+export const ECDH_OPERATORS: Record<string, StdOperatorMeta> = {
+  'ecdh/p256-ephemeral': {
+    module: 'ecdh',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'ECDH over P-256 (SEC 1, NIST SP 800-56A) with an ephemeral key generated inside the operator: answers the 65-byte uncompressed public key of that key and the 32-byte shared x coordinate with the peer. The ephemeral secret never leaves the operator: its randomness is fresh host entropy that is never journaled, the journal records only the public key and the shared secret the program sees, and a replay answers with them without running the operator. The peer is a SEC 1 point; one that is not on the curve, or an operand that is not canonical padded base64, answers null.',
+    hasSideEffects: false,
+    returnType: nullable(shape({ public: BYTES, shared: BYTES })),
+    params: [{ name: 'peer', type: BYTES, description: 'The peer public key, a SEC 1 point (65 bytes uncompressed)' }],
+    example: '["ecdh/p256-ephemeral", "<peerPublic>"] // => { public: "<65 bytes>", shared: "<32 bytes>" }',
   },
 };
 
@@ -152,6 +245,20 @@ export const RSA_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["rsa/verify", "<n>", "AQAB", "header.payload", "<signature>"] // => "valid"',
   },
+  'rsa/sign': {
+    module: 'rsa',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Sign a message with RSASSA-PKCS1-v1_5 and SHA-256 (RFC 8017 section 8.2.1, what JWS RS256 needs); the private operation is blinded and the signature is as long as the modulus. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key of at least 2048 bits. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it; the blinding randomness is fresh host entropy that is never journaled (the journal records the signature, and a replay answers with it without signing again). The result is null when the credential is not held or is not such a key. Runs only in the kernel.',
+    hasSideEffects: false,
+    returnType: nullable(BYTES),
+    params: [
+      { name: 'key', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the PEM private key' },
+      { name: 'message', type: STRING, description: 'The message to sign, hashed as its UTF-8 bytes' },
+    ],
+    example: '["rsa/sign", "@config.signingKey", "header.payload"] // => "<signature>"',
+  },
 };
 
 export const ECDSA_OPERATORS: Record<string, StdOperatorMeta> = {
@@ -170,6 +277,20 @@ export const ECDSA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'signature', type: BYTES, description: 'The signature, 64 bytes r||s' },
     ],
     example: '["ecdsa/p256-verify", "<x>", "<y>", "header.payload", "<signature>"] // => "valid"',
+  },
+  'ecdsa/p256-sign': {
+    module: 'ecdsa',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Sign a message with ECDSA over P-256 and SHA-256 (FIPS 186-4 section 6.4.1) using the deterministic nonce of RFC 6979 and constant-time scalar arithmetic; the signature is 64 raw bytes r||s, what JWS ES256 and VAPID need. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not a P-256 key. Runs only in the kernel.',
+    hasSideEffects: false,
+    returnType: nullable(BYTES),
+    params: [
+      { name: 'key', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the PEM private key' },
+      { name: 'message', type: STRING, description: 'The message to sign, hashed as its UTF-8 bytes' },
+    ],
+    example: '["ecdsa/p256-sign", "@config.signingKey", "header.payload"] // => "<64 bytes r||s>"',
   },
 };
 

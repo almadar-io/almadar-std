@@ -1,0 +1,327 @@
+app std-http-fetch [
+  version: "1.0.0",
+  egress: ["https://api.example.test"],
+  description: "std-http-fetch — the HTTP client of a program that runs in a browser host, which has no sockets (spec/net/http-fetch.lolo). It answers the events std-http-client answers: HTTP_SEND { key, method, target, headers, body, stream } becomes one os/fetch of method, origin knob plus target, the headers and the body bytes (timeoutMs from the knob), and the host's raw status, headers and body come back as HTTP_REPLIED { key, status, headers, body } for any status (header names lower-cased, repeats joined with a comma and a space, as std-http-client). The origin knob must be declared in egress; the kernel answers an undeclared origin denied without asking the host. A request the atom will not write (method, header or target the patterns refuse, or a header naming framing or a credential) answers HTTP_FAILED kind refused, as std-http-client. A stream of sse or jsonl asks os/fetch with stream true: the host answers at the head, the body is read with os/recv on the handle (config.recvBytes at a time) and each complete frame is answered as HTTP_STREAM_EVENT { key, data, event, id } while the body is still arriving (the framing of std-http-client) The framing is std-http-frame, composed in this atom as the sibling trait FetchFrame: a program that asks for a stream composes FetchFrame beside this trait., then HTTP_REPLIED with an empty body when the body ends and the handle is closed. One stream is in flight per frame; a second HTTP_SEND meanwhile answers HTTP_FAILED kind refused. Any other stream answers HTTP_FAILED kind refused. A host failure keeps its kind denied or timeout, else io; a native host answers os/fetch unsupported, which is io here: a native program composes std-http-client instead. Nothing follows a redirect that the host's fetch does not."
+]
+uses Spec from "almadar-std/http-fetch"
+uses Frame from "std/behaviors/std-http-frame"
+type HttpHeader = { name : string!, value : string! }
+
+orbital HttpFetchOrbital {
+  entity HttpFetchFlight [runtime] {
+    id : string!
+    key : string @description "The key of the stream in flight." = ""
+    stream : string @description "none, sse or jsonl." = "none"
+    handle : number @description "The open streamed response, -1 when none." = -1
+    dec : bytes @description "Body bytes read and not yet framed." = ""
+    status : number @description "The status of the streamed head." = 0
+    headers : [HttpHeader] @description "The headers of the streamed head, names lower-cased." = []
+    total : number @description "Body bytes read so far." = 0
+    eof : boolean @description "The body ended." = false
+    flushed : boolean @description "The unterminated rest of the body was framed." = false
+    @invariant (>= @entity.total 0)
+  }
+
+  trait FetchFrame = Frame.traits.HttpFrame {
+    listens {
+      HttpFetch.HF_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait HttpFetch -> HttpFetchFlight [client] {
+    initial: ready
+
+    config {
+      origin : url = "https://api.example.test"
+        @label "Origin"
+        @description "The scheme and host every request is made against (no trailing slash); declared in egress."
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Timeout"
+        @description "The longest the host waits for the fetch to answer."
+        @tier "infra"
+      tokenPattern : string = "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$"
+        @label "Token"
+        @description "What a method or header name must match."
+        @tier "domain"
+      valuePattern : string = "^[^\\x00-\\x08\\x0a-\\x1f\\x7f]*$"
+        @label "Header value"
+        @description "What a header value may hold: no control character other than a tab."
+        @tier "domain"
+      targetPattern : string = "^/[^ \\x00-\\x20\\x7f]*$"
+        @label "Target"
+        @description "A request target: a slash and no space or control character."
+        @tier "domain"
+      streams : [string] = ["none", "sse", "jsonl"]
+        @label "Streams"
+        @description "The stream framings a call may ask for."
+        @tier "domain"
+      recvBytes : number = 16384
+        @label "Read size"
+        @description "The most bytes one os/recv of a streamed response takes."
+        @tier "infra"
+      maxBody : number = 67108864
+        @label "Largest body"
+        @description "A streamed body past this many bytes fails."
+        @tier "infra"
+      credentialHeaders : [string] = ["authorization", "proxy-authorization", "cookie", "x-api-key"]
+        @label "Credential headers"
+        @description "Header names that carry a credential. A payload never carries one: credentials ride a secret slot, so a call that sets one here is refused."
+        @tier "domain"
+      framingHeaders : [string] = ["host", "content-length", "transfer-encoding", "connection"]
+        @label "Framing headers"
+        @description "Header names the fetch sets itself; a call that sets one is refused."
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+
+      HTTP_SEND -> ready when (not (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (not (array/includes @config.credentialHeaders (str/lower @h.name))))))))
+        (emit HTTP_FAILED { key: @payload.key, error: "the request cannot be written: a method, header, target or stream is not allowed, or a header names framing the fetch sets or carries a credential", kind: "refused" })
+
+      HTTP_SEND -> ready when (and (= @payload.stream "none") (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (not (array/includes @config.credentialHeaders (str/lower @h.name))))))))
+        (os/fetch @payload.method (str/concat @config.origin @payload.target) { headers: @payload.headers, body: @payload.body, timeoutMs: @config.timeoutMs } { key: @payload.key, emit: { success: HF_REPLIED, failure: HF_FAILED } })
+
+      HTTP_SEND -> opening when (and (!= @payload.stream "none") (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (not (array/includes @config.credentialHeaders (str/lower @h.name))))))))
+        (set @entity.key @payload.key)
+        (set @entity.stream @payload.stream)
+        (set @entity.handle -1)
+        (set @entity.dec (bytes/from-string ""))
+        (set @entity.total 0)
+        (set @entity.eof false)
+        (set @entity.flushed false)
+        (os/fetch @payload.method (str/concat @config.origin @payload.target) { headers: @payload.headers, body: @payload.body, timeoutMs: @config.timeoutMs, stream: true } { key: @payload.key, emit: { success: HF_HEAD, failure: HF_HEAD_FAILED } })
+
+      HF_REPLIED -> ready
+        (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
+      HF_FAILED -> ready
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+      HF_CLOSED -> ready
+    }
+
+    state opening {
+      INIT -> opening
+      HTTP_SEND -> opening
+        (emit HTTP_FAILED { key: @payload.key, error: "a stream is in flight on this frame", kind: "refused" })
+      HF_REPLIED -> opening
+        (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
+      HF_FAILED -> opening
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+      HF_CLOSED -> opening
+      HF_HEAD -> ready when (== @payload.handle null)
+        (emit HTTP_FAILED { key: @entity.key, error: "the host answered a streamed fetch with no handle", kind: "io" })
+      HF_HEAD -> streaming when (!= @payload.handle null)
+        (set @entity.handle (default @payload.handle -1))
+        (set @entity.status @payload.status)
+        (set @entity.headers (array/map @payload.headers (fn h { name: (str/lower @h.name), value: @h.value })))
+        (os/recv @payload.handle @config.recvBytes { key: "read" emit: { success: HF_READ, failure: HF_IO_FAILED } })
+      HF_HEAD_FAILED -> ready
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+    }
+
+    state streaming {
+      INIT -> streaming
+      HTTP_SEND -> streaming
+        (emit HTTP_FAILED { key: @payload.key, error: "a stream is in flight on this frame", kind: "refused" })
+      HF_REPLIED -> streaming
+        (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
+      HF_FAILED -> streaming
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+      HF_CLOSED -> streaming
+      HF_IO_FAILED -> ready
+        (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
+        (set @entity.handle -1)
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+
+      HF_READ -> streaming
+        (set @entity.dec (bytes/concat [@entity.dec, @payload.data]))
+        (set @entity.total (+ @entity.total (bytes/length @payload.data)))
+        (set @entity.eof @payload.eof)
+        (emit HF_FRAMED { n: (+ @entity.total (bytes/length @entity.dec)) })
+
+      HF_FRAMED -> streaming when (> @entity.total @config.maxBody)
+        (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
+        (set @entity.handle -1)
+        (emit HTTP_FAILED { key: @entity.key, error: "the body is past the largest body", kind: "io" })
+      HF_FRAMED -> streaming when (<= @entity.total @config.maxBody)
+        (emit HF_FRAME { key: @entity.key, stream: @entity.stream, data: @entity.dec, final: false })
+      HF_DRAINED -> streaming
+        (set @entity.dec @payload.rest)
+        (emit HF_AFTER { n: (+ @entity.total (bytes/length @entity.dec)) })
+      HF_FRAME_EVENT -> streaming
+        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id })
+      HF_FRAME_FAILED -> streaming
+        (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
+        (set @entity.handle -1)
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: @payload.kind })
+
+      HF_AFTER -> streaming when (not @entity.eof)
+        (os/recv @entity.handle @config.recvBytes { key: "read" emit: { success: HF_READ, failure: HF_IO_FAILED } })
+      HF_AFTER -> streaming when (and @entity.eof (not @entity.flushed) (> (bytes/length @entity.dec) 0))
+        (set @entity.flushed true)
+        (emit HF_FRAME { key: @entity.key, stream: @entity.stream, data: @entity.dec, final: true })
+      HF_AFTER -> ready when (and @entity.eof (or @entity.flushed (= (bytes/length @entity.dec) 0)))
+        (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
+        (set @entity.handle -1)
+        (set @entity.dec (bytes/from-string ""))
+        (emit HTTP_REPLIED { key: @entity.key, status: @entity.status, headers: (default (object/fromEntries (array/map @entity.headers (fn h [@h.name, (str/join (array/map (array/filter @entity.headers (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))) {}), body: (bytes/from-string "") })
+    }
+
+    emits {
+      HTTP_REPLIED -> external {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+        @description "The response, of any status, whole."
+        @tier "primary"
+      HTTP_STREAM_EVENT -> external {
+        key : string!
+        data : string!
+        event : string?
+        id : string?
+      }
+        @description "One complete frame of a streamed response (sse or jsonl)."
+        @tier "primary"
+      HTTP_FAILED -> external {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "The call produced no response: kind refused (nothing sent), denied, timeout, encoding (a stream frame is not UTF-8) or io."
+        @tier "primary"
+      HF_HEAD {
+        key : string
+        status : number!
+        headers : [HttpHeader]!
+        body : bytes!
+        handle : number?
+      }
+        @description "Internal: the os/fetch answer of a streamed fetch, at the head."
+        @tier "internal"
+      HF_HEAD_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the os/fetch failure of a streamed fetch."
+        @tier "internal"
+      HF_READ {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "Internal: one os/recv answer of a streamed response."
+        @tier "internal"
+      HF_IO_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/recv of a streamed response failed."
+        @tier "internal"
+      HF_FRAMED -> internal {
+        n : number!
+      }
+        @description "Internal: body bytes were read; frame a stream or read more."
+        @tier "internal"
+      HF_AFTER -> internal {
+        n : number!
+      }
+        @description "Internal: no frame is complete; read more or finish."
+        @tier "internal"
+      HF_FRAME {
+        key : string!
+        stream : string!
+        data : bytes!
+        final : boolean!
+      }
+        @description "Internal: the unframed stream bytes, for the framer."
+        @tier "internal"
+      HF_CLOSED {
+      }
+        @description "Internal: the streamed response was closed."
+        @tier "internal"
+      HF_REPLIED {
+        key : string
+        status : number!
+        headers : [HttpHeader]!
+        body : bytes!
+      }
+        @description "Internal: the os/fetch answer."
+        @tier "internal"
+      HF_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the os/fetch failure."
+        @tier "internal"
+    }
+
+    listens {
+      HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Make one HTTP call; answered HTTP_REPLIED or HTTP_FAILED, and with a stream each frame as HTTP_STREAM_EVENT first."
+        @synonyms "browser http client, fetch"
+      HF_REPLIED {
+        key : string
+        status : number!
+        headers : [HttpHeader]!
+        body : bytes!
+      }
+      HF_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+      HF_HEAD {
+        key : string
+        status : number!
+        headers : [HttpHeader]!
+        body : bytes!
+        handle : number?
+      }
+      HF_HEAD_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+      HF_READ {
+        data : bytes!
+        eof : boolean!
+      }
+      HF_IO_FAILED {
+        error : string
+        kind : string
+      }
+      HF_CLOSED {
+      }
+      HF_FRAME_EVENT {
+        key : string!
+        data : string!
+        event : string?
+        id : string?
+      }
+      HF_DRAINED {
+        rest : bytes!
+      }
+      HF_FRAME_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+      FetchFrame.FRAME_EVENT -> HF_FRAME_EVENT
+      FetchFrame.FRAME_DRAINED -> HF_DRAINED
+      FetchFrame.FRAME_FAILED -> HF_FRAME_FAILED
+    }
+  }
+
+  page boot as HttpFetchPage -> HttpFetch, FetchFrame
+}

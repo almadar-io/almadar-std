@@ -1,62 +1,169 @@
 {
  "atom": "cli/atoms/std-orb-value-leaves.lolo",
  "trait": "OrbValueLeaves",
- "note": "Cases mirror the value-source walk (value_walk.rs all_sources, core sexpr walk tests): each returnSemantics kind with a paired control for the opaque and absent-argument cases. The semantics are the installed operator table's declared kinds.",
+ "note": "Cases mirror the value-source walk (value_walk.rs all_sources, core sexpr walk tests): each value-source slot kind (branches, args, last, lambdaResult, listed) with a paired control for the opaque and absent-argument cases. The slots are the installed operator table's valueSourceSlots, fed as VALUE_WALK_HEARD.",
  "cases": [
   {
    "id": "a-literal-list-of-descriptors-is-its-own-leaf",
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -105,55 +212,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -201,55 +415,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -305,55 +626,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -408,55 +836,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -508,55 +1043,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -606,55 +1248,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -709,55 +1458,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -808,55 +1664,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -905,55 +1868,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]
@@ -997,55 +2067,162 @@
    "steps": [
     {
      "trait": "OrbValueLeaves",
+     "event": "VALUE_WALK_HEARD",
+     "from": "ready",
+     "payload": {
+      "slots": {
+       "array/append": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/concat": {
+        "kind": "args"
+       },
+       "array/drop": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/dropLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/filter": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/insert": {
+        "kind": "listed",
+        "args": [
+         0,
+         2
+        ]
+       },
+       "array/map": {
+        "kind": "lambdaResult"
+       },
+       "array/prepend": {
+        "kind": "listed",
+        "args": [
+         0,
+         1
+        ]
+       },
+       "array/reduce": {
+        "kind": "lambdaResult"
+       },
+       "array/reject": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/remove": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/removeItem": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/reverse": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/shuffle": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/slice": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/sort": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/take": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/takeLast": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "array/unique": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "behavior/apply": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       },
+       "do": {
+        "kind": "last"
+       },
+       "if": {
+        "kind": "branches"
+       },
+       "let": {
+        "kind": "listed",
+        "args": [
+         1
+        ]
+       },
+       "or": {
+        "kind": "args"
+       },
+       "default": {
+        "kind": "args"
+       },
+       "tree/fold": {
+        "kind": "lambdaResult"
+       },
+       "typed": {
+        "kind": "listed",
+        "args": [
+         0
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
      "event": "VALUE_SEMANTICS_HEARD",
      "from": "ready",
      "payload": {
-      "semantics": {
-       "%": "integer-closed",
-       "*": "integer-closed",
-       "+": "integer-closed",
-       "-": "integer-closed",
-       "array/append": "union-of-args<0,1>",
-       "array/concat": "union-of-args",
-       "array/drop": "identity-of-arg<0>",
-       "array/dropLast": "identity-of-arg<0>",
-       "array/filter": "identity-of-arg<0>",
-       "array/insert": "union-of-args<0,2>",
-       "array/map": "lambda-result",
-       "array/nth": "tuple-element",
-       "array/prepend": "union-of-args<0,1>",
-       "array/reduce": "lambda-result",
-       "array/reject": "identity-of-arg<0>",
-       "array/remove": "identity-of-arg<0>",
-       "array/removeItem": "identity-of-arg<0>",
-       "array/reverse": "identity-of-arg<0>",
-       "array/shuffle": "identity-of-arg<0>",
-       "array/slice": "identity-of-arg<0>",
-       "array/sort": "identity-of-arg<0>",
-       "array/take": "identity-of-arg<0>",
-       "array/takeLast": "identity-of-arg<0>",
-       "array/unique": "identity-of-arg<0>",
-       "behavior/apply": "identity-of-arg<0>",
-       "brotli/compress": "option-branch<1,result>",
-       "brotli/decompress": "option-branch<2,result>",
-       "do": "last-of-args",
-       "gzip/compress": "option-branch<1,result>",
-       "gzip/decompress": "option-branch<2,result>",
-       "if": "branch-union",
-       "let": "identity-of-arg<1>",
-       "math/abs": "integer-closed",
-       "math/ceil": "integer-result",
-       "math/clamp": "integer-closed",
-       "math/floor": "integer-result",
-       "math/max": "integer-closed",
-       "math/min": "integer-closed",
-       "math/mod": "integer-closed",
-       "math/round": "integer-result",
-       "or": "coalesce",
-       "default": "coalesce",
-       "tree/fold": "lambda-result",
-       "typed": "identity-of-arg<0>"
-      },
       "functions": [
        "fn"
       ]

@@ -4,7 +4,7 @@ app std-orb-lint-config-role-lists [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-config-role-lists - the `orb lint config-role-lists <file>` command, the port of check_config_role_lists (identity/user_identity.rs, ORB_S_ROLE_LITERAL_NOT_MEMBER) over the compiler's role_list_sites dataflow (inline/rewrite.rs). It lowers the file with program/read. For each inline trait with a config block (an authored trait when the identity shape is the orbital's own expects shape), against the roster's closed-vocabulary fields (the declared [identity] entity, else the orbital's expects entity [identity] { shape }): a knob list is a role-list site when the trait tests membership in it against a role source, either `(array/includes @config.K <role source>)` (the knob is the list) or `(array/includes (object/get @p <key>) <role source>)` inside a `(fn p ...)` over a collection that resolves to knob K (a `@config.K`, an identity-of-arg<N> pass-through of one as the installed operator table declares it, or `(object/get @q <key>)` of an outer element), where a role source is `@user.<role field>` or `@config.V` whose default is such a read. Sites are searched in transition guards and effects, tick guards and effects, listen guards and payload mappings, and every knob default. Every string literal of a site's list in the knob's default that is not a declared member of the role field is reported at <trait path>.config.<knob>. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint config-role-lists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-config-role-lists - the `orb lint config-role-lists <file>` command, the port of check_config_role_lists (identity/user_identity.rs, ORB_S_ROLE_LITERAL_NOT_MEMBER) over the compiler's role_list_sites dataflow (inline/rewrite.rs). It lowers the file with program/read. For each inline trait with a config block (an authored trait when the identity shape is the orbital's own expects shape), against the roster's closed-vocabulary fields (the declared [identity] entity, else the orbital's expects entity [identity] { shape }): a knob list is a role-list site when the trait tests membership in it against a role source, either `(array/includes @config.K <role source>)` (the knob is the list) or `(array/includes (object/get @p <key>) <role source>)` inside a `(fn p ...)` over a collection that resolves to knob K (a `@config.K`, a pass-through of one whose value-source slot lists the single argument N, as the installed operator table declares it, or `(object/get @q <key>)` of an outer element), where a role source is `@user.<role field>` or `@config.V` whose default is such a read. Sites are searched in transition guards and effects, tick guards and effects, listen guards and payload mappings, and every knob default. Every string literal of a site's list in the knob's default that is not a declared member of the role field is reported at <trait path>.config.<knob>. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint config-role-lists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-config-role-lists"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -32,6 +32,7 @@ type RlWorkList = [RlWork]
 type RlRfMap = Map string [string]
 type RlCfgMap = Map string RlShape?
 
+type WalkSlot = { kind : string!, args : [number] }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintConfigRoleListsCodes = { sRoleLiteralNotMember : LintCodeDecl }
 
@@ -42,11 +43,10 @@ orbital OrbLintConfigRoleListsOrbital {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
-    semantics : Map string string = {}
+    walk : Map string WalkSlot = {}
     ctxs : [RlCtx] = []
     frontier : [RlWork] = []
     sites : [RlSite] = []
-    semUnread : boolean = false
   }
 
   trait OrbLintConfigRoleLists -> OrbLintConfigRoleListsRun [optimistic] {
@@ -54,9 +54,8 @@ orbital OrbLintConfigRoleListsOrbital {
 
     state ready {
       INIT -> ready
-      SEM_HEARD -> ready
-        (set @entity.semUnread false)
-        (set @entity.semantics @payload.semantics)
+      WALK_HEARD -> ready
+        (set @entity.walk @payload.slots)
       RL_STEP -> ready when (> (array/len @entity.frontier) 0)
         (set @entity.sites (let ((ctxs : [RlCtx] @entity.ctxs) (nosites : [RlSite] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
   (array/concat @entity.sites (array/flatten
@@ -81,7 +80,7 @@ orbital OrbLintConfigRoleListsOrbital {
                           @nosites))
                       @nosites))))))
           @nosites))))))))
-        (set @entity.frontier (let ((nowork : [RlWork] []) (noshapes : [RlShape] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (sem0 @entity.semantics))
+        (set @entity.frontier (let ((nowork : [RlWork] []) (noshapes : [RlShape] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (sem0 @entity.walk) (noslot : WalkSlot { kind: "", args: [] }))
   (default (as (default (array/filter (array/flatten
   (array/map @entity.frontier
     (fn w
@@ -96,11 +95,11 @@ orbital OrbLintConfigRoleListsOrbital {
     "")
   (if (validate/array @n)
     (let ((op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))) (argc (- (array/len @n) 1)))
-      (let ((sem (object/get @sem0 @op "")))
-        (let ((idxText (str/slice @sem 16 (- (str/len @sem) 1))))
-          (if (and (str/startsWith @sem "identity-of-arg<") (str/endsWith @sem ">") (not (str/includes @idxText ",")) (!= (str/to-int (str/trim @idxText)) null))
-            (if (< (str/to-int (str/trim @idxText)) @argc)
-              (let ((kr (array/nth @k (+ (str/to-int (str/trim @idxText)) 1))))
+      (let ((sl (default (object/get @sem0 @op) @noslot)))
+        (let ((slArgs (object/get @sl "args" [])) (slArg (default (array/nth (object/get @sl "args" []) 0) -1)))
+          (if (and (= (object/get @sl "kind" "") "listed") (= (array/len @slArgs) 1))
+            (if (< @slArg @argc)
+              (let ((kr (array/nth @k (+ @slArg 1))))
                 (if (validate/string @kr) @kr ""))
               "")
             (if (and (= @op "object/get") (>= (array/len @n) 3))
@@ -226,9 +225,9 @@ orbital OrbLintConfigRoleListsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RlProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      SEM_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: every operator's declared returnSemantics; an operator declaring identity-of-arg<N> passes argument N through."
-      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEM_HEARD
+      WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: every operator's value-source slots; an operator whose result is drawn from the single listed argument N passes argument N through."
+      OrbLintInput.LINT_OPERATOR_WALK -> WALK_HEARD
     }
     config {
       codes : LintConfigRoleListsCodes = { sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }

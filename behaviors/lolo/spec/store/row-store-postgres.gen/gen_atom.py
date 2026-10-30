@@ -277,7 +277,7 @@ def scram_proof():
          ('cs', hmac('@stored', '@am')), ('ss', hmac('@sk', '@am')), ('pframe', pf)],
         '{ frame: @pframe, sig: @ss, error: "" }', none=f3)
     return T(
-        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (if (= @sf null) §f0§ (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (= @iter null) §f1§ (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (salted (hash/pbkdf2 (bytes/from-string @entity.secret) @salt @iter 32))) (if (= @salted null) §f3§ §inner§)))))))))))))',
+        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (if (= @sf null) §f0§ (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (= @iter null) §f1§ (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (salted (hash/pbkdf2 @config.password @salt @iter 32))) (if (= @salted null) §f3§ §inner§)))))))))))))',
         fr=find('r'), fs=find('s'), fi=find('i'),
         f0=fail('the SCRAM server-first message is not text'),
         f1=fail('the SCRAM server-first message lacks r, s or i'),
@@ -510,14 +510,25 @@ STARTUP_FRAME = T('(let ((sb (bytes/concat [§v§, (bytes/from-string (str/conca
 SCRAM_FIRST_FRAME = T('(let ((first (bytes/from-string (str/concat "n,,n=" §esc§ ",r=" @entity.nonce)))) §m§)', esc=ESC_USER,
                       m=msg('p', chain([('fl', '(bytes/write-uint (bytes/length @first) 4 "be")')],
                                        '(bytes/concat [(bytes/from-string (str/concat "SCRAM-SHA-256" ' + NUL + ')), @fl, @first])'), nullable=True))
-PW_CLEAR = '(bytes/from-string (str/concat @entity.secret ' + NUL + '))'
-PW_MD5 = chain([('md1', '(hash/md5 (base64/encode (str/concat @entity.secret @entity.userName)) "hex")'),
+PW_MD5 = chain([('md1', '(hash/md5-credential @config.password @entity.userName "hex")'),
                 ('md2', '(hash/md5 ' + B64('(bytes/concat [(bytes/from-string @md1), (bytes/slice @entity.act.body 4 8)])') + ' "hex")')],
                '(bytes/from-string (str/concat "md5" @md2 ' + NUL + '))')
-PASSWORD_FRAME = msg('p', '(if (= @entity.act.code 3) ' + PW_CLEAR + ' ' + PW_MD5 + ')', nullable=True)
+PASSWORD_FRAME = msg('p', PW_MD5, nullable=True)
+NO_PASSWORD = '(<= @entity.pwLen 0)'
+HAS_PASSWORD = '(> @entity.pwLen 0)'
+CLEAR_HEAD = chain([('pl', '(bytes/write-uint (+ @entity.pwLen 5) 4 "be")')], '(bytes/concat [(bytes/from-string "p"), @pl])')
 
 SCAN_FAILED = 'the server sent a message this driver cannot read'
 FRAME_FAILED = 'the request cannot be encoded as a Postgres message'
+
+
+def send_clear():
+    """The cleartext password message: the host fills the credential in between the head (kind byte and length, counted from the
+    credential's byte length) and the NUL, so the frame the diagnostic shows is the head alone."""
+    return [SET('stage', S('password')), SET('sql', '""'), SET('params', '[]')] + frame_sets(CLEAR_HEAD) + [
+        EMIT('PG_WIRE_SENT', '{ stage: @entity.stage, sql: @entity.sql, params: @entity.params, frame: @entity.frame }'),
+        '(os/send @entity.sock [{ bytes: @entity.frame, credential: @config.password }, { bytes: (bytes/from-string ' + NUL + '), credential: "" }] { key: "send" emit: { failure: PG_IO_FAILED } })',
+        RECV]
 
 
 def frame_sets(frame):
@@ -616,10 +627,11 @@ L = stg(*LOGIN_STAGES)
 P(tr('PG_SCANNED', 'ready', AND(L, IS_ERR), FAIL_CLOSE(ERR_MSG)))
 P(tr('PG_SCANNED', 'ready', AND(L, NOT(IS_ERR), '@entity.badSig'), FAIL_CLOSE('"the SCRAM server signature does not match: the server does not know the password"')))
 A = NE('@entity.act.code', '0')
-P(tr('PG_SCANNED', 'ready', AND(L, NOT(IS_ERR), NOT('@entity.badSig'), A, OR(EQ('@entity.act.code', '3'), EQ('@entity.act.code', '5'), EQ('@entity.act.code', '11')), EQ('@entity.secret', '""')),
-     FAIL_CLOSE('"the server asks for a password and DATABASE_URL has none"')))
+P(tr('PG_SCANNED', 'ready', AND(L, NOT(IS_ERR), NOT('@entity.badSig'), A, OR(EQ('@entity.act.code', '3'), EQ('@entity.act.code', '5'), EQ('@entity.act.code', '11')), NO_PASSWORD),
+     FAIL_CLOSE('"the server asks for a password and the password credential is not held"')))
 OKL = AND(L, NOT(IS_ERR), NOT('@entity.badSig'))
-P(tr('PG_SCANNED', 'startup', AND(OKL, OR(EQ('@entity.act.code', '3'), EQ('@entity.act.code', '5'))), send_inline('password', PASSWORD_FRAME)))
+P(tr('PG_SCANNED', 'startup', AND(OKL, EQ('@entity.act.code', '3')), send_clear()))
+P(tr('PG_SCANNED', 'startup', AND(OKL, EQ('@entity.act.code', '5')), send_inline('password', PASSWORD_FRAME)))
 P(tr('PG_SCANNED', 'drawing', AND(OKL, EQ('@entity.act.code', '10')), ['(random-bytes 18 { key: "nonce" emit: { success: PG_NONCE_DRAWN, failure: PG_NONCE_FAILED } })']))
 P(tr('PG_SCANNED', 'running', AND(OKL, EQ('@entity.act.code', '11')), [SET('stage', '"scram-final"'), EMIT('PG_PROOF')]))
 P(tr('PG_SCANNED', 'ready', AND(OKL, A, NE('@entity.act.code', '3'), NE('@entity.act.code', '5'), NE('@entity.act.code', '10'), NE('@entity.act.code', '11')),
@@ -855,13 +867,14 @@ URL_CRED = '(if (str/includes ' + URL_AUTH + ' ' + AT + ') (array/nth (str/split
 URL_USER_RAW = '(array/nth (str/split ' + URL_CRED + ' ":") 0)'
 URL_PATH = '(array/nth (str/split (str/join (array/drop (str/split ' + URL_REST + ' "/") 1) "/") "?") 0)'
 SCHEME = '(array/nth (str/split @config.url "://") 0)'
-URL_OK = AND('(str/includes @config.url "://")', '(array/includes ["postgres", "postgresql"] ' + SCHEME + ')')
+URL_NO_PASSWORD = '(not (str/includes ' + URL_CRED + ' ":"))'
+URL_OK = AND('(str/includes @config.url "://")', '(array/includes ["postgres", "postgresql"] ' + SCHEME + ')', URL_NO_PASSWORD)
 SSL_OK = '(array/includes ' + SSLMODES + ' @config.sslmode)'
 COLD_OK = AND(NOSOCK, URL_OK, SSL_OK)
 COLD_BAD = AND(NOSOCK, NOT(AND(URL_OK, SSL_OK)))
-BAD_MSG = '(if (not (str/includes @config.url "://")) "DATABASE_URL is not a URL: relative URL without a base" (if (not ' + URL_OK + ') (str/concat "DATABASE_URL must be postgres:// or postgresql://, not " ' + SCHEME + ' "://") (str/concat "sslmode `" @config.sslmode "` is not one of disable, allow, prefer, require, verify-ca, verify-full")))'
+BAD_MSG = '(if (not (str/includes @config.url "://")) "DATABASE_URL is not a URL: relative URL without a base" (if (not (array/includes ["postgres", "postgresql"] ' + SCHEME + ')) (str/concat "DATABASE_URL must be postgres:// or postgresql://, not " ' + SCHEME + ' "://") (if (not ' + URL_NO_PASSWORD + ') "DATABASE_URL carries a password: the login password is the password credential, never part of the URL" (str/concat "sslmode `" @config.sslmode "` is not one of disable, allow, prefer, require, verify-ca, verify-full"))))'
 URL_SETS = [SET('userName', '(if (= ' + URL_USER_RAW + ' "") "postgres" ' + DEC(URL_USER_RAW) + ')'),
-            SET('secret', '(if (str/includes ' + URL_CRED + ' ":") ' + DEC('(str/join (array/drop (str/split ' + URL_CRED + ' ":") 1) ":")') + ' "")'),
+            SET('pwLen', '(default (credential/byte-length @config.password) -1)'),
             SET('dbName', '(if (= ' + URL_PATH + ' "") @entity.userName ' + DEC(URL_PATH) + ')')]
 CONNECT = '(os/tcp-connect @config.host @config.port { key: "connect" emit: { success: PG_CONNECTED, failure: PG_IO_FAILED } })'
 
@@ -1016,13 +1029,15 @@ SU(tr('PG_RECEIVED', 'ready', '@payload.eof', FAIL_CLOSE('"the server closed the
 NE_EOF = NOT('@payload.eof')
 SU(tr('PG_RECEIVED', 'ready', AND(NE_EOF, LG(L_ERR)), SCAN_SETS + FAIL_CLOSE(ERR_MSG)))
 SU(tr('PG_RECEIVED', 'ready', AND(NE_EOF, LG(AND(NOT(L_ERR), L_BAD))), FAIL_CLOSE('"the SCRAM server signature does not match: the server does not know the password"')))
-SU(tr('PG_RECEIVED', 'ready', AND(NE_EOF, LG(AND(L_OK(), OR(EQ(L_ACT, '3'), EQ(L_ACT, '5'), EQ(L_ACT, '11')))), EQ('@entity.secret', '""')),
-      FAIL_CLOSE('"the server asks for a password and DATABASE_URL has none"')))
-SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), OR(EQ(L_ACT, '3'), EQ(L_ACT, '5')))), NE('@entity.secret', '""')),
+SU(tr('PG_RECEIVED', 'ready', AND(NE_EOF, LG(AND(L_OK(), OR(EQ(L_ACT, '3'), EQ(L_ACT, '5'), EQ(L_ACT, '11')))), NO_PASSWORD),
+      FAIL_CLOSE('"the server asks for a password and the password credential is not held"')))
+SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '3'))), HAS_PASSWORD),
+      SCAN_SETS + send_clear()))
+SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '5'))), HAS_PASSWORD),
       SCAN_SETS + send_inline('password', PASSWORD_FRAME)))
 SU(tr('PG_RECEIVED', 'drawing', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '10')))),
       SCAN_SETS + ['(random-bytes 18 { key: "nonce" emit: { success: PG_NONCE_DRAWN, failure: PG_NONCE_FAILED } })']))
-SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '11'))), NE('@entity.secret', '""')),
+SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '11'))), HAS_PASSWORD),
       SCAN_SETS + [SET('stage', '"scram-final"'), SET('proof', scram_proof()),
                    '(if (= @entity.proof.error "") ' + block([G('psg', '@entity.proof.sig', PROOF_UNSET), SET('scram', '@psg'), SET('sql', '""'), SET('params', '[]'),
                                                               G('pfr', '@entity.proof.frame', PROOF_UNSET), SET('frame', '@pfr')] + SENT()) + ' (emit PG_PROOF_FAILED))']))
@@ -1174,7 +1189,7 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     params : [PgParam] @description "The binds of the statement in flight, as the diagnostic emits them" = []
     binds : [PgBind] @description "The binds of the statement in flight" = []
     userName : string @description "The login role read from the connection URL" = ""
-    secret : string @description "The login password read from the connection URL; empty when it has none" = ""
+    pwLen : number @description "The byte length of the login password, read by the kernel from the password credential; -1 when it is not held" = -1
     dbName : string @description "The database read from the connection URL" = ""
     sock : number @description "The held session's socket; below zero while no session is open" = -1
     inbox : bytes @description "Bytes received and not yet consumed as whole messages" = ""
@@ -1225,9 +1240,13 @@ CONFIG = '''    config {
         @label "Port"
         @description "The server port os/tcp-connect opens; a literal knob because the net grant is checked against it."
         @tier "infra"
-      url : string = "postgres://app:secret@postgres.example.test:5432/app"
+      url : string = "postgres://app@postgres.example.test:5432/app"
         @label "Connection URL"
-        @description "postgres://user:password@host:port/database, the DATABASE_URL form: the user, the password (percent-decoded; none means a server that asks for one is STORE_FAILED) and the database come from it. host and port below open the socket and must name the same server, because the net grant is checked against literals."
+        @description "postgres://user@host:port/database, the DATABASE_URL form without the password: the user and the database come from it (percent-decoded), and a URL that carries a password is refused. host and port below open the socket and must name the same server, because the net grant is checked against literals."
+        @tier "infra"
+      password : secret = "POSTGRES_PASSWORD"
+        @label "Password"
+        @description "The credential holding the login password. The kernel reads its length and derives the md5 and SCRAM proofs from it, and the host fills it into the cleartext password message, so the atom never holds the password; a server that asks for a password while the credential is not held is STORE_FAILED."
         @tier "infra"
       sslmode : string!
         @label "SSL mode"
@@ -1417,12 +1436,12 @@ PG_DESC = ('std-postgres — one read-only SQL query on a real Postgres server, 
            'PG_RESULT answers the rows (maps of column name to value), the row count the server\'s CommandComplete reported and the columns with their type OIDs. '
            'A statement that is refused, a server error (with its SQLSTATE), an unreachable server or a rejected login answers PG_FAILED. '
            'Values: booleans, numbers, null, text and lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type arrive as the text Postgres prints, timestamptz as UTC ISO text and bytea as base64. '
-           'The connection is the DATABASE_URL form (postgres://user:password@host:port/database) with an sslmode; the host and port knobs are the net grant the app declares.')
+           'The connection is the DATABASE_URL form without the password (postgres://user@host:port/database) with an sslmode; the login password is the password credential (default POSTGRES_PASSWORD), which the kernel holds and the program never sees; the host and port knobs are the net grant the app declares.')
 PG_CLIENT = '''  trait PostgresSession = Pg.traits.RowStoreDriver -> RowStoreFlight {
     config {
       host: "postgres.example.test"
       port: 5432
-      url: "postgres://app:secret@postgres.example.test:5432/app"
+      url: "postgres://app@postgres.example.test:5432/app"
       sslmode: "prefer"
       statementTimeoutMs: 10000
     }

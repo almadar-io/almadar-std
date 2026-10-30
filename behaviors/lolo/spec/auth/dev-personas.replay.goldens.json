@@ -1,70 +1,431 @@
 {
-  "atom": "auth/atoms/std-dev-personas.lolo",
-  "trait": "DevPersonas",
-  "note": "Playground persona HTTP contract (register-unregister-lifecycle.test.ts, persona-auth.test.ts server side): list gate, rows filter, sign-in id validation, not-found and failure answers. Emulator http legs are not played.",
-  "cases": [
+ "atom": "auth/atoms/std-dev-personas.lolo",
+ "trait": "DevPersonas",
+ "note": "Playground persona HTTP contract (register-unregister-lifecycle.test.ts, persona-auth.test.ts server side): list gate, rows filter, sign-in id validation, not-found and failure answers. Emulator http legs are not played.",
+ "cases": [
+  {
+   "id": "list-404-without-emulator",
+   "steps": [
     {
-      "id": "list-404-without-emulator",
-      "steps": [
-        { "event": "PERSONAS_HOST", "payload": { "value": "" },
-          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 404 } } ] } }
+     "event": "PERSONAS_HOST",
+     "payload": {
+      "value": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONAS_ANSWERED",
+        "payload": {
+         "status": 404
+        }
+       }
       ]
-    },
-    {
-      "id": "list-filters-rows-without-id",
-      "steps": [
-        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" }, { "id": "", "name": "Ghost" } ], "totalCount": 2 },
-          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
-      ]
-    },
-    {
-      "id": "list-empty-source-none",
-      "steps": [
-        { "event": "PERSONAS_ROWS", "payload": { "data": [], "totalCount": 0 },
-          "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
-      ]
-    },
-    {
-      "id": "list-over-the-cap-is-500",
-      "steps": [
-        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" } ], "totalCount": 201 },
-          "expect": { "emits": [ { "event": "PERSONAS_FAILED" } ] } }
-      ]
-    },
-    {
-      "id": "sign-in-without-id-is-400",
-      "steps": [
-        { "event": "SIGN_IN_CALLED", "payload": { "rawBody": "{}" },
-          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 400 } } ] } }
-      ]
-    },
-    {
-      "id": "sign-in-404-without-emulator",
-      "steps": [
-        { "event": "SIGN_IN_HOST", "payload": { "value": "", "key": "ada" },
-          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 404 } } ] } }
-      ]
-    },
-    {
-      "id": "sign-in-unknown-id-is-404",
-      "steps": [
-        { "event": "SIGN_IN_ROW_MISSED", "payload": { "error": "missing", "code": "not-found" },
-          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 404 } } ] } }
-      ]
-    },
-    {
-      "id": "sign-in-store-failure-is-500",
-      "steps": [
-        { "event": "SIGN_IN_ROW_MISSED", "payload": { "error": "boom", "code": "unavailable" },
-          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 500 } } ] } }
-      ]
-    },
-    {
-      "id": "sign-in-reserved-claim-is-500",
-      "steps": [
-        { "event": "SIGN_IN_ROW", "payload": { "data": { "id": "ada", "iss": "x" } },
-          "expect": { "emits": [ { "event": "PERSONA_SIGN_IN_ANSWERED", "payload": { "status": 500 } } ] } }
-      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "list-filters-rows-without-id",
+   "steps": [
+    {
+     "event": "PERSONAS_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       },
+       {
+        "id": "",
+        "name": "Ghost"
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONAS_ANSWERED",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-empty-source-none",
+   "steps": [
+    {
+     "event": "PERSONAS_ROWS",
+     "payload": {
+      "data": [],
+      "totalCount": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONAS_ANSWERED",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-over-the-cap-is-500",
+   "steps": [
+    {
+     "event": "PERSONAS_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "totalCount": 201
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONAS_FAILED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-without-id-is-400",
+   "steps": [
+    {
+     "event": "SIGN_IN_CALLED",
+     "payload": {
+      "rawBody": "{}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 400
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-404-without-emulator",
+   "steps": [
+    {
+     "event": "SIGN_IN_HOST",
+     "payload": {
+      "value": "",
+      "key": "ada"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 404
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-unknown-id-is-404",
+   "steps": [
+    {
+     "event": "SIGN_IN_ROW_MISSED",
+     "payload": {
+      "error": "missing",
+      "code": "not-found"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 404
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-store-failure-is-500",
+   "steps": [
+    {
+     "event": "SIGN_IN_ROW_MISSED",
+     "payload": {
+      "error": "boom",
+      "code": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-reserved-claim-is-500",
+   "steps": [
+    {
+     "event": "SIGN_IN_ROW",
+     "payload": {
+      "data": {
+       "id": "ada",
+       "iss": "x"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sign-in-row-creates-the-emulator-user-through-the-http-client",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SIGN_IN_ROW",
+     "payload": {
+      "data": {
+       "id": "p1",
+       "name": "Ada",
+       "role": "admin"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DP_POST",
+        "payload": {
+         "key": "create:p1",
+         "method": "POST",
+         "target": "/identitytoolkit.googleapis.com/v1/projects/demo-almadar/accounts",
+         "headers": [
+          {
+           "name": "Content-Type",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none",
+         "body": "eyJsb2NhbElkIjoicDEiLCJkaXNwbGF5TmFtZSI6IkFkYSJ9"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-row-without-a-name-creates-the-user-by-id-only",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SIGN_IN_ROW",
+     "payload": {
+      "data": {
+       "id": "p2",
+       "role": "admin"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DP_POST",
+        "payload": {
+         "key": "create:p2",
+         "body": "eyJsb2NhbElkIjoicDIifQ=="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-claims-call-sets-the-custom-attributes",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SIGN_IN_CLAIMS",
+     "payload": {
+      "data": {
+       "id": "p1",
+       "name": "Ada",
+       "email": "a@x.test",
+       "role": "admin"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DP_POST",
+        "payload": {
+         "key": "update:p1",
+         "method": "POST",
+         "target": "/identitytoolkit.googleapis.com/v1/projects/demo-almadar/accounts:update",
+         "headers": [
+          {
+           "name": "Content-Type",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none",
+         "body": "eyJsb2NhbElkIjoicDEiLCJkaXNwbGF5TmFtZSI6IkFkYSIsImN1c3RvbUF0dHJpYnV0ZXMiOiJ7XCJyb2xlXCI6XCJhZG1pblwifSJ9"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-create-reply-is-read-as-text-and-routed-by-its-key",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "create:p1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJsb2NhbElkIjoicDEifQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGN_IN_CREATED",
+        "payload": {
+         "key": "p1",
+         "status": 200,
+         "body": "{\"localId\":\"p1\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SIGN_IN_UPDATED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-update-reply-is-routed-as-the-update-answer",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "update:p1",
+      "status": 200,
+      "headers": {},
+      "body": "e30="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGN_IN_UPDATED",
+        "payload": {
+         "key": "p1",
+         "status": 200,
+         "body": "{}"
+        }
+       },
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 200
+        }
+       }
+      ],
+      "neverEmits": [
+       "SIGN_IN_CREATED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-emulator-refusal-on-create-is-a-500",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "create:p1",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6eyJtZXNzYWdlIjoiSU5WQUxJRCJ9fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-duplicate-local-id-on-create-goes-on-to-read-the-row-not-a-500",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "create:p1",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6eyJtZXNzYWdlIjoiRFVQTElDQVRFX0xPQ0FMX0lEIn19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGN_IN_ROW_MISSED",
+        "payload": {
+         "code": "not-found"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

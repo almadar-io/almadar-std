@@ -1,0 +1,191 @@
+app std-orb-lint-control-value-discarded [
+  version: "1.0.0",
+  inbound: ["cli-lint-control-value-discarded"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-control-value-discarded - the `orb lint control-value-discarded <file>` command, the port of ORB_CONTROL_VALUE_DISCARDED (composition/composed_wiring.rs validate_composed_wiring and discarded_offered_values). For every composed trait (one with sourceBehavior) it reads the events its rendered value controls fire: in every effect tree, an object whose `type` (or the string default of the `@config.<knob>` it names) is a pattern with value controls (std-orb-lint-input's LINT_VALUE_CONTROLS: the event or event-ref props that are not notifications and, for a `fieldsContract: form` pattern every one, otherwise the ones declaring an emitPayloadSchema) contributes the event named by each such prop, resolved through the trait's own string config defaults. An event the trait declares with a payload is discarded when no sibling trait of the trait's embedder closure (std-orb-embed-chain's embedders) has a transition for it, no `listens` route of the orbital or of any of its traits reaches that closure (an `any` source, or a trait or orbital source naming a trait of it), no other orbital routes it by naming this orbital and this trait, and its own arms for it keep nothing: no guard reads the payload (`@payload` or a `?` binding), no effect reads the payload except through a `set` of a runtime entity field that no trait bound to that entity reads (guards, transition effects and tick effects), and no effect holds a persist, call-service or emit. An event the trait offers outward (an emits entry of scope external) defers to an importer and is reported only for a finished program under rule control-value-discarded-final (`orb validate --final`); every other discarded event is reported under rule control-value-discarded. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint control-value-discarded: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-control-value-discarded"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CvNode = string | number | boolean | [CvNode?] | Map string CvNode?
+type CvField = { default : CvNode? }
+type CvPayloadField = { name : string }
+type CvEvent = { key : string, payloadSchema : [CvPayloadField] }
+type CvTrans = { event : string, guard : CvNode?, effects : [CvNode?] }
+type CvMachine = { events : [CvEvent], transitions : [CvTrans] }
+type CvTick = { effects : [CvNode?] }
+type CvEmit = { event : string, scope : string }
+type CvSource = { kind : string, trait : string, orbital : string }
+type CvListen = { event : string, source : CvSource? }
+type CvBehavior = { behavior : string }
+type CvTrait = { name : string, linkedEntity : string, sourceBehavior : CvBehavior?, emits : [CvEmit], listens : [CvListen], stateMachine : CvMachine, ticks : [CvTick], config : Map string CvField? }
+type CvEntityField = { name : string }
+type CvEntity = { name : string, persistence : string, fields : [CvEntityField] }
+type CvOrbital = { name : string, entity : CvEntity?, auxiliaryEntities : [CvEntity], traits : [CvTrait], listens : [CvListen] }
+type CvProgram = { orbitals : [CvOrbital] }
+type EmbedMap = Map string [string]
+type CvUnit = { oi : number!, ti : number!, o : string!, t : string!, evs : [string]!, unread : [string]!, scope : [string]! }
+type CvHit = { oi : number!, ti : number!, o : string!, t : string!, ev : string!, offered : boolean! }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type ControlValueDiscardedCodes = { controlValueDiscarded : LintCodeDecl }
+
+orbital OrbLintControlValueDiscardedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Chain from "std/behaviors/std-orb-embed-chain"
+
+  entity OrbLintControlValueDiscardedRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CvProgram = {}
+    vcontrols : Map string [string] = {}
+    chains : [EmbedMap] = []
+    haveVc : boolean = false
+    haveChains : boolean = false
+    units : [CvUnit] = []
+    hits : [CvHit] = []
+    findings : [OrbFinding] = []
+    finalFindings : [OrbFinding] = []
+    shown : [OrbFinding] = []
+  }
+
+  trait OrbLintControlValueDiscarded -> OrbLintControlValueDiscardedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.scope @payload.scope)
+      VALUE_CONTROLS_HEARD -> ready
+        (set @entity.vcontrols @payload.patterns)
+        (set @entity.haveVc true)
+      CHAINS_HEARD -> ready when @entity.haveVc
+        (set @entity.chains @payload.embedders)
+        (set @entity.haveChains true)
+        (emit LINT_COMPUTE { })
+      CHAINS_HEARD -> ready when (not @entity.haveVc)
+        (set @entity.chains @payload.embedders)
+        (set @entity.haveChains true)
+      LINT_COMPUTE -> ready
+        (set @entity.units (let ((nr : [string] []) (orbitals (object/get @entity.program "orbitals" [])) (vc @entity.vcontrols) (chains @entity.chains)) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (default (array/nth @orbitals @oi) {}))) (let ((ts (object/get @o "traits" [])) (primary (object/get (object/get @o "entity" {}) "name" "")) (chain (default (array/nth @chains @oi) {})) (ents (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])))) (array/flatten (array/map (array/range 0 (array/len @ts)) (fn ti (let ((t (default (array/nth @ts @ti) {}))) (if (not (object/has @t "sourceBehavior")) [] (let ((tn (object/get @t "name" "")) (cfg (object/get @t "config" {})) (ename (if (!= (object/get @t "linkedEntity" "") "") (object/get @t "linkedEntity" "") @primary))) (let ((R (default (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (validate/string (object/get (default (object/get @cfg @key null) {}) "default" null)))) (fn key [@key, (object/get (default (object/get @cfg @key null) {}) "default" "")]))) {})) (roots (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (object/get @x "effects" [])))))) (let ((evs (array/sort (array/unique (array/filter (default (tree/fold @roots (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (let ((pn (let ((rv (object/get @n "type" null))) (if (validate/string @rv) (let ((rr (if (str/startsWith @rv (quote "@config.")) (object/get @R (str/replaceAll @rv (quote "@config.") "") "") @rv))) (if (validate/string @rr) @rr "")) "")))) (array/concat (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (array/map (object/get @vc @pn []) (fn p (let ((rv (object/get @n @p null))) (if (validate/string @rv) (let ((rr (if (str/startsWith @rv (quote "@config.")) (object/get @R (str/replaceAll @rv (quote "@config.") "") "") @rv))) (if (validate/string @rr) @rr "")) "")))))) @nr))) "CvNode") @nr) (fn e (!= @e ""))))))) (if (= (array/len @evs) 0) [] (let ((eroots (array/flatten (array/map (array/filter @ts (fn s (= (if (!= (object/get @s "linkedEntity" "") "") (object/get @s "linkedEntity" "") @primary) @ename))) (fn s (array/concat (array/flatten (array/map (object/get @s "stateMachine.transitions" []) (fn x (array/concat (if (= (object/get @x "guard" null) null) [] [(object/get @x "guard" null)]) (object/get @x "effects" []))))) (array/flatten (array/map (object/get @s "ticks" []) (fn x (object/get @x "effects" [])))))))))) (let ((reads (array/unique (default (tree/fold @eroots (fn (n k) (if (validate/array @n) (array/flatten (array/map (if (and (>= (array/len @n) 2) (= (array/nth @n 0) "set") (let ((a1 (array/nth @n 1))) (and (validate/string @a1) (str/startsWith @a1 (quote "@entity."))))) (array/drop @k 2) @k) (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (str/startsWith @n (quote "@entity."))) [(default (array/first (str/split (str/replaceAll (str/replaceAll (str/replaceAll @n (quote "@entity.") "") "[" ".") "]" "") ".")) "")] @nr)))) "CvNode") @nr))) (ent : CvEntity? (array/find @ents (fn e (= (object/get @e "name" "") @ename))))) [{ oi: @oi, ti: @ti, o: (object/get @o "name" ""), t: @tn, evs: @evs, unread: (if (and (!= @ent null) (= (object/get @ent "persistence" "") "runtime")) (array/filter (array/map (object/get @ent "fields" []) (fn f (object/get @f "name" ""))) (fn f (not (array/includes @reads @f)))) []), scope: (array/concat [@tn] (object/get @chain @tn [])) }]))))))))))))))))))
+        (set @entity.hits (let ((orbitals (object/get @entity.program "orbitals" []))) (array/flatten (array/map @entity.units (fn u (let ((o (default (array/nth @orbitals (object/get @u "oi")) {}))) (let ((ts (object/get @o "traits" [])) (t (default (array/nth (object/get @o "traits" []) (object/get @u "ti")) {})) (unread (object/get @u "unread")) (scope (object/get @u "scope")) (tn (object/get @u "t")) (on (object/get @u "o"))) (let ((allL (array/concat (object/get @o "listens" []) (array/flatten (array/map @ts (fn s (object/get @s "listens" []))))))) (array/flatten (array/map (object/get @u "evs") (fn ev (let ((trs (array/filter (object/get @t "stateMachine.transitions" []) (fn x (= (object/get @x "event" "") @ev)))) (offered (array/some (object/get @t "emits" []) (fn e (and (= (object/get @e "event" "") @ev) (= (object/get @e "scope" "") "external")))))) (let ((carries (array/some (object/get @t "stateMachine.events" []) (fn e (and (= (object/get @e "key" "") @ev) (> (array/len (object/get @e "payloadSchema" [])) 0))))) (heardSib (or (array/some @ts (fn s (and (!= (object/get @s "name" "") @tn) (array/includes @scope (object/get @s "name" "")) (array/some (object/get @s "stateMachine.transitions" []) (fn x (= (object/get @x "event" "") @ev)))))) (array/some @allL (fn l (and (= (object/get @l "event" "") @ev) (let ((src (object/get @l "source" {}))) (let ((k (object/get @src "kind" ""))) (or (= @k "any") (and (array/includes ["trait", "orbital"] @k) (array/includes @scope (object/get @src "trait" ""))))))))))) (heardAcross (array/some @orbitals (fn p (and (!= (object/get @p "name" "") @on) (array/some (object/get @p "traits" []) (fn s (array/some (object/get @s "listens" []) (fn l (and (= (object/get @l "event" "") @ev) (let ((src (object/get @l "source" {}))) (and (= (object/get @src "kind" "") "orbital") (= (object/get @src "orbital" "") @on) (= (object/get @src "trait" "") @tn)))))))))))) (kept (array/some @trs (fn x (or (and (!= (object/get @x "guard" null) null) (= (tree/fold (object/get @x "guard" null) (fn (n k) (if (validate/array @n) (array/some @k (fn r (= @r true))) (if (validate/object @n) (array/some (object/values @k) (fn r (= @r true))) (if (validate/string @n) (or (str/startsWith @n (quote "@payload")) (str/startsWith @n "?")) false)))) "CvNode") true)) (array/some (object/get @x "effects" []) (fn e (or (= (tree/fold @e (fn (n k) (if (validate/array @n) (and (not (let ((a1 (array/nth @n 1))) (and (>= (array/len @n) 2) (= (array/nth @n 0) "set") (validate/string @a1) (str/startsWith @a1 (quote "@entity.")) (array/includes @unread (default (array/first (str/split (str/replaceAll (str/replaceAll (str/replaceAll @a1 (quote "@entity.") "") "[" ".") "]" "") ".")) ""))))) (array/some @k (fn r (= @r true)))) (if (validate/object @n) (array/some (object/values @k) (fn r (= @r true))) (if (validate/string @n) (or (str/startsWith @n (quote "@payload")) (str/startsWith @n "?")) false)))) "CvNode") true) (= (tree/fold @e (fn (n k) (if (validate/array @n) (or (and (> (array/len @n) 0) (let ((a0 (array/nth @n 0))) (and (validate/string @a0) (array/includes ["persist", "call-service", "emit"] @a0)))) (array/some @k (fn r (= @r true)))) false)) "CvNode") true))))))))) (if (and @carries (not @heardSib) (not @heardAcross) (not @kept)) [{ oi: (object/get @u "oi"), ti: (object/get @u "ti"), o: @on, t: @tn, ev: @ev, offered: @offered }] []))))))))))))))
+        (set @entity.findings (array/map (array/filter @entity.hits (fn h (not (object/get @h "offered")))) (fn h { code: @config.codes.controlValueDiscarded.code, path: (str/concat "orbitals[" (object/get @h "oi") "].traits[" (object/get @h "ti") "]"), message: (str/concat "'" (object/get @h "t") "' renders a control that fires " (object/get @h "ev") " with a value, but no other trait hears " (object/get @h "ev") " and its own " (object/get @h "ev") " arm reads none of it - what the user entered is discarded"), suggestion: (str/concat "route it to a trait that keeps it: `listens { " (object/get @h "t") "." (object/get @h "ev") " -> <its input> }` on that trait"), severity: "error" })))
+        (set @entity.finalFindings (array/map (array/filter @entity.hits (fn h (object/get @h "offered"))) (fn h { code: @config.codes.controlValueDiscarded.code, path: (str/concat "orbitals[" (object/get @h "oi") "].traits[" (object/get @h "ti") "]"), message: (str/concat "'" (object/get @h "t") "' renders a control that fires " (object/get @h "ev") " with a value, but no other trait hears " (object/get @h "ev") " and its own " (object/get @h "ev") " arm reads none of it - what the user entered is discarded"), suggestion: (str/concat "route it to a trait that keeps it: `listens { " (object/get @h "t") "." (object/get @h "ev") " -> <its input> }` on that trait"), severity: "error" })))
+        (set @entity.haveVc false)
+        (set @entity.haveChains false)
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "control-value-discarded", scope: @entity.scope, findings: @entity.findings })
+        (emit LINT_FOUND { rule: "control-value-discarded-final", scope: @entity.scope, findings: @entity.finalFindings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella: the discarded events the trait keeps internal under rule control-value-discarded, the ones it offers outward (a finished program only) under control-value-discarded-final."
+        @tier "internal"
+      LINT_COMPUTE { }
+        @description "Internal: the program, the value controls and the embed chains are in, compute the findings."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      codes : ControlValueDiscardedCodes = { controlValueDiscarded: { code: "ORB_CONTROL_VALUE_DISCARDED", category: "circuit", description: "A composed trait's rendered control fires an event carrying a value that no other trait hears and whose own handling reads none of it: the value the user entered is discarded (a form submission nothing keeps)." } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CvProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      VALUE_CONTROLS_HEARD { patterns : Map string [string]! }
+        @description "std-orb-lint-input's LINT_VALUE_CONTROLS: the value-carrying event props per pattern."
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]!  embedders : [EmbedMap]! }
+        @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_VALUE_CONTROLS -> VALUE_CONTROLS_HEARD
+      OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
+    }
+  }
+
+  trait OrbLintControlValueDiscardedCli -> OrbLintControlValueDiscardedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint control-value-discarded <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (set @entity.shown [])
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> waiting when (= @payload.rule "control-value-discarded")
+        (set @entity.shown @payload.findings)
+      LINT_FOUND -> ready when (and (= @payload.rule "control-value-discarded-final") (= (array/len (array/concat @entity.shown @payload.findings)) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint control-value-discarded: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "control-value-discarded-final") (> (array/len (array/concat @entity.shown @payload.findings)) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map (array/concat @entity.shown @payload.findings) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint control-value-discarded: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-control-value-discarded" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint control-value-discarded` with its arguments and working directory."
+        @synonyms "orb lint control-value-discarded"
+      OrbLintControlValueDiscarded.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbLintInput = Input.traits.OrbLintInput {
+  }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses."
+      OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
+    }
+  }
+}

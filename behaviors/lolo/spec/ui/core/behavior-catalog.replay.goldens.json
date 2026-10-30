@@ -1408,6 +1408,102 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-search-over-rows-without-vectors-refuses-loudly-and-never-embeds-the-query",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "query": "x"
+     },
+     "event": "SEARCH_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "d",
+        "traits": [],
+        "vectors": {},
+        "value": {
+         "behavior": "std/a"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_SHOWN",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LLM_EMBED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-search-over-rows-with-description-vectors-embeds-the-query",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "query": "x"
+     },
+     "event": "SEARCH_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "d",
+        "traits": [],
+        "vectors": {
+         "description": [
+          1,
+          0
+         ]
+        },
+        "value": {
+         "behavior": "std/a"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "searching",
+      "emits": [
+       {
+        "event": "LLM_EMBED",
+        "payload": {
+         "texts": [
+          "x"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

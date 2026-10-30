@@ -3,7 +3,7 @@ app std-orb-lint-input [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), reads the installed @almadar/core component mapping (the root the language scan reports) and answers LINT_COMPONENTS { names }, reads the pattern registry the manifest declares at orbLanguage.patterns and answers LINT_EVENT_PROPS { names, maps, listens } (the event-bearing prop names), reads the installed @almadar/std operator table and answers LINT_OPERATORS { names } (the names with no namespace) and LINT_OPERATOR_SEMANTICS { semantics, functions } (each operator's declared returnSemantics, and the function-returning operators), resolves it with program/read { resolve } (the inlined program `orb resolve` prints, its `uses lazy` behaviors split off) and answers LINT_LAZY { orbitals } (the lazy children by orbital) LINT_INDEX { scope, heads, roots } (the structural index of the pass: per inline trait and per transition effect list, the operator heads and the binding roots it uses, built by one tree/fold pass per unit) and LINT_INPUT { file, raw, latin, program } to every rule trait that listens, the index first; a LINT_CHILD_REQUEST { index } answers LINT_INPUT again with that lazy child's program and its orbital as `scope` (empty for the program itself), which each rule echoes in LINT_FOUND; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
+  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), reads the installed @almadar/core component mapping (the root the language scan reports) and answers LINT_COMPONENTS { names }, reads the pattern registry the manifest declares at orbLanguage.patterns and answers LINT_EVENT_PROPS { names, maps, listens } (the event-bearing prop names), reads the installed @almadar/std operator table and answers LINT_OPERATORS { names } (the names with no namespace) and LINT_OPERATOR_SEMANTICS { semantics, functions } (the function-returning operators), resolves it with program/read { resolve } (the inlined program `orb resolve` prints, its `uses lazy` behaviors split off) and answers LINT_LAZY { orbitals } (the lazy children by orbital) LINT_INDEX { scope, heads, roots } (the structural index of the pass: per inline trait and per transition effect list, the operator heads and the binding roots it uses, built by one tree/fold pass per unit) and LINT_INPUT { file, raw, latin, program } to every rule trait that listens (a rule that walks effect expressions also asks the OrbLintExprNodes trait of this file: LINT_EXPR_ASK { requestId, items } answers LINT_EXPR_NODES { requestId, nodes }, the typed flat nodes of each asked expression), the index first; a LINT_CHILD_REQUEST { index } answers LINT_INPUT again with that lazy child's program and its orbital as `scope` (empty for the program itself), which each rule echoes in LINT_FOUND; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
 ]
 uses Spec from "almadar-std/lint-input"
 uses Language from "std/behaviors/std-orb-language"
@@ -48,7 +48,14 @@ type OpFieldType = string | OpShape
 type OpShape = { kind : string, fields : Map string OpFieldType? }
 type OpParamType = string | OpShape
 type OpParam = { type : OpParamType }
-type OperatorEntry = { category : string, returnSemantics : string, returnType : OperatorReturnType, busExcluded : [string], targetOptions : [string], params : [OpParam] }
+type OpSlots = { kind : string!, args : [number] }
+type OpProjection = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type LintStr = string
+type LintArr = [LintValue?]
+type LintScope = { nm : string!, root : number!, lo : number! }
+type LintExprNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type LintExprItem = { e : LintValue?, eff : boolean! }
+type OperatorEntry = { category : string, valueSourceSlots : OpSlots, fieldProjection : OpProjection, returnType : OperatorReturnType, busExcluded : [string], targetOptions : [string], params : [OpParam] }
 type PatternEventProp = { pattern : string!, prop : string!, field : string! }
 type ControlProp = { pattern : string!, prop : string!, kind : string!, notification : boolean! }
 type OperatorTypeRef = string | OperatorTypeNode
@@ -61,10 +68,11 @@ type OperatorTable = { operators : Map string OperatorEntry! }
 type PatternProp = { kind : string, eventField : string, notification : boolean }
 type PatternEntry = { propsSchema : Map string PatternProp }
 type PatternRegistry = { patterns : Map string PatternEntry! }
-type PatternRegProp = { notification : boolean, types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, cardinality : string, payloadFor : string, requiredFields : [string], items : PatternRegProp?, properties : Map string PatternRegProp? }
+type PatEmitField = { name : string }
+type PatternRegProp = { drawableSlot : boolean, emitPayloadSchema : [PatEmitField], notification : boolean, types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, cardinality : string, payloadFor : string, requiredFields : [string], items : PatternRegProp?, properties : Map string PatternRegProp? }
 type PatternRegEntry = { category : string, requiresAction : boolean, drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], propsSchema : Map string PatternRegProp }
 type PatternRegFile = { patterns : Map string PatternRegEntry! }
-type PatternPropShape = { notification : boolean?, types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, cardinality : string?, payloadFor : string?, requiredFields : [string]?, items : PatternPropShape?, properties : Map string PatternPropShape? }
+type PatternPropShape = { drawableSlot : boolean?, notification : boolean?, types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, cardinality : string?, payloadFor : string?, requiredFields : [string]?, items : PatternPropShape?, properties : Map string PatternPropShape? }
 type PatternShape = { category : string?, requiresAction : boolean!, drawHost : boolean!, drawable : boolean!, fieldsContract : string!, accessibleName : [string]?, props : Map string PatternPropShape? }
 type ProgTypeNode = { type : string!, required : boolean, nullable : boolean, items : ProgTypeNode, properties : Map string ProgTypeNode, values : [string] }
 type ProgTypeFile = Map string ProgTypeNode
@@ -137,6 +145,53 @@ orbital OrbLintInputOrbital {
         @description "std-semver's SEMVER_REFUSED: the range check refused."
       Versions.SEMVER_SATISFIED -> LANG_SAT
       Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
+    }
+  }
+
+  entity OrbLintExprNodesRun [runtime] {
+    id : string!
+    names : [string] = []
+    nameIdx : Map string boolean = {}
+    fns : [string] = []
+    slots : Map string OpSlots = {}
+    projs : Map string OpProjection = {}
+  }
+
+  trait OrbLintExprNodes -> OrbLintExprNodesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_OPERATOR_NAMES -> ready
+        (set @entity.names @payload.names)
+        (set @entity.nameIdx (default (object/fromEntries (array/map @payload.names (fn x [@x, true]))) {}))
+      LINT_OPERATOR_SEMANTICS -> ready
+        (set @entity.fns @payload.functions)
+      LINT_OPERATOR_WALK -> ready
+        (set @entity.slots @payload.slots)
+        (set @entity.projs @payload.projections)
+      LINT_EXPR_ASK -> ready
+        (emit LINT_EXPR_NODES { requestId: @payload.requestId, nodes: (array/map @payload.items (fn it (let ((nn : LintExprNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null }) (nils : [LintExprNode] [@nn]) (nl : LintExprNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "null", pv: false, hs: false, sl: [], lb: [], lv: null }) (nulls : [LintExprNode] [@nl]) (noslot : OpSlots { kind: "", args: [] }) (eff (object/get @it "eff")) (fnOk (array/includes @entity.fns "fn")) (ev (object/get @it "e"))) (if (= @ev null) [] (default (tree/fold (default @ev "") (fn (n k) (if (validate/string @n) (let ((s : string (default (as @n LintStr) ""))) (if (not (str/includes @s (quote "@"))) (let ((r : LintExprNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: [@s] })) [@r]) (let ((whole (= (str/slice @s 0 1) (quote "@")))) (let ((toks : [string] (if @whole [] (array/filter (array/map (array/drop (str/split @s (quote "@")) 1) (fn sg (let ((tail (str/replace-pattern @sg "^[A-Za-z0-9_]+(\\[[0-9]+\\])?(\\.[A-Za-z0-9_]+(\\[[0-9]+\\])?)*" ""))) (if (= (str/len @tail) (str/len @sg)) "" (str/concat (quote "@") (str/slice @sg 0 (- (str/len @sg) (str/len @tail)))))))) (fn x (!= @x ""))))) ) (let ((texts : [string] (if @whole [@s] @toks))) (if (= (array/len @texts) 0) (let ((r : LintExprNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: [@s] })) [@r]) (let ((nodes : [LintExprNode] (array/map @texts (fn tx (let ((parts (str/split (str/slice @tx 1 (str/len @tx)) ".")) ) (let ((p0 : string (default (array/first @parts) "")) (np (array/len @parts))) (let ((rtv (if (and (= @p0 "trait") (>= @np 2)) "none" (if (and (= @np 1) (array/includes ["pages", "currentTheme", "locale"] @p0)) "none" (if (= @p0 "payload") "payload" (if (= @p0 "event") "event" (if (array/includes ["entity", "state", "config", "user", "prevEvents", "prevStates", "fromState", "toState"] @p0) "none" "local"))))))) (let ((b : LintExprNode { k: "bind", ks: [], hd: "", nms: [], rt: @rtv, nm: @p0, pa: (array/drop @parts 1), bd: -1, wh: (if @whole "w" "i"), tx: @s, pv: false, hs: false, sl: [], lb: [], lv: null })) @b)))))))) (if @whole @nodes (let ((c : LintExprNode { k: "cat", ks: (array/map @nodes (fn x 1)), hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/append @nodes @c)))))))))) (if (validate/object @n) (let ((ents (object/entries @k))) (let ((nms : [string] (array/map @ents (fn e (default (array/nth @e 0) "")))) (blks : [[LintExprNode]] (array/map @ents (fn e (default (array/nth @e 1) @nulls))))) (let ((o : LintExprNode { k: "obj", ks: (array/map @blks (fn b (array/len @b))), hd: "", nms: @nms, rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/append (array/flatten @blks) @o)))) (if (validate/array @n) (let ((ln (array/len @n)) (bl : [[LintExprNode]] (array/map (array/range 0 (array/len @n)) (fn i (default (array/nth @k @i) @nulls))))) (let ((hd : string (if (and (> @ln 0) (validate/string (array/nth @n 0))) (default (as (array/nth @n 0) LintStr) "") "")) (szall : [number] (array/map @bl (fn b (array/len @b)))) (flatbl : [LintExprNode] (array/flatten @bl))) (let ((letOk (and (= @hd "let") (>= @ln 3) (validate/array (array/nth @n 1)) (array/every (default (as (array/nth @n 1) LintArr) []) (fn p (let ((pa : [LintValue?] (default (as @p LintArr) []))) (and (validate/array @p) (or (= (array/len @pa) 2) (= (array/len @pa) 3)) (validate/string (array/nth @pa 0)) (or (= (array/len @pa) 2) (validate/string (array/nth @pa 2))))))))) (lamOk (and (= @hd "fn") @fnOk (>= @ln 3)))) (if @letOk (let ((B : [LintExprNode] (default (array/nth @bl 1) @nils))) (let ((pks : [number] (object/get (default (array/last @B) @nn) "ks"))) (let ((ps : [number] (array/map (array/range 0 (array/len @pks)) (fn j (array/sum (array/take @pks @j)))))) (let ((inits : [[LintExprNode]] (array/map (array/range 0 (array/len @pks)) (fn j (let ((st (default (array/nth @ps @j) 0)) (pn : LintExprNode (default (array/nth @B (- (+ (default (array/nth @ps @j) 0) (default (array/nth @pks @j) 0)) 1)) @nn))) (let ((pk : [number] (object/get @pn "ks"))) (if (>= (array/len @pk) 2) (array/slice @B (+ @st (default (array/nth @pk 0) 0)) (+ @st (default (array/nth @pk 0) 0) (default (array/nth @pk 1) 0))) @nils)))))) (body : [LintExprNode] (default (array/nth @bl 2) @nils)) (names : [string] (array/map (default (as (array/nth @n 1) LintArr) []) (fn p (default (as (array/nth (default (as @p LintArr) []) 0) LintStr) ""))))) (let ((isz : [number] (array/map @inits (fn b (array/len @b))))) (let ((roots : [number] (array/map (array/range 0 (array/len @isz)) (fn j (- (array/sum (array/take @isz (+ @j 1))) 1)))) (n0 : string (default (as (array/nth @names 0) LintStr) "")) (n2 : string (if (validate/string (array/nth @n 2)) (default (as (array/nth @n 2) LintStr) "") "")) (p0 : [LintValue?] (default (as (array/nth (default (as (array/nth @n 1) LintArr) []) 0) LintArr) []))) (let ((knob (and (= (array/len @names) 1) (= (array/len @p0) 3) (str/startsWith @n0 "knob_") (validate/string (array/nth @n 2)) (= @n2 (str/concat (quote "@") @n0))))) (let ((nlv : [string]? (if @knob (object/get (default (array/last (default (array/nth @inits 0) @nils)) @nn) "lv") (object/get (default (array/last @body) @nn) "lv")))) (let ((L : [LintExprNode] (array/concat (array/flatten @inits) @body)) (sps : [LintScope] (array/reverse (array/map (array/range 0 (array/len @isz)) (fn j (let ((r : LintScope { nm: (default (array/nth @names @j) ""), root: (default (array/nth @roots @j) 0), lo: (+ (default (array/nth @roots @j) 0) 1) })) @r)))))) (let ((d : LintExprNode { k: "let", ks: (array/append @isz (array/len @body)), hd: "", nms: @names, rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: @nlv })) (array/append (array/reduce @sps @L (fn (acc sp) (array/map (array/range 0 (array/len @acc)) (fn q (let ((nd : LintExprNode (default (array/nth @acc @q) @nn))) (if (and (>= @q (object/get @sp "lo")) (= (object/get @nd "k") "bind") (= (object/get @nd "rt") "local") (= (object/get @nd "nm") (object/get @sp "nm")) (= (object/get @nd "bd") -1)) (object/merge @nd { bd: (if (< (object/get @sp "root") 0) 0 (- @q (object/get @sp "root"))) }) @nd)))))) @d))))))))))) (if @lamOk (let ((body : [LintExprNode] (default (array/nth @bl (- @ln 1)) @nils)) (params : [string] (array/flatten (array/map (array/slice @n 1 (- @ln 1)) (fn it (if (validate/string @it) [(default (as @it LintStr) "")] (if (validate/array @it) (array/map (array/filter (default (as @it LintArr) []) (fn x (validate/string @x))) (fn x (default (as @x LintStr) ""))) []))))))) (let ((sps : [LintScope] (array/map @params (fn x (let ((r : LintScope { nm: @x, root: -1, lo: 0 })) @r))))) (let ((d : LintExprNode { k: "lam", ks: [(array/len @body)], hd: "", nms: @params, rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/append (array/reduce @sps @body (fn (acc sp) (array/map (array/range 0 (array/len @acc)) (fn q (let ((nd : LintExprNode (default (array/nth @acc @q) @nn))) (if (and (>= @q (object/get @sp "lo")) (= (object/get @nd "k") "bind") (= (object/get @nd "rt") "local") (= (object/get @nd "nm") (object/get @sp "nm")) (= (object/get @nd "bd") -1)) (object/merge @nd { bd: (if (< (object/get @sp "root") 0) 0 (- @q (object/get @sp "root"))) }) @nd)))))) @d)))) (if (and (= @hd "let") (not @letOk)) @nils (if (object/has @entity.nameIdx @hd) (if (and @eff (= @hd "render-ui")) (let ((r : LintExprNode { k: "rui", ks: @szall, hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/append (array/flatten (array/map (array/range 0 @ln) (fn i (let ((blk : [LintExprNode] (default (array/nth @bl @i) @nils))) (if (< @i 1) @blk (let ((b : [LintExprNode] @blk)) (let ((root : LintExprNode (default (array/last @b) @nn))) (if (= (object/get @root "k") "obj") (let ((rks : [number] (object/get @root "ks"))) (let ((st (- (- (array/len @b) 1) (array/sum @rks)))) (let ((idx : [number] (array/map (array/range 0 (array/len @rks)) (fn j (- (+ @st (array/sum (array/take @rks (+ @j 1)))) 1))))) (array/map (array/range 0 (array/len @b)) (fn q (let ((x : LintExprNode (default (array/nth @b @q) @nn))) (if (and (array/includes @idx @q) (= (object/get @x "k") "bind") (= (object/get @x "wh") "w")) (object/merge @x { pv: true }) @x))))))) @b)))))))) @r)) (let ((sd : OpSlots (default (object/get @entity.slots @hd) @noslot)) (argc (- @ln 1)) (kind : string (object/get @sd "kind")) (lamIdx : [number] (if (= @kind "lambdaResult") (array/filter (array/range 0 (- @ln 1)) (fn i (= (object/get (default (array/last (default (array/nth @bl (+ @i 1)) @nils)) @nn) "k") "lam"))) []))) (let ((sargs : [number] (object/get @sd "args" []))) (let ((hs : boolean (if (= @kind "branches") (>= (- @ln 1) 2) (if (= @kind "args") (>= (- @ln 1) 1) (if (= @kind "last") (>= (- @ln 1) 1) (if (= @kind "lambdaResult") (> (array/len @lamIdx) 0) (if (= @kind "listed") (not (array/some @sargs (fn i (>= @i (- @ln 1))))) false))))))) (let ((slv : [number] (if (not @hs) [] (if (= @kind "branches") (array/range 1 (- @ln 1)) (if (= @kind "args") (array/range 0 (- @ln 1)) (if (= @kind "last") [(- (- @ln 1) 1)] (if (= @kind "lambdaResult") [(default (array/last @lamIdx) 0)] @sargs))))))) (let ((lbx : [number] (if (= @kind "lambdaResult") @slv []))) (let ((lvs : [[string]?] (if @hs (array/map @slv (fn i (let ((blk : [LintExprNode] (default (array/nth @bl (+ @i 1)) @nils))) (if (array/includes @lbx @i) (object/get (default (array/nth @blk (- (array/len @blk) 2)) @nn) "lv") (object/get (default (array/last @blk) @nn) "lv"))))) []))) (let ((c : LintExprNode { k: (if (object/has @entity.projs @hd) "proj" "call"), ks: @szall, hd: @hd, nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: @hs, sl: @slv, lb: @lbx, lv: (if (and @hs (not (array/some @lvs (fn x (= @x null))))) (array/flatten (array/map @lvs (fn x (default @x [])))) null) })) (array/append @flatbl @c))))))))) (let ((a : LintExprNode { k: "arr", ks: @szall, hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/append @flatbl @a))))))))) (let ((sc : LintExprNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: (if (validate/number @n) (str/concat @n) (if (validate/boolean @n) (if @n "true" "false") "null")), pv: false, hs: false, sl: [], lb: [], lv: null })) [@sc]))))) "LintValue") []))))) })
+    }
+
+    emits {
+      LINT_EXPR_NODES -> external { requestId : string!  nodes : [[LintExprNode]]! }
+        @description "For each asked expression, its flat typed nodes in post order: every node carries the sizes of its children's blocks, so a child block is the run of nodes before it. A binding node carries its root kind, name and path, whether it stands whole or interpolated, and for a let or lambda scope the distance back to the node that binds it (a let node names its bound variables and a lambda node its parameters in `nms`); a call node carries its operator, whether the operator table gives it value-source slots, those slots, and the literal strings it can yield. A nil node is a literal: a string without a binding carries its text in `lv`, and a number, a boolean or null (also a null child) carries its JSON text in `tx` (5, 1.5, true, false, null). `pv` marks a whole binding that is the value of a first-level prop of an object argument of a render-ui effect."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "This input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "This input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string OpSlots!  projections : Map string OpProjection! }
+        @description "This input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [LintExprItem]! }
+        @description "A rule offers the expressions whose nodes it needs, each flagged when it stands in an effect position."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
     }
   }
 
@@ -274,6 +329,7 @@ orbital OrbLintInputOrbital {
                       (object/merge
                         { types: (array/filter (object/get @node "types" []) (fn t (!= @t "unknown"))), requiredOnParent: (let ((rq (object/get @node "required" false))) (and (validate/boolean @rq) (= @rq true))), requiredNames: (let ((rq (object/get @node "required" false))) (if (validate/array @rq) @rq [])) }
                         (if (= (object/get @node "notification" false) true) { notification: true } {})
+                        (if (= (object/get @node "drawableSlot" false) true) { drawableSlot: true } {})
                         (if (!= (object/get @node "kind" "") "") { kind: (object/get @node "kind") } {})
                         (if (!= (object/get @node "itemKind" "") "") { itemKind: (object/get @node "itemKind") } {})
                         (if (!= (object/get @node "cardinality" "") "") { cardinality: (object/get @node "cardinality") } {})
@@ -285,6 +341,13 @@ orbital OrbLintInputOrbital {
                       "PatternRegProp"))) }
                 (if (!= (object/get @e "category" "") "") { category: (object/get @e "category") } {})
                 (if (object/has @e "accessibleName") { accessibleName: (object/get @e "accessibleName") } {})))) })))))
+        (let ((text (bytes/to-string @payload.data)))
+          (if (= @text null)
+            (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry is not valid text" })
+            (let ((registry (json/parse @text PatternRegFile)))
+              (if (= @registry null)
+                (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry is not a pattern registry" })
+                (emit LINT_VALUE_CONTROLS { patterns: (object/mapValues (object/get @registry "patterns") (fn e (let ((carries (object/mapValues (object/get @e "propsSchema" {}) (fn p (and (array/includes ["event", "event-ref"] (object/get @p "kind" "")) (not (= (object/get @p "notification" false) true)) (or (= (object/get @e "fieldsContract" "") "form") (> (array/len (object/get @p "emitPayloadSchema" [])) 0))))))) (array/filter (array/sort (object/keys @carries)) (fn key (object/get @carries @key false)))))) })))))
         (emit LINT_STD_READ { })
       LINT_STD_READ -> ready when (= @entity.stdRoot "")
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/std" })
@@ -327,15 +390,18 @@ orbital OrbLintInputOrbital {
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
             (let ((ops (object/get (json/parse @text OperatorTable) "operators")))
-              (let ((semMap (object/fromEntries (array/map (array/filter (object/keys @ops) (fn n (!= (object/get (object/get @ops @n) "returnSemantics" "") ""))) (fn n [@n, (object/get (object/get @ops @n) "returnSemantics")])))))
-                (if (= @semMap null)
-                  (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table has operators whose declared returnSemantics cannot be keyed by name" })
               (emit LINT_OPERATOR_SEMANTICS {
                 busExcluded: (object/get (object/get @ops "emit") "busExcluded"),
                 targetOptions: (object/get (object/get @ops "program/dispatch") "targetOptions"),
-                semantics: @semMap,
                 functions: (array/sort (array/filter (object/keys @ops) (fn n (let ((rt (object/get (object/get @ops @n) "returnType" ""))) (and (validate/object @rt) (= (object/get @rt "kind" "") "fn")))))),
-                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))))
+                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))
+        (let ((text (bytes/to-string @payload.data)))
+          (if (= @text null)
+            (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
+            (let ((ops (object/get (json/parse @text OperatorTable) "operators")))
+              (emit LINT_OPERATOR_WALK {
+                slots: (default (object/fromEntries (array/map (array/filter (object/keys @ops) (fn n (object/has (object/get @ops @n) "valueSourceSlots"))) (fn n [@n, (object/get (object/get @ops @n) "valueSourceSlots")]))) {}),
+                projections: (default (object/fromEntries (array/map (array/filter (object/keys @ops) (fn n (object/has (object/get @ops @n) "fieldProjection"))) (fn n [@n, (object/get (object/get @ops @n) "fieldProjection")]))) {}) }))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
@@ -438,14 +504,20 @@ orbital OrbLintInputOrbital {
       LINT_COMPONENTS -> external { names : [string]! }
         @description "The UI component names of the installed @almadar/core component mapping (an entity named like one collides in compiled output); sent before LINT_INPUT."
         @tier "internal"
-      LINT_OPERATOR_SEMANTICS -> external { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
-        @description "The installed operators' declared returnSemantics (operator name to its provenance kind) and the operators whose result is a function (a lambda form); sent before LINT_INPUT."
+      LINT_OPERATOR_SEMANTICS -> external { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "The operators whose result is a function (a lambda form), the bus-excluded events, the dispatch target options and the emit option slots; sent before LINT_INPUT."
+        @tier "internal"
+      LINT_OPERATOR_WALK -> external { slots : Map string OpSlots!  projections : Map string OpProjection! }
+        @description "The installed operators' value-walk metadata, derived by orbital-core and carried by the operator table: `slots` maps an operator to the argument slots its declared returnSemantics draws a call's result from (`kind` is branches, args, last, lambdaResult or listed, `args` the listed positions), `projections` maps a field-projecting operator to the positions of its source, key and optional default arguments; sent before LINT_INPUT."
         @tier "internal"
       LINT_OPERATORS -> external { names : [string]! }
         @description "The installed operator names with no namespace (`if`, `+`, `and`, …): a default array headed by one is an operator call, not data; sent before LINT_INPUT."
         @tier "internal"
       LINT_EVENT_PROPS -> external { names : [string]!  maps : [string]!  listens : Map string [string]!  byPattern : [PatternEventProp]!  controls : [ControlProp]! }
         @description "The event-bearing prop names of the installed @almadar/core pattern registry: `names` are the props of kind event, event-ref, event-listen or callback plus the eventField of each event-list prop, `maps` the event-map props, `listens` the event-listen props by pattern; sent before LINT_INPUT."
+        @tier "internal"
+      LINT_VALUE_CONTROLS -> external { patterns : Map string [string]! }
+        @description "The installed @almadar/core pattern registry's value controls: per pattern the event or event-ref props that are not notifications and carry a value (every such prop of a `fieldsContract: form` pattern, otherwise the props that declare an emitPayloadSchema); a pattern with none answers an empty list; sent before LINT_INPUT."
         @tier "internal"
       LINT_PATTERNS -> external { patterns : Map string PatternShape! }
         @description "The installed @almadar/core pattern registry projected for the render-ui checks: per pattern its requiresAction (a render of it needs an action, event, onClick or href), drawHost and drawable flags, fieldsContract, accessibleName props (absent when the pattern declares none) and props; per prop its concrete types (never `unknown`), whether it is required on its parent (the bool form), the sub-keys it requires (the list form), kind, itemKind, payloadFor (the sibling event prop it pairs with, absent when none), requiredFields (the entity fields an EntityWith prop requires, absent when none), enumValues (absent when unbounded) and the same shape for its items and properties; sent before LINT_INPUT."
@@ -589,5 +661,5 @@ orbital OrbLintInputOrbital {
     }
   }
 
-  page boot as OrbLintInputOrbitalStart -> OrbLintInput, Packs, Versions
+  page boot as OrbLintInputOrbitalStart -> OrbLintInput, OrbLintExprNodes, Packs, Versions
 }

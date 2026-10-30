@@ -1,7 +1,7 @@
 app std-learn-generate [
   version: "1.0.0",
   description: "Generic instrument generator — GENERATE { subject, context } picks one learning instrument for a subject and writes its roster. It lists the installed behaviors under `scope` (optionally narrowed to the `instruments` allow-list), keeps those whose trait listens for ROSTER_LOADED (an instrument that takes its roster at runtime), asks the model to CHOOSE one, then to FILL a roster whose fields are exactly that instrument's ROSTER_LOADED payload; the tool loop checks the roster against those declared fields before it is accepted. GENERATED { behavior, mode, roster } carries the instrument, its mode (the behavior's name, the matchMode a lab router uses) and the roster as JSON, ready to send as that instrument's ROSTER_LOADED. It never writes a program: when no instrument in scope fits or the roster cannot be filled, it emits GENERATE_FAILED { error }. The instrument list is read once and kept for later requests.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 ;; @capabilities "pick a learning instrument for a subject, write an instrument's roster, generate an interactive visualisation for a concept"
@@ -10,7 +10,6 @@ type CatalogHit = {
   behavior : string!
   description : string
   traits : [trait]!
-  vectors : Map string [number]
 }
 type AgentChatMessage = {
   role : "user" | "assistant"!
@@ -100,6 +99,8 @@ type AgentUsage = {
 
 uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -416,8 +417,37 @@ orbital LearnGenerateOrbital {
       LearnGenerateTools.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
       LearnGenerateTools.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
       LearnGenerateTools.LLM_CANCEL -> LLM_CANCEL
+      LearnChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      LearnChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      LearnChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      LearnChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
     }
   }
 
-  page boot as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm
+  trait LearnChatRequest = Req.traits.HttpRequest {
+    listens {
+      LearnGenerateLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      LearnGenerateLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      LearnChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      LearnChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LearnChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LearnChatRequest.HTTP_SEND -> HTTP_SEND
+      LearnChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  page boot as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm, LearnChatRequest, LearnChatHttp
 }

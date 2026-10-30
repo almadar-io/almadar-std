@@ -4,18 +4,18 @@ app std-orb-lint-emit [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-emit — the `orb lint emit <file>` command, the port of validate_emit (effect/emit.rs). It lowers the file with program/read and walks the effects of every inline trait transition and tick, descending through the do, if, when and let effect-sequencing forms, and checks each `emit` effect: no event name is CIRCUIT_ORPHAN_EVENT, a string that is not an identifier (a letter, then letters, digits and underscores) is ORB_T_EVT_INVALID_NAME, and a first argument that is an object, a list, a number, a boolean or null is ORB_EFF_EMIT_INVALID_NAME, each with the Rust path, message and suggestion (status 500, exit 1). The emit config blocks of the async operators belong to those operators' own lints. Clean answers `lint emit: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-emit — the `orb lint emit <file>` command, the port of validate_emit (effect/emit.rs). It lowers the file with program/read and walks the effects of every inline trait transition and tick, descending through the do, if, when and let effect-sequencing forms, and checks each `emit` effect: no event name is CIRCUIT_ORPHAN_EVENT, a string that is not an identifier (a letter, then letters, digits and underscores) is ORB_T_EVT_INVALID_NAME, and a first argument that is an object, a list, a number, a boolean or null is ORB_EFF_EMIT_INVALID_NAME, each with the Rust path, message and suggestion (status 500, exit 1). The emit config blocks of the async operators belong to those operators' own lints. The rule asks std-orb-effect-leaves for the emit effects (heads: emit) and reads each one from its flat typed nodes (std-orb-lint-input's OrbLintExprNodes: the event name is the second child, a number, a boolean or null is a literal node carrying its JSON text). Clean answers `lint emit: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-emit"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type EmitVal = string | number | boolean | [EmitVal?] | Map string EmitVal?
-type EmitTransition = { effects : [EmitVal?] }
-type EmitMachine = { transitions : [EmitTransition] }
-type EmitTick = { effects : [EmitVal?] }
-type EmitTrait = { name : string, stateMachine : EmitMachine, ticks : [EmitTick] }
+type EmitTrait = { name : string }
 type EmitOrbital = { name : string, traits : [EmitTrait] }
-type EmitLeaf = { p : string!, e : EmitVal!, oi : number!, ti : number! }
+type EmitNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type EmitLeaf = { p : string!, n : [EmitNode]!, oi : number!, ti : number! }
+type EmitWalkSlot = { kind : string!, args : [number] }
+type EmitWalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type EmitExprItem = { eff : boolean! }
 type EmitProgram = { orbitals : [EmitOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -40,29 +40,16 @@ orbital OrbLintEmitOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.orbitals (object/get @payload.program "orbitals" []))
-        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emit" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emit" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: ["emit"] })
       EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "emit" @entity.scope))
-        (set @entity.findings (let ((orbitals @entity.orbitals))
-          (let ((ls @payload.leaves))
-          (array/flatten (array/map @ls (fn l
-            (let ((e (object/get @l "e")) (p (object/get @l "p")))
-              (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "emit"))) []
-              (if (< (array/len @e) 2)
-                [{ code: @config.codes.circuitOrphanEvent.code, path: @p, message: "emit requires event name", suggestion: "Use: [\"emit\", \"EVENT_NAME\"]", severity: "error" }]
-                (let ((x (array/nth @e 1)))
-                  (if (validate/string @x)
-                    (if (validate/pattern @x "^[A-Za-z][A-Za-z0-9_]*$") []
-                      [{ code: @config.codes.tEvtInvalidName.code, path: @p, message: (str/concat "Event name '" @x "' is not a valid identifier"), suggestion: "Declare the event via `type EventName = Event<Payload>` and reference it by identifier", severity: "error" }])
-                    (if (or (validate/array @x) (validate/number @x) (validate/boolean @x) (= @x null))
-                      [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit's first argument must be the event name (a string identifier), got " (if (validate/array @x) "a list" (if (validate/number @x) "a number" (if (validate/boolean @x) "a boolean" "null")))), suggestion: "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block", severity: "error" }]
-                      [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }]))))))))))))
+        (set @entity.findings (let ((nn : EmitNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null })) (array/flatten (array/map @payload.leaves (fn l (let ((n : [EmitNode] (object/get @l "n" [])) (p (object/get @l "p"))) (let ((rti (- (array/len @n) 1)) (rt : EmitNode (default (array/nth @n @rti) @nn))) (let ((rtks : [number] (object/get @rt "ks"))) (let ((rtcr : [number] (array/map (array/range 0 (array/len @rtks)) (fn j (- (+ (- @rti (array/sum @rtks)) (array/sum (array/take @rtks (+ @j 1)))) 1))))) (if (not (and (array/includes ["call", "arr", "proj", "rui"] (object/get @rt "k")) (> (array/len @rtks) 0) (= (default (array/first (default (object/get (default (array/nth @n (default (array/nth @rtcr 0) 0)) @nn) "lv") [])) "") "emit"))) [] (if (< (array/len @rtks) 2) [{ code: @config.codes.circuitOrphanEvent.code, path: @p, message: "emit requires event name", suggestion: "Use: [\"emit\", \"EVENT_NAME\"]", severity: "error" }] (let ((xi (default (array/nth @rtcr 1) 0)) (x : EmitNode (default (array/nth @n @xi) @nn))) (if (or (and (= (object/get @x "k") "nil") (!= (object/get @x "lv") null)) (and (= (object/get @x "k") "bind") (= (object/get @x "wh") "w")) (= (object/get @x "k") "cat")) (let ((txt : string (if (= (object/get @x "k") "nil") (default (array/first (default (object/get @x "lv") [])) "") (if (= (object/get @x "k") "bind") (object/get @x "tx") (object/get (default (array/nth @n (- @xi 1)) @nn) "tx"))))) (if (validate/pattern @txt "^[A-Za-z][A-Za-z0-9_]*$") [] [{ code: @config.codes.tEvtInvalidName.code, path: @p, message: (str/concat "Event name '" @txt "' is not a valid identifier"), suggestion: "Declare the event via `type EventName = Event<Payload>` and reference it by identifier", severity: "error" }])) (if (or (array/includes ["call", "arr", "proj", "rui", "let", "lam"] (object/get @x "k")) (and (= (object/get @x "k") "nil") (= (object/get @x "lv") null) (!= (object/get @x "tx") "") (!= (object/get @x "tx") "true") (!= (object/get @x "tx") "false") (!= (object/get @x "tx") "null")) (and (= (object/get @x "k") "nil") (= (object/get @x "lv") null) (or (= (object/get @x "tx") "true") (= (object/get @x "tx") "false"))) (and (= (object/get @x "k") "nil") (= (object/get @x "lv") null) (= (object/get @x "tx") "null"))) [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit's first argument must be the event name (a string identifier), got " (if (array/includes ["call", "arr", "proj", "rui", "let", "lam"] (object/get @x "k")) "a list" (if (and (= (object/get @x "k") "nil") (= (object/get @x "lv") null) (!= (object/get @x "tx") "") (!= (object/get @x "tx") "true") (!= (object/get @x "tx") "false") (!= (object/get @x "tx") "null")) "a number" (if (and (= (object/get @x "k") "nil") (= (object/get @x "lv") null) (or (= (object/get @x "tx") "true") (= (object/get @x "tx") "false"))) "a boolean" "null")))), suggestion: "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block", severity: "error" }] [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }]))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "emit", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
-      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmitOrbital]! }
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmitOrbital]!  heads : [string]! }
         @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
@@ -144,9 +131,28 @@ orbital OrbLintEmitOrbital {
 
   trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
     listens {
-      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmitOrbital]! }
-        @description "Flatten the effects of every inline trait."
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmitOrbital]!  heads : [string]! }
+        @description "Flatten the effects of every inline trait whose head is asked."
+      LINT_EXPR_NODES { requestId : string!  nodes : [[EmitNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
       OrbLintEmit.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
+    }
+  }
+  trait OrbLintExprNodes = Input.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string EmitWalkSlot!  projections : Map string EmitWalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [EmitExprItem]! }
+        @description "A rule asks to flatten expressions."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbEffectLeaves.LINT_EXPR_ASK -> LINT_EXPR_ASK
     }
   }
   trait Versions = Input.traits.Versions {
@@ -168,5 +174,5 @@ orbital OrbLintEmitOrbital {
     }
   }
 
-  page boot as OrbLintEmitOrbitalStart -> OrbLintEmit, OrbLintEmitCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
+  page boot as OrbLintEmitOrbitalStart -> OrbLintEmit, OrbLintEmitCli, OrbLintInput, Packs, OrbEffectLeaves, OrbLintExprNodes, Versions
 }

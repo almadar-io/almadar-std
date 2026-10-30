@@ -172,53 +172,6 @@
    ]
   },
   {
-   "id": "a-tarball-body-that-is-not-base64-is-refused-as-unhashable",
-   "steps": [
-    {
-     "event": "PKG_DOWNLOADED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "***",
-      "key": "tarball"
-     },
-     "from": "downloading",
-     "entity": {
-      "id": "p",
-      "cmd": "add",
-      "dir": "/w",
-      "cwd": "/w",
-      "targets": [
-       {
-        "name": "pkg-a",
-        "version": "1.0.0",
-        "url": "https://registry.example/packages/pkg-a/1.0.0.tgz",
-        "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-       }
-      ],
-      "cursor": 0,
-      "digest": "",
-      "tarballSize": 0
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "PKG_VERIFY",
-        "payload": {}
-       },
-       {
-        "event": "PACKAGE_REFUSED",
-        "payload": {
-         "name": "pkg-a",
-         "problem": "integrity-unavailable"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "a-call-whose-arguments-cannot-be-read-answers-500",
    "steps": [
     {
@@ -249,6 +202,940 @@
          "body": "",
          "stderr": "Error: the call's arguments could not be read"
         }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-version-list-reply-is-read-as-text",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PK_REPLIED",
+     "payload": {
+      "key": "versions",
+      "status": 200,
+      "headers": {},
+      "body": "eyJuYW1lIjoicGtnLWEiLCJ2ZXJzaW9ucyI6W119"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_VERSIONS",
+        "payload": {
+         "status": 200,
+         "body": "{\"name\":\"pkg-a\",\"versions\":[]}",
+         "key": "versions"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_RESOLVED",
+       "PKG_DOWNLOADED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-resolve-reply-is-routed-to-the-resolve-answer",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PK_REPLIED",
+     "payload": {
+      "key": "resolve",
+      "status": 404,
+      "headers": {},
+      "body": "e30="
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_RESOLVED",
+        "payload": {
+         "status": 404,
+         "body": "{}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_VERSIONS",
+       "PKG_DOWNLOADED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-tarball-reply-keeps-its-bytes",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PK_REPLIED",
+     "payload": {
+      "key": "tarball",
+      "status": 200,
+      "headers": {},
+      "body": "H4sIAA=="
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_DOWNLOADED",
+        "payload": {
+         "status": 200,
+         "body": "H4sIAA==",
+         "key": "tarball"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_VERSIONS",
+       "PKG_RESOLVED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-version-list-call-is-unlisted",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PK_FAILED",
+     "payload": {
+      "key": "versions",
+      "error": "connect refused",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_VERSIONS_UNLISTED",
+        "payload": {
+         "kind": "denied"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_RESOLVE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-resolve-call-is-a-resolve-failure",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PK_FAILED",
+     "payload": {
+      "key": "resolve",
+      "error": "timeout",
+      "kind": "timeout"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_RESOLVE_FAILED",
+        "payload": {
+         "kind": "timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_VERSIONS_UNLISTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-tarball-call-answers-500-unreachable",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PK_FAILED",
+     "payload": {
+      "key": "tarball",
+      "error": "reset",
+      "kind": "io"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_DOWNLOAD_FAILED",
+        "payload": {
+         "kind": "io"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tarball-url-under-the-registry-asks-the-client-for-its-path",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PKG_DOWNLOAD",
+     "payload": {
+      "url": "https://registry.example/pkg-a/-/pkg-a-1.0.0.tgz"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PK_GET",
+        "payload": {
+         "key": "tarball",
+         "method": "GET",
+         "target": "/pkg-a/-/pkg-a-1.0.0.tgz",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-tarball-url-outside-the-registry-is-refused-source",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PKG_DOWNLOAD",
+     "payload": {
+      "url": "https://elsewhere.example/pkg-a.tgz"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "ORB_PACKAGE_SOURCE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PK_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tarball-url-under-the-source-origin-asks-the-source-client-for-its-path",
+   "config": {
+    "registry": "https://registry.example",
+    "sourceOrigin": "https://cdn.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PKG_DOWNLOAD",
+     "payload": {
+      "url": "https://cdn.example/pkg-a/-/pkg-a-1.0.0.tgz"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PK_SRC_GET",
+        "payload": {
+         "key": "tarball",
+         "method": "GET",
+         "target": "/pkg-a/-/pkg-a-1.0.0.tgz",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PK_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-tarball-url-under-the-registry-never-asks-the-source-client",
+   "config": {
+    "registry": "https://registry.example",
+    "sourceOrigin": "https://cdn.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PKG_DOWNLOAD",
+     "payload": {
+      "url": "https://registry.example/pkg-a/-/pkg-a-1.0.0.tgz"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PK_GET",
+        "payload": {
+         "key": "tarball",
+         "method": "GET",
+         "target": "/pkg-a/-/pkg-a-1.0.0.tgz",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PK_SRC_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-tarball-url-under-neither-origin-is-refused-source-and-asks-no-client",
+   "config": {
+    "registry": "https://registry.example",
+    "sourceOrigin": "https://cdn.example"
+   },
+   "steps": [
+    {
+     "from": "downloading",
+     "event": "PKG_DOWNLOAD",
+     "payload": {
+      "url": "https://elsewhere.example/pkg-a.tgz"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "ORB_PACKAGE_SOURCE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PK_GET",
+       "PK_SRC_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-name-resolve-asks-the-client-for-the-package-version",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_TARGET_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "",
+        "integrity": ""
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PK_GET",
+        "payload": {
+         "key": "resolve",
+         "method": "GET",
+         "target": "/packages/pkg-a/1.0.0",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-a-package-with-no-orb-block-is-skipped",
+   "steps": [
+    {
+     "event": "PKG_W_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogInBsYWluIiwgInZlcnNpb24iOiAiMS4wLjAifQ==",
+      "key": "wmanifest"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpath": "/w/node_modules/plain",
+      "wpkgs": [
+       {
+        "name": "plain",
+        "dir": "/w/node_modules"
+       }
+      ],
+      "wc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_W_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-a-package-declaring-only-a-language-block-is-skipped",
+   "steps": [
+    {
+     "event": "PKG_W_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogImxhbmciLCAidmVyc2lvbiI6ICIxLjAuMCIsICJvcmIiOiB7InZlY3RvcnMiOiAidiJ9fQ==",
+      "key": "wmanifest"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpath": "/w/node_modules/lang",
+      "wc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_W_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-the-nearest-package-of-a-name-wins",
+   "steps": [
+    {
+     "event": "PKG_W_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogImEiLCAidmVyc2lvbiI6ICIyLjAuMCIsICJvcmIiOiB7InByZWZpeCI6ICJwIiwgInNvdXJjZSI6ICJzIiwgImNvbXBpbGVyIjogIj49MSJ9fQ==",
+      "key": "wmanifest"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpath": "/up/node_modules/a",
+      "wrows": [
+       {
+        "name": "a",
+        "version": "1.0.0",
+        "root": "/w/node_modules/a",
+        "prefix": "p",
+        "compiler": ">=1",
+        "source": "s"
+       }
+      ],
+      "wc": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_W_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-a-malformed-orb-block-is-refused",
+   "steps": [
+    {
+     "event": "PKG_W_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogImJhZCIsICJ2ZXJzaW9uIjogIjEuMC4wIiwgIm9yYiI6IHsicHJlZml4IjogInAiLCAic291cmNlIjogInMifX0=",
+      "key": "wmanifest"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpath": "/w/node_modules/bad",
+      "wc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-control-a-wellformed-behavior-package-is-kept",
+   "steps": [
+    {
+     "event": "PKG_W_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogImdvb2QiLCAidmVyc2lvbiI6ICIxLjAuMCIsICJvcmIiOiB7InByZWZpeCI6ICJnIiwgInNvdXJjZSI6ICJzIiwgImNvbXBpbGVyIjogIj49MSJ9fQ==",
+      "key": "wmanifest"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpath": "/w/node_modules/good",
+      "wc": 0
+     },
+     "expect": {
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-two-packages-claiming-one-prefix-are-refused",
+   "steps": [
+    {
+     "event": "PKG_W_DONE",
+     "payload": {},
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wrows": [
+       {
+        "name": "a",
+        "version": "1.0.0",
+        "root": "/w/node_modules/a",
+        "prefix": "p",
+        "compiler": ">=1",
+        "source": "s"
+       },
+       {
+        "name": "b",
+        "version": "1.0.0",
+        "root": "/w/node_modules/b",
+        "prefix": "p",
+        "compiler": ">=1",
+        "source": "s"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-control-distinct-prefixes-answer-the-rows",
+   "steps": [
+    {
+     "event": "PKG_W_DONE",
+     "payload": {},
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wrows": [
+       {
+        "name": "a",
+        "version": "1.0.0",
+        "root": "/w/node_modules/a",
+        "prefix": "p",
+        "compiler": ">=1",
+        "source": "s"
+       },
+       {
+        "name": "b",
+        "version": "1.0.0",
+        "root": "/w/node_modules/b",
+        "prefix": "q",
+        "compiler": ">=1",
+        "source": "s"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-a-lock-that-is-not-version-1-is-refused",
+   "steps": [
+    {
+     "event": "PKG_W_LOCK",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogMiwgImZpbGVzIjoge319",
+      "key": "wlock"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpend": {
+       "name": "a",
+       "version": "1.0.0",
+       "root": "/w/node_modules/a",
+       "prefix": "p",
+       "compiler": ">=1",
+       "source": "s"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "walk-control-a-version-1-lock-is-kept-on-the-row",
+   "steps": [
+    {
+     "event": "PKG_W_LOCK",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogMSwgImZpbGVzIjogeyJ2LmJpbiI6IHsic2hhMjU2IjogImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCAiYnl0ZXMiOiA5LCAidXJsIjogImh0dHBzOi8veC50ZXN0L3YifX19",
+      "key": "wlock"
+     },
+     "from": "walking",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "ancestors": true,
+      "wpend": {
+       "name": "a",
+       "version": "1.0.0",
+       "root": "/w/node_modules/a",
+       "prefix": "p",
+       "compiler": ">=1",
+       "source": "s"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_W_APPEND",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-an-orbProgram-block-is-skipped-not-an-error",
+   "steps": [
+    {
+     "event": "PKG_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogInBsYWluIiwgInZlcnNpb24iOiAiMS4wLjAifQ==",
+      "key": "manifest"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "dir": "/w",
+      "pkgs": [
+       {
+        "name": "plain",
+        "kind": "dir"
+       }
+      ],
+      "cursor": 0,
+      "rows": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-manifest-declaring-an-orb-block-is-recorded",
+   "steps": [
+    {
+     "event": "PKG_MANIFEST",
+     "payload": {
+      "data": "eyJuYW1lIjogImJlaCIsICJ2ZXJzaW9uIjogIjEuMC4wIiwgIm9yYiI6IHsicHJlZml4IjogImJlaCJ9fQ==",
+      "key": "manifest"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "p",
+      "cmd": "list",
+      "cwd": "/w",
+      "dir": "/w",
+      "pkgs": [
+       {
+        "name": "beh",
+        "kind": "dir"
+       }
+      ],
+      "cursor": 0,
+      "rows": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_READ",
+        "payload": {}
        }
       ]
      }

@@ -1,10 +1,14 @@
 app std-ml-classify [
   version: "1.0.0",
   description: "Generative rung (R5) — structured LLM verdict from a closed category set, through std-llm (LLM_CLASSIFY). Bottom of the fall-through: always answers or fails, never abstains.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 
 uses Llm from "std/behaviors/std-llm"
+
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
 
 orbital MlClassifyOrbital {
 
@@ -30,6 +34,35 @@ orbital MlClassifyOrbital {
   trait ClassifyLlm = Llm.traits.LlmClient {
     listens {
       ClassifyRun.LLM_CLASSIFY -> LLM_CLASSIFY
+      ClassifyChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      ClassifyChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      ClassifyChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      ClassifyChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait ClassifyChatRequest = Req.traits.HttpRequest {
+    listens {
+      ClassifyLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      ClassifyLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      ClassifyChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      ClassifyChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ClassifyChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      ClassifyChatRequest.HTTP_SEND -> HTTP_SEND
+      ClassifyChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -146,5 +179,5 @@ orbital MlClassifyOrbital {
     }
   }
 
-  page "/ml-classify" as MlClassifyPage -> ClassifyRun, ClassifyLlm
+  page "/ml-classify" as MlClassifyPage -> ClassifyRun, ClassifyLlm, ClassifyChatRequest, ClassifyChatHttp
 }

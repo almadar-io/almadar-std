@@ -147,9 +147,11 @@ orbital OrbMcpOrbital {
 
     state starting {
       INIT -> starting
-      MCP_CALLED -> parsing
+      MCP_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit MCP_ARGS_UNREAD { })
+      MCP_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit MCP_ARGS_UNREAD { }) (emit MCP_ARGS_PARSE { stage: "mcp" argv: @argv flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {

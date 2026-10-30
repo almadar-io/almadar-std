@@ -3,6 +3,8 @@ app std-rigger [
   description: "std-rigger — the local rigger service (FastAPI mesh-rigging, cutout-layer and image-generation server, default http://127.0.0.1:8181) as one atom: health, build a mesh bundle, render a preset, list presets, load and save a rig file, build the pixel-ownership map, cut the layers, sample a pose and generate an image. Every action POSTs (or GETs) JSON to its endpoint and answers a typed result event; a non-2xx reply answers the action's failure event with the message `Rigger <path> returned <status>: <detail>` (detail is the service's `detail` field when present) and no code; an unreachable service answers the network error message. Generation is validated before it is sent: the model must be z-image-turbo or kontext, and kontext needs a sourcePath.",
   egress: ["http://127.0.0.1:8181"]
 ]
+uses Fetch from "std/behaviors/std-http-fetch"
+type HttpHeader = { name : string!, value : string! }
 type RiggerIssue = { loc : [string | number], msg : string, type : string }
 type RiggerErrorBody = { detail : string | [RiggerIssue] }
 type RiggerDetailString = { detail : string }
@@ -30,6 +32,26 @@ orbital RiggerOrbital {
     id : string!
   }
 
+  trait RiggerFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "http://127.0.0.1:8181"
+      timeoutMs: 30000
+    }
+    listens {
+      RiggerClient.RIGGER_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
+  trait RiggerGenerateFetch = Fetch.traits.HttpFetch {
+    config {
+      origin: "http://127.0.0.1:8181"
+      timeoutMs: 600000
+    }
+    listens {
+      RiggerClient.RIGGER_GENERATE_SEND -> HTTP_SEND
+    }
+  }
+
   trait RiggerClient -> RiggerCall [client] {
     initial: idle
 
@@ -37,196 +59,158 @@ orbital RiggerOrbital {
       INIT -> idle
 
       RIGGER_HEALTH -> idle
-        (http GET @config.origin "/health" {
-          headers: { Accept: "application/json" },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_HEALTH_REPLIED, failure: RIGGER_HEALTH_UNREACHABLE } })
-      RIGGER_HEALTH_REPLIED -> idle
+        (emit RIGGER_HTTP_SEND { key: "health", method: "GET", target: "/health", headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
+      RIGGER_REPLIED -> idle when (= @payload.key "health")
         (emit RIGGER_HEALTH_CHECKED { ok: (and (>= @payload.status 200) (< @payload.status 300)) })
-      RIGGER_HEALTH_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "health")
         (emit RIGGER_HEALTH_FAILED { message: @payload.error })
 
       RIGGER_BUILD_MESH -> idle
-        (http POST @config.origin "/mesh/build" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: { imagePath: @payload.imagePath, rig: @payload.rig },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_BUILD_MESH_REPLIED, failure: RIGGER_BUILD_MESH_UNREACHABLE } })
-      RIGGER_BUILD_MESH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerMeshBuilt)))
+        (emit RIGGER_HTTP_SEND { key: "build_mesh", method: "POST", target: "/mesh/build", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify { imagePath: @payload.imagePath, rig: @payload.rig })), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "build_mesh") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerMeshBuilt)))
           (emit RIGGER_MESH_BUILT { bundlePath: @r.bundlePath, boneCount: @r.boneCount, vertexCount: @r.vertexCount, triangleCount: @r.triangleCount, clips: @r.clips }))
-      RIGGER_BUILD_MESH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "build_mesh") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_BUILD_MESH_FAILED {
               message: (str/concat "Rigger /mesh/build returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_BUILD_MESH_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "build_mesh")
         (emit RIGGER_BUILD_MESH_FAILED { message: @payload.error })
 
       RIGGER_RENDER -> idle
-        (http POST @config.origin "/render" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: (object/merge { imagePath: @payload.imagePath, rig: @payload.rig, preset: @payload.preset, outDir: @payload.outDir } (if (not (validate/required @payload.mode)) {} { mode: @payload.mode }) (if (= @payload.supersample null) {} { supersample: @payload.supersample })),
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_RENDER_REPLIED, failure: RIGGER_RENDER_UNREACHABLE } })
-      RIGGER_RENDER_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerRendered)))
+        (emit RIGGER_HTTP_SEND { key: "render", method: "POST", target: "/render", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify (object/merge { imagePath: @payload.imagePath, rig: @payload.rig, preset: @payload.preset, outDir: @payload.outDir } (if (not (validate/required @payload.mode)) {} { mode: @payload.mode }) (if (= @payload.supersample null) {} { supersample: @payload.supersample })))), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "render") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerRendered)))
           (emit RIGGER_RENDERED { outdir: @r.outdir, frames: @r.frames, framePaths: @r.framePaths, sheet: @r.sheet, gif: @r.gif, atlas: @r.atlas }))
-      RIGGER_RENDER_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "render") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_RENDER_FAILED {
               message: (str/concat "Rigger /render returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_RENDER_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "render")
         (emit RIGGER_RENDER_FAILED { message: @payload.error })
 
       RIGGER_LIST_PRESETS -> idle
-        (http GET @config.origin "/presets" {
-          headers: { Accept: "application/json" },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_LIST_PRESETS_REPLIED, failure: RIGGER_LIST_PRESETS_UNREACHABLE } })
-      RIGGER_LIST_PRESETS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerPresetList)))
+        (emit RIGGER_HTTP_SEND { key: "list_presets", method: "GET", target: "/presets", headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "list_presets") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerPresetList)))
           (emit RIGGER_PRESETS { presets: @r.presets }))
-      RIGGER_LIST_PRESETS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "list_presets") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_LIST_PRESETS_FAILED {
               message: (str/concat "Rigger /presets returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_LIST_PRESETS_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "list_presets")
         (emit RIGGER_LIST_PRESETS_FAILED { message: @payload.error })
 
       RIGGER_LOAD_RIG -> idle
-        (http POST @config.origin "/rig/load" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: { rigPath: @payload.rigPath },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_LOAD_RIG_REPLIED, failure: RIGGER_LOAD_RIG_UNREACHABLE } })
-      RIGGER_LOAD_RIG_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerRigLoaded)))
+        (emit RIGGER_HTTP_SEND { key: "load_rig", method: "POST", target: "/rig/load", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify { rigPath: @payload.rigPath })), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "load_rig") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerRigLoaded)))
           (emit RIGGER_RIG_LOADED { rig: @r.rig, resolved: @r.resolved }))
-      RIGGER_LOAD_RIG_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "load_rig") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_LOAD_RIG_FAILED {
               message: (str/concat "Rigger /rig/load returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_LOAD_RIG_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "load_rig")
         (emit RIGGER_LOAD_RIG_FAILED { message: @payload.error })
 
       RIGGER_SAVE_RIG -> idle
-        (http POST @config.origin "/rig/save" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: { rigPath: @payload.rigPath, rig: @payload.rig },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_SAVE_RIG_REPLIED, failure: RIGGER_SAVE_RIG_UNREACHABLE } })
-      RIGGER_SAVE_RIG_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerRigSaved)))
+        (emit RIGGER_HTTP_SEND { key: "save_rig", method: "POST", target: "/rig/save", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify { rigPath: @payload.rigPath, rig: @payload.rig })), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "save_rig") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerRigSaved)))
           (emit RIGGER_RIG_SAVED { rigPath: @r.rigPath, parts: @r.parts }))
-      RIGGER_SAVE_RIG_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "save_rig") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_SAVE_RIG_FAILED {
               message: (str/concat "Rigger /rig/save returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_SAVE_RIG_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "save_rig")
         (emit RIGGER_SAVE_RIG_FAILED { message: @payload.error })
 
       RIGGER_OWNERSHIP -> idle
-        (http POST @config.origin "/ownership" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: { imagePath: @payload.imagePath, rig: @payload.rig, outPath: @payload.outPath },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_OWNERSHIP_REPLIED, failure: RIGGER_OWNERSHIP_UNREACHABLE } })
-      RIGGER_OWNERSHIP_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerOwnership)))
+        (emit RIGGER_HTTP_SEND { key: "ownership", method: "POST", target: "/ownership", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify { imagePath: @payload.imagePath, rig: @payload.rig, outPath: @payload.outPath })), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "ownership") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerOwnership)))
           (emit RIGGER_OWNERSHIP_BUILT { outPath: @r.outPath, legend: @r.legend }))
-      RIGGER_OWNERSHIP_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "ownership") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_OWNERSHIP_FAILED {
               message: (str/concat "Rigger /ownership returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_OWNERSHIP_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "ownership")
         (emit RIGGER_OWNERSHIP_FAILED { message: @payload.error })
 
       RIGGER_BUILD_LAYERS -> idle
-        (http POST @config.origin "/layers" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: { imagePath: @payload.imagePath, rig: @payload.rig, outDir: @payload.outDir },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_BUILD_LAYERS_REPLIED, failure: RIGGER_BUILD_LAYERS_UNREACHABLE } })
-      RIGGER_BUILD_LAYERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerLayers)))
+        (emit RIGGER_HTTP_SEND { key: "build_layers", method: "POST", target: "/layers", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify { imagePath: @payload.imagePath, rig: @payload.rig, outDir: @payload.outDir })), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "build_layers") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerLayers)))
           (emit RIGGER_LAYERS_BUILT { layers: @r.layers }))
-      RIGGER_BUILD_LAYERS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "build_layers") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_BUILD_LAYERS_FAILED {
               message: (str/concat "Rigger /layers returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_BUILD_LAYERS_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "build_layers")
         (emit RIGGER_BUILD_LAYERS_FAILED { message: @payload.error })
 
       RIGGER_POSE -> idle
-        (http POST @config.origin "/pose" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: (object/merge { imagePath: @payload.imagePath, rig: @payload.rig, roles: @payload.roles } (if (not (validate/required @payload.preset)) {} { preset: @payload.preset }) (if (= @payload.overrides null) {} { overrides: @payload.overrides })),
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: RIGGER_POSE_REPLIED, failure: RIGGER_POSE_UNREACHABLE } })
-      RIGGER_POSE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerPosed)))
+        (emit RIGGER_HTTP_SEND { key: "pose", method: "POST", target: "/pose", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify (object/merge { imagePath: @payload.imagePath, rig: @payload.rig, roles: @payload.roles } (if (not (validate/required @payload.preset)) {} { preset: @payload.preset }) (if (= @payload.overrides null) {} { overrides: @payload.overrides })))), stream: "none" })
+      RIGGER_REPLIED -> idle when (and (= @payload.key "pose") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerPosed)))
           (emit RIGGER_POSED { fps: @r.fps, frames: @r.frames }))
-      RIGGER_POSE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "pose") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_POSE_FAILED {
               message: (str/concat "Rigger /pose returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_POSE_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "pose")
         (emit RIGGER_POSE_FAILED { message: @payload.error })
 
       RIGGER_GENERATE -> idle when (and (or (= @payload.model "z-image-turbo") (= @payload.model "kontext")) (or (!= @payload.model "kontext") (!= (default @payload.sourcePath "") "")))
-        (http POST @config.origin "/generate" {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          json: (object/merge { model: @payload.model, prompt: @payload.prompt, outDir: @payload.outDir } (if (= @payload.seed null) {} { seed: @payload.seed }) (if (= @payload.size null) {} { size: @payload.size }) (if (= @payload.steps null) {} { steps: @payload.steps }) (if (= @payload.sourcePath null) {} { sourcePath: @payload.sourcePath })),
-          timeoutMs: @config.generateTimeoutMs
-        } { emit: { success: RIGGER_GENERATE_REPLIED, failure: RIGGER_GENERATE_UNREACHABLE } })
+        (emit RIGGER_GENERATE_SEND { key: "generate", method: "POST", target: "/generate", headers: [{ name: "Accept", value: "application/json" }, { name: "Content-Type", value: "application/json" }], body: (bytes/from-string (json/stringify (object/merge { model: @payload.model, prompt: @payload.prompt, outDir: @payload.outDir } (if (= @payload.seed null) {} { seed: @payload.seed }) (if (= @payload.size null) {} { size: @payload.size }) (if (= @payload.steps null) {} { steps: @payload.steps }) (if (= @payload.sourcePath null) {} { sourcePath: @payload.sourcePath })))), stream: "none" })
       RIGGER_GENERATE -> idle when (and (!= @payload.model "z-image-turbo") (!= @payload.model "kontext"))
         (emit RIGGER_GENERATE_FAILED { code: "VALIDATION_ERROR", message: "Validation failed for rigger.generate: params: model must be one of z-image-turbo, kontext" })
       RIGGER_GENERATE -> idle when (and (= @payload.model "kontext") (= (default @payload.sourcePath "") ""))
         (emit RIGGER_GENERATE_FAILED { code: "VALIDATION_ERROR", message: "Validation failed for rigger.generate: params: sourcePath is required when model is kontext" })
-      RIGGER_GENERATE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((r (json/parse @payload.body RiggerGenerated)))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "generate") (>= @payload.status 200) (< @payload.status 300))
+        (let ((r (json/parse (default (bytes/to-string @payload.body) "") RiggerGenerated)))
           (emit RIGGER_GENERATED { outPath: @r.outPath, model: @r.model, prompt: @r.prompt, seed: @r.seed, size: @r.size, sourcePath: @r.sourcePath, elapsedMs: @r.elapsedMs }))
-      RIGGER_GENERATE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+      RIGGER_REPLIED -> idle when (and (= @payload.key "generate") (or (< @payload.status 200) (>= @payload.status 300)))
         (let (
-            (errBody (json/parse @payload.body RiggerErrorBody))
+            (errBody (json/parse (default (bytes/to-string @payload.body) "") RiggerErrorBody))
             (detailJson (json/stringify (object/get @errBody detail "")))
-            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
+            (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse (default (bytes/to-string @payload.body) "") RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_GENERATE_FAILED {
               message: (str/concat "Rigger /generate returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
-      RIGGER_GENERATE_UNREACHABLE -> idle
+      RIGGER_FAILED -> idle when (= @payload.key "generate")
         (emit RIGGER_GENERATE_FAILED { message: @payload.error })
     }
 
@@ -244,19 +228,6 @@ orbital RiggerOrbital {
         @description "The health probe never reached the rigger service: the network error message."
         @synonyms "health failed, rigger error"
         @tier "primary"
-      RIGGER_HEALTH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the health call's HTTP reply."
-        @tier "secondary"
-      RIGGER_HEALTH_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the health call never produced a reply."
-        @tier "secondary"
       RIGGER_MESH_BUILT -> external {
         bundlePath : string!
         boneCount : number!
@@ -274,19 +245,6 @@ orbital RiggerOrbital {
         @description "Building the mesh failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "build mesh failed, rigger error"
         @tier "primary"
-      RIGGER_BUILD_MESH_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the buildMesh call's HTTP reply."
-        @tier "secondary"
-      RIGGER_BUILD_MESH_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the buildMesh call never produced a reply."
-        @tier "secondary"
       RIGGER_RENDERED -> external {
         outdir : string!
         frames : number!
@@ -305,19 +263,6 @@ orbital RiggerOrbital {
         @description "Rendering failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "render failed, rigger error"
         @tier "primary"
-      RIGGER_RENDER_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the render call's HTTP reply."
-        @tier "secondary"
-      RIGGER_RENDER_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the render call never produced a reply."
-        @tier "secondary"
       RIGGER_PRESETS -> external {
         presets : [RiggerPreset]!
       }
@@ -331,19 +276,6 @@ orbital RiggerOrbital {
         @description "Listing presets failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "list presets failed, rigger error"
         @tier "primary"
-      RIGGER_LIST_PRESETS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the listPresets call's HTTP reply."
-        @tier "secondary"
-      RIGGER_LIST_PRESETS_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the listPresets call never produced a reply."
-        @tier "secondary"
       RIGGER_RIG_LOADED -> external {
         rig : RiggerRig!
         resolved : RiggerResolvedRig!
@@ -358,19 +290,6 @@ orbital RiggerOrbital {
         @description "Loading the rig failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "load rig failed, rigger error"
         @tier "primary"
-      RIGGER_LOAD_RIG_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the loadRig call's HTTP reply."
-        @tier "secondary"
-      RIGGER_LOAD_RIG_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the loadRig call never produced a reply."
-        @tier "secondary"
       RIGGER_RIG_SAVED -> external {
         rigPath : string!
         parts : number!
@@ -385,19 +304,6 @@ orbital RiggerOrbital {
         @description "Saving the rig failed: the rigger's HTTP status and detail (a malformed part is a 4xx), or the network error message."
         @synonyms "save rig failed, rigger error"
         @tier "primary"
-      RIGGER_SAVE_RIG_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the saveRig call's HTTP reply."
-        @tier "secondary"
-      RIGGER_SAVE_RIG_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the saveRig call never produced a reply."
-        @tier "secondary"
       RIGGER_OWNERSHIP_BUILT -> external {
         outPath : string!
         legend : [RiggerLegendRow]!
@@ -412,19 +318,6 @@ orbital RiggerOrbital {
         @description "Building the ownership map failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "ownership failed, rigger error"
         @tier "primary"
-      RIGGER_OWNERSHIP_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the ownership call's HTTP reply."
-        @tier "secondary"
-      RIGGER_OWNERSHIP_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the ownership call never produced a reply."
-        @tier "secondary"
       RIGGER_LAYERS_BUILT -> external {
         layers : [RiggerLayer]!
       }
@@ -438,19 +331,6 @@ orbital RiggerOrbital {
         @description "Building the layers failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "build layers failed, rigger error"
         @tier "primary"
-      RIGGER_BUILD_LAYERS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the buildLayers call's HTTP reply."
-        @tier "secondary"
-      RIGGER_BUILD_LAYERS_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the buildLayers call never produced a reply."
-        @tier "secondary"
       RIGGER_POSED -> external {
         fps : number!
         frames : [Map string RiggerPoseTransform]!
@@ -465,19 +345,6 @@ orbital RiggerOrbital {
         @description "Posing failed: the rigger's HTTP status and detail, or the network error message."
         @synonyms "pose failed, rigger error"
         @tier "primary"
-      RIGGER_POSE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the pose call's HTTP reply."
-        @tier "secondary"
-      RIGGER_POSE_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the pose call never produced a reply."
-        @tier "secondary"
       RIGGER_GENERATED -> external {
         outPath : string!
         model : string!
@@ -497,19 +364,26 @@ orbital RiggerOrbital {
         @description "Generation failed: a validation message (model not z-image-turbo or kontext, or kontext without sourcePath), the rigger's HTTP status and detail, or the network error message."
         @synonyms "generate failed, rigger error"
         @tier "primary"
-      RIGGER_GENERATE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      RIGGER_GENERATE_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the generate call's HTTP reply."
-        @tier "secondary"
-      RIGGER_GENERATE_UNREACHABLE {
-        error : string!
-        kind : string!
+        @description "Internal: the generation request, for the long-timeout HTTP fetch."
+        @tier "internal"
+      RIGGER_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the generate call never produced a reply."
-        @tier "secondary"
+        @description "Internal: one request, for the HTTP fetch."
+        @tier "internal"
     }
 
     listens {
@@ -580,26 +454,26 @@ orbital RiggerOrbital {
       }
         @description "Generate one image on the local image server: model z-image-turbo is text-to-image, kontext edits the image at sourcePath (required for kontext)."
         @synonyms "generate image, text to image, kontext edit"
+      RIGGER_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+      RIGGER_FAILED {
+        key : string
+        error : string!
+        kind : string!
+      }
+      RiggerFetch.HTTP_REPLIED -> RIGGER_REPLIED
+      RiggerFetch.HTTP_FAILED -> RIGGER_FAILED
+      RiggerGenerateFetch.HTTP_REPLIED -> RIGGER_REPLIED
+      RiggerGenerateFetch.HTTP_FAILED -> RIGGER_FAILED
     }
 
     config {
-      origin : url = "http://127.0.0.1:8181"
-        @label "Rigger service origin"
-        @description "The rigger service origin (scheme://host[:port], no path); must be declared in the app egress list."
-        @synonyms "rigger url, rigger base url, rigger host"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each rigger request except generation may take before it fails as unreachable."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
-      generateTimeoutMs : number = 600000
-        @label "Generation timeout (ms)"
-        @description "Milliseconds an image generation may take before it fails as unreachable; a local z-image-turbo run takes about 60-90 seconds and a kontext edit at 1024px several minutes."
-        @synonyms "generation timeout, image timeout"
-        @tier "infra"
     }
   }
 
-  page boot as RiggerPage -> RiggerClient
+  page boot as RiggerPage -> RiggerClient, RiggerFetch, RiggerGenerateFetch
 }

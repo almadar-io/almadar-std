@@ -1,15 +1,16 @@
 app std-orb-value-leaves [
   version: "1.0.0",
-  description: "std-orb-value-leaves - the one place a lint run reads the value leaves of an expression, the port of the compiler's json_value_leaves/value_leaves walk (value_walk.rs all_sources). VALUE_LEAVES_ASK { requestId, values } offers a list of program values (a config default, a render-ui prop) and answers VALUE_LEAVES { requestId, leaves } with, for each value in order, the JSON text of each leaf the value can yield: the walk is driven only by the operators' declared returnSemantics (identity-of-arg<N> recurses into argument N, branch-union unions every argument after the condition, union-of-args and coalesce every argument, union-of-args<i,j> the listed ones, last-of-args the last argument, lambda-result the body of the lambda argument) and anything else, including an operator with no declaration or one whose kind names an absent argument, is an opaque leaf (itself). Every branch contributes (the all-sources walk). The semantics come from std-orb-lint-input's LINT_OPERATOR_SEMANTICS (VALUE_SEMANTICS_HEARD); a rule that needs the leaves of a value composes this trait and reads VALUE_LEAVES, it never walks returnSemantics itself."
+  description: "std-orb-value-leaves - the one place a lint run reads the value leaves of an expression, the port of the compiler's json_value_leaves/value_leaves walk (value_walk.rs all_sources). VALUE_LEAVES_ASK { requestId, values } offers a list of program values (a config default, a render-ui prop) and answers VALUE_LEAVES { requestId, leaves } with, for each value in order, the JSON text of each leaf the value can yield: the walk is driven only by the operators' value-source slots (a listed slot recurses into its listed arguments, branches unions every argument after the condition, args every argument, last the last argument, lambdaResult the body of the lambda argument) and anything else, including an operator with no declaration or one whose kind names an absent argument, is an opaque leaf (itself). Every branch contributes (the all-sources walk). The slots come from std-orb-lint-input's LINT_OPERATOR_WALK (VALUE_WALK_HEARD) and the function-returning operators from LINT_OPERATOR_SEMANTICS (VALUE_SEMANTICS_HEARD); a rule that needs the leaves of a value composes this trait and reads VALUE_LEAVES, it never walks the slots itself."
 ]
 uses Spec from "almadar-std/value-leaves"
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
 type FiredLf = { lf : [string]!, ll : [string]! }
+type WalkSlot = { kind : string!, args : [number] }
 
 orbital OrbValueLeavesOrbital {
   entity OrbValueLeavesRun [runtime] {
     id : string!
-    semantics : Map string string = {}
+    slots : Map string WalkSlot = {}
     functions : [string] = []
   }
 
@@ -19,25 +20,26 @@ orbital OrbValueLeavesOrbital {
     state ready {
       INIT -> ready
       VALUE_SEMANTICS_HEARD -> ready
-        (set @entity.semantics @payload.semantics)
         (set @entity.functions @payload.functions)
+      VALUE_WALK_HEARD -> ready
+        (set @entity.slots @payload.slots)
       VALUE_LEAVES_ASK -> ready
-        (let ((sem @entity.semantics) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.slots) (noslot : WalkSlot { kind: "", args: [] }) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
           (emit VALUE_LEAVES { requestId: @payload.requestId, leaves: (array/map @payload.values (fn v
             (if (validate/array @v)
               (let ((sr (tree/fold @v (fn (n k)
   (if (validate/array @n)
     (let ((len (array/len @n)) (kk (array/map @k (fn r (if (= @r null) @nl @r)))))
       (let ((argc (- @len 1)))
-        (let ((sm (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (object/get @sem @h "") ""))))
-          (let ((lamIdx (if (= @sm "lambda-result") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
-                (picked (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<")) (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v)))) [])))
-            (let ((sel (if (= @sm "branch-union") (if (< @argc 2) null (array/flatten (array/map (array/range 2 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                         (if (or (= @sm "union-of-args") (= @sm "coalesce")) (if (< @argc 1) null (array/flatten (array/map (array/range 1 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                           (if (= @sm "last-of-args") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
-                             (if (= @sm "lambda-result") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
+        (let ((sl (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (default (object/get @sem @h) @noslot) @noslot))) (sm (object/get @sl "kind" "")))
+          (let ((lamIdx (if (= @sm "lambdaResult") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
+                (picked (if (= @sm "listed") (object/get @sl "args" []) [])))
+            (let ((sel (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/range 2 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
+                         (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map (array/range 1 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
+                           (if (= @sm "last") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
+                             (if (= @sm "lambdaResult") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
                                (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc)))))) (array/flatten (array/map @picked (fn i (object/get (array/nth @kk (+ @i 1)) "lf")))) null)))))))
-              { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branch-union")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
+              { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
     { lf: [(json/stringify @n)], ll: [] })) "FiredNode")))
                 (object/get @sr "lf" []))
               [(json/stringify @v)]))) }))
@@ -50,8 +52,10 @@ orbital OrbValueLeavesOrbital {
     }
 
     listens {
-      VALUE_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
-        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      VALUE_SEMANTICS_HEARD { functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
+      VALUE_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots, the one encoding of how a call's result is drawn from its arguments."
       VALUE_LEAVES_ASK { requestId : string!  values : [FiredNode?]! }
         @description "A rule offers the values whose leaves it needs."
     }

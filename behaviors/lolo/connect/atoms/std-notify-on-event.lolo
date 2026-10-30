@@ -183,7 +183,6 @@ orbital NotifyOnEventOrbital {
         }) (if (= @entity.channel push) (fetch PushSubscription { limit: @config.maxSubscriptionRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
-          secret: @config.webhookSecret
           url: @config.webhookUrl
         })))))
       NOTIFY_PUSH_SUBS -> idle when (> ?totalCount (array/len ?data))
@@ -365,7 +364,6 @@ orbital NotifyOnEventOrbital {
         url : string!
         event : string!
         payload : NotifyWebhookPayload!
-        secret : string
       }
         @description "Ask std-webhook to post the webhook-channel notification."
         @tier "secondary"
@@ -519,11 +517,6 @@ orbital NotifyOnEventOrbital {
         @description "Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel \"webhook\" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure)."
         @synonyms "webhook endpoint, callback url, target url, http endpoint, notify url"
         @tier "policy"
-      webhookSecret : string = ""
-        @label "Webhook secret"
-        @description "Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank."
-        @synonyms "signing secret, hmac secret, webhook signature, shared secret"
-        @tier "internal"
       template : string = "You have a new notification"
         @label "Message template"
         @description "Text shown to the recipient; supports payload interpolation"

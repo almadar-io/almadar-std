@@ -1,7 +1,7 @@
 app std-agent-fix-loop [
   version: "2.0.0",
   description: "Agent fix loop — evaluate a program and, when it does not validate, ask the model for a repair. VALIDATE_PROGRAM { program } runs `program/eval` (the 0-error / 0-warning gate, written to the workspace's orbitals/ on success): a valid program emits PROGRAM_VALID { behavior }; an invalid one hands the validator's issues to the model (std-llm LLM_GENERATE) and emits FIX_PROPOSED { issues, fix } with the model's repair instructions. Headless apart from a status line.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "api.openai.com:443": [tcp] },
 ]
 ;; @capabilities "program repair, fix validation errors, evaluate a program, repair suggestion"
 
@@ -15,6 +15,10 @@ type Evaluated = {
 
 uses Llm from "std/behaviors/std-llm"
 
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
 orbital AgentFixLoopOrbital {
 
   entity FixLoop [runtime] {
@@ -27,6 +31,35 @@ orbital AgentFixLoopOrbital {
   trait FixLoopLlm = Llm.traits.LlmClient {
     listens {
       FixLoopExecution.LLM_GENERATE -> LLM_GENERATE
+      FixLoopChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      FixLoopChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      FixLoopChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      FixLoopChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait FixLoopChatRequest = Req.traits.HttpRequest {
+    listens {
+      FixLoopLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      FixLoopLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      FixLoopChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      FixLoopChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait FixLoopChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      FixLoopChatRequest.HTTP_SEND -> HTTP_SEND
+      FixLoopChatRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -136,5 +169,5 @@ orbital AgentFixLoopOrbital {
     }
   }
 
-  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopLlm
+  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopLlm, FixLoopChatRequest, FixLoopChatHttp
 }

@@ -1,7 +1,7 @@
 app std-resp-client [
   version: "1.0.0",
   net: { "redis.example.test:6379": [tcp] },
-  description: "std-resp-client — RESP2 over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: the wire of the retired runtime drivers/redis. RESP_RUN { key, argv } is one command; calls with different keys run concurrently over ONE connection: the first call connects, later calls are written at once (or after the handshake when one is configured), the keys in flight are an ordered table because RESP replies come back in the order the commands were written, and each reply frame answers the oldest key. The connection closes when the table empties. A configured SELECT db (db above 0) is one pipelined write whose reply is checked to be +OK before any command goes out. A command is a RESP array of bulk strings (the length counts UTF-8 bytes); a reply split across reads asks for more until the frame is whole. Replies map: +OK is text, an integer is a number, $-1 and *-1 are null, a bulk is UTF-8 text (invalid UTF-8 answers kind unsupported), -ERR word ... answers that key with kind redis and the first word as code while the other keys go on; a frame with an unknown type byte, a non-integer or too small length or a bulk not CRLF-terminated, a close inside a reply, a read timeout, a refused or failed transport or a reply past the largest reply fails EVERY key in flight with the same kind (protocol, failed, timeout, refused) and closes. A read or failure that belongs to an earlier socket (its ask key names the socket) is ignored. Not carried yet: array replies (kind unsupported), integers beyond 2^53, TLS (rediss), and the AUTH password in the sent bytes, which waits for the secret knob that lets a declared secret feed an os/send argument."
+  description: "std-resp-client — RESP2 over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: the wire of the retired runtime drivers/redis. RESP_RUN { key, argv } is one command; calls with different keys run concurrently over ONE connection: the first call connects, later calls are written at once (or after the handshake when one is configured), the keys in flight are an ordered table because RESP replies come back in the order the commands were written, and each reply frame answers the oldest key. The connection closes when the table empties. A configured AUTH and SELECT db (db above 0) are one pipelined write whose reply is checked to be +OK before any command goes out. A command is a RESP array of bulk strings (the length counts UTF-8 bytes); a reply split across reads asks for more until the frame is whole. Replies map: +OK is text, an integer is a number, $-1 and *-1 are null, a bulk is UTF-8 text (invalid UTF-8 answers kind unsupported), -ERR word ... answers that key with kind redis and the first word as code while the other keys go on; a frame with an unknown type byte, a non-integer or too small length or a bulk not CRLF-terminated, a close inside a reply, a read timeout, a refused or failed transport or a reply past the largest reply fails EVERY key in flight with the same kind (protocol, failed, timeout, refused) and closes. A read or failure that belongs to an earlier socket (its ask key names the socket) is ignored. When authenticated, AUTH [user] password is the first command of the handshake pipeline: the password is the password credential, a secret knob the host fills into the os/send at the boundary as a credential segment, so the program, the journal and RESP_WIRE_SENT never hold it (the wire diagnostic shows the frame without the password bytes); a credential that is not held fails every key in flight with kind unconfigured before any connect. Not carried yet: array replies (kind unsupported), integers beyond 2^53 and TLS (rediss)."
 ]
 
 type RespScalar = string | number
@@ -13,7 +13,10 @@ orbital RespClientOrbital {
     sock : number @description "The open socket, -1 when none." = -1
     stage : string @description "connect, handshake or ready." = "connect"
     pending : number @description "Handshake replies still to read." = 0
-    hello : bytes @description "The AUTH and SELECT pipeline." = ""
+    hello : bytes @description "The SELECT frame of the handshake pipeline; empty when db is 0." = ""
+    authLen : number @description "The byte length of the AUTH password, read from its credential by the kernel; -1 when it is not held." = -1
+    authHead : bytes @description "The AUTH frame up to the password bytes; empty when not authenticated." = ""
+    authTail : bytes @description "The AUTH frame after the password bytes; empty when not authenticated." = ""
     outbox : bytes @description "Commands accepted while the connection is not ready, written once the handshake is done." = ""
     armed : boolean @description "A read is outstanding or its reply chain is running; one read per connection at a time." = false
     buf : bytes @description "Bytes read and not yet consumed." = ""
@@ -39,6 +42,14 @@ orbital RespClientOrbital {
         @label "Authenticate"
         @description "Send AUTH before the command."
         @tier "infra"
+      user : string = ""
+        @label "ACL user"
+        @description "The ACL user AUTH names; empty sends the password alone."
+        @tier "infra"
+      password : secret = "REDIS_PASSWORD"
+        @label "Password"
+        @description "The credential holding the AUTH password. The host fills it into the send at the boundary; the program never holds it."
+        @tier "infra"
       db : number = 0
         @label "Database"
         @description "The logical database to SELECT; 0 sends no SELECT."
@@ -60,8 +71,8 @@ orbital RespClientOrbital {
       RESP_READ -> idle
       RESP_IO_FAILED -> idle
 
-      RESP_RUN -> idle when (or (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) (and @config.authenticated true))
-        (emit RESP_FAILED { key: @payload.key, kind: (if (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) "refused" "unconfigured"), code: null, message: (if (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) "the command must be a non-empty list of non-empty text items" "AUTH needs the password in the sent bytes, which waits for the secret knob that lets a declared secret feed an os/send argument") })
+      RESP_RUN -> idle when (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a ""))))
+        (emit RESP_FAILED { key: @payload.key, kind: "refused", code: null, message: "the command must be a non-empty list of non-empty text items" })
 
       RESP_RUN -> connecting when (and (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a ""))))) (not @config.authenticated))
         (set @entity.flight [@payload.key])
@@ -69,8 +80,42 @@ orbital RespClientOrbital {
         (set @entity.armed false)
         (set @entity.buf (bytes/from-string ""))
         (set @entity.pending (if (> @config.db 0) 1 0))
+        (set @entity.authHead (bytes/from-string ""))
+        (set @entity.authTail (bytes/from-string ""))
         (set @entity.hello (bytes/from-string (if (> @config.db 0) (str/concat "*2\r\n$6\r\nSELECT\r\n$" (bytes/length (bytes/from-string (str/concat @config.db))) "\r\n" @config.db "\r\n") "")))
         (set @entity.outbox (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) ""))))
+        (os/tcp-connect @config.host @config.port { key: "connect", emit: { success: RESP_CONNECTED, failure: RESP_IO_FAILED } })
+      RESP_RUN -> authorizing when (and (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a ""))))) @config.authenticated)
+        (set @entity.flight [@payload.key])
+        (set @entity.stage "connect")
+        (set @entity.armed false)
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.pending (+ 1 (if (> @config.db 0) 1 0)))
+        (set @entity.authLen (default (credential/byte-length @config.password) -1))
+        (set @entity.authTail (bytes/from-string "\r\n"))
+        (set @entity.hello (bytes/from-string (if (> @config.db 0) (str/concat "*2\r\n$6\r\nSELECT\r\n$" (bytes/length (bytes/from-string (str/concat @config.db))) "\r\n" @config.db "\r\n") "")))
+        (set @entity.outbox (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) ""))))
+        (emit RESP_AUTH_READ {})
+    }
+
+    state authorizing {
+      INIT -> authorizing
+      RESP_CLOSED -> authorizing
+      RESP_SENT -> authorizing
+      RESP_READ -> authorizing
+      RESP_IO_FAILED -> authorizing
+      RESP_RUN -> authorizing when (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a ""))))
+        (emit RESP_FAILED { key: @payload.key, kind: "refused", code: null, message: "the command must be a non-empty list of non-empty text items" })
+      RESP_RUN -> authorizing when (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a "")))))
+        (set @entity.flight (array/append @entity.flight @payload.key))
+        (set @entity.outbox (bytes/concat [@entity.outbox, (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) "")))]))
+      RESP_AUTH_READ -> aborting when (< @entity.authLen 0)
+        (set @entity.failKind "unconfigured")
+        (set @entity.failCode "")
+        (set @entity.failMessage "AUTH needs the password credential, which is not held")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_AUTH_READ -> connecting when (>= @entity.authLen 0)
+        (set @entity.authHead (bytes/from-string (if (= @config.user "") (str/concat "*2\r\n$4\r\nAUTH\r\n$" @entity.authLen "\r\n") (str/concat "*3\r\n$4\r\nAUTH\r\n$" (bytes/length (bytes/from-string @config.user)) "\r\n" @config.user "\r\n$" @entity.authLen "\r\n"))))
         (os/tcp-connect @config.host @config.port { key: "connect", emit: { success: RESP_CONNECTED, failure: RESP_IO_FAILED } })
     }
 
@@ -84,7 +129,12 @@ orbital RespClientOrbital {
       RESP_RUN -> connecting when (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a "")))))
         (set @entity.flight (array/append @entity.flight @payload.key))
         (set @entity.outbox (bytes/concat [@entity.outbox, (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) "")))]))
-      RESP_CONNECTED -> open when (> @entity.pending 0)
+      RESP_CONNECTED -> open when (and (> @entity.pending 0) @config.authenticated)
+        (set @entity.sock @payload.sock)
+        (set @entity.stage "handshake")
+        (os/send @payload.sock [{ bytes: @entity.authHead, credential: @config.password }, { bytes: (bytes/concat [@entity.authTail, @entity.hello]), credential: "" }] { key: (str/concat "send" @payload.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
+        (emit RESP_WIRE_SENT { key: (default (array/first @entity.flight) ""), stage: "handshake", bytes: (bytes/concat [@entity.authHead, @entity.authTail, @entity.hello]) })
+      RESP_CONNECTED -> open when (and (> @entity.pending 0) (not @config.authenticated))
         (set @entity.sock @payload.sock)
         (set @entity.stage "handshake")
         (os/send @payload.sock @entity.hello { key: (str/concat "send" @payload.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
@@ -306,8 +356,12 @@ orbital RespClientOrbital {
         stage : string!
         bytes : bytes!
       }
-        @description "The exact frame written, a diagnostic: the stage (handshake or command) and the bytes."
+        @description "The frame written, a diagnostic: the stage (handshake or command) and the bytes. A credential segment's bytes are never part of it."
         @tier "secondary"
+      RESP_AUTH_READ -> internal {
+      }
+        @description "Internal: the AUTH password's length was read; connect, or fail when the credential is not held."
+        @tier "internal"
       RESP_ABORT -> internal {
         left : number!
       }

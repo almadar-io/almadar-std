@@ -1,0 +1,789 @@
+{
+ "atom": "cli/atoms/std-behavior-borrows.lolo",
+ "trait": "BehaviorBorrows",
+ "note": "Reflection results are fed as the operators' success and failure events; the closure rule's verdict is fed as BORROWS_FOUND.",
+ "cases": [
+  {
+   "id": "the entities a sibling owns that an orbital references are its borrows",
+   "steps": [
+    {
+     "trait": "BehaviorBorrows",
+     "from": "ready",
+     "event": "BORROWS_DESCRIBE",
+     "payload": {
+      "behavior": "std-x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/describe",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         }
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "program/read",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "orbitals": [
+         {
+          "name": "XOrbital",
+          "entity": {
+           "name": "X"
+          },
+          "traits": [
+           {
+            "name": "XView"
+           }
+          ]
+         },
+         {
+          "name": "YOrbital",
+          "entity": {
+           "name": "Y"
+          },
+          "traits": []
+         }
+        ]
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BORROWS_PROBE",
+        "payload": {
+         "file": "/p/std-x.lolo",
+         "program": {
+          "orbitals": [
+           {
+            "name": "XOrbital",
+            "entity": "Source.orbitals.XOrbital.entity",
+            "reference": {
+             "ref": "Source.orbitals.XOrbital",
+             "entity": "X"
+            }
+           },
+           {
+            "name": "YOrbital",
+            "entity": "Source.orbitals.YOrbital.entity",
+            "reference": {
+             "ref": "Source.orbitals.YOrbital",
+             "entity": "Y"
+            }
+           }
+          ]
+         },
+         "kept": [
+          {
+           "orbital": 0,
+           "traits": [
+            "XView"
+           ]
+          },
+          {
+           "orbital": 1,
+           "traits": []
+          }
+         ],
+         "references": [
+          {
+           "kind": "orbital",
+           "path": "orbitals[0]",
+           "callSite": {
+            "ref": "Source.orbitals.XOrbital"
+           },
+           "declaration": {
+            "name": "XOrbital",
+            "entity": {
+             "name": "X"
+            },
+            "traits": [
+             {
+              "name": "XView"
+             }
+            ]
+           },
+           "aliasOrbitals": [
+            {
+             "name": "XOrbital",
+             "entity": {
+              "name": "X"
+             },
+             "traits": [
+              {
+               "name": "XView"
+              }
+             ]
+            },
+            {
+             "name": "YOrbital",
+             "entity": {
+              "name": "Y"
+             },
+             "traits": []
+            }
+           ]
+          },
+          {
+           "kind": "orbital",
+           "path": "orbitals[1]",
+           "callSite": {
+            "ref": "Source.orbitals.YOrbital"
+           },
+           "declaration": {
+            "name": "YOrbital",
+            "entity": {
+             "name": "Y"
+            },
+            "traits": []
+           },
+           "aliasOrbitals": [
+            {
+             "name": "XOrbital",
+             "entity": {
+              "name": "X"
+             },
+             "traits": [
+              {
+               "name": "XView"
+              }
+             ]
+            },
+            {
+             "name": "YOrbital",
+             "entity": {
+              "name": "Y"
+             },
+             "traits": []
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_FOUND",
+     "payload": {
+      "rule": "orbital-ref-closure",
+      "scope": "",
+      "findings": [
+       {
+        "code": "ORB_O_ENTITY_UNMAPPED",
+        "path": "orbitals[0].entities(Thing)",
+        "entity": "Thing"
+       },
+       {
+        "code": "ORB_O_ENTITY_UNMAPPED",
+        "path": "orbitals[0].entities(Other)",
+        "entity": "Other"
+       },
+       {
+        "code": "ORB_O_ENTITY_UNMAPPED",
+        "path": "orbitals[0].entities(Thing)",
+        "entity": "Thing"
+       },
+       {
+        "code": "ORB_O_ENTITY_TARGET_UNKNOWN",
+        "path": "orbitals[1].entities(Rec)",
+        "entity": "Rec"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BORROWS_DESCRIBED",
+        "payload": {
+         "result": {
+          "behavior": "std-x",
+          "orbitals": [
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "XOrbital"
+            },
+            "borrows": [
+             "Other",
+             "Thing"
+            ]
+           },
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "YOrbital"
+            },
+            "borrows": []
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control, a finding of another code is no borrow, and orbital 1 is not orbital 10",
+   "steps": [
+    {
+     "trait": "BehaviorBorrows",
+     "from": "ready",
+     "event": "BORROWS_DESCRIBE",
+     "payload": {
+      "behavior": "std-x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/describe",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         }
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "program/read",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "orbitals": [
+         {
+          "name": "XOrbital",
+          "entity": {
+           "name": "X"
+          },
+          "traits": [
+           {
+            "name": "XView"
+           }
+          ]
+         },
+         {
+          "name": "YOrbital",
+          "entity": {
+           "name": "Y"
+          },
+          "traits": []
+         }
+        ]
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BORROWS_PROBE",
+        "payload": {
+         "file": "/p/std-x.lolo",
+         "program": {
+          "orbitals": [
+           {
+            "name": "XOrbital",
+            "entity": "Source.orbitals.XOrbital.entity",
+            "reference": {
+             "ref": "Source.orbitals.XOrbital",
+             "entity": "X"
+            }
+           },
+           {
+            "name": "YOrbital",
+            "entity": "Source.orbitals.YOrbital.entity",
+            "reference": {
+             "ref": "Source.orbitals.YOrbital",
+             "entity": "Y"
+            }
+           }
+          ]
+         },
+         "kept": [
+          {
+           "orbital": 0,
+           "traits": [
+            "XView"
+           ]
+          },
+          {
+           "orbital": 1,
+           "traits": []
+          }
+         ],
+         "references": [
+          {
+           "kind": "orbital",
+           "path": "orbitals[0]",
+           "callSite": {
+            "ref": "Source.orbitals.XOrbital"
+           },
+           "declaration": {
+            "name": "XOrbital",
+            "entity": {
+             "name": "X"
+            },
+            "traits": [
+             {
+              "name": "XView"
+             }
+            ]
+           },
+           "aliasOrbitals": [
+            {
+             "name": "XOrbital",
+             "entity": {
+              "name": "X"
+             },
+             "traits": [
+              {
+               "name": "XView"
+              }
+             ]
+            },
+            {
+             "name": "YOrbital",
+             "entity": {
+              "name": "Y"
+             },
+             "traits": []
+            }
+           ]
+          },
+          {
+           "kind": "orbital",
+           "path": "orbitals[1]",
+           "callSite": {
+            "ref": "Source.orbitals.YOrbital"
+           },
+           "declaration": {
+            "name": "YOrbital",
+            "entity": {
+             "name": "Y"
+            },
+            "traits": []
+           },
+           "aliasOrbitals": [
+            {
+             "name": "XOrbital",
+             "entity": {
+              "name": "X"
+             },
+             "traits": [
+              {
+               "name": "XView"
+              }
+             ]
+            },
+            {
+             "name": "YOrbital",
+             "entity": {
+              "name": "Y"
+             },
+             "traits": []
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_FOUND",
+     "payload": {
+      "rule": "orbital-ref-closure",
+      "scope": "",
+      "findings": [
+       {
+        "code": "ORB_O_ENTITY_UNMAPPED",
+        "path": "orbitals[10].entities(Far)",
+        "entity": "Far"
+       },
+       {
+        "code": "ORB_O_ENTITY_TARGET_UNKNOWN",
+        "path": "orbitals[0].entities(Rec)",
+        "entity": "Rec"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BORROWS_DESCRIBED",
+        "payload": {
+         "result": {
+          "behavior": "std-x",
+          "orbitals": [
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "XOrbital"
+            },
+            "borrows": []
+           },
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "YOrbital"
+            },
+            "borrows": []
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control, a behavior with a lazy import borrows nothing",
+   "steps": [
+    {
+     "trait": "BehaviorBorrows",
+     "from": "ready",
+     "event": "BORROWS_DESCRIBE",
+     "payload": {
+      "behavior": "std-x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/describe",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         }
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "program/read",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "orbitals": [
+         {
+          "name": "XOrbital",
+          "entity": {
+           "name": "X"
+          },
+          "traits": [
+           {
+            "name": "XView"
+           }
+          ]
+         },
+         {
+          "name": "YOrbital",
+          "entity": {
+           "name": "Y"
+          },
+          "traits": []
+         }
+        ]
+       },
+       "lazy": [
+        {
+         "orbital": "Z"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BORROWS_FOUND",
+        "payload": {
+         "rule": "",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_FOUND",
+     "payload": {
+      "rule": "",
+      "scope": "",
+      "findings": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BORROWS_DESCRIBED",
+        "payload": {
+         "result": {
+          "behavior": "std-x",
+          "orbitals": [
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "XOrbital"
+            },
+            "borrows": []
+           },
+           {
+            "value": {
+             "behavior": "std-x",
+             "orbital": "YOrbital"
+            },
+            "borrows": []
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control, an operator failure answers the error",
+   "steps": [
+    {
+     "trait": "BehaviorBorrows",
+     "from": "ready",
+     "event": "BORROWS_DESCRIBE",
+     "payload": {
+      "behavior": "std-x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/describe",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "BehaviorBorrows",
+     "from": "working",
+     "event": "BORROWS_OPERATOR_FAILED",
+     "payload": {
+      "error": "cannot resolve `std-x`"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BORROWS_FAILED",
+        "payload": {
+         "error": "cannot resolve `std-x`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,11 +1,14 @@
 app std-ml-similarity [
   version: "1.0.0",
   description: "Retrieval rung (R3) — embed a candidate against references through std-llm (LLM_EMBED) and gate on cosine floor + margin; abstains when not confident.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  net: { "openrouter.ai:443": [tcp] },
 ]
 
 uses Spec from "almadar-std/similarity"
 uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
+uses Delay from "std/behaviors/std-delay"
 
 orbital MlSimilarityOrbital {
 
@@ -35,6 +38,44 @@ orbital MlSimilarityOrbital {
   trait SimilarityLlm = Llm.traits.LlmClient {
     listens {
       SimilarityRun.LLM_EMBED -> LLM_EMBED
+      SimEmbedWait.SIM_EMBED_WAITED -> LLM_EMBED_WAITED
+      SimEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      SimEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      SimEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait SimEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: SIM_EMBED_WAITED
+    }
+    listens {
+      SimilarityLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait SimEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      SimilarityLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      SimilarityLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      SimEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      SimEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait SimEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      SimEmbedRequest.HTTP_SEND -> HTTP_SEND
+      SimEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -208,5 +249,5 @@ orbital MlSimilarityOrbital {
     }
   }
 
-  page boot as MlSimilarityPage -> SimilarityRun, SimilarityLlm
+  page boot as MlSimilarityPage -> SimilarityRun, SimilarityLlm, SimEmbedWait, SimEmbedRequest, SimEmbedHttp
 }

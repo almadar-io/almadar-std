@@ -1,0 +1,188 @@
+app std-orb-lint-llm-wire-unrouted [
+  version: "1.0.0",
+  inbound: ["cli-lint-llm-wire-unrouted"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-llm-wire-unrouted — the `orb lint llm-wire-unrouted <file>` command (ORB_X_LLM_WIRE_UNROUTED). std-llm hands its HTTP calls to the composer: LLM_CHAT_WIRE and LLM_EMBED_WIRE carry the request, LLM_CHAT_WIRE_CANCEL and LLM_EMBED_WIRE_CANCEL abort it, and the composer routes each to std-http-request. A composed trait that declares one of these in its `emits`, reaches it from an event a route delivers to it (std-orb-effect-leaves flattens the emit effects of its transitions; the events that lead to the wire event are the transitions' emit chain, followed backwards to a fixed point), and has no trait in the program listening to its wire event, sends a request that never leaves the program: the call waits for an answer nothing sends. A trait no route reaches the wire from (an embed-only composer's chat wire) is not reported, and a cancel wire is reported only when its request wire is routed (nothing is in flight to abort otherwise). A route sourced at the trait (the listener's own orbital) or at the trait's orbital counts. Reports once per trait and wire event at orbitals.<Orbital>.traits.<Trait> (status 500, exit 1). The rule asks std-orb-effect-leaves for the emit effects (heads: emit) and reads each emitted event name from their flat typed nodes. Clean answers `lint llm-wire-unrouted: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-llm-wire-unrouted"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LwEmit = { event : string }
+type LwSource = { kind : string, trait : string, orbital : string }
+type LwListen = { event : string, triggers : string, source : LwSource }
+type LwTransition = { event : string }
+type LwMachine = { transitions : [LwTransition] }
+type LwTrait = { name : string, stateMachine : LwMachine, emits : [LwEmit], listens : [LwListen] }
+type LwOrbital = { name : string, traits : [LwTrait] }
+type LwNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type LwLeaf = { p : string!, n : [LwNode]!, oi : number!, ti : number! }
+type LwWalkSlot = { kind : string!, args : [number] }
+type LwWalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type LwExprItem = { eff : boolean! }
+type LwProgram = { orbitals : [LwOrbital] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintLlmWireUnroutedCodes = { xLlmWireUnrouted : LintCodeDecl }
+
+orbital OrbLintLlmWireUnroutedOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
+
+  entity OrbLintLlmWireUnroutedRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    orbitals : [LwOrbital] = []
+  }
+
+  trait OrbLintLlmWireUnrouted -> OrbLintLlmWireUnroutedRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "llmwire" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: ["emit"] })
+      EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "llmwire" @entity.scope))
+        (set @entity.findings (let ((orbitals @entity.orbitals) (nn : LwNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null }) (nof : [OrbFinding] []) (nos : [string] []) (noe : [LwEmit] []) (nol : [LwListen] [])) (let ((cands (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (array/flatten (array/map (array/range 0 (array/len (object/get (array/nth @orbitals @oi) "traits" []))) (fn ti (let ((tr (array/nth (object/get (array/nth @orbitals @oi) "traits" []) @ti))) (if (not (object/has @tr "stateMachine")) [] (array/map (array/filter @config.wires (fn w (array/some (object/get @tr "emits" @noe) (fn em (= (object/get @em "event" "") @w))))) (fn w { oi: @oi, ti: @ti, on: (object/get (array/nth @orbitals @oi) "name" "") , tn: (object/get @tr "name" "") , w: @w })))))))))))) (array/flatten (array/map @cands (fn c (let ((tr (array/nth (object/get (array/nth @orbitals (object/get @c "oi")) "traits" []) (object/get @c "ti"))) (w (object/get @c "w"))) (let ((evOf (object/fromEntries (array/map (array/range 0 (array/len (object/get (object/get @tr "stateMachine") "transitions" []))) (fn i [(str/concat @i) , (object/get (array/nth (object/get (object/get @tr "stateMachine") "transitions" []) @i) "event" "")])))) (edges (array/flatten (array/map (array/filter @payload.leaves (fn l (and (= (object/get @l "oi") (object/get @c "oi")) (= (object/get @l "ti") (object/get @c "ti")) (str/includes (object/get @l "p") "transitions[")))) (fn l (let ((n : [LwNode] (object/get @l "n" []))) (let ((rti (- (array/len @n) 1)) (rt : LwNode (default (array/nth @n @rti) @nn))) (let ((rtks : [number] (object/get @rt "ks"))) (let ((rtcr : [number] (array/map (array/range 0 (array/len @rtks)) (fn j (- (+ (- @rti (array/sum @rtks)) (array/sum (array/take @rtks (+ @j 1)))) 1))))) (if (and (array/includes ["call", "arr", "proj", "rui"] (object/get @rt "k")) (>= (array/len @rtks) 2) (= (default (array/first (default (object/get (default (array/nth @n (default (array/nth @rtcr 0) 0)) @nn) "lv") [])) "") "emit")) (let ((xi (default (array/nth @rtcr 1) 0)) (x : LwNode (default (array/nth @n @xi) @nn))) (if (or (and (= (object/get @x "k") "nil") (!= (object/get @x "lv") null)) (and (= (object/get @x "k") "bind") (= (object/get @x "wh") "w")) (= (object/get @x "k") "cat")) [{ from: (object/get @evOf (array/nth (str/split (array/nth (str/split (object/get @l "p") "transitions[") 1) "]") 0) ""), to: (if (= (object/get @x "k") "nil") (default (array/first (default (object/get @x "lv") [])) "") (if (= (object/get @x "k") "bind") (object/get @x "tx") (object/get (default (array/nth @n (- @xi 1)) @nn) "tx"))) }] [])) [])))))))))) (let ((reach (array/reduce (array/range 0 (array/len @edges)) [@w] (fn acc k (array/unique (array/concat @acc (array/map (array/filter @edges (fn ed (array/includes @acc (object/get @ed "to" "")))) (fn ed (object/get @ed "from" ""))))))))) (let ((used (array/some (object/get @tr "listens" @nol) (fn l (array/includes @reach (object/get @l "triggers" ""))))) (routedEvents (array/flatten (array/map @orbitals (fn ho (array/flatten (array/map (object/get @ho "traits" []) (fn ht (array/map (array/filter (object/get @ht "listens" @nol) (fn l (and (= (object/get (object/get @l "source" {  }) "trait" "") (object/get @c "tn")) (or (and (= (object/get (object/get @l "source" {  }) "kind" "") "trait") (= (object/get @ho "name" "") (object/get @c "on"))) (and (= (object/get (object/get @l "source" {  }) "kind" "") "orbital") (= (object/get (object/get @l "source" {  }) "orbital" "") (object/get @c "on"))))))) (fn l (object/get @l "event" ""))))))))))) (if (and @used (not (array/includes @routedEvents @w)) (or (not (str/endsWith @w "_CANCEL")) (array/includes @routedEvents (str/replaceAll @w "_CANCEL" "")))) [{ code: @config.codes.xLlmWireUnrouted.code, path: (str/concat "orbitals." (object/get @c "on") ".traits." (object/get @c "tn")) , message: (str/concat (object/get @c "tn") " can emit " @w " (a route delivers an event that leads to it), but no trait in the program listens to " (object/get @c "tn") "." @w ": the request never leaves the program and the call waits for an answer nothing sends") , suggestion: (str/concat "route " (object/get @c "tn") "." @w " to std-http-request in the composing orbital (" (if (str/endsWith @w "_CANCEL") "HTTP_REQUEST_CANCEL" "HTTP_REQUEST") ")") , severity: "error" }] @nof)))))))))))
+        (emit LINT_FINISH { })
+
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "llm-wire-unrouted", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [LwOrbital]!  heads : [string]! }
+        @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      EFFECT_LEAVES_HEARD { requestId : string!  leaves : [LwLeaf]! }
+        @description "std-orb-effect-leaves's answer: the effects to check, flattened."
+      OrbEffectLeaves.EFFECT_LEAVES_EXPANDED -> EFFECT_LEAVES_HEARD
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LwProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      wires : [string] = ["LLM_CHAT_WIRE", "LLM_CHAT_WIRE_CANCEL", "LLM_EMBED_WIRE", "LLM_EMBED_WIRE_CANCEL"]
+        @label "Wire events"
+        @description "The events std-llm emits for its HTTP calls and their aborts; the composer must route each one a route can reach."
+      codes : LintLlmWireUnroutedCodes = { xLlmWireUnrouted: { code: "ORB_X_LLM_WIRE_UNROUTED", category: "cross", description: "A composed std-llm trait can emit a wire event that no trait in the program listens to" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintLlmWireUnroutedCli -> OrbLintLlmWireUnroutedRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint llm-wire-unrouted <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "llm-wire-unrouted") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint llm-wire-unrouted: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "llm-wire-unrouted") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint llm-wire-unrouted: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-llm-wire-unrouted" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint llm-wire-unrouted` with its arguments and working directory."
+        @synonyms "orb lint llm-wire-unrouted"
+      OrbLintLlmWireUnrouted.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LwOrbital]!  heads : [string]! }
+        @description "Flatten the effects of every inline trait whose head is asked."
+      LINT_EXPR_NODES { requestId : string!  nodes : [[LwNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
+      OrbLintLlmWireUnrouted.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
+    }
+  }
+  trait OrbLintExprNodes = Input.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string LwWalkSlot!  projections : Map string LwWalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [LwExprItem]! }
+        @description "A rule asks to flatten expressions."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbEffectLeaves.LINT_EXPR_ASK -> LINT_EXPR_ASK
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintLlmWireUnroutedCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintLlmWireUnroutedOrbitalStart -> OrbLintLlmWireUnrouted, OrbLintLlmWireUnroutedCli, OrbLintInput, Packs, OrbEffectLeaves, OrbLintExprNodes, Versions
+}

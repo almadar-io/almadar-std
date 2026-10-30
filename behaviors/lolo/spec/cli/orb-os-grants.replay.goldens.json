@@ -1,0 +1,299 @@
+{
+  "atom": "cli/atoms/std-orb-os-grants.lolo",
+  "trait": "OrbOsGrants",
+  "cases": [
+    {
+      "id": "a relative file is joined to the working directory and proved",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an absolute file is proved as given",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"/a/shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "--final checks the finished program",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"/a/shop.orb\", \"--final\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        }
+      ]
+    },
+    {
+      "id": "the findings print as pretty JSON (status 200)",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_DONE",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "missing",
+                  "orbital": "Files",
+                  "call": "os/read-file",
+                  "entry": "fs \"/etc/passwd\" read",
+                  "site": "orbitals[0 (Files)].traits[0 (Reader)].stateMachine.transitions[0].effects[0]",
+                  "grant": "fs: { \"/etc/passwd\": [read] }",
+                  "app": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"findings\": [\n    {\n      \"code\": \"missing\",\n      \"orbital\": \"Files\",\n      \"call\": \"os/read-file\",\n      \"entry\": \"fs \\\"/etc/passwd\\\" read\",\n      \"site\": \"orbitals[0 (Files)].traits[0 (Reader)].stateMachine.transitions[0].effects[0]\",\n      \"grant\": \"fs: { \\\"/etc/passwd\\\": [read] }\",\n      \"app\": true\n    }\n  ]\n}",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a clean file prints an empty list",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_DONE",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"findings\": []\n}",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a refused ask prints its reason (status 500)",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_REFUSED",
+          "from": "checking",
+          "payload": {
+            "error": "program/os-grants: Failed to read /x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: program/os-grants: Failed to read /x"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "no file is the usage",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb os-grants <FILE> [--final]"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreadable command body is the usage",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb os-grants <FILE> [--final]"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unknown second argument is the usage",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.orb\", \"--bogus\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb os-grants <FILE> [--final]"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "three arguments are the usage",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.orb\", \"--final\", \"x\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb os-grants <FILE> [--final]"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "two files are the usage",
+      "steps": [
+        {
+          "trait": "OrbOsGrants",
+          "event": "GRANTS_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.orb\", \"b.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GRANTS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb os-grants <FILE> [--final]"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    }
+  ]
+}

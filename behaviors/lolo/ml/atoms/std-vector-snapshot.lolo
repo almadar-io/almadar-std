@@ -1,7 +1,7 @@
 app std-vector-snapshot [
   version: "1.0.0",
   description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, userAnchor, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
-  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
   fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
@@ -13,6 +13,8 @@ uses Write from "std/behaviors/std-vector-write"
 uses Quantize from "std/behaviors/std-vector-quantize"
 uses F32 from "std/behaviors/std-f32"
 uses Delay from "std/behaviors/std-delay"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
 uses Sig6 from "std/behaviors/std-sig6"
 uses BigCmp from "std/behaviors/std-bigcmp"
 
@@ -103,86 +105,66 @@ orbital VectorSnapshotOrbital {
     }
   }
 
-  trait SnapLlmOrShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORS
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOrShared = Resolve.traits.ResolveLlmOrShared {
     listens {
       SnapResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+      ResolveOrSharedWait.WAITED_ORS -> LLM_EMBED_WAITED
+      ResolveOrSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait SnapLlmOrOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_ORO
-    }
-    config {
-      embedProvider: openrouter
-      embedOrigin: "https://openrouter.ai"
-      embedBasePath: "/api/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPEN_ROUTER_API_KEY"
-    }
+  trait ResolveLlmOrOwn = Resolve.traits.ResolveLlmOrOwn {
     listens {
       SnapResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+      ResolveOrOwnWait.WAITED_ORO -> LLM_EMBED_WAITED
+      ResolveOrOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait SnapLlmOaShared = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAS
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmOaShared = Resolve.traits.ResolveLlmOaShared {
     listens {
       SnapResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+      ResolveOaSharedWait.WAITED_OAS -> LLM_EMBED_WAITED
+      ResolveOaSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait SnapLlmOaOwn = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_OAO
-    }
-    config {
-      embedProvider: openai
-      embedOrigin: "https://api.openai.com"
-      embedBasePath: "/v1"
-      embedModel: "baai/bge-base-en-v1.5"
-      embedApiKey: "OPENAI_API_KEY"
-    }
+  trait ResolveLlmOaOwn = Resolve.traits.ResolveLlmOaOwn {
     listens {
       SnapResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+      ResolveOaOwnWait.WAITED_OAO -> LLM_EMBED_WAITED
+      ResolveOaOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
-  trait SnapLlmLm = Llm.traits.LlmClient {
-    events {
-      LLM_EMBED: LLM_EMBED_LM
-    }
-    config {
-      embedProvider: lmstudio
-      embedOrigin: "http://127.0.0.1:1234"
-      embedBasePath: "/v1"
-      embedModel: "text-embedding-bge-base-en-v1.5"
-      embedApiKey: "EMBEDDING_API_KEY"
-    }
+  trait ResolveLlmLm = Resolve.traits.ResolveLlmLm {
     listens {
       SnapResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+      ResolveLmWait.WAITED_LM -> LLM_EMBED_WAITED
+      ResolveLmRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
     }
   }
-
+  trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
+  trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest {}
+  trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp {}
+  trait ResolveOrOwnWait = Resolve.traits.ResolveOrOwnWait {}
+  trait ResolveOrOwnRequest = Resolve.traits.ResolveOrOwnRequest {}
+  trait ResolveOrOwnHttp = Resolve.traits.ResolveOrOwnHttp {}
+  trait ResolveOaSharedWait = Resolve.traits.ResolveOaSharedWait {}
+  trait ResolveOaSharedRequest = Resolve.traits.ResolveOaSharedRequest {}
+  trait ResolveOaSharedHttp = Resolve.traits.ResolveOaSharedHttp {}
+  trait ResolveOaOwnWait = Resolve.traits.ResolveOaOwnWait {}
+  trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest {}
+  trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp {}
+  trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmRequest = Resolve.traits.ResolveLmRequest {}
+  trait ResolveLmHttp = Resolve.traits.ResolveLmHttp {}
 
   trait SnapResolve = Resolve.traits.VectorResolve {
     listens {
@@ -190,16 +172,16 @@ orbital VectorSnapshotOrbital {
       Snapshot.USER_STORE_READ -> USER_STORE_READ
       SnapStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
       SnapStore.VECTOR_REFUSED -> VECTOR_REFUSED
-      SnapLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      SnapLlmOrShared.LLM_FAILED -> LLM_FAILED
-      SnapLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      SnapLlmOrOwn.LLM_FAILED -> LLM_FAILED
-      SnapLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      SnapLlmOaShared.LLM_FAILED -> LLM_FAILED
-      SnapLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      SnapLlmOaOwn.LLM_FAILED -> LLM_FAILED
-      SnapLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
-      SnapLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
       SnapWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
       SnapWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
       RESOLVE {
@@ -473,5 +455,5 @@ orbital VectorSnapshotOrbital {
     }
   }
 
-  page boot as VectorSnapshotPage -> Snapshot, SnapResolve, SnapStore, SnapWrite, SnapQuantize, SnapF32, SnapSig6, SnapBigCmp, SnapDelay, SnapLlmOrShared, SnapLlmOrOwn, SnapLlmOaShared, SnapLlmOaOwn, SnapLlmLm
+  page boot as VectorSnapshotPage -> Snapshot, SnapResolve, SnapStore, SnapWrite, SnapQuantize, SnapF32, SnapSig6, SnapBigCmp, SnapDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
 }

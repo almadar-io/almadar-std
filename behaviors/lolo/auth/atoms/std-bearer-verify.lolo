@@ -1,10 +1,10 @@
 app std-bearer-verify [
   version: "1.0.0",
-  description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksOrigin and jwksPath knobs with an http GET, kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_VERIFIED with the owner as viewer id and the key claims. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS origin in the app egress list.",
-  egress: ["https://www.googleapis.com"],
+  description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksPath knob with one GET asked of a composed std-http-client trait (BV_GET out; its HTTP_REPLIED routes to JWKS_RAW and its HTTP_FAILED to JWKS_UNREACHABLE; the host, port and TLS name are that trait's knobs), kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_VERIFIED with the owner as viewer id and the key claims. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS host as a net grant on the program that composes the HTTP client.",
   env: ["ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST", "AUTH_PROVIDER", "FIREBASE_PROJECT_ID", "OIDC_ISSUER_URL", "OIDC_AUDIENCE"]
 ]
 uses Spec from "almadar-std/bearer-verify"
+type HttpHeader = { name : string!, value : string! }
 type BearerKeyClaim = { name : string!, value : string! }
 type BearerJob = { requestId : number, authorization : string }
 type BearerHeader = { kid : string, alg : string }
@@ -129,10 +129,7 @@ orbital BearerVerifyOrbital {
           (do
             (set @entity.token @token)
                 (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
-            (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split @token ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" "")) (http GET @config.jwksOrigin @config.jwksPath {
-              headers: { Accept: "application/json" },
-              timeoutMs: @config.timeoutMs
-            } { emit: { success: JWKS_REPLIED, failure: JWKS_UNREACHABLE } }))))))
+            (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split @token ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" "")) (emit BV_GET { key: "jwks", method: "GET", target: @config.jwksPath, headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" }))))))
         (set @entity.queue (array/slice @entity.queue 1))
       BEARER_NEXT -> idle
         (emit BEARER_PUMP {})
@@ -160,6 +157,8 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
+      JWKS_RAW -> fetching
+        (emit JWKS_REPLIED { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) "") })
       JWKS_REPLIED -> idle when (or (!= @payload.status 200) (not (json/valid @payload.body)))
         (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "keys-unavailable" })
         (emit BEARER_PUMP {})
@@ -394,6 +393,16 @@ orbital BearerVerifyOrbital {
       BEARER_PUMP {}
         @description "Internal: start the oldest queued request."
         @tier "secondary"
+      BV_GET -> external {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the key document request, for the HTTP client."
+        @tier "secondary"
       JWKS_REPLIED {
         status : number!
         headers : Map string string
@@ -401,15 +410,21 @@ orbital BearerVerifyOrbital {
       }
         @description "Internal: the key document reply."
         @tier "secondary"
+    }
+
+    listens {
+      JWKS_RAW {
+        status : number!
+        headers : Map string string
+        body : bytes!
+        key : string
+      }
+        @description "Internal: the key document reply of the HTTP client, before its body is read as text."
       JWKS_UNREACHABLE {
         error : string!
         kind : string!
       }
         @description "Internal: the key document fetch produced no reply."
-        @tier "secondary"
-    }
-
-    listens {
       BEARER_VERIFY -> input {
         requestId : number
         authorization : string
@@ -449,11 +464,6 @@ orbital BearerVerifyOrbital {
     }
 
     config {
-      jwksOrigin : url = "https://www.googleapis.com"
-        @label "JWKS origin"
-        @description "The origin (scheme://host, no path) the signing keys are published at; it must be in the app egress list."
-        @synonyms "key set origin, jwks host"
-        @tier "infra"
       keysFormat : string = "jwks"
         @label "Key document format"
         @description "jwks reads a JWK Set (OIDC jwks_uri; Firebase securetoken JWK endpoint); x509 reads a document of kid to PEM certificate (Firebase /robot/v1/metadata/x509/securetoken@system.gserviceaccount.com), each certificate read through std-x509."
@@ -461,7 +471,7 @@ orbital BearerVerifyOrbital {
         @tier "domain"
       jwksPath : string = "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
         @label "JWKS path"
-        @description "The path of the key set on jwksOrigin (OIDC jwks_uri path)."
+        @description "The path of the key set on the host the composed HTTP client trait is configured with (OIDC jwks_uri path)."
         @synonyms "key set path"
         @tier "infra"
       issuerFromEnv : boolean = false
@@ -507,11 +517,6 @@ orbital BearerVerifyOrbital {
         @description "How many requests may wait behind the one in flight; one beyond it is refused with busy."
         @synonyms "queue limit, backlog"
         @tier "domain"
-      timeoutMs : number = 10000
-        @label "Fetch timeout (ms)"
-        @description "Milliseconds the key fetch may take."
-        @synonyms "timeout"
-        @tier "infra"
     }
   }
 

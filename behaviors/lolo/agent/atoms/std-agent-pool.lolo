@@ -1,7 +1,8 @@
 app std-agent-pool [
   version: "1.0.0",
   description: "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, fields, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors.",
-  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"]
+  egress: ["http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"],
+  net: { "openrouter.ai:443": [tcp] },
 ]
 ;; @capabilities "behavior pool, shared generated content, retrieve by meaning, reuse generated behaviors, quality signals, retire bad content"
 
@@ -30,6 +31,12 @@ type PoolWrite = {
 }
 
 uses Llm from "std/behaviors/std-llm"
+
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+uses Delay from "std/behaviors/std-delay"
 uses Storage from "std/behaviors/std-storage"
 
 orbital AgentPoolOrbital {
@@ -97,6 +104,44 @@ orbital AgentPoolOrbital {
   trait AgentPoolLlm = Llm.traits.LlmClient {
     listens {
       AgentPoolWriter.LLM_EMBED -> LLM_EMBED
+      PoolEmbedWait.POOL_EMBED_WAITED -> LLM_EMBED_WAITED
+      PoolEmbedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      PoolEmbedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      PoolEmbedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+
+  trait PoolEmbedWait = Delay.traits.Delay {
+    events {
+      ELAPSED: POOL_EMBED_WAITED
+    }
+    listens {
+      AgentPoolLlm.LLM_EMBED_WAIT -> START
+    }
+  }
+
+  trait PoolEmbedRequest = Req.traits.HttpRequest {
+    listens {
+      AgentPoolLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
+      AgentPoolLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      PoolEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
+      PoolEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PoolEmbedHttp = Http.traits.HttpClient {
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "EMBEDDING_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      PoolEmbedRequest.HTTP_SEND -> HTTP_SEND
+      PoolEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
     }
   }
 
@@ -474,5 +519,5 @@ orbital AgentPoolOrbital {
     }
   }
 
-  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, AgentPoolStorage
+  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, PoolEmbedWait, PoolEmbedRequest, PoolEmbedHttp, AgentPoolStorage
 }
