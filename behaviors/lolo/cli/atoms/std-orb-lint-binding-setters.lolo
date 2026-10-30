@@ -91,9 +91,10 @@ orbital OrbLintBindingSettersOrbital {
         (emit LINT_EXPR_ASK { requestId: (str/concat "binding-setters:" @entity.scope), items: (array/map @payload.asks (fn a { e: (object/get @a "x"), eff: (or (= (object/get @a "w") "e") (= (object/get @a "w") "t")) })) })
       LINT_EXPR_NODES -> ready when (= @payload.requestId (str/concat "binding-setters:" @entity.scope))
         (set @entity.toks (let ((nn : SsNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null }) (nostr : [string] []) (nofl : [SsNode] []) (nask : SsAsk { oi: 0, ti: 0, w: "", j: 0, x: null }))
-          (array/map (array/range 0 (array/len @entity.asks)) (fn xi
-            (let ((a : SsAsk (default (array/nth @entity.asks @xi) @nask)) (fl : [SsNode] (default (array/nth @payload.nodes @xi) @nofl)))
-              (let ((toks : [string] (array/flatten (array/map (array/range 0 (array/len @fl)) (fn i
+          (let ((keys : [string] (array/map @entity.asks (fn ka (str/concat (if (or (= (object/get @ka "w") "e") (= (object/get @ka "w") "t")) "e" "x") (bytes/to-base64 (bytes/from-string (json/stringify (object/get @ka "x")))))))))
+            (let ((firstIdx : Map string number (default (object/fromEntries (array/map (array/range 0 (array/len @entity.asks)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {})))
+              (let ((ids : [number] (object/values @firstIdx)))
+                (let ((ukeys : [string] (array/map @ids (fn xk (default (array/nth @keys @xk) "")))) (tl : [[string]] (array/map @ids (fn xi (let ((a : SsAsk (default (array/nth @entity.asks @xi) @nask)) (fl : [SsNode] (default (array/nth @payload.nodes @xi) @nofl))) (let ((toks : [string] (array/flatten (array/map (array/range 0 (array/len @fl)) (fn i
                 (let ((nd : SsNode (default (array/nth @fl @i) @nn)))
                   (let ((kind : string (object/get @nd "k")) (nm : string (object/get @nd "nm")) (pa : [string] (object/get @nd "pa")))
                     (if (and (= @kind "bind") (= (object/get @nd "wh") "w"))
@@ -127,8 +128,9 @@ orbital OrbLintBindingSettersOrbital {
                                     (if (and (= @h0 "persist") (>= @cn 4) (or (= @h1 "update") (= @h1 "delete")) (= (object/get @c3 "k") "bind") (= (object/get @c3 "nm") "entity") (= (object/get @c3 "wh") "w") (= (array/len (object/get @c3 "pa")) 0))
                                       ["p:1"]
                                       @nostr)))))))
-                        @nostr)))))))))
-                (let ((tk : SsXT { k: (str/concat (object/get @a "oi") "|" (object/get @a "ti") "|" (object/get @a "w") "|" (object/get @a "j")), t: @toks })) @tk)))))))
+                        @nostr))))))))) @toks))))))
+                  (let ((tokD : Map string [string] (default (object/fromEntries (array/map (array/range 0 (array/len @ids)) (fn j [(default (array/nth @ukeys @j) ""), (default (array/nth @tl @j) @nostr)]))) {})))
+                    (array/map (array/range 0 (array/len @entity.asks)) (fn xi (let ((a : SsAsk (default (array/nth @entity.asks @xi) @nask))) (let ((tk : SsXT { k: (str/concat (object/get @a "oi") "|" (object/get @a "ti") "|" (object/get @a "w") "|" (object/get @a "j")), t: (default (object/get @tokD (default (array/nth @keys @xi) "")) @nostr) })) @tk)))))))))))
         (emit BS_ROWS { })
       BS_ROWS -> ready
         (set @entity.rows (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nostr : [string] []) (busEx : [string] @entity.busExcluded) (byKey : Map string [SsXT] (default (array/groupBy @entity.toks "k") {})))

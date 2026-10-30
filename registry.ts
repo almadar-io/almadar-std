@@ -21,6 +21,7 @@ import { OBJECT_OPERATORS } from './modules/object.js';
 import { JSON_OPERATORS } from './modules/json.js';
 import { CSV_OPERATORS } from './modules/csv.js';
 import { XML_OPERATORS } from './modules/xml.js';
+import { YAML_OPERATORS } from './modules/yaml.js';
 import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
@@ -106,6 +107,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...ECDH_OPERATORS,
   ...AES_GCM_OPERATORS,
   ...XML_OPERATORS,
+  ...YAML_OPERATORS,
 };
 
 /**
@@ -163,6 +165,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   gzip: GZIP_OPERATORS,
   brotli: BROTLI_OPERATORS,
   xml: XML_OPERATORS,
+  yaml: YAML_OPERATORS,
 };
 
 // ============================================================================

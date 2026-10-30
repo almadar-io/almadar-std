@@ -1,0 +1,1446 @@
+{
+  "atom": "cli/atoms/std-orb-firestore-indexes.lolo",
+  "trait": "OrbFirestoreIndexes",
+  "note": " Bodies are two-space indented firestore.indexes.json text without the trailing newline (the printed answer); the file written by --out keeps the newline.",
+  "cases": [
+    {
+      "id": "call-malformed-body-is-usage",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "call-well-formed-parses-args",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [\"p.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_ARGS_PARSE",
+                "payload": {
+                  "stage": "firestore-indexes",
+                  "argv": [
+                    "p.lolo"
+                  ],
+                  "flags": [
+                    {
+                      "name": "scope",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "out",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-file-is-usage",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [],
+            "positionals": [],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-files-is-usage",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "a",
+              "b"
+            ],
+            "positionals": [
+              "a",
+              "b"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "parse-error-is-usage",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "a"
+            ],
+            "positionals": [
+              "a"
+            ],
+            "flags": {},
+            "errors": [
+              "unknown flag --x"
+            ]
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-scope-is-usage",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "a"
+            ],
+            "positionals": [
+              "a"
+            ],
+            "flags": {
+              "scope": [
+                "global"
+              ]
+            },
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-file-default-scope-reads",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {},
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collection-scope-reads",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {
+              "scope": [
+                "collection"
+              ]
+            },
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collection-group-scope-reads",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {
+              "scope": [
+                "collection-group"
+              ]
+            },
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION_GROUP\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "out-flag-reads",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_ARGS_DONE",
+          "from": "parsing",
+          "payload": {
+            "stage": "firestore-indexes",
+            "words": [
+              "p.lolo"
+            ],
+            "positionals": [
+              "p.lolo"
+            ],
+            "flags": {
+              "out": [
+                "fi.json"
+              ]
+            },
+            "errors": []
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering"
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "read-failure-answers-500-from-reading",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_FAILED",
+          "from": "reading",
+          "payload": {
+            "error": "no such file"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: no such file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-failure-answers-500-from-writing",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_FAILED",
+          "from": "writing",
+          "payload": {
+            "error": "denied"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "wrote-answers-path",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_WROTE",
+          "from": "writing",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "out": "fi.json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "wrote fi.json"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-field-index-ascending",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "order-by-defaults-ascending",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a"
+                        ],
+                        "orderBy": "t"
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "order-by-desc",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a"
+                        ],
+                        "orderBy": "t:desc"
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "order-by-explicit-asc",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a"
+                        ],
+                        "orderBy": "t:asc"
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collection-group-scope",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION_GROUP",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION_GROUP\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-field-index-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "non-persistent-entity-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "runtime",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity-without-collection-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity-without-indexes-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-without-entity-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {}
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-orbitals-empty-file",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-entities-keep-declaration-order",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      },
+                      {
+                        "fields": [
+                          "c"
+                        ],
+                        "orderBy": "d:desc"
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                },
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "x",
+                          "y"
+                        ]
+                      }
+                    ],
+                    "collection": "users"
+                  }
+                },
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "z"
+                        ]
+                      }
+                    ],
+                    "collection": "skip"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"b\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"c\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"d\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    },\n    {\n      \"collectionGroup\": \"users\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"x\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"y\",\n          \"order\": \"ASCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "out-set-writes-file-state",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "fi.json",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing"
+          }
+        }
+      ]
+    }
+  ]
+}

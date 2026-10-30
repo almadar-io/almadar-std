@@ -1,7 +1,7 @@
 {
  "atom": "ops/atoms/std-app-hosting-board.lolo",
  "trait": "AppHostingStatus",
- "note": "from std-app-hosting-board-program.test.ts; the gcloud token and App Hosting REST replies are host answers",
+ "note": "from std-app-hosting-board-program.test.ts; the App Hosting REST replies are host answers; the REST token is the host-held GCLOUD_ACCESS_TOKEN credential, never a payload",
  "cases": [
   {
    "id": "status-load-queues-and-pumps",
@@ -49,6 +49,108 @@
       "state": "idle",
       "neverEmits": [
        "AH_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "start-of-a-status-read-asks-the-rollouts-with-no-token-step",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_START",
+     "payload": {},
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      },
+      "statusCache": []
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "AH_ROLLOUTS",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "AH_GCLOUD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rollouts-sends-the-rest-read-carrying-no-credential-header",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_ROLLOUTS",
+     "payload": {},
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AH_HTTP_SEND",
+        "payload": {
+         "key": "rollouts",
+         "method": "GET",
+         "headers": [],
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-rollouts-read-answers-unknown",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_FAILED",
+     "payload": {
+      "key": "rollouts",
+      "error": "credential not held",
+      "kind": "denied"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "AH_PUMP",
+        "payload": {}
+       }
       ]
      }
     }

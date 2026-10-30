@@ -1,0 +1,100 @@
+app perkey-probe [
+  version: "1.0.0",
+  description: "scratch probe: one trait whose rows are addressed per a payload key (the per listen clause)"
+]
+
+orbital PerKeyOrbital {
+  entity Slot [runtime] {
+    id : string!
+    val : number = 0
+  }
+
+  trait Caller -> Slot [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (emit SEND { key: @payload.key, n: @payload.n })
+      BACK -> idle
+        (emit REPLY { key: @payload.key })
+    }
+
+    emits {
+      SEND -> external {
+        key : string!
+        n : number!
+      }
+      REPLY -> external {
+        key : string!
+      }
+    }
+
+    listens {
+      GO {
+        key : string!
+        n : number!
+      }
+      BACK {
+        key : string!
+      }
+    }
+  }
+
+  trait PerKey -> Slot [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SEND -> busy
+        (set @entity.val @payload.n)
+        (emit SENT { key: @entity.id, val: @entity.val })
+      REPLY -> idle
+        (emit STRAY { key: @payload.key, holder: @entity.id })
+    }
+
+    state busy {
+      INIT -> busy
+      SEND -> busy
+        (emit REFUSED { key: @payload.key, holder: @entity.id, val: @entity.val })
+      REPLY -> idle
+        (emit REPLIED { key: @payload.key, holder: @entity.id, val: @entity.val })
+        (set @entity.val 0)
+    }
+
+    listens {
+      SEND {
+        key : string!
+        n : number!
+      }
+      REPLY {
+        key : string!
+      }
+      Caller.SEND -> SEND per @payload.key
+      Caller.REPLY -> REPLY per @payload.key
+    }
+
+    emits {
+      SENT -> external {
+        key : string!
+        val : number!
+      }
+      REFUSED -> external {
+        key : string!
+        holder : string!
+        val : number!
+      }
+      REPLIED -> external {
+        key : string!
+        holder : string!
+        val : number!
+      }
+      STRAY -> external {
+        key : string!
+        holder : string!
+      }
+    }
+  }
+
+  page boot as PerKeyPage -> Caller, PerKey
+}

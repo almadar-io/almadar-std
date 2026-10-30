@@ -1,0 +1,121 @@
+app std-orb-app-hosting-keys [
+  version: "1.0.0",
+  inbound: ["cli-app-hosting-keys"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-app-hosting-keys — the `orb app-hosting-keys <program> <apphosting.yaml>` command (spec/cli/orb-app-hosting-keys.lolo). The program is resolved (program/read with resolve, from the path made absolute against the command's cwd) and the names of its `env` grant are the declared keys; the default of every `secret`-typed config knob of every trait of the resolved program (a credential name the kernel resolves) counts as declared for the undeclared check but is never required in the file; the file is read and parsed with yaml/parse into its `env` list of variables. A declared name absent from the file's variables is reported as `missing`, and a variable the file makes available at run time (no availability list, or one that names RUNTIME) that the program does not declare as `undeclared`; a variable available at build time only is not compared. Clean answers `app-hosting-keys: clean` (status 200); findings answer one line each in declaration order, missing before undeclared (status 500). A wrong word count answers the usage (status 400); an unreadable program or file, or a file that does not parse as an apphosting.yaml, answers status 500 on `Error: <reason>`."
+]
+uses Spec from "almadar-std/orb-app-hosting-keys"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type AppHostingVar = { variable : string!, value : string?, secret : string?, availability : [string]? }
+type AppHostingFile = { env : [AppHostingVar]? }
+type KeysEnv = { env : [string]? }
+type KeysNode = string | number | boolean | [KeysNode?] | Map string KeysNode?
+type KeysKnob = { type : string!, default : KeysNode? }
+type KeysTrait = { config : Map string KeysKnob }
+type KeysOrbital = { traits : [KeysTrait]? }
+type KeysProgram = { osGrants : KeysEnv?, orbitals : [KeysOrbital]? }
+type KeysResolved = { program : KeysProgram? }
+
+orbital OrbAppHostingKeysOrbital {
+  entity AppHostingKeysRun [runtime] {
+    id : string!
+    program : string = ""
+    file : string = ""
+    cwd : string = ""
+    declared : [string] = []
+    secrets : [string] = []
+  }
+
+  trait OrbAppHostingKeys -> AppHostingKeysRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      APP_HOSTING_KEYS_CALLED -> ready when (!= (array/len (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 2)
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 400, body: "usage: orb app-hosting-keys <program> <apphosting.yaml>" })
+      APP_HOSTING_KEYS_CALLED -> parsing when (= (array/len (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 2)
+        (set @entity.program (default (array/nth (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") 0) ""))
+        (set @entity.cwd (default (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "cwd") ""))
+        (set @entity.file (default (array/nth (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) ""))
+        (emit APP_HOSTING_KEYS_READ_PROGRAM {})
+    }
+
+    state parsing {
+      INIT -> parsing
+      APP_HOSTING_KEYS_READ_PROGRAM -> readingProgram when (not (os/path-is-absolute @entity.program))
+        (program/read "" { resolve: true text: false path: (str/concat @entity.cwd "/" @entity.program) } { key: "lowered" emit: { success: APP_HOSTING_KEYS_PROGRAM_LOWERED, failure: APP_HOSTING_KEYS_FAILED } })
+      APP_HOSTING_KEYS_READ_PROGRAM -> readingProgram when (os/path-is-absolute @entity.program)
+        (program/read "" { resolve: true text: false path: @entity.program } { key: "lowered" emit: { success: APP_HOSTING_KEYS_PROGRAM_LOWERED, failure: APP_HOSTING_KEYS_FAILED } })
+    }
+
+    state readingProgram {
+      INIT -> readingProgram
+      APP_HOSTING_KEYS_FAILED -> ready
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "unreadable")) })
+      APP_HOSTING_KEYS_PROGRAM_LOWERED -> readingProgram
+        (let ((program (object/get (default (json/parse (json/stringify @payload.result) KeysResolved) { program: { osGrants: { env: [] }, orbitals: [] } }) "program" { osGrants: { env: [] }, orbitals: [] })))
+          (do (set @entity.declared (object/get (default (object/get @program "osGrants" { env: [] }) { env: [] }) "env" []))
+          (set @entity.secrets (array/unique (array/flatten (array/map (object/get @program "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/filter (array/map (array/filter (object/values (object/get @t "config" {})) (fn k (= (object/get @k "type") "secret"))) (fn k (let ((d (object/get @k "default"))) (if (validate/string @d) @d "")))) (fn n (!= @n "")))))))))))))
+        (emit APP_HOSTING_KEYS_READ_FILE {})
+      APP_HOSTING_KEYS_READ_FILE -> readingFile when (not (os/path-is-absolute @entity.file))
+        (os/read-file { anchor: "cwd" path: @entity.file } { key: "file" emit: { success: APP_HOSTING_KEYS_FILE_READ, failure: APP_HOSTING_KEYS_FAILED } })
+      APP_HOSTING_KEYS_READ_FILE -> readingFile when (os/path-is-absolute @entity.file)
+        (os/read-file (str/concat "/" (str/slice @entity.file 1 (str/len @entity.file))) { key: "file" emit: { success: APP_HOSTING_KEYS_FILE_READ, failure: APP_HOSTING_KEYS_FAILED } })
+    }
+
+    state readingFile {
+      INIT -> readingFile
+      APP_HOSTING_KEYS_FAILED -> ready
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "unreadable")) })
+      APP_HOSTING_KEYS_FILE_READ -> ready when (= (yaml/parse (default (bytes/to-string @payload.data) "") AppHostingFile) null)
+        (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: (str/concat "Error: " @entity.file " is not an apphosting.yaml") })
+      APP_HOSTING_KEYS_FILE_READ -> ready when (!= (yaml/parse (default (bytes/to-string @payload.data) "") AppHostingFile) null)
+        (let ((vars (object/get (default (yaml/parse (default (bytes/to-string @payload.data) "") AppHostingFile) { env: [] }) "env" [])))
+          (let ((set (array/map @vars (fn v (object/get @v "variable")))))
+            (let ((missing (array/filter @entity.declared (fn n (and (not (array/includes @set @n)) (not (array/includes @config.platformEnv @n))))))
+                  (undeclared (array/map (array/filter @vars (fn v (and (not (array/includes @entity.declared (object/get @v "variable"))) (not (array/includes @entity.secrets (object/get @v "variable"))) (array/includes (default (object/get @v "availability") ["BUILD", "RUNTIME"]) "RUNTIME")))) (fn v (object/get @v "variable")))))
+              (emit APP_HOSTING_KEYS_ANSWERED { status: (if (= (+ (array/len @missing) (array/len @undeclared)) 0) 200 500), body: (if (= (+ (array/len @missing) (array/len @undeclared)) 0) "app-hosting-keys: clean" (str/join (array/concat (array/map @missing (fn n (str/concat "missing: " @n))) (array/map @undeclared (fn n (str/concat "undeclared: " @n)))) "\n")) }))))
+    }
+
+    emits {
+      APP_HOSTING_KEYS_READ_PROGRAM {}
+        @description "Internal: read the program file."
+        @tier "internal"
+      APP_HOSTING_KEYS_READ_FILE {}
+        @description "Internal: read the apphosting.yaml."
+        @tier "internal"
+      APP_HOSTING_KEYS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      APP_HOSTING_KEYS_PROGRAM_LOWERED { result : SExpr! }
+        @description "The program lowered."
+        @tier "internal"
+      APP_HOSTING_KEYS_FILE_READ { data : bytes! }
+        @description "The apphosting.yaml read."
+        @tier "internal"
+      APP_HOSTING_KEYS_FAILED { error : string }
+        @description "The program or the file could not be read or lowered."
+        @tier "internal"
+    }
+
+    listens {
+      APP_HOSTING_KEYS_CALLED -> inbound "cli-app-hosting-keys" answers APP_HOSTING_KEYS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb app-hosting-keys`."
+        @synonyms "orb app-hosting-keys, check apphosting.yaml env keys, App Hosting key check, declared env versus apphosting.yaml"
+    }
+
+    config {
+      platformEnv : [string] = ["PORT", "K_SERVICE", "K_REVISION", "K_CONFIGURATION"]
+        @label "Platform-set variables"
+        @description "Names the App Hosting container contract sets itself (Cloud Run injects PORT, K_SERVICE, K_REVISION and K_CONFIGURATION, and apphosting.yaml must not set PORT): a program may declare one, and it is never reported missing when the file does not set it. A declared name outside this list is still required in the file."
+    }
+  }
+
+  page boot as OrbAppHostingKeysOrbitalStart -> OrbAppHostingKeys
+}

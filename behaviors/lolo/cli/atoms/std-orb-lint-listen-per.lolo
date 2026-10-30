@@ -1,0 +1,156 @@
+app std-orb-lint-listen-per [
+  version: "1.0.0",
+  inbound: ["cli-lint-listen-per"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-listen-per — the `orb lint listen-per <file>` command (EXEC-STEP-1a). A trait whose listens carry a `per <expr>` clause is stepped on rows addressed by that key, so its entity must be a `[runtime]` entity that declares an `id : string` field (ORB_X_LISTEN_PER_ENTITY) and the trait must not be placed on a route page (ORB_X_LISTEN_PER_ROUTED_PAGE): a route page mounts one viewer frame, never keyed rows. Both are errors. Clean answers `lint listen-per: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-listen-per"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type PerNode = string | number | boolean | [PerNode?] | Map string PerNode?
+type PerField = { name : string, type : string }
+type PerEntity = { name : string, persistence : string, fields : [PerField] }
+type PerListen = { event : string, triggers : string, key : PerNode? }
+type PerTrait = { name : string, linkedEntity : string, listens : [PerListen] }
+type PerPageTrait = { ref : string, name : string }
+type PerPage = { path : string, protocol : string, name : string, traits : [PerPageTrait] }
+type PerOrbital = { name : string, entity : PerEntity, auxiliaryEntities : [PerEntity], traits : [PerTrait], pages : [PerPage] }
+type PerProgram = { orbitals : [PerOrbital] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenPerCodes = { listenWildcardUnkeyed : LintCodeDecl }
+
+orbital OrbLintListenPerOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintListenPerRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintListenPer -> OrbLintListenPerRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb
+          (let ((ents (array/concat [(object/get @orb "entity" {})] (object/get @orb "auxiliaryEntities" []))) (pgs (object/get @orb "pages" [])) (on (object/get @orb "name" "")))
+            (array/flatten (array/map (object/get @orb "traits" []) (fn tr
+              (let ((tn (object/get @tr "name" "")))
+                (if (not (array/some (object/get @tr "listens" []) (fn l (object/has @l "key"))))
+                  []
+                  (let ((en (object/get @tr "linkedEntity" (object/get (object/get @orb "entity" {}) "name" ""))))
+                    (let ((ent (default (array/first (array/filter @ents (fn e (= (object/get @e "name" "") @en)))) {})))
+                      (array/concat
+                        (if (and (= (object/get @ent "persistence" "") "runtime") (array/some (object/get @ent "fields" []) (fn f (and (= (object/get @f "name" "") "id") (= (object/get @f "type" "") "string")))))
+                          []
+                          [{ code: @config.codes.entity.code, path: (str/concat "orbitals." @on ".traits." @tn ".listens"), message: (str/concat "`" @on "." @tn "` listens `per` a key, so its rows are addressed by it, but its entity `" @en "` is not a `[runtime]` entity with an `id : string` field"), suggestion: (str/concat "declare `entity " @en " [runtime] { id : string! }` for the trait, or drop the `per` clause"), severity: "error" }])
+                        (if (array/some @pgs (fn pg (and (!= (default (object/get @pg "path" null) "") "") (= (default (object/get @pg "protocol" null) "") "") (array/some (default (object/get @pg "traits" null) []) (fn pt (= (default (object/get @pt "ref" null) (default (object/get @pt "name" null) "")) @tn))))))
+                          [{ code: @config.codes.routedPage.code, path: (str/concat "orbitals." @on ".traits." @tn ".listens"), message: (str/concat "`" @on "." @tn "` listens `per` a key, so it runs on keyed rows, but a route page places it: a route page mounts one viewer frame"), suggestion: "mount the trait on a `boot` page, not a route page", severity: "error" }]
+                          []))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "listen-per", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PerProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintListenPerCodes = { entity: { code: "ORB_X_LISTEN_PER_ENTITY", category: "trait_event", description: "A trait that listens per a key does not link a [runtime] entity declaring an id : string field" }, routedPage: { code: "ORB_X_LISTEN_PER_ROUTED_PAGE", category: "trait_event", description: "A trait that listens per a key is placed on a route page" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintListenPerCli -> OrbLintListenPerRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-per <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-per") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint listen-per: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "listen-per") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint listen-per: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-listen-per" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint listen-per` with its arguments and working directory."
+        @synonyms "orb lint listen-per"
+      OrbLintListenPer.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintListenPerCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintListenPerOrbitalStart -> OrbLintListenPer, OrbLintListenPerCli, OrbLintInput, Packs, Versions
+}

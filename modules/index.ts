@@ -14,6 +14,7 @@ export { OBJECT_OPERATORS, getObjectOperators } from './object.js';
 export { JSON_OPERATORS, getJsonOperators } from './json.js';
 export { CSV_OPERATORS, getCsvOperators } from './csv.js';
 export { XML_OPERATORS, getXmlOperators } from './xml.js';
+export { YAML_OPERATORS, getYamlOperators } from './yaml.js';
 export { TIME_OPERATORS, getTimeOperators } from './time.js';
 export { VALIDATE_OPERATORS, getValidateOperators } from './validate.js';
 export { FORMAT_OPERATORS, getFormatOperators } from './format.js';

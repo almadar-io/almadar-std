@@ -1,11 +1,11 @@
 app std-app-hosting-board [
   version: "1.0.0",
-  description: "std-app-hosting-board — a Firebase App Hosting project's backends at a glance, read through the App Hosting REST API (with the token gcloud auth print-access-token mints) and the gcloud CLI (std-cli, with the host's PATH and HOME passed through). AH_STATUS_LOAD { backendId, force? } answers AH_STATUS with the backend's latest rollout (by creation time): its state, id, time (updated, else created), and from the build behind it the commit's first line, short hash and url, the build log url, the Cloud Build id and region read from that url (the region knob when the url names none) and the error source; status UNKNOWN when there is no token or no rollout, and a build that cannot be read leaves its fields empty. AH_LOGS_LOAD { backendId } answers AH_LOGS with the backend's last 60 Cloud Run log lines: time to the second, severity, the revision's last name segment and the message (the text payload, else the structured payload's message, else the structured payload as JSON; terminal colour codes removed; empty lines left out). AH_BUILD_LOGS_LOAD { cloudBuildId, region? } answers AH_BUILD_LOGS with the build's non-blank log lines (gcloud prints a failed build's log and exits non-zero). Requests that arrive during a read wait in a first-in-first-out queue; a status is cached statusTtlMs (force skips it), logs and build logs logsTtlMs.",
+  description: "std-app-hosting-board — a Firebase App Hosting project's backends at a glance, read through the App Hosting REST API (over std-http-client with the accessToken credential, GCLOUD_ACCESS_TOKEN, which the host holds and the operator refreshes) and the gcloud CLI (std-cli, with the host's PATH and HOME passed through). AH_STATUS_LOAD { backendId, force? } answers AH_STATUS with the backend's latest rollout (by creation time): its state, id, time (updated, else created), and from the build behind it the commit's first line, short hash and url, the build log url, the Cloud Build id and region read from that url (the region knob when the url names none) and the error source; status UNKNOWN when the credential is not held, the API refuses, or there is no rollout, and a build that cannot be read leaves its fields empty. AH_LOGS_LOAD { backendId } answers AH_LOGS with the backend's last 60 Cloud Run log lines: time to the second, severity, the revision's last name segment and the message (the text payload, else the structured payload's message, else the structured payload as JSON; terminal colour codes removed; empty lines left out). AH_BUILD_LOGS_LOAD { cloudBuildId, region? } answers AH_BUILD_LOGS with the build's non-blank log lines (gcloud prints a failed build's log and exits non-zero). Requests that arrive during a read wait in a first-in-first-out queue; a status is cached statusTtlMs (force skips it), logs and build logs logsTtlMs.",
   exec: ["gcloud"],
   env: ["PATH", "HOME"],
-  egress: ["https://firebaseapphosting.googleapis.com"]
+  net: { "firebaseapphosting.googleapis.com:443": [tcp] }
 ]
-uses Fetch from "std/behaviors/std-http-fetch"
+uses Http from "std/behaviors/std-http-client"
 type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/app-hosting-board"
 type AhRequest = { kind : "status" | "logs" | "build-logs", backendId : string, force : boolean, cloudBuildId : string, region : string }
@@ -33,7 +33,6 @@ orbital AppHostingBoardOrbital {
     loading : boolean @description "Whether a read is in flight." = false
     queue : [AhRequest] @description "Requests waiting to be read, oldest first." = []
     current : AhRequest @description "The request being read."
-    token : string @description "The access token gcloud minted for the status read in flight." = ""
     latest : AhRollout @description "The latest rollout of the status read in flight."
     build : AhBuild @description "Its build, when it could be read."
     statusCache : [AhStatusCached] = []
@@ -52,11 +51,15 @@ orbital AppHostingBoardOrbital {
     }
   }
 
-  trait AhApi = Fetch.traits.HttpFetch {
+  trait AhApi = Http.traits.HttpClient {
     config {
-      origin: "https://firebaseapphosting.googleapis.com"
-      timeoutMs: 30000
-      credentialHeaders: []
+      host: "firebaseapphosting.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "firebaseapphosting.googleapis.com"
+      credential: "GCLOUD_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
     }
     listens {
       AppHostingStatus.AH_HTTP_SEND -> HTTP_SEND
@@ -138,7 +141,7 @@ orbital AppHostingBoardOrbital {
         (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_START -> reading when (and (= @entity.current.kind "status") (or @entity.current.force (== (array/find @entity.statusCache (fn c (and (= @c.backendId @entity.current.backendId) (< (- @now @c.cachedAt) @config.statusTtlMs)))) null)))
-        (emit AH_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
+        (emit AH_ROLLOUTS { })
       AH_START -> idle when (and (= @entity.current.kind "logs") (!= (array/find @entity.logsCache (fn c (and (= @c.key @entity.current.backendId) (< (- @now @c.cachedAt) @config.logsTtlMs)))) null))
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.current.backendId))) "lines") })
         (emit AH_RENDER { })
@@ -151,14 +154,8 @@ orbital AppHostingBoardOrbital {
       AH_START -> reading when (and (= @entity.current.kind "build-logs") (== (array/find @entity.buildCache (fn c (and (= @c.key (str/concat @entity.current.cloudBuildId "|" @entity.current.region)) (< (- @now @c.cachedAt) @config.logsTtlMs)))) null))
         (emit AH_GCLOUD { stage: "build-logs", argv: ["builds", "log", @entity.current.cloudBuildId, (str/concat "--project=" @config.project), (str/concat "--region=" @entity.current.region)] })
 
-      AH_RAN -> reading when (and (= @payload.stage "token") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
-        (set @entity.token (str/trim @payload.stdout))
-        (emit AH_HTTP_SEND { key: "rollouts", method: "GET", target: (str/concat "/v1beta/projects/" @config.project "/locations/" @config.region "/backends/" @entity.current.backendId "/rollouts?pageSize=100"), headers: [{ name: "Authorization", value: (str/concat "Bearer " (str/trim @payload.stdout)) }], body: (bytes/from-string ""), stream: "none" })
-      AH_RAN -> idle when (and (= @payload.stage "token") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
-        (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
-        (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })
-        (emit AH_RENDER { })
-        (emit AH_PUMP { })
+      AH_ROLLOUTS -> reading
+        (emit AH_HTTP_SEND { key: "rollouts", method: "GET", target: (str/concat "/v1beta/projects/" @config.project "/locations/" @config.region "/backends/" @entity.current.backendId "/rollouts?pageSize=100"), headers: [], body: (bytes/from-string ""), stream: "none" })
       AH_REPLIED -> reading when (and (= @payload.key "rollouts") (json/valid (default (bytes/to-string @payload.body) "")) (> (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0))
         (set @entity.latest (object/get (array/nth (array/sort (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) (fn r { at: (time/parse @r.createTime), r: @r })) "at" "desc") 0) "r"))
         (emit AH_BUILD { })
@@ -168,7 +165,7 @@ orbital AppHostingBoardOrbital {
         (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_BUILD -> reading when (!= (default @entity.latest.build "") "")
-        (emit AH_HTTP_SEND { key: "build", method: "GET", target: (str/concat "/v1beta/" @entity.latest.build), headers: [{ name: "Authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none" })
+        (emit AH_HTTP_SEND { key: "build", method: "GET", target: (str/concat "/v1beta/" @entity.latest.build), headers: [], body: (bytes/from-string ""), stream: "none" })
       AH_BUILD -> idle when (= (default @entity.latest.build "") "")
         (set @entity.build (json/parse "{}" AhBuild))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (let ((latest @entity.latest) (b @entity.build) (logsUrl (object/get @entity.build "buildLogsUri" "")))
@@ -265,11 +262,6 @@ orbital AppHostingBoardOrbital {
             (emit AH_BUILD_LOGS { cloudBuildId: @entity.current.cloudBuildId, region: @entity.current.region, lines: @lines })))
         (emit AH_PUMP { })
 
-      AH_CLI_FAILED -> idle when (= @payload.stage "token")
-        (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
-        (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })
-        (emit AH_RENDER { })
-        (emit AH_PUMP { })
       AH_CLI_FAILED -> idle when (= @payload.stage "logs")
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: [] })
         (emit AH_RENDER { })
@@ -319,6 +311,9 @@ orbital AppHostingBoardOrbital {
       AH_START -> internal { }
         @description "Internal: begin the request taken from the queue."
         @tier "internal"
+      AH_ROLLOUTS -> internal { }
+        @description "Internal: read the backend's rollouts."
+        @tier "internal"
       AH_BUILD -> internal { }
         @description "Internal: read the latest rollout's build."
         @tier "internal"
@@ -330,7 +325,7 @@ orbital AppHostingBoardOrbital {
         body : bytes!
         stream : string!
       }
-        @description "Internal: one request, for the HTTP fetch."
+        @description "Internal: one request, for the HTTP client."
         @tier "internal"
     }
 

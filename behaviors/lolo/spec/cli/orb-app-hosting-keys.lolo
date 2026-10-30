@@ -1,0 +1,14 @@
+app orb-app-hosting-keys-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb app-hosting-keys <program> <apphosting.yaml>`: compare the environment names the program declares (the app's `env` grant) with the variables the Firebase App Hosting file sets. A name the program declares and the file does not set is `missing`; a variable the file makes available at run time (availability absent, or listing RUNTIME) that the program does not declare is `undeclared`; the default of a `secret`-typed config knob in the resolved program counts as declaring that name (never as a required one). Clean answers `app-hosting-keys: clean` (status 200, exit 0); any finding answers one line each (status 500, exit 1). A wrong word count is the usage (status 400, exit 2); an unreadable program, an unreadable file, or a file that is not an apphosting.yaml (YAML that does not parse to an `env` list of variables) is status 500 on `Error: <reason>`."
+]
+
+orbital OrbAppHostingKeysSpec {
+  expects trait OrbAppHostingKeys {
+    state ready
+    emits {
+      APP_HOSTING_KEYS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbAppHostingKeys
+}

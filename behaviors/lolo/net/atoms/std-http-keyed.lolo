@@ -1,218 +1,50 @@
 app std-http-keyed [
-  version: "1.0.0",
+  version: "2.0.0",
   net: { "api.example.test:80": [tcp] },
-  description: "std-http-keyed — concurrent HTTP calls by key over 4 std-http-client slots (spec/net/http-keyed.lolo). std-http-client stays one call per frame; this atom composes 4 of its traits (KeyedSlot0..KeyedSlot3, each with its own stream framer KeyedFrame0..KeyedFrame3) and gives every in-flight key its own slot, so its own socket. HTTP_SEND { key, method, target, headers, body, stream } takes the first free slot (a call to the same host, port and credential the slots are configured with) or waits in arrival order for one; a key already in flight or waiting, or an empty key, answers HTTP_FAILED kind refused. A slot's answer is forwarded unchanged and keyed: HTTP_REPLIED { key, status, headers, body }, HTTP_FAILED { key, error, kind } and, for a stream of sse or jsonl, HTTP_STREAM_EVENT { key, data, event, id }; the slot is then free and the oldest waiting call takes it. HTTP_CANCEL { key } drops a waiting call, or closes the socket of an in-flight one (std-http-client HTTP_CANCEL); no answer follows. At most 4 keys are in flight at once; the rest wait. Every slot is a std-http-client trait, so the host, port, tls, serverName and credential knobs are set on each slot (the net grant names that host)."
+  description: "std-http-keyed — concurrent HTTP calls by key (spec/net/http-keyed.lolo): one std-http-client trait (KeyedHttp) whose rows are addressed by the call key, and its one stream framer (KeyedFrame). A caller routes its HTTP_SEND { key, method, target, headers, body, stream } and HTTP_CANCEL { key } to HttpKeyed, which re-emits them and KeyedHttp hears each with `per @payload.key`; the kernel gives each key its own row of the client, so its own socket, head and body state, and creates it on first use (INIT runs once). The client's answers are keyed and unchanged: HTTP_REPLIED { key, status, headers, body }, HTTP_FAILED { key, error, kind } and, for a stream of sse or jsonl, HTTP_STREAM_EVENT { key, data, event, id }. The framer is stateless, so every row shares KeyedFrame, and the frames it answers return to their row by `per @payload.key`. A second HTTP_SEND on a key whose call is in flight answers HTTP_FAILED kind refused (std-http-client's one call per frame); an empty key is refused by the `per` clause as DELIVERY_REJECTED, and with no trait listening for it the dispatch fails naming the envelope and reason. A row returns to its defaults, and so is dropped, when its call ends and its socket is closed; a kept-alive socket keeps it until HTTP_CLOSE. No slot count or queue: the number of keys in flight is the caller's. The host, port, tls, serverName and credential knobs are set once on KeyedHttp (the net grant names that host); a call site that restates KeyedHttp's listens restates every `per` clause with it. The answers come from KeyedHttp."
 ]
 uses Spec from "almadar-std/http-keyed"
 uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
-type KeyedAsk = { key : string!, method : string!, target : string!, headers : [HttpHeader]!, body : bytes!, stream : string! }
 
 orbital HttpKeyedOrbital {
-  entity KeyedFlights [runtime] {
+  entity KeyedCall [runtime] {
     id : string!
-    slots : [string] @description "The key in flight on each slot, empty when the slot is free." = ["", "", "", ""]
-    queue : [KeyedAsk] @description "The calls waiting for a free slot, oldest first; empty whenever a slot is free." = []
-    blank : KeyedAsk @description "The empty call a pump with nothing waiting reads." = { key: "", method: "GET", target: "/", headers: [], body: "", stream: "none" }
   }
 
-  trait KeyedFrame0 = Frame.traits.HttpFrame {
+  trait KeyedFrame = Frame.traits.HttpFrame {
     listens {
-      KeyedSlot0.HC_FRAME -> FRAME_RUN
+      KeyedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
-  trait KeyedSlot0 = Http.traits.HttpClient {
-    listens {
-      HttpKeyed.KEYED_SEND_0 -> HTTP_SEND
-      HttpKeyed.KEYED_CANCEL -> HTTP_CANCEL
-      KeyedFrame0.FRAME_EVENT -> HC_FRAME_EVENT
-      KeyedFrame0.FRAME_DRAINED -> HC_DRAINED
-      KeyedFrame0.FRAME_FAILED -> HC_FRAME_FAILED
-    }
-  }
-
-  trait KeyedFrame1 = Frame.traits.HttpFrame {
-    listens {
-      KeyedSlot1.HC_FRAME -> FRAME_RUN
-    }
-  }
-
-  trait KeyedSlot1 = Http.traits.HttpClient {
-    listens {
-      HttpKeyed.KEYED_SEND_1 -> HTTP_SEND
-      HttpKeyed.KEYED_CANCEL -> HTTP_CANCEL
-      KeyedFrame1.FRAME_EVENT -> HC_FRAME_EVENT
-      KeyedFrame1.FRAME_DRAINED -> HC_DRAINED
-      KeyedFrame1.FRAME_FAILED -> HC_FRAME_FAILED
-    }
-  }
-
-  trait KeyedFrame2 = Frame.traits.HttpFrame {
-    listens {
-      KeyedSlot2.HC_FRAME -> FRAME_RUN
-    }
-  }
-
-  trait KeyedSlot2 = Http.traits.HttpClient {
-    listens {
-      HttpKeyed.KEYED_SEND_2 -> HTTP_SEND
-      HttpKeyed.KEYED_CANCEL -> HTTP_CANCEL
-      KeyedFrame2.FRAME_EVENT -> HC_FRAME_EVENT
-      KeyedFrame2.FRAME_DRAINED -> HC_DRAINED
-      KeyedFrame2.FRAME_FAILED -> HC_FRAME_FAILED
-    }
-  }
-
-  trait KeyedFrame3 = Frame.traits.HttpFrame {
-    listens {
-      KeyedSlot3.HC_FRAME -> FRAME_RUN
-    }
-  }
-
-  trait KeyedSlot3 = Http.traits.HttpClient {
-    listens {
-      HttpKeyed.KEYED_SEND_3 -> HTTP_SEND
-      HttpKeyed.KEYED_CANCEL -> HTTP_CANCEL
-      KeyedFrame3.FRAME_EVENT -> HC_FRAME_EVENT
-      KeyedFrame3.FRAME_DRAINED -> HC_DRAINED
-      KeyedFrame3.FRAME_FAILED -> HC_FRAME_FAILED
-    }
-  }
-
-  trait HttpKeyed -> KeyedFlights [optimistic] {
+  trait HttpKeyed -> KeyedCall [optimistic] {
     initial: ready
 
     state ready {
       INIT -> ready
-        (set @entity.blank { key: "", method: "GET", target: "/", headers: [], body: "", stream: "none" })
-
-      HTTP_SEND -> ready when (= @payload.key "")
-        (emit HTTP_FAILED { key: @payload.key, error: "a call needs a key", kind: "refused" })
-      HTTP_SEND -> ready when (and (!= @payload.key "") (or (array/includes @entity.slots @payload.key) (array/some @entity.queue (fn q (= @q.key @payload.key)))))
-        (emit HTTP_FAILED { key: @payload.key, error: "a call with this key is in flight", kind: "refused" })
-      HTTP_SEND -> ready when (and (!= @payload.key "") (not (array/includes @entity.slots @payload.key)) (not (array/some @entity.queue (fn q (= @q.key @payload.key)))))
-        (set @entity.queue (array/append @entity.queue { key: @payload.key, method: @payload.method, target: @payload.target, headers: @payload.headers, body: @payload.body, stream: @payload.stream }))
-        (emit KEYED_PUMP { })
-
-      KEYED_PUMP -> ready when (and (> (array/len @entity.queue) 0) (= (array/indexOf @entity.slots "") 0))
-        (set @entity.slots (array/insert (array/remove @entity.slots 0) 0 (default (object/get (array/first @entity.queue) "key") "")))
-        (let ((q (default (array/first @entity.queue) @entity.blank)))
-          (emit KEYED_SEND_0 { key: @q.key, method: @q.method, target: @q.target, headers: @q.headers, body: @q.body, stream: @q.stream }))
-        (set @entity.queue (array/drop @entity.queue 1))
-      KEYED_PUMP -> ready when (and (> (array/len @entity.queue) 0) (= (array/indexOf @entity.slots "") 1))
-        (set @entity.slots (array/insert (array/remove @entity.slots 1) 1 (default (object/get (array/first @entity.queue) "key") "")))
-        (let ((q (default (array/first @entity.queue) @entity.blank)))
-          (emit KEYED_SEND_1 { key: @q.key, method: @q.method, target: @q.target, headers: @q.headers, body: @q.body, stream: @q.stream }))
-        (set @entity.queue (array/drop @entity.queue 1))
-      KEYED_PUMP -> ready when (and (> (array/len @entity.queue) 0) (= (array/indexOf @entity.slots "") 2))
-        (set @entity.slots (array/insert (array/remove @entity.slots 2) 2 (default (object/get (array/first @entity.queue) "key") "")))
-        (let ((q (default (array/first @entity.queue) @entity.blank)))
-          (emit KEYED_SEND_2 { key: @q.key, method: @q.method, target: @q.target, headers: @q.headers, body: @q.body, stream: @q.stream }))
-        (set @entity.queue (array/drop @entity.queue 1))
-      KEYED_PUMP -> ready when (and (> (array/len @entity.queue) 0) (= (array/indexOf @entity.slots "") 3))
-        (set @entity.slots (array/insert (array/remove @entity.slots 3) 3 (default (object/get (array/first @entity.queue) "key") "")))
-        (let ((q (default (array/first @entity.queue) @entity.blank)))
-          (emit KEYED_SEND_3 { key: @q.key, method: @q.method, target: @q.target, headers: @q.headers, body: @q.body, stream: @q.stream }))
-        (set @entity.queue (array/drop @entity.queue 1))
-      KEYED_PUMP -> ready when (or (= (array/len @entity.queue) 0) (< (array/indexOf @entity.slots "") 0))
-
-      KS_REPLIED -> ready when (array/includes @entity.slots @payload.key)
-        (set @entity.slots (array/map @entity.slots (fn s (if (= @s @payload.key) "" @s))))
-        (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: @payload.headers, body: @payload.body })
-        (emit KEYED_PUMP { })
-      KS_REPLIED -> ready when (not (array/includes @entity.slots @payload.key))
-      KS_FAILED -> ready when (array/includes @entity.slots @payload.key)
-        (set @entity.slots (array/map @entity.slots (fn s (if (= @s @payload.key) "" @s))))
-        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: @payload.kind })
-        (emit KEYED_PUMP { })
-      KS_FAILED -> ready when (not (array/includes @entity.slots @payload.key))
-      KS_STREAM -> ready when (array/includes @entity.slots @payload.key)
-        (emit HTTP_STREAM_EVENT { key: @payload.key, data: @payload.data, event: @payload.event, id: @payload.id })
-      KS_STREAM -> ready when (not (array/includes @entity.slots @payload.key))
-
-      HTTP_CANCEL -> ready when (array/some @entity.queue (fn q (= @q.key @payload.key)))
-        (set @entity.queue (array/filter @entity.queue (fn q (!= @q.key @payload.key))))
-      HTTP_CANCEL -> ready when (array/includes @entity.slots @payload.key)
+      HTTP_SEND -> ready
+        (emit KEYED_SEND { key: @payload.key, method: @payload.method, target: @payload.target, headers: @payload.headers, body: @payload.body, stream: @payload.stream })
+      HTTP_CANCEL -> ready
         (emit KEYED_CANCEL { key: @payload.key })
-        (set @entity.slots (array/map @entity.slots (fn s (if (= @s @payload.key) "" @s))))
-        (emit KEYED_PUMP { })
-      HTTP_CANCEL -> ready when (and (not (array/some @entity.queue (fn q (= @q.key @payload.key)))) (not (array/includes @entity.slots @payload.key)))
     }
 
     emits {
-      HTTP_REPLIED -> external {
+      KEYED_SEND {
         key : string!
-        status : number!
-        headers : Map string string
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
         body : bytes!
+        stream : string!
       }
-        @description "The response of the call with this key, of any status, whole."
-        @tier "primary"
-      HTTP_STREAM_EVENT -> external {
-        key : string!
-        data : string!
-        event : string?
-        id : string?
-      }
-        @description "One complete frame of a streamed response (sse or jsonl) of the call with this key."
-        @tier "primary"
-      HTTP_FAILED -> external {
-        key : string!
-        error : string!
-        kind : string!
-      }
-        @description "The call with this key produced no response: kind refused (nothing sent), denied, timeout, tls, encoding or io."
-        @tier "primary"
+        @description "Internal: the call, for the row of its key."
+        @tier "internal"
       KEYED_CANCEL {
         key : string!
       }
-        @description "Internal: abort the call with this key on whichever slot holds it."
-        @tier "internal"
-      KEYED_PUMP -> internal {
-      }
-        @description "Internal: place the oldest waiting call on a free slot."
-        @tier "internal"
-      KEYED_SEND_0 {
-        key : string!
-        method : string!
-        target : string!
-        headers : [HttpHeader]!
-        body : bytes!
-        stream : string!
-      }
-        @description "Internal: the call placed on slot 0, for its HTTP client."
-        @tier "internal"
-      KEYED_SEND_1 {
-        key : string!
-        method : string!
-        target : string!
-        headers : [HttpHeader]!
-        body : bytes!
-        stream : string!
-      }
-        @description "Internal: the call placed on slot 1, for its HTTP client."
-        @tier "internal"
-      KEYED_SEND_2 {
-        key : string!
-        method : string!
-        target : string!
-        headers : [HttpHeader]!
-        body : bytes!
-        stream : string!
-      }
-        @description "Internal: the call placed on slot 2, for its HTTP client."
-        @tier "internal"
-      KEYED_SEND_3 {
-        key : string!
-        method : string!
-        target : string!
-        headers : [HttpHeader]!
-        body : bytes!
-        stream : string!
-      }
-        @description "Internal: the call placed on slot 3, for its HTTP client."
+        @description "Internal: abort the call, for the row of its key."
         @tier "internal"
     }
 
@@ -225,43 +57,24 @@ orbital HttpKeyedOrbital {
         body : bytes!
         stream : string!
       }
-        @description "Make one HTTP call under this key; answered HTTP_REPLIED or HTTP_FAILED with the same key, any number of keys at once up to the slot count."
+        @description "Make one HTTP call under this key; answered by KeyedHttp as HTTP_REPLIED or HTTP_FAILED with the same key, any number of keys at once."
         @synonyms "concurrent http client, parallel requests, keyed calls"
       HTTP_CANCEL {
         key : string!
       }
-        @description "Drop the waiting call, or close the socket of the in-flight call, with this key; no answer follows."
-      KS_REPLIED {
-        key : string!
-        status : number!
-        headers : Map string string
-        body : bytes!
-      }
-      KS_FAILED {
-        key : string!
-        error : string!
-        kind : string!
-      }
-      KS_STREAM {
-        key : string!
-        data : string!
-        event : string?
-        id : string?
-      }
-      KeyedSlot0.HTTP_REPLIED -> KS_REPLIED
-      KeyedSlot0.HTTP_FAILED -> KS_FAILED
-      KeyedSlot0.HTTP_STREAM_EVENT -> KS_STREAM
-      KeyedSlot1.HTTP_REPLIED -> KS_REPLIED
-      KeyedSlot1.HTTP_FAILED -> KS_FAILED
-      KeyedSlot1.HTTP_STREAM_EVENT -> KS_STREAM
-      KeyedSlot2.HTTP_REPLIED -> KS_REPLIED
-      KeyedSlot2.HTTP_FAILED -> KS_FAILED
-      KeyedSlot2.HTTP_STREAM_EVENT -> KS_STREAM
-      KeyedSlot3.HTTP_REPLIED -> KS_REPLIED
-      KeyedSlot3.HTTP_FAILED -> KS_FAILED
-      KeyedSlot3.HTTP_STREAM_EVENT -> KS_STREAM
+        @description "Close the socket of the in-flight call with this key; no answer follows."
     }
   }
 
-  page boot as HttpKeyedPage -> HttpKeyed, KeyedSlot0, KeyedFrame0, KeyedSlot1, KeyedFrame1, KeyedSlot2, KeyedFrame2, KeyedSlot3, KeyedFrame3
+  trait KeyedHttp = Http.traits.HttpClient {
+    listens {
+      HttpKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      HttpKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+      KeyedFrame.FRAME_EVENT -> HC_FRAME_EVENT per @payload.key
+      KeyedFrame.FRAME_DRAINED -> HC_DRAINED per @payload.key
+      KeyedFrame.FRAME_FAILED -> HC_FRAME_FAILED per @payload.key
+    }
+  }
+
+  page boot as HttpKeyedPage -> HttpKeyed, KeyedHttp, KeyedFrame
 }

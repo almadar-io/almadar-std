@@ -1,0 +1,510 @@
+{
+ "atom": "cli/atoms/std-orb-lint-listen-per.lolo",
+ "trait": "OrbLintListenPer",
+ "note": "EXEC-STEP-1a: a trait that listens per a key needs a [runtime] entity with an id : string field and a boot page, not a route page.",
+ "cases": [
+  {
+   "id": "a-keyed-trait-on-a-runtime-entity-with-an-id-on-a-boot-page-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "trait": "OrbLintListenPer",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "C"
+             },
+             "key": "@payload.key"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-per",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-trait-on-a-persistent-entity-is-refused",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "trait": "OrbLintListenPer",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "C"
+             },
+             "key": "@payload.key"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-per",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_PER_ENTITY",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "`A.T` listens `per` a key, so its rows are addressed by it, but its entity `E` is not a `[runtime]` entity with an `id : string` field",
+           "suggestion": "declare `entity E [runtime] { id : string! }` for the trait, or drop the `per` clause",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-trait-on-an-entity-without-an-id-string-is-refused",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "trait": "OrbLintListenPer",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "val",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "C"
+             },
+             "key": "@payload.key"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-per",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_PER_ENTITY",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "`A.T` listens `per` a key, so its rows are addressed by it, but its entity `E` is not a `[runtime]` entity with an `id : string` field",
+           "suggestion": "declare `entity E [runtime] { id : string! }` for the trait, or drop the `per` clause",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-trait-placed-on-a-route-page-is-refused",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "trait": "OrbLintListenPer",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "C"
+             },
+             "key": "@payload.key"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-per",
+         "findings": [
+          {
+           "code": "ORB_X_LISTEN_PER_ROUTED_PAGE",
+           "path": "orbitals.A.traits.T.listens",
+           "message": "`A.T` listens `per` a key, so it runs on keyed rows, but a route page places it: a route page mounts one viewer frame",
+           "suggestion": "mount the trait on a `boot` page, not a route page",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-without-per-on-a-persistent-entity-and-a-route-page-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "trait": "OrbLintListenPer",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "listens": [
+            {
+             "event": "GO",
+             "triggers": "GO",
+             "source": {
+              "kind": "trait",
+              "trait": "C"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-per",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,1129 +1,300 @@
 {
-  "atom": "net/atoms/std-http-keyed.lolo",
-  "trait": "HttpKeyed",
-  "spec": "spec/net/http-keyed.lolo",
-  "note": "Slot routing and the wait queue of the keyed client; the wire itself is std-http-client's (http-client.replay.goldens.json).",
-  "cases": [
+ "atom": "net/atoms/std-http-keyed.lolo",
+ "trait": "HttpKeyed",
+ "note": "Row routing of the keyed client: HttpKeyed re-emits a call and KeyedHttp hears it `per @payload.key`, so each key is its own row of std-http-client (its own socket and head and body state), created on first use; the wire itself is std-http-client's (http-client.replay.goldens.json). A row's os completions are dispatched to its row by the host and are covered by the kernel twin tests (per_listen_instances).",
+ "cases": [
+  {
+   "id": "a-call-opens-the-socket-of-its-own-row",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
     {
-      "id": "the-first-call-takes-slot-0",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ],
-            "neverEmits": [
-              "HTTP_FAILED"
-            ]
-          }
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/k1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1",
+         "target": "/k1"
         }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
       ]
-    },
-    {
-      "id": "concurrent-keys-take-the-first-free-slots-in-order",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k3",
-            "method": "GET",
-            "target": "/k3",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_2",
-                "payload": {
-                  "key": "k3",
-                  "method": "GET",
-                  "target": "/k3",
-                  "stream": "none"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k4",
-            "method": "GET",
-            "target": "/k4",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_3",
-                "payload": {
-                  "key": "k4",
-                  "method": "GET",
-                  "target": "/k4",
-                  "stream": "none"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-fifth-key-waits-and-takes-the-slot-an-answer-frees",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k3",
-            "method": "GET",
-            "target": "/k3",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_2",
-                "payload": {
-                  "key": "k3",
-                  "method": "GET",
-                  "target": "/k3",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k4",
-            "method": "GET",
-            "target": "/k4",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_3",
-                "payload": {
-                  "key": "k4",
-                  "method": "GET",
-                  "target": "/k4",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k5",
-            "method": "GET",
-            "target": "/k5",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3",
-              "HTTP_FAILED"
-            ]
-          }
-        },
-        {
-          "event": "KS_REPLIED",
-          "payload": {
-            "key": "k2",
-            "status": 200,
-            "headers": {},
-            "body": "aGk="
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_REPLIED",
-                "payload": {
-                  "key": "k2",
-                  "status": 200,
-                  "headers": {},
-                  "body": "aGk="
-                }
-              },
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k5",
-                  "method": "GET",
-                  "target": "/k5",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-answer-with-nothing-waiting-frees-its-slot-and-places-nothing",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "KS_REPLIED",
-          "payload": {
-            "key": "k2",
-            "status": 200,
-            "headers": {},
-            "body": "aGk="
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_REPLIED",
-                "payload": {
-                  "key": "k2"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k6",
-            "method": "GET",
-            "target": "/k6",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k6",
-                  "method": "GET",
-                  "target": "/k6",
-                  "stream": "none"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-key-already-in-flight-is-refused",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_FAILED",
-                "payload": {
-                  "key": "k1",
-                  "kind": "refused"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-key-already-waiting-is-refused",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k3",
-            "method": "GET",
-            "target": "/k3",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_2",
-                "payload": {
-                  "key": "k3",
-                  "method": "GET",
-                  "target": "/k3",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k4",
-            "method": "GET",
-            "target": "/k4",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_3",
-                "payload": {
-                  "key": "k4",
-                  "method": "GET",
-                  "target": "/k4",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k5",
-            "method": "GET",
-            "target": "/k5",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3",
-              "HTTP_FAILED"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k5",
-            "method": "GET",
-            "target": "/k5",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_FAILED",
-                "payload": {
-                  "key": "k5",
-                  "kind": "refused"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "an-empty-key-is-refused",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "",
-            "method": "GET",
-            "target": "/",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_FAILED",
-                "payload": {
-                  "key": "",
-                  "kind": "refused"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-slot-failure-is-forwarded-with-its-key-and-frees-the-slot",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "KS_FAILED",
-          "payload": {
-            "key": "k1",
-            "error": "boom",
-            "kind": "io"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_FAILED",
-                "payload": {
-                  "key": "k1",
-                  "error": "boom",
-                  "kind": "io"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k7",
-            "method": "GET",
-            "target": "/k7",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k7",
-                  "method": "GET",
-                  "target": "/k7",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-stream-frame-is-forwarded-with-its-key",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1x",
-            "method": "GET",
-            "target": "/k1x",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready"
-          }
-        },
-        {
-          "event": "KS_STREAM",
-          "payload": {
-            "key": "k1",
-            "data": "{\"a\":1}"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_STREAM_EVENT",
-                "payload": {
-                  "key": "k1",
-                  "data": "{\"a\":1}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-stream-frame-of-an-unknown-key-is-dropped",
-      "steps": [
-        {
-          "event": "KS_STREAM",
-          "payload": {
-            "key": "nope",
-            "data": "x"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "HTTP_STREAM_EVENT"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-answer-of-an-unknown-key-is-dropped",
-      "steps": [
-        {
-          "event": "KS_REPLIED",
-          "payload": {
-            "key": "nope",
-            "status": 200,
-            "headers": {},
-            "body": "aGk="
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "HTTP_REPLIED",
-              "HTTP_FAILED"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-cancelled-waiting-call-never-takes-a-slot",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k3",
-            "method": "GET",
-            "target": "/k3",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_2",
-                "payload": {
-                  "key": "k3",
-                  "method": "GET",
-                  "target": "/k3",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k4",
-            "method": "GET",
-            "target": "/k4",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_3",
-                "payload": {
-                  "key": "k4",
-                  "method": "GET",
-                  "target": "/k4",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k5",
-            "method": "GET",
-            "target": "/k5",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_CANCEL",
-          "payload": {
-            "key": "k5"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "KEYED_CANCEL",
-              "HTTP_FAILED",
-              "HTTP_REPLIED"
-            ]
-          }
-        },
-        {
-          "event": "KS_REPLIED",
-          "payload": {
-            "key": "k1",
-            "status": 200,
-            "headers": {},
-            "body": "aGk="
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "HTTP_REPLIED",
-                "payload": {
-                  "key": "k1"
-                }
-              }
-            ],
-            "neverEmits": [
-              "KEYED_SEND_0",
-              "KEYED_SEND_1",
-              "KEYED_SEND_2",
-              "KEYED_SEND_3"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "cancelling-an-in-flight-call-closes-its-slot-and-frees-it-for-the-next",
-      "steps": [
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k1",
-            "method": "GET",
-            "target": "/k1",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_0",
-                "payload": {
-                  "key": "k1",
-                  "method": "GET",
-                  "target": "/k1",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k2",
-            "method": "GET",
-            "target": "/k2",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k2",
-                  "method": "GET",
-                  "target": "/k2",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "event": "HTTP_CANCEL",
-          "payload": {
-            "key": "k2"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_CANCEL",
-                "payload": {
-                  "key": "k2"
-                }
-              }
-            ],
-            "neverEmits": [
-              "HTTP_FAILED",
-              "HTTP_REPLIED"
-            ]
-          }
-        },
-        {
-          "event": "HTTP_SEND",
-          "payload": {
-            "key": "k8",
-            "method": "GET",
-            "target": "/k8",
-            "headers": [],
-            "body": "",
-            "stream": "none"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "KEYED_SEND_1",
-                "payload": {
-                  "key": "k8",
-                  "method": "GET",
-                  "target": "/k8",
-                  "stream": "none"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-cancelling-an-unknown-key-does-nothing",
-      "steps": [
-        {
-          "event": "HTTP_CANCEL",
-          "payload": {
-            "key": "nope"
-          },
-          "expect": {
-            "state": "ready",
-            "neverEmits": [
-              "KEYED_CANCEL",
-              "HTTP_FAILED"
-            ]
-          }
-        }
-      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "two-keys-are-in-flight-at-once-on-two-rows",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/k1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k2",
+      "method": "GET",
+      "target": "/k2",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k2"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k3",
+      "method": "GET",
+      "target": "/k3",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k3"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-key-already-in-flight-is-refused-on-its-own-row",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/k1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/again",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1"
+        }
+       },
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cancel-reaches-only-its-own-row",
+   "defaults": [
+    "KeyedHttp",
+    "KeyedFrame"
+   ],
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/k1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k1"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k2",
+      "method": "GET",
+      "target": "/k2",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k2"
+        }
+       },
+       {
+        "event": "HC_BUILT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_CANCEL",
+     "payload": {
+      "key": "k1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_CANCEL",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED",
+       "HTTP_REPLIED"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k2",
+      "method": "GET",
+      "target": "/k2b",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "k2"
+        }
+       },
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k2",
+         "kind": "refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

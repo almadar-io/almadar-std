@@ -1,0 +1,1981 @@
+{
+  "atom": "cli/atoms/std-orb-app-hosting-keys.lolo",
+  "trait": "OrbAppHostingKeys",
+  "note": " The file text travels as base64 in the read answer, as the host gives it; each check case lowers a program whose env grant is the declared set, then answers the read of the file.",
+  "cases": [
+    {
+      "id": "malformed-body-is-usage",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb app-hosting-keys <program> <apphosting.yaml>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-words-is-usage",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb app-hosting-keys <program> <apphosting.yaml>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-word-is-usage",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb app-hosting-keys <program> <apphosting.yaml>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "three-words-is-usage",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a\", \"b\", \"c\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb app-hosting-keys <program> <apphosting.yaml>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-words-start-reading",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\", \"h.yaml\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_PROGRAM",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_PROGRAM",
+          "from": "parsing",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "absolute-program-path-reads-too",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\": [\"/abs/a.lolo\", \"h.yaml\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing"
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_PROGRAM",
+          "from": "parsing",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "failure-in-readingProgram-answers-500",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_FAILED",
+          "from": "readingProgram",
+          "payload": {
+            "error": "no such file"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: no such file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "failure-in-readingFile-answers-500",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_FAILED",
+          "from": "readingFile",
+          "payload": {
+            "error": "no such file"
+          },
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: no such file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "failure-without-reason-still-answers-500",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_FAILED",
+          "from": "readingFile",
+          "payload": {},
+          "entity": {
+            "id": "r"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: unreadable"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "matching-sets-are-clean",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "B"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "declared-name-absent-from-file-is-missing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "B",
+                    "C"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "missing: C"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "run-time-variable-the-program-does-not-declare-is-undeclared",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "undeclared: B"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-reported-before-undeclared-each-in-order",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "Z",
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "missing: Z\nundeclared: B"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "build-only-variable-is-not-compared",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgLSB2YXJpYWJsZTogVAogICAgc2VjcmV0OiBTCiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gQlVJTEQK"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "build-and-runtime-variable-is-compared",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgLSB2YXJpYWJsZTogVAogICAgc2VjcmV0OiBTCiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gQlVJTEQKICAgICAgLSBSVU5USU1FCg=="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "undeclared: T"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "file-with-no-env-list-leaves-every-declared-name-missing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "cnVuQ29uZmlnOgogIGNwdTogMQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "missing: A"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-declared-names-and-no-variables-is-clean",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": []
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "cnVuQ29uZmlnOgogIGNwdTogMQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "anchored-variables-resolve",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "B"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "YmFzZTogJnYKICB2YWx1ZTogeAplbnY6CiAgLSB2YXJpYWJsZTogQQogICAgPDw6ICp2CiAgLSB2YXJpYWJsZTogQgogICAgdmFsdWU6IHkK"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "text-that-is-not-yaml-is-refused",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OiBbdW5jbG9zZWQ="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: h.yaml is not an apphosting.yaml"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "several-documents-are-refused",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OiBbXQotLS0KZW52OiBbXQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: h.yaml is not an apphosting.yaml"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-variable-without-a-name-is-refused",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFsdWU6IHgK"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: h.yaml is not an apphosting.yaml"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "env-that-is-not-a-list-is-refused",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OiBub3BlCg=="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: h.yaml is not an apphosting.yaml"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "secret-knob-name-counts-as-declared",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "credential": {
+                            "type": "secret",
+                            "default": "B"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-non-secret-knob-with-the-same-default-declares-nothing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "credential": {
+                            "type": "string",
+                            "default": "B"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "undeclared: B"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "secret-knob-name-the-file-lacks-is-not-missing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "B"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "credential": {
+                            "type": "secret",
+                            "default": "Z"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "secret-knob-for-another-name-leaves-the-variable-undeclared",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "credential": {
+                            "type": "secret",
+                            "default": "Z"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "undeclared: B"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "secret-knobs-with-no-string-default-declare-nothing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "a": {
+                            "type": "secret",
+                            "default": ""
+                          },
+                          "b": {
+                            "type": "secret"
+                          },
+                          "c": {
+                            "type": "secret",
+                            "default": {
+                              "x": 1
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "undeclared: B"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "secret-knobs-across-orbitals-and-traits-are-collected-once",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A"
+                  ]
+                },
+                "orbitals": [
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "k": {
+                            "type": "secret",
+                            "default": "B"
+                          }
+                        }
+                      },
+                      {
+                        "config": {}
+                      }
+                    ]
+                  },
+                  {
+                    "traits": [
+                      {
+                        "config": {
+                          "k": {
+                            "type": "secret",
+                            "default": "B"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {}
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IEIKICAgIHNlY3JldDogUwo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "platform-name-declared-and-absent-from-the-file-is-not-missing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "PORT"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "every-platform-name-is-exempt",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "PORT",
+                    "K_SERVICE",
+                    "K_REVISION",
+                    "K_CONFIGURATION"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-non-platform-name-absent-from-the-file-is-missing",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "PORT",
+                    "C"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQo="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "missing: C"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-platform-name-present-in-the-file-and-declared-is-fine",
+      "steps": [
+        {
+          "event": "APP_HOSTING_KEYS_PROGRAM_LOWERED",
+          "from": "readingProgram",
+          "payload": {
+            "result": {
+              "program": {
+                "osGrants": {
+                  "env": [
+                    "A",
+                    "PORT"
+                  ]
+                }
+              },
+              "lazy": []
+            }
+          },
+          "entity": {
+            "id": "r",
+            "file": "h.yaml"
+          },
+          "expect": {
+            "fired": true,
+            "state": "readingProgram",
+            "emits": [
+              {
+                "event": "APP_HOSTING_KEYS_READ_FILE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_READ_FILE",
+          "from": "readingProgram",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "readingFile",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        },
+        {
+          "event": "APP_HOSTING_KEYS_FILE_READ",
+          "from": "readingFile",
+          "payload": {
+            "data": "ZW52OgogIC0gdmFyaWFibGU6IEEKICAgIHZhbHVlOiB4CiAgICBhdmFpbGFiaWxpdHk6CiAgICAgIC0gUlVOVElNRQogIC0gdmFyaWFibGU6IFBPUlQKICAgIHZhbHVlOiAiODA4MCIKICAgIGF2YWlsYWJpbGl0eToKICAgICAgLSBSVU5USU1FCg=="
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "APP_HOSTING_KEYS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "app-hosting-keys: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

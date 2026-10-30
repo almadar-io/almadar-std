@@ -302,6 +302,7 @@ export const STD_MODULES = [
   'gzip',
   'brotli',
   'xml',
+  'yaml',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];

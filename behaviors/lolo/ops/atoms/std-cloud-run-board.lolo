@@ -1,11 +1,11 @@
 app std-cloud-run-board [
   version: "1.0.0",
-  description: "std-cloud-run-board — a Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs (std-cli, with the host's PATH and HOME passed through so they find their login) and Cloud Monitoring. CLOUD_RUN_LOAD answers CLOUD_RUN_BOARD from the cache within cacheTtlMs; CLOUD_RUN_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: mints an access token (gcloud auth print-access-token) and sums each service's billable instance seconds and request count for the UTC month to date from Cloud Monitoring (usage unavailable without a token or when Monitoring is unreachable; a refused metric reads as none); when resourceLevelExport is on, reads each Cloud Run service's gross and net (credits included) cost from the billingExportTable billing export; lists the project's Cloud Run services and describes each one (cpu, memory, min and max instances, concurrency, GPU; an unset value is Cloud Run's documented default from the default knobs; a service that cannot be described has hasResourceData false and zero resources and price); lists the enabled Google Cloud APIs the trackedServices knob names, then replaces them with the month's cost per service from the billing export when it answers rows (each rounded to cents, sorted by cost, highest first, then by name). Per service: hourlyIfUp is one instance's list price for an hour at the rate knobs, activeInstanceHours the billed hours, avgInstances those over the hours elapsed, projectedMonthlyUsd the net cost scaled to hoursPerMonth. actualBilledUsd is the Cloud Run row of the rollup.",
+  description: "std-cloud-run-board — a Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs (std-cli, with the host's PATH and HOME passed through so they find their login) and Cloud Monitoring. CLOUD_RUN_LOAD answers CLOUD_RUN_BOARD from the cache within cacheTtlMs; CLOUD_RUN_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: sums each service's billable instance seconds and request count for the UTC month to date from Cloud Monitoring (Monitoring is read over std-http-client with the accessToken credential held by the host, GCLOUD_ACCESS_TOKEN, which the operator refreshes; usage unavailable when the credential is not held or when Monitoring is unreachable; a refused metric reads as none); when resourceLevelExport is on, reads each Cloud Run service's gross and net (credits included) cost from the billingExportTable billing export; lists the project's Cloud Run services and describes each one (cpu, memory, min and max instances, concurrency, GPU; an unset value is Cloud Run's documented default from the default knobs; a service that cannot be described has hasResourceData false and zero resources and price); lists the enabled Google Cloud APIs the trackedServices knob names, then replaces them with the month's cost per service from the billing export when it answers rows (each rounded to cents, sorted by cost, highest first, then by name). Per service: hourlyIfUp is one instance's list price for an hour at the rate knobs, activeInstanceHours the billed hours, avgInstances those over the hours elapsed, projectedMonthlyUsd the net cost scaled to hoursPerMonth. actualBilledUsd is the Cloud Run row of the rollup.",
   exec: ["gcloud", "bq"],
   env: ["PATH", "HOME"],
-  egress: ["https://monitoring.googleapis.com"]
+  net: { "monitoring.googleapis.com:443": [tcp] }
 ]
-uses Fetch from "std/behaviors/std-http-fetch"
+uses Http from "std/behaviors/std-http-client"
 type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/cloud-run-board"
 type CrCondition = { type : string, status : string }
@@ -54,7 +54,6 @@ orbital CloudRunBoardOrbital {
     hasCache : boolean = false
     loading : boolean @description "Whether a read is in flight." = false
     startedAt : instant @description "Epoch milliseconds at which the read in flight began." = 0
-    token : string @description "The access token gcloud minted for the read in flight; empty without one." = ""
     usageAvailable : boolean = false
     instanceSeconds : [CrSeriesSum] = []
     requests : [CrSeriesSum] = []
@@ -84,11 +83,15 @@ orbital CloudRunBoardOrbital {
     }
   }
 
-  trait CrMonitoring = Fetch.traits.HttpFetch {
+  trait CrMonitoring = Http.traits.HttpClient {
     config {
-      origin: "https://monitoring.googleapis.com"
-      timeoutMs: 30000
-      credentialHeaders: []
+      host: "monitoring.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "monitoring.googleapis.com"
+      credential: "GCLOUD_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
     }
     listens {
       CloudRunStatus.CR_HTTP_SEND -> HTTP_SEND
@@ -111,7 +114,6 @@ orbital CloudRunBoardOrbital {
       CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
-        (set @entity.token "")
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])
         (set @entity.requests [])
@@ -122,11 +124,10 @@ orbital CloudRunBoardOrbital {
         (set @entity.cursor 0)
         (set @entity.entries [])
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
-        (emit CR_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
+        (emit CR_MONITOR { })
       CLOUD_RUN_REFRESH -> reading
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
-        (set @entity.token "")
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])
         (set @entity.requests [])
@@ -137,7 +138,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.cursor 0)
         (set @entity.entries [])
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
-        (emit CR_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
+        (emit CR_MONITOR { })
     }
 
     state reading {
@@ -145,14 +146,12 @@ orbital CloudRunBoardOrbital {
       CLOUD_RUN_LOAD -> reading
       CLOUD_RUN_REFRESH -> reading
 
-      CR_RAN -> reading when (and (= @payload.stage "token") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
-        (set @entity.token (str/trim @payload.stdout))
-        (emit CR_HTTP_SEND { key: "time", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [{ name: "Authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none" })
-      CR_RAN -> reading when (and (= @payload.stage "token") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
+      CR_MONITOR -> reading
+        (emit CR_HTTP_SEND { key: "time", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [], body: (bytes/from-string ""), stream: "none" })
         (emit CR_COST { })
       CR_REPLIED -> reading when (= @payload.key "time")
         (set @entity.instanceSeconds (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid (default (bytes/to-string @payload.body) ""))) (array/filter (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
-        (emit CR_HTTP_SEND { key: "requests", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [{ name: "Authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none" })
+        (emit CR_HTTP_SEND { key: "requests", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [], body: (bytes/from-string ""), stream: "none" })
       CR_REPLIED -> reading when (= @payload.key "requests")
         (set @entity.requests (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid (default (bytes/to-string @payload.body) ""))) (array/filter (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
         (set @entity.usageAvailable true)
@@ -271,8 +270,6 @@ orbital CloudRunBoardOrbital {
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if @v.hasResourceData (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (str/concat @v.minInstances "–" @v.maxInstances), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
 
-      CR_CLI_FAILED -> reading when (= @payload.stage "token")
-        (emit CR_COST { })
       CR_CLI_FAILED -> reading when (= @payload.stage "cost")
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
       CR_CLI_FAILED -> reading when (= @payload.stage "services")
@@ -313,6 +310,9 @@ orbital CloudRunBoardOrbital {
       }
         @description "Internal: one bq run."
         @tier "internal"
+      CR_MONITOR -> internal { }
+        @description "Internal: read the month's usage from Cloud Monitoring."
+        @tier "internal"
       CR_COST -> internal { }
         @description "Internal: read the per-service cost."
         @tier "internal"
@@ -333,7 +333,7 @@ orbital CloudRunBoardOrbital {
         body : bytes!
         stream : string!
       }
-        @description "Internal: one request, for the HTTP fetch."
+        @description "Internal: one request, for the HTTP client."
         @tier "internal"
     }
 

@@ -1,0 +1,239 @@
+{
+ "atom": "spec/scratch/perkey.lolo",
+ "trait": "Caller",
+ "note": "R18: Caller.SEND -> SEND per @payload.key gives each key its own row of PerKey (state and frame), created on first use; PerKey is in the case defaults because the rows start from its initial state.",
+ "cases": [
+  {
+   "id": "interleaved-keys-step-independently-each-on-its-own-row",
+   "defaults": [
+    "PerKey"
+   ],
+   "steps": [
+    {
+     "trait": "Caller",
+     "event": "GO",
+     "payload": {
+      "key": "A",
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND",
+        "payload": {
+         "key": "A",
+         "n": 1
+        }
+       },
+       {
+        "event": "SENT",
+        "payload": {
+         "key": "A",
+         "val": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Caller",
+     "event": "GO",
+     "payload": {
+      "key": "B",
+      "n": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND",
+        "payload": {
+         "key": "B",
+         "n": 2
+        }
+       },
+       {
+        "event": "SENT",
+        "payload": {
+         "key": "B",
+         "val": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Caller",
+     "event": "BACK",
+     "payload": {
+      "key": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY",
+        "payload": {
+         "key": "A"
+        }
+       },
+       {
+        "event": "REPLIED",
+        "payload": {
+         "key": "A",
+         "holder": "A",
+         "val": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Caller",
+     "event": "BACK",
+     "payload": {
+      "key": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY",
+        "payload": {
+         "key": "B"
+        }
+       },
+       {
+        "event": "REPLIED",
+        "payload": {
+         "key": "B",
+         "holder": "B",
+         "val": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-same-key-shares-one-row",
+   "defaults": [
+    "PerKey"
+   ],
+   "steps": [
+    {
+     "trait": "Caller",
+     "event": "GO",
+     "payload": {
+      "key": "A",
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND",
+        "payload": {
+         "key": "A"
+        }
+       },
+       {
+        "event": "SENT",
+        "payload": {
+         "key": "A",
+         "val": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Caller",
+     "event": "GO",
+     "payload": {
+      "key": "A",
+      "n": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND",
+        "payload": {
+         "key": "A"
+        }
+       },
+       {
+        "event": "REFUSED",
+        "payload": {
+         "key": "A",
+         "holder": "A",
+         "val": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "SENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-to-a-key-never-sent-is-stray-on-its-own-fresh-row",
+   "defaults": [
+    "PerKey"
+   ],
+   "steps": [
+    {
+     "trait": "Caller",
+     "event": "GO",
+     "payload": {
+      "key": "A",
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SENT",
+        "payload": {
+         "key": "A",
+         "val": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Caller",
+     "event": "BACK",
+     "payload": {
+      "key": "C"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY",
+        "payload": {
+         "key": "C"
+        }
+       },
+       {
+        "event": "STRAY",
+        "payload": {
+         "key": "C",
+         "holder": "C"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REPLIED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

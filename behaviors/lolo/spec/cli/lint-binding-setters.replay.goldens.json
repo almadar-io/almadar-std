@@ -6814,6 +6814,200 @@
           }
         }
       ]
+    },
+    {
+      "id": "neverset-ctl-malformed-let-keeps-its-reads",
+      "steps": [
+        {
+          "trait": "OrbLintBindingSetters",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {},
+            "functions": [],
+            "busExcluded": [
+              "INIT",
+              "LOAD",
+              "$MOUNT"
+            ],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintBindingSetters",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "Fx",
+              "version": "1.0.0",
+              "description": "fx",
+              "orbitals": [
+                {
+                  "name": "NsOrbital",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "nullable": false,
+                        "name": "done",
+                        "type": "boolean",
+                        "default": false
+                      },
+                      {
+                        "nullable": false,
+                        "name": "count",
+                        "type": "number"
+                      },
+                      {
+                        "nullable": false,
+                        "name": "flag",
+                        "type": "boolean",
+                        "intrinsic": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "other",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "NsTrait",
+                      "linkedEntity": "Task",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "INIT"
+                          },
+                          {
+                            "key": "SHOW",
+                            "name": "SHOW"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.count",
+                                1
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SHOW",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    7,
+                                    "@payload.x"
+                                  ]
+                                ],
+                                [
+                                  "set",
+                                  "@entity.other",
+                                  "y"
+                                ],
+                                "@entity.title"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "NsOrbitalPage",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "NsTrait"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintBindingSetters",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "binding-setters",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_ENTITY_FIELD_NEVER_SET",
+                      "path": "orbitals[0 (NsOrbital)].traits[0 (NsTrait)]",
+                      "message": "trait \"NsTrait\" reads @entity.title (first seen on event \"SHOW\") but no transition runs (set @entity.title <value>); per the explicit-binding rule, every @entity.X must be set explicitly or it stays undefined",
+                      "suggestion": "Add (set @entity.title <default-or-payload>) in the trait's INIT transition or in a transition that runs before the read on entity \"Task\"",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

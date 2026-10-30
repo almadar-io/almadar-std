@@ -3,7 +3,7 @@
  "trait": "CloudRunStatus",
  "cases": [
   {
-   "id": "load-mints-token-first",
+   "id": "load-starts-the-monitoring-read-with-no-token-step",
    "now": 1792067445678,
    "steps": [
     {
@@ -13,52 +13,41 @@
       "state": "reading",
       "emits": [
        {
-        "event": "CR_GCLOUD",
-        "payload": {
-         "stage": "token",
-         "argv": [
-          "auth",
-          "print-access-token"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-empty-token-skips-monitoring-reads-cost",
-   "now": 1792067445678,
-   "steps": [
-    {
-     "event": "CLOUD_RUN_LOAD",
-     "payload": {}
-    },
-    {
-     "event": "CR_RAN",
-     "payload": {
-      "stage": "token",
-      "exitCode": 1,
-      "signal": 0,
-      "stdout": "",
-      "stderr": "",
-      "stdoutBytes": ""
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "CR_COST",
+        "event": "CR_MONITOR",
         "payload": {}
        }
+      ],
+      "neverEmits": [
+       "CR_GCLOUD"
       ]
      }
     }
    ]
   },
   {
-   "id": "cli-failed-token-reads-cost",
+   "id": "refresh-starts-the-monitoring-read-with-no-token-step",
+   "now": 1792067445678,
+   "steps": [
+    {
+     "event": "CLOUD_RUN_REFRESH",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_MONITOR",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "CR_GCLOUD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-monitoring-read-goes-on-to-cost",
    "now": 1792067445678,
    "steps": [
     {
@@ -66,11 +55,11 @@
      "payload": {}
     },
     {
-     "event": "CR_CLI_FAILED",
+     "event": "CR_FAILED",
      "payload": {
-      "stage": "token",
-      "error": "no gcloud",
-      "code": "cli_failed"
+      "key": "time",
+      "error": "credential not held",
+      "kind": "denied"
      },
      "from": "reading",
      "expect": {

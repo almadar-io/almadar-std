@@ -7,8 +7,8 @@ app std-launchpad [
   sys: [memory, cpu],
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
   description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status, std-aws-board, std-ci-run-logs, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. Its tab bar is Home (the dashboard) plus one tab per opened app: Open on a tile or a recent adds the tab and shows the board's own view in it, with `@trait.X` embedding; switching tabs switches the view and every open board keeps its state; closing a tab removes the board's view (its trait keeps its state, as any trait does when its view is not shown). A board is inert until its Load is pressed: its INIT only draws its view (the loadOnInit knobs stay false), so opening the launchpad reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home holds Recent (the opens remembered per machine in ~/.almadar/launchpad/recents.json by std-launchpad-recents, those of the boards knob's apps shown, each reopening its tab), Open now (the tabs, with Open and Close; a click on a failing row of the CI status tab opens or focuses the CI run logs tab and reads that run), the tiles of the boards knob (id, label, topic and a one-line description, in the sections the sections knob names), the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open tab, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its tab), the machine's memory, CPU, load and uptime (std-system-stats) and the orb's own version, uptime and kernel counters (std-orb-stats). The top bar holds AUTH_PROVIDER and the problems std-boot-env-check reports for this machine. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is the variables the boot gate reads (std-http-boot-gate reads ALMADAR_INTEGRATIONS_MODE too, and the launchpad ignores a mock value there) with PATH and HOME for the CLIs; egress lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. Serve it with `orb launchpad`.",
-  egress: ["https://api.github.com", "https://firebaseapphosting.googleapis.com", "https://monitoring.googleapis.com", "https://api.deepseek.com", "https://api.moonshot.ai", "http://127.0.0.1:3000"],
-  net: { "openrouter.ai:443": [tcp] },
+  egress: ["https://api.github.com", "https://api.deepseek.com", "https://api.moonshot.ai", "http://127.0.0.1:3000"],
+  net: { "openrouter.ai:443": [tcp], "firebaseapphosting.googleapis.com:443": [tcp], "monitoring.googleapis.com:443": [tcp] },
 ]
 ;; @capabilities "open an orb operations board or the behavior playground as a tab and run it live, switch between open apps, close an app, see the memory and cpu of this machine, see the orb's version and kernel counters, remember recent opens"
 
@@ -112,14 +112,24 @@ orbital Launchpad {
       backends: ["almadar-analytics", "almadar-builder-server", "almadar-kflow-server", "kflow-server", "almadar-inspection-server", "almadar-iram-server", "almadar-kekec-server", "almadar-trait-wars-server", "almadar-alummaalraqamia-server", "almadar-blaz-klemenc-server"]
     }
   }
-  trait AhApi = Ah.traits.AhApi {}
+  trait AhApi = Ah.traits.AhApi {
+    listens {
+      AppHostingStatus.AH_HTTP_SEND -> HTTP_SEND
+      CatEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL when (array/includes ["rollouts", "build"] @payload.key)
+    }
+  }
   trait AhGcloud = Ah.traits.AhGcloud {}
   trait CloudRunStatus = Cr.traits.CloudRunStatus {
     config {
       project: "kflow-b3a39"
     }
   }
-  trait CrMonitoring = Cr.traits.CrMonitoring {}
+  trait CrMonitoring = Cr.traits.CrMonitoring {
+    listens {
+      CloudRunStatus.CR_HTTP_SEND -> HTTP_SEND
+      CatEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL when (array/includes ["time", "requests"] @payload.key)
+    }
+  }
   trait CrGcloud = Cr.traits.CrGcloud {}
   trait CrBq = Cr.traits.CrBq {}
   trait TrainingStatus = Tr.traits.TrainingStatus {}
