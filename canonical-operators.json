@@ -7178,6 +7178,118 @@
       ],
       "docsSource": "generated"
     },
+    "credential-connect": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Ask the host's credential store to exchange an OAuth code at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. credential, clientId and clientSecret are secret knobs; code and verifier are the single-use values, redacted in the journal. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+      "module": "core",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "credential-connect",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "connected": "boolean",
+            "label": "string"
+          }
+        }
+      },
+      "closedCall": {
+        "request": true
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "credential": "string",
+              "scope": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "app"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "user"
+                  }
+                ]
+              },
+              "tokenEndpoint": "string",
+              "grant": "string",
+              "code": "string",
+              "redirectUri": "string",
+              "verifier": "string",
+              "clientId": "string",
+              "clientSecret": "string",
+              "clientAuth": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "body"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "basic"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "none"
+                  }
+                ]
+              },
+              "scopes": {
+                "kind": "array",
+                "of": "string"
+              }
+            },
+            "optional": [
+              "scope",
+              "verifier",
+              "clientSecret",
+              "scopes"
+            ]
+          },
+          "description": "{ credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { connected, label } payload and the { error, kind } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(credential-connect {\"credential\":\"@config.googleToken\",\"tokenEndpoint\":\"https://oauth2.googleapis.com/token\",\"grant\":\"authorization_code\",\"code\":\"@payload.code\",\"redirectUri\":\"https://app.example.com/cb\",\"clientId\":\"@config.googleClientId\",\"clientAuth\":\"body\"} {\"emit\":{\"success\":\"CONNECTED\",\"failure\":\"CONNECT_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "credential-forget": {
       "category": "effect",
       "minArity": 1,
@@ -7241,7 +7353,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service and name, never a value) and the credentials the registered programs declare (group, envVar, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared }.",
+      "description": "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared, services }.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7259,9 +7371,13 @@
                 "kind": "object",
                 "fields": {
                   "service": "string",
-                  "name": "string"
+                  "name": "string",
+                  "last4": "string"
                 },
-                "open": true
+                "optional": [
+                  "last4"
+                ],
+                "open": false
               }
             },
             "declared": {
@@ -7274,6 +7390,32 @@
                   "description": "string"
                 },
                 "open": true
+              }
+            },
+            "services": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "name": "string",
+                  "backend": "string",
+                  "credentials": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "envVar": "string",
+                        "required": "boolean",
+                        "description": "string"
+                      },
+                      "open": false
+                    }
+                  }
+                },
+                "optional": [
+                  "backend"
+                ],
+                "open": false
               }
             }
           }
@@ -14271,7 +14413,11 @@
       "visual": {
         "form": "block"
       },
-      "failable": {},
+      "failable": {
+        "unlessObject": [
+          0
+        ]
+      },
       "title": "Set",
       "params": [
         {
@@ -19666,7 +19812,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential, encode? } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, passed through its encode when it has one (base64 is standard padded base64, uri is encodeURIComponent, form is application/x-www-form-urlencoded with a space as +; any other value is refused), where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
+      "description": "Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential, encode?, scope? } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, passed through its encode when it has one (base64 is standard padded base64, uri is encodeURIComponent, form is application/x-www-form-urlencoded with a space as +; any other value is refused), where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A segment scope is app (the default: the app-wide credential) or user (the credential of the signed-in viewer of the dispatch, so two viewers send two values; a user segment with no signed-in viewer fails the send as denied before anything is written; any other scope is refused); the journal records the credential reference and its scope, never a value. A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "visual": {
         "form": "actuator"
@@ -19723,16 +19869,30 @@
                           "value": "form"
                         }
                       ]
+                    },
+                    "scope": {
+                      "kind": "union",
+                      "of": [
+                        {
+                          "kind": "literal",
+                          "value": "app"
+                        },
+                        {
+                          "kind": "literal",
+                          "value": "user"
+                        }
+                      ]
                     }
                   },
                   "optional": [
-                    "encode"
+                    "encode",
+                    "scope"
                   ]
                 }
               }
             ]
           },
-          "description": "Content to send: bytes, or a list of { bytes, credential, encode? } segments"
+          "description": "Content to send: bytes, or a list of { bytes, credential, encode?, scope? } segments"
         },
         {
           "name": "options",

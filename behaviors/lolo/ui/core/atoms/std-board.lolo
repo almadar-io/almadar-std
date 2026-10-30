@@ -246,14 +246,14 @@ orbital BoardOrbital {
       ;; the background; the BoardItemsLoaded arm below already recomputes
       ;; @entity.boards, which the mounted data-grid is bound to, so the grid
       ;; updates in place with no unmount/flicker.
-      REFETCH_QUERY -> viewing_board when (or (= @config.searchRelation null) (= ?searchTerm ""))
+      REFETCH_QUERY -> viewing_board when (or (not (validate/required @config.searchRelation)) (= ?searchTerm ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
-      REFETCH_QUERY -> viewing_board when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+      REFETCH_QUERY -> viewing_board when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsRelatedLoaded }
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
@@ -266,7 +266,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {

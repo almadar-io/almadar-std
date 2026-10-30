@@ -134,7 +134,7 @@ orbital BrowseItemOrbital {
       ;; in the background; when BrowseItemLoaded arrives we render the
       ;; grid with the new rows (handler below), so React reconciles the
       ;; data-grid in place instead of unmounting it.
-      REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+      REFETCH_QUERY -> browsing when (or (not (validate/required @config.searchRelation)) (= ?searchTerm ""))
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
@@ -144,7 +144,7 @@ orbital BrowseItemOrbital {
           orderBy: @config.orderBy
           offset: 0
         })
-      REFETCH_QUERY -> browsing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+      REFETCH_QUERY -> browsing when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemRelatedLoaded }
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
@@ -153,7 +153,7 @@ orbital BrowseItemOrbital {
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy

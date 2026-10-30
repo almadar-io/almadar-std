@@ -82,7 +82,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Set nested value by path (returns new object). A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    failable: {},
+    failable: { unlessObject: [0] },
     returnType: nullable(tv('R')),
     params: [
       { name: 'obj', type: rec('R'), description: 'The object' },

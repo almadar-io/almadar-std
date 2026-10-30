@@ -46,7 +46,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
         })
       CalendarEventLoaded -> loading when (> ?totalCount (array/len ?data))
         (emit CalendarEventLoadFailed { error: (str/concat "CalendarEvent has " ?totalCount " events, over the maxRows cap of " @config.maxRows), code: "CALENDAR_OVER_CAP" })
@@ -123,14 +123,14 @@ orbital CalendarEventOrbital {
       ;; to `loading` without repainting, so the current grid/agenda/timeline
       ;; stays mounted until CalendarEventLoaded's own render-ui fires — a
       ;; repaint here would flicker the toolbar's search-input every keystroke.
-      REFETCH_QUERY -> loading when (or (= @config.searchRelation null) (= ?searchTerm ""))
+      REFETCH_QUERY -> loading when (or (not (validate/required @config.searchRelation)) (= ?searchTerm ""))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
-      REFETCH_QUERY -> loading when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+      REFETCH_QUERY -> loading when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventRelatedLoaded }
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))

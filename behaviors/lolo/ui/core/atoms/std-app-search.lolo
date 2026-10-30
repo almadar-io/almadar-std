@@ -52,7 +52,7 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching when (= @config.searchRelation null)
+      APP_SEARCH -> searching when (not (validate/required @config.searchRelation))
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
@@ -74,7 +74,7 @@ orbital AppSearchOrbital {
             content: "Searching…"
           }]
         })
-      APP_SEARCH -> searching when (!= @config.searchRelation null)
+      APP_SEARCH -> searching when (validate/required @config.searchRelation)
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
@@ -109,7 +109,7 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching when (= @config.searchRelation null)
+      APP_SEARCH -> searching when (not (validate/required @config.searchRelation))
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
@@ -131,7 +131,7 @@ orbital AppSearchOrbital {
             content: "Searching…"
           }]
         })
-      APP_SEARCH -> searching when (!= @config.searchRelation null)
+      APP_SEARCH -> searching when (validate/required @config.searchRelation)
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
@@ -156,7 +156,7 @@ orbital AppSearchOrbital {
         (emit AppSearchFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows) })
       AppSearchRelatedLoaded -> searching
         (fetch AppSearchTarget {
-          filter: (or (= @entity.searchTerm "") (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
+          filter: (or (= @entity.searchTerm "") (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
           limit: @config.pageSize
           offset: (* (- @entity.appSearchPage 1) @config.pageSize)
@@ -228,7 +228,7 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
-      APP_SEARCH -> searching when (= @config.searchRelation null)
+      APP_SEARCH -> searching when (not (validate/required @config.searchRelation))
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
@@ -250,7 +250,7 @@ orbital AppSearchOrbital {
             content: "Searching…"
           }]
         })
-      APP_SEARCH -> searching when (!= @config.searchRelation null)
+      APP_SEARCH -> searching when (validate/required @config.searchRelation)
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
@@ -271,7 +271,7 @@ orbital AppSearchOrbital {
             content: "Searching…"
           }]
         })
-      REFETCH_PAGE -> searching when (= @config.searchRelation null)
+      REFETCH_PAGE -> searching when (not (validate/required @config.searchRelation))
         (set @entity.appSearchPage ?page)
         (fetch AppSearchTarget {
           filter: (or (= @entity.searchTerm "") (str/includes (object/get @entity @config.searchField) @entity.searchTerm))
@@ -279,7 +279,7 @@ orbital AppSearchOrbital {
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
         })
-      REFETCH_PAGE -> searching when (!= @config.searchRelation null)
+      REFETCH_PAGE -> searching when (validate/required @config.searchRelation)
         (set @entity.appSearchPage ?page)
         (fetch @config.relatedEntity {
           filter: (or (= @entity.searchTerm "") (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.searchTerm)))

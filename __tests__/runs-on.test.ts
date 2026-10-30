@@ -31,7 +31,7 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
       'persist', 'persist/read-named', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());

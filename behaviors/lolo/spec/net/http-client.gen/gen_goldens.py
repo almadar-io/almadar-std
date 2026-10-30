@@ -324,6 +324,28 @@ grefuse("a-query-credential-with-a-credential-header-is-refused",dict(QRY,creden
 grefuse("a-header-credential-with-a-credential-name-is-refused",dict(CRED,credentialName="key"))
 grefuse("an-encode-with-no-credential-header-is-refused",{"credential":"BASIC_LOGIN","credentialEncode":"base64"})
 
+# credential scope: user sends the signed-in viewer's credential; app (the default) writes the segment without a scope
+def usegs(enc,scope="user"):
+    seg={"bytes":"@entity.head","credential":"@config.credential"}
+    if enc: seg["encode"]=enc
+    if scope: seg["scope"]=scope
+    return [seg,{"bytes":"@entity.request","credential":""}]
+def usent(enc,scope="user"): return step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":usegs(enc,scope)}]})
+UBEARER={"credential":"USER_TOKEN","credentialHeader":"authorization","credentialPrefix":"Bearer ","credentialScope":"user"}
+gcase("a-user-scoped-header-credential-is-a-user-segment-of-the-signed-in-viewer",UBEARER,[
+ dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Bearer ","\r\n\r\n")),usent(None)],credentials={"USER_TOKEN":"tok"})
+gcase("control-an-explicit-app-scope-writes-the-same-segment-as-the-default-with-no-scope",dict(UBEARER,credentialScope="app"),[
+ dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Bearer ","\r\n\r\n")),usent(None,None)],credentials={"USER_TOKEN":"tok"})
+gcase("a-user-scoped-basic-credential-keeps-its-base64-encode",dict(BASIC,credentialScope="user"),[
+ dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Basic ","\r\n\r\n")),usent("base64")],credentials={"BASIC_LOGIN":"user:pass"})
+gcase("a-user-scoped-query-credential-is-a-user-segment-with-the-uri-encode",dict(QRY,credentialScope="user"),[
+ dict(send(target="/x"),expect=exact("GET /x?key="," HTTP/1.1"+HOSTL+"\r\n")),usent("uri")],credentials={"API_KEY":"k e&y"})
+gcase("a-user-scoped-body-credential-is-a-user-segment-with-the-form-encode",dict(BOD,credentialScope="user"),[
+ dict(send(method="POST",target="/revoke",headers=FORMCT,body=""),expect=exact("POST /revoke HTTP/1.1"+HOSTL+CT+"content-length: 21\r\n\r\nclient_secret=","")),usent("form")],credentials={"CLIENT_SECRET":"a b&c"})
+gcase("control-a-user-scope-with-no-credential-header-is-one-plain-send",{"credential":"USER_TOKEN","credentialScope":"user"},[
+ dict(send(),expect={"state":"connecting","effects":[{"type":"os/tcp-connect","arg0":"api.example.test","arg1":80}]}),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":"@entity.request"}]})])
+
 # body limit
 json.dump({"atom":"net/atoms/std-http-client.lolo","trait":"HttpClient","spec":"spec/net/http-client.lolo","note":"parity oracle: the retired drivers/http_request wire loop; request composition, framing, streaming, refusals and failure kinds","cases":cases},open(out,'w'),indent=1)
 print(len(cases))

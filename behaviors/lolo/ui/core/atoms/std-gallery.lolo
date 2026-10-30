@@ -171,7 +171,7 @@ orbital GalleryItemOrbital {
       ;; media-gallery every keystroke and flicker. The fetch fires in the
       ;; background; when GalleryItemLoaded arrives below, React reconciles
       ;; the grid in place instead of unmounting it.
-      REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+      REFETCH_QUERY -> browsing when (or (not (validate/required @config.searchRelation)) (= ?searchTerm ""))
         (set @entity.gallerySearchTerm ?searchTerm)
         (set @entity.galleryPage 1)
         (fetch GalleryItem {
@@ -180,7 +180,7 @@ orbital GalleryItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-      REFETCH_QUERY -> browsing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+      REFETCH_QUERY -> browsing when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (set @entity.gallerySearchTerm ?searchTerm)
         (set @entity.galleryPage 1)
         (fetch @config.relatedEntity {
@@ -193,11 +193,11 @@ orbital GalleryItemOrbital {
       GalleryItemRelatedLoaded -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (and (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
+          filter: (and (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: (* (- @entity.galleryPage 1) @config.pageSize)
         })
-      REFETCH_FILTER -> browsing when (or (= @config.searchRelation null) (= @entity.gallerySearchTerm ""))
+      REFETCH_FILTER -> browsing when (or (not (validate/required @config.searchRelation)) (= @entity.gallerySearchTerm ""))
         (set @entity.galleryFilterField ?field)
         (set @entity.galleryFilterValue ?value)
         (set @entity.galleryPage 1)
@@ -207,7 +207,7 @@ orbital GalleryItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-      REFETCH_FILTER -> browsing when (and (!= @config.searchRelation null) (!= @entity.gallerySearchTerm ""))
+      REFETCH_FILTER -> browsing when (and (validate/required @config.searchRelation) (!= @entity.gallerySearchTerm ""))
         (set @entity.galleryFilterField ?field)
         (set @entity.galleryFilterValue ?value)
         (set @entity.galleryPage 1)
@@ -216,7 +216,7 @@ orbital GalleryItemOrbital {
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") @entity.gallerySearchTerm))
           limit: @config.relatedMaxRows
         })
-      REFETCH_PAGE -> browsing when (or (= @config.searchRelation null) (= @entity.gallerySearchTerm ""))
+      REFETCH_PAGE -> browsing when (or (not (validate/required @config.searchRelation)) (= @entity.gallerySearchTerm ""))
         (set @entity.galleryPage ?page)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
@@ -224,7 +224,7 @@ orbital GalleryItemOrbital {
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
         })
-      REFETCH_PAGE -> browsing when (and (!= @config.searchRelation null) (!= @entity.gallerySearchTerm ""))
+      REFETCH_PAGE -> browsing when (and (validate/required @config.searchRelation) (!= @entity.gallerySearchTerm ""))
         (set @entity.galleryPage ?page)
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }

@@ -114,6 +114,8 @@ export interface FailableMeta {
   unlessNominal?: number[];
   /** Argument positions whose value, typed non-optional, cannot make the call fail (`tree/fold` of a present value). */
   unlessPresent?: number[];
+  /** Argument positions whose value, proved an object (a Map, a closed struct, a row or an object literal), cannot make the call fail (object/set of an object). */
+  unlessObject?: number[];
 }
 
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */
@@ -433,6 +435,7 @@ export interface OperatorEffectMeta {
     | 'random-bytes'
     | 'credential-status'
     | 'credential-forget'
+    | 'credential-connect'
     | 'access-check'
     | 'credential-list'
     | 'credential-set'

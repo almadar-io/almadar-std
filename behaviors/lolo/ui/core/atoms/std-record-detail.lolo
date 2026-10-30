@@ -59,11 +59,11 @@ orbital RecordItemOrbital {
       ;; Slug-routed open (/things/:slug): no id on the payload, so fetch by
       ;; the slug field instead. Filtered rather than by-id, so the success
       ;; payload is a collection — its own event keeps the two shapes honest.
-      INIT -> loading when (and (= @config.openOn "init") (= (default ?id "") "") (!= (default ?slug "") ""))
+      INIT -> loading when (and (= @config.openOn "init") (= (default ?id "") "") (!= (default ?slug "") "") (validate/required @config.slugField))
         (set @entity.slug ?slug)
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
-          filter: (= (object/get @entity slug) ?slug)
+          filter: (= (object/get @entity @config.slugField) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -72,7 +72,7 @@ orbital RecordItemOrbital {
       ;; fetch by the (missing) id so the failure surfaces as the error
       ;; state's alert + Retry instead of a silent blank page. This is the
       ;; pre-slug atom's exact behavior, kept as the explicit last arm.
-      INIT -> loading when (and (= @config.openOn "init") (= (default ?id "") "") (= (default ?slug "") ""))
+      INIT -> loading when (and (= @config.openOn "init") (= (default ?id "") "") (or (= (default ?slug "") "") (not (validate/required @config.slugField))))
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
           emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
@@ -126,11 +126,11 @@ orbital RecordItemOrbital {
         ;; Skeleton, not a blank frame: the hand-authored detail traits this
         ;; atom replaces rendered nothing until the record arrived.
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") ""))
+      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") "") (validate/required @config.slugField))
         (set @entity.slug ?slug)
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
-          filter: (= (object/get @entity slug) ?slug)
+          filter: (= (object/get @entity @config.slugField) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -219,11 +219,11 @@ orbital RecordItemOrbital {
           include: @config.include
         })
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") "") (!= ?slug @entity.slug))
+      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") "") (validate/required @config.slugField) (!= ?slug @entity.slug))
         (set @entity.slug ?slug)
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
-          filter: (= (object/get @entity slug) ?slug)
+          filter: (= (object/get @entity @config.slugField) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -260,11 +260,11 @@ orbital RecordItemOrbital {
           id: ?id
           include: @config.include
         })
-      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") ""))
+      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") "") (validate/required @config.slugField))
         (set @entity.slug ?slug)
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
-          filter: (= (object/get @entity slug) ?slug)
+          filter: (= (object/get @entity @config.slugField) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -329,11 +329,11 @@ orbital RecordItemOrbital {
           include: @config.include
         })
         (render-ui main @config.loadingContent)
-      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") ""))
+      INIT -> loading when (and (= (default ?id "") "") (!= (default ?slug "") "") (validate/required @config.slugField))
         (set @entity.slug ?slug)
         (set @entity.openDraft (default ?draft ""))
         (fetch RecordItem {
-          filter: (= (object/get @entity slug) ?slug)
+          filter: (= (object/get @entity @config.slugField) ?slug)
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
@@ -635,6 +635,11 @@ orbital RecordItemOrbital {
         @label "Which field is the cover image?"
         @description "Name of the image-typed field on the loaded record painted as the hero banner of the document look and of the profile record look (e.g. coverImage, heroImage). Unset = no banner, the default."
         @synonyms "cover field, hero image field, banner field"
+        @tier "presentation"
+      slugField : field @entity string
+        @label "Which field is the address key?"
+        @description "Name of the field on the record matched against the address key when the surface opens by slug instead of id (e.g. slug). Unset = id-only opening; an address key without it reaches the same error alert as a missing id."
+        @synonyms "slug field, permalink field, url key field"
         @tier "presentation"
       iconField : field @entity string
         @label "Which field is the document icon?"

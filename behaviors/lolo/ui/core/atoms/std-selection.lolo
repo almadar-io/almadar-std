@@ -162,7 +162,7 @@ orbital SelectableItemOrbital {
       ;; on refetch unmounts the list and flickers every keystroke. The fetch
       ;; fires in the background; the SelectableItemLoaded arm below
       ;; re-renders in place once it lands.
-      REFETCH_QUERY -> idle when (or (= @config.searchRelation null) (= ?searchTerm ""))
+      REFETCH_QUERY -> idle when (or (not (validate/required @config.searchRelation)) (= ?searchTerm ""))
         (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
@@ -170,7 +170,7 @@ orbital SelectableItemOrbital {
           limit: @config.pageSize
           offset: 0
         })
-      REFETCH_QUERY -> idle when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+      REFETCH_QUERY -> idle when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemRelatedLoaded }
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
@@ -182,7 +182,7 @@ orbital SelectableItemOrbital {
         (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
-          filter: (if (= @config.searchRelation null) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
           limit: @config.pageSize
           offset: 0
         })

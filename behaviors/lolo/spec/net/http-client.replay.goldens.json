@@ -5639,6 +5639,470 @@
     "credential": "BASIC_LOGIN",
     "credentialEncode": "base64"
    }
+  },
+  {
+   "id": "a-user-scoped-header-credential-is-a-user-segment-of-the-signed-in-viewer",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "scope": "user"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "USER_TOKEN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer ",
+    "credentialScope": "user"
+   },
+   "credentials": {
+    "USER_TOKEN": "tok"
+   }
+  },
+  {
+   "id": "control-an-explicit-app-scope-writes-the-same-segment-as-the-default-with-no-scope",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmVhcmVyIA==",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "USER_TOKEN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer ",
+    "credentialScope": "app"
+   },
+   "credentials": {
+    "USER_TOKEN": "tok"
+   }
+  },
+  {
+   "id": "a-user-scoped-basic-credential-keeps-its-base64-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "base64",
+          "scope": "user"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Basic ",
+    "credentialEncode": "base64",
+    "credentialScope": "user"
+   },
+   "credentials": {
+    "BASIC_LOGIN": "user:pass"
+   }
+  },
+  {
+   "id": "a-user-scoped-query-credential-is-a-user-segment-with-the-uri-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "uri",
+          "scope": "user"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key",
+    "credentialScope": "user"
+   },
+   "credentials": {
+    "API_KEY": "k e&y"
+   }
+  },
+  {
+   "id": "a-user-scoped-body-credential-is-a-user-segment-with-the-form-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/revoke",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvcmV2b2tlIEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQpjb250ZW50LXR5cGU6IGFwcGxpY2F0aW9uL3gtd3d3LWZvcm0tdXJsZW5jb2RlZA0KY29udGVudC1sZW5ndGg6IDIxDQoNCmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvcmV2b2tlIEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQpjb250ZW50LXR5cGU6IGFwcGxpY2F0aW9uL3gtd3d3LWZvcm0tdXJsZW5jb2RlZA0KY29udGVudC1sZW5ndGg6IDIxDQoNCmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "form",
+          "scope": "user"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret",
+    "credentialScope": "user"
+   },
+   "credentials": {
+    "CLIENT_SECRET": "a b&c"
+   }
+  },
+  {
+   "id": "control-a-user-scope-with-no-credential-header-is-one-plain-send",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": "@entity.request"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "USER_TOKEN",
+    "credentialScope": "user"
+   }
   }
  ]
 }

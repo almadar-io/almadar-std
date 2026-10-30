@@ -1,24 +1,25 @@
 {
   "atom": "net/atoms/std-webhook.lolo",
   "trait": "WebhookClient",
+  "note": "std-webhook over the composed std-http-client: one declared destination (the sibling WebhookHttp trait), the POST is one WEBHOOK_HTTP_SEND, the HMAC signature is computed in .lolo over the signingSecret credential slot and rides X-Almadar-Signature, replies and failures return through the sibling client, a sibling WebhookTimeout races each attempt.",
   "cases": [
     {
-      "id": "a send to a url that is not http or https is refused before any attempt",
+      "id": "a send with an empty event name is refused before any attempt",
       "steps": [
         {
           "from": "idle",
           "event": "WEBHOOK_SEND",
           "payload": {
-            "url": "ftp://hooks.example.test/x",
-            "event": "order.created",
+            "event": "",
             "payload": "{\"id\":1}"
           },
           "expect": {
+            "state": "idle",
             "emits": [
               {
                 "event": "WEBHOOK_FAILED",
                 "payload": {
-                  "message": "Invalid URL",
+                  "message": "Invalid event: the event name is empty",
                   "attempts": 0
                 }
               }
@@ -31,21 +32,23 @@
       ]
     },
     {
-      "id": "CONTROL a send to an https url is handed to the retry under its call key",
+      "id": "CONTROL a send with an event name is handed to the retry under its call key",
       "steps": [
         {
           "from": "idle",
           "event": "WEBHOOK_SEND",
           "payload": {
-            "url": "https://hooks.example.test/x",
             "event": "order.created",
             "payload": "{\"id\":1}"
           },
           "expect": {
+            "state": "sending",
             "emits": [
               {
                 "event": "WEBHOOK_RETRY_START",
-                "payload": {}
+                "payload": {
+                  "key": "webhook:1"
+                }
               }
             ],
             "neverEmits": [
@@ -56,28 +59,434 @@
       ]
     },
     {
-      "id": "a send with an empty event name is refused",
+      "id": "an unsigned attempt asks the http client for one POST to the declared path with the event header and no signature",
+      "config": {
+        "path": "/hooks/orders"
+      },
       "steps": [
         {
-          "from": "idle",
-          "event": "WEBHOOK_SEND",
-          "payload": {
-            "url": "https://hooks.example.test/x",
-            "event": "",
-            "payload": "{\"id\":1}"
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 0
           },
+          "payload": {},
           "expect": {
+            "state": "sending",
             "emits": [
               {
-                "event": "WEBHOOK_FAILED",
+                "event": "WEBHOOK_HTTP_SEND",
                 "payload": {
-                  "message": "Invalid URL",
-                  "attempts": 0
+                  "key": "webhook:1",
+                  "method": "POST",
+                  "target": "/hooks/orders",
+                  "headers": [
+                    {
+                      "name": "Accept",
+                      "value": "*/*"
+                    },
+                    {
+                      "name": "Content-Type",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "X-Almadar-Event",
+                      "value": "order.created"
+                    }
+                  ],
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WebhookHttp",
+        "WebhookTimeout"
+      ]
+    },
+    {
+      "id": "a signed attempt adds the X-Almadar-Signature header and the secret is in no emit",
+      "config": {
+        "signed": true
+      },
+      "credentials": {
+        "WEBHOOK_SIGNING_SECRET": "s3cr3t-value"
+      },
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 0
+          },
+          "payload": {},
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_HTTP_SEND",
+                "payload": {
+                  "key": "webhook:1",
+                  "method": "POST",
+                  "target": "/"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WebhookHttp",
+        "WebhookTimeout"
+      ]
+    },
+    {
+      "id": "a signed attempt whose signing credential is not held fails the attempt to the retry",
+      "config": {
+        "signed": true,
+        "signingSecret": "HOOK_KEY"
+      },
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 0
+          },
+          "payload": {},
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_FAILED",
+                "payload": {
+                  "key": "webhook:1",
+                  "error": "the signing secret credential is not held"
                 }
               }
             ],
             "neverEmits": [
-              "WEBHOOK_RETRY_START"
+              "WEBHOOK_HTTP_SEND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a 2xx reply answers the result and tells the retry it succeeded",
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_REPLIED",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 1,
+            "startedAt": "2026-01-01T00:00:00Z"
+          },
+          "payload": {
+            "status": 204,
+            "body": "",
+            "headers": {}
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_SUCCEEDED",
+                "payload": {
+                  "key": "webhook:1"
+                }
+              },
+              {
+                "event": "WEBHOOK_RESULT",
+                "payload": {
+                  "status": 204,
+                  "ok": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_FAILED",
+              "WEBHOOK_RETRY_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a 4xx reply is a result, not a failure",
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_REPLIED",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 1,
+            "startedAt": "2026-01-01T00:00:00Z"
+          },
+          "payload": {
+            "status": 404,
+            "body": "",
+            "headers": {}
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_RESULT",
+                "payload": {
+                  "status": 404,
+                  "ok": false
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_FAILED",
+              "WEBHOOK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a 5xx reply fails the attempt to the retry and stays sending",
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_REPLIED",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 1
+          },
+          "payload": {
+            "status": 503,
+            "body": "",
+            "headers": {}
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_FAILED",
+                "payload": {
+                  "key": "webhook:1",
+                  "error": "Webhook endpoint returned 503"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreachable endpoint fails the attempt to the retry with the client error",
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_UNREACHABLE",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 1
+          },
+          "payload": {
+            "error": "connection refused",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_FAILED",
+                "payload": {
+                  "key": "webhook:1",
+                  "error": "connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the retry giving up answers the failure with the last error and the attempts",
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_GAVE_UP",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 3,
+            "lastError": "Webhook endpoint returned 503"
+          },
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "message": "Webhook endpoint returned 503",
+                  "attempts": 3
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the clients reply reaches the reply route with its body as text",
+      "defaults": [
+        "WebhookHttp"
+      ],
+      "steps": [
+        {
+          "trait": "WebhookHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "webhook:1",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAyIEFjY2VwdGVkDQpjb250ZW50LWxlbmd0aDogMA0KDQo=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "webhook:1",
+                  "status": 202
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_UNREACHABLE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the clients failure reaches the unreachable route",
+      "steps": [
+        {
+          "trait": "WebhookClient",
+          "event": "WEBHOOK_UNREACHABLE",
+          "from": "sending",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "order.created",
+            "payload": "{\"id\":1}",
+            "attempts": 0
+          },
+          "payload": {
+            "error": "credential x is not held",
+            "kind": "denied"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_FAILED",
+                "payload": {
+                  "error": "credential x is not held"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the deadline passing fails the attempt with the timeout message",
+      "steps": [
+        {
+          "trait": "WebhookTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "webhook:1"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "webhook:1",
+                  "timeoutMs": 10000
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a reply before the deadline wins the race and disarms it",
+      "steps": [
+        {
+          "trait": "WebhookTimeout",
+          "event": "START",
+          "payload": {
+            "key": "webhook:1"
+          },
+          "expect": {
+            "state": "running"
+          }
+        },
+        {
+          "trait": "WebhookTimeout",
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "webhook:1"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "TIMED_OUT"
             ]
           }
         }

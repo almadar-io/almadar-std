@@ -1099,6 +1099,48 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["credential-forget", "@config.googleToken", { "emit": { "success": "DISCONNECTED" } }]',
     effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN, label: STRING }) },
   },
+  'credential-connect': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Ask the host's credential store to exchange an OAuth code at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. credential, clientId and clientSecret are secret knobs; code and verifier are the single-use values, redacted in the journal. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    closedCall: { request: true },
+    returnType: 'void',
+    params: [
+      {
+        name: 'request',
+        type: shape(
+          {
+            credential: STRING,
+            scope: union(lit('app'), lit('user')),
+            tokenEndpoint: STRING,
+            grant: STRING,
+            code: STRING,
+            redirectUri: STRING,
+            verifier: STRING,
+            clientId: STRING,
+            clientSecret: STRING,
+            clientAuth: union(lit('body'), lit('basic'), lit('none')),
+            scopes: list(STRING),
+          },
+          ['scope', 'verifier', 'clientSecret', 'scopes'],
+        ),
+        description: '{ credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? }',
+      },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { connected, label } payload and the { error, kind } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-connect", { "credential": "@config.googleToken", "tokenEndpoint": "https://oauth2.googleapis.com/token", "grant": "authorization_code", "code": "@payload.code", "redirectUri": "https://app.example.com/cb", "clientId": "@config.googleClientId", "clientAuth": "body" }, { "emit": { "success": "CONNECTED", "failure": "CONNECT_FAILED" } }]',
+    effect: { kind: 'credential-connect', produces: shape({ connected: BOOLEAN, label: STRING }) },
+  },
   'access-check': {
     module: 'core',
     category: 'effect',
@@ -1137,7 +1179,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service and name, never a value) and the credentials the registered programs declare (group, envVar, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared }.",
+      "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared, services }.",
     hasSideEffects: true,
     runsOn: 'server',
     closedCall: { request: true },
@@ -1152,7 +1194,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-list", { "service": "llm" }, { "emit": { "success": "LISTED" } }]',
-    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, entries: list(openShape({ service: STRING, name: STRING })), declared: list(openShape({ group: STRING, envVar: STRING, description: STRING })) }) },
+    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, entries: list(shape({ service: STRING, name: STRING, last4: STRING }, ['last4'])), declared: list(openShape({ group: STRING, envVar: STRING, description: STRING })), services: list(shape({ name: STRING, backend: STRING, credentials: list(shape({ envVar: STRING, required: BOOLEAN, description: STRING })) }, ['backend'])) }) },
   },
   'credential-set': {
     module: 'core',

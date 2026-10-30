@@ -1,0 +1,6190 @@
+{
+ "atom": "auth/atoms/std-oauth.lolo",
+ "trait": "OAuthClient",
+ "spec": "spec/auth/oauth.lolo",
+ "note": "the OAuth flow on std-http-client and the host credential store; the replay host answers credential-connect as unavailable, so a connected store answer is fed as OAUTH_KNOWN",
+ "cases": [
+  {
+   "id": "github-without-an-issuer-draws-at-once-from-the-static-endpoints",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "random-bytes",
+        "arg0": 64
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND",
+       "OAUTH_AUTHORIZE_ERROR"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "github-authorization-url-is-the-fixed-order-pkce-url-and-the-grant-row-is-written",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "OAUTH_STORED",
+        "payload": {
+         "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "owner": "u1",
+         "provider": "github",
+         "verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+         "redirectUri": "https://app.example/cb",
+         "subject": "u1",
+         "scopes": [
+          "repo"
+         ],
+         "tokenEndpoint": "https://github.com/login/oauth/access_token",
+         "userinfoEndpoint": "https://api.github.com/user",
+         "revocationEndpoint": "",
+         "expiresAt": "2023-11-14T22:23:20.000Z"
+        }
+       },
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://github.com/login/oauth/authorize?redirect_uri=https%3A%2F%2Fapp.example%2Fcb&scope=repo&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZE_ERROR"
+      ]
+     }
+    }
+   ],
+   "note": "the challenge is the RFC 7636 appendix B vector for the verifier; the verifier is stored in the owner row, never emitted"
+  },
+  {
+   "id": "a-payload-redirect-overrides-the-knob",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://other.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "https://app.example/cb",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://github.com/login/oauth/authorize?redirect_uri=https%3A%2F%2Fapp.example%2Fcb&scope=repo&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-payload-redirect-takes-the-knob",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://other.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://github.com/login/oauth/authorize?redirect_uri=https%3A%2F%2Fother.example%2Fcb&scope=repo&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-scopes-are-joined-by-one-space-and-encoded",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo",
+       "user"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://github.com/login/oauth/authorize?redirect_uri=https%3A%2F%2Fapp.example%2Fcb&scope=repo%20user&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-redirect-anywhere-is-refused",
+   "config": {
+    "provider": "github",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "VALIDATION_ERROR",
+         "message": "No redirect URI: pass redirectUri or set the redirectUri knob"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auth0-without-an-issuer-names-the-missing-issuer",
+   "config": {
+    "provider": "auth0",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Provider \"auth0\" has no OIDC issuer \u2014 set OIDC_ISSUER_URL to an OIDC-compliant issuer"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-auth0-with-an-issuer-discovers-it",
+   "config": {
+    "provider": "auth0",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "issuerUrl": "https://idp.example.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "discovery",
+         "method": "GET",
+         "target": "/.well-known/openid-configuration",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "google-discovers-the-built-in-issuer-first",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "discovery",
+         "method": "GET",
+         "target": "/.well-known/openid-configuration",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_DRAWN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-issuer-with-a-path-keeps-the-path-and-a-trailing-slash-is-dropped",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "issuerUrl": "https://idp.example.com/tenant/"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "discovery",
+         "method": "GET",
+         "target": "/tenant/.well-known/openid-configuration",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-matching-discovery-document-draws-and-the-url-adds-the-google-extras-first",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "openid",
+       "email"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&prompt=consent&redirect_uri=https%3A%2F%2Fapp.example%2Fcb&scope=openid%20email&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-endpoint-that-already-has-a-query-takes-an-ampersand",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/auth?tenant=1\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZED",
+        "payload": {
+         "authUrl": "https://accounts.google.com/auth?tenant=1&access_type=offline&prompt=consent&redirect_uri=https%3A%2F%2Fapp.example%2Fcb&scope=repo&state=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&client_id=cid&response_type=code",
+         "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "code": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failing-discovery-status-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 500,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The issuer discovery document could not be read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unparsable-discovery-body-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "not json"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The issuer discovery document could not be read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-discovery-issuer-that-differs-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://evil.example\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The discovered issuer does not match the expected issuer"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-discovery-token-endpoint-that-is-not-https-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"http://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The issuer's authorization or token endpoint is missing or not https"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-discovery-without-an-authorization-endpoint-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The issuer's authorization or token endpoint is missing or not https"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-draw-of-the-wrong-length-is-refused",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "short"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The host drew an unusable state"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_AUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-draw-answers-the-authorize-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HOST_FAILED",
+     "payload": {
+      "error": "no entropy"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The host could not complete the request"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-discovery-transport-failure-answers-the-authorize-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "connection refused",
+      "kind": "io"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The provider could not be reached or answered something unusable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-client-id-is-a-visible-not-configured-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_AUTHORIZE_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "No OAuth client id: set the authClientId knob"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND"
+      ],
+      "effects": [
+       {
+        "type": "emit"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-callback-state-that-does-not-match-a-grant-is-refused",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "wrong-state"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_GRANT_ABSENT",
+        "payload": {
+         "error": "OAuthGrant wrong-state not found",
+         "code": "not-found"
+        }
+       },
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Unknown or expired authorization state"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN",
+       "OAUTH_STEP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-matching-state-takes-the-grant-and-an-unavailable-store-answers-sign-in-unavailable",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "OAuthGrant"
+       }
+      ],
+      "emits": [
+       {
+        "event": "OAUTH_GRANT_TAKEN",
+        "payload": {
+         "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "deleted": true
+        }
+       },
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Sign-in is unavailable on this host"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_ABSENT"
+      ]
+     }
+    }
+   ],
+   "note": "the replay host answers credential-connect as a bare host does: kind unavailable"
+  },
+  {
+   "id": "a-grant-is-single-use-the-second-callback-is-refused",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Unknown or expired authorization state"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-expired-grant-is-refused-and-dropped",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "now": 1700000600001,
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The authorization has expired"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-grant-one-millisecond-before-expiry-is-taken",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "now": 1700000599999,
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_GRANT_TAKEN",
+        "payload": {
+         "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_ABSENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-grant-started-by-one-user-is-not-taken-by-another-the-owner-check",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u2",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Unknown or expired authorization state"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-grant-bound-to-another-subject-is-refused-even-when-owned",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_GRANT_LOADED",
+     "payload": {
+      "data": {
+       "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       "owner": "u2",
+       "provider": "github",
+       "verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+       "redirectUri": "https://app.example/cb",
+       "scopes": [],
+       "tokenEndpoint": "",
+       "userinfoEndpoint": "",
+       "revocationEndpoint": "",
+       "expiresAt": "2099-01-01T00:00:00.000Z",
+       "subject": "u1"
+      }
+     },
+     "viewer": {
+      "id": "u2",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The authorization was started for a different user"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-bound-subject-itself-takes-the-grant",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "C",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_GRANT_TAKEN",
+        "payload": {
+         "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "deleted": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-grant-with-no-subject-is-taken",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "C",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_GRANT_TAKEN",
+        "payload": {
+         "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "deleted": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-grant-of-another-provider-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_GRANT_LOADED",
+     "payload": {
+      "data": {
+       "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+       "owner": "u1",
+       "provider": "github",
+       "verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+       "redirectUri": "https://app.example/cb",
+       "subject": "",
+       "scopes": [],
+       "tokenEndpoint": "",
+       "userinfoEndpoint": "",
+       "revocationEndpoint": "",
+       "expiresAt": "2099-01-01T00:00:00.000Z"
+      }
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The authorization belongs to a different provider"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_GRANT_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-exchange-asks-the-store-with-clientauth-secret-and-names-credentials-only",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com",
+    "clientAuth": "secret"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_GRANT_TAKEN",
+     "payload": {
+      "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "deleted": true
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.credential",
+         "scope": "user",
+         "tokenEndpoint": "@entity.tokenEndpoint",
+         "grant": "authorization_code",
+         "code": "@entity.code",
+         "redirectUri": "@entity.redirectUri",
+         "verifier": "@entity.verifier",
+         "clientId": "@config.clientId",
+         "clientAuth": "body",
+         "clientSecret": "@config.clientSecret"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-exchange-asks-the-store-with-clientauth-basic-and-names-credentials-only",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com",
+    "clientAuth": "basic"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_GRANT_TAKEN",
+     "payload": {
+      "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "deleted": true
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.credential",
+         "scope": "user",
+         "tokenEndpoint": "@entity.tokenEndpoint",
+         "grant": "authorization_code",
+         "code": "@entity.code",
+         "redirectUri": "@entity.redirectUri",
+         "verifier": "@entity.verifier",
+         "clientId": "@config.clientId",
+         "clientAuth": "basic",
+         "clientSecret": "@config.clientSecret"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-exchange-asks-the-store-with-clientauth-none-and-names-credentials-only",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com",
+    "clientAuth": "none"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_GRANT_TAKEN",
+     "payload": {
+      "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "deleted": true
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.credential",
+         "scope": "user",
+         "tokenEndpoint": "@entity.tokenEndpoint",
+         "grant": "authorization_code",
+         "code": "@entity.code",
+         "redirectUri": "@entity.redirectUri",
+         "verifier": "@entity.verifier",
+         "clientId": "@config.clientId",
+         "clientAuth": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-connected-answer-without-a-userinfo-endpoint-keeps-the-label-and-answers-only-the-row",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ada@example.com",
+      "access_token": "SECRET-TOKEN"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_STORED",
+        "payload": {
+         "id": "u1|google",
+         "owner": "u1",
+         "provider": "google",
+         "account": "ada@example.com",
+         "avatarUrl": "",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "userinfoEndpoint": "",
+         "revocationEndpoint": "https://oauth2.googleapis.com/revoke"
+        }
+       },
+       {
+        "event": "OAUTH_CONNECTED",
+        "payload": {
+         "provider": "google",
+         "connected": true,
+         "account": "ada@example.com",
+         "avatarUrl": "",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_CONNECT_ERROR",
+       "OAUTH_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "note": "the store answer carries a stray access_token field: the connected row is exact, so no token reaches an emit"
+  },
+  {
+   "id": "a-github-connect-reads-the-user-api-with-a-user-agent-and-fills-account-and-avatar-from-login-and-avatar-url",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "userinfo",
+         "method": "GET",
+         "target": "/user",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "user-agent",
+           "value": "almadar-oauth"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"login\": \"octo\", \"id\": 1, \"avatar_url\": \"https://avatars.example/o.png\", \"name\": null, \"email\": null}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_STORED",
+        "payload": {
+         "id": "u1|github",
+         "owner": "u1",
+         "provider": "github",
+         "account": "octo",
+         "avatarUrl": "https://avatars.example/o.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z",
+         "tokenEndpoint": "https://github.com/login/oauth/access_token",
+         "userinfoEndpoint": "https://api.github.com/user",
+         "revocationEndpoint": ""
+        }
+       },
+       {
+        "event": "OAUTH_CONNECTED",
+        "payload": {
+         "provider": "github",
+         "connected": true,
+         "account": "octo",
+         "avatarUrl": "https://avatars.example/o.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "GitHub answers null for name and email: the login names the account"
+  },
+  {
+   "id": "control-a-github-profile-with-a-name-names-the-account-by-it",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"login\": \"octo\", \"id\": 1, \"avatar_url\": \"https://avatars.example/o.png\", \"name\": \"The Octocat\", \"email\": null}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_STORED",
+        "payload": {
+         "id": "u1|github",
+         "owner": "u1",
+         "provider": "github",
+         "account": "The Octocat",
+         "avatarUrl": "https://avatars.example/o.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z",
+         "tokenEndpoint": "https://github.com/login/oauth/access_token",
+         "userinfoEndpoint": "https://api.github.com/user",
+         "revocationEndpoint": ""
+        }
+       },
+       {
+        "event": "OAUTH_CONNECTED",
+        "payload": {
+         "provider": "github",
+         "connected": true,
+         "account": "The Octocat",
+         "avatarUrl": "https://avatars.example/o.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-github-user-api-401-after-connecting-is-a-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 401,
+      "body": "bad"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The account profile could not be read after connecting"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_CONNECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-userinfo-endpoint-off-the-configured-origin-fails-the-connect-visibly",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "The userinfo endpoint is not on the configured userinfo origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND",
+       "OAUTH_CONNECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-is-refused",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider did not connect the account"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_CONNECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-unavailable-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "unavailable"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Sign-in is unavailable on this host"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-unsigned-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "unsigned"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Nobody is signed in"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-invalid-grant-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "invalid_grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider refused the request or the connection is not held"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-invalid-client-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "invalid_client"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider refused the request or the connection is not held"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-denied-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "denied"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider refused the request or the connection is not held"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-transport-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "transport"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The provider could not be reached or answered something unusable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-malformed-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "malformed"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The provider could not be reached or answered something unusable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-of-kind-refused-answers-a-fixed-safe-connect-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "c",
+      "state": "no-grant"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "vendor said: secret-body-7",
+      "kind": "refused"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECT_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The provider could not be reached or answered something unusable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-google-connect-reads-userinfo-with-the-held-credential-and-fills-account-and-avatar",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "userinfo",
+         "method": "GET",
+         "target": "/v1/userinfo",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "user-agent",
+           "value": "almadar-oauth"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_STORED",
+        "payload": {
+         "id": "u1|google",
+         "owner": "u1",
+         "provider": "google",
+         "account": "ada@example.com",
+         "avatarUrl": "https://img.example/a.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "userinfoEndpoint": "https://openidconnect.googleapis.com/v1/userinfo",
+         "revocationEndpoint": "https://oauth2.googleapis.com/revoke"
+        }
+       },
+       {
+        "event": "OAUTH_CONNECTED",
+        "payload": {
+         "provider": "google",
+         "connected": true,
+         "account": "ada@example.com",
+         "avatarUrl": "https://img.example/a.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refresh-reads-the-connection-and-asks-the-store-for-the-refresh-grant",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REFRESH",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "OAuthConnection"
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_ROW_LOADED",
+     "payload": {
+      "data": {
+       "id": "u1|google",
+       "owner": "u1",
+       "provider": "google",
+       "account": "ada@example.com",
+       "avatarUrl": "",
+       "scope": [],
+       "connectedAt": "",
+       "tokenEndpoint": "https://oauth2.googleapis.com/token",
+       "userinfoEndpoint": "",
+       "revocationEndpoint": ""
+      }
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.credential",
+         "scope": "user",
+         "tokenEndpoint": "@payload.data.tokenEndpoint",
+         "grant": "refresh_token",
+         "code": "",
+         "redirectUri": "",
+         "verifier": "",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refresh-the-store-cannot-carry-answers-the-fixed-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REFRESH",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REFRESH_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Sign-in is unavailable on this host"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_REFRESHED"
+      ]
+     }
+    }
+   ],
+   "note": "the replay host answers every credential-connect as unavailable"
+  },
+  {
+   "id": "a-connected-refresh-answer-carries-no-token",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REFRESH",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ada@example.com",
+      "access_token": "SECRET-TOKEN",
+      "refresh_token": "SECRET-REFRESH"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_REFRESHED",
+        "payload": {
+         "connected": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-not-connected-refresh-answer-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REFRESH",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REFRESH_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider did not refresh the connection"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_REFRESHED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refresh-without-a-connection-row-says-not-connected",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_REFRESH",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REFRESH_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Not connected: there is no provider connection for the signed-in user"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_REFRESHED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "userinfo-sends-a-get-to-the-connection-endpoint-path",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "userinfo",
+         "method": "GET",
+         "target": "/v1/userinfo",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "user-agent",
+           "value": "almadar-oauth"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\", \"access_token\": \"SECRET\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_RESULT",
+        "payload": {
+         "sub": "s1",
+         "email": "ada@example.com",
+         "name": "Ada",
+         "picture": "https://img.example/a.png"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "userinfo-fields-the-provider-omits-are-empty-text",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_RESULT",
+        "payload": {
+         "sub": "s1",
+         "email": "",
+         "name": "",
+         "picture": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-userinfo-401-is-an-auth-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 401,
+      "body": "denied"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The userinfo lookup failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-userinfo-500-is-a-service-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 500,
+      "body": "boom"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The userinfo lookup failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "userinfo-with-a-credential-the-client-cannot-use-answers-the-fixed-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "credential not held",
+      "kind": "denied"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "The provider refused the request or the connection is not held"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "github-userinfo-sends-the-user-api-get-and-names-the-login-when-there-is-no-name",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "octo"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"login\": \"octo\", \"id\": 1, \"avatar_url\": \"https://avatars.example/o.png\", \"name\": null, \"email\": null}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "userinfo",
+         "method": "GET",
+         "target": "/user",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "user-agent",
+           "value": "almadar-oauth"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"login\": \"octo\", \"id\": 1, \"avatar_url\": \"https://avatars.example/o.png\", \"name\": null, \"email\": null}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_USERINFO_RESULT",
+        "payload": {
+         "sub": "",
+         "email": "",
+         "name": "octo",
+         "picture": "https://avatars.example/o.png"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-provider-whose-discovery-has-no-userinfo-endpoint-says-so",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ada@example.com"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Provider \"google\" has no userinfo endpoint \u2014 set OIDC_ISSUER_URL to an OIDC-compliant issuer"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-userinfo-endpoint-off-the-configured-origin-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://other.example"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "The userinfo endpoint is not on the configured userinfo origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "userinfo-without-a-connection-row-says-not-connected",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_USERINFO",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_USERINFO_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Not connected: there is no provider connection for the signed-in user"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "revoke-posts-an-empty-form-and-the-client-appends-the-credential",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_HTTP_SEND",
+        "payload": {
+         "key": "revoke",
+         "method": "POST",
+         "target": "/revoke",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/x-www-form-urlencoded"
+          },
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "revoke",
+      "status": 200,
+      "body": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_REVOKED",
+        "payload": {
+         "revoked": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revocation-the-provider-refuses-is-an-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "revoke",
+      "status": 400,
+      "body": "bad"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_REVOKE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The revocation failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "github-has-no-revocation-endpoint-and-says-so",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "octo"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"login\": \"octo\", \"id\": 1, \"avatar_url\": \"https://avatars.example/o.png\", \"name\": null, \"email\": null}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REVOKE_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Provider \"github\" has no revocation endpoint \u2014 set OIDC_ISSUER_URL to an OIDC-compliant issuer"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "revoke-without-a-connection-row-says-not-connected",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REVOKE_ERROR",
+        "payload": {
+         "code": "AUTH_ERROR",
+         "message": "Not connected: there is no provider connection for the signed-in user"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revocation-endpoint-off-the-configured-origin-is-refused",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "revocationOrigin": "https://other.example"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_REVOKE_ERROR",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "The revocation endpoint is not on the configured revocation origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OAUTH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revoke-timeout-answers-the-fixed-revoke-error",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_REVOKE",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_STEP_FAILED",
+     "payload": {
+      "error": "timeout of 30000ms exceeded",
+      "kind": "timeout"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_REVOKE_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The provider could not be reached or answered something unusable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "status-asks-the-store-for-the-viewer-credential",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECTION",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-status",
+        "arg0": {
+         "credential": "@config.credential",
+         "scope": "user"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "not-connected-status-is-an-empty-row",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECTION",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECTION_RESULT",
+        "payload": {
+         "provider": "github",
+         "connected": false,
+         "account": "",
+         "avatarUrl": "",
+         "scope": [],
+         "connectedAt": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connected-status-answers-the-stored-row",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECTION",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ada@example.com"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_CONNECTION_RESULT",
+        "payload": {
+         "provider": "google",
+         "connected": true,
+         "account": "ada@example.com",
+         "avatarUrl": "https://img.example/a.png",
+         "scope": [
+          "repo"
+         ],
+         "connectedAt": "2023-11-14T22:13:20Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connected-status-without-a-row-answers-the-label",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECTION",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "octo"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_ROW_ABSENT",
+        "payload": {
+         "error": "OAuthConnection u1|github not found",
+         "code": "not-found"
+        }
+       },
+       {
+        "event": "OAUTH_CONNECTION_RESULT",
+        "payload": {
+         "provider": "github",
+         "connected": true,
+         "account": "octo",
+         "avatarUrl": "",
+         "scope": [],
+         "connectedAt": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-status-the-host-cannot-answer-is-a-fixed-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_CONNECTION",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HOST_FAILED",
+     "payload": {
+      "error": "store down"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_CONNECTION_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The host could not complete the request"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "forget-drops-the-credential-and-the-row",
+   "config": {
+    "provider": "google",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_AUTHORIZE",
+     "payload": {
+      "scopes": [
+       "repo"
+      ],
+      "redirectUri": "",
+      "subject": "u1"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "discovery",
+      "status": 200,
+      "body": "{\"issuer\": \"https://accounts.google.com\", \"authorization_endpoint\": \"https://accounts.google.com/o/oauth2/v2/auth\", \"token_endpoint\": \"https://oauth2.googleapis.com/token\", \"userinfo_endpoint\": \"https://openidconnect.googleapis.com/v1/userinfo\", \"revocation_endpoint\": \"https://oauth2.googleapis.com/revoke\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DRAWN",
+     "payload": {
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_CONNECT",
+     "payload": {
+      "code": "CODE-1",
+      "state": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": true,
+      "label": "ignored@x"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HTTP_REPLIED",
+     "payload": {
+      "key": "userinfo",
+      "status": 200,
+      "body": "{\"sub\": \"s1\", \"email\": \"ada@example.com\", \"name\": \"Ada\", \"picture\": \"https://img.example/a.png\"}"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_DISCONNECT",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.op"
+       }
+      ]
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_DISCONNECTED",
+        "payload": {
+         "provider": "google",
+         "connected": false,
+         "account": "",
+         "avatarUrl": "",
+         "scope": [],
+         "connectedAt": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "forgetting-with-no-row-still-disconnects",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_DISCONNECT",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_KNOWN",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OAUTH_DISCONNECTED",
+        "payload": {
+         "provider": "github",
+         "connected": false,
+         "account": "",
+         "avatarUrl": "",
+         "scope": [],
+         "connectedAt": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "forgetting-when-nobody-is-signed-in-is-a-fixed-error",
+   "config": {
+    "provider": "github",
+    "redirectUri": "https://app.example/cb",
+    "authClientId": "cid",
+    "userinfoOrigin": "https://api.github.com"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "OAuthDiscoveryHttp",
+    "OAuthUserinfoHttp",
+    "OAuthRevokeHttp",
+    "OAuthTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OAUTH_DISCONNECT",
+     "payload": {},
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     }
+    },
+    {
+     "event": "OAUTH_HOST_FAILED",
+     "payload": {
+      "error": "nobody is signed in"
+     },
+     "viewer": {
+      "id": "u1",
+      "role": "member",
+      "claims": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "OAUTH_DISCONNECT_ERROR",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "The host could not complete the request"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
