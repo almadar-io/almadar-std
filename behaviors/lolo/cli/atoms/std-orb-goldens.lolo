@@ -34,7 +34,8 @@ orbital GoldensOrbital {
     files : [string]! = []
     fileCursor : number! = 0
     golden : GoldenFile = { atom: "", trait: "", cases: [] }
-    program : string = ""
+    program : GoldenFull?
+    programRef : GoldenProgramRef?
     cursor : number! = 0
     lines : [string]! = []
     fails : [string]! = []
@@ -111,7 +112,8 @@ orbital GoldensOrbital {
       GOLDENS_ATOM_READ -> reading when (!= (bytes/to-string @payload.data) null)
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: GOLDENS_PROGRAM, failure: GOLDENS_FAILED } })
       GOLDENS_PROGRAM -> running
-        (set @entity.program (json/stringify @payload.result))
+        (set @entity.program (as @payload.result GoldenFull))
+        (set @entity.programRef (as @payload.result GoldenProgramRef))
         (emit GOLDENS_NEXT {})
       GOLDENS_FAILED -> ready
         (emit GOLDENS_ANSWERED { status: 500, body: (str/concat "goldens: " (default @payload.error "")) })
@@ -140,11 +142,11 @@ orbital GoldensOrbital {
         (set @entity.fails [])
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT { at: @entity.cursor })
-      GOLDENS_PREFLIGHT -> ready when (and (= (array/len @entity.fails) 0) (or (= (json/parse @entity.program GoldenFull) null) (= (json/parse @entity.program GoldenProgramRef) null)))
+      GOLDENS_PREFLIGHT -> ready when (and (= (array/len @entity.fails) 0) (or (= @entity.program null) (= @entity.programRef null)))
         (emit GOLDENS_ANSWERED { status: 500, body: "goldens: the resolved program does not fit the expected shape" })
-      GOLDENS_PREFLIGHT -> running when (and (= (array/len @entity.fails) 0) (!= (json/parse @entity.program GoldenFull) null) (!= (json/parse @entity.program GoldenProgramRef) null))
-        (program/step (json/parse @entity.program GoldenFull)
-          (let ((cc @entity.curCase) (gf @entity.golden) (pr (json/parse @entity.program GoldenProgramRef))) (array/reduce (array/take (object/get @cc "steps") (if (array/some (object/get @cc "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get @cc "steps")))) [] (fn acc s
+      GOLDENS_PREFLIGHT -> running when (and (= (array/len @entity.fails) 0) (!= @entity.program null) (!= @entity.programRef null))
+        (program/step @entity.program
+          (let ((cc @entity.curCase) (gf @entity.golden) (pr @entity.programRef)) (array/reduce (array/take (object/get @cc "steps") (if (array/some (object/get @cc "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get @cc "steps")))) [] (fn acc s
             (array/append @acc (object/merge
               { orbital: (object/get @s "orbital" (object/get @gf "orbital" (let ((fo (array/find (object/get @pr "orbitals") (fn o (array/some (object/get @o "traits" []) (fn t (= (object/get @t "name") (object/get @s "trait" (object/get @gf "trait"))))))))) (if (= @fo null) "" (object/get @fo "name"))))),
                 trait: (object/get @s "trait" (object/get @gf "trait")),

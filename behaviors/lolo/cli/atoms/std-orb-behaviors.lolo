@@ -1,7 +1,7 @@
 app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
-  fs: { "/dev/fd/0": [read], cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  fs: { "/dev/fd/0": [read], cwd: "**": [read], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   exec: ["kill", "orb"],
   net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
@@ -50,7 +50,7 @@ type OrbBehaviorsCatalogHit = {
   pattern : string
 }
 type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
-type OrbBehaviorsPackage = { root : string!, prefix : string!, vectors : string }
+type OrbBehaviorsPackage = { root : string!, prefix : string!, vectors : string, vectorsRel : string, vectorsIn : string }
 type WantedText = { key : string!, text : string! }
 type TextRow = { key : string!, text : string!, hash : string! }
 type KeyedVector = { key : string!, vector : [number]! }
@@ -100,7 +100,7 @@ type FiredProgram = { orbitals : [FiredOrbital] }
 type CuForward = { orbital : string!, trait : string!, event : string!, via : [string]! }
 type OrbBehaviorsDescription = {
   behavior : string!
-  knobs : [OrbBehaviorsKnobField]!
+  knobs : [DescribedKnob]!
   orbitals : [DescribedOrbital]
 }
 
@@ -123,7 +123,7 @@ orbital OrbBehaviorsOrbital {
     cwd : string = ""
     rows : [OrbBehaviorsCatalogHit] = []
     wanted : [WantedText] = []
-    vpaths : [string] = []
+    vpaths : [{ path : string!, in : string!, rel : string! }] = []
     vpath : string = ""
     stem : string = ""
     base : TraitDescription
@@ -462,32 +462,32 @@ orbital OrbBehaviorsOrbital {
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "expects") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors expects <spec>" })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "expects") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (set @entity.spec (array/nth @payload.positionals 0))
+        (set @entity.spec (default (array/nth @payload.positionals 0) ""))
         (emit BEHAVIORS_EXPECTS { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "which") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (set @entity.spec (array/nth @payload.positionals 0))
+        (set @entity.spec (default (array/nth @payload.positionals 0) ""))
         (emit BEHAVIORS_WHICH { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "texts") (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (set @entity.paths @payload.positionals)
         (set @entity.kind (default (array/first (default (object/get @payload.flags "kind") [])) ""))
         (emit BEHAVIORS_TEXTS { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "catalog") (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
-        (set @entity.json (!= (object/get @payload.flags "json") null))
-        (set @entity.noVectors (!= (object/get @payload.flags "no-vectors") null))
-        (set @entity.noTraits (!= (object/get @payload.flags "no-traits") null))
-        (set @entity.topics (!= (object/get @payload.flags "topics") null))
+        (set @entity.json (object/has @payload.flags "json"))
+        (set @entity.noVectors (object/has @payload.flags "no-vectors"))
+        (set @entity.noTraits (object/has @payload.flags "no-traits"))
+        (set @entity.topics (object/has @payload.flags "topics"))
         (set @entity.exposure (default (object/get @payload.flags "exposure") []))
         (set @entity.paths @payload.positionals)
         (emit BEHAVIORS_CATALOG { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (!= (array/nth @payload.positionals 0) "-"))
-        (set @entity.knobVectors (!= (object/get @payload.flags "knob-vectors") null))
-        (set @entity.spec (array/nth @payload.positionals 0))
+        (set @entity.knobVectors (object/has @payload.flags "knob-vectors"))
+        (set @entity.spec (default (array/nth @payload.positionals 0) ""))
         (emit BEHAVIORS_DESCRIBE { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "describe") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (= (array/nth @payload.positionals 0) "-"))
-        (set @entity.knobVectors (!= (object/get @payload.flags "knob-vectors") null))
+        (set @entity.knobVectors (object/has @payload.flags "knob-vectors"))
         (emit BEHAVIORS_STDIN { })
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "source") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (set @entity.spec (array/nth @payload.positionals 0))
+        (set @entity.spec (default (array/nth @payload.positionals 0) ""))
         (emit BEHAVIORS_SOURCE { })
     }
 
@@ -549,17 +549,15 @@ orbital OrbBehaviorsOrbital {
       PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (not (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/"))))))
         (emit TRAIT_ATTACHED { result: @entity.base })
       PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/")))))
-        (set @entity.vpaths (array/filter (array/map (array/filter @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/")))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))))
+        (set @entity.vpaths (array/map (array/filter @payload.result (fn p (and (str/startsWith @entity.vpath (str/concat @p.root "/")) (!= (default @p.vectors "") "")))) (fn p { path: (default @p.vectors ""), in: (default @p.vectorsIn ""), rel: (default @p.vectorsRel "") })))
         (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: KNOB_WHOLE_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
-      KNOB_WHOLE_DESCRIBED -> working when (!= (as @payload.result DescribedBehavior) null)
-        (set @entity.whole (default (as @payload.result DescribedBehavior) @entity.whole))
+      KNOB_WHOLE_DESCRIBED -> working
+        (set @entity.whole (as @payload.result DescribedBehavior))
         (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: KNOB_SOURCED, failure: BEHAVIORS_FAILED }
         })
-      KNOB_WHOLE_DESCRIBED -> ready when (= (as @payload.result DescribedBehavior) null)
-        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the description is not a behavior description" })
       KNOB_SOURCED -> working when (!= (as @payload.result WrittenProgram) null)
         (emit BV_KNOB_TEXTS { name: @entity.stem, described: @entity.whole, written: (default (as @payload.result WrittenProgram) { orbitals: [] }) })
       KNOB_SOURCED -> ready when (= (as @payload.result WrittenProgram) null)
@@ -621,13 +619,11 @@ orbital OrbBehaviorsOrbital {
         (set @entity.acc (array/concat @entity.acc (array/concat (if (or (= @entity.kind "") (= @entity.kind "organism")) @entity.gOrg []) (array/concat (if (or (= @entity.kind "") (= @entity.kind "capability")) @entity.gCap []) @entity.gKnobs))))
         (set @entity.gi (+ @entity.gi 1))
         (emit TX_GROUP { at: @entity.gi })
-      TX_DESCRIBED -> working when (!= (as @payload.result DescribedBehavior) null)
-        (set @entity.whole (default (as @payload.result DescribedBehavior) @entity.whole))
+      TX_DESCRIBED -> working
+        (set @entity.whole (as @payload.result DescribedBehavior))
         (behavior/source { behavior: (default @entity.cur.behavior "") } {
           emit: { success: TX_SOURCED, failure: BEHAVIORS_FAILED }
         })
-      TX_DESCRIBED -> ready when (= (as @payload.result DescribedBehavior) null)
-        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the description is not a behavior description" })
       TX_SOURCED -> working when (!= (as @payload.result WrittenProgram) null)
         (emit BV_KNOB_TEXTS { name: (default @entity.cur.name ""), described: @entity.whole, written: (default (as @payload.result WrittenProgram) { orbitals: [] }) })
       TX_SOURCED -> ready when (= (as @payload.result WrittenProgram) null)
@@ -737,7 +733,7 @@ orbital OrbBehaviorsOrbital {
       }
         @tier "secondary"
       BV_SOURCES -> external {
-        paths : [string]!
+        paths : [{ path : string!, in : string!, rel : string! }]!
       }
         @tier "secondary"
       BV_RESOLVE -> external {
@@ -812,37 +808,37 @@ orbital OrbBehaviorsOrbital {
     listens {
       CATALOG_CALLED -> inbound "cli-behaviors-catalog" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors catalog` with its arguments."
         @synonyms "orb behaviors catalog, list behaviors"
       DESCRIBE_CALLED -> inbound "cli-behaviors-describe" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors describe` with its operand."
         @synonyms "orb behaviors describe, describe behavior"
       SOURCE_CALLED -> inbound "cli-behaviors-source" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors source` with its operand."
         @synonyms "orb behaviors source, behavior source"
       WHICH_CALLED -> inbound "cli-behaviors-which" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors which` with its specifier."
         @synonyms "orb behaviors which, where a behavior resolves"
       EXPECTS_CALLED -> inbound "cli-behaviors-expects" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors expects` with its specifier or file."
         @synonyms "orb behaviors expects, derive a behavior's expectations"
       TEXTS_CALLED -> inbound "cli-behaviors-texts" answers BEHAVIORS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors texts` with its scopes."
         @synonyms "orb behaviors texts, behavior embedding texts"

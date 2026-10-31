@@ -220,6 +220,716 @@
      }
     }
    ]
+  },
+  {
+   "id": "pin-storage_put-with-no-bucket-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": ""
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT",
+     "payload": {
+      "mode": "single",
+      "bucket": "",
+      "key": "k",
+      "contentType": "text/plain",
+      "b64": "aGk=",
+      "size": 2,
+      "isPublic": false,
+      "fileName": "k",
+      "fileSize": 2,
+      "fileKind": "text/plain",
+      "etag": "\"e\"",
+      "batch": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-storage_download-with-no-bucket-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": ""
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-storage_list-with-no-bucket-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": ""
+   },
+   "steps": [
+    {
+     "event": "STORAGE_LIST",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-storage_delete-with-no-bucket-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": ""
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DELETE",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-storage_get_signed_url-with-no-bucket-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": ""
+   },
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-upload-of-a-key-and-content-pair-asks-to-resolve",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "content": "hello",
+      "contentType": "text/plain"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_RESOLVE",
+        "payload": {
+         "mode": "single",
+         "bucket": "my-bucket",
+         "key": "k.txt",
+         "hasFile": false,
+         "hasContent": true,
+         "raw": "hello"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-resolve-with-neither-a-file-nor-a-pair-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": false,
+      "hasContent": false,
+      "raw": "",
+      "key": "",
+      "fileName": "",
+      "fileSize": 0,
+      "fileType": "",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "upload requires either `file` (with content) or the `key` + `content` pair"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-resolve-over-the-size-limit-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": true,
+      "hasContent": false,
+      "raw": "data:text/plain,hi",
+      "key": "",
+      "fileName": "a.txt",
+      "fileSize": 10,
+      "fileType": "text/plain",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 5,
+      "batch": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Upload rejected: a.txt is 10 bytes (max 5)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-resolve-of-a-file-with-no-content-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": true,
+      "hasContent": false,
+      "raw": "",
+      "key": "",
+      "fileName": "a.txt",
+      "fileSize": 2,
+      "fileType": "text/plain",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Upload rejected: file payload for 'a.txt' carries no content — the uploader must include the base64 data URL"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-2xx-put-reply-for-a-public-object-completes-with-the-bucket-url",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "",
+      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":true,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_PUT_DONE",
+        "payload": {
+         "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-2xx-put-reply-for-a-private-object-does-not-finish-until-its-url-is-presigned",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "",
+      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "STORAGE_PUT_DONE",
+       "STORAGE_FAILED",
+       "STORAGE_HTTP_ERROR"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-non-2xx-put-reply-is-a-storage-error-with-the-body",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "status": 403,
+      "headers": {},
+      "body": "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_ERROR",
+        "payload": {
+         "text": "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-put-done-in-single-mode-answers-the-upload",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT_DONE",
+     "payload": {
+      "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt",
+      "state": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "k.txt",
+         "bucket": "my-bucket",
+         "size": 5,
+         "etag": "\"e\"",
+         "id": "k.txt",
+         "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-put-done-with-unreadable-state-fails",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_PUT_DONE",
+     "payload": {
+      "url": "u",
+      "state": "not json"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The upload state could not be read back"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-2xx-download-reply-answers-the-base64-content-and-type",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {
+       "content-type": "text/plain"
+      },
+      "body": "aGVsbG8="
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_DOWNLOADED",
+        "payload": {
+         "content": "aGVsbG8=",
+         "contentType": "text/plain",
+         "size": 5
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-download-reply-without-a-content-type-is-octet-stream",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "aGk="
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_DOWNLOADED",
+        "payload": {
+         "content": "aGk=",
+         "contentType": "application/octet-stream",
+         "size": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-2xx-delete-reply-answers-deleted",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DELETE_REPLIED",
+     "payload": {
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_DELETED",
+        "payload": {
+         "deleted": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-failing-delete-reply-is-a-storage-error",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_DELETE_REPLIED",
+     "payload": {
+      "status": 500,
+      "headers": {},
+      "body": "boom"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_ERROR",
+        "payload": {
+         "text": "boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-failing-list-reply-is-a-storage-error",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 403,
+      "headers": {},
+      "body": "denied"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_ERROR",
+        "payload": {
+         "text": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-storage-error-reads-the-s3-message",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_ERROR",
+     "payload": {
+      "text": "<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The specified key does not exist."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-empty-storage-error-is-unknown",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_ERROR",
+     "payload": {
+      "text": "  "
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "UnknownError"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-timeout-is-connection-timed-out",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Connection timed out"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-unconfigured-credential-names-the-credential",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured",
+      "credential": "AWS_SECRET"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage credential not configured: AWS_SECRET"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-any-other-transport-failure-carries-its-text",
+   "config": {
+    "region": "us-east-1",
+    "bucket": "my-bucket"
+   },
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "error": "connection refused",
+      "kind": "failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "connection refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

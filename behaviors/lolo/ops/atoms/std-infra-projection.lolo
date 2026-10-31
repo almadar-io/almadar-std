@@ -92,9 +92,9 @@ orbital InfraProjectionOrbital {
                             (array/filter (array/map (default @o.services []) (fn s (if (validate/string @s) @s (let ((d (as @s InfraService))) (default @d.ref (default @d.name "")))))) (fn n (!= @n "")))
                             (array/flatten (array/map @forms (fn f (array/concat
                               (array/flatten (array/map (json/nodes (array/drop @f 1)) (fn n (if (validate/array @n) (let ((l (as @n InfraForm))) (if (= @l null) [] (if (and (> (array/len @l) 1) (= (array/first @l) "call-service") (validate/string (array/nth @l 1))) [(array/nth @l 1)] []))) []))))
-                              (if (and (> (array/len @f) 1) (= (array/first @f) "call-service") (validate/string (array/nth @f 1))) [(str/concat (array/nth @f 1))] (array/take [""] 0))))))),
-                          emits: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (default @t.emits [])))) (fn e (if (validate/string @e) @e (if (validate/object @e) (default (object/get (as @e InfraEventRef) "event") "") "")))) (fn n (!= @n "")))),
-                          listens: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (default @t.listens [])))) (fn e (if (validate/string @e) @e (if (validate/object @e) (default (object/get (as @e InfraEventRef) "event") "") "")))) (fn n (!= @n ""))))
+                              (if (and (> (array/len @f) 1) (= (array/first @f) "call-service") (validate/string (array/nth @f 1))) [(default (as (array/nth @f 1) InfraStr) "")] (array/take [""] 0))))))),
+                          emits: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (default @t.emits [])))) (fn e (if (validate/string @e) @e (if (validate/object @e) (let ((er (as @e InfraEventRef))) (if (== @er null) "" (default @er.event ""))) "")))) (fn n (!= @n "")))),
+                          listens: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (default @t.listens [])))) (fn e (if (validate/string @e) @e (if (validate/object @e) (let ((er (as @e InfraEventRef))) (if (== @er null) "" (default @er.event ""))) "")))) (fn n (!= @n ""))))
                         })))))))
                 (let ((bad (array/flatten (array/map @infos (fn i @i.badForms)))))
                   (if (> (array/len @bad) 0)
@@ -104,7 +104,7 @@ orbital InfraProjectionOrbital {
                       (entities (array/map (array/filter @orbitals (fn o (validate/object @o.entity))) (fn o { entity: (as @o.entity InfraEntity), orbital: (default @o.name "") })))
                       (schemaServices (array/concat (default @p.services []) (array/flatten (array/map @orbitals (fn o (default @o.services [])))))))
                   (let ((heads (array/map @forms (fn f (if (and (> (array/len @f) 0) (validate/string (array/first @f))) (default (as (array/first @f) InfraStr) "") ""))))
-                        (refs (array/unique (array/concat (array/flatten (array/map @infos (fn i @i.services))) (array/filter (array/map (default @p.services []) (fn s (if (validate/object @s) (default (object/get (as @s InfraService) "name") "") ""))) (fn n (!= @n "")))))))
+                        (refs (array/unique (array/concat (array/flatten (array/map @infos (fn i @i.services))) (array/filter (array/map (default @p.services []) (fn s (if (validate/object @s) (let ((sv (as @s InfraService))) (if (== @sv null) "" (default @sv.name ""))) ""))) (fn n (!= @n "")))))))
                     (do
                       (set @entity.orbitalCount (array/len @orbitals))
                       (set @entity.traitCount (array/len @allTs))
@@ -125,11 +125,11 @@ orbital InfraProjectionOrbital {
                       (set @entity.navigateCount (array/len (array/filter @heads (fn h (= @h "navigate")))))
                       (set @entity.notifyCount (array/len (array/filter @heads (fn h (= @h "notify")))))
                       (set @entity.setCount (array/len (array/filter @heads (fn h (= @h "set")))))
-                      (set @entity.hasAuth (array/some (array/concat (array/map @orbitals (fn o @o.entity)) (array/flatten (array/map @orbitals (fn o (default @o.auxiliaryEntities []))))) (fn e (and (validate/object @e) (= (object/get (as @e InfraEntity) "identity") true)))))
+                      (set @entity.hasAuth (array/some (array/concat (array/map @orbitals (fn o @o.entity)) (array/flatten (array/map @orbitals (fn o (default @o.auxiliaryEntities []))))) (fn e (and (validate/object @e) (let ((en (as @e InfraEntity))) (and (!= @en null) (= @en.identity true)))))))
                       (set @entity.crossOrbitalEventCount (array/sum (array/map (array/range 0 (array/len @infos)) (fn i (array/sum (array/map (array/range 0 (array/len @infos)) (fn j (if (= (object/get (array/nth @infos @i) "name") (object/get (array/nth @infos @j) "name")) 0 (array/len (array/filter (object/get (array/nth @infos @i) "emits") (fn ev (array/includes (object/get (array/nth @infos @j) "listens") @ev))))))))))))
                       (set @entity.serviceRefs @refs)
-                      (set @entity.serviceCredentials (array/map @refs (fn svc (let ((registered (if (>= (array/indexOf (object/keys (default @payload.credentials {})) @svc) 0) (array/nth (object/values (default @payload.credentials {})) (array/indexOf (object/keys (default @payload.credentials {})) @svc)) (array/take [{ envVar: "", required: false, description: "" }] 0))))
-                        { name: @svc, credentials: (if (> (array/len @registered) 0) @registered (array/map (array/filter (array/map (array/filter @schemaServices (fn s (validate/object @s))) (fn s (as @s InfraService))) (fn s (and (= @s.name @svc) (= @s.type "rest") (!= (default @s.auth.secretEnv "") "")))) (fn s { envVar: @s.auth.secretEnv, required: true, description: (str/concat "API credential for " @svc) }))) }))))
+                      (set @entity.serviceCredentials (array/map @refs (fn sx (let ((svc (default (as @sx InfraStr) ""))) (let ((registered (if (>= (array/indexOf (object/keys (default @payload.credentials {})) @svc) 0) (default (array/nth (object/values (default @payload.credentials {})) (array/indexOf (object/keys (default @payload.credentials {})) @svc)) (array/take [{ envVar: "", required: false, description: "" }] 0)) (array/take [{ envVar: "", required: false, description: "" }] 0))))
+                        { name: @svc, credentials: (if (> (array/len @registered) 0) @registered (array/map (array/filter (array/map (array/filter @schemaServices (fn s (validate/object @s))) (fn s (as @s InfraService))) (fn s (and (= @s.name @svc) (= @s.type "rest") (!= (default @s.auth.secretEnv "") "")))) (fn s { envVar: @s.auth.secretEnv, required: true, description: (str/concat "API credential for " @svc) }))) })))))
                       (emit INFRA_ANALYZED { })))))))))
 
       INFRA_ANALYZED -> idle

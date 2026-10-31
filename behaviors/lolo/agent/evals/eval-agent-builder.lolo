@@ -1,7 +1,8 @@
 app eval-agent-builder [
   version: "1.0.0",
   description: "Eval of std-agent-builder's ladder over std-agent-pool. RUN_CASE { index } builds the case's request through the ladder (the pool first, adopted at or above its threshold; otherwise a std learning instrument filled by the model with its knobs and a one-line hint), pools what was built, and records an EvalCase: the tier that served it, the behavior, the hint, the latency and the verdict: the tier the case expects, with a hint. Driven from outside, one case at a time.",
-  egress: ["https://api.openai.com", "https://openrouter.ai"]
+  egress: ["https://api.openai.com", "https://openrouter.ai"],
+  net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] }
 ]
 ;; @exposure internal
 
@@ -46,7 +47,8 @@ orbital EvalRunOrbital {
   entity EvalRunView [runtime] {
     id : string!
     index : number = 0
-    startedAt : number = 0
+    startedAt : instant = 0
+    current : EvalCaseSpec = { id: "", request: "", expectTier: "" }
   }
 
   entity EvalCase [persistent: evalCases] {
@@ -68,11 +70,12 @@ orbital EvalRunOrbital {
     state idle {
       INIT -> idle
         (render-ui main { type: stack, direction: horizontal, gap: sm, children: [{ type: button, variant: ghost, label: "Cases", href: "/" }, { type: button, variant: ghost, label: "Builder", href: "/agent-builder" }, { type: button, variant: ghost, label: "Pool", href: "/agent-pool" }] })
-      RUN_CASE -> running when (< ?index (array/len @config.cases))
+      RUN_CASE -> running when (!= (array/nth @config.cases ?index) null)
         (set @entity.index ?index)
+        (set @entity.current (array/nth @config.cases ?index))
         (set @entity.startedAt @now)
-        (emit START_BUILD { request: (object/get (array/nth @config.cases ?index) request), orbitalName: (str/concat "EvalCard" (object/get (array/nth @config.cases ?index) id)) })
-      RUN_CASE -> idle when (>= ?index (array/len @config.cases))
+        (emit START_BUILD { request: @entity.current.request, orbitalName: (str/concat "EvalCard" @entity.current.id) })
+      RUN_CASE -> idle when (== (array/nth @config.cases ?index) null)
       READ_CASES -> idle
         (fetch EvalCase {
           emit: { failure: CASES_FAILED, success: CASES_READ }
@@ -92,13 +95,14 @@ orbital EvalRunOrbital {
 
     state running {
       INIT -> idle
+      ;; fields is absent when the pool answered; an empty hint then fails the case
       BUILD_DONE -> idle when (= ?tier "pool")
-        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields howToPlay ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields howToPlay "") "")) pass fail) })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) })
       BUILD_DONE -> idle when (!= ?tier "pool")
-        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields howToPlay ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields howToPlay "") "")) pass fail) })
-        (emit POOL_WRITE { value: ?value, name: ?orbitalName, kind: "instrument", topic: "", fields: ?fields, description: (object/get (array/nth @config.cases @entity.index) request) })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) })
+        (emit POOL_WRITE { value: ?value, name: ?orbitalName, kind: "instrument", topic: "", fields: ?fields, description: @entity.current.request })
       BUILD_FAILED_CASE -> idle
-        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), latencyMs: (- @now @entity.startedAt), verdict: fail, error: ?error })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, latencyMs: (time/diff @now @entity.startedAt), verdict: fail, error: ?error })
     }
 
     config {

@@ -84,6 +84,10 @@ orbital CloudRunBoardOrbital {
   }
 
   trait CrMonitoring = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: CR_HTTP_REPLIED
+      HTTP_FAILED: CR_HTTP_FAILED
+    }
     config {
       host: "monitoring.googleapis.com"
       port: 443
@@ -385,8 +389,8 @@ orbital CloudRunBoardOrbital {
         error : string!
         kind : string!
       }
-      CrMonitoring.HTTP_REPLIED -> CR_REPLIED
-      CrMonitoring.HTTP_FAILED -> CR_FAILED
+      CrMonitoring.CR_HTTP_REPLIED -> CR_REPLIED
+      CrMonitoring.CR_HTTP_FAILED -> CR_FAILED
     }
 
     config {

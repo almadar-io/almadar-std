@@ -10,7 +10,7 @@
      "HOME": "/h"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -66,7 +66,7 @@
      "HOME": "/h"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -122,7 +122,7 @@
      "EMBEDDING_API_KEY": "k"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -178,7 +178,7 @@
      "OPEN_ROUTER_API_KEY": "k"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -236,7 +236,7 @@
      "EMBEDDING_MODEL": "text-embedding-3-small"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -293,7 +293,7 @@
      "OPENAI_API_KEY": "k"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -350,7 +350,7 @@
      "OPEN_ROUTER_API_KEY": "k"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -406,7 +406,7 @@
      "EMBEDDING_PROVIDER": "lmstudio"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -462,7 +462,7 @@
      "EMBEDDING_PROVIDER": "lmstudio"
     },
     "idx": 7,
-    "paths": []
+    "snaps": []
    },
    "steps": [
     {
@@ -515,14 +515,22 @@
    "entity": {
     "vars": {},
     "idx": 7,
-    "paths": [
-     "/a.vec",
-     "/b.vec"
-    ],
     "pos": 0,
     "snapshots": [],
     "userDir": "/u",
-    "userAnchor": "home"
+    "userAnchor": "home",
+    "snaps": [
+     {
+      "path": "/a.vec",
+      "in": "sidecars",
+      "rel": "a.vec"
+     },
+     {
+      "path": "/b.vec",
+      "in": "sidecars",
+      "rel": "b.vec"
+     }
+    ]
    },
    "steps": [
     {
@@ -600,8 +608,12 @@
    "id": "a snapshot that cannot be read for another reason is refused",
    "entity": {
     "vars": {},
-    "paths": [
-     "/a.vec"
+    "snaps": [
+     {
+      "path": "/a.vec",
+      "in": "sidecars",
+      "rel": "a.vec"
+     }
     ]
    },
    "steps": [
@@ -724,6 +736,118 @@
         "payload": {
          "code": "ORB_VECTOR_ENV",
          "detail": "cannot read the environment: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a snapshot under node_modules is read through the cwd anchor",
+   "entity": {
+    "vars": {},
+    "snaps": [
+     {
+      "path": "/w/node_modules/@almadar/std/dist/orb.vectors",
+      "in": "node-modules",
+      "rel": "@almadar/std/dist/orb.vectors"
+     }
+    ],
+    "pos": 0,
+    "cur": {
+     "path": "/w/node_modules/@almadar/std/dist/orb.vectors",
+     "in": "node-modules",
+     "rel": "@almadar/std/dist/orb.vectors"
+    }
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_PLACE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a snapshot in the sidecar cache is read under the sidecar directory",
+   "entity": {
+    "vars": {},
+    "snaps": [
+     {
+      "path": "/h/.almadar/sidecars/std-1.vec",
+      "in": "sidecars",
+      "rel": "std-1.vec"
+     }
+    ],
+    "pos": 0,
+    "cur": {
+     "path": "/h/.almadar/sidecars/std-1.vec",
+     "in": "sidecars",
+     "rel": "std-1.vec"
+    }
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_PLACE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control, a snapshot outside both anchors is refused visibly and never read",
+   "entity": {
+    "vars": {},
+    "snaps": [
+     {
+      "path": "/elsewhere/orb.vectors",
+      "in": "outside",
+      "rel": ""
+     }
+    ],
+    "pos": 0,
+    "cur": {
+     "path": "/elsewhere/orb.vectors",
+     "in": "outside",
+     "rel": ""
+    }
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_PLACE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_OUTSIDE",
+         "detail": "/elsewhere/orb.vectors: the snapshot is outside node_modules and the sidecar cache, so it is not read"
         }
        }
       ]

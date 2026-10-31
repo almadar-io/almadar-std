@@ -1,9 +1,7 @@
 app std-catalog-vectors [
   version: "1.0.0",
   env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
-  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
-  exec: ["kill"],
-  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
+  fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] },
   description: "std-catalog-vectors — the ONE std flow that owns catalog rows with vectors. CATALOG_VECTORS_ASK { paths, exposure, traits } lists the installed behaviors under the registry folders with the facts their embedding texts read (`behavior/catalog` with texts: true), builds each row's organism and capability texts (std-behavior-texts), reads where the vectors live and which embedding provider is configured (std-vector-sources), and resolves every text package snapshot first, then the user store, then the configured provider for what no store holds (std-vector-resolve, which writes what it embeds back to the user store), then answers CATALOG_VECTORS_ROWS { rows, model }: each row with its `vectors` keyed `description` and, when the behavior declares capabilities, `capabilities`. A host never attaches vectors to a catalog row, so a consumer that ranks by meaning (a search, a retrieval ladder, a scope listing) asks this atom and never reads `vectors` off a plain `behavior/catalog` answer. Nothing is answered empty: a row whose description has no vector, a package that cannot be read, no vector in any store with no provider configured, or a provider failure answers CATALOG_VECTORS_REFUSED { code, detail }, and the consumer shows it. The provider call is std-llm over std-http-request and std-http-client; a keyed provider's key rides the HttpClient credential knobs, which the host fills into the os/send at the boundary. The composer declares the same fs, env, exec and net grants as this app."
 ]
 uses Texts from "std/behaviors/std-behavior-texts"
@@ -45,7 +43,7 @@ type CatalogVectorRow = {
   value : behavior!
   vectors : Map string [number]!
 }
-type CatalogPackage = { root : string!, prefix : string!, vectors : string }
+type CatalogPackage = { root : string!, prefix : string!, vectors : string, vectorsRel : string, vectorsIn : string }
 
 orbital CatalogVectorsOrbital {
   entity CatalogVectorsRun [runtime] {
@@ -106,7 +104,7 @@ orbital CatalogVectorsOrbital {
     state packaging {
       INIT -> packaging
       CV_PACKAGES -> sourcing
-        (emit CV_SOURCES { paths: (array/filter (array/map (array/filter @payload.result (fn p (array/some @entity.rows (fn r (= (array/first (str/split @r.behavior "/")) @p.prefix))))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))) })
+        (emit CV_SOURCES { paths: (array/map (array/filter @payload.result (fn p (and (array/some @entity.rows (fn r (= (array/first (str/split @r.behavior "/")) @p.prefix))) (!= (default @p.vectors "") "")))) (fn p { path: (default @p.vectors ""), in: (default @p.vectorsIn ""), rel: (default @p.vectorsRel "") })) })
       CV_FAILED -> idle
         (emit CATALOG_VECTORS_REFUSED { code: "ORB_CATALOG_UNREAD", detail: @payload.error })
     }
@@ -139,7 +137,7 @@ orbital CatalogVectorsOrbital {
         @description "Internal: ask std-behavior-texts for the embedding texts of these catalog rows."
         @tier "internal"
       CV_SOURCES {
-        paths : [string]!
+        paths : [{ path : string!, in : string!, rel : string! }]!
       }
         @description "Internal: ask std-vector-sources for the package snapshots and the configured provider."
         @tier "internal"

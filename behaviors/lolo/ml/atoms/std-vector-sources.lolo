@@ -2,14 +2,15 @@ app std-vector-sources [
   version: "1.0.0",
   description: "std-vector-sources — read where orb's embedding vectors live and which embedding provider is configured. SOURCES { paths } reads the environment the Rust embedder read (ALMADAR_VECTORS_DIR, HOME, EMBEDDING_PROVIDER, EMBEDDING_API_KEY, OPENAI_API_KEY, OPEN_ROUTER_API_KEY, EMBEDDING_MODEL, LMSTUDIO_EMBEDDING_MODEL) and each package snapshot path in order (a file that does not exist is an empty bytes value; any other read failure is a refusal), then answers SOURCES_READY { snapshots, snapshotPaths, userDir, userAnchor, providerModel, providerKind, embedModel } for std-vector-resolve: userDir is ALMADAR_VECTORS_DIR, else HOME/.almadar/vectors, and userAnchor says which (`env` or `home`), the anchor the user store is addressed under; providerKind selects the embedding instance (openrouter-shared, openrouter-own, openai-shared, openai-own, lmstudio, empty without a provider; openai and openrouter need a key); providerModel is the model it produces and embedModel the name it is asked for. USER_STORE_NEEDED { model, path } answers USER_STORE_READ { data } with the user store file (empty bytes when it does not exist), read under ALMADAR_VECTORS_DIR when set, else under ~/.almadar/vectors. SOURCES_REFUSED { code, detail } carries a failed read.",
   env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
-  fs: { cwd: "**": [read], "~/.almadar/vectors/**": [read], "~/.almadar/sidecars/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
+  fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
 ]
 uses Spec from "almadar-std/vector-sources"
 
 orbital VectorSourcesOrbital {
   entity SourcesRun [runtime] {
     id : string!
-    paths : [string] = []
+    snaps : [{ path : string!, in : string!, rel : string! }] = []
+    cur : { path : string!, in : string!, rel : string! } = { path: "", in: "", rel: "" }
     vars : Map string string = {}
     idx : number = 0
     pos : number = 0
@@ -34,7 +35,7 @@ orbital VectorSourcesOrbital {
     state idle {
       INIT -> idle
       SOURCES -> envs
-        (set @entity.paths @payload.paths)
+        (set @entity.snaps @payload.paths)
         (set @entity.vars {})
         (set @entity.idx 0)
         (set @entity.pos 0)
@@ -85,10 +86,18 @@ orbital VectorSourcesOrbital {
 
     state snapshots {
       INIT -> snapshots
-      SRC_NEXT -> snapshots when (< @entity.pos (array/len @entity.paths))
-        (let ((path (default (array/nth @entity.paths @entity.pos) ""))) (os/read-file @path { key: @path emit: { success: SRC_SNAPSHOT_READ, failure: SRC_SNAPSHOT_ABSENT } }))
-      SRC_NEXT -> idle when (>= @entity.pos (array/len @entity.paths))
-        (emit SOURCES_READY { snapshots: @entity.snapshots, snapshotPaths: @entity.paths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+      ;; the guard keeps pos inside the list, so the default never answers
+      SRC_NEXT -> snapshots when (< @entity.pos (array/len @entity.snaps))
+        (set @entity.cur (default (array/nth @entity.snaps @entity.pos) @entity.cur))
+        (emit SRC_PLACE { })
+      SRC_PLACE -> snapshots when (== @entity.cur.in "node-modules")
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/" @entity.cur.rel) } { key: @entity.cur.path emit: { success: SRC_SNAPSHOT_READ, failure: SRC_SNAPSHOT_ABSENT } })
+      SRC_PLACE -> snapshots when (== @entity.cur.in "sidecars")
+        (os/read-file (str/concat "~/.almadar/sidecars/" @entity.cur.rel) { key: @entity.cur.path emit: { success: SRC_SNAPSHOT_READ, failure: SRC_SNAPSHOT_ABSENT } })
+      SRC_PLACE -> idle when (and (!= @entity.cur.in "node-modules") (!= @entity.cur.in "sidecars"))
+        (emit SOURCES_REFUSED { code: "ORB_VECTOR_OUTSIDE", detail: (str/concat @entity.cur.path ": the snapshot is outside node_modules and the sidecar cache, so it is not read") })
+      SRC_NEXT -> idle when (>= @entity.pos (array/len @entity.snaps))
+        (emit SOURCES_READY { snapshots: @entity.snapshots, snapshotPaths: (array/map @entity.snaps (fn s @s.path)), userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
       SRC_SNAPSHOT_READ -> snapshots
         (set @entity.snapshots (array/append @entity.snapshots @payload.data))
         (set @entity.pos (+ @entity.pos 1))
@@ -103,6 +112,7 @@ orbital VectorSourcesOrbital {
 
     emits {
       SRC_NEXT -> internal { }
+      SRC_PLACE -> internal { }
       SOURCES_READY -> external {
         snapshots : [bytes]!
         snapshotPaths : [string]!
@@ -126,7 +136,7 @@ orbital VectorSourcesOrbital {
 
     listens {
       SOURCES -> input {
-        paths : [string]!
+        paths : [{ path : string!, in : string!, rel : string! }]!
       }
         @description "Read the environment and these snapshot files."
       USER_STORE_NEEDED {

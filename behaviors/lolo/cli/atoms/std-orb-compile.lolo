@@ -24,11 +24,12 @@ orbital OrbCompileOrbital {
     id : string!
     cwd : string = ""
     positionals : [string] = []
-    flags : Map string [string]
+    flags : Map string [string] = {}
+    path : string = ""
     file : string = ""
     json : boolean = false
     denyWarnings : boolean = false
-    report : ValidationReport
+    report : ValidationReport = { success: true, valid: true }
     errors : [ReportFinding] = []
     warnings : [ReportFinding] = []
     valid : boolean = false
@@ -81,22 +82,27 @@ orbital OrbCompileOrbital {
       INIT -> parsing
       COMPILE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
         (emit COMPILE_ANSWERED { status: 400, body: "", stderr: "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client]" })
+      ;; the positional default never fires: this arm requires exactly one positional
       COMPILE_ARGS_DONE -> validating when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
         (set @entity.positionals @payload.positionals)
         (set @entity.flags @payload.flags)
-        (emit VALIDATE_START { file: (array/first @payload.positionals), path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))), cwd: @entity.cwd, json: true, denyWarnings: false, finalProgram: false, hasPatterns: false, patterns: "", hasServices: false, services: "" })
+        (set @entity.file (default (array/first @payload.positionals) ""))
+        (set @entity.path (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)))
+        (emit VALIDATE_START { file: @entity.file, path: @entity.path, cwd: @entity.cwd, json: true, denyWarnings: false, finalProgram: false, hasPatterns: false, patterns: "", hasServices: false, services: "" })
     }
 
     state validating {
       INIT -> validating
       VALIDATE_REPORTED -> ready when (!= @payload.status 200)
         (emit COMPILE_ANSWERED { status: 500, body: "", stderr: @payload.stderr })
-      VALIDATE_REPORTED -> ready when (and (= @payload.status 200) (> (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) 0))
-        (emit COMPILE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (if (os/path-is-absolute (array/first @entity.positionals)) (array/first @entity.positionals) (os/path-join @entity.cwd (array/first @entity.positionals))) " fails `orb validate` with " (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) " error(s), so it is not compiled:
-" (str/join (array/map (object/get (json/parse @payload.body ValidationReport) "errors" []) (fn f (str/concat "[" (object/get @f "code" "") "] " (object/get @f "path" "") ": " (object/get @f "message" "") (if (!= (object/get @f "suggestion" "") "") (str/concat " 💡 " (object/get @f "suggestion")) "")))) "
+      VALIDATE_REPORTED -> ready when (and (= @payload.status 200) (== (json/parse @payload.body ValidationReport) null))
+        (emit COMPILE_ANSWERED { status: 500, body: "", stderr: "Error: orb validate answered something that is not a report, so the program is not compiled" })
+      VALIDATE_REPORTED -> ready when (and (= @payload.status 200) (!= (json/parse @payload.body ValidationReport) null) (> (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) 0))
+        (emit COMPILE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @entity.path " fails `orb validate` with " (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) " error(s), so it is not compiled:
+" (str/join (array/map (object/get (json/parse @payload.body ValidationReport) "errors" []) (fn f (str/concat "[" (object/get @f "code" "") "] " (object/get @f "path" "") ": " (object/get @f "message" "") (if (!= (object/get @f "suggestion" "") "") (str/concat " 💡 " (object/get @f "suggestion" "")) "")))) "
 ")) })
-      VALIDATE_REPORTED -> generating when (and (= @payload.status 200) (= (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) 0))
-        (program/eval null { generate: (object/merge { path: (if (os/path-is-absolute (array/first @entity.positionals)) (array/first @entity.positionals) (os/path-join @entity.cwd (array/first @entity.positionals))), output: (if (os/path-is-absolute (if (!= (object/get @entity.flags "output") null) (array/first (object/get @entity.flags "output")) "./output")) (if (!= (object/get @entity.flags "output") null) (array/first (object/get @entity.flags "output")) "./output") (os/path-join @entity.cwd (if (!= (object/get @entity.flags "output") null) (array/first (object/get @entity.flags "output")) "./output"))), shell: (if (!= (object/get @entity.flags "shell") null) (array/first (object/get @entity.flags "shell")) "typescript") } (if (!= (object/get @entity.flags "mode") null) { mode: (array/first (object/get @entity.flags "mode")) } {}) (if (!= (object/get @entity.flags "frontend") null) { frontend: (array/first (object/get @entity.flags "frontend")) } {}) (if (!= (object/get @entity.flags "backend") null) { backend: (array/first (object/get @entity.flags "backend")) } {}) (if (!= (object/get @entity.flags "backend-url") null) { backendUrl: (array/first (object/get @entity.flags "backend-url")) } {}) (if (!= (object/get @entity.flags "patterns") null) { patterns: (if (os/path-is-absolute (array/first (object/get @entity.flags "patterns"))) (array/first (object/get @entity.flags "patterns")) (os/path-join @entity.cwd (array/first (object/get @entity.flags "patterns")))) } {}) (if (!= (object/get @entity.flags "dev-logs") null) { devLogs: true } {}) (if (!= (object/get @entity.flags "web-client") null) { webClient: true } {}) (if (!= (object/get @entity.flags "host") null) { host: (array/first (object/get @entity.flags "host")) } {}) (if (!= (object/get @entity.flags "emit-orb") null) { emitOrb: (if (os/path-is-absolute (array/first (object/get @entity.flags "emit-orb"))) (array/first (object/get @entity.flags "emit-orb")) (os/path-join @entity.cwd (array/first (object/get @entity.flags "emit-orb")))) } {})) } { key: "compile" emit: { success: COMPILE_GENERATED, failure: COMPILE_REFUSED } })
+      VALIDATE_REPORTED -> generating when (and (= @payload.status 200) (!= (json/parse @payload.body ValidationReport) null) (= (array/len (object/get (json/parse @payload.body ValidationReport) "errors" [])) 0))
+        (program/eval null { generate: (object/merge { path: @entity.path, output: (if (os/path-is-absolute (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output")) (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output") (os/path-join @entity.cwd (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output"))), shell: (if (object/has @entity.flags "shell") (default (array/first (object/get @entity.flags "shell")) "") "typescript") } (if (object/has @entity.flags "mode") { mode: (default (array/first (object/get @entity.flags "mode")) "") } {}) (if (object/has @entity.flags "frontend") { frontend: (default (array/first (object/get @entity.flags "frontend")) "") } {}) (if (object/has @entity.flags "backend") { backend: (default (array/first (object/get @entity.flags "backend")) "") } {}) (if (object/has @entity.flags "backend-url") { backendUrl: (default (array/first (object/get @entity.flags "backend-url")) "") } {}) (if (object/has @entity.flags "patterns") { patterns: (if (os/path-is-absolute (default (array/first (object/get @entity.flags "patterns")) "")) (default (array/first (object/get @entity.flags "patterns")) "") (os/path-join @entity.cwd (default (array/first (object/get @entity.flags "patterns")) ""))) } {}) (if (object/has @entity.flags "dev-logs") { devLogs: true } {}) (if (object/has @entity.flags "web-client") { webClient: true } {}) (if (object/has @entity.flags "host") { host: (default (array/first (object/get @entity.flags "host")) "") } {}) (if (object/has @entity.flags "emit-orb") { emitOrb: (if (os/path-is-absolute (default (array/first (object/get @entity.flags "emit-orb")) "")) (default (array/first (object/get @entity.flags "emit-orb")) "") (os/path-join @entity.cwd (default (array/first (object/get @entity.flags "emit-orb")) ""))) } {})) } { key: "compile" emit: { success: COMPILE_GENERATED, failure: COMPILE_REFUSED } })
     }
 
     state generating {

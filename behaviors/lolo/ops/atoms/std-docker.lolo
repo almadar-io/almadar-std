@@ -57,7 +57,7 @@ orbital DockerOrbital {
       REMOVE -> working
         (set @entity.op "remove")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { env: @config.env stage: "remove" argv: (array/concat (if (or @payload.force false) ["rm" "-f"] ["rm"]) [@payload.containerId]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "remove" argv: (array/concat (if (default @payload.force false) ["rm" "-f"] ["rm"]) [@payload.containerId]) })
       LOGS -> working
         (set @entity.op "logs")
         (set @entity.target @payload.containerId)
@@ -68,7 +68,7 @@ orbital DockerOrbital {
         (emit DOCKER_EXEC { env: @config.env stage: "status" argv: ["inspect" "--format" "{{json .}}" @payload.containerId] })
       LIST -> working
         (set @entity.op "list")
-        (emit DOCKER_EXEC { env: @config.env stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (or @payload.all false) ["-a"] [])) (if (!= (default @payload.filterByLabel "") "") ["--filter" (str/concat "label=" @payload.filterByLabel)] [])) })
+        (emit DOCKER_EXEC { env: @config.env stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (default @payload.all false) ["-a"] [])) (if (!= (default @payload.filterByLabel "") "") ["--filter" (str/concat "label=" (default @payload.filterByLabel ""))] [])) })
     }
 
     state working {
@@ -114,9 +114,10 @@ orbital DockerOrbital {
       DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "run"))
         (set @entity.target (str/trim @payload.stdout))
         (emit DOCKER_EXEC { env: @config.env stage: "run-inspect" argv: ["inspect" "--format" "{{json .}}" (str/trim @payload.stdout)] })
+      ;; a stopped container binds no ports, and a port key always reads number/protocol, so these defaults only cover that
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "run-inspect"))
         (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
-          (emit RUN_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) }))))))}))
+          (emit RUN_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") }))))))}))
       DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "stop"))
         (emit DOCKER_EXEC { env: @config.env stage: "stop-inspect" argv: ["inspect" "--format" "{{json .}}" @entity.target] })
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "stop-inspect"))
@@ -127,16 +128,18 @@ orbital DockerOrbital {
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "logs"))
         (let ((lines (array/map (array/sort (array/map (array/filter (str/split (str/trim (str/concat @payload.stdout "\n" @payload.stderr)) "\n") (fn l (!= @l ""))) (fn l { at: (array/first (str/split @l " ")) line: @l })) "at" "asc") (fn r @r.line))))
           (emit LOGS_DONE { containerId: @entity.target logs: @lines lineCount: (array/len @lines) }))
+      ;; a stopped container binds no ports, and a port key always reads number/protocol, so these defaults only cover that
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "status"))
         (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
-          (emit STATUS_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) })))))) createdAt: (time/parse @d.Created) startedAt: (if (str/startsWith @d.State.StartedAt "0001") 0 (time/parse @d.State.StartedAt)) stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
+          (emit STATUS_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (time/parse @d.Created) startedAt: (if (str/startsWith @d.State.StartedAt "0001") 0 (time/parse @d.State.StartedAt)) stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list") (== (str/trim @payload.stdout) ""))
         (emit LIST_DONE { containers: [] total: 0 })
       DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "list") (!= (str/trim @payload.stdout) ""))
         (emit DOCKER_EXEC { env: @config.env stage: "list-inspect" argv: (array/concat ["inspect" "--format" "{{json .}}"] (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= @l "")))) })
+      ;; a stopped container binds no ports, and a port key always reads number/protocol, so these defaults only cover that
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list-inspect"))
         (let ((rows (array/map (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= @l ""))) (fn l (json/parse @l DockerInspect)))))
-          (emit LIST_DONE { containers: (array/map @rows (fn d { id: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) })))))) createdAt: (time/parse @d.Created) })) total: (array/len @rows) }))
+          (emit LIST_DONE { containers: (array/map @rows (fn d { id: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (time/parse @d.Created) })) total: (array/len @rows) }))
     }
 
     emits {

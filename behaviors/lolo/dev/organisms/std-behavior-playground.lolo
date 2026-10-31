@@ -11,6 +11,7 @@ uses Catalog from "std/behaviors/std-behavior-catalog"
 uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
 uses Loader from "std/behaviors/std-behavior-loader"
 
+type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { behavior : string!, kind : string! }
@@ -141,8 +142,8 @@ orbital BehaviorPlayground {
     listens {
       PlaygroundStage.COSMIC_LOAD -> LOAD
       LOAD {
-        program : string!
-        source : string!
+        program : PlaygroundProgram!
+        source : PlaygroundProgram!
         highlighted : string!
       }
       OPEN_TRAITS {
@@ -376,7 +377,7 @@ orbital BehaviorPlayground {
       TAB_SELECTED -> open when (= ?tabId machines)
         (set @entity.tab machines)
         (emit STAGE_SHOWN {})
-        (emit COSMIC_LOAD { program: @entity.programJson, source: @entity.sourceJson, highlighted: "" })
+        (let ((shown (json/parse @entity.programJson PlaygroundProgram)) (written (json/parse @entity.sourceJson PlaygroundProgram))) (if (or (== @shown null) (== @written null)) (notify error "The opened behavior could not be read for the explorer.") (emit COSMIC_LOAD { program: @shown, source: @written, highlighted: "" })))
       TAB_SELECTED -> open when (and (!= ?tabId machines) (array/includes ["live", "source"] ?tabId))
         (set @entity.tab ?tabId)
         (emit STAGE_SHOWN {})
@@ -432,8 +433,8 @@ orbital BehaviorPlayground {
       }
         @description "Ask the loader for the opened behavior's source, resolved program, knobs and validation."
       COSMIC_LOAD -> external {
-        program : string!
-        source : string!
+        program : PlaygroundProgram!
+        source : PlaygroundProgram!
         highlighted : string!
       }
         @description "Hand the opened behavior, resolved and as written, to the state machine explorer."

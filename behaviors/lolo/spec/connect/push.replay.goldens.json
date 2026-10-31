@@ -1,0 +1,592 @@
+{
+ "atom": "connect/atoms/std-push.lolo",
+ "trait": "PushClient",
+ "note": "Pins std-push's observable behaviour before it moves off the http effect: the subscription pre-checks, the reply mapping and the failure mapping. The RFC 8291 section 5 byte-level vector (spec/connect/push.vectors.json) joins once the bytes-message hmac op lands.",
+ "cases": [
+  {
+   "id": "pin-a-subscription-without-keys-is-refused",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x"
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "push.send: subscription must be { endpoint, keys: { p256dh, auth } }"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-empty-endpoint-is-refused",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "You must pass in a subscription with at least an endpoint."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-empty-keys-are-refused",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "",
+        "auth": ""
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-short-p256dh-is-refused",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "AAAA",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "The subscription p256dh value should be 65 bytes long."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-valid-subscription-asks-the-push-service",
+   "config": {
+    "vapidPublicKey": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "AAAAAAAAAAAAAAAAAAAAAA"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "http"
+       }
+      ],
+      "neverEmits": [
+       "PUSH_SEND_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-201-reply-answers-ok-true-expired-false",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_REPLIED",
+     "payload": {
+      "status": 201,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_RESULT",
+        "payload": {
+         "statusCode": 201,
+         "ok": true,
+         "expired": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-400-reply-answers-ok-false-expired-false",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_REPLIED",
+     "payload": {
+      "status": 400,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_RESULT",
+        "payload": {
+         "statusCode": 400,
+         "ok": false,
+         "expired": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-404-reply-answers-ok-false-expired-true",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_REPLIED",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_RESULT",
+        "payload": {
+         "statusCode": 404,
+         "ok": false,
+         "expired": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-410-reply-answers-ok-false-expired-true",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_REPLIED",
+     "payload": {
+      "status": 410,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_RESULT",
+        "payload": {
+         "statusCode": 410,
+         "ok": false,
+         "expired": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-5xx-reply-fails-with-the-status",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_REPLIED",
+     "payload": {
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint returned 503"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-timeout-is-a-socket-timeout",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Socket timeout"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-unconfigured-call-with-no-subject-names-the-subject",
+   "config": {
+    "vapidPublicKey": "",
+    "vapidSubject": ""
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "No subject set in vapidDetails.subject."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-unconfigured-call-with-no-public-key-names-the-public-key",
+   "config": {
+    "vapidPublicKey": "",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "No key set vapidDetails.publicKey"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-an-unconfigured-call-with-both-set-names-the-private-key",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "No key set in vapidDetails.privateKey"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-any-other-transport-failure-carries-its-text",
+   "config": {
+    "vapidPublicKey": "BPubKey",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "connection refused",
+      "kind": "failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "connection refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-short-auth-key-is-refused",
+   "config": {
+    "vapidPublicKey": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "AAAA"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "The subscription auth key should be at least 16 bytes long"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-subject-that-is-not-a-valid-url-is-refused",
+   "config": {
+    "vapidPublicKey": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+    "vapidSubject": "ftp://ops.example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "AAAAAAAAAAAAAAAAAAAAAA"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Vapid subject is not a valid URL. ftp://ops.example.test"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-public-key-with-padding-characters-is-refused",
+   "config": {
+    "vapidPublicKey": "AAAA==",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "AAAAAAAAAAAAAAAAAAAAAA"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Vapid public key must be a URL safe Base 64 (without \"=\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pin-a-short-public-key-is-refused",
+   "config": {
+    "vapidPublicKey": "AAAA",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://push.example.test/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "AAAAAAAAAAAAAAAAAAAAAA"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Vapid public key should be 65 bytes long when decoded."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

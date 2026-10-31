@@ -466,15 +466,15 @@ orbital AgentPoolOrbital {
     state counting {
       INIT -> ready
       ENTRY_LOADED -> ready when (!= ?data null)
-        (let ((e ?data))
-          (let ((plays (+ (object/get @e plays 0) (if (= @entity.signalOf "play") 1 0))) (bad (+ (+ (object/get @e hides 0) (object/get @e wrong 0)) (if (or (= @entity.signalOf "hide") (= @entity.signalOf "wrong")) 1 0))))
+        (let ((e : PoolEntry ?data))
+          (let ((plays (+ @e.plays (if (= @entity.signalOf "play") 1 0))) (bad (+ (+ @e.hides @e.wrong) (if (or (= @entity.signalOf "hide") (= @entity.signalOf "wrong")) 1 0))))
             (persist update PoolEntry {
-              id: (object/get @e id)
+              id: @e.id
               plays: @plays
-              likes: (+ (object/get @e likes 0) (if (= @entity.signalOf "like") 1 0))
-              hides: (+ (object/get @e hides 0) (if (= @entity.signalOf "hide") 1 0))
-              right: (+ (object/get @e right 0) (if (= @entity.signalOf "right") 1 0))
-              wrong: (+ (object/get @e wrong 0) (if (= @entity.signalOf "wrong") 1 0))
+              likes: (+ @e.likes (if (= @entity.signalOf "like") 1 0))
+              hides: (+ @e.hides (if (= @entity.signalOf "hide") 1 0))
+              right: (+ @e.right (if (= @entity.signalOf "right") 1 0))
+              wrong: (+ @e.wrong (if (= @entity.signalOf "wrong") 1 0))
               retired: (and (>= @plays @config.minPlays) (>= (default (/ @bad (math/max @plays 1)) 0) @config.ratio))
             })))
       ENTRY_LOADED -> ready when (== ?data null)

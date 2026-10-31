@@ -3032,7 +3032,7 @@
         "event": "HTTP_STREAM_EVENT",
         "payload": {
          "key": "k1",
-         "data": "h\u00e9llo"
+         "data": "héllo"
         }
        }
       ],
@@ -6102,6 +6102,122 @@
    "config": {
     "credential": "USER_TOKEN",
     "credentialScope": "user"
+   }
+  },
+  {
+   "id": "a-header-listed-in-signatureHeaders-is-sent-as-a-plain-header-although-credentialHeaders-names-it",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Authorization",
+        "value": "AWS4-HMAC-SHA256 Credential=AK/20150830/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-date, Signature=abc"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "",
+         "request": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQVdTNC1ITUFDLVNIQTI1NiBDcmVkZW50aWFsPUFLLzIwMTUwODMwL3VzLWVhc3QtMS9zMy9hd3M0X3JlcXVlc3QsIFNpZ25lZEhlYWRlcnM9aG9zdDt4LWFtei1kYXRlLCBTaWduYXR1cmU9YWJjDQoNCg=="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "signatureHeaders": [
+     "authorization"
+    ]
+   }
+  },
+  {
+   "id": "control-an-authorization-header-is-still-refused-when-signatureHeaders-is-empty",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Authorization",
+        "value": "AWS4-HMAC-SHA256 Credential=AK/20150830/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-date, Signature=abc"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ],
+   "config": {}
+  },
+  {
+   "id": "control-a-credential-header-not-listed-in-signatureHeaders-is-still-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "cookie",
+        "value": "AWS4-HMAC-SHA256 Credential=AK/20150830/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-date, Signature=abc"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "signatureHeaders": [
+     "authorization"
+    ]
    }
   }
  ]

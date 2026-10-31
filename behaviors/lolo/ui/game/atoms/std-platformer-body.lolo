@@ -141,8 +141,9 @@ orbital PlatformerBodyOrbital {
         (let ((ny2 (if @landed (if (> @gdir 0) (- @hitY @bh) (+ @hitY @hitH)) @ny)) (vy2 (if @landed 0 @vy1)))
         (let ((cx (+ @nx (/ @bw 2))) (firstS (default (array/first @entity.skateCurve) { x: 0, y: 0 })) (lastS (default (array/last @entity.skateCurve) { x: 0, y: 0 })))
         (let ((inRange (and @config.skate (and (> (array/len @entity.skateCurve) 1) (and (>= @cx (object/get @firstS x)) (< @cx (object/get @lastS x)))))))
-        (let ((leftSamp (if @inRange (array/last (array/filter @entity.skateCurve (fn s (<= (object/get @s x) @cx)))) { x: 0, y: 0 })))
-        (let ((rightSamp (if @inRange (array/first (array/filter @entity.skateCurve (fn s (> (object/get @s x) @cx)))) { x: 1, y: 0 })))
+        ;; inRange puts cx between the first and last curve points, so the sample defaults never fire
+        (let ((leftSamp (if @inRange (default (array/last (array/filter @entity.skateCurve (fn s (<= (object/get @s x) @cx)))) { x: 0, y: 0 }) { x: 0, y: 0 })))
+        (let ((rightSamp (if @inRange (default (array/first (array/filter @entity.skateCurve (fn s (> (object/get @s x) @cx)))) { x: 1, y: 0 }) { x: 1, y: 0 })))
         (let ((slope (if @inRange (default (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))) 0) 0)))
         (let ((curveY (if @inRange (+ (object/get @leftSamp y) (* @slope (- @cx (object/get @leftSamp x)))) 0)))
         (let ((gapBreak (and (> @config.skateMaxGap 0) (> (- (object/get @rightSamp x) (object/get @leftSamp x)) @config.skateMaxGap))))

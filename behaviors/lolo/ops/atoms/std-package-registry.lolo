@@ -11,7 +11,7 @@ orbital PackageRegistryOrbital {
   entity RegistryState [runtime] {
     id : string!
     busy : boolean = false
-    current : RegistryCall @description "The request being served."
+    current : RegistryCall @description "The request being served; empty while none is." = { requestId: 0, op: "", name: "", version: "", integrity: "" }
     queue : [RegistryRequest] @description "Requests received while one is being served." = []
     tarball : bytes @description "The tarball of the publish being served."
   }
@@ -60,44 +60,46 @@ orbital PackageRegistryOrbital {
       INIT -> serving
       REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) (not @entity.busy))
         (set @entity.busy true)
-        (emit REGISTRY_ENTER { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) })
+        (emit REGISTRY_ENTER { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get (default @payload.headers {}) "authorization") ""), body: (default @payload.body (bytes/from-string "")) })
       REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) @entity.busy)
-        (set @entity.queue (array/append @entity.queue { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) }))
+        (set @entity.queue (array/append @entity.queue { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get (default @payload.headers {}) "authorization") ""), body: (default @payload.body (bytes/from-string "")) }))
       REGISTRY_DONE -> serving when (= (array/len @entity.queue) 0)
         (set @entity.busy false)
       REGISTRY_DONE -> serving when (> (array/len @entity.queue) 0)
-        (emit REGISTRY_ENTER { requestId: (object/get (array/first @entity.queue) "requestId"), method: (object/get (array/first @entity.queue) "method"), path: (object/get (array/first @entity.queue) "path"), authorization: (object/get (array/first @entity.queue) "authorization"), body: (object/get (array/first @entity.queue) "body") })
+        (let ((nx (array/first @entity.queue)))
+          (emit REGISTRY_ENTER { requestId: @nx.requestId, method: @nx.method, path: @nx.path, authorization: @nx.authorization, body: @nx.body }))
         (set @entity.queue (array/drop @entity.queue 1))
+      ;; the rest defaults never fire: each route's guard fixes the segment count first
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (and (= @m "PUT") (= @n 2)))
         (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
-              (m (str/upper @payload.method))) (emit PACKAGE_PUBLISH { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1), token: (str/replace @payload.authorization "Bearer " ""), tarball: @payload.body }))
+              (m (str/upper @payload.method))) (emit PACKAGE_PUBLISH { requestId: @payload.requestId, name: (default (array/nth @rest 0) ""), version: (default (array/nth @rest 1) ""), token: (str/replace @payload.authorization "Bearer " ""), tarball: @payload.body }))
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (and (= @m "GET") (= @n 2)))
         (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
-              (m (str/upper @payload.method))) (emit PACKAGE_FETCH { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1) }))
+              (m (str/upper @payload.method))) (emit PACKAGE_FETCH { requestId: @payload.requestId, name: (default (array/nth @rest 0) ""), version: (default (array/nth @rest 1) "") }))
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (and (= @m "GET") (= @n 3) (= (array/nth @rest 2) "tarball")))
         (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
-              (m (str/upper @payload.method))) (emit PACKAGE_TARBALL { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1) }))
+              (m (str/upper @payload.method))) (emit PACKAGE_TARBALL { requestId: @payload.requestId, name: (default (array/nth @rest 0) ""), version: (default (array/nth @rest 1) "") }))
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (and (= @m "GET") (= @n 1)))
         (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
-              (m (str/upper @payload.method))) (emit PACKAGE_VERSIONS { requestId: @payload.requestId, name: (array/nth @rest 0) }))
+              (m (str/upper @payload.method))) (emit PACKAGE_VERSIONS { requestId: @payload.requestId, name: (default (array/nth @rest 0) "") }))
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (and (= @m "POST") (= @n 3) (= (array/nth @rest 2) "yank")))
         (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
-              (m (str/upper @payload.method))) (emit PACKAGE_YANK { requestId: @payload.requestId, name: (array/nth @rest 0), version: (array/nth @rest 1), token: (str/replace @payload.authorization "Bearer " "") }))
+              (m (str/upper @payload.method))) (emit PACKAGE_YANK { requestId: @payload.requestId, name: (default (array/nth @rest 0) ""), version: (default (array/nth @rest 1) ""), token: (str/replace @payload.authorization "Bearer " "") }))
       REGISTRY_ENTER -> serving when (let ((rest (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/"))
               (n (array/len (str/split (str/slice @payload.path (str/len (str/concat @config.apiPrefix "/packages/"))) "/")))
               (m (str/upper @payload.method))) (not (or (and (= @m "PUT") (= @n 2)) (and (= @m "GET") (= @n 2)) (and (= @m "GET") (= @n 3) (= (array/nth @rest 2) "tarball")) (and (= @m "GET") (= @n 1)) (and (= @m "POST") (= @n 3) (= (array/nth @rest 2) "yank")))))
