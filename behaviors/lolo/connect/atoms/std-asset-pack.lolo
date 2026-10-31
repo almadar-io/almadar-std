@@ -1,7 +1,8 @@
 app std-asset-pack [
   version: "1.0.0",
   description: "AssetPackLoader — SOLE writer of the asset-pack fields on a board frame's entity. A board declares its pack (assetPack, packPath, transport); at INIT the atom reads <packPath> (an AssetPackManifest: pack, version, base, assets = a list of Asset rows keyed by their key field, group/name) over http (origin knob, must be in the app's egress) or os/read-file (assetsRoot anchor), resolves every entry url against base, and publishes assetByKey (flat) plus assetManifest (nested by the groups knob). Until the load answers, and after a failed load, every expectedKeys entry is a visible placeholder; every key the pack lacks is a placeholder and gets one ASSET_PACK_MISSING { pack, key }.",
-  egress: ["https://almadar-kflow-assets.web.app"]
+  egress: ["https://almadar-kflow-assets.web.app"],
+  fs: { cwd: "almadar-assets/**": [read] }
 ]
 uses Fetch from "std/behaviors/std-http-fetch"
 type HttpHeader = { name : string!, value : string! }

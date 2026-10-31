@@ -1,8 +1,12 @@
 app std-banking [
-  version: "1.0.0",
-  description: "std-banking — bank-account reads through GoCardless Bank Account Data (bankaccountdata.gocardless.com). BANKING_CREATE_REQUISITION starts the bank-connection consent flow and answers the requisition id and the link the user authorizes at, BANKING_LIST_ACCOUNTS lists the account ids linked under a completed requisition, BANKING_LIST_TRANSACTIONS lists the booked transactions of an account, optionally between two dates. The API logs in with a secret id and key exchanged for a short-lived access token that the host caches; every failure answers BANKING_FAILED.",
-  egress: ["https://bankaccountdata.gocardless.com"]
+  version: "1.1.0",
+  description: "std-banking — bank-account reads through GoCardless Bank Account Data (bankaccountdata.gocardless.com). BANKING_CREATE_REQUISITION starts the bank-connection consent flow and answers the requisition id and the link the user authorizes at, BANKING_LIST_ACCOUNTS lists the account ids linked under a completed requisition, BANKING_LIST_TRANSACTIONS lists the booked transactions of an account, optionally between two dates. The API logs in with a secret id and key exchanged for a short-lived access token that the host caches; every failure answers BANKING_FAILED. The access token is a json-token grant held by the host credential store, not a program value: a request carries the stored token, a not-held token is minted once and the call retried once, and every grant or transport failure answers BANKING_FAILED.",
+  egress: ["https://bankaccountdata.gocardless.com"],
+  net: { "bankaccountdata.gocardless.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type BankingRequisition = { id : string, link : string }
 type BankingRequisitionReply = { id : string, accounts : [string] }
 type BankingAmount = { amount : string, currency : string }
@@ -13,6 +17,43 @@ type BankingTransaction = { id : string?, amount : number, currency : string, da
 orbital BankingOrbital {
   entity BankingRequest [runtime] {
     id : string!
+    op : string @description "The call in flight: requisition, accounts or transactions." = ""
+    institutionId : string = ""
+    redirectUrl : string = ""
+    reference : string = ""
+    requisitionId : string = ""
+    accountId : string = ""
+    dateFrom : string = ""
+    dateTo : string = ""
+    mintTried : boolean @description "True once this call minted a token after the store reported none held, so a second not-held answer fails instead of looping." = false
+  }
+
+  trait BankingHttp = Http.traits.HttpClient {
+    config {
+      host: "bankaccountdata.gocardless.com"
+      port: 443
+      tls: true
+      serverName: "bankaccountdata.gocardless.com"
+      credential: "GOCARDLESS_ACCESS"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      BankingClient.BANKING_HTTP_SEND -> HTTP_SEND
+      BankingTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait BankingTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 20000
+      cancelOnDeadline: false
+    }
+    listens {
+      BankingClient.BANKING_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      BankingHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      BankingHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait BankingClient -> BankingRequest [optimistic] {
@@ -21,38 +62,63 @@ orbital BankingOrbital {
     state idle {
       INIT -> idle
 
-      BANKING_CREATE_REQUISITION -> idle when (!= (default @payload.reference "") "")
-        (http POST @config.origin "/requisitions/" {
-          json: { institution_id: @payload.institutionId, redirect: @payload.redirectUrl, reference: @payload.reference },
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: @config.tokenUrl,
-            body: { json: { secret_id: { credential: @config.secretIdCredential }, secret_key: { credential: @config.secretKeyCredential } } },
-            accessField: "access",
-            expiresField: "access_expires",
-            expiresMarginMs: 60000,
-            storeAs: { name: "gocardless:access", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, timeoutMs: @config.tokenTimeoutMs }
-          },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BANKING_REQUISITION_REPLIED, failure: BANKING_HTTP_FAILED } })
-      BANKING_CREATE_REQUISITION -> idle when (= (default @payload.reference "") "")
-        (http POST @config.origin "/requisitions/" {
-          json: { institution_id: @payload.institutionId, redirect: @payload.redirectUrl },
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: @config.tokenUrl,
-            body: { json: { secret_id: { credential: @config.secretIdCredential }, secret_key: { credential: @config.secretKeyCredential } } },
-            accessField: "access",
-            expiresField: "access_expires",
-            expiresMarginMs: 60000,
-            storeAs: { name: "gocardless:access", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, timeoutMs: @config.tokenTimeoutMs }
-          },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BANKING_REQUISITION_REPLIED, failure: BANKING_HTTP_FAILED } })
+      BANKING_CREATE_REQUISITION -> idle
+        (set @entity.op "requisition")
+        (set @entity.institutionId @payload.institutionId)
+        (set @entity.redirectUrl @payload.redirectUrl)
+        (set @entity.reference (default @payload.reference ""))
+        (set @entity.mintTried false)
+        (emit BANKING_DISPATCH {})
+      BANKING_LIST_ACCOUNTS -> idle
+        (set @entity.op "accounts")
+        (set @entity.requisitionId @payload.requisitionId)
+        (set @entity.mintTried false)
+        (emit BANKING_DISPATCH {})
+      BANKING_LIST_TRANSACTIONS -> idle
+        (set @entity.op "transactions")
+        (set @entity.accountId @payload.accountId)
+        (set @entity.dateFrom (default @payload.dateFrom ""))
+        (set @entity.dateTo (default @payload.dateTo ""))
+        (set @entity.mintTried false)
+        (emit BANKING_DISPATCH {})
+
+      BANKING_DISPATCH -> idle when (and (= @entity.op "requisition") (!= @entity.reference ""))
+        (emit BANKING_HTTP_SEND {
+          key: "requisition",
+          method: "POST",
+          target: (str/concat @config.apiPath "/requisitions/"),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (json/stringify { institution_id: @entity.institutionId, redirect: @entity.redirectUrl, reference: @entity.reference })),
+          stream: "none"
+        })
+      BANKING_DISPATCH -> idle when (and (= @entity.op "requisition") (= @entity.reference ""))
+        (emit BANKING_HTTP_SEND {
+          key: "requisition",
+          method: "POST",
+          target: (str/concat @config.apiPath "/requisitions/"),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (json/stringify { institution_id: @entity.institutionId, redirect: @entity.redirectUrl })),
+          stream: "none"
+        })
+      BANKING_DISPATCH -> idle when (= @entity.op "accounts")
+        (emit BANKING_HTTP_SEND {
+          key: "accounts",
+          method: "GET",
+          target: (str/concat @config.apiPath "/requisitions/" (str/join (array/map (str/split @entity.requisitionId "/") (fn p (str/encode-uri-component @p))) "/") "/"),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none"
+        })
+      BANKING_DISPATCH -> idle when (= @entity.op "transactions")
+        (emit BANKING_HTTP_SEND {
+          key: "transactions",
+          method: "GET",
+          target: (str/concat @config.apiPath "/accounts/" (str/join (array/map (str/split @entity.accountId "/") (fn p (str/encode-uri-component @p))) "/") "/transactions/" (if (and (= @entity.dateFrom "") (= @entity.dateTo "")) "" (str/concat "?" (str/join (array/filter [(if (= @entity.dateFrom "") "" (str/concat "date_from=" (str/encode-uri-component @entity.dateFrom))), (if (= @entity.dateTo "") "" (str/concat "date_to=" (str/encode-uri-component @entity.dateTo)))] (fn q (!= @q ""))) "&")))),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none"
+        })
+
       BANKING_REQUISITION_REPLIED -> idle when (>= @payload.status 500)
         (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_REQUISITION_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
@@ -61,28 +127,14 @@ orbital BankingOrbital {
         (emit BANKING_FAILED { message: (str/concat "GoCardless error " (default (format/number @payload.status) "") ": " @payload.body) })
       BANKING_REQUISITION_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((reply (json/parse @payload.body BankingRequisition)))
-          (if (= @reply null)
-            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition" })
+          ;; the guard below fails a reply with no id or link, so these defaults only type the present values
+          (if (or (= @reply null) (= (object/get @reply id null) null) (= (object/get @reply link null) null))
+            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition: id and link are required" })
             (emit BANKING_REQUISITION_RESULT {
               requisitionId: (default (object/get @reply id null) ""),
               link: (default (object/get @reply link null) "")
             })))
 
-      BANKING_LIST_ACCOUNTS -> idle
-        (http GET @config.origin (str/concat "/requisitions/" (str/join (array/map (str/split @payload.requisitionId "/") (fn p (str/encode-uri-component @p))) "/") "/") {
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: @config.tokenUrl,
-            body: { json: { secret_id: { credential: @config.secretIdCredential }, secret_key: { credential: @config.secretKeyCredential } } },
-            accessField: "access",
-            expiresField: "access_expires",
-            expiresMarginMs: 60000,
-            storeAs: { name: "gocardless:access", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, timeoutMs: @config.tokenTimeoutMs }
-          },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BANKING_ACCOUNTS_REPLIED, failure: BANKING_HTTP_FAILED } })
       BANKING_ACCOUNTS_REPLIED -> idle when (>= @payload.status 500)
         (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
@@ -91,31 +143,12 @@ orbital BankingOrbital {
         (emit BANKING_FAILED { message: (str/concat "GoCardless error " (default (format/number @payload.status) "") ": " @payload.body) })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((reply (json/parse @payload.body BankingRequisitionReply)))
-          (if (= @reply null)
-            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition" })
+          (if (or (= @reply null) (= (object/get @reply accounts null) null))
+            (emit BANKING_FAILED { message: "GoCardless returned a reply that is not a requisition: accounts is required" })
             (emit BANKING_ACCOUNTS_RESULT {
               accounts: (default (object/get @reply accounts null) [])
             })))
 
-      BANKING_LIST_TRANSACTIONS -> idle
-        (http GET @config.origin (str/concat "/accounts/" (str/join (array/map (str/split @payload.accountId "/") (fn p (str/encode-uri-component @p))) "/") "/transactions/") {
-          query: {
-            date_from: (if (= (default @payload.dateFrom "") "") null @payload.dateFrom),
-            date_to: (if (= (default @payload.dateTo "") "") null @payload.dateTo)
-          },
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: @config.tokenUrl,
-            body: { json: { secret_id: { credential: @config.secretIdCredential }, secret_key: { credential: @config.secretKeyCredential } } },
-            accessField: "access",
-            expiresField: "access_expires",
-            expiresMarginMs: 60000,
-            storeAs: { name: "gocardless:access", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, timeoutMs: @config.tokenTimeoutMs }
-          },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BANKING_TRANSACTIONS_REPLIED, failure: BANKING_HTTP_FAILED } })
       BANKING_TRANSACTIONS_REPLIED -> idle when (>= @payload.status 500)
         (emit BANKING_FAILED { message: (str/concat "GoCardless returned " (default (format/number @payload.status) "")) })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (< @payload.status 500) (not (json/valid @payload.body)))
@@ -143,14 +176,26 @@ orbital BankingOrbital {
               (emit BANKING_FAILED { message: "GoCardless returned a transaction whose amount is not a number" })
               (emit BANKING_TRANSACTIONS_RESULT { transactions: @rows }))))))
 
-      BANKING_HTTP_FAILED -> idle when (= @payload.kind "unconfigured")
-        (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY." })
       BANKING_HTTP_FAILED -> idle when (= @payload.kind "timeout")
         (emit BANKING_FAILED { message: "The operation was aborted due to timeout" })
-      BANKING_HTTP_FAILED -> idle when (and (= @payload.phase "grant") (validate/required @payload.grantStatus) (!= @payload.kind "unconfigured") (!= @payload.kind "timeout"))
-        (emit BANKING_FAILED { message: (str/concat "GoCardless token request failed: " (default (format/number @payload.grantStatus) "")) })
-      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.kind "timeout") (not (and (= @payload.phase "grant") (validate/required @payload.grantStatus))))
+      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (not @entity.mintTried))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.accessCredential, scope: app, tokenEndpoint: @config.tokenUrl, grant: "json-token", clientId: @config.secretIdCredential, clientSecret: @config.secretKeyCredential, clientIdField: "secret_id", clientSecretField: "secret_key", accessField: "access", refreshField: "refresh", expiresInField: "access_expires", refreshEndpoint: @config.refreshUrl, refreshBodyField: "refresh" } { emit: { success: BANKING_CONNECTED, failure: BANKING_CONNECT_FAILED } })
+      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") @entity.mintTried)
+        (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY." })
+      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.kind "timeout"))
         (emit BANKING_FAILED { message: @payload.error })
+
+      BANKING_CONNECTED -> idle when @payload.connected
+        (emit BANKING_DISPATCH {})
+      BANKING_CONNECTED -> idle when (not @payload.connected)
+        (emit BANKING_FAILED { message: "GoCardless did not connect the account" })
+      BANKING_CONNECT_FAILED -> idle when (= @payload.kind "invalid_client")
+        (emit BANKING_FAILED { message: "GoCardless rejected the secret id and key" })
+      BANKING_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. The host has no credential store." })
+      BANKING_CONNECT_FAILED -> idle when (and (!= @payload.kind "invalid_client") (!= @payload.kind "unavailable"))
+        (emit BANKING_FAILED { message: (str/concat "GoCardless token request failed: " @payload.error) })
     }
 
     emits {
@@ -180,34 +225,30 @@ orbital BankingOrbital {
         @description "The GoCardless call failed: credentials not configured (code NOT_CONFIGURED), login rejected, unreachable API, a 5xx reply, an unreadable reply or a GoCardless error with its full body."
         @synonyms "banking error, gocardless failure"
         @tier "primary"
-      BANKING_REQUISITION_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      BANKING_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the requisition call's HTTP reply."
+        @description "Internal: the GoCardless request, for the HTTP client."
         @tier "secondary"
-      BANKING_ACCOUNTS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      BANKING_DISPATCH -> internal
+        @description "Internal: send the call in flight, again after a token was minted."
+        @tier "secondary"
+      BANKING_CONNECTED -> internal {
+        connected : boolean!
+        label : string
       }
-        @description "Internal: the requisition read's HTTP reply."
+        @description "Internal: the credential store minted the access token."
         @tier "secondary"
-      BANKING_TRANSACTIONS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the transactions call's HTTP reply."
-        @tier "secondary"
-      BANKING_HTTP_FAILED {
+      BANKING_CONNECT_FAILED -> internal {
         error : string!
         kind : string!
-        phase : string
-        grantStatus : number
       }
-        @description "Internal: a GoCardless call never produced a reply."
+        @description "Internal: the credential store could not mint the access token."
         @tier "secondary"
     }
 
@@ -231,6 +272,20 @@ orbital BankingOrbital {
       }
         @description "List the booked transactions of an account, optionally from and to a date (YYYY-MM-DD)."
         @synonyms "bank statement, account transactions, reconciliation feed"
+      BANKING_DISPATCH
+      BANKING_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      BANKING_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+      BankingHttp.HTTP_REPLIED -> BANKING_REQUISITION_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "requisition")
+      BankingHttp.HTTP_REPLIED -> BANKING_ACCOUNTS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "accounts")
+      BankingHttp.HTTP_REPLIED -> BANKING_TRANSACTIONS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "transactions")
+      BankingHttp.HTTP_FAILED -> BANKING_HTTP_FAILED with { error: ?error, kind: ?kind }
+      BankingTimeout.TIMED_OUT -> BANKING_HTTP_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
       BANKING_REQUISITION_REPLIED {
         status : number!
         headers : Map string string
@@ -249,21 +304,29 @@ orbital BankingOrbital {
       BANKING_HTTP_FAILED {
         error : string!
         kind : string!
-        phase : string
-        grantStatus : number
       }
     }
 
     config {
-      origin : url = "https://bankaccountdata.gocardless.com/api/v2"
-        @label "GoCardless API origin"
-        @description "The Bank Account Data API origin with its /api/v2 prefix. The scheme and host must be declared in the app egress list."
-        @synonyms "gocardless url, api host"
+      apiPath : string = "/api/v2"
+        @label "GoCardless API path prefix"
+        @description "The path prefix of the Bank Account Data API on bankaccountdata.gocardless.com."
+        @synonyms "api prefix, api version path"
         @tier "infra"
       tokenUrl : url = "https://bankaccountdata.gocardless.com/api/v2/token/new/"
         @label "Login URL"
         @description "The endpoint that exchanges the secret id and key for an access token."
         @synonyms "token url, login endpoint"
+        @tier "infra"
+      refreshUrl : url = "https://bankaccountdata.gocardless.com/api/v2/token/refresh/"
+        @label "Token refresh URL"
+        @description "The endpoint that renews the access token from its refresh value."
+        @synonyms "refresh endpoint"
+        @tier "infra"
+      accessCredential : secret = "GOCARDLESS_ACCESS"
+        @label "Access token credential"
+        @description "Name of the stored credential the json-token grant keeps the GoCardless access token under; the BankingHttp credential carries the same name."
+        @synonyms "access token name"
         @tier "infra"
       secretIdCredential : secret = "GOCARDLESS_SECRET_ID"
         @label "Secret id credential"
@@ -275,18 +338,8 @@ orbital BankingOrbital {
         @description "Name of the credential holding the GoCardless Bank Account Data secret key."
         @synonyms "gocardless key, gocardless secret"
         @tier "infra"
-      tokenTimeoutMs : number = 15000
-        @label "Login timeout (ms)"
-        @description "Milliseconds the access-token request may take before it fails."
-        @synonyms "login deadline"
-        @tier "infra"
-      timeoutMs : number = 20000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each GoCardless request may take before it fails."
-        @synonyms "timeout, request deadline"
-        @tier "infra"
     }
   }
 
-  page boot as BankingPage -> BankingClient
+  page boot as BankingPage -> BankingClient, BankingHttp, BankingTimeout
 }

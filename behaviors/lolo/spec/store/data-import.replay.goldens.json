@@ -112,6 +112,41 @@
      }
     }
    ]
+  },
+  {
+   "id": "staging-two-rows-persists-them-through-the-batch-form-and-fires-no-failure",
+   "entity": {
+    "id": "b1",
+    "sourceName": "s",
+    "status": "uploaded",
+    "rowCount": 0,
+    "errorCount": 0
+   },
+   "steps": [
+    {
+     "from": "uploaded",
+     "event": "STAGE_ROWS",
+     "payload": {
+      "rows": [
+       "{\"a\":\"1\"}",
+       "{\"a\":\"2\"}"
+      ],
+      "errorCount": 0
+     },
+     "expect": {
+      "state": "staged",
+      "emits": [
+       {
+        "event": "ROWS_STAGED"
+       }
+      ],
+      "neverEmits": [
+       "IMPORT_FAILED",
+       "IMPORT_PERSIST_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

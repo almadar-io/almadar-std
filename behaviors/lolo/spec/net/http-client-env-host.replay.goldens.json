@@ -1,0 +1,267 @@
+{
+ "atom": "net/atoms/std-http-client.lolo",
+ "trait": "HttpClient",
+ "spec": "spec/net/http-client.lolo",
+ "note": "the env-anchored host of std-http-client: the host knob is a literal or { anchor: { env: NAME } } (a net grant such as net: { env NAME, 443: [tcp] } covers it); with an anchored host the caller names the same text in the host field of HTTP_SEND, which is the host header and the TLS server name. Written before the atom change; a literal host behaves as before. The TLS server name is checked through the request's host text (the connect effect carries it as an expression, so these cases pin arg0 and arg1).",
+ "cases": [
+  {
+   "id": "an-anchored-host-connects-to-the-env-anchor-and-writes-the-callers-host-as-the-host-header",
+   "config": {
+    "host": {
+     "anchor": {
+      "env": "S3_HOST"
+     }
+    },
+    "port": 443,
+    "tls": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "bucket.s3.eu-west-1.amazonaws.com"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": {
+         "anchor": {
+          "env": "S3_HOST"
+         }
+        },
+        "arg1": 443
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBidWNrZXQuczMuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb20NCg0K"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-anchored-host-on-a-port-that-is-not-the-default-writes-host-colon-port",
+   "config": {
+    "host": {
+     "anchor": {
+      "env": "S3_HOST"
+     }
+    },
+    "port": 9000,
+    "tls": false
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "127.0.0.1"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": {
+         "anchor": {
+          "env": "S3_HOST"
+         }
+        },
+        "arg1": 9000
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiAxMjcuMC4wLjE6OTAwMA0KDQo="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-anchored-host-send-with-no-host-text-is-refused-before-any-socket-opens",
+   "config": {
+    "host": {
+     "anchor": {
+      "env": "S3_HOST"
+     }
+    },
+    "port": 443,
+    "tls": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-anchored-host-send-with-an-empty-host-text-is-refused",
+   "config": {
+    "host": {
+     "anchor": {
+      "env": "S3_HOST"
+     }
+    },
+    "port": 443,
+    "tls": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-literal-host-ignores-the-payload-host-and-keeps-its-tls-server-name",
+   "config": {
+    "host": "api.example.test",
+    "port": 443,
+    "tls": true,
+    "serverName": "api.example.test"
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "other.example"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 443
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-literal-host-send-with-no-host-text-is-unchanged",
+   "config": {},
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -139,7 +139,7 @@ orbital RecordItemOrbital {
       ;; draft=1 and lands straight in the editor — a distinct target state,
       ;; not a flag on the render, so the machine stays honest about being
       ;; in an editing session.
-      RecordItemLoaded -> editing when (and (!= (as ?data RecordRow) null) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
+      RecordItemLoaded -> editing when (and (validate/object ?data) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
         ;; the typed empty base copies the fetched row into loadedRow's Map type
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
@@ -149,7 +149,7 @@ orbital RecordItemOrbital {
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemLoaded -> viewing when (and (!= (as ?data RecordRow) null) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
+      RecordItemLoaded -> viewing when (and (validate/object ?data) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
         ;; the typed empty base copies the fetched row into loadedRow's Map type
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
@@ -165,7 +165,7 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
+      RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (validate/object (array/first ?data)) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
@@ -174,7 +174,7 @@ orbital RecordItemOrbital {
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
+      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (validate/object (array/first ?data)) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
@@ -189,9 +189,9 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemLoaded -> error when (= (as ?data RecordRow) null)
+      RecordItemLoaded -> error when (not (validate/object ?data))
         (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
-      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (= (as (array/first ?data) RecordRow) null))
+      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
         (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
@@ -268,7 +268,7 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-      RecordItemLoaded -> viewing when (!= (as ?data RecordRow) null)
+      RecordItemLoaded -> viewing when (validate/object ?data)
         ;; the typed empty base copies the fetched row into loadedRow's Map type
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
@@ -284,7 +284,7 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null))
+      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (validate/object (array/first ?data)))
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
@@ -299,9 +299,9 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemLoaded -> error when (= (as ?data RecordRow) null)
+      RecordItemLoaded -> error when (not (validate/object ?data))
         (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
-      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (= (as (array/first ?data) RecordRow) null))
+      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
         (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })

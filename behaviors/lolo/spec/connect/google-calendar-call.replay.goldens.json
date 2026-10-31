@@ -1,0 +1,62 @@
+{
+ "atom": "connect/atoms/std-google-calendar.lolo",
+ "trait": "CalendarCall",
+ "note": "CalendarCall knobs (the delegated user) are set by the case config of the default trait, so this case runs with CalendarCall as the default trait.",
+ "cases": [
+  {
+   "id": "a-not-held-token-with-a-delegated-user-mints-with-the-subject",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "create",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": false,
+      "attempt": 0
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.tokenCache",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccount",
+         "issuer": "@config.serviceAccountEmail",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/calendar",
+          " "
+         ],
+         "subject": "user@example.com"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "subject": "user@example.com"
+   },
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  }
+ ]
+}

@@ -51,7 +51,7 @@ orbital OrbLintThemeRefOrbital {
                 (refs : [ThrRef] (array/concat
                   (let ((t (object/get @payload.program "theme" null))) (if (validate/string @t) [{ p: "theme", k: @t }] @noref))
                   (array/concat
-                    (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((t (object/get (array/nth @orbitals @oi) "theme" null))) (if (validate/string @t) [{ p: (str/concat "orbitals[" @oi "].theme"), k: @t }] @noref)))))
+                    (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((t (object/get (default (array/nth @orbitals @oi) {}) "theme" null))) (if (validate/string @t) [{ p: (str/concat "orbitals[" @oi "].theme"), k: @t }] @noref)))))
                     (let ((ts (object/get @payload.program "themes" null))) (if (validate/array @ts) (array/flatten (array/map (array/range 0 (array/len @ts)) (fn ti (let ((k (array/nth @ts @ti))) (if (validate/string @k) [{ p: (str/concat "themes[" @ti "]"), k: @k }] @noref))))) @noref))))))
             (array/map (array/filter @refs (fn r (and (not (validate/pattern (object/get @r "k" "") "^[A-Z][a-zA-Z0-9]*\\.theme$")) (not (array/includes @inl (object/get @r "k" ""))) (not (object/has @keySet (object/get @r "k" ""))))))
               (fn r { code: @config.codes.xUnknownTheme.code, path: (object/get @r "p" ""), message: (str/concat "Unknown theme '" (object/get @r "k" "") "'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme."), suggestion: "", severity: "error" })))))

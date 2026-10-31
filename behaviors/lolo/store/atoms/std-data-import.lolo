@@ -147,7 +147,7 @@ orbital DataImportOrbital {
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (default ?errorCount 0))
         (set @entity.status staged)
-        (persist create ImportRow (array/map ?rows (fn r { batchId: @entity.id, rowJson: @r, status: staged, createdAt: @now })) {
+        (persist batch (array/map (array/zip (array/range (array/len ?rows)) ?rows) (fn z ["create" "ImportRow" { id: (str/concat @entity.id ":" (array/nth @z 0)), batchId: @entity.id, rowJson: (array/nth @z 1), status: staged, createdAt: @now }])) {
           emit: { failure: IMPORT_PERSIST_FAILED, success: ROWS_STAGED }
         })
         (persist update ImportBatch {

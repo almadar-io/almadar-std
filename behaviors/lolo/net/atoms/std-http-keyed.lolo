@@ -26,7 +26,7 @@ orbital HttpKeyedOrbital {
     state ready {
       INIT -> ready
       HTTP_SEND -> ready
-        (emit KEYED_SEND { key: @payload.key, method: @payload.method, target: @payload.target, headers: @payload.headers, body: @payload.body, stream: @payload.stream })
+        (emit KEYED_SEND { key: @payload.key, method: @payload.method, target: @payload.target, headers: @payload.headers, body: @payload.body, stream: @payload.stream, host: @payload.host })
       HTTP_CANCEL -> ready
         (emit KEYED_CANCEL { key: @payload.key })
       KEY_REFUSED -> ready when (and (= @payload.reason "key-invalid") (= @payload.event "HTTP_SEND"))
@@ -55,6 +55,7 @@ orbital HttpKeyedOrbital {
         headers : [HttpHeader]!
         body : bytes!
         stream : string!
+        host : string
       }
         @description "Internal: the call, for the row of its key."
         @tier "internal"
@@ -80,6 +81,7 @@ orbital HttpKeyedOrbital {
         headers : [HttpHeader]!
         body : bytes!
         stream : string!
+        host : string
       }
         @description "Make one HTTP call under this key; answered by KeyedHttp as HTTP_REPLIED or HTTP_FAILED with the same key, any number of keys at once."
         @synonyms "concurrent http client, parallel requests, keyed calls"

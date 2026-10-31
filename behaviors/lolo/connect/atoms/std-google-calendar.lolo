@@ -1,9 +1,14 @@
 app std-google-calendar [
-  version: "1.0.0",
+  version: "1.2.0",
   description: "std-google-calendar — Google Calendar through the REST API (www.googleapis.com/calendar/v3): list, create, update and delete events, free-busy queries and push-channel watch. Each action is one input event with a typed payload and one result event carrying the provider's result record; an API or transport failure answers on that action's failure event with the error message; an unconfigured service account answers code NOT_CONFIGURED; a 2xx reply whose JSON body cannot be read answers code MALFORMED_REPLY. Push notifications arrive at the inbound hook google-calendar: the CalendarPushInbound trait checks the watch-channel token, acknowledges the sync handshake and emits CAL_REMOTE_CHANGED.",
   egress: ["https://www.googleapis.com"],
+  net: { "www.googleapis.com:443": [tcp] },
   inbound: ["google-calendar"]
 ]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Timeout from "std/behaviors/std-timeout"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
 type CalendarDay = date
 type CalendarInstant = instant
 type CalendarRawTime = { dateTime : string, date : string }
@@ -20,10 +25,66 @@ type CalendarApiErrorItem = { message : string, domain : string }
 type CalendarApiError = { code : number, message : string, errors : [CalendarApiErrorItem] }
 type CalendarErrorReply = { error : CalendarApiError }
 type CalendarErrorStringReply = { error : string }
-type CalendarGrantError = { error : string, error_description : string }
 orbital CalendarOrbital {
   entity CalendarRequest [runtime] {
     id : string!
+    method : string = ""
+    target : string = ""
+    body : string @description "The JSON body of the request in flight; empty for none." = ""
+    mintTried : boolean @description "True once this request minted the access token after the store reported none held, so a second not-held answer fails instead of looping." = false
+    attempt : number @description "The std-retry attempt in flight for a list or delete; 0 for the calls that are not retried." = 0
+  }
+
+  trait CalendarKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      CalendarCall.CALENDAR_HTTP_SEND -> HTTP_SEND
+      CalendarTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      CalendarKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait CalendarHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "www.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "www.googleapis.com"
+      credential: "GOOGLE_CALENDAR_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      CalendarKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      CalendarKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  trait CalendarTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      CalendarCall.CALENDAR_HTTP_SEND -> START per @payload.key with { key: (as ?key CallKey) }
+      CalendarHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+      CalendarHttp.HTTP_FAILED -> FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  ;; list and delete retry on 1xx, 408, 429, 5xx (three retries: 100, 500 then 1500 ms) and on a timeout or transport failure (two retries, the client stops them); 100 x 5^(n-1) capped at 1500 reproduces the schedule
+  trait CalendarRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      CalendarCall.CALENDAR_RETRY_START -> START per @payload.key
+      CalendarCall.CALENDAR_RETRY_FAILED -> FAILED per @payload.key
+      CalendarCall.CALENDAR_RETRY_CANCEL -> CANCEL per @payload.key
+      CalendarHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (or (= ?key "list") (str/startsWith ?key "delete:")) (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+    }
   }
 
   trait CalendarClient -> CalendarRequest [optimistic] {
@@ -33,113 +94,344 @@ orbital CalendarOrbital {
       INIT -> idle
 
       CALENDAR_LIST_EVENTS -> idle
-        (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events") {
-          headers: { Accept: "*/*" },
-          query: { syncToken: (if (!= (default @payload.syncToken "") "") (default @payload.syncToken "") null), timeMin: (if (and (not (!= (default @payload.syncToken "") "")) (!= (default @payload.timeMin "") "")) (default @payload.timeMin "") null), timeMax: (if (and (not (!= (default @payload.syncToken "") "")) (!= (default @payload.timeMax "") "")) (default @payload.timeMax "") null), singleEvents: (if (!= (default @payload.syncToken "") "") null "true"), orderBy: (if (!= (default @payload.syncToken "") "") null "startTime"), maxResults: (default @payload.maxResults 250) },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] },
-          timeoutMs: @config.timeoutMs
-        } { key: "list", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: "list", method: "GET", target: (let ((sync (default @payload.syncToken ""))) (let ((q (str/join (array/filter [(if (!= @sync "") (str/concat "syncToken=" (str/encode-uri-component @sync)) "") (if (and (= @sync "") (!= (default @payload.timeMin "") "")) (str/concat "timeMin=" (str/encode-uri-component (default @payload.timeMin ""))) "") (if (and (= @sync "") (!= (default @payload.timeMax "") "")) (str/concat "timeMax=" (str/encode-uri-component (default @payload.timeMax ""))) "") (if (= @sync "") "singleEvents=true" "") (if (= @sync "") "orderBy=startTime" "") (str/concat "maxResults=" (default @payload.maxResults 250))] (fn p (!= @p ""))) "&"))) (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events?" @q))), body: "", retry: true })
       CALENDAR_CREATE_EVENT -> idle when (or (validate/required @payload.end) (= (str/len @payload.start) 10) (> (default @payload.durationMinutes 0) 0))
         (let ((allDay (as @payload.start CalendarDay)) (st (as @payload.start CalendarInstant)))
          (let ((endValue (if (validate/required @payload.end) @payload.end (if (= (str/len @payload.start) 10) (if (== @allDay null) null (time/format (time/add @allDay 1 day) "YYYY-MM-DD")) (if (== @st null) null (str/concat (time/format (time/add @st (default @payload.durationMinutes 0) "minute") "YYYY-MM-DDTHH:mm:ss") "Z"))))))
           (if (== @endValue null)
             (emit CALENDAR_CREATE_EVENT_FAILED { message: "createEvent could not read `start` as a date or date-time to compute `end`" })
-          (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events") {
-            headers: { Accept: "*/*", Content-Type: "application/json" },
-            text: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (validate/required @payload.description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (validate/required @payload.location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len @endValue) 10) (str/concat "{\"date\":" (json/stringify @endValue) "}") (str/concat "{\"dateTime\":" (json/stringify @endValue) "}")))] (fn p (!= @p ""))) ",") "}"),
-            auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-            timeoutMs: @config.timeoutMs
-          } { key: "create", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))))
+            (emit CALENDAR_READY { key: "create", method: "POST", target: (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events"), body: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (validate/required @payload.description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (validate/required @payload.location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len @endValue) 10) (str/concat "{\"date\":" (json/stringify @endValue) "}") (str/concat "{\"dateTime\":" (json/stringify @endValue) "}")))] (fn p (!= @p ""))) ",") "}"), retry: false }))))
       CALENDAR_CREATE_EVENT -> idle when (and (not (validate/required @payload.end)) (!= (str/len @payload.start) 10) (<= (default @payload.durationMinutes 0) 0))
         (emit CALENDAR_CREATE_EVENT_FAILED { message: "createEvent requires `end` or a positive `durationMinutes`" })
       CALENDAR_UPDATE_EVENT -> idle
-        (http PATCH @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
-          headers: { Accept: "*/*", Content-Type: "application/json" },
-          text: (str/concat "{" (str/join (array/filter [(if (object/has @payload summary) (str/concat "\"summary\":" (json/stringify @payload.summary)) "") (if (object/has @payload description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (object/has @payload location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (if (validate/required @payload.start) (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) "") (if (validate/required @payload.end) (str/concat "\"end\":" (if (= (str/len @payload.end) 10) (str/concat "{\"date\":" (json/stringify @payload.end) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.end) "}"))) "")] (fn p (!= @p ""))) ",") "}"),
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          timeoutMs: @config.timeoutMs
-        } { key: "update", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: "update", method: "PATCH", target: (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)), body: (str/concat "{" (str/join (array/filter [(if (object/has @payload summary) (str/concat "\"summary\":" (json/stringify @payload.summary)) "") (if (object/has @payload description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (object/has @payload location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (if (validate/required @payload.start) (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) "") (if (validate/required @payload.end) (str/concat "\"end\":" (if (= (str/len @payload.end) 10) (str/concat "{\"date\":" (json/stringify @payload.end) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.end) "}"))) "")] (fn p (!= @p ""))) ",") "}"), retry: false })
       CALENDAR_DELETE_EVENT -> idle
-        (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) {
-          headers: { Accept: "*/*" },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] },
-          timeoutMs: @config.timeoutMs
-        } { key: (str/concat "delete:" @payload.eventId), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: (str/concat "delete:" @payload.eventId), method: "DELETE", target: (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)), body: "", retry: true })
       CALENDAR_FREE_BUSY -> idle
-        (http POST @config.origin "/calendar/v3/freeBusy" {
-          headers: { Accept: "*/*" },
-          json: { timeMin: @payload.timeMin, timeMax: @payload.timeMax, items: [{ id: (default @payload.calendarId @config.calendarId) }] },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          timeoutMs: @config.timeoutMs
-        } { key: (str/concat "freeBusy:" (default @payload.calendarId @config.calendarId)), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: (str/concat "freeBusy:" (default @payload.calendarId @config.calendarId)), method: "POST", target: "/calendar/v3/freeBusy", body: (json/stringify { timeMin: @payload.timeMin, timeMax: @payload.timeMax, items: [{ id: (default @payload.calendarId @config.calendarId) }] }), retry: false })
       CALENDAR_WATCH -> idle
-        (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/watch") {
-          headers: { Accept: "*/*", Content-Type: "application/json" },
-          text: (str/concat "{" (str/join (array/filter [(str/concat "\"id\":" (json/stringify @payload.channelId)) (str/concat "\"type\":" "\"web_hook\"") (str/concat "\"address\":" (json/stringify @payload.address)) (if (!= (default @payload.ttlSeconds 0) 0) (str/concat "\"params\":{\"ttl\":" (json/stringify (str/concat @payload.ttlSeconds)) "}") "")] (fn p (!= @p ""))) ",") "}"),
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          timeoutMs: @config.timeoutMs
-        } { key: (str/concat "watch:" @payload.channelId), emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: (str/concat "watch:" @payload.channelId), method: "POST", target: (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events/watch"), body: (str/concat "{" (str/join (array/filter [(str/concat "\"id\":" (json/stringify @payload.channelId)) (str/concat "\"type\":" "\"web_hook\"") (str/concat "\"address\":" (json/stringify @payload.address)) (if (!= (default @payload.ttlSeconds 0) 0) (str/concat "\"params\":{\"ttl\":" (json/stringify (str/concat (default @payload.ttlSeconds 0))) "}") "")] (fn p (!= @p ""))) ",") "}"), retry: false })
       CALENDAR_STOP_WATCH -> idle
-        (http POST @config.origin "/calendar/v3/channels/stop" {
-          headers: { Accept: "*/*" },
-          json: { id: @payload.channelId, resourceId: @payload.resourceId },
-          auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (time/diff @now @config.epoch "s") 3600), iat: (time/diff @now @config.epoch "s") } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
-          timeoutMs: @config.timeoutMs
-        } { key: "stopWatch", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
+        (emit CALENDAR_READY { key: "stopWatch", method: "POST", target: "/calendar/v3/channels/stop", body: (json/stringify { id: @payload.channelId, resourceId: @payload.resourceId }), retry: false })
+    }
+
+    emits {
+      CALENDAR_CREATE_EVENT_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of creating an event: the API error message, or the transport error; code is blank, NOT_CONFIGURED or MALFORMED_REPLY."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_READY {
+        key : string!
+        method : string!
+        target : string!
+        body : string!
+        retry : boolean!
+      }
+        @description "Internal: a built request, handed to the row of its key in CalendarCall."
+        @tier "secondary"
+    }
+
+    listens {
+      CALENDAR_LIST_EVENTS -> input {
+        calendarId : string
+        timeMin : string
+        timeMax : string
+        syncToken : string
+        maxResults : number
+      }
+        @description "List events on a Google Calendar; pass syncToken for incremental sync instead of a time window (the API rejects combining them). calendarId defaults to the calendarId knob; maxResults defaults to 250."
+        @synonyms "list events, calendar events, sync events"
+      CALENDAR_CREATE_EVENT -> input {
+        calendarId : string
+        summary : string!
+        description : string
+        location : string
+        start : string!
+        end : string
+        durationMinutes : number
+      }
+        @description "Create a calendar event; an all-day event uses a 10-character (YYYY-MM-DD) start with no end, defaulting to the next day. A timed event needs an explicit end."
+        @synonyms "create event, add calendar event, schedule meeting"
+      CALENDAR_UPDATE_EVENT -> input {
+        calendarId : string
+        eventId : string!
+        summary : string
+        description : string
+        location : string
+        start : string
+        end : string
+      }
+        @description "Patch an existing event's fields; only fields present in the payload are changed."
+        @synonyms "update event, edit calendar event, reschedule"
+      CALENDAR_DELETE_EVENT -> input {
+        calendarId : string
+        eventId : string!
+      }
+        @description "Delete a calendar event."
+        @synonyms "delete event, remove calendar event, cancel event"
+      CALENDAR_FREE_BUSY -> input {
+        calendarId : string
+        timeMin : string!
+        timeMax : string!
+      }
+        @description "Query busy time blocks on a calendar within a window."
+        @synonyms "free busy, availability, busy slots"
+      CALENDAR_WATCH -> input {
+        calendarId : string
+        channelId : string!
+        address : string!
+        ttlSeconds : number
+      }
+        @description "Register a push-notification channel for calendar change events."
+        @synonyms "watch calendar, push notifications, subscribe changes"
+      CALENDAR_STOP_WATCH -> input {
+        channelId : string!
+        resourceId : string!
+      }
+        @description "Stop an active watch channel, ending calendar change notifications."
+        @synonyms "stop watch, unsubscribe, end notifications"
+    }
+
+    config {
+      calendarId : string = "primary"
+        @label "Default calendar id"
+        @description "Calendar used when an action names none."
+        @synonyms "default calendar, calendar id"
+        @tier "domain"
+    }
+  }
+
+  trait CalendarCall -> CalendarRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle when (= @payload.retry false)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (emit CALENDAR_DISPATCH {})
+      CALL_READY -> idle when (= @payload.retry true)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (emit CALENDAR_RETRY_START { key: (as @payload.key CallKey) })
+      CALENDAR_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit CALENDAR_DISPATCH {})
+      CALENDAR_DISPATCH -> idle when (= @entity.body "")
+        (emit CALENDAR_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })
+      CALENDAR_DISPATCH -> idle when (!= @entity.body "")
+        (emit CALENDAR_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: [{ name: "accept", value: "*/*" }, { name: "content-type", value: "application/json" }], body: (bytes/from-string @entity.body), stream: "none" })
+
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @payload.key "list"))
         (let ((r (json/parse @payload.body CalendarEventsReply))) (if (= @r null) (emit CALENDAR_LIST_EVENTS_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with JSON that is not a calendar event list" }) (emit CALENDAR_EVENTS_LISTED { events: (array/map (object/get @r items []) (fn i { id: (default (object/get @i id "") ""), summary: (default (object/get @i summary "") ""), description: (default (object/get @i description "") ""), location: (default (object/get @i location "") ""), start: (let ((dt (object/get @i "start.dateTime" ""))) (if (!= @dt "") @dt (object/get @i "start.date" ""))), end: (let ((dt (object/get @i "end.dateTime" ""))) (if (!= @dt "") @dt (object/get @i "end.date" ""))), status: (default (object/get @i status "") ""), updated: (default (object/get @i updated "") "") })), nextSyncToken: (object/get @r nextSyncToken null) })))
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @payload.key "create"))
         (let ((r (json/parse @payload.body CalendarCreatedReply))) (if (= @r null) (emit CALENDAR_CREATE_EVENT_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with JSON that is not a created event" }) (emit CALENDAR_EVENT_CREATED { id: (object/get @r id ""), status: (object/get @r status ""), htmlLink: (object/get @r htmlLink "") })))
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @payload.key "update"))
         (let ((r (json/parse @payload.body CalendarPatchedReply))) (if (= @r null) (emit CALENDAR_UPDATE_EVENT_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with JSON that is not a patched event" }) (emit CALENDAR_EVENT_UPDATED { id: (object/get @r id ""), status: (object/get @r status "") })))
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (str/startsWith @payload.key "delete:"))
         (emit CALENDAR_EVENT_DELETED { id: (str/slice @payload.key 7), deleted: true })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (str/startsWith @payload.key "freeBusy:"))
         (let ((r (json/parse @payload.body CalendarFreeBusyReply))) (if (= @r null) (emit CALENDAR_FREE_BUSY_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with JSON that is not a free-busy result" }) (emit CALENDAR_FREE_BUSY_RESULT { busy: (array/map (object/get (object/get (object/get @r calendars {}) (str/slice @payload.key 9) {}) busy []) (fn s { start: (default (object/get @s start "") ""), end: (default (object/get @s end "") "") })) })))
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (str/startsWith @payload.key "watch:"))
         (let ((r (json/parse @payload.body CalendarWatchReply))) (if (= @r null) (emit CALENDAR_WATCH_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with JSON that is not a watch channel" }) (emit CALENDAR_WATCHED { channelId: (let ((rid (object/get @r id ""))) (if (!= @rid "") @rid (str/slice @payload.key 6))), resourceId: (object/get @r resourceId ""), expiration: (object/get @r expiration "") })))
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.key "stopWatch"))
         (emit CALENDAR_WATCH_STOPPED { stopped: true })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)) (= @payload.key "list"))
         (emit CALENDAR_LIST_EVENTS_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with a body that is not valid JSON" })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)) (= @payload.key "create"))
         (emit CALENDAR_CREATE_EVENT_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with a body that is not valid JSON" })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)) (= @payload.key "update"))
         (emit CALENDAR_UPDATE_EVENT_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with a body that is not valid JSON" })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)) (str/startsWith @payload.key "freeBusy:"))
         (emit CALENDAR_FREE_BUSY_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with a body that is not valid JSON" })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)) (str/startsWith @payload.key "watch:"))
         (emit CALENDAR_WATCH_FAILED { code: "MALFORMED_REPLY", message: "Google Calendar replied with a body that is not valid JSON" })
-      CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= @payload.key "list"))
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))) (= @payload.key "list"))
         (emit CALENDAR_LIST_EVENTS_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= @payload.key "create"))
         (emit CALENDAR_CREATE_EVENT_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= @payload.key "update"))
         (emit CALENDAR_UPDATE_EVENT_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
-      CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (str/startsWith @payload.key "delete:"))
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))) (str/startsWith @payload.key "delete:"))
         (emit CALENDAR_DELETE_EVENT_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (str/startsWith @payload.key "freeBusy:"))
         (emit CALENDAR_FREE_BUSY_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (str/startsWith @payload.key "watch:"))
         (emit CALENDAR_WATCH_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+        (emit CALENDAR_CLEAR {})
       CALENDAR_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= @payload.key "stopWatch"))
         (emit CALENDAR_STOP_WATCH_FAILED { message: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
-      CALENDAR_REQUEST_FAILED -> idle when (= @payload.key "list")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_LIST_EVENTS_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_LIST_EVENTS_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (= @payload.key "create")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_CREATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_CREATE_EVENT_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (= @payload.key "update")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_UPDATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_UPDATE_EVENT_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (str/startsWith @payload.key "delete:")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_DELETE_EVENT_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_DELETE_EVENT_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (str/startsWith @payload.key "freeBusy:")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_FREE_BUSY_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_FREE_BUSY_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (str/startsWith @payload.key "watch:")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_WATCH_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_WATCH_FAILED { message: @msg })))
-      CALENDAR_REQUEST_FAILED -> idle when (= @payload.key "stopWatch")
-        (let ((msg (if (= @payload.kind "unconfigured") "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." (if (and (= @payload.phase "grant") (validate/required @payload.grantBody) (validate/required @payload.grantStatus)) (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (let ((ge (json/parse @gb CalendarGrantError))) (if (= @ge null) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))) (if (!= (object/get @ge error "") "") (str/concat (object/get @ge error "") (if (!= (object/get @ge error_description "") "") (str/concat ": " (object/get @ge error_description "")) "")) (let ((eo (json/parse @gb CalendarErrorReply)) (es (json/parse @gb CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @gs 400) (if (str/startsWith @gb "{") "[object Object]" @gb) (str/concat "Request failed with status code " @gs))))))))) (if (= @payload.kind "timeout") "network timeout" @payload.error))))) (if (= @payload.kind "unconfigured") (emit CALENDAR_STOP_WATCH_FAILED { code: "NOT_CONFIGURED", message: @msg }) (emit CALENDAR_STOP_WATCH_FAILED { message: @msg })))
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REPLIED -> idle when (and (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))) (= @payload.key "list"))
+        (emit CALENDAR_RETRY_FAILED { key: (as @payload.key CallKey), error: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+      CALENDAR_REPLIED -> idle when (and (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))) (str/startsWith @payload.key "delete:"))
+        (emit CALENDAR_RETRY_FAILED { key: (as @payload.key CallKey), error: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (!= @config.subject ""))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, issuer: @config.serviceAccountEmail, subject: @config.subject, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (= @config.subject ""))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, issuer: @config.serviceAccountEmail, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (= @payload.key "list"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_LIST_EVENTS_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (= @payload.key "create"))
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (= @payload.key "update"))
+        (emit CALENDAR_UPDATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (str/startsWith @payload.key "delete:"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_DELETE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (str/startsWith @payload.key "freeBusy:"))
+        (emit CALENDAR_FREE_BUSY_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (str/startsWith @payload.key "watch:"))
+        (emit CALENDAR_WATCH_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (= @payload.key "stopWatch"))
+        (emit CALENDAR_STOP_WATCH_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (= @payload.key "list") (< @entity.attempt 3))
+        (emit CALENDAR_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (= @payload.key "list") (>= @entity.attempt 3))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_LIST_EVENTS_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (= @payload.key "create"))
+        (emit CALENDAR_CREATE_EVENT_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (= @payload.key "update"))
+        (emit CALENDAR_UPDATE_EVENT_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (str/startsWith @payload.key "delete:") (< @entity.attempt 3))
+        (emit CALENDAR_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (str/startsWith @payload.key "delete:") (>= @entity.attempt 3))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_DELETE_EVENT_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (str/startsWith @payload.key "freeBusy:"))
+        (emit CALENDAR_FREE_BUSY_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (str/startsWith @payload.key "watch:"))
+        (emit CALENDAR_WATCH_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (= @payload.key "stopWatch"))
+        (emit CALENDAR_STOP_WATCH_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (= @payload.connected true)
+        (emit CALENDAR_DISPATCH {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (= @entity.id "list"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_LIST_EVENTS_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (= @entity.id "create"))
+        (emit CALENDAR_CREATE_EVENT_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (= @entity.id "update"))
+        (emit CALENDAR_UPDATE_EVENT_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (str/startsWith @entity.id "delete:"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_DELETE_EVENT_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (str/startsWith @entity.id "freeBusy:"))
+        (emit CALENDAR_FREE_BUSY_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (str/startsWith @entity.id "watch:"))
+        (emit CALENDAR_WATCH_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECTED -> idle when (and (= @payload.connected false) (= @entity.id "stopWatch"))
+        (emit CALENDAR_STOP_WATCH_FAILED { message: "Google Calendar did not connect the service account" })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (= @entity.id "list"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_LIST_EVENTS_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (= @entity.id "create"))
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (= @entity.id "update"))
+        (emit CALENDAR_UPDATE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (str/startsWith @entity.id "delete:"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_DELETE_EVENT_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (str/startsWith @entity.id "freeBusy:"))
+        (emit CALENDAR_FREE_BUSY_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (str/startsWith @entity.id "watch:"))
+        (emit CALENDAR_WATCH_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (= @payload.kind "unavailable") (= @entity.id "stopWatch"))
+        (emit CALENDAR_STOP_WATCH_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (= @entity.id "list"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_LIST_EVENTS_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (= @entity.id "create"))
+        (emit CALENDAR_CREATE_EVENT_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (= @entity.id "update"))
+        (emit CALENDAR_UPDATE_EVENT_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (str/startsWith @entity.id "delete:"))
+        (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit CALENDAR_DELETE_EVENT_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (str/startsWith @entity.id "freeBusy:"))
+        (emit CALENDAR_FREE_BUSY_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (str/startsWith @entity.id "watch:"))
+        (emit CALENDAR_WATCH_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CONNECT_FAILED -> idle when (and (!= @payload.kind "unavailable") (= @entity.id "stopWatch"))
+        (emit CALENDAR_STOP_WATCH_FAILED { message: (str/concat "Google token request failed: " @payload.error) })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_GAVE_UP -> idle when (= @payload.key "list")
+        (emit CALENDAR_LIST_EVENTS_FAILED { message: (default @payload.error "") })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_GAVE_UP -> idle when (str/startsWith @payload.key "delete:")
+        (emit CALENDAR_DELETE_EVENT_FAILED { message: (default @payload.error "") })
+        (emit CALENDAR_CLEAR {})
+      CALENDAR_CLEAR -> idle
+        (set @entity.method "")
+        (set @entity.target "")
+        (set @entity.body "")
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
     }
 
     emits {
@@ -241,85 +533,53 @@ orbital CalendarOrbital {
         @description "Failure of stopping a watch channel: the API error message, or the transport error; code is blank, NOT_CONFIGURED or MALFORMED_REPLY."
         @synonyms "calendar failure, calendar error"
         @tier "primary"
-      CALENDAR_REPLIED -> internal {
-        status : number!
-        headers : Map string string
-        body : string!
+      CALENDAR_HTTP_SEND {
         key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: a calendar request's HTTP reply."
+        @description "Internal: the Google Calendar request, for the HTTP client."
         @tier "secondary"
-      CALENDAR_REQUEST_FAILED -> internal {
+      CALENDAR_RETRY_START { key : CallKey! }
+        @description "Internal: hand a list or delete to std-retry."
+        @tier "secondary"
+      CALENDAR_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      CALENDAR_DISPATCH -> internal { }
+        @description "Internal: send the request in flight, again after a retry attempt or a minted token."
+        @tier "secondary"
+      CALENDAR_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      CALENDAR_CONNECT_FAILED -> internal {
         error : string!
         kind : string!
-        key : string!
-        phase : string
-        grantStatus : number
-        grantBody : string
       }
-        @description "Internal: a calendar request never produced a reply."
+        @description "Internal: the credential store could not mint the access token."
+        @tier "secondary"
+      CALENDAR_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      CALENDAR_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
         @tier "secondary"
     }
 
     listens {
-      CALENDAR_LIST_EVENTS -> input {
-        calendarId : string
-        timeMin : string
-        timeMax : string
-        syncToken : string
-        maxResults : number
+      CALL_READY {
+        key : string!
+        method : string!
+        target : string!
+        body : string!
+        retry : boolean!
       }
-        @description "List events on a Google Calendar; pass syncToken for incremental sync instead of a time window (the API rejects combining them). calendarId defaults to the calendarId knob; maxResults defaults to 250."
-        @synonyms "list events, calendar events, sync events"
-      CALENDAR_CREATE_EVENT -> input {
-        calendarId : string
-        summary : string!
-        description : string
-        location : string
-        start : string!
-        end : string
-        durationMinutes : number
-      }
-        @description "Create a calendar event; an all-day event uses a 10-character (YYYY-MM-DD) start with no end, defaulting to the next day. A timed event needs an explicit end."
-        @synonyms "create event, add calendar event, schedule meeting"
-      CALENDAR_UPDATE_EVENT -> input {
-        calendarId : string
-        eventId : string!
-        summary : string
-        description : string
-        location : string
-        start : string
-        end : string
-      }
-        @description "Patch an existing event's fields; only fields present in the payload are changed."
-        @synonyms "update event, edit calendar event, reschedule"
-      CALENDAR_DELETE_EVENT -> input {
-        calendarId : string
-        eventId : string!
-      }
-        @description "Delete a calendar event."
-        @synonyms "delete event, remove calendar event, cancel event"
-      CALENDAR_FREE_BUSY -> input {
-        calendarId : string
-        timeMin : string!
-        timeMax : string!
-      }
-        @description "Query busy time blocks on a calendar within a window."
-        @synonyms "free busy, availability, busy slots"
-      CALENDAR_WATCH -> input {
-        calendarId : string
-        channelId : string!
-        address : string!
-        ttlSeconds : number
-      }
-        @description "Register a push-notification channel for calendar change events."
-        @synonyms "watch calendar, push notifications, subscribe changes"
-      CALENDAR_STOP_WATCH -> input {
-        channelId : string!
-        resourceId : string!
-      }
-        @description "Stop an active watch channel, ending calendar change notifications."
-        @synonyms "stop watch, unsubscribe, end notifications"
       CALENDAR_REPLIED {
         status : number!
         headers : Map string string
@@ -330,34 +590,52 @@ orbital CalendarOrbital {
         error : string!
         kind : string!
         key : string!
-        phase : string
-        grantStatus : number
-        grantBody : string
       }
+      CALENDAR_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      CALENDAR_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+      CALENDAR_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      CALENDAR_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      CALENDAR_DISPATCH
+      CALENDAR_CLEAR
+      CalendarClient.CALENDAR_READY -> CALL_READY per @payload.key
+      CalendarHttp.HTTP_REPLIED -> CALENDAR_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      CalendarHttp.HTTP_FAILED -> CALENDAR_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      CalendarRetry.ATTEMPT -> CALENDAR_ATTEMPT per @payload.key
+      CalendarRetry.GAVE_UP -> CALENDAR_GAVE_UP per @payload.key
     }
 
     config {
-      origin : url = "https://www.googleapis.com"
-        @label "Google APIs origin"
-        @description "The Google APIs origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "google api url, calendar api host"
-        @tier "infra"
       tokenUrl : url = "https://www.googleapis.com/oauth2/v4/token"
         @label "Token endpoint"
-        @description "The Google OAuth token endpoint the signed service-account assertion is exchanged at; also the assertion audience. Must be declared in the app egress list."
+        @description "The Google OAuth token endpoint the credential store exchanges the signed service-account assertion at; also the assertion audience. Must be declared in the app egress list."
         @synonyms "oauth token url, jwt exchange endpoint"
         @tier "infra"
-      epoch : instant = "1970-01-01T00:00:00.000Z"
-        @description "The Unix epoch; the service-account assertion exp and iat are NumericDate seconds counted from it."
-        @tier "infra"
       serviceAccount : secret = "GOOGLE_CALENDAR_SA_KEY"
-        @label "Service account credential"
-        @description "Name of the credential holding the Google service-account key JSON (raw or base64); the assertion issuer is its client_email."
+        @label "Service account signing key"
+        @description "Name of the credential holding the service account's PKCS#8 PEM RSA private key; the credential store signs the RS256 assertion with it."
         @synonyms "service account key, google credential, calendar key"
         @tier "infra"
-      tokenCache : string = "GOOGLE_CALENDAR_ACCESS_TOKEN"
-        @label "Access token cache name"
-        @description "Host credential name under which the exchanged access token is cached until five minutes before it expires."
+      serviceAccountEmail : string
+        @label "Service account email"
+        @description "The service account's client_email, the assertion issuer; the stored credential is the PEM key only."
+        @synonyms "client email, service account address, assertion issuer"
+        @tier "infra"
+      tokenCache : secret = "GOOGLE_CALENDAR_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Host credential name the minted access token lives under; the composed CalendarHttp trait carries the same name, restate it there when this knob changes."
         @synonyms "token cache, access token name"
         @tier "infra"
       scope : string = "https://www.googleapis.com/auth/calendar"
@@ -370,16 +648,6 @@ orbital CalendarOrbital {
         @description "Workspace user the service account acts as (the sub claim); blank = the service account itself."
         @synonyms "impersonate user, domain-wide delegation, subject"
         @tier "domain"
-      calendarId : string = "primary"
-        @label "Default calendar id"
-        @description "Calendar used when an action names none."
-        @synonyms "default calendar, calendar id"
-        @tier "domain"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each Google Calendar request may take before it fails."
-        @synonyms "timeout, request deadline"
-        @tier "infra"
     }
   }
 
@@ -429,5 +697,5 @@ orbital CalendarOrbital {
     }
   }
 
-  page boot as CalendarPage -> CalendarClient, CalendarPushInbound
+  page boot as CalendarPage -> CalendarClient, CalendarCall, CalendarKeyed, CalendarHttp, CalendarTimeout, CalendarRetry, CalendarPushInbound
 }

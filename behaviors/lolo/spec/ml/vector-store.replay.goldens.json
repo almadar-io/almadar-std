@@ -1592,6 +1592,98 @@
      }
     }
    ]
+  },
+  {
+   "id": "a later corrupt store is reported before an earlier model mismatch (Rust opens every store first)",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQALAG90aGVyLW1vZGVsBAABAAAA8gkrxw3po4f30HiQ/5F1r52hyLcZzplGA7L8x9tZpksAAAA/f8EZAA==",
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7"
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec",
+       "/v/store2.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": [
+       "a"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store2.vec: expected 157 bytes for 3 records, found 156"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two stores that disagree on model with no corrupt store still report the mismatch",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP_MANY",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQAVAGJhYWkvYmdlLWJhc2UtZW4tdjEuNQQAAwAAACeUOpPYlYlb7n0EPh0aVDsxzrPY1llbisUfpsZlIae0AAAAP3/BGQBY/bdP4mPeV6xmh9b52Q3EZmfESW1sto4GEKHPMQURUgAAgD8AAAAAmXTeueB/gZM8M44muXsAuICcwoOGxIcRxVQgXET3TuIAAABAgAX7fw==",
+       "T1JCVkVDAQALAG90aGVyLW1vZGVsBAABAAAA8gkrxw3po4f30HiQ/5F1r52hyLcZzplGA7L8x9tZpksAAAA/f8EZAA=="
+      ],
+      "origins": [
+       "/v/store0.vec",
+       "/v/store1.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "texts": [
+       "a"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_MODEL_MISMATCH",
+         "detail": "baai/bge-base-en-v1.5 vs other-model — vectors from different embedding models are not comparable"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

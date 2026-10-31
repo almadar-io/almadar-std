@@ -4287,6 +4287,223 @@
      }
     }
    ]
+  },
+  {
+   "id": "a baseline answer without echoed idx or baseNE is joined to its probe by position (the precondition of a passing base case is dropped)",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PLAN_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "trait": "T",
+        "event": "GO",
+        "result": {
+         "guard": "pass",
+         "transitionFired": true
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "reqs": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "payload": {},
+        "idx": 0,
+        "baseNE": true
+       }
+      ],
+      "steps": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success",
+        "precondition": {
+         "kind": "established",
+         "proof": "proven"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a baseline answer for a failing guard keeps the precondition",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PLAN_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "trait": "T",
+        "event": "GO",
+        "result": {
+         "guard": "fail",
+         "transitionFired": false
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "reqs": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "payload": {},
+        "idx": 0,
+        "baseNE": true
+       }
+      ],
+      "steps": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success",
+        "precondition": {
+         "kind": "established",
+         "proof": "proven"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "payload": {},
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "precondition": {
+            "kind": "established",
+            "proof": "proven"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a baseline answer with another row count fails the plan",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PLAN_STEPPED",
+     "payload": {
+      "result": []
+     },
+     "entity": {
+      "id": "p",
+      "reqs": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "payload": {},
+        "idx": 0,
+        "baseNE": true
+       }
+      ],
+      "steps": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success",
+        "precondition": {
+         "kind": "established",
+         "proof": "proven"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_FAILED"
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

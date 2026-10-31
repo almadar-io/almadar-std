@@ -362,6 +362,122 @@
      }
     }
    ]
+  },
+  {
+   "id": "latest-rollout-by-parsed-time: a fractional-second time later than a whole-second one wins (text order would pick the earlier)",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_REPLIED",
+     "payload": {
+      "key": "rollouts",
+      "status": 200,
+      "body": "eyJyb2xsb3V0cyI6IFt7Im5hbWUiOiAicHJvamVjdHMvcC9sb2NhdGlvbnMvbC9iYWNrZW5kcy9iMS9yb2xsb3V0cy9hIiwgImNyZWF0ZVRpbWUiOiAiMjAyNS0wMS0wMVQwMDowMDowMFoiLCAiYnVpbGQiOiAiYnVpbGRzL2EifSwgeyJuYW1lIjogInByb2plY3RzL3AvbG9jYXRpb25zL2wvYmFja2VuZHMvYjEvcm9sbG91dHMvYiIsICJjcmVhdGVUaW1lIjogIjIwMjUtMDEtMDFUMDA6MDA6MDAuNTAwWiIsICJidWlsZCI6ICJidWlsZHMvYiJ9XX0="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AH_HTTP_SEND",
+        "payload": {
+         "key": "build",
+         "target": "/v1beta/builds/b"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-latest-rollout-by-parsed-time: the later whole-second time wins whatever the list order",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_REPLIED",
+     "payload": {
+      "key": "rollouts",
+      "status": 200,
+      "body": "eyJyb2xsb3V0cyI6IFt7Im5hbWUiOiAicHJvamVjdHMvcC9sb2NhdGlvbnMvbC9iYWNrZW5kcy9iMS9yb2xsb3V0cy9iIiwgImNyZWF0ZVRpbWUiOiAiMjAyNS0wMS0wMlQwMDowMDowMFoiLCAiYnVpbGQiOiAiYnVpbGRzL2IifSwgeyJuYW1lIjogInByb2plY3RzL3AvbG9jYXRpb25zL2wvYmFja2VuZHMvYjEvcm9sbG91dHMvYSIsICJjcmVhdGVUaW1lIjogIjIwMjUtMDEtMDFUMDA6MDA6MDBaIiwgImJ1aWxkIjogImJ1aWxkcy9hIn1dfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AH_HTTP_SEND",
+        "payload": {
+         "key": "build",
+         "target": "/v1beta/builds/b"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-rollout-whose-create-time-does-not-parse-answers-unknown-with-a-warning",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_REPLIED",
+     "payload": {
+      "key": "rollouts",
+      "status": 200,
+      "body": "eyJyb2xsb3V0cyI6IFt7Im5hbWUiOiAicHJvamVjdHMvcC9sb2NhdGlvbnMvbC9iYWNrZW5kcy9iMS9yb2xsb3V0cy9hIiwgImNyZWF0ZVRpbWUiOiAieWVzdGVyZGF5IiwgImJ1aWxkIjogImJ1aWxkcy9hIn1dfQ=="
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "emits": [
+       {
+        "event": "AH_STATUS",
+        "payload": {
+         "backendId": "b1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AH_BUILD"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

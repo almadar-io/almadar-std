@@ -69,7 +69,21 @@
         },
         "arg0": "main"
        }
+      ],
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.2.type": "form-section",
+         "children.2.mode": "create",
+         "children.2.initialData.stage": "todo"
+        }
+       }
       ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
      }
     }
    ]
@@ -86,6 +100,57 @@
      "payload": {},
      "expect": {
       "state": "viewing_board"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reorder-announcement-reloads-the-board-and-writes-no-position",
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "viewing_board",
+     "event": "REORDER_CARD",
+     "payload": {
+      "id": "c1",
+      "oldIndex": 0,
+      "newIndex": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing_board",
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-renumbered-position-event-persists-the-card-position",
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "viewing_board",
+     "event": "REORDER_POSITION",
+     "payload": {
+      "id": "c1",
+      "position": 2000
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing_board",
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
      }
     }
    ]

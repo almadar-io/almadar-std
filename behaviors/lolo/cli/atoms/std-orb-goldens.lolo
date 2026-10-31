@@ -10,10 +10,10 @@ type GoldenValue = string | number | boolean | [GoldenValue?] | Map string Golde
 type GoldenPayload = Map string GoldenValue?
 type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
-type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
+type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], rendered : [GoldenPayload], entity : GoldenPayload }
 type GoldenClaim = { name : string!, value : GoldenValue! }
 type GoldenViewer = { id : string!, email : string?, name : string?, role : string, permissions : [string], claims : [GoldenClaim]! }
-type GoldenStep = { keep : string, keepField : string, now : number | string, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
+type GoldenStep = { keep : string, keepField : string, now : number | string, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, options : GoldenPayload, expect : GoldenExpect }
 type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, credentials : Map string string, defaults : [string], now : number | string, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenFull = { orbitals : [orbital] }
@@ -23,7 +23,7 @@ type GoldenProgramRef = { orbitals : [GoldenOrbitalRef]! }
 type GoldenState = { before : string, after : string }
 type GoldenEffect = { type : string, args : [GoldenValue?]!, status : string, error : string }
 type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted], emits : [GoldenEmitted] }
-type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect] }
+type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect], rendered : [GoldenPayload] }
 type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult!, outcomes : [GoldenOutcome] }
 
 orbital GoldensOrbital {
@@ -132,9 +132,18 @@ orbital GoldensOrbital {
           (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "credentials", "defaults", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
           (array/flatten (array/reduce (object/get @cc "steps") [] (fn acc s
             (array/append @acc (array/concat
-              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
-              (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
+              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "options", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
+              (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "rendered", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
               (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] [])
+              (if (object/has @s "options")
+                (let ((op (as (object/get @s "options") GoldenPayload)))
+                  (if (= @op null)
+                    [(str/concat "step " (array/len @acc) ": options must be an object")]
+                    (array/concat
+                      (array/map (array/filter (object/keys @op) (fn k (not (array/includes ["render", "renderProps", "live"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown option key: " @k)))
+                      (array/map (array/filter (object/keys @op) (fn k (and (array/includes ["render", "renderProps", "live"] @k) (not (validate/boolean (object/get @op @k)))))) (fn k (str/concat "step " (array/len @acc) ": option " @k " must be a boolean")))
+                      (if (and (= (object/get @op "renderProps") true) (not (= (object/get @op "render") true))) [(str/concat "step " (array/len @acc) ": option renderProps needs render")] []))))
+                [])
               (if (and (!= (object/get @s "viewer") null) (= (as (object/get @s "viewer") GoldenViewer) null)) [(str/concat "step " (array/len @acc) ": viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }")] [])))))))))
         (emit GOLDENS_PREFLIGHT {})
       GOLDENS_PREFLIGHT -> running when (> (array/len @entity.fails) 0)
@@ -163,7 +172,7 @@ orbital GoldensOrbital {
               (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {})
               (if (and (object/has @cc "config") (= (object/get @s "trait" (object/get @gf "trait")) (object/get @gf "trait"))) { config: (object/get @cc "config") } {})
               (if (object/has @cc "credentials") { credentials: (object/get @cc "credentials") } {}))))))
-          { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
+          { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } render: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "render") true))) renderProps: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "renderProps") true))) live: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "live") true))) })
       GOLDENS_STEPPED -> running when (and (!= (array/nth (object/get @entity.golden "cases") @entity.cursor) null) (and (array/some (object/get @entity.curCase "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get @entity.curCase "steps")))) (let ((np : GoldenPlayed { trait: "", event: "", result: { transitionFired: false, state: {}, emitted: [] } }) (ns : GoldenStep { event: "" }) (st (default (array/nth (object/get @entity.curCase "steps") @entity.upto) @ns)) (kf (default (object/get @st "keepField") ""))) (let ((hitp (array/find (array/reduce (object/get (object/get (default (array/nth @payload.result @entity.upto) @np) "result") "emitted") [] (fn l em (array/append @l (object/get @em "payload" {})))) (fn pl (object/has @pl @kf))))) (and (object/has @st "keep") (= @hitp null)))))
         (set @entity.lines (array/append @entity.lines (str/concat "fail  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id") "\n  step " @entity.upto ": keep field " (default (object/get (default (array/nth (object/get @entity.curCase "steps") @entity.upto) { event: "" }) "keepField") "") " not emitted")))
         (set @entity.upto 0)
@@ -197,6 +206,17 @@ orbital GoldensOrbital {
                     []
                     (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (default (array/nth @wantE (object/get @m "k")) @nx)) (em (default (as @e GoldenPayload) @nx))) (array/every (array/filter (object/keys @x) (fn key (!= @key "optionsAt"))) (fn key (= (let ((av : GoldenValue? (if (= @key "key") (let ((ka (array/nth (object/get @e "args") (let ((oa (object/get @x "optionsAt" 2))) (if (validate/number @oa) @oa 2))))) (if (validate/object @ka) (object/get @ka "key") null)) (if (str/startsWith @key "arg") (let ((idx (str/to-number (str/slice @key 3 (str/len @key))))) (if (= @idx null) null (array/nth (object/get @e "args") @idx))) (object/get @em @key null))))) (json/stringify @av { sorted: true })) (json/stringify (object/get @x @key) { sorted: true })))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
                       (if (< @hitE (array/len @wantE)) [(str/concat "step " (array/len @acc) ": effect " @hitE " " (json/stringify (array/nth @wantE @hitE)) " not found in order; actual effects: " (json/stringify @gotE))] []))))
+                (let ((wantR (object/get @ex "rendered" null)) (gotR (object/get @rr "rendered" [])))
+                  (if (== @wantR null)
+                    []
+                    (array/map
+                      (array/filter (array/range 0 (array/len @wantR))
+                        (fn i (let ((x (default (as (array/nth @wantR @i) GoldenPayload) @nx)))
+                          (not (array/some @gotR (fn g (let ((gp (default (as @g GoldenPayload) @nx)))
+                            (and (or (not (object/has @x "slot")) (= (object/get @gp "slot") (object/get @x "slot")))
+                                 (array/every (object/entries (default (as (object/get @x "props" {}) GoldenPayload) @nx))
+                                   (fn en (= (json/stringify (object/get (default (as (object/get @gp "props" {}) GoldenPayload) @nx) (default (array/nth @en 0) ""))) (json/stringify (array/nth @en 1)))))))))))))
+                      (fn i (str/concat "step " (array/len @acc) ": rendered " @i " " (json/stringify (array/nth @wantR @i)) " not found; actual rendered: " (json/stringify @gotR))))))
                 (let ((wantX (object/get @ex "exactEmits" null)))
                   (if (== @wantX null)
                     []

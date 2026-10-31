@@ -502,6 +502,122 @@
      }
     }
    ]
+  },
+  {
+   "id": "a role claim that is not text is refused with the reason claims",
+   "entity": {
+    "emulator": true,
+    "requestId": 7
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "JWS_VERIFIED",
+     "payload": {
+      "header": {
+       "alg": "none"
+      },
+      "payload": {
+       "iss": "",
+       "aud": "",
+       "sub": "u1",
+       "exp": 4102444800,
+       "extra": {
+        "role": 5
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "claims"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a permissions claim that is not a list of text is refused with the reason claims",
+   "entity": {
+    "emulator": true,
+    "requestId": 7
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "JWS_VERIFIED",
+     "payload": {
+      "header": {
+       "alg": "none"
+      },
+      "payload": {
+       "iss": "",
+       "aud": "",
+       "sub": "u1",
+       "exp": 4102444800,
+       "extra": {
+        "permissions": "all"
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "claims"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a text role and a list of text permissions are verified",
+   "entity": {
+    "emulator": true,
+    "requestId": 7
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "JWS_VERIFIED",
+     "payload": {
+      "header": {
+       "alg": "none"
+      },
+      "payload": {
+       "iss": "",
+       "aud": "",
+       "sub": "u1",
+       "exp": 4102444800,
+       "extra": {
+        "role": "admin",
+        "permissions": [
+         "read"
+        ]
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFIED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -12,6 +12,7 @@ type AhRequest = { kind : "status" | "logs" | "build-logs"!, backendId : string!
 type AhStatus = { rolloutState : string!, rolloutId : string!, rolloutTime : string!, commitMessage : string!, commitHash : string!, commitUrl : string!, buildLogsUrl : string!, cloudBuildId : string!, cloudBuildRegion : string!, errorSource : string! }
 type AhLogLine = { ts : string!, severity : string!, revision : string!, msg : string! }
 type AhRollout = { name : string, createTime : string!, updateTime : string, state : string, build : string }
+type AhRolloutAt = { at : (date | datetime)!, r : AhRollout! }
 type AhRollouts = { rollouts : [AhRollout] }
 type AhCodebase = { branch : string, hash : string, commitMessage : string, uri : string }
 type AhSource = { codebase : AhCodebase }
@@ -163,11 +164,20 @@ orbital AppHostingBoardOrbital {
 
       AH_ROLLOUTS -> reading
         (emit AH_HTTP_SEND { key: "rollouts", method: "GET", target: (str/concat "/v1beta/projects/" @config.project "/locations/" @config.region "/backends/" @entity.current.backendId "/rollouts?pageSize=100"), headers: [], body: (bytes/from-string ""), stream: "none" })
-      AH_REPLIED -> reading when (and (= @payload.key "rollouts") (!= (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null) (> (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0))
-        (let ((top (array/nth (array/sort (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) "createTime" "desc") 0)))
+      AH_REPLIED -> reading when (and (= @payload.key "rollouts") (!= (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null) (> (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0) (array/every (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) (fn r (!= (time/parse @r.createTime) null))))
+        ;; every createTime parses (guard), so the reduce below drops no rollout
+        (let ((noRows : [AhRolloutAt] []))
+        (let ((rows (array/reduce (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) @noRows (fn acc r (let ((t (time/parse @r.createTime))) (if (== @t null) @acc (array/append @acc { at: @t, r: @r })))))))
+        (let ((top (array/nth (array/sort @rows "at" "desc") 0)))
           (when (!= @top null) (do
-            (set @entity.latest @top)
-            (emit AH_BUILD { }))))
+            (set @entity.latest @top.r)
+            (emit AH_BUILD { }))))))
+      AH_REPLIED -> idle when (and (= @payload.key "rollouts") (!= (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null) (> (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0) (not (array/every (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) (fn r (!= (time/parse @r.createTime) null)))))
+        (notify warning "The App Hosting rollouts could not be ordered: a createTime is not a time")
+        (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
+        (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })
+        (emit AH_RENDER { })
+        (emit AH_PUMP { })
       AH_REPLIED -> idle when (and (= @payload.key "rollouts") (!= (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null) (= (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })

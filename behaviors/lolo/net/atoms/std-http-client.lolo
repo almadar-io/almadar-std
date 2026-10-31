@@ -6,6 +6,9 @@ app std-http-client [
 uses Spec from "almadar-std/http-client"
 uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
+type HttpEnvPart = { anchor : { env : string! }! }
+type HttpHostText = string
+type HttpHostPart = string | HttpEnvPart
 
 orbital HttpClientOrbital {
   entity HttpFlight [runtime] {
@@ -27,6 +30,7 @@ orbital HttpClientOrbital {
     total : number @description "Decoded body bytes so far." = 0
     idle : number @description "A kept-alive socket the server left open, -1 when none." = -1
     reused : boolean @description "The socket in flight was an idle one; a failure before any response byte retries on a fresh connection." = false
+    hostText : string @description "With an env-anchored host, the host field of the call in flight (the host header and the TLS server name); empty with a literal host." = ""
     keep : boolean @description "The final head allows the socket to be kept for the next call." = false
     headOnly : boolean @description "The reply to this request has no body whatever the head says." = false
     @invariant (>= @entity.total 0)
@@ -42,9 +46,9 @@ orbital HttpClientOrbital {
     initial: ready
 
     config {
-      host : string = "api.example.test"
+      host : HttpHostPart = "api.example.test"
         @label "Host"
-        @description "The server os/tcp-connect opens; a literal knob because the net grant is checked against it, and the host header."
+        @description "The server os/tcp-connect opens, and the host header: a literal host, because the net grant is checked against it, or { anchor: { env: NAME } }, the host that environment variable NAME holds at boot, granted by an env-anchored net entry such as net: { env NAME, 443: [tcp] }. With an anchored host the caller names that same text in the host field of HTTP_SEND (an HTTP_SEND without one is refused): it is the host header and the TLS server name, and the serverName knob is not used."
         @tier "infra"
       port : number = 80
         @label "Port"
@@ -170,10 +174,10 @@ orbital HttpClientOrbital {
       HC_READ -> ready
       HC_IO_FAILED -> ready
 
-      HTTP_SEND -> ready when (not (and (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded")))))))))
+      HTTP_SEND -> ready when (not (and (and (or (validate/string @config.host) (!= (default @payload.host "") "")) (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded")))))))))
         (emit HTTP_FAILED { key: @payload.key, error: "the request cannot be written: a method, header, target, port, host or stream is not allowed, or a header names framing the atom writes or carries a credential, or the credential placement is not allowed (a query or body credential needs credentialName, no credentialHeader, credentialEncode none, and for a body a form content-type header; a header credential takes no credentialName and an encode only with a credentialHeader)", kind: "refused" })
 
-      HTTP_SEND -> sending when (and (>= @entity.idle 0) (and (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded")))))))))
+      HTTP_SEND -> sending when (and (>= @entity.idle 0) (and (and (or (validate/string @config.host) (!= (default @payload.host "") "")) (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded")))))))))
         (set @entity.key @payload.key)
         (set @entity.stream @payload.stream)
         (set @entity.stage "head")
@@ -186,9 +190,10 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
+        (set @entity.hostText (default @payload.host ""))
         (set @entity.credUse (and (or (!= @config.credentialIn "header") (!= @config.credentialHeader "")) (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
         (set @entity.credEnc (if (= @config.credentialIn "query") "uri" (if (= @config.credentialIn "body") "form" @config.credentialEncode)))
-        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " (default (as @config.host HttpHostText) @entity.hostText) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
               (fields (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) ""))
               (bodyCred (and @entity.credUse (= @config.credentialIn "body")))
               (queryCred (and @entity.credUse (= @config.credentialIn "query")))
@@ -213,7 +218,7 @@ orbital HttpClientOrbital {
         (set @entity.sock @entity.idle)
         (set @entity.idle -1)
         (set @entity.reused true)
-      HTTP_SEND -> connecting when (and (not @config.tls) (and (< @entity.idle 0) (and (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded"))))))))))
+      HTTP_SEND -> connecting when (and (not @config.tls) (and (< @entity.idle 0) (and (and (or (validate/string @config.host) (!= (default @payload.host "") "")) (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded"))))))))))
         (set @entity.key @payload.key)
         (set @entity.stream @payload.stream)
         (set @entity.stage "head")
@@ -226,9 +231,10 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
+        (set @entity.hostText (default @payload.host ""))
         (set @entity.credUse (and (or (!= @config.credentialIn "header") (!= @config.credentialHeader "")) (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
         (set @entity.credEnc (if (= @config.credentialIn "query") "uri" (if (= @config.credentialIn "body") "form" @config.credentialEncode)))
-        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " (default (as @config.host HttpHostText) @entity.hostText) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
               (fields (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) ""))
               (bodyCred (and @entity.credUse (= @config.credentialIn "body")))
               (queryCred (and @entity.credUse (= @config.credentialIn "query")))
@@ -252,7 +258,7 @@ orbital HttpClientOrbital {
             })))
         (set @entity.reused false)
         (os/tcp-connect @config.host @config.port { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
-      HTTP_SEND -> connecting when (and @config.tls (and (< @entity.idle 0) (and (and (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded"))))))))))
+      HTTP_SEND -> connecting when (and @config.tls (and (< @entity.idle 0) (and (and (or (validate/string @config.host) (!= (default @payload.host "") "")) (validate/pattern @payload.method @config.tokenPattern) (validate/pattern @payload.target @config.targetPattern) (array/includes @config.streams @payload.stream) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))) (or (not (array/includes @config.credentialHeaders (str/lower @h.name))) (array/includes @config.signatureHeaders (str/lower @h.name))))))) (or (and (= @config.credentialIn "header") (= @config.credentialName "") (or (!= @config.credentialHeader "") (= @config.credentialEncode "none"))) (and (!= @config.credentialIn "header") (!= @config.credentialName "") (= @config.credentialEncode "none") (= @config.credentialHeader "") (or (= @config.credentialIn "query") (array/some @payload.headers (fn h (and (= (str/lower @h.name) "content-type") (= (str/lower (str/trim @h.value)) "application/x-www-form-urlencoded"))))))))))
         (set @entity.key @payload.key)
         (set @entity.stream @payload.stream)
         (set @entity.stage "head")
@@ -265,9 +271,10 @@ orbital HttpClientOrbital {
         (set @entity.total 0)
         (set @entity.keep false)
         (set @entity.headOnly (= @payload.method "HEAD"))
+        (set @entity.hostText (default @payload.host ""))
         (set @entity.credUse (and (or (!= @config.credentialIn "header") (!= @config.credentialHeader "")) (or (not @config.credentialOptional) (>= (default (credential/byte-length @config.credential) -1) 0))))
         (set @entity.credEnc (if (= @config.credentialIn "query") "uri" (if (= @config.credentialIn "body") "form" @config.credentialEncode)))
-        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " @config.host (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
+        (let ((hostLine (str/concat " HTTP/1.1\r\nhost: " (default (as @config.host HttpHostText) @entity.hostText) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)) "\r\n"))
               (fields (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) ""))
               (bodyCred (and @entity.credUse (= @config.credentialIn "body")))
               (queryCred (and @entity.credUse (= @config.credentialIn "query")))
@@ -290,7 +297,7 @@ orbital HttpClientOrbital {
               ])
             })))
         (set @entity.reused false)
-        (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
+        (os/tcp-connect @config.host @config.port { serverName: (if (validate/string @config.host) @config.serverName @entity.hostText), alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
 
       HTTP_CLOSE -> ready when (>= @entity.idle 0)
         (os/close @entity.idle { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
@@ -396,7 +403,7 @@ orbital HttpClientOrbital {
         (set @entity.reused false)
         (set @entity.sock -1)
         (set @entity.buf (bytes/from-string ""))
-        (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
+        (os/tcp-connect @config.host @config.port { serverName: (if (validate/string @config.host) @config.serverName @entity.hostText), alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
       HC_IO_FAILED -> ready when (not @entity.reused)
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
@@ -424,7 +431,7 @@ orbital HttpClientOrbital {
         (set @entity.reused false)
         (set @entity.sock -1)
         (set @entity.buf (bytes/from-string ""))
-        (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
+        (os/tcp-connect @config.host @config.port { serverName: (if (validate/string @config.host) @config.serverName @entity.hostText), alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
       HC_IO_FAILED -> ready when (not (and @entity.reused (= @entity.stage "head") (= (bytes/length @entity.buf) 0)))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
@@ -448,7 +455,7 @@ orbital HttpClientOrbital {
         (set @entity.reused false)
         (set @entity.sock -1)
         (set @entity.buf (bytes/from-string ""))
-        (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
+        (os/tcp-connect @config.host @config.port { serverName: (if (validate/string @config.host) @config.serverName @entity.hostText), alpn: @config.alpn } { key: "connect" emit: { success: HC_CONNECTED, failure: HC_IO_FAILED } })
       HC_WANT -> ready when (and @entity.eof (!= @entity.stage "close") (not (and @entity.reused (= @entity.stage "head") (= (bytes/length @entity.buf) 0))))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
@@ -704,6 +711,7 @@ orbital HttpClientOrbital {
         headers : [HttpHeader]!
         body : bytes!
         stream : string!
+        host : string
       }
       HC_CONNECTED {
         sock : number!

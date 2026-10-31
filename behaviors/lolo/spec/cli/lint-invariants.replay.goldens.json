@@ -169,6 +169,177 @@
       ]
     },
     {
+      "id": "a-finding-while-another-orbital-names-its-entity-by-reference-still-answers",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                },
+                {
+                  "name": "Mirror",
+                  "entity": "Up.orbitals.Shop.entity",
+                  "traits": [],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "unproved-keeps-the-reason-and-the-possible-counterexample",
       "steps": [
         {

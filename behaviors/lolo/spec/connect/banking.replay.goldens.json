@@ -1,0 +1,875 @@
+{
+ "atom": "connect/atoms/std-banking.lolo",
+ "trait": "BankingClient",
+ "note": "std-banking over the composed std-http-client: the access token is a json-token grant (credential-connect) held by the host credential store and carried by the BankingHttp credential, never the event; a not-held token mints once and retries once; every failure answers BANKING_FAILED. Self-handled internal events (declared -> internal) are consumed by the trait and not listed, as in the firestore twin goldens.",
+ "cases": [
+  {
+   "id": "a-requisition-with-a-reference-asks-the-http-client-for-one-json-post",
+   "steps": [
+    {
+     "event": "BANKING_CREATE_REQUISITION",
+     "payload": {
+      "institutionId": "SANDBOXFINANCE_SFIN0000",
+      "redirectUrl": "https://app.example/back",
+      "reference": "ref-1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "requisition",
+         "method": "POST",
+         "target": "/api/v2/requisitions/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJpbnN0aXR1dGlvbl9pZCI6IlNBTkRCT1hGSU5BTkNFX1NGSU4wMDAwIiwicmVkaXJlY3QiOiJodHRwczovL2FwcC5leGFtcGxlL2JhY2siLCJyZWZlcmVuY2UiOiJyZWYtMSJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-requisition-without-a-reference-leaves-the-reference-out",
+   "steps": [
+    {
+     "event": "BANKING_CREATE_REQUISITION",
+     "payload": {
+      "institutionId": "I1",
+      "redirectUrl": "https://app.example/back"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "requisition",
+         "method": "POST",
+         "target": "/api/v2/requisitions/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJpbnN0aXR1dGlvbl9pZCI6IkkxIiwicmVkaXJlY3QiOiJodHRwczovL2FwcC5leGFtcGxlL2JhY2sifQ==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "listing-accounts-gets-the-requisition-with-its-id-encoded",
+   "steps": [
+    {
+     "event": "BANKING_LIST_ACCOUNTS",
+     "payload": {
+      "requisitionId": "req 1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "accounts",
+         "method": "GET",
+         "target": "/api/v2/requisitions/req%201/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "listing-transactions-with-both-dates-puts-them-in-the-query",
+   "steps": [
+    {
+     "event": "BANKING_LIST_TRANSACTIONS",
+     "payload": {
+      "accountId": "acc-1",
+      "dateFrom": "2024-01-01",
+      "dateTo": "2024-01-31"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "transactions",
+         "method": "GET",
+         "target": "/api/v2/accounts/acc-1/transactions/?date_from=2024-01-01&date_to=2024-01-31",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "listing-transactions-without-dates-has-no-query",
+   "steps": [
+    {
+     "event": "BANKING_LIST_TRANSACTIONS",
+     "payload": {
+      "accountId": "acc-1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "transactions",
+         "method": "GET",
+         "target": "/api/v2/accounts/acc-1/transactions/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-2xx-requisition-reply-answers-the-id-and-link",
+   "steps": [
+    {
+     "event": "BANKING_REQUISITION_REPLIED",
+     "payload": {
+      "status": 201,
+      "headers": {},
+      "body": "{\"id\": \"r1\", \"link\": \"https://ob.example/consent\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_REQUISITION_RESULT",
+        "payload": {
+         "requisitionId": "r1",
+         "link": "https://ob.example/consent"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-2xx-accounts-reply-answers-the-account-ids",
+   "steps": [
+    {
+     "event": "BANKING_ACCOUNTS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"r1\", \"accounts\": [\"a1\", \"a2\"]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_ACCOUNTS_RESULT",
+        "payload": {
+         "accounts": [
+          "a1",
+          "a2"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-2xx-transactions-reply-answers-the-booked-rows",
+   "steps": [
+    {
+     "event": "BANKING_TRANSACTIONS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"transactions\": {\"booked\": [{\"transactionAmount\": {\"amount\": \"12.50\", \"currency\": \"EUR\"}, \"transactionId\": \"t1\", \"bookingDate\": \"2024-01-02\", \"remittanceInformationUnstructured\": \"Coffee\", \"creditorName\": \"Cafe\"}]}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_TRANSACTIONS_RESULT",
+        "payload": {
+         "transactions": [
+          {
+           "id": "t1",
+           "amount": 12.5,
+           "currency": "EUR",
+           "date": "2024-01-02",
+           "description": "Coffee",
+           "counterparty": "Cafe"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-5xx-reply-fails-with-the-status",
+   "steps": [
+    {
+     "event": "BANKING_ACCOUNTS_REPLIED",
+     "payload": {
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless returned 503"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-non-json-reply-fails",
+   "steps": [
+    {
+     "event": "BANKING_REQUISITION_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "<html>"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless returned a reply that is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-4xx-json-reply-fails-with-its-body",
+   "steps": [
+    {
+     "event": "BANKING_TRANSACTIONS_REPLIED",
+     "payload": {
+      "status": 400,
+      "headers": {},
+      "body": "{\"detail\":\"bad\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless error 400: {\"detail\":\"bad\"}"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-transaction-with-a-non-numeric-amount-fails",
+   "steps": [
+    {
+     "event": "BANKING_TRANSACTIONS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"transactions\": {\"booked\": [{\"transactionAmount\": {\"amount\": \"abc\", \"currency\": \"EUR\"}, \"transactionId\": \"t1\"}]}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless returned a transaction whose amount is not a number"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-requisition-reply-without-id-and-link-fails-with-a-stated-reason",
+   "steps": [
+    {
+     "event": "BANKING_REQUISITION_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless returned a reply that is not a requisition: id and link are required"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-timeout-fails-with-the-abort-message",
+   "steps": [
+    {
+     "event": "BANKING_HTTP_FAILED",
+     "payload": {
+      "error": "timeout of 20000ms exceeded",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "The operation was aborted due to timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BANKING_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-transport-failure-fails-with-its-text",
+   "steps": [
+    {
+     "event": "BANKING_HTTP_FAILED",
+     "payload": {
+      "error": "connection reset",
+      "kind": "transport"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "connection reset"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-not-held-token-mints-once-through-the-json-token-grant",
+   "steps": [
+    {
+     "event": "BANKING_LIST_ACCOUNTS",
+     "payload": {
+      "requisitionId": "r1"
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "event": "BANKING_HTTP_FAILED",
+     "payload": {
+      "error": "credential GOCARDLESS_ACCESS is not held",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.accessCredential",
+         "scope": "app",
+         "tokenEndpoint": "https://bankaccountdata.gocardless.com/api/v2/token/new/",
+         "grant": "json-token",
+         "clientId": "@config.secretIdCredential",
+         "clientSecret": "@config.secretKeyCredential",
+         "clientIdField": "secret_id",
+         "clientSecretField": "secret_key",
+         "accessField": "access",
+         "refreshField": "refresh",
+         "expiresInField": "access_expires",
+         "refreshEndpoint": "https://bankaccountdata.gocardless.com/api/v2/token/refresh/",
+         "refreshBodyField": "refresh"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-fails-not-configured-instead-of-looping",
+   "steps": [
+    {
+     "event": "BANKING_LIST_ACCOUNTS",
+     "payload": {
+      "requisitionId": "r1"
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "event": "BANKING_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.accessCredential",
+         "scope": "app",
+         "tokenEndpoint": "https://bankaccountdata.gocardless.com/api/v2/token/new/",
+         "grant": "json-token",
+         "clientId": "@config.secretIdCredential",
+         "clientSecret": "@config.secretKeyCredential",
+         "clientIdField": "secret_id",
+         "clientSecretField": "secret_key",
+         "accessField": "access",
+         "refreshField": "refresh",
+         "expiresInField": "access_expires",
+         "refreshEndpoint": "https://bankaccountdata.gocardless.com/api/v2/token/refresh/",
+         "refreshBodyField": "refresh"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "BANKING_HTTP_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-call-again",
+   "steps": [
+    {
+     "event": "BANKING_LIST_ACCOUNTS",
+     "payload": {
+      "requisitionId": "r1"
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "event": "BANKING_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "accounts",
+         "method": "GET",
+         "target": "/api/v2/requisitions/r1/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-fails",
+   "steps": [
+    {
+     "event": "BANKING_CONNECTED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless did not connect the account"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BANKING_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "invalid-client-fails-with-the-rejected-credentials-message",
+   "steps": [
+    {
+     "event": "BANKING_CONNECT_FAILED",
+     "payload": {
+      "error": "secret rejected",
+      "kind": "invalid_client"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless rejected the secret id and key"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "an-unavailable-store-fails-not-configured",
+   "steps": [
+    {
+     "event": "BANKING_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: banking. The host has no credential store."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "any-other-grant-failure-fails-with-its-text",
+   "steps": [
+    {
+     "event": "BANKING_CONNECT_FAILED",
+     "payload": {
+      "error": "dns",
+      "kind": "transport"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless token request failed: dns"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "control-a-held-token-never-asks-the-store",
+   "steps": [
+    {
+     "event": "BANKING_LIST_ACCOUNTS",
+     "payload": {
+      "requisitionId": "r1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_HTTP_SEND",
+        "payload": {
+         "key": "accounts",
+         "method": "GET",
+         "target": "/api/v2/requisitions/r1/",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  },
+  {
+   "id": "an-accounts-reply-without-accounts-fails-with-a-stated-reason",
+   "steps": [
+    {
+     "event": "BANKING_ACCOUNTS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"r1\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BANKING_FAILED",
+        "payload": {
+         "message": "GoCardless returned a reply that is not a requisition: accounts is required"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "BankingHttp",
+    "BankingTimeout"
+   ]
+  }
+ ]
+}

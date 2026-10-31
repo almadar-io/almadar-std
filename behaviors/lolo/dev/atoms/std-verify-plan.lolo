@@ -34,9 +34,11 @@ type PlanFull = { orbitals : [orbital] }
 type PlanProbe = { idx : number!, r : PlanRow! }
 type PlanProbes = [PlanProbe]
 type PlanResult = { guard : string!, transitionFired : boolean! }
+type PlanReq = { orbital : string!, trait : string!, from : string!, event : string!, viewer : (Map string PlanMockValue)?, payload : PlanPayload!, idx : number!, baseNE : boolean! }
+type PlanStepped = { orbital : string, trait : string!, from : string, event : string!, result : PlanResult! }
 type PlanPlayed = { idx : number!, baseNE : boolean!, result : PlanResult! }
 type PlanPrecondition = { kind : string!, trait : string, event : string, fields : [string], proof : string!, reason : string }
-type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type JsonValue = string | number | boolean | [JsonValue?] | Map string JsonValue?
 type PlanPayload = Map string JsonValue
 type PlanMockValue = string | number | boolean | [PlanMockValue?] | Map string PlanMockValue?
 type PlanRelation = { entity : string, cardinality : string }
@@ -60,6 +62,7 @@ orbital VerifyPlanOrbital {
     seedProgram : PlanSeedProgram?
     fullProgram : PlanFull?
     rows : [PlanRow] = []
+    reqs : [PlanReq] = []
     progTraits : [PlanTrait] = []
     probes : [PlanProbe] = []
     rowRefs : [PlanRowRef] = []
@@ -274,7 +277,7 @@ orbital VerifyPlanOrbital {
         (emit PLAN_FAILED { error: "verify-plan: the program was not kept for the baseline probe" })
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (> (array/len @entity.probes) 0) (!= @entity.program null) (!= @entity.fullProgram null))
         (let ((noForm : PlanForm []) (orbs (object/get @entity.program "orbitals")) (noGraph : PlanGraph {}))
-          (program/step @entity.fullProgram (array/reduce @entity.probes [] (fn (acc p)
+          (let ((noReq : [PlanReq] [])) (let ((reqs (array/reduce @entity.probes @noReq (fn (acc p)
             (let ((r (object/get @p "r")))
               (let ((o (array/find @orbs (fn o (= (object/get @o "name") (object/get @r "orbital"))))))
                (if (= @o null) @acc
@@ -292,10 +295,15 @@ orbital VerifyPlanOrbital {
                         (let ((baseNE (or @initSet (array/some @fields (fn fld (array/some @entFields (fn e (and (= (object/get @e "name") @fld) (object/has @e "default")))))))))
                           (array/concat @acc (array/concat
                             (if @hasInit [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (if (= @initFrom "*") (object/get @r "from") @initFrom), event: "INIT", viewer: @entity.viewer, payload: {}, idx: (- 0 1), baseNE: false }] [])
-                            [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), viewer: @entity.viewer, payload: (object/get @sp "payload"), idx: (object/get @p "idx"), baseNE: @baseNE }])))))))))))))))) { key: "steps" emit: { success: PLAN_STEPPED, failure: PLAN_FAILED } }))
-      PLAN_STEPPED -> ready
+                            [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), viewer: @entity.viewer, payload: (object/get @sp "payload"), idx: (object/get @p "idx"), baseNE: @baseNE }]))))))))))))))))))
+            (do
+              (set @entity.reqs @reqs)
+              (program/step @entity.fullProgram (array/map @reqs (fn q { orbital: @q.orbital, trait: @q.trait, from: @q.from, event: @q.event, viewer: @q.viewer, payload: @q.payload })) { key: "steps" emit: { success: PLAN_STEPPED, failure: PLAN_FAILED } })))))
+      PLAN_STEPPED -> ready when (!= (array/len @payload.result) (array/len @entity.reqs))
+        (emit PLAN_FAILED { error: "verify-plan: the step answer does not match the baseline probes sent" })
+      PLAN_STEPPED -> ready when (= (array/len @payload.result) (array/len @entity.reqs))
         (set @entity.steps (array/reduce @entity.steps [] (fn (acc s)
-          (let ((hit (array/first (array/filter @payload.result (fn q (= (object/get @q "idx") (array/len @acc)))))))
+          (let ((hit (array/first (array/filter (array/map (array/zip @entity.reqs @payload.result) (fn z (let ((rq (array/nth @z 0)) (an (array/nth @z 1))) { idx: @rq.idx, baseNE: @rq.baseNE, result: @an.result }))) (fn q (= (object/get @q "idx") (array/len @acc)))))))
             (array/concat @acc [(if (and (!= @hit null) (= (object/get (object/get @hit "result") "guard") "pass") (object/get @hit "baseNE"))
               (object/omit @s ["precondition"])
               @s)])))))
@@ -317,7 +325,7 @@ orbital VerifyPlanOrbital {
       PLAN_COMPUTED -> internal { count : number! }
         @description "Internal: the plan is computed; the baseline probe runs next when rows need it."
         @tier "internal"
-      PLAN_STEPPED -> internal { result : [PlanPlayed]! }
+      PLAN_STEPPED -> internal { result : [PlanStepped]! }
         @description "Internal: the baseline probe played."
         @tier "internal"
       PLAN_FAILED -> internal { error : string }

@@ -6,7 +6,7 @@ app std-calendar-sync [
 ]
 type RemoteEvent = { id : string, summary : string, description : string, location : string, start : string, end : string, status : string, updated : string }
 type TargetRow = { id : string, externalEventId : string }
-orbital CalendarSyncOrbital {
+orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
   uses CalendarApi from "std/behaviors/std-google-calendar"
 
     type CAL_REMOTE_CHANGED = Event { channelId : string, resourceId : string, resourceState : string } "Google watch-channel push notification, delivered by the google-calendar inbound hook (/api/hooks/google-calendar)."
@@ -32,25 +32,26 @@ orbital CalendarSyncOrbital {
     syncedAt : instant? @description "When this row last synced with the remote calendar; null = never." @synonyms "last sync, synced"
   }
 
-  trait CalendarSyncApi = CalendarApi.traits.CalendarClient {
+  trait CalendarClient = CalendarApi.traits.CalendarClient {
     listens {
       CalendarSync.CALENDAR_LIST_EVENTS -> CALENDAR_LIST_EVENTS
       CalendarSync.CALENDAR_CREATE_EVENT -> CALENDAR_CREATE_EVENT
-      CALENDAR_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-      CALENDAR_REQUEST_FAILED {
-        error : string!
-        kind : string!
-        key : string!
-        phase : string
-        grantStatus : number
-        grantBody : string
-      }
     }
+  }
+
+  trait CalendarCall = CalendarApi.traits.CalendarCall {
+  }
+
+  trait CalendarKeyed = CalendarApi.traits.CalendarKeyed {
+  }
+
+  trait CalendarHttp = CalendarApi.traits.CalendarHttp {
+  }
+
+  trait CalendarTimeout = CalendarApi.traits.CalendarTimeout {
+  }
+
+  trait CalendarRetry = CalendarApi.traits.CalendarRetry {
   }
 
   trait CalendarSyncInbound = CalendarApi.traits.CalendarPushInbound {
@@ -270,10 +271,10 @@ orbital CalendarSyncOrbital {
     }
 
     listens {
-      CalendarSyncApi.CALENDAR_EVENTS_LISTED -> CAL_REMOTE_LISTED
-      CalendarSyncApi.CALENDAR_EVENT_CREATED -> CAL_EVENT_CREATED
-      CalendarSyncApi.CALENDAR_LIST_EVENTS_FAILED -> CAL_CALENDAR_FAILED
-      CalendarSyncApi.CALENDAR_CREATE_EVENT_FAILED -> CAL_CALENDAR_FAILED
+      CalendarCall.CALENDAR_EVENTS_LISTED -> CAL_REMOTE_LISTED
+      CalendarCall.CALENDAR_EVENT_CREATED -> CAL_EVENT_CREATED
+      CalendarCall.CALENDAR_LIST_EVENTS_FAILED -> CAL_CALENDAR_FAILED
+      CalendarCall.CALENDAR_CREATE_EVENT_FAILED -> CAL_CALENDAR_FAILED
       CalendarSyncInbound.CAL_REMOTE_CHANGED -> CAL_REMOTE_CHANGED
       CAL_CALENDAR_FAILED {
         code : string
@@ -382,5 +383,6 @@ orbital CalendarSyncOrbital {
     }
   }
 
-  page "/calendar-sync" as CalendarSyncPage -> CalendarSync, CalendarSyncApi, CalendarSyncInbound
+  page "/calendar-sync" as CalendarSyncPage -> CalendarSync, CalendarClient, CalendarSyncInbound
+  page boot as CalendarSyncOrbitalCalendarCallBoot -> CalendarCall, CalendarKeyed, CalendarHttp, CalendarTimeout, CalendarRetry
 }

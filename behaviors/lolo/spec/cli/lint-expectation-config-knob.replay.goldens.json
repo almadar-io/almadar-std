@@ -372,6 +372,438 @@
       ]
     },
     {
+      "id": "a-knob-whose-type-the-composed-behavior-qualifies-satisfies-the-short-name",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "CliOrbital",
+                  "entity": {
+                    "name": "CliCall",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "CliRunner",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "auth": {
+                          "type": "std-firestore::FirestoreAuth"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "config",
+                      "name": "auth",
+                      "knob": {
+                        "type": "FirestoreAuth"
+                      },
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-config-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-a-qualified-knob-of-another-short-name-still-fails",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "CliOrbital",
+                  "entity": {
+                    "name": "CliCall",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "CliRunner",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "auth": {
+                          "type": "std-firestore::FirestoreAuth"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "config",
+                      "name": "auth",
+                      "knob": {
+                        "type": "OtherAuth"
+                      },
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-config-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_TYPE_MISMATCH",
+                      "path": "orbitals[0 (CliOrbital)].expects[0]",
+                      "message": "`CliOrbital` expects config knob `auth : OtherAuth`, but `CliRunner` declares `std-firestore::FirestoreAuth`.",
+                      "suggestion": "Declare `auth` as `OtherAuth` in the trait's `config`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        }
+      ]
+    },
+    {
+      "id": "a-record-knob-whose-nested-types-the-composed-behavior-qualifies-satisfies-the-same-shape",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "CliOrbital",
+                  "entity": {
+                    "name": "CliCall",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "CliRunner",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "caps": {
+                          "type": "std-firestore::QueryCapabilities",
+                          "properties": [
+                            {
+                              "name": "leaves",
+                              "type": "array",
+                              "items": {
+                                "type": "std-firestore::RowLeafKind"
+                              }
+                            },
+                            {
+                              "name": "window",
+                              "type": "boolean"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "config",
+                      "name": "caps",
+                      "knob": {
+                        "type": "QueryCapabilities",
+                        "properties": [
+                          {
+                            "name": "leaves",
+                            "type": "array",
+                            "items": {
+                              "type": "RowLeafKind"
+                            }
+                          },
+                          {
+                            "name": "window",
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-config-knob",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        }
+      ]
+    },
+    {
+      "id": "control-a-record-knob-whose-nested-type-differs-still-fails",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "CliOrbital",
+                  "entity": {
+                    "name": "CliCall",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "CliRunner",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "caps": {
+                          "type": "std-firestore::QueryCapabilities",
+                          "properties": [
+                            {
+                              "name": "leaves",
+                              "type": "array",
+                              "items": {
+                                "type": "std-firestore::RowLeafKind"
+                              }
+                            },
+                            {
+                              "name": "window",
+                              "type": "boolean"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "config",
+                      "name": "caps",
+                      "knob": {
+                        "type": "QueryCapabilities",
+                        "properties": [
+                          {
+                            "name": "leaves",
+                            "type": "array",
+                            "items": {
+                              "type": "RowLeafKind"
+                            }
+                          },
+                          {
+                            "name": "window",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-config-knob",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTED_FIELD_TYPE_MISMATCH",
+                      "path": "orbitals[0 (CliOrbital)].expects[0]",
+                      "message": "`CliOrbital` expects config knob `caps : QueryCapabilities`, but `CliRunner` declares `std-firestore::QueryCapabilities`.",
+                      "suggestion": "Declare `caps` as `QueryCapabilities` in the trait's `config`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationConfigKnob"
+        }
+      ]
+    },
+    {
       "id": "a-knob-with-another-closed-value-set-fails-expects-config",
       "steps": [
         {

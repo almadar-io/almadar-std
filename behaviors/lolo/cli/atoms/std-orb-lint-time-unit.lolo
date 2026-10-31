@@ -49,10 +49,10 @@ orbital OrbLintTimeUnitOrbital {
       INIT -> ready
       SHAPES_HEARD -> ready
         (set @entity.shapesUnread false)
-        (set @entity.units (let ((ents : [TimeUnitEntry] (array/flatten (array/map (array/filter (object/keys @payload.operators) (fn k (= (object/get (object/get @payload.operators @k) "category" "") "std-time"))) (fn k
-          (let ((ps : [TimeOpParam] (object/get (object/get @payload.operators @k) "params" [])))
+        (set @entity.units (let ((ents : [TimeUnitEntry] (array/flatten (array/map (array/filter (object/keys @payload.operators) (fn k (= (object/get (default (object/get @payload.operators @k) {}) "category" "") "std-time"))) (fn k
+          (let ((ps : [TimeOpParam] (object/get (default (object/get @payload.operators @k) {}) "params" [])))
             (array/flatten (array/map (array/range 0 (array/len @ps)) (fn j
-              (let ((p (array/nth @ps @j)))
+              (let ((p (default (array/nth @ps @j) {})))
                 (if (!= (object/get @p "name" "") "unit")
                   []
                   (let ((nd (as (object/get @p "type" null) TimeUnionNode)))
@@ -70,12 +70,12 @@ orbital OrbLintTimeUnitOrbital {
     (let ((roots : [TimeRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((o (array/nth @orbitals @oi)))
+      (let ((o (default (array/nth @orbitals @oi) {})))
         (let ((trts : [TimeTrait] (object/get @o "traits" [])))
           (array/flatten
             (array/map (array/range 0 (array/len @trts))
               (fn ti
-                (let ((t (array/nth @trts @ti)))
+                (let ((t (default (array/nth @trts @ti) {})))
                   (if (not (object/has @t "stateMachine"))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [TimeTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [TimeTick] (object/get @t "ticks" [])))
@@ -83,7 +83,7 @@ orbital OrbLintTimeUnitOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @trs))
                             (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                              (let ((tr (default (array/nth @trs @xi) {})) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
                                 (let ((effs : [TimeExpr] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard") }] @noroots)
@@ -91,7 +91,7 @@ orbital OrbLintTimeUnitOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @tks))
                             (fn ki
-                              (let ((teffs : [TimeExpr] (object/get (array/nth @tks @ki) "effects" [])))
+                              (let ((teffs : [TimeExpr] (object/get (default (array/nth @tks @ki) {}) "effects" [])))
                                 (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]") }))))))))))))))))))))
       (array/flatten
         (array/map @roots

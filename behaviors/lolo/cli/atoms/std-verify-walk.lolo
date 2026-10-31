@@ -23,6 +23,8 @@ type WalkPlanned = { orbital : string!, trait : string!, from : string!, event :
 type WalkEffect = { type : string!, args : [WalkJson]!, status : string!, error : string }
 type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
 type WalkSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
+type WalkSent = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]! }
+type WalkStepped = { orbital : string, trait : string!, from : string!, event : string!, result : WalkResult! }
 type WalkPlayed = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]!, result : WalkResult! }
 type WalkResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
@@ -52,6 +54,7 @@ orbital VerifyWalkOrbital {
     machineRows : [WalkMachineRow] = []
     planned : [WalkPlanned] = []
     judgeSteps : [WalkPlanStep] = []
+    sent : [WalkSent] = []
     played : [WalkPlayed] = []
     judged : [WalkJudged] = []
     hops : [WalkHop] = []
@@ -209,17 +212,20 @@ orbital VerifyWalkOrbital {
     state stepping {
       INIT -> stepping
       WALK_PLAY -> stepping when (= (array/len @payload.rows) 0)
+        (set @entity.sent [])
         (emit WALK_STEPPED { result: [] })
       WALK_PLAY -> stepping when (and (> (array/len @payload.rows) 0) (= @entity.program null))
         (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_PLAY -> stepping when (and (> (array/len @payload.rows) 0) (!= @entity.program null))
+        (set @entity.sent (array/map @payload.rows (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"), targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))) })))
         (program/step @entity.program (array/map @payload.rows (fn r
-          { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
-            targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))),
+          { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"),
             payload: (object/get @r "payload"), viewer: @entity.viewer
           })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
-      WALK_STEPPED -> judging
-        (set @entity.played @payload.result)
+      WALK_STEPPED -> stepping when (!= (array/len @payload.result) (array/len @entity.sent))
+        (emit WALK_FAILED { error: "the step answer does not match the rows sent" })
+      WALK_STEPPED -> judging when (= (array/len @payload.result) (array/len @entity.sent))
+        (set @entity.played (array/map (array/zip @entity.sent @payload.result) (fn z (let ((sn (array/nth @z 0)) (an (array/nth @z 1))) { trait: @sn.trait, from: @sn.from, event: @sn.event, to: @sn.to, guarded: @sn.guarded, targets: @sn.targets, result: @an.result }))))
         (set @entity.hops (array/reduce (array/filter @payload.result (fn p (object/get (object/get @p "result") "transitionFired"))) [] (fn acc p
           (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get (default (object/get (object/get @p "result") "state") {}) "after" ""), arm: (object/get (object/get @p "result") "firedArm" (- 0 1)) }]))))
         (set @entity.judged [])
@@ -312,7 +318,7 @@ orbital VerifyWalkOrbital {
       WALK_PLAY { rows : [WalkPlanned]! }
         @description "Plan done: the rows to play."
         @tier "internal"
-      WALK_STEPPED { result : [WalkPlayed]! }
+      WALK_STEPPED { result : [WalkStepped]! }
         @description "Every row played."
         @tier "internal"
       WALK_FAILED { error : string }

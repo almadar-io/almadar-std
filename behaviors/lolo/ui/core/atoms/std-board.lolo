@@ -229,7 +229,14 @@ orbital BoardOrbital {
         (persist update BoardView { id: ?id, stage: ?targetGroup } {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
         })
+      ;; The drag-end renumbers the whole zone through REORDER_POSITION (idx * 1000), which persists; REORDER_CARD only
+      ;; announces the move, so the board reloads to show the stored order and never writes the raw newIndex over those positions.
       REORDER_CARD -> viewing_board
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
+          limit: @config.maxRows
+        })
       REORDER_POSITION -> viewing_board
         (persist update BoardView { id: ?id, position: ?position } {
           emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }

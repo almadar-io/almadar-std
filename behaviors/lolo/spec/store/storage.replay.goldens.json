@@ -930,6 +930,88 @@
      }
     }
    ]
+  },
+  {
+   "id": "list-unreadable-size-fails",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>many</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The listing could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-truncated-unreadable-size-fails",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><Contents><Key>a.txt</Key><Size>many</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents><NextContinuationToken>t1</NextContinuationToken></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The listing could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-list-readable-size-lists",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_LISTED",
+        "payload": {
+         "keys": [
+          {
+           "key": "a.txt",
+           "size": 5,
+           "lastModified": 1705570200000
+          }
+         ],
+         "truncated": false
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

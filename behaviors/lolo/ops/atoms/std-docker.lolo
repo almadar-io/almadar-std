@@ -13,7 +13,7 @@ type DockerPortBinding = { HostIp : string!, HostPort : string! }
 type DockerInspectNetwork = { Ports : Map string [DockerPortBinding] }
 type DockerInspect = { Id : string!, Name : string!, Created : string!, State : DockerInspectState!, Config : DockerInspectConfig!, NetworkSettings : DockerInspectNetwork! }
 type DockerImageInspect = { Id : string!, Size : number }
-type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : number? }
+type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : instant? }
 orbital DockerOrbital {
   uses Cli from "std/behaviors/std-cli"
 
@@ -122,7 +122,7 @@ orbital DockerOrbital {
         (emit DOCKER_EXEC { env: @config.env stage: "stop-inspect" argv: ["inspect" "--format" "{{json .}}" @entity.target] })
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "stop-inspect"))
         (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
-          (emit STOP_DONE { containerId: @d.Id status: @d.State.Status stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
+          (emit STOP_DONE { containerId: @d.Id status: @d.State.Status stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") null (let ((t (time/parse @d.State.FinishedAt))) (if (== @t null) null (as @t instant)))) }))
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "remove"))
         (emit REMOVE_DONE { containerId: @entity.target removed: true })
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "logs"))
@@ -131,7 +131,7 @@ orbital DockerOrbital {
       ;; a stopped container binds no ports, and a port key always reads number/protocol, so these defaults only cover that
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "status"))
         (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
-          (emit STATUS_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (time/parse @d.Created) startedAt: (if (str/startsWith @d.State.StartedAt "0001") 0 (time/parse @d.State.StartedAt)) stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
+          (emit STATUS_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (let ((t (time/parse @d.Created))) (if (== @t null) null (as @t instant))) startedAt: (if (str/startsWith @d.State.StartedAt "0001") null (let ((t (time/parse @d.State.StartedAt))) (if (== @t null) null (as @t instant)))) stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") null (let ((t (time/parse @d.State.FinishedAt))) (if (== @t null) null (as @t instant)))) }))
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list") (== (str/trim @payload.stdout) ""))
         (emit LIST_DONE { containers: [] total: 0 })
       DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "list") (!= (str/trim @payload.stdout) ""))
@@ -139,7 +139,7 @@ orbital DockerOrbital {
       ;; a stopped container binds no ports, and a port key always reads number/protocol, so these defaults only cover that
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list-inspect"))
         (let ((rows (array/map (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= @l ""))) (fn l (json/parse @l DockerInspect)))))
-          (emit LIST_DONE { containers: (array/map @rows (fn d { id: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (time/parse @d.Created) })) total: (array/len @rows) }))
+          (emit LIST_DONE { containers: (array/map @rows (fn d { id: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys (default @d.NetworkSettings.Ports {})) (fn k (array/map (object/get (default @d.NetworkSettings.Ports {}) @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (default (array/nth (str/split @k "/") 0) "")) protocol: (default (array/nth (str/split @k "/") 1) "") })))))) createdAt: (let ((t (time/parse @d.Created))) (if (== @t null) null (as @t instant))) })) total: (array/len @rows) }))
     }
 
     emits {
@@ -164,9 +164,9 @@ orbital DockerOrbital {
       STOP_DONE -> external {
         containerId : string!
         status : string!
-        stoppedAt : number!
+        stoppedAt : instant?
       }
-        @description "The container was stopped; stoppedAt is its FinishedAt in epoch milliseconds."
+        @description "The container was stopped; stoppedAt is its FinishedAt as an instant, absent while it never ran (docker answers year 0001) or when docker answers a time that does not parse."
         @synonyms "stopped, container stopped"
         @tier "domain"
       REMOVE_DONE -> external {
@@ -190,9 +190,9 @@ orbital DockerOrbital {
         image : string!
         status : string!
         ports : [DockerPortView]!
-        createdAt : number?
-        startedAt : number!
-        stoppedAt : number!
+        createdAt : instant?
+        startedAt : instant?
+        stoppedAt : instant?
       }
         @description "The container's inspected state."
         @synonyms "inspect, container state"

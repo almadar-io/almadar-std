@@ -886,7 +886,7 @@
      "expect": {
       "effects": [
        {
-        "type": "os/open",
+        "type": "if",
         "routed": true
        }
       ],
@@ -1054,6 +1054,109 @@
       "detail": "/u/m.vec: the store header could not be encoded"
      },
      "expect": {}
+    }
+   ]
+  },
+  {
+   "id": "the wait elapsing retries the exclusive create under the env anchor",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "lockStart": 1000000,
+    "wait": 5,
+    "viaEnv": true
+   },
+   "steps": [
+    {
+     "from": "waiting",
+     "event": "ELAPSED",
+     "payload": {
+      "waitedMs": 5
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "if",
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "LOCK_FAILED",
+        "payload": {
+         "error": "os/open: no os host configured",
+         "kind": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a store path that is not a plain relative file name is refused",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "VECTOR_WRITE",
+     "payload": {
+      "path": "/u/m.vec",
+      "anchor": "home",
+      "model": "m",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.5,
+         -0.25
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_WRITE_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_IO",
+         "detail": "the store path /u/m.vec is not a plain relative file name"
+        }
+       }
+      ],
+      "neverEmits": [
+       "QUANTIZE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a plain relative file name goes on to quantize",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "VECTOR_WRITE",
+     "payload": {
+      "path": "m.vec",
+      "anchor": "home",
+      "model": "m",
+      "records": [
+       {
+        "text": "a",
+        "vector": [
+         0.5,
+         -0.25
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "QUANTIZE"
+       }
+      ]
+     }
     }
    ]
   }

@@ -1,20 +1,17 @@
 {
   "atom": "cli/atoms/std-orb-lint-engine-rule-count.lolo",
   "trait": "OrbLintEngineRuleCount",
-  "note": "Prevention for a lint engine whose ruleCount knob differs from the rule traits it routes LINT_FOUND from (a larger knob never settles and orb validate reports a clean program). The lowered program lists the engine's composed traits as refs, so the count is the engine's own LINT_FOUND listens; multiAnswerCount (the engine's extra answers) is not part of it.",
+  "note": "Prevention for a lint engine whose rules knob (the names its routed rule traits answer LINT_FOUND with) differs from what they emit. The routed trait declarations come from the call sites input (references, else an inline trait); each declaration's transition and tick effects are walked for emit LINT_FOUND { rule: <literal> }. Which rules answer the program pass only (programOnlyRules) cannot be derived structurally, so it is only checked to be a subset of rules.",
   "cases": [
     {
-      "id": "a-knob-above-the-routed-answers-is-refused",
+      "id": "a-routed-rule-name-missing-from-rules-is-refused",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
               "orbitals": [
                 {
                   "name": "EngineOrbital",
@@ -37,27 +34,13 @@
                             "kind": "trait",
                             "trait": "R1"
                           }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R2"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R3"
-                          }
                         }
                       ],
                       "config": {
-                        "ruleCount": {
-                          "default": 5
+                        "rules": {
+                          "default": [
+                            "a"
+                          ]
                         }
                       }
                     }
@@ -65,7 +48,67 @@
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -87,16 +130,16 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
+                  "scope": "",
                   "findings": [
                     {
                       "code": "ORB_LINT_RULE_COUNT_MISMATCH",
-                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.ruleCount",
-                      "message": "ruleCount is 5 but Engine routes 4 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
-                      "suggestion": "set ruleCount to 4",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the rule b is answered by a routed trait but missing from rules: a pass never expects it, so it can settle before b answered",
+                      "suggestion": "add b to rules",
                       "severity": "error"
                     }
-                  ],
-                  "scope": ""
+                  ]
                 }
               }
             ]
@@ -105,17 +148,14 @@
       ]
     },
     {
-      "id": "a-knob-below-the-routed-answers-is-refused",
+      "id": "an-entry-no-routed-trait-answers-with-is-refused",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
               "orbitals": [
                 {
                   "name": "EngineOrbital",
@@ -138,27 +178,15 @@
                             "kind": "trait",
                             "trait": "R1"
                           }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R2"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R3"
-                          }
                         }
                       ],
                       "config": {
-                        "ruleCount": {
-                          "default": 3
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b",
+                            "c"
+                          ]
                         }
                       }
                     }
@@ -166,7 +194,67 @@
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -188,16 +276,16 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
+                  "scope": "",
                   "findings": [
                     {
                       "code": "ORB_LINT_RULE_COUNT_MISMATCH",
-                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.ruleCount",
-                      "message": "ruleCount is 3 but Engine routes 4 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
-                      "suggestion": "set ruleCount to 4",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the rules entry c is answered by no routed trait: a pass waits for it and never settles",
+                      "suggestion": "remove c from rules",
                       "severity": "error"
                     }
-                  ],
-                  "scope": ""
+                  ]
                 }
               }
             ]
@@ -206,17 +294,310 @@
       ]
     },
     {
-      "id": "control-a-knob-equal-to-the-routed-answers-is-clean",
+      "id": "a-duplicate-rules-entry-is-refused",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "a",
+                            "b"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the rules entry a is listed more than once",
+                      "suggestion": "list a once",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-programOnlyRules-entry-not-in-rules-is-refused",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b"
+                          ]
+                        },
+                        "programOnlyRules": {
+                          "default": [
+                            "z"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.programOnlyRules",
+                      "message": "the programOnlyRules entry z is not in rules, so no pass expects it",
+                      "suggestion": "remove z from programOnlyRules or add it to rules",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-route-whose-source-trait-has-no-declaration-is-refused",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
               "orbitals": [
                 {
                   "name": "EngineOrbital",
@@ -245,21 +626,16 @@
                           "triggers": "LINT_FOUND",
                           "source": {
                             "kind": "trait",
-                            "trait": "R2"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R3"
+                            "trait": "R9"
                           }
                         }
                       ],
                       "config": {
-                        "ruleCount": {
-                          "default": 4
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b"
+                          ]
                         }
                       }
                     }
@@ -267,7 +643,67 @@
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -289,8 +725,16 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
-                  "findings": [],
-                  "scope": ""
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the trait R9 routes its LINT_FOUND into Engine but no declaration of it is among the references or the inline traits, so the rule names it answers with are unknown",
+                      "suggestion": "compose R9 through a trait reference the call sites input resolves",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]
@@ -299,17 +743,14 @@
       ]
     },
     {
-      "id": "only-LINT_FOUND-listens-are-counted",
+      "id": "a-routed-trait-emitting-a-non-literal-rule-is-refused",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
               "orbitals": [
                 {
                   "name": "EngineOrbital",
@@ -332,35 +773,13 @@
                             "kind": "trait",
                             "trait": "R1"
                           }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R2"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R3"
-                          }
-                        },
-                        {
-                          "event": "LINT_LAZY",
-                          "triggers": "LINT_LAZY_HEARD",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "In"
-                          }
                         }
                       ],
                       "config": {
-                        "ruleCount": {
-                          "default": 4
+                        "rules": {
+                          "default": [
+                            "a"
+                          ]
                         }
                       }
                     }
@@ -368,7 +787,67 @@
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "@config.name",
+                              "scope": "",
+                              "findings": []
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -390,8 +869,16 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
-                  "findings": [],
-                  "scope": ""
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the trait R1 emits LINT_FOUND with a rule that is not a literal string, so the names the engine must list cannot be read",
+                      "suggestion": "emit LINT_FOUND with a literal string rule",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]
@@ -400,23 +887,20 @@
       ]
     },
     {
-      "id": "control-a-trait-with-no-ruleCount-knob-is-left-alone",
+      "id": "control-rules-equal-to-the-routed-names-is-clean",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
               "orbitals": [
                 {
                   "name": "EngineOrbital",
                   "traits": [
                     {
-                      "name": "Plain",
+                      "name": "Engine",
                       "listens": [
                         {
                           "event": "LINT_FOUND",
@@ -433,23 +917,87 @@
                             "kind": "trait",
                             "trait": "R1"
                           }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R2"
-                          }
                         }
                       ],
-                      "config": {}
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b"
+                          ]
+                        },
+                        "programOnlyRules": {
+                          "default": [
+                            "b"
+                          ]
+                        }
+                      }
                     }
                   ]
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -471,8 +1019,740 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
-                  "findings": [],
-                  "scope": ""
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-order-of-rules-does-not-matter",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "b",
+                            "a"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-trait-answering-twice-lists-both-names",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "a-final",
+                            "b"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ],
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a-final",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-emit-nested-in-a-guarded-effect-and-a-tick-is-read",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "if",
+                            [
+                              "=",
+                              1,
+                              1
+                            ],
+                            [
+                              "emit",
+                              "LINT_FOUND",
+                              {
+                                "rule": "a",
+                                "scope": "",
+                                "findings": "@entity.findings"
+                              }
+                            ],
+                            [
+                              "noop"
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": []
+                      }
+                    ]
+                  },
+                  "ticks": [
+                    {
+                      "effects": [
+                        [
+                          "emit",
+                          "LINT_FOUND",
+                          {
+                            "rule": "b",
+                            "scope": "",
+                            "findings": "@entity.findings"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-trait-declared-inline-is-read-without-a-reference",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R1"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a",
+                            "b"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "name": "R0",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "event": "LINT_X",
+                            "effects": [
+                              [
+                                "emit",
+                                "LINT_FOUND",
+                                {
+                                  "rule": "a",
+                                  "scope": "",
+                                  "findings": "@entity.findings"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": []
+                    },
+                    {
+                      "name": "R1",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "event": "LINT_X",
+                            "effects": [
+                              [
+                                "emit",
+                                "LINT_FOUND",
+                                {
+                                  "rule": "b",
+                                  "scope": "",
+                                  "findings": "@entity.findings"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-only-LINT_FOUND-listens-are-routes",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        },
+                        {
+                          "event": "LINT_FINISH",
+                          "triggers": "LINT_FINISH",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R9"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-trait-with-no-rules-knob-is-left-alone",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": [
+                {
+                  "name": "EngineOrbital",
+                  "traits": [
+                    {
+                      "name": "Engine",
+                      "listens": [
+                        {
+                          "event": "LINT_FOUND",
+                          "triggers": "LINT_FOUND",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "R0"
+                          }
+                        }
+                      ],
+                      "config": {
+                        "other": {
+                          "default": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
                 }
               }
             ]
@@ -484,178 +1764,11 @@
       "id": "each-engine-trait-is-checked-on-its-own",
       "steps": [
         {
-          "event": "LINT_INPUT",
+          "event": "LINT_CALL_SITES",
           "from": "ready",
           "payload": {
             "file": "a.lolo",
-            "raw": "",
-            "latin": true,
             "program": {
-              "name": "app",
-              "orbitals": [
-                {
-                  "name": "EngineOrbital",
-                  "traits": [
-                    {
-                      "name": "EngineA",
-                      "listens": [
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R0"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R1"
-                          }
-                        }
-                      ],
-                      "config": {
-                        "ruleCount": {
-                          "default": 2
-                        }
-                      }
-                    },
-                    {
-                      "name": "EngineB",
-                      "listens": [
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R0"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R1"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R2"
-                          }
-                        }
-                      ],
-                      "config": {
-                        "ruleCount": {
-                          "default": 9
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "engine-rule-count",
-                  "findings": [
-                    {
-                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
-                      "path": "orbitals[name=EngineOrbital].traits[name=EngineB].config.ruleCount",
-                      "message": "ruleCount is 9 but EngineB routes 3 rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered",
-                      "suggestion": "set ruleCount to 3",
-                      "severity": "error"
-                    }
-                  ],
-                  "scope": ""
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-no-orbitals",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "app",
-              "orbitals": []
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "engine-rule-count",
-                  "findings": [],
-                  "scope": ""
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-multiAnswerCount-does-not-change-the-count",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "app",
               "orbitals": [
                 {
                   "name": "EngineOrbital",
@@ -678,30 +1791,33 @@
                             "kind": "trait",
                             "trait": "R1"
                           }
-                        },
+                        }
+                      ],
+                      "config": {
+                        "rules": {
+                          "default": [
+                            "a"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "name": "Second",
+                      "listens": [
                         {
                           "event": "LINT_FOUND",
                           "triggers": "LINT_FOUND",
                           "source": {
                             "kind": "trait",
-                            "trait": "R2"
-                          }
-                        },
-                        {
-                          "event": "LINT_FOUND",
-                          "triggers": "LINT_FOUND",
-                          "source": {
-                            "kind": "trait",
-                            "trait": "R3"
+                            "trait": "R0"
                           }
                         }
                       ],
                       "config": {
-                        "ruleCount": {
-                          "default": 4
-                        },
-                        "multiAnswerCount": {
-                          "default": 1
+                        "rules": {
+                          "default": [
+                            "a"
+                          ]
                         }
                       }
                     }
@@ -709,7 +1825,67 @@
                 }
               ]
             },
-            "scope": ""
+            "kept": [],
+            "references": [
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R0",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R0",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "a",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "A",
+                "name": "A.traits.R1",
+                "path": "orbitals[0].traits[1]",
+                "callSite": {},
+                "declaration": {
+                  "name": "R1",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "LINT_X",
+                        "effects": [
+                          [
+                            "emit",
+                            "LINT_FOUND",
+                            {
+                              "rule": "b",
+                              "scope": "",
+                              "findings": "@entity.findings"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": []
+                }
+              }
+            ]
           },
           "expect": {
             "fired": true,
@@ -731,8 +1907,59 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "engine-rule-count",
-                  "findings": [],
-                  "scope": ""
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_RULE_COUNT_MISMATCH",
+                      "path": "orbitals[name=EngineOrbital].traits[name=Engine].config.rules",
+                      "message": "the rule b is answered by a routed trait but missing from rules: a pass never expects it, so it can settle before b answered",
+                      "suggestion": "add b to rules",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-orbitals",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "program": {
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "engine-rule-count",
+                  "scope": "",
+                  "findings": []
                 }
               }
             ]

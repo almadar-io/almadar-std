@@ -54,12 +54,12 @@ orbital OrbLintSexprBindingOrbital {
       (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr)))))))))) (tRoots : [SbRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((o (array/nth @orbitals @oi)))
+      (let ((o (default (array/nth @orbitals @oi) {})))
         (let ((trts : [SbTrait] (object/get @o "traits" [])))
           (array/flatten
             (array/map (array/range 0 (array/len @trts))
               (fn ti
-                (let ((t (array/nth @trts @ti)))
+                (let ((t (default (array/nth @trts @ti) {})))
                   (if (not (object/has @t "stateMachine"))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SbTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [SbState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [SbTick] (object/get @t "ticks" [])))
@@ -67,7 +67,7 @@ orbital OrbLintSexprBindingOrbital {
                         (array/flatten
                           (array/map (array/range 0 (array/len @trs))
                             (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                              (let ((tr (default (array/nth @trs @xi) {})) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
                                 (let ((effs : [SbShape] (object/get @tr "effects" [])) (ens : [SbShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard") }] @noroots)
@@ -78,16 +78,16 @@ orbital OrbLintSexprBindingOrbital {
                           (array/flatten
                             (array/map (array/range 0 (array/len @sts))
                               (fn si
-                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
+                                (let ((h (object/get (default (array/nth @sts @si) {}) "holds" null)))
                                   (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds") }] @noroots)))))
                           (array/flatten
                             (array/map (array/range 0 (array/len @tks))
                               (fn ki
-                                (let ((teffs : [SbShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                (let ((teffs : [SbShape] (object/get (default (array/nth @tks @ki) {}) "effects" [])))
                                   (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]") })))))))))))))))))))) (fieldRoots : [SbRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
-      (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
+      (let ((ent (object/get (default (array/nth @orbitals @oi) {}) "entity" null)))
         (if (not (validate/object @ent)) @noroots
           (let ((fl : [SbField] (object/get @ent "fields" [])) (bound (+ 2 (object/get (tree/fold (object/get @ent "fields" []) (fn (n k) { d: (+ 1 (array/reduce (if (validate/array @n) (array/map @k (fn r (let ((rd (as @r SbDepth))) (if (= @rd null) 1 (object/get @rd "d"))))) (if (validate/object @n) (array/map (object/keys @k) (fn q (object/get (object/get @k @q) "d"))) [0])) 0 (fn (m v) (if (> @v @m) @v @m)))) }) "SbShape") "d" 0))))
             (object/get (array/reduce (array/range 0 @bound)

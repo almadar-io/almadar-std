@@ -1,29 +1,34 @@
 app std-orb-lint-engine-rule-count [
   version: "1.0.0",
   inbound: ["cli-lint-engine-rule-count"],
-  env: ["PATH"],
-  exec: ["orb"],
-  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-engine-rule-count — the `orb lint engine-rule-count <file>` command, the guard behind the lint engine settling. A lint engine settles when its collected LINT_FOUND answers reach its ruleCount knob plus its multiAnswerCount knob, so a ruleCount above the rule traits that route LINT_FOUND into it leaves the run waiting and `orb validate` reports a clean program, and one below settles before every rule answered. For every trait that declares a ruleCount config knob it counts the listens that route LINT_FOUND into the trait (one per composed rule trait); a ruleCount that differs is ORB_LINT_RULE_COUNT_MISMATCH at the trait, with both numbers."
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-engine-rule-count — the `orb lint engine-rule-count <file>` command, the guard behind the lint engine settling. A lint engine settles a pass when every rule name it expects has answered LINT_FOUND: its `rules` config knob lists the names the routed rule traits answer with, and its `programOnlyRules` knob the names a lazy child's pass does not expect. For every trait that declares a `rules` config knob it reads the traits whose LINT_FOUND the trait routes in (listens `<Trait>.LINT_FOUND -> LINT_FOUND`) from the call sites input (std-orb-lint-call-site-input: the declaration each reference carries, else a trait declared inline), walks each one's transition and tick effects for the `(emit LINT_FOUND { rule: \"<name>\", ... })` effects, and reports ORB_LINT_RULE_COUNT_MISMATCH, one finding per problem naming the rule: a routed rule name missing from `rules`; a `rules` entry no routed trait answers with; a duplicate `rules` entry; a `programOnlyRules` entry not in `rules`. A route whose source trait has no declaration, or whose LINT_FOUND emit carries a rule that is not a literal string, is a finding naming the trait: it is never skipped. Which rules answer only for the program pass cannot be derived structurally (it is a property of what each rule reads), so it is only checked to be a subset of `rules`. Clean answers `lint engine-rule-count: clean` (status 200, exit 0); anything but one file argument is the usage (status 400); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-engine-rule-count"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type RcListen = { event : string, triggers : string }
-type RcField = { default : number? }
-type RcTrait = { name : string, listens : [RcListen], config : Map string RcField? }
+type RcVal = string | number | boolean | [RcVal?] | Map string RcVal?
+type RcStrings = [string]
+type RcSource = { kind : string, trait : string }
+type RcListen = { event : string, triggers : string, source : RcSource? }
+type RcField = { default : RcVal? }
+type RcTransition = { effects : [RcVal] }
+type RcMachine = { transitions : [RcTransition] }
+type RcTick = { effects : [RcVal] }
+type RcTrait = { name : string, listens : [RcListen], config : Map string RcField?, stateMachine : RcMachine?, ticks : [RcTick] }
 type RcOrbital = { name : string, traits : [RcTrait] }
 type RcProgram = { orbitals : [RcOrbital] }
+type RcRef = { kind : string!, declaration : RcTrait! }
+type RcKept = { orbital : number!, traits : [string]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintEngineRuleCountCodes = { ruleCountMismatch : LintCodeDecl }
 
 orbital OrbLintEngineRuleCountOrbital {
-  uses Input from "std/behaviors/std-orb-lint-input"
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
 
   entity OrbLintEngineRuleCountRun [runtime] {
     id : string!
-    scope : string = ""
     findings : [OrbFinding] = []
   }
 
@@ -32,20 +37,44 @@ orbital OrbLintEngineRuleCountOrbital {
 
     state ready {
       INIT -> ready
-      LINT_INPUT -> ready
-        (set @entity.scope @payload.scope)
-        (set @entity.findings (array/flatten (array/map (default (object/get @payload.program "orbitals") []) (fn o
-          (array/flatten (array/map (array/filter (default (object/get @o "traits") []) (fn t (!= (object/get (default (object/get @t "config") {}) "ruleCount") null))) (fn t
-            (let ((cfg (default (object/get @t "config") {})))
-              (let ((knob (default (object/get (default (object/get @cfg "ruleCount") {}) "default") 0))
-                    (routes (array/len (array/filter (default (object/get @t "listens") []) (fn l (and (= (object/get @l "event") "LINT_FOUND") (= (object/get @l "triggers") "LINT_FOUND")))))))
-                (if (= @knob @routes)
-                  []
-                  (let ((where (str/concat "orbitals[name=" (default (object/get @o "name") "") "].traits[name=" (default (object/get @t "name") "") "].config.ruleCount")))
-                    [{ code: @config.codes.ruleCountMismatch.code, path: @where, message: (str/concat "ruleCount is " @knob " but " (default (object/get @t "name") "") " routes " @routes " rule traits' LINT_FOUND: the run settles when the answers reach ruleCount plus multiAnswerCount, so a larger knob never settles and orb validate reports a clean program, a smaller one settles before every rule answered"), suggestion: (str/concat "set ruleCount to " @routes), severity: "error" }])))))))))))
+      LINT_CALL_SITES -> ready
+        (set @entity.findings (let ((decls (array/concat (array/map (array/filter @payload.references (fn r (= (object/get @r "kind") "trait"))) (fn r (object/get @r "declaration"))) (array/filter (array/reduce (object/get @payload.program "orbitals" []) [] (fn acc o (array/concat @acc (object/get @o "traits" [])))) (fn t (!= (object/get @t "stateMachine" null) null))))))
+          (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
+            (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (!= (object/get (object/get @t "config" {}) "rules" null) null))) (fn t
+              (let ((at (str/concat "orbitals[name=" (object/get @o "name" "") "].traits[name=" (object/get @t "name" "") "].config"))
+                    (knob (default (as (object/get (object/get (object/get @t "config" {}) "rules" {}) "default" null) RcStrings) []))
+                    (programOnly (default (as (object/get (object/get (object/get @t "config" {}) "programOnlyRules" {}) "default" null) RcStrings) []))
+                    (routes (array/unique (array/map (array/filter (object/get @t "listens" []) (fn l (and (= (object/get @l "event") "LINT_FOUND") (= (object/get @l "triggers") "LINT_FOUND")))) (fn l (object/get (object/get @l "source" {}) "trait" "")))))
+                    (marks : [string] []))
+                (let ((answers (array/map @routes (fn nm
+                        (let ((d (array/find @decls (fn x (= (object/get @x "name" "") @nm)))))
+                          { trait: @nm, declared: (!= @d null), names: (if (= @d null) @marks (tree/fold (array/concat (array/reduce (object/get (default (object/get @d "stateMachine" null) {}) "transitions" []) [] (fn a tr (array/concat @a (object/get @tr "effects" [])))) (array/reduce (object/get @d "ticks" []) [] (fn a tk (array/concat @a (object/get @tk "effects" []))))) (fn (n k)
+                          (let ((none : [string] []))
+                            (let ((kids (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) @none))))
+                              (if (and (validate/array @n) (= (array/nth @n 0) "emit") (= (array/nth @n 1) "LINT_FOUND"))
+                                (array/concat @kids [(let ((a (array/nth @n 2))) (if (validate/object @a) (let ((rl (object/get @a "rule" null))) (if (and (validate/string @rl) (!= @rl "") (not (str/startsWith @rl (quote "@")))) @rl "")) ""))])
+                                @kids)))) "RcVal")) })))))
+                  (let ((routed (array/sort (array/unique (array/filter (array/flatten (array/map @answers (fn a (object/get @a "names")))) (fn x (!= @x "")))))))
+                    (array/concat
+                      (array/map (array/filter @answers (fn a (not (object/get @a "declared")))) (fn a
+                        { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".rules"), message: (str/concat "the trait " (object/get @a "trait") " routes its LINT_FOUND into " (object/get @t "name" "") " but no declaration of it is among the references or the inline traits, so the rule names it answers with are unknown"), suggestion: (str/concat "compose " (object/get @a "trait") " through a trait reference the call sites input resolves"), severity: "error" }))
+                      (array/concat
+                        (array/map (array/filter @answers (fn a (and (object/get @a "declared") (array/includes (object/get @a "names") "")))) (fn a
+                          { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".rules"), message: (str/concat "the trait " (object/get @a "trait") " emits LINT_FOUND with a rule that is not a literal string, so the names the engine must list cannot be read"), suggestion: "emit LINT_FOUND with a literal string rule", severity: "error" }))
+                        (array/concat
+                          (array/map (array/filter @routed (fn r (not (array/includes @knob @r)))) (fn r
+                            { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".rules"), message: (str/concat "the rule " @r " is answered by a routed trait but missing from rules: a pass never expects it, so it can settle before " @r " answered"), suggestion: (str/concat "add " @r " to rules"), severity: "error" }))
+                          (array/concat
+                            (array/map (array/filter (array/unique @knob) (fn r (not (array/includes @routed @r)))) (fn r
+                              { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".rules"), message: (str/concat "the rules entry " @r " is answered by no routed trait: a pass waits for it and never settles"), suggestion: (str/concat "remove " @r " from rules"), severity: "error" }))
+                            (array/concat
+                              (array/map (array/filter (array/unique @knob) (fn r (> (array/len (array/filter @knob (fn x (= @x @r)))) 1))) (fn r
+                                { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".rules"), message: (str/concat "the rules entry " @r " is listed more than once"), suggestion: (str/concat "list " @r " once"), severity: "error" }))
+                              (array/map (array/filter (array/unique @programOnly) (fn r (not (array/includes @knob @r)))) (fn r
+                                { code: @config.codes.ruleCountMismatch.code, path: (str/concat @at ".programOnlyRules"), message: (str/concat "the programOnlyRules entry " @r " is not in rules, so no pass expects it"), suggestion: (str/concat "remove " @r " from programOnlyRules or add it to rules"), severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "engine-rule-count", scope: @entity.scope, findings: @entity.findings })
+        (emit LINT_FOUND { rule: "engine-rule-count", scope: "", findings: @entity.findings })
     }
 
     emits {
@@ -58,12 +87,12 @@ orbital OrbLintEngineRuleCountOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RcProgram!  scope : string! }
-        @description "The lint input: the file read, its language decided and the program lowered."
-      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_CALL_SITES { file : string!  program : RcProgram!  kept : [RcKept]!  references : [RcRef]!  stamped : RcVal? }
+        @description "The call sites input: the file lowered unresolved and each reference with the declaration the compiler loads for it."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
     }
     config {
-      codes : LintEngineRuleCountCodes = { ruleCountMismatch: { code: "ORB_LINT_RULE_COUNT_MISMATCH", category: "lint", description: "A lint engine ruleCount knob differs from the rule traits whose LINT_FOUND it routes" } }
+      codes : LintEngineRuleCountCodes = { ruleCountMismatch: { code: "ORB_LINT_RULE_COUNT_MISMATCH", category: "lint", description: "A lint engine's rules or programOnlyRules names differ from the rule names its routed rule traits answer LINT_FOUND with" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
@@ -78,7 +107,7 @@ orbital OrbLintEngineRuleCountOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint engine-rule-count <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint engine-rule-count <file>" }) (emit LINT_REQUEST { file: @argFile })))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint engine-rule-count <file>" }) (emit LINT_CALL_SITES_REQUEST { file: @argFile, stamp: false, references: true })))
     }
 
     state waiting {
@@ -87,7 +116,7 @@ orbital OrbLintEngineRuleCountOrbital {
         (emit LINT_ANSWERED { status: 200, body: "lint engine-rule-count: clean" })
       LINT_FOUND -> ready when (and (= @payload.rule "engine-rule-count") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
-      LINT_INPUT_UNREAD -> ready
+      LINT_CALL_SITES_UNREAD -> ready
         (emit LINT_ANSWERED { status: 500, body: "lint engine-rule-count: the file could not be read or lowered" })
     }
 
@@ -98,14 +127,14 @@ orbital OrbLintEngineRuleCountOrbital {
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      LINT_REQUEST -> external { file : string! }
-        @description "Ask the lint input to read and lower this file."
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
         @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "The rule trait's findings for the file."
         @tier "internal"
-      LINT_INPUT_UNREAD -> external { file : string! }
-        @description "The lint input could not read or lower the file."
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
         @tier "internal"
     }
 
@@ -117,30 +146,17 @@ orbital OrbLintEngineRuleCountOrbital {
         @description "Run `orb lint engine-rule-count` with its arguments and working directory."
         @synonyms "orb lint engine-rule-count"
       OrbLintEngineRuleCount.LINT_FOUND -> LINT_FOUND
-      LINT_INPUT_UNREAD { file : string! }
-        @description "The lint input could not read or lower the file."
-      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
     }
   }
 
-  trait Versions = Input.traits.Versions {
-  }
-  trait Packs = Input.traits.Packs {
-  }
-  trait OrbLintInput = Input.traits.OrbLintInput {
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
     listens {
-      OrbLintEngineRuleCountCli.LINT_REQUEST -> LINT_REQUEST
-      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
-        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
-      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
-        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
-      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
-      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
-      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
-      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+      OrbLintEngineRuleCountCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
     }
   }
 
-  page boot as OrbLintEngineRuleCountOrbitalStart -> OrbLintEngineRuleCount, OrbLintEngineRuleCountCli, OrbLintInput, Packs, Versions
+  page boot as OrbLintEngineRuleCountOrbitalStart -> OrbLintEngineRuleCount, OrbLintEngineRuleCountCli, CallSiteInput
 }

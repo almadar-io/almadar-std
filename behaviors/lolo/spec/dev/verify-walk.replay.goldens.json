@@ -459,6 +459,102 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-step-answer-without-echoed-to-guarded-targets-is-joined-to-its-request-by-position",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "stepping",
+     "event": "WALK_STEPPED",
+     "payload": {
+      "result": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "firedArm": 0,
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "r",
+      "sent": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "state": "judging",
+      "emits": [
+       {
+        "event": "WALK_JUDGE_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-step-answer-with-a-different-row-count-fails-the-walk",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "stepping",
+     "event": "WALK_STEPPED",
+     "payload": {
+      "result": []
+     },
+     "entity": {
+      "id": "r",
+      "sent": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "WALK_JUDGE_NEXT"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -1,129 +1,5496 @@
 {
-  "atom": "connect/atoms/std-google-calendar.lolo",
-  "trait": "CalendarClient",
-  "cases": [
+ "atom": "connect/atoms/std-google-calendar.lolo",
+ "trait": "CalendarClient",
+ "note": "std-google-calendar over the composed std-http-client: the access token is a jwt-bearer grant (credential-connect) the host credential store signs and re-signs, carried by the CalendarHttp credential, never the event; a not-held token mints once and sends again; list and delete retry under std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500: 100, 500, 1500); every failure answers its action's failure event. Self-handled internal events (declared -> internal) are consumed by the trait and not listed, as in the firestore twin goldens.",
+ "cases": [
+  {
+   "id": "list-builds-a-window-get-and-hands-it-to-std-retry",
+   "steps": [
     {
-      "id": "create-event-with-a-start-that-is-not-a-date-and-no-end-is-refused",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Standup",
-            "start": "not-a-date",
-            "durationMinutes": 30
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "CALENDAR_CREATE_EVENT_FAILED",
-                "payload": {
-                  "message": "createEvent could not read `start` as a date or date-time to compute `end`"
-                }
-              }
-            ]
-          }
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
         }
+       }
       ]
-    },
-    {
-      "id": "create-event-with-an-end-reaches-the-request-without-reading-start",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Standup",
-            "start": "not-a-date",
-            "end": "2026-10-26T10:00:00Z"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "CALENDAR_REQUEST_FAILED",
-                "payload": {
-                  "key": "create"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "create-event-without-end-or-duration-is-refused",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Standup",
-            "start": "2026-10-26T09:00:00Z"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "CALENDAR_CREATE_EVENT_FAILED",
-                "payload": {
-                  "message": "createEvent requires `end` or a positive `durationMinutes`"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "create-event-with-a-date-time-start-and-duration-is-sent",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Standup",
-            "start": "2026-10-26T09:00:00Z",
-            "durationMinutes": 30
-          },
-          "expect": {
-            "state": "idle",
-            "emits": []
-          }
-        }
-      ]
-    },
-    {
-      "id": "create-event-with-an-all-day-start-is-sent",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Offsite",
-            "start": "2026-10-26"
-          },
-          "expect": {
-            "state": "idle",
-            "emits": []
-          }
-        }
-      ]
-    },
-    {
-      "id": "create-event-with-an-unreadable-all-day-start-is-refused",
-      "steps": [
-        {
-          "event": "CALENDAR_CREATE_EVENT",
-          "payload": {
-            "summary": "Offsite",
-            "start": "2026-13-45"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "CALENDAR_CREATE_EVENT_FAILED",
-                "payload": {
-                  "message": "createEvent could not read `start` as a date or date-time to compute `end`"
-                }
-              }
-            ]
-          }
-        }
-      ]
+     }
     }
-  ]
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "list-with-a-sync-token-drops-the-window-and-the-ordering",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "syncToken": "abc",
+      "timeMin": "2026-10-01T00:00:00Z",
+      "maxResults": 50
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "the-first-attempt-sends-the-list-request-in-the-dispatch-that-starts-it",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "list",
+         "method": "GET",
+         "target": "/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "create-event-with-a-date-time-start-and-duration-is-sent",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "2026-10-26T09:00:00Z",
+      "durationMinutes": 30
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiU3RhbmR1cCIsInN0YXJ0Ijp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTowMDowMFoifSwiZW5kIjp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTozMDowMFoifX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "create-event-with-an-all-day-start-is-sent",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Offsite",
+      "start": "2026-10-26"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiT2Zmc2l0ZSIsInN0YXJ0Ijp7ImRhdGUiOiIyMDI2LTEwLTI2In0sImVuZCI6eyJkYXRlIjoiMjAyNi0xMC0yNyJ9fQ==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "create-event-with-an-end-reaches-the-request-without-reading-start",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "not-a-date",
+      "end": "2026-10-26T10:00:00Z"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiU3RhbmR1cCIsInN0YXJ0Ijp7ImRhdGUiOiJub3QtYS1kYXRlIn0sImVuZCI6eyJkYXRlVGltZSI6IjIwMjYtMTAtMjZUMTA6MDA6MDBaIn19",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "update-event-patches-only-the-fields-present",
+   "steps": [
+    {
+     "event": "CALENDAR_UPDATE_EVENT",
+     "payload": {
+      "eventId": "e1",
+      "summary": "Moved"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "update",
+         "method": "PATCH",
+         "target": "/calendar/v3/calendars/primary/events/e1",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiTW92ZWQifQ==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "delete-event-hands-the-delete-to-std-retry",
+   "steps": [
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "free-busy-posts-the-window-and-calendar",
+   "steps": [
+    {
+     "event": "CALENDAR_FREE_BUSY",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-10-02T00:00:00Z"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "freeBusy:primary",
+         "method": "POST",
+         "target": "/calendar/v3/freeBusy",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0aW1lTWluIjoiMjAyNi0xMC0wMVQwMDowMDowMFoiLCJ0aW1lTWF4IjoiMjAyNi0xMC0wMlQwMDowMDowMFoiLCJpdGVtcyI6W3siaWQiOiJwcmltYXJ5In1dfQ==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "watch-registers-a-web-hook-channel-with-its-ttl",
+   "steps": [
+    {
+     "event": "CALENDAR_WATCH",
+     "payload": {
+      "channelId": "c1",
+      "address": "https://app.example/api/hooks/google-calendar",
+      "ttlSeconds": 3600
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "watch:c1",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events/watch",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJpZCI6ImMxIiwidHlwZSI6IndlYl9ob29rIiwiYWRkcmVzcyI6Imh0dHBzOi8vYXBwLmV4YW1wbGUvYXBpL2hvb2tzL2dvb2dsZS1jYWxlbmRhciIsInBhcmFtcyI6eyJ0dGwiOiIzNjAwIn19",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "stop-watch-posts-the-channel-and-resource",
+   "steps": [
+    {
+     "event": "CALENDAR_STOP_WATCH",
+     "payload": {
+      "channelId": "c1",
+      "resourceId": "r1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "stopWatch",
+         "method": "POST",
+         "target": "/calendar/v3/channels/stop",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJpZCI6ImMxIiwicmVzb3VyY2VJZCI6InIxIn0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "create-event-without-end-or-duration-is-refused",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "2026-10-26T09:00:00Z"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "createEvent requires `end` or a positive `durationMinutes`"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "create-event-with-an-unreadable-all-day-start-is-refused",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Offsite",
+      "start": "2026-13-45"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "createEvent could not read `start` as a date or date-time to compute `end`"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-list-reply-answers-the-flat-events",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-create-reply-answers-the-event-id-status-and-link",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJlMSIsICJzdGF0dXMiOiAiY29uZmlybWVkIiwgImh0bWxMaW5rIjogImh0dHBzOi8vY2FsL2UxIn0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_CREATED",
+        "payload": {
+         "id": "e1",
+         "status": "confirmed",
+         "htmlLink": "https://cal/e1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-update-reply-answers-the-event-id-and-status",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "update",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJlMSIsICJzdGF0dXMiOiAiY29uZmlybWVkIn0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_UPDATED",
+        "payload": {
+         "id": "e1",
+         "status": "confirmed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-delete-reply-answers-the-deleted-id",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_DELETED",
+        "payload": {
+         "id": "e1",
+         "deleted": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-free-busy-reply-answers-the-busy-slots",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjYWxlbmRhcnMiOiB7InByaW1hcnkiOiB7ImJ1c3kiOiBbeyJzdGFydCI6ICIyMDI2LTEwLTAxVDA5OjAwOjAwWiIsICJlbmQiOiAiMjAyNi0xMC0wMVQxMDowMDowMFoifV19fX0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_RESULT",
+        "payload": {
+         "busy": [
+          {
+           "start": "2026-10-01T09:00:00Z",
+           "end": "2026-10-01T10:00:00Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-watch-reply-answers-the-channel",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "watch:c1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJjMSIsICJyZXNvdXJjZUlkIjogInIxIiwgImV4cGlyYXRpb24iOiAiMTc5MDAwMDAwMDAwMCJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCHED",
+        "payload": {
+         "channelId": "c1",
+         "resourceId": "r1",
+         "expiration": "1790000000000"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-stop-watch-reply-answers-stopped",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "stopWatch",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_STOPPED",
+        "payload": {
+         "stopped": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-list-reply-that-is-not-json-fails-malformed",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "PGh0bWw+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY",
+         "message": "Google Calendar replied with a body that is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-create-reply-that-is-not-json-fails-malformed",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 200,
+      "headers": {},
+      "body": "PGh0bWw+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "code": "MALFORMED_REPLY",
+         "message": "Google Calendar replied with a body that is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-404-list-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-400-create-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-404-update-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "update",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-404-delete-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_DELETE_EVENT_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-400-freeBusy-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-400-watch-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "watch:c1",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-404-stopWatch-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "stopWatch",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_STOP_WATCH_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-503-list-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 503,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDUwMywgIm1lc3NhZ2UiOiAiQmFja2VuZCBFcnJvciIsICJlcnJvcnMiOiBbeyJtZXNzYWdlIjogIkJhY2tlbmQgRXJyb3IiLCAiZG9tYWluIjogImdsb2JhbCJ9XX19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "list",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-429-delete-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 429,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQyOSwgIm1lc3NhZ2UiOiAiUmF0ZSIsICJlcnJvcnMiOiBbeyJtZXNzYWdlIjogIlJhdGUgTGltaXQgRXhjZWVkZWQiLCAiZG9tYWluIjogImdsb2JhbCJ9XX19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "delete:e1",
+         "error": "Rate Limit Exceeded"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-408-list-reply-is-retryable",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 408,
+      "headers": {},
+      "body": "dGltZW91dA=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "list",
+         "error": "timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "control-a-404-is-not-retryable",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-on-list-fails-with-the-last-api-message",
+   "steps": [
+    {
+     "event": "CALENDAR_GAVE_UP",
+     "payload": {
+      "key": "list",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "CalendarCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-on-delete-fails-with-the-last-api-message",
+   "steps": [
+    {
+     "event": "CALENDAR_GAVE_UP",
+     "payload": {
+      "key": "delete:e1",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_DELETE_EVENT_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "CalendarCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-first-list-attempt-is-retried",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "list",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "list",
+         "error": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-the-second-list-attempt-is-retried",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "list",
+      "error": "the peer closed before the response was whole",
+      "kind": "io"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "list",
+         "error": "the peer closed before the response was whole"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list",
+      "method": "GET",
+      "target": "/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
+      "body": "",
+      "mintTried": false,
+      "attempt": 2
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-fourth-list-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "list",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_CANCEL",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list",
+      "method": "GET",
+      "target": "/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
+      "body": "",
+      "mintTried": false,
+      "attempt": 3
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-the-fourth-delete-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "delete:e1",
+      "error": "reset",
+      "kind": "io"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_CANCEL",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "CALENDAR_DELETE_EVENT_FAILED",
+        "payload": {
+         "message": "reset"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "delete:e1",
+      "method": "DELETE",
+      "target": "/calendar/v3/calendars/primary/events/e1",
+      "body": "",
+      "mintTried": false,
+      "attempt": 3
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-create-fails-without-retrying",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "create",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-update-fails-without-retrying",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "update",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-freeBusy-fails-without-retrying",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-watch-fails-without-retrying",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "watch:c1",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-stopWatch-fails-without-retrying",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "stopWatch",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_STOP_WATCH_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-create-fails-with-its-text",
+   "steps": [
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "create",
+      "error": "bad certificate",
+      "kind": "tls"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "bad certificate"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-token-mints-once-through-the-jwt-bearer-grant",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "create",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": false,
+      "attempt": 0
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.tokenCache",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccount",
+         "issuer": "@config.serviceAccountEmail",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/calendar",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-held-request-again",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "svc"
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": true,
+      "attempt": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiU3RhbmR1cCIsInN0YXJ0Ijp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTowMDowMFoifSwiZW5kIjp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTozMDowMFoifX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-create-fails-not-configured-instead-of-looping",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "create",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-list-cancels-the-retry-and-fails-not-configured",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "list",
+      "error": "",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_CANCEL",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list",
+      "method": "GET",
+      "target": "/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-fails",
+   "steps": [
+    {
+     "event": "CALENDAR_CONNECTED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "Google Calendar did not connect the service account"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_HTTP_SEND"
+      ]
+     },
+     "trait": "CalendarCall",
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "an-unavailable-store-fails-not-configured",
+   "steps": [
+    {
+     "event": "CALENDAR_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN."
+        }
+       }
+      ]
+     },
+     "trait": "CalendarCall",
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "an-invalid-grant-fails-with-its-text",
+   "steps": [
+    {
+     "event": "CALENDAR_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant: Invalid JWT Signature.",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant: Invalid JWT Signature."
+        }
+       }
+      ]
+     },
+     "trait": "CalendarCall",
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-failed-mint-on-list-cancels-the-retry",
+   "steps": [
+    {
+     "event": "CALENDAR_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_CANCEL",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant"
+        }
+       }
+      ]
+     },
+     "trait": "CalendarCall",
+     "entity": {
+      "id": "list",
+      "method": "GET",
+      "target": "/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "control-a-held-token-never-asks-the-store",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "2026-10-26T09:00:00Z",
+      "durationMinutes": 30
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create",
+         "method": "POST",
+         "target": "/calendar/v3/calendars/primary/events",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJzdW1tYXJ5IjoiU3RhbmR1cCIsInN0YXJ0Ijp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTowMDowMFoifSwiZW5kIjp7ImRhdGVUaW1lIjoiMjAyNi0xMC0yNlQwOTozMDowMFoifX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJlMSIsICJzdGF0dXMiOiAiY29uZmlybWVkIiwgImh0bWxMaW5rIjogImh0dHBzOi8vY2FsL2UxIn0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_CREATED",
+        "payload": {
+         "id": "e1",
+         "status": "confirmed",
+         "htmlLink": "https://cal/e1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-token-asks-the-store-once-then-the-connected-answer-sends-again",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "create",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": false,
+      "attempt": 0
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.tokenCache",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccount",
+         "issuer": "@config.serviceAccountEmail",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/calendar",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "two-retried-calls-keep-independent-retry-runs",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ],
+   "note": "list and delete are both in flight under std-retry; each key has its own run, so the second start schedules its own first retry (attempt 1, 100 ms) instead of being ignored by a run busy with the first."
+  },
+  {
+   "id": "success-list-answers-its-own-result-while-delete-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_DELETED",
+        "payload": {
+         "id": "e1",
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-list-reply-fails-only-its-own-call-while-delete-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_LIST_EVENTS_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_DELETED",
+        "payload": {
+         "id": "e1",
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-list-timeout-is-answered-on-its-own-route-while-delete-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "list",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "list",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_DELETED",
+        "payload": {
+         "id": "e1",
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-create-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJlMSIsICJzdGF0dXMiOiAiY29uZmlybWVkIiwgImh0bWxMaW5rIjogImh0dHBzOi8vY2FsL2UxIn0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_CREATED",
+        "payload": {
+         "id": "e1",
+         "status": "confirmed",
+         "htmlLink": "https://cal/e1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-create-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "create",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-create-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "create",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-update-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "update",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJlMSIsICJzdGF0dXMiOiAiY29uZmlybWVkIn0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_UPDATED",
+        "payload": {
+         "id": "e1",
+         "status": "confirmed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-update-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "update",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-update-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "update",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_UPDATE_EVENT_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-delete-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENT_DELETED",
+        "payload": {
+         "id": "e1",
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-delete-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "delete:e1",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_DELETE_EVENT_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-delete-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_DELETE_EVENT",
+     "payload": {
+      "eventId": "e1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "delete:e1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "delete:e1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "delete:e1",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_FAILED",
+        "payload": {
+         "key": "delete:e1",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-freeBusy-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjYWxlbmRhcnMiOiB7InByaW1hcnkiOiB7ImJ1c3kiOiBbeyJzdGFydCI6ICIyMDI2LTEwLTAxVDA5OjAwOjAwWiIsICJlbmQiOiAiMjAyNi0xMC0wMVQxMDowMDowMFoifV19fX0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_RESULT",
+        "payload": {
+         "busy": [
+          {
+           "start": "2026-10-01T09:00:00Z",
+           "end": "2026-10-01T10:00:00Z"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-freeBusy-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-freeBusy-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-watch-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "watch:c1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJjMSIsICJyZXNvdXJjZUlkIjogInIxIiwgImV4cGlyYXRpb24iOiAiMTc5MDAwMDAwMDAwMCJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCHED",
+        "payload": {
+         "channelId": "c1",
+         "resourceId": "r1",
+         "expiration": "1790000000000"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_WATCH_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-watch-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "watch:c1",
+      "status": 400,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwMCwgIm1lc3NhZ2UiOiAiQmFkIFJlcXVlc3QiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJJbnZhbGlkIHZhbHVlIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "message": "Invalid value"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED",
+       "CALENDAR_WATCHED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-watch-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "watch:c1",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "success-stopWatch-answers-its-own-result-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "stopWatch",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_WATCH_STOPPED",
+        "payload": {
+         "stopped": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-stopWatch-reply-fails-only-its-own-call-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "stopWatch",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_STOP_WATCH_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-stopWatch-timeout-is-answered-on-its-own-route-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "stopWatch",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_STOP_WATCH_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpdGVtcyI6IFt7ImlkIjogImUxIiwgInN1bW1hcnkiOiAiU3RhbmR1cCIsICJkZXNjcmlwdGlvbiI6ICJkIiwgImxvY2F0aW9uIjogImwiLCAic3RhcnQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MDA6MDBaIn0sICJlbmQiOiB7ImRhdGVUaW1lIjogIjIwMjYtMTAtMjZUMDk6MzA6MDBaIn0sICJzdGF0dXMiOiAiY29uZmlybWVkIiwgInVwZGF0ZWQiOiAiMjAyNi0xMC0yNVQwMDowMDowMFoifV0sICJuZXh0U3luY1Rva2VuIjogInRvayJ9"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_EVENTS_LISTED",
+        "payload": {
+         "events": [
+          {
+           "id": "e1",
+           "summary": "Standup",
+           "description": "d",
+           "location": "l",
+           "start": "2026-10-26T09:00:00Z",
+           "end": "2026-10-26T09:30:00Z",
+           "status": "confirmed",
+           "updated": "2026-10-25T00:00:00Z"
+          }
+         ],
+         "nextSyncToken": "tok"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "failure-two-transport-kinds-reach-two-routes-while-list-is-in-flight",
+   "steps": [
+    {
+     "event": "CALENDAR_LIST_EVENTS",
+     "payload": {
+      "timeMin": "2026-10-01T00:00:00Z",
+      "timeMax": "2026-11-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_RETRY_START",
+        "payload": {
+         "key": "list"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_DELETE_EVENT_FAILED",
+       "CALENDAR_EVENTS_LISTED",
+       "CALENDAR_EVENT_CREATED",
+       "CALENDAR_EVENT_DELETED",
+       "CALENDAR_EVENT_UPDATED",
+       "CALENDAR_FREE_BUSY_FAILED",
+       "CALENDAR_FREE_BUSY_RESULT",
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_STOP_WATCH_FAILED",
+       "CALENDAR_UPDATE_EVENT_FAILED",
+       "CALENDAR_WATCHED",
+       "CALENDAR_WATCH_FAILED",
+       "CALENDAR_WATCH_STOPPED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "create",
+      "error": "refused",
+      "kind": "refused"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_CREATE_EVENT_FAILED",
+        "payload": {
+         "message": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_LIST_EVENTS_FAILED",
+       "CALENDAR_RETRY_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "CalendarHttp",
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "freeBusy:primary",
+      "error": "reset",
+      "kind": "io"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_FREE_BUSY_FAILED",
+        "payload": {
+         "message": "reset"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_CREATE_EVENT_FAILED",
+       "CALENDAR_LIST_EVENTS_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "two-not-held-calls-each-mint-for-their-own-row",
+   "steps": [
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "create",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "entity": {
+      "id": "create",
+      "method": "POST",
+      "target": "/calendar/v3/calendars/primary/events",
+      "body": "{\"summary\":\"Standup\",\"start\":{\"dateTime\":\"2026-10-26T09:00:00Z\"},\"end\":{\"dateTime\":\"2026-10-26T09:30:00Z\"}}",
+      "mintTried": false,
+      "attempt": 0
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.tokenCache",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccount",
+         "issuer": "@config.serviceAccountEmail",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/calendar",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "CalendarCall",
+     "event": "CALENDAR_REQUEST_FAILED",
+     "payload": {
+      "key": "update",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "entity": {
+      "id": "update",
+      "method": "PATCH",
+      "target": "/calendar/v3/calendars/primary/events/e1",
+      "body": "{}",
+      "mintTried": false,
+      "attempt": 0
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.tokenCache",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccount",
+         "issuer": "@config.serviceAccountEmail",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/calendar",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ],
+   "note": "each call asks the store itself; one call hearing the answer never settles the other call."
+  },
+  {
+   "id": "control-a-lone-call-reaches-the-wire-under-its-key",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "2026-10-26T09:00:00Z",
+      "durationMinutes": 30
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CALENDAR_HTTP_SEND",
+        "payload": {
+         "key": "create"
+        }
+       },
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "create"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CALENDAR_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "control-two-calls-under-two-keys-are-never-refused",
+   "steps": [
+    {
+     "event": "CALENDAR_CREATE_EVENT",
+     "payload": {
+      "summary": "Standup",
+      "start": "2026-10-26T09:00:00Z",
+      "durationMinutes": 30
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "create"
+        }
+       },
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "create",
+         "kind": "denied"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KEY_REFUSED"
+      ]
+     }
+    },
+    {
+     "event": "CALENDAR_UPDATE_EVENT",
+     "payload": {
+      "eventId": "e1",
+      "summary": "Moved"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "update"
+        }
+       },
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "update",
+         "kind": "denied"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KEY_REFUSED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ],
+   "note": "the replay host has no os host, so each call ends denied on its own row; a refused kind would mean the second call met the first call's row."
+  },
+  {
+   "id": "retry-run-schedules-100-ms-after-failed-attempt-1",
+   "steps": [
+    {
+     "trait": "CalendarRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list",
+      "key": "list",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "list",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 1,
+         "delayMs": 100
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "retry-run-schedules-500-ms-after-failed-attempt-2",
+   "steps": [
+    {
+     "trait": "CalendarRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list",
+      "key": "list",
+      "attempt": 2
+     },
+     "payload": {
+      "key": "list",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 2,
+         "delayMs": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "retry-run-schedules-1500-ms-after-failed-attempt-3",
+   "steps": [
+    {
+     "trait": "CalendarRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list",
+      "key": "list",
+      "attempt": 3
+     },
+     "payload": {
+      "key": "list",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list",
+         "attempt": 3,
+         "delayMs": 1500
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  },
+  {
+   "id": "retry-run-gives-up-after-the-fourth-attempt",
+   "steps": [
+    {
+     "trait": "CalendarRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list",
+      "key": "list",
+      "attempt": 4
+     },
+     "payload": {
+      "key": "list",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GAVE_UP",
+        "payload": {
+         "key": "list",
+         "attempts": 4
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_SCHEDULED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "CalendarCall",
+    "CalendarKeyed",
+    "CalendarHttp",
+    "CalendarTimeout",
+    "CalendarRetry"
+   ]
+  }
+ ]
 }

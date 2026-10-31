@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-30T20:31:23.347Z",
+  "generated": "2026-10-31T10:43:51.160Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -7288,7 +7288,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Ask the host's credential store to exchange an OAuth code at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. credential, clientId and clientSecret are secret knobs; code and verifier are the single-use values, redacted in the journal. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored private key signingKey names; iss, sub, scope, aud and ttlSeconds are declared) or json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. A jwt-bearer credential is re-signed by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7355,16 +7355,46 @@
               "scopes": {
                 "kind": "array",
                 "of": "string"
-              }
+              },
+              "refreshCredential": "string",
+              "signingKey": "string",
+              "issuer": "string",
+              "subject": "string",
+              "audience": "string",
+              "ttlSeconds": "number",
+              "clientIdField": "string",
+              "clientSecretField": "string",
+              "accessField": "string",
+              "refreshField": "string",
+              "expiresInField": "string",
+              "refreshEndpoint": "string",
+              "refreshBodyField": "string"
             },
             "optional": [
               "scope",
+              "code",
+              "redirectUri",
               "verifier",
+              "clientId",
               "clientSecret",
-              "scopes"
+              "clientAuth",
+              "scopes",
+              "refreshCredential",
+              "signingKey",
+              "issuer",
+              "subject",
+              "audience",
+              "ttlSeconds",
+              "clientIdField",
+              "clientSecretField",
+              "accessField",
+              "refreshField",
+              "expiresInField",
+              "refreshEndpoint",
+              "refreshBodyField"
             ]
           },
-          "description": "{ credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? }"
+          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, issuer?, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? }"
         },
         {
           "name": "options",
@@ -7481,8 +7511,7 @@
                 },
                 "optional": [
                   "last4"
-                ],
-                "open": false
+                ]
               }
             },
             "env": {
@@ -9981,7 +10010,7 @@
     "hmac/sha256": {
       "category": "std-codec",
       "minArity": 3,
-      "maxArity": 3,
+      "maxArity": 4,
       "returnType": {
         "kind": "union",
         "of": [
@@ -9992,7 +10021,7 @@
           }
         ]
       },
-      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a key, as lower-case hex or standard base64. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the key. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held. Runs only in the kernel.",
+      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a key, as lower-case hex or standard base64. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the key. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held. The optional literal `prefix` is put in front of the credential value to form the key (the SigV4 chain starts at HMAC(\"AWS4\" + secret, date)); it is a literal string, never a computed value, and the credential value never enters program state. Runs only in the kernel.",
       "module": "hmac",
       "visual": {
         "form": "block"
@@ -10024,6 +10053,13 @@
             ]
           },
           "description": "Digest encoding: \"hex\" or \"base64\""
+        },
+        {
+          "name": "prefix",
+          "type": "string",
+          "description": "A literal string put before the credential value to form the key, such as \"AWS4\"; default: none",
+          "optional": true,
+          "defaultValue": ""
         }
       ],
       "examples": [
@@ -10034,7 +10070,7 @@
     "hmac/sha256-bytes": {
       "category": "std-codec",
       "minArity": 3,
-      "maxArity": 3,
+      "maxArity": 4,
       "returnType": {
         "kind": "union",
         "of": [
@@ -10045,7 +10081,7 @@
           }
         ]
       },
-      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a bytes key that is a program value, as lower-case hex or standard base64: a key derived inside the program, such as one step of a SigV4 signing chain. A key that comes from a credential goes through hmac/sha256, never here. An operand that is not canonical padded base64 answers null.",
+      "description": "HMAC-SHA256 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64: a key derived inside the program, such as one step of a SigV4 signing chain. The message is the UTF-8 of a string, or bytes when input is \"bytes\" (RFC 8291 key derivation). A key that comes from a credential goes through hmac/sha256, never here. An operand that is not canonical padded base64, or an unknown input, answers null.",
       "module": "hmac",
       "visual": {
         "form": "block"
@@ -10058,8 +10094,14 @@
         },
         {
           "name": "message",
-          "type": "string",
-          "description": "The message to sign"
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
         },
         {
           "name": "encoding",
@@ -10077,6 +10119,25 @@
             ]
           },
           "description": "Digest encoding: \"hex\" or \"base64\""
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "text"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "Message kind: \"text\" (default) or \"bytes\"",
+          "optional": true,
+          "defaultValue": "text"
         }
       ],
       "examples": [
@@ -25421,7 +25482,7 @@
         "kind": "array",
         "of": "PlayedStep"
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references).",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references) With `options.renderProps: true` (needs `render: true`) each rendered slot also carries `props`, the slot's content exactly as the kernel resolved it for a host to paint (`@entity` read after the step's `set`s, `let` bindings in scope, calls evaluated), and `fault` (`{ code, error }`) when the slot's repaint failed and it keeps its last paint.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -25461,6 +25522,7 @@
             "fields": {
               "key": "string",
               "render": "boolean",
+              "renderProps": "boolean",
               "live": "boolean",
               "report": {
                 "kind": "literal",
@@ -25484,7 +25546,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `live: true` runs the requests on the native host; `report: \"raw\"` answers the kernel's cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)",
+          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `renderProps: true` (with `render: true`) adds each slot's resolved `props`; `live: true` runs the requests on the native host; `report: \"raw\"` answers the kernel's cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)",
           "optional": true
         }
       ],
