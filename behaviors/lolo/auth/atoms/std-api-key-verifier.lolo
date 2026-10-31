@@ -77,10 +77,10 @@ orbital ApiKeyVerifierOrbital {
       KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (= @payload.data.revoked true))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "revoked", message: "revoked API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (object/has @payload.data "expiresAt") (>= (time/diff @now @payload.data.expiresAt "ms") 0))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (validate/required @payload.data.expiresAt) (>= (time/diff @now @payload.data.expiresAt "ms") 0))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "expired", message: "expired API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (object/has @payload.data "expiresAt") (>= (time/diff @now @payload.data.expiresAt "ms") 0))))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (validate/required @payload.data.expiresAt) (>= (time/diff @now @payload.data.expiresAt "ms") 0))))
         (emit API_KEY_VERIFIED { requestId: @entity.requestId, owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
         (emit KEY_PUMP {})
     }

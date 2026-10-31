@@ -295,10 +295,10 @@ orbital CalendarOrbital {
         (emit CALENDAR_RETRY_FAILED { key: (as @payload.key CallKey), error: (let ((eo (json/parse @payload.body CalendarErrorReply)) (es (json/parse @payload.body CalendarErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
       CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (!= @config.subject ""))
         (set @entity.mintTried true)
-        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, issuer: @config.serviceAccountEmail, subject: @config.subject, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
+        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, subject: @config.subject, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
       CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (= @config.subject ""))
         (set @entity.mintTried true)
-        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, issuer: @config.serviceAccountEmail, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
+        (credential-connect { credential: @config.tokenCache, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccount, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: CALENDAR_CONNECTED, failure: CALENDAR_CONNECT_FAILED } })
       CALENDAR_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true) (= @payload.key "list"))
         (emit CALENDAR_RETRY_CANCEL { key: (as @entity.id CallKey) })
         (emit CALENDAR_LIST_EVENTS_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: calendar. Set GOOGLE_CALENDAR_SA_KEY / GOOGLE_CALENDAR_SUBJECT / GOOGLE_CALENDAR_ID / GOOGLE_CALENDAR_CHANNEL_TOKEN." })
@@ -624,14 +624,9 @@ orbital CalendarOrbital {
         @synonyms "oauth token url, jwt exchange endpoint"
         @tier "infra"
       serviceAccount : secret = "GOOGLE_CALENDAR_SA_KEY"
-        @label "Service account signing key"
-        @description "Name of the credential holding the service account's PKCS#8 PEM RSA private key; the credential store signs the RS256 assertion with it."
+        @label "Service account credential"
+        @description "Name of the stored service-account JSON credential; the credential store signs the RS256 assertion with its private key, taking iss from client_email, sub from the subject knob (else client_email) and kid from private_key_id."
         @synonyms "service account key, google credential, calendar key"
-        @tier "infra"
-      serviceAccountEmail : string
-        @label "Service account email"
-        @description "The service account's client_email, the assertion issuer; the stored credential is the PEM key only."
-        @synonyms "client email, service account address, assertion issuer"
         @tier "infra"
       tokenCache : secret = "GOOGLE_CALENDAR_ACCESS_TOKEN"
         @label "Access token credential"

@@ -9,7 +9,7 @@ orbital GzipOrbital {
     id : string!
     size : number = 0
     crc : number = 0
-    result : GzipResult
+    result : GzipResult?
   }
   trait Gunzip -> GzipRun [client] {
     initial: idle
@@ -27,6 +27,10 @@ orbital GzipOrbital {
       GZIP -> idle
         (set @entity.result (gzip/compress @payload.data { result: true, level: @config.level }))
         (set @entity.size (bytes/length @payload.data))
+        (emit GZIP_CHECKED {})
+      GZIP_CHECKED -> idle when (= @entity.result null)
+        (emit GZIP_REFUSED { reason: "the encoder refused the options (level)" })
+      GZIP_CHECKED -> idle when (and (!= @entity.result null) (default @entity.result.ok false))
         ;; GzipResult.crc is optional in the type; the op fills it on every compress result, so a missing one is refused as a checksum failure.
         (let ((crc @entity.result.crc))
           (if (= @crc null)
@@ -34,10 +38,14 @@ orbital GzipOrbital {
             (do
               (set @entity.crc @crc)
               (emit GZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @crc }))))
+      GZIP_CHECKED -> idle when (and (!= @entity.result null) (not (default @entity.result.ok false)))
+        (emit GZIP_REFUSED { reason: (default @entity.result.code "") })
       GUNZIP -> idle
         (set @entity.result (gzip/decompress @payload.data (if (= @payload.maxBytes null) @config.maxBytes @payload.maxBytes) { result: true }))
         (emit GUNZIP_CHECKED {})
-      GUNZIP_CHECKED -> idle when @entity.result.ok
+      GUNZIP_CHECKED -> idle when (= @entity.result null)
+        (emit GZIP_REFUSED { reason: "the decoder refused the input or the maxBytes cap" })
+      GUNZIP_CHECKED -> idle when (and (!= @entity.result null) (default @entity.result.ok false))
         (when (!= @entity.result.data null)
           (do
             (set @entity.size (bytes/length @entity.result.data))
@@ -47,10 +55,11 @@ orbital GzipOrbital {
                 (do
                   (set @entity.crc @crc)
                   (emit GUNZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @crc }))))))
-      GUNZIP_CHECKED -> idle when (not (default @entity.result.ok false))
+      GUNZIP_CHECKED -> idle when (and (!= @entity.result null) (not (default @entity.result.ok false)))
         (emit GZIP_REFUSED { reason: (default @entity.result.code "") })
     }
     emits {
+      GZIP_CHECKED -> internal {}
       GUNZIP_CHECKED -> internal {}
       GUNZIP_ANSWERED -> external { data : bytes! size : number! crc : number! }
         @description "The unpacked bytes of every member, their length and the CRC32 of the last member."

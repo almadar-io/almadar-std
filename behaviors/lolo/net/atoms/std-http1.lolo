@@ -136,10 +136,12 @@ orbital Http1Orbital {
         (os/tcp-listen @config.host { anchor: { env: "PORT" } } { key: "http1" emit: { success: LISTENING failure: LISTEN_FAILED onMessage: CONN_ACCEPTED } })
       PORT_UNREAD -> booting
         (emit HTTP1_LISTEN_FAILED { error: @payload.error, kind: @payload.kind })
-      LISTENING -> serving
+      LISTENING -> serving when (and (validate/required @payload.port) (>= @payload.port 0))
         (set @entity.host @payload.address)
         (set @entity.port @payload.port)
         (emit HTTP1_LISTENING { host: @payload.address, port: @payload.port })
+      LISTENING -> booting when (not (and (validate/required @payload.port) (>= @payload.port 0)))
+        (emit HTTP1_LISTEN_FAILED { error: "listener reported a missing or negative port", kind: "invalid-port" })
       LISTEN_FAILED -> booting
         (emit HTTP1_LISTEN_FAILED { error: @payload.error, kind: @payload.kind })
     }

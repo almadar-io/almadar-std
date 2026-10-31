@@ -1,0 +1,657 @@
+{
+ "atom": "auth/atoms/std-dev-persona-picker.lolo",
+ "trait": "PersonaPicker",
+ "note": "In-app dev persona picker: list, refusal route, pick, sign-in ask with the token, failures. The server answer is played as SIGNED_IN { subject } / SIGN_IN_REFUSED { error, kind }.",
+ "cases": [
+  {
+   "id": "start-asks-for-the-personas",
+   "note": "INIT asks std-dev-personas for the list and waits",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "idle",
+     "event": "INIT",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PERSONAS_REQUESTED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-200-list-routes-the-personas",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"success\":true,\"personas\":[{\"id\":\"ada\",\"name\":\"Ada\"}],\"source\":\"identity-entity\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "LIST_READ",
+        "payload": {
+         "personas": [
+          {
+           "id": "ada",
+           "name": "Ada"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "LIST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-200-empty-list-routes-no-personas",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"success\":true,\"personas\":[],\"source\":\"none\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "LIST_READ",
+        "payload": {
+         "personas": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-404-refusal-goes-the-failure-route",
+   "note": "the 404 of a deployment is a refusal with its reason, never an empty list",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 404,
+      "body": "{\"success\":false,\"error\":\"no dev personas: the Auth emulator is not configured\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "LIST_REFUSED",
+        "payload": {
+         "message": "no dev personas: the Auth emulator is not configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LIST_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refusal-without-a-readable-body-names-the-default",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 500,
+      "body": "oops"
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "LIST_REFUSED",
+        "payload": {
+         "message": "The personas were refused."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-200-with-an-unreadable-body-is-refused",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "oops"
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "LIST_REFUSED",
+        "payload": {
+         "message": "The personas answer could not be read."
+        }
+       }
+      ],
+      "neverEmits": [
+       "LIST_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "personas-read-show-the-list",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_READ",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-personas-read-show-the-empty-state",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_READ",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "personas": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "empty"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-list-shows-the-empty-state",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "listing",
+     "event": "LIST_REFUSED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "message": "refused"
+     },
+     "expect": {
+      "fired": true,
+      "state": "empty"
+     }
+    }
+   ]
+  },
+  {
+   "id": "picking-asks-the-persona-sign-in",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "ready",
+     "event": "PERSONA_PICKED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "id": "ada"
+     },
+     "expect": {
+      "fired": true,
+      "state": "signing",
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REQUESTED",
+        "payload": {
+         "id": "ada"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-answer-hands-the-token-to-the-server-sign-in",
+   "note": "the token goes straight into the host ask; it is stored nowhere",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "SIGN_IN_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"success\":true,\"customToken\":\"aaa.bbb.\",\"authEmulatorHost\":\"127.0.0.1:9099\",\"projectId\":\"demo-almadar\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "signing",
+      "emits": [
+       {
+        "event": "TOKEN_SIGN_IN_REQUESTED",
+        "payload": {
+         "token": "aaa.bbb."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-200-without-a-token-fails-and-asks-nothing",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "SIGN_IN_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"success\":true}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "failed",
+      "neverEmits": [
+       "TOKEN_SIGN_IN_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-404-sign-in-answer-shows-the-failure",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "SIGN_IN_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 404,
+      "body": "{\"success\":false,\"error\":\"no persona with that id\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "failed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-server-signing-the-session-in-shows-who",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "SIGNED_IN",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "subject": "ada"
+     },
+     "expect": {
+      "fired": true,
+      "state": "signedIn"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-sign-in-refusal-shows-the-failure",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "SIGN_IN_REFUSED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "error": "the emulator token is not a Verified",
+      "kind": "unsealed"
+     },
+     "expect": {
+      "fired": true,
+      "state": "failed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "retry-after-a-failure-asks-again",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "failed",
+     "event": "RETRY",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PERSONAS_REQUESTED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "retry-from-the-empty-state-asks-again",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "empty",
+     "event": "RETRY",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PERSONAS_REQUESTED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "switching-persona-lists-again",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signedIn",
+     "event": "SWITCH_PERSONA",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PERSONAS_REQUESTED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-list-answer-while-signing-is-ignored",
+   "note": "",
+   "steps": [
+    {
+     "trait": "PersonaPicker",
+     "from": "signing",
+     "event": "LIST_ANSWERED",
+     "entity": {
+      "id": "p",
+      "personas": [
+       {
+        "id": "ada",
+        "name": "Ada"
+       }
+      ],
+      "selectedId": "ada",
+      "message": ""
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"success\":true,\"personas\":[{\"id\":\"ada\",\"name\":\"Ada\"}],\"source\":\"identity-entity\"}"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  }
+ ]
+}

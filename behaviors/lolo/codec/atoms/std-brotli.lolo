@@ -3,12 +3,14 @@ app std-brotli [
   description: "Pack bytes through the brotli crate. BROTLI { data } answers BROTLI_ANSWERED { data, size, packed }; quality (0–11) and window (10–24) select the encoder parameters."
 ]
 uses Spec from "almadar-std/brotli"
+type BrotliResult = { ok : boolean!, data : bytes, crc : number, code : string }
 orbital BrotliOrbital {
   entity BrotliRun [runtime] {
     id : string!
     data : bytes = ""
     size : number = 0
     packed : number = 0
+    result : BrotliResult?
   }
   trait Brotli -> BrotliRun [client] {
     initial: idle
@@ -25,11 +27,24 @@ orbital BrotliOrbital {
     state idle {
       BROTLI -> idle
         (set @entity.size (bytes/length @payload.data))
-        (set @entity.data (brotli/compress @payload.data { result: false, quality: @config.quality, window: @config.window }))
-        (set @entity.packed (bytes/length @entity.data))
-        (emit BROTLI_ANSWERED { data: @entity.data, size: @entity.size, packed: @entity.packed })
+        (set @entity.result (brotli/compress @payload.data { result: true, quality: @config.quality, window: @config.window }))
+        (emit BROTLI_CHECKED {})
+      BROTLI_CHECKED -> idle when (= @entity.result null)
+        (emit BROTLI_REFUSED { reason: "the encoder refused the options (quality/window)" })
+      BROTLI_CHECKED -> idle when (and (!= @entity.result null) (default @entity.result.ok false))
+        (when (!= @entity.result.data null)
+          (do
+            (set @entity.data @entity.result.data)
+            (set @entity.packed (bytes/length @entity.data))
+            (emit BROTLI_ANSWERED { data: @entity.data, size: @entity.size, packed: @entity.packed })))
+      BROTLI_CHECKED -> idle when (and (!= @entity.result null) (not (default @entity.result.ok false)))
+        (emit BROTLI_REFUSED { reason: (default @entity.result.code "") })
     }
     emits {
+      BROTLI_CHECKED -> internal {}
+      BROTLI_REFUSED -> external { reason : string! }
+        @description "Why the encoder refused the quality or window."
+        @tier "primary"
       BROTLI_ANSWERED -> external { data : bytes! size : number! packed : number! }
         @description "The brotli stream, the input length and the stream length."
         @tier "primary"

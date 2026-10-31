@@ -179,13 +179,13 @@ orbital OrbEvaluateOrbital {
       EVALUATE_ENV -> idle when (= (json/parse (str/trim @entity.text) EvaluateJson) null)
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: "Error: JSON parse error: invalid JSON" })
       EVALUATE_ENV -> evaluating when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (= (str/trim (default @payload.value "")) ""))
-        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasViewer: true })
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasIdentity: true })
       EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (not (json/valid (str/trim (default @payload.value ""))))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona is not valid JSON: " (str/trim (default @payload.value ""))) })
       EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (not (let ((u (json/parse (str/trim (default @payload.value "")) EvaluateObject))) (if (= @u null) false (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv ""))))))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona needs an \"id\" (or \"uid\"): " (str/trim (default @payload.value ""))) })
       EVALUATE_ENV -> evaluating when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (str/startsWith (str/trim (default @payload.value "")) "{") (json/valid (str/trim (default @payload.value ""))) (!= (json/parse (str/trim (default @payload.value "")) EvaluateObject) null) (let ((u (json/parse (str/trim (default @payload.value "")) EvaluateObject))) (if (= @u null) false (let ((idv (if (!= (object/get @u "id") null) (object/get @u "id") (object/get @u "uid")))) (and (validate/string @idv) (!= @idv "")))))))
-        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasViewer: true, viewer: (json/parse (str/trim (default @payload.value "")) EvaluateObject) })
+        (emit EVALUATE_EVAL { expr: (json/parse (str/trim @entity.text) EvaluateJson), entity: (if @entity.hasEntity (default (json/parse @entity.entityText EvaluateObject) {}) {}), payload: (if @entity.hasPayload (default (json/parse @entity.payloadText EvaluateObject) {}) {}), hasIdentity: true, identity: (json/parse (str/trim (default @payload.value "")) EvaluateObject) })
       EVALUATE_ENV -> idle when (and (!= (json/parse (str/trim @entity.text) EvaluateJson) null) (and (!= (str/trim (default @payload.value "")) "") (not (str/startsWith (str/trim (default @payload.value "")) "{"))))
         (emit EVALUATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: Persona \"" (str/trim (default @payload.value "")) "\" is a bare id/role, which resolves against an app's declared [identity] roster — this schema-less probe accepts only the JSON persona form (e.g. {\"id\":\"member-1\",\"role\":\"member\"}).") })
     }
@@ -236,8 +236,8 @@ orbital OrbEvaluateOrbital {
         expr : EvaluateJson
         entity : Map string EvaluateJson?
         payload : Map string EvaluateJson?
-        hasViewer : boolean!
-        viewer : Map string EvaluateJson?
+        hasIdentity : boolean!
+        identity : Map string EvaluateJson?
       }
         @description "Internal: hand the expression and bindings to std-orb-eval."
         @tier "internal"

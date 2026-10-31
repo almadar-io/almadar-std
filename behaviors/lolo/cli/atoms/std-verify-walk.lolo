@@ -220,7 +220,7 @@ orbital VerifyWalkOrbital {
         (set @entity.sent (array/map @payload.rows (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"), targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))) })))
         (program/step @entity.program (array/map @payload.rows (fn r
           { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"),
-            payload: (object/get @r "payload"), viewer: @entity.viewer
+            payload: (object/get @r "payload"), identity: @entity.viewer
           })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> stepping when (!= (array/len @payload.result) (array/len @entity.sent))
         (emit WALK_FAILED { error: "the step answer does not match the rows sent" })

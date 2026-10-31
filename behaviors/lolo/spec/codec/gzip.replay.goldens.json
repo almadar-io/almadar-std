@@ -713,6 +713,55 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-level-past-the-flate-range-is-refused-not-silent",
+   "config": {
+    "level": 12
+   },
+   "steps": [
+    {
+     "event": "GZIP",
+     "payload": {
+      "data": "AA=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GZIP_REFUSED",
+        "payload": {
+         "reason": "the encoder refused the options (level)"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GZIP_ANSWERED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-gunzip-cap-the-decoder-refuses-answers-the-refusal-not-silence",
+   "steps": [
+    {
+     "event": "GUNZIP",
+     "payload": {
+      "data": "AA==",
+      "maxBytes": -1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GZIP_REFUSED"
+       }
+      ],
+      "neverEmits": [
+       "GUNZIP_ANSWERED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

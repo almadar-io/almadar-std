@@ -260,6 +260,35 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-negative-port-is-refused-and-never-written",
+   "steps": [
+    {
+     "from": "booting",
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": -1
+     },
+     "expect": {
+      "fired": true,
+      "state": "booting",
+      "emits": [
+       {
+        "event": "HTTP1_LISTEN_FAILED",
+        "payload": {
+         "error": "listener reported a missing or negative port",
+         "kind": "invalid-port"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP1_LISTENING"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

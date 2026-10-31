@@ -28,14 +28,14 @@ type SampleFrame = { spec : MockFieldSpec!, name : string!, index : number!, dep
 type SampleAcc = { stack : [SampleFrame]!, cells : [MockWalkCell]!, s : number! }
 type SampleStep = { cells : [MockWalkCell]!, push : [SampleFrame]!, s : number! }
 type WalkOut = { cells : [MockWalkCell], s : number, value : MockValue? }
-type SeedEmitted = { event : string!, payload : Map string MockValue? }
-type SeedDispatchOutcome = { ok : boolean!, error : string, emitted : [SeedEmitted] }
+type SeedEmitted = { event : string!, payload : Map string MockValue?, source : string }
+type SeedSessionAnswer = { emittedEvents : [SeedEmitted]! }
 type SeedWriteRow = { store : string!, i : number!, label : string!, entity : string!, owner : string!, checked : boolean! }
 type SeedGroup = { owner : string!, ops : [[MockValue?]]! }
-type SeedWrite = { viewer : (Map string MockValue?)?, ops : [[MockValue?]]! }
+type SeedWrite = { owner : string!, ops : [[MockValue?]]! }
 type DsStamp = { store : string!, i : number!, col : string!, id : string, wasDeferred : boolean }
 type DsOlink = { store : string!, field : string!, i : number!, target : string!, scalar : boolean! }
-type AccessReq = { entity : string!, action : string!, row : (Map string MockValue?)!, viewer : (Viewer | (Map string MockValue?))? }
+type AccessReq = { entity : string!, action : string!, row : (Map string MockValue?)!, identity : (Viewer | (Map string MockValue?))? }
 type AcPlan = { queue : [AccessReq]!, planned : number, n : number!, read : boolean!, rel : boolean!, ids : [string]!, viewer : boolean! }
 type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
 type DsBatch = { stores : Map string [Map string MockValue?]!, s : number!, minted : number!, stamps : [DsStamp]!, used : number!, halt : boolean! }
@@ -108,7 +108,8 @@ orbital MockSeedHostOrbital {
     dsWriteAll : [SeedWriteRow] @description "Every seeded row in write order, with the policy entity and owner its writer is chosen by." = []
     dsWriteAt : number @description "The seeded row whose writer is being chosen." = 0
     dsWriters : [string] @description "The chosen writer of each seeded row so far, an identity row id, or empty for the asking viewer." = []
-    dsWrites : [SeedWrite] @description "The owner chunks of the seeded rows still to write, next first; each runs as its owner's identity row, or as the asking viewer when no identity row owns it." = []
+    dsWrites : [SeedWrite] @description "The owner chunks of the seeded rows still to write, next first; each runs in the session seed-<owner>, or in the anonymous session seed-anonymous when no identity row owns it." = []
+    dsSessions : [string] @description "The owners that have signed in to their seed-<owner> session in this run." = []
     dsViewer : string @description "The viewer id owner columns are stamped for, or empty." = ""
     dsIdStore : string @description "The store key of the identity entity." = ""
     dsCount : number @description "The seed count the host named." = 0
@@ -118,7 +119,14 @@ orbital MockSeedHostOrbital {
 
   trait MockStream = Seed.traits.MockStream -> MockCell { }
 
-  trait MockSeed = Seed.traits.MockSeed -> MockCell { }
+  trait MockSeed = Seed.traits.MockSeed -> MockCell {
+    config {
+      seedOrbital: "MockSeedHostOrbital"
+      seedTrait: "MockSeed"
+      personaOrbital: "PersonaOrbital"
+      personaTrait: "DevPersonas"
+    }
+  }
 
   page boot as MockSeedHostBoot -> MockSeed, MockStream
 

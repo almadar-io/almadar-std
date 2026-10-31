@@ -1,27 +1,27 @@
 app std-stream-ticket [
   version: "1.0.0",
-  description: "std-stream-ticket — single-use tickets for a live-event stream, whose client (an EventSource) sends no Authorization header. MINT_TICKET { viewer } draws 32 bytes from the host CSPRNG, keeps the base64url draw as the ticket (the row id) with the viewer text and an expiry ttlMs from now (60000 by default), and answers TICKET_MINTED { ticket, expiresAt }. TAKE_TICKET { ticket } spends it: the row is read, deleted, and the viewer answered once in TICKET_TAKEN { ticket, viewer }. A forged, expired or already spent ticket answers TICKET_REFUSED (unknown, expired or used); a failed draw or write answers seed or store. The viewer is a typed Viewer record: the @user fields id, email, name, role and permissions."
+  description: "std-stream-ticket — single-use tickets for a live-event stream, whose client (an EventSource) sends no Authorization header. MINT_TICKET { clientId } draws 32 bytes from the host CSPRNG, keeps the base64url draw as the ticket (the row id) with the issuing client and an expiry ttlMs from now (60000 by default), and answers TICKET_MINTED { ticket, expiresAt }. TAKE_TICKET { ticket } spends it: the row is read, deleted, and the issuing client answered once in TICKET_TAKEN { ticket, clientId }. A forged, expired or already spent ticket answers TICKET_REFUSED (unknown, expired or used); a failed draw or write answers seed or store. The viewer is a typed Viewer record: the @user fields id, email, name, role and permissions."
 ]
 uses Spec from "almadar-std/stream-ticket"
-type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, viewer : Viewer, clientId : string }
+type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, clientId : string }
 orbital StreamTicketOrbital {
-  type MINT_TICKET = Event { viewer : Viewer!, requestId : number } "Mint one ticket for a viewer."
+  type MINT_TICKET = Event { clientId : string!, requestId : number } "Mint one ticket for the client of the issuing request."
   type TAKE_TICKET = Event { ticket : string! } "Spend one ticket."
 
   entity StreamTicket [persistent: stream_tickets] {
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
-    viewer : Viewer! @description "The viewer the ticket was minted for."
-    expiresAt : instant @description "When the ticket stops working."
+    clientId : string! @description "The client session of the request that minted the ticket."
+    expiresAt : instant! @description "When the ticket stops working."
   }
 
   entity StreamTicketRun [runtime] {
     id : string!
-    viewer : Viewer @description "The viewer a mint in flight is for."
+    clientId : string @description "The client session a mint in flight is for."
     ticket : string @description "The ticket being minted or spent." = ""
     mintRequest : number @description "The caller's request id of the mint in flight, echoed on its answer; 0 when none." = 0
     expiresAt : instant @description "The expiry of the ticket being minted."
     expired : boolean @description "Whether the ticket being spent had already expired." = false
-    holder : Viewer @description "The viewer read off the ticket being spent."
+    holder : string @description "The issuing client read off the ticket being spent."
     queue : [StreamTicketJob] @description "Requests that arrived while one was in flight, oldest first; each is started when the one before it is answered." = []
   }
 
@@ -32,7 +32,7 @@ orbital StreamTicketOrbital {
       INIT -> idle
       TICKET_PUMP -> idle when (= (array/len @entity.queue) 0)
       TICKET_PUMP -> drawing when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "kind") "mint"))
-        (set @entity.viewer (object/get (array/first @entity.queue) "viewer" { id: "", claims: [] }))
+        (set @entity.clientId (object/get (array/first @entity.queue) "clientId" ""))
         (set @entity.mintRequest (object/get (array/first @entity.queue) "requestId" 0))
         (set @entity.queue (array/slice @entity.queue 1))
         (random-bytes 32 { emit: { success: SEED_DRAWN, failure: SEED_FAILED } })
@@ -41,12 +41,12 @@ orbital StreamTicketOrbital {
         (fetch StreamTicket { id: (object/get (array/first @entity.queue) "ticket"), emit: { success: TICKET_LOADED, failure: TICKET_ABSENT } })
         (set @entity.queue (array/slice @entity.queue 1))
       MINT_TICKET -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", clientId: @payload.clientId }))
         (emit TICKET_PUMP {})
       MINT_TICKET -> idle when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (default @payload.requestId 0) })
       TAKE_TICKET -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, clientId: "" }))
         (emit TICKET_PUMP {})
       TAKE_TICKET -> idle when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
@@ -55,18 +55,18 @@ orbital StreamTicketOrbital {
     state drawing {
       INIT -> idle
       MINT_TICKET -> drawing when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", clientId: @payload.clientId }))
       MINT_TICKET -> drawing when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (default @payload.requestId 0) })
       TAKE_TICKET -> drawing when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, clientId: "" }))
       TAKE_TICKET -> drawing when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       SEED_DRAWN -> saving
         (set @entity.ticket @payload.value)
         (set @entity.expiresAt (time/add @now @config.ttlMs "ms"))
-        (persist create StreamTicket { id: @payload.value, viewer: @entity.viewer, expiresAt: (time/add @now @config.ttlMs "ms") } {
+        (persist create StreamTicket { id: @payload.value, clientId: @entity.clientId, expiresAt: (time/add @now @config.ttlMs "ms") } {
           emit: { success: TICKET_SAVED, failure: TICKET_NOT_SAVED }
         })
       SEED_FAILED -> idle
@@ -77,11 +77,11 @@ orbital StreamTicketOrbital {
     state saving {
       INIT -> idle
       MINT_TICKET -> saving when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", clientId: @payload.clientId }))
       MINT_TICKET -> saving when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (default @payload.requestId 0) })
       TAKE_TICKET -> saving when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, clientId: "" }))
       TAKE_TICKET -> saving when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
@@ -100,11 +100,11 @@ orbital StreamTicketOrbital {
     state taking {
       INIT -> idle
       MINT_TICKET -> taking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", clientId: @payload.clientId }))
       MINT_TICKET -> taking when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (default @payload.requestId 0) })
       TAKE_TICKET -> taking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, clientId: "" }))
       TAKE_TICKET -> taking when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
@@ -115,7 +115,7 @@ orbital StreamTicketOrbital {
         (emit TICKET_REFUSED { code: "store", message: @payload.error, ticket: @entity.ticket })
         (emit TICKET_PUMP {})
       TICKET_LOADED -> spending
-        (set @entity.holder @payload.data.viewer)
+        (set @entity.holder @payload.data.clientId)
         (set @entity.expired (>= (time/diff @now @payload.data.expiresAt "ms") 0))
         (persist delete StreamTicket @entity.ticket {
           emit: { success: TICKET_SPENT, failure: TICKET_NOT_SPENT }
@@ -125,11 +125,11 @@ orbital StreamTicketOrbital {
     state spending {
       INIT -> idle
       MINT_TICKET -> spending when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", viewer: @payload.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "mint", requestId: (default @payload.requestId 0), ticket: "", clientId: @payload.clientId }))
       MINT_TICKET -> spending when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", requestId: (default @payload.requestId 0) })
       TAKE_TICKET -> spending when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, viewer: @entity.viewer, clientId: "" }))
+        (set @entity.queue (array/append @entity.queue { kind: "take", requestId: 0, ticket: @payload.ticket, clientId: "" }))
       TAKE_TICKET -> spending when (>= (array/len @entity.queue) @config.maxQueue)
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
@@ -140,8 +140,8 @@ orbital StreamTicketOrbital {
         ;; holder is read off the stored ticket by TICKET_LOADED before the delete that answers TICKET_SPENT; an absent one is refused, never defaulted.
         (let ((owner @entity.holder))
           (if (= @owner null)
-            (emit TICKET_REFUSED { code: "unknown", message: "the stream ticket names no viewer", ticket: @entity.ticket })
-            (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @owner })))
+            (emit TICKET_REFUSED { code: "unknown", message: "the stream ticket names no client", ticket: @entity.ticket })
+            (emit TICKET_TAKEN { ticket: @entity.ticket, clientId: @owner })))
         (emit TICKET_PUMP {})
       TICKET_NOT_SPENT -> idle
         (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent", ticket: @entity.ticket })
@@ -159,9 +159,9 @@ orbital StreamTicketOrbital {
         @tier "primary"
       TICKET_TAKEN -> external {
         ticket : string!
-        viewer : Viewer!
+        clientId : string!
       }
-        @description "The ticket named its viewer, and is now spent."
+        @description "The ticket named the client that issued it, and is now spent."
         @synonyms "stream ticket spent, ticket redeemed"
         @tier "primary"
       TICKET_REFUSED -> external {
@@ -223,15 +223,15 @@ orbital StreamTicketOrbital {
 
     listens {
       MINT_TICKET {
-        viewer : Viewer!
+        clientId : string!
         requestId : number
       }
-        @description "Mint one stream ticket for a viewer."
+        @description "Mint one stream ticket for the issuing request's client."
         @synonyms "mint ticket, create stream ticket"
       TAKE_TICKET {
         ticket : string!
       }
-        @description "Spend one stream ticket and learn its viewer."
+        @description "Spend one stream ticket and learn the client that issued it."
         @synonyms "take ticket, redeem ticket"
     }
 

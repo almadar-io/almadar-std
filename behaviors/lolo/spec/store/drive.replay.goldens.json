@@ -1,0 +1,6676 @@
+{
+ "atom": "store/atoms/std-drive.lolo",
+ "trait": "DriveClient",
+ "note": "std-drive over two keyed std-http-client traits (std-http-keyed): the service-account token is a jwt-bearer grant and the user token a refresh_token grant (credential-connect) the host credential store mints and renews, carried by the DriveSaHttp and DriveUserHttp credentials, never by an event; every call is a row of DriveCall under its own key; a not-held token mints once and sends again, a second not-held answer falls back to the other credential (reads and shares service account first, uploads and folders user first) and, with both spent, asks credential-status about the refresh token; list, metadata and media reads retry under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500: 100, 500, 1500) and the media read starts when std-retry completes the metadata run; the upload body is one multipart/related body built in .lolo. Self-handled internal events (declared -> internal) are consumed by the trait and not listed.",
+ "cases": [
+  {
+   "id": "list-builds-a-drive-query-and-sends-it-as-the-service-account",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {
+      "folderId": "f1",
+      "query": "name contains 'x'",
+      "maxResults": 25
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:f1|name contains 'x'|25#1"
+        }
+       },
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "list:f1|name contains 'x'|25#1",
+         "method": "GET",
+         "target": "/drive/v3/files?q=trashed%20%3D%20false%20and%20%27f1%27%20in%20parents%20and%20name%20contains%20%27x%27&pageSize=25&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "list-without-a-folder-or-query-lists-100-non-trashed-files",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       },
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "list:||0#1",
+         "method": "GET",
+         "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "list-escapes-a-quote-in-the-folder-id",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {
+      "folderId": "o'k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:o'k||0#1"
+        }
+       },
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "list:o'k||0#1",
+         "method": "GET",
+         "target": "/drive/v3/files?q=trashed%20%3D%20false%20and%20%27o%5C%27k%27%20in%20parents&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "get-hands-the-metadata-read-to-std-retry-and-sends-it-as-the-service-account",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "a b/c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:a b/c#1"
+        }
+       },
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "get:a b/c#1",
+         "method": "GET",
+         "target": "/drive/v3/files/a%20b%2Fc?fields=id%2C%20name%2C%20mimeType%2C%20size",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-plain-text-builds-a-multipart-related-body",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "hello",
+      "mimeType": "text/plain"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpoZWxsbw0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-text-without-a-mime-type-uses-octet-stream",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.bin",
+      "content": "hello"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.bin#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4uYmluIn0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoNCmhlbGxvDQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-base64-data-url-sends-the-decoded-bytes-with-the-url-mime-type",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain;base64,aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpoZWxsbw0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-base64-data-url-with-an-explicit-mime-type-prefers-it",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain;base64,aGVsbG8=",
+      "mimeType": "application/x-test"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24veC10ZXN0DQoNCmhlbGxvDQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-base64-data-url-without-a-mime-type-uses-octet-stream",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.bin",
+      "content": "data:;base64,aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.bin#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4uYmluIn0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoNCmhlbGxvDQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-percent-encoded-data-url-sends-the-decoded-text",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain,hello%20world"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpoZWxsbyB3b3JsZA0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-percent-encoded-data-url-keeps-the-commas-after-the-first",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain,a,b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQphLGINCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-data-url-with-parameters-is-sent-as-the-literal-text",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain;charset=utf-8,hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoNCmRhdGE6dGV4dC9wbGFpbjtjaGFyc2V0PXV0Zi04LGhpDQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-malformed-percent-encoding-fails-uri-malformed",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain,%E0%A4%A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "URI malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND",
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-invalid-base64-fails",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "data:text/plain;base64,!!!"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The base64 content could not be decoded"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND",
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-with-a-control-character-in-the-mime-type-is-refused",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "hello",
+      "mimeType": "text/plain\nx"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The content type is not valid"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-into-a-named-folder-sets-the-parent",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "hello",
+      "mimeType": "text/plain",
+      "folderId": "fold"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:fold/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0IiwicGFyZW50cyI6WyJmb2xkIl19DQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0DQpDb250ZW50LVR5cGU6IHRleHQvcGxhaW4NCg0KaGVsbG8NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "upload-into-the-default-folder-sets-the-parent",
+   "steps": [
+    {
+     "event": "DRIVE_UPLOAD_FILE",
+     "payload": {
+      "name": "n.txt",
+      "content": "hello",
+      "mimeType": "text/plain"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "upload:root1/n.txt#1",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0IiwicGFyZW50cyI6WyJyb290MSJdfQ0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQoNCmhlbGxvDQotLWFsbWFkYXItZHJpdmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "defaultFolderId": "root1"
+   },
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "folder-posts-the-folder-mime-type-as-the-user",
+   "steps": [
+    {
+     "event": "DRIVE_CREATE_FOLDER",
+     "payload": {
+      "name": "d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "folder:/d#1",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "folder-in-a-parent-sets-the-parent",
+   "steps": [
+    {
+     "event": "DRIVE_CREATE_FOLDER",
+     "payload": {
+      "name": "d",
+      "parentId": "p1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "folder:p1/d#1",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciIsInBhcmVudHMiOlsicDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "folder-in-the-default-folder-sets-the-parent",
+   "steps": [
+    {
+     "event": "DRIVE_CREATE_FOLDER",
+     "payload": {
+      "name": "d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "folder:root1/d#1",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciIsInBhcmVudHMiOlsicm9vdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "defaultFolderId": "root1"
+   },
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "share-posts-a-reader-permission-as-the-service-account",
+   "steps": [
+    {
+     "event": "DRIVE_SHARE_FILE",
+     "payload": {
+      "fileId": "f1",
+      "email": "a@b.c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c#1",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "share-with-a-role-posts-that-role",
+   "steps": [
+    {
+     "event": "DRIVE_SHARE_FILE",
+     "payload": {
+      "fileId": "f1",
+      "email": "a@b.c",
+      "role": "writer"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c#1",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJ3cml0ZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-list-reply-answers-the-flat-files",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 200,
+      "headers": {},
+      "body": "{\"files\": [{\"id\": \"1\", \"name\": \"a\", \"mimeType\": \"text/plain\", \"size\": \"12\", \"modifiedTime\": \"2026-10-01T00:00:00Z\", \"webViewLink\": \"https://w/1\"}]}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILES_LISTED",
+        "payload": {
+         "files": [
+          {
+           "id": "1",
+           "name": "a",
+           "mimeType": "text/plain",
+           "size": 12,
+           "modifiedTime": "2026-10-01T00:00:00Z",
+           "webViewLink": "https://w/1"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-media-reply-answers-the-file-with-base64-content",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"f1\", \"name\": \"a.txt\", \"mimeType\": \"text/plain\", \"size\": \"5\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    },
+    {
+     "event": "DRIVE_RETRY_DONE",
+     "payload": {
+      "key": "get:f1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    },
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "hello",
+      "content": "aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f1",
+         "name": "a.txt",
+         "mimeType": "text/plain",
+         "content": "aGVsbG8=",
+         "size": 5
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-metadata-reply-without-an-id-answers-the-requested-file-id",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"a.txt\", \"mimeType\": \"text/plain\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    },
+    {
+     "event": "DRIVE_RETRY_DONE",
+     "payload": {
+      "key": "get:f1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    },
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "hello",
+      "content": "aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f1",
+         "name": "a.txt",
+         "mimeType": "text/plain",
+         "content": "aGVsbG8=",
+         "size": 5
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-late-completion-of-the-metadata-run-after-a-malformed-reply-starts-no-media-read",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    },
+    {
+     "event": "DRIVE_RETRY_DONE",
+     "payload": {
+      "key": "get:f1",
+      "attempts": 1
+     },
+     "expect": {
+      "neverEmits": [
+       "DRIVE_RETRY_START"
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-upload-reply-answers-the-file",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"u1\", \"name\": \"n.txt\", \"webViewLink\": \"https://w/u1\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_UPLOADED",
+        "payload": {
+         "id": "u1",
+         "name": "n.txt",
+         "webViewLink": "https://w/u1"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-upload-reply-without-a-name-answers-the-requested-name",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"u1\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_UPLOADED",
+        "payload": {
+         "id": "u1",
+         "name": "n.txt",
+         "webViewLink": ""
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-folder-reply-answers-the-folder",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "folder:/d",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"d1\", \"name\": \"d\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FOLDER_CREATED",
+        "payload": {
+         "id": "d1",
+         "name": "d"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-folder-reply-without-a-name-answers-the-requested-name",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "folder:/d",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"d1\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FOLDER_CREATED",
+        "payload": {
+         "id": "d1",
+         "name": "d"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-share-reply-answers-the-permission",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"perm1\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_SHARED",
+        "payload": {
+         "shared": true,
+         "permissionId": "perm1"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "control-a-held-token-never-asks-the-store",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\": \"perm1\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_SHARED",
+        "payload": {
+         "shared": true,
+         "permissionId": "perm1"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-list-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-metadata-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_START"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-upload-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-folder-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "folder:/d",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-share-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 200,
+      "headers": {},
+      "body": "nope",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "The Drive answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-404-list-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"File not found\", \"errors\": [{\"message\": \"File not found\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "File not found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-404-metadata-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"File not found\", \"errors\": [{\"message\": \"File not found\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "File not found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-404-media-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"File not found\", \"errors\": [{\"message\": \"File not found\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "File not found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "media",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-403-upload-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "status": 403,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 403, \"message\": \"Insufficient permissions\", \"errors\": [{\"message\": \"Insufficient permissions\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Insufficient permissions"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-400-folder-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "folder:/d",
+      "status": 400,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 400, \"message\": \"Bad parent\", \"errors\": [{\"message\": \"Bad parent\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Bad parent"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-404-share-reply-fails-with-the-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"File not found\", \"errors\": [{\"message\": \"File not found\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "File not found"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-reply-with-several-api-errors-joins-them",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 400,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 400, \"message\": \"m\", \"errors\": [{\"message\": \"one\"}, {\"message\": \"two\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "one\ntwo"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-reply-with-a-string-error-fails-with-it",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 400,
+      "headers": {},
+      "body": "{\"error\": \"invalid\"}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "invalid"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-text-error-reply-fails-with-its-body",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 404,
+      "headers": {},
+      "body": "Not Found",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-object-error-reply-without-an-error-field-fails-object-object",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 400,
+      "headers": {},
+      "body": "{\"x\":1}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "[object Object]"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-redirect-reply-fails-with-its-status",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 302,
+      "headers": {},
+      "body": "",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Request failed with status code 302"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-503-list-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 503,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 503, \"message\": \"Backend Error\", \"errors\": [{\"message\": \"Backend Error\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-408-list-reply-is-retryable",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 408,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 408, \"message\": \"Timeout\", \"errors\": [{\"message\": \"Timeout\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0",
+         "error": "Timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-429-metadata-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 429,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 429, \"message\": \"Rate limit\", \"errors\": [{\"message\": \"Rate limit\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "get:f1",
+         "error": "Rate limit"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-503-media-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "get:f1",
+      "status": 503,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 503, \"message\": \"Backend Error\", \"errors\": [{\"message\": \"Backend Error\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "get:f1",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "media",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-503-upload-reply-fails-without-retrying",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "status": 503,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 503, \"message\": \"Backend Error\", \"errors\": [{\"message\": \"Backend Error\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "control-a-404-is-not-retryable",
+   "steps": [
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "list:||0",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"Not Found\", \"errors\": [{\"message\": \"Not Found\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-on-list-fails-with-the-last-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_GAVE_UP",
+     "payload": {
+      "key": "list:||0",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-on-the-metadata-read-fails-with-the-last-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_GAVE_UP",
+     "payload": {
+      "key": "get:f1",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-on-the-media-read-fails-with-the-last-api-message",
+   "steps": [
+    {
+     "event": "DRIVE_GAVE_UP",
+     "payload": {
+      "key": "get:f1",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-first-list-attempt-is-retried",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "list:||0",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0",
+         "error": "network timeout"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 1,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-the-second-list-attempt-is-retried",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "list:||0",
+      "kind": "io",
+      "error": "connection reset"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0",
+         "error": "connection reset"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 2,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-third-list-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "list:||0",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "list:||0"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 3,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-the-third-metadata-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "get:f1",
+      "kind": "io",
+      "error": "connection reset"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "get:f1"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "connection reset"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 3,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-third-media-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "get:f1",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "get:f1"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "media",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 3,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-upload-fails-without-retrying",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED",
+       "DRIVE_RETRY_CANCEL"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-folder-fails-without-retrying",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "folder:/d",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED",
+       "DRIVE_RETRY_CANCEL"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-share-fails-without-retrying",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED",
+       "DRIVE_RETRY_CANCEL"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-share-fails-with-its-text",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "io",
+      "error": "connection reset"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "connection reset"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-refused-call-on-folder-fails-with-its-text",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "folder:/d",
+      "kind": "refused",
+      "error": "a call is in flight on this frame"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "a call is in flight on this frame"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-service-account-token-mints-once-through-the-jwt-bearer-grant",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "list:||0",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.saToken",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccountKey",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/drive",
+          " "
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-user-token-mints-once-through-the-refresh-token-grant",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "folder:/d",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.userToken",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-held-request-again",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "svc"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-connected-answer-for-the-user-token-sends-the-held-request-again",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "me"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "folder:/d",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "POST",
+      "target": "/drive/v3/files?fields=id%2C%20name",
+      "contentType": "application/json",
+      "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-the-service-account-falls-back-to-the-user-for-a-share",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-a-list-falls-back-to-the-user-and-keeps-the-retry-run",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "list:||0",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "list:||0",
+         "method": "GET",
+         "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_CANCEL"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 1,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-a-metadata-read-falls-back-to-the-user",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "get:f1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "get:f1",
+         "method": "GET",
+         "target": "/drive/v3/files/f1?fields=id%2C%20name%2C%20mimeType%2C%20size",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "get:f1",
+      "op": "meta",
+      "method": "GET",
+      "target": "/drive/v3/files/f1?fields=id%2C%20name%2C%20mimeType%2C%20size",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 1,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-on-the-service-account-falls-back-to-the-user",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECTED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-the-user-falls-back-to-the-service-account-for-an-upload",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "upload:/n.txt",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "upload:/n.txt",
+         "method": "POST",
+         "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=almadar-drive-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpoZWxsbw0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "upload:/n.txt",
+      "op": "upload",
+      "method": "POST",
+      "target": "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart",
+      "contentType": "multipart/related; boundary=almadar-drive-multipart",
+      "body": "LS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydA0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uDQoNCnsibmFtZSI6Im4udHh0In0NCi0tYWxtYWRhci1kcml2ZS1tdWx0aXBhcnQNCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpoZWxsbw0KLS1hbG1hZGFyLWRyaXZlLW11bHRpcGFydC0tDQo=",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false,
+      "name": "n.txt"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-the-user-falls-back-to-the-service-account-for-a-folder",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "folder:/d",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "folder:/d",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "POST",
+      "target": "/drive/v3/files?fields=id%2C%20name",
+      "contentType": "application/json",
+      "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-fallback-credential-mints-its-own-token-once",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.userToken",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "user",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-configured-refresh-token-after-both-not-held-fails-with-the-set-up-hint",
+   "steps": [
+    {
+     "event": "DRIVE_REFRESH_PROBED",
+     "payload": {
+      "connected": true,
+      "label": "me"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Drive not configured — set GOOGLE_DRIVE_SA_KEY (reads) and/or GOOGLE_DRIVE_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET (writes)"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-unconfigured-refresh-token-fails-not-configured",
+   "steps": [
+    {
+     "event": "DRIVE_REFRESH_PROBED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID."
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-failed-probe-fails-not-configured",
+   "steps": [
+    {
+     "event": "DRIVE_PROBE_FAILED",
+     "payload": {
+      "error": "no store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID."
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-unconfigured-refresh-token-after-a-list-cancels-the-retry",
+   "steps": [
+    {
+     "event": "DRIVE_REFRESH_PROBED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "list:||0"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID."
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-unavailable-store-fails-not-configured",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID."
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-unavailable-store-on-a-list-cancels-the-retry-and-fails-not-configured",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "list:||0"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID."
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-invalid-grant-on-the-service-account-fails-with-its-text",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "an-invalid-client-on-the-user-fails-with-its-text",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_client",
+      "kind": "invalid_client"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_client"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "POST",
+      "target": "/drive/v3/files?fields=id%2C%20name",
+      "contentType": "application/json",
+      "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-failed-mint-on-list-cancels-the-retry",
+   "steps": [
+    {
+     "event": "DRIVE_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_CANCEL",
+        "payload": {
+         "key": "list:||0"
+        }
+       },
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "list:||0",
+      "op": "list",
+      "method": "GET",
+      "target": "/drive/v3/files?q=trashed%20%3D%20false&pageSize=100&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "the-keyed-client-reply-reaches-the-list-row",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#1",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "the-user-keyed-client-reply-reaches-the-row-too",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#1",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ]
+     },
+     "trait": "DriveUserHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-keyed-client-503-on-a-list-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#1",
+      "status": 503,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDUwMywgIm1lc3NhZ2UiOiAiQmFja2VuZCBFcnJvciIsICJlcnJvcnMiOiBbeyJtZXNzYWdlIjogIkJhY2tlbmQgRXJyb3IiLCAiZG9tYWluIjogImdsb2JhbCJ9XX19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0#1",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-keyed-client-timeout-on-a-list-is-retried",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "list:||0#1",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0#1",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "two-retried-calls-keep-independent-retry-runs",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f1#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ],
+   "note": "a list and a get are both in flight under std-retry; each key has its own run, so the second start schedules its own first retry instead of being ignored by a run busy with the first."
+  },
+  {
+   "id": "two-lists-with-different-folders-keep-independent-retry-runs",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {
+      "folderId": "f2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:f2||0#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:f2||0#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "success-list-answers-its-own-result-while-a-get-is-in-flight",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#2",
+      "status": 200,
+      "headers": {},
+      "body": "eyJmaWxlcyI6IFt7ImlkIjogIjEiLCAibmFtZSI6ICJhIiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICIxMiIsICJtb2RpZmllZFRpbWUiOiAiMjAyNi0xMC0wMVQwMDowMDowMFoiLCAid2ViVmlld0xpbmsiOiAiaHR0cHM6Ly93LzEifV19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILES_LISTED",
+        "payload": {
+         "files": [
+          {
+           "id": "1",
+           "name": "a",
+           "mimeType": "text/plain",
+           "size": 12,
+           "modifiedTime": "2026-10-01T00:00:00Z",
+           "webViewLink": "https://w/1"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED",
+       "DRIVE_FILE_FETCHED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "DRIVE_FAILED",
+       "DRIVE_FILES_LISTED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "failure-list-reply-fails-only-its-own-call-while-a-get-is-in-flight",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#2",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImRvbWFpbiI6ICJnbG9iYWwifV19fQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_FAILED",
+       "DRIVE_FILE_FETCHED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "failure-list-timeout-is-answered-on-its-own-route-while-a-get-is-in-flight",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "list:||0#2",
+      "error": "t",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_FAILED",
+        "payload": {
+         "key": "list:||0#2",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "neverEmits": [
+       "DRIVE_FAILED",
+       "DRIVE_FILES_LISTED"
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "control-two-calls-under-two-keys-are-never-refused",
+   "steps": [
+    {
+     "event": "DRIVE_SHARE_FILE",
+     "payload": {
+      "fileId": "f1",
+      "email": "a@b.c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c#1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KEY_REFUSED",
+       "DRIVE_RETRY_START"
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_CREATE_FOLDER",
+     "payload": {
+      "name": "d"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "folder:/d#2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "KEY_REFUSED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "control-a-lone-call-reaches-the-wire-under-its-key",
+   "steps": [
+    {
+     "event": "DRIVE_SHARE_FILE",
+     "payload": {
+      "fileId": "f1",
+      "email": "a@b.c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c#1",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       },
+       {
+        "event": "KEYED_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c#1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "two-not-held-calls-each-mint-for-their-own-row",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.saToken",
+         "scope": "app",
+         "tokenEndpoint": "https://www.googleapis.com/oauth2/v4/token",
+         "grant": "jwt-bearer",
+         "signingKey": "@config.serviceAccountKey",
+         "audience": "https://www.googleapis.com/oauth2/v4/token",
+         "ttlSeconds": 3600,
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/drive",
+          " "
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    },
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "folder:/d",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.userToken",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ],
+   "note": "each call asks the store itself; one call hearing the answer never settles the other call."
+  },
+  {
+   "id": "a-fallback-on-one-row-leaves-the-other-row-on-its-credential",
+   "steps": [
+    {
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    },
+    {
+     "event": "DRIVE_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "me"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "folder:/d",
+         "method": "POST",
+         "target": "/drive/v3/files?fields=id%2C%20name",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "folder:/d",
+      "op": "folder",
+      "method": "POST",
+      "target": "/drive/v3/files?fields=id%2C%20name",
+      "contentType": "application/json",
+      "body": "eyJuYW1lIjoiZCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vdm5kLmdvb2dsZS1hcHBzLmZvbGRlciJ9",
+      "auth": "user",
+      "tried": 0,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false,
+      "name": "d"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-failure-on-one-call-never-clears-another-calls-row",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_REPLIED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"nf\", \"errors\": [{\"message\": \"nf\", \"domain\": \"global\"}]}}",
+      "content": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "nf"
+        }
+       }
+      ]
+     },
+     "trait": "DriveCall",
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJmaWxlcyI6IFt7ImlkIjogIjEiLCAibmFtZSI6ICJhIiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICIxMiIsICJtb2RpZmllZFRpbWUiOiAiMjAyNi0xMC0wMVQwMDowMDowMFoiLCAid2ViVmlld0xpbmsiOiAiaHR0cHM6Ly93LzEifV19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILES_LISTED",
+        "payload": {
+         "files": [
+          {
+           "id": "1",
+           "name": "a",
+           "mimeType": "text/plain",
+           "size": 12,
+           "modifiedTime": "2026-10-01T00:00:00Z",
+           "webViewLink": "https://w/1"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "DriveSaHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "retry-run-schedules-100-ms-after-failed-attempt-1",
+   "steps": [
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list:||0",
+      "key": "list:||0",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "list:||0",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0",
+         "attempt": 1,
+         "delayMs": 100
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "retry-run-schedules-500-ms-after-failed-attempt-2",
+   "steps": [
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list:||0",
+      "key": "list:||0",
+      "attempt": 2
+     },
+     "payload": {
+      "key": "list:||0",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0",
+         "attempt": 2,
+         "delayMs": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "retry-run-schedules-1500-ms-after-failed-attempt-3",
+   "steps": [
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list:||0",
+      "key": "list:||0",
+      "attempt": 3
+     },
+     "payload": {
+      "key": "list:||0",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0",
+         "attempt": 3,
+         "delayMs": 1500
+        }
+       }
+      ],
+      "neverEmits": [
+       "GAVE_UP"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "retry-run-gives-up-after-the-fourth-attempt",
+   "steps": [
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "FAILED",
+     "entity": {
+      "id": "list:||0",
+      "key": "list:||0",
+      "attempt": 4
+     },
+     "payload": {
+      "key": "list:||0",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GAVE_UP",
+        "payload": {
+         "key": "list:||0",
+         "attempts": 4
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_SCHEDULED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-the-fallback-credential-signals-unconfigured",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "share:f1:a@b.c",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_UNCONFIGURED",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "user",
+      "tried": 1,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-on-the-fallback-credential-signals-unconfigured",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_CONNECTED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_UNCONFIGURED",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "user",
+      "tried": 1,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-on-the-media-read-signals-unconfigured-without-a-fallback",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_REQUEST_FAILED",
+     "payload": {
+      "key": "get:f1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_UNCONFIGURED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND"
+      ]
+     },
+     "entity": {
+      "id": "get:f1",
+      "op": "media",
+      "method": "GET",
+      "target": "/m",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 1,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "the-unconfigured-signal-on-the-second-credential-asks-credential-status",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_UNCONFIGURED",
+     "payload": {},
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-status",
+        "arg0": {
+         "credential": "@config.refreshToken",
+         "scope": "app"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND",
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     },
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "user",
+      "tried": 1,
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "the-unconfigured-signal-on-the-media-read-asks-credential-status",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_UNCONFIGURED",
+     "payload": {},
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-status",
+        "arg0": {
+         "credential": "@config.refreshToken",
+         "scope": "app"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_USER_HTTP_SEND",
+       "DRIVE_SA_HTTP_SEND"
+      ]
+     },
+     "entity": {
+      "id": "get:f1",
+      "op": "media",
+      "method": "GET",
+      "target": "/m",
+      "contentType": "",
+      "body": "",
+      "auth": "sa",
+      "tried": 1,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "fileId": "f1"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "the-unconfigured-signal-on-the-first-credential-falls-back-instead-of-probing",
+   "steps": [
+    {
+     "trait": "DriveCall",
+     "event": "DRIVE_UNCONFIGURED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_USER_HTTP_SEND",
+        "payload": {
+         "key": "share:f1:a@b.c",
+         "method": "POST",
+         "target": "/drive/v3/files/f1/permissions?fields=id"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "share:f1:a@b.c",
+      "op": "share",
+      "method": "POST",
+      "target": "/drive/v3/files/f1/permissions?fields=id",
+      "contentType": "application/json",
+      "body": "eyJ0eXBlIjoidXNlciIsInJvbGUiOiJyZWFkZXIiLCJlbWFpbEFkZHJlc3MiOiJhQGIuYyJ9",
+      "auth": "sa",
+      "tried": 0,
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-metadata-reply-waits-for-std-retry-then-starts-the-media-read",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "DRIVE_FAILED",
+       "DRIVE_FILE_FETCHED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "SUCCEEDED",
+     "entity": {
+      "id": "get:f1#1",
+      "key": "get:f1#1",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "get:f1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "idle",
+     "event": "START",
+     "entity": {
+      "id": "get:f1#1",
+      "key": "get:f1#1",
+      "attempt": 0
+     },
+     "payload": {
+      "key": "get:f1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "get:f1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "DRIVE_SA_HTTP_SEND",
+        "payload": {
+         "key": "get:f1#1",
+         "method": "GET",
+         "target": "/drive/v3/files/f1?alt=media",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ],
+   "note": "the metadata reply is stored and std-retry's completion of the metadata run starts the media read under the same key; the media request goes out on the same credential."
+  },
+  {
+   "id": "a-media-reply-through-the-keyed-client-answers-the-file-with-base64-content",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "SUCCEEDED",
+     "entity": {
+      "id": "get:f1#1",
+      "key": "get:f1#1",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "get:f1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f1",
+         "name": "a.txt",
+         "mimeType": "text/plain",
+         "content": "aGVsbG8=",
+         "size": 5
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "a-user-client-media-reply-after-a-fallback-answers-the-file",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveUserHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "SUCCEEDED",
+     "entity": {
+      "id": "get:f1#1",
+      "key": "get:f1#1",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "get:f1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveUserHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f1",
+         "name": "a.txt",
+         "mimeType": "text/plain",
+         "content": "aGVsbG8=",
+         "size": 5
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "two-gets-in-flight-keep-their-own-metadata-and-media-reads",
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f2#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "get:f2#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f2#2",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMiIsICJuYW1lIjogImIudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4ifQ=="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICI1In0="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "SUCCEEDED",
+     "entity": {
+      "id": "get:f2#2",
+      "key": "get:f2#2",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "get:f2#2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "get:f2#2",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f2#2"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f2#2",
+      "status": 200,
+      "headers": {},
+      "body": "aGk="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f2",
+         "name": "b.txt",
+         "mimeType": "text/plain",
+         "content": "aGk=",
+         "size": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveRetry",
+     "from": "running",
+     "event": "SUCCEEDED",
+     "entity": {
+      "id": "get:f1#1",
+      "key": "get:f1#1",
+      "attempt": 1
+     },
+     "payload": {
+      "key": "get:f1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "get:f1#1",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "aGVsbG8="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILE_FETCHED",
+        "payload": {
+         "id": "f1",
+         "name": "a.txt",
+         "mimeType": "text/plain",
+         "content": "aGVsbG8=",
+         "size": 5
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ]
+  },
+  {
+   "id": "two-identical-calls-run-independently-under-distinct-keys",
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ],
+   "note": "the call counter gives each call its own key, so two identical lists are two rows with two retry runs and two replies.",
+   "steps": [
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#1"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#1",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_LIST_FILES",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "list:||0#2"
+        }
+       },
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "list:||0#2",
+         "attempt": 1,
+         "delayMs": 100,
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#2",
+      "status": 200,
+      "headers": {},
+      "body": "eyJmaWxlcyI6IFt7ImlkIjogIjEiLCAibmFtZSI6ICJhIiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4iLCAic2l6ZSI6ICIxMiIsICJtb2RpZmllZFRpbWUiOiAiMjAyNi0xMC0wMVQwMDowMDowMFoiLCAid2ViVmlld0xpbmsiOiAiaHR0cHM6Ly93LzEifV19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FILES_LISTED",
+        "payload": {
+         "files": [
+          {
+           "id": "1",
+           "name": "a",
+           "mimeType": "text/plain",
+           "size": 12,
+           "modifiedTime": "2026-10-01T00:00:00Z",
+           "webViewLink": "https://w/1"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:||0#1",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAiTm90IEZvdW5kIiwgImVycm9ycyI6IFt7Im1lc3NhZ2UiOiAiTm90IEZvdW5kIn1dfX0="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FILES_LISTED",
+       "DRIVE_RETRY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-identical-gets-keep-their-own-metadata-and-media-reads",
+   "config": {},
+   "defaults": [
+    "DriveClient",
+    "DriveCall",
+    "DriveSaKeyed",
+    "DriveSaHttp",
+    "DriveUserKeyed",
+    "DriveUserHttp",
+    "DriveRetry"
+   ],
+   "steps": [
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "DRIVE_GET_FILE",
+     "payload": {
+      "fileId": "f1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_RETRY_START",
+        "payload": {
+         "key": "get:f1#2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#2",
+      "status": 404,
+      "headers": {},
+      "body": "eyJlcnJvciI6IHsiY29kZSI6IDQwNCwgIm1lc3NhZ2UiOiAibmYiLCAiZXJyb3JzIjogW3sibWVzc2FnZSI6ICJuZiJ9XX19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRIVE_FAILED",
+        "payload": {
+         "message": "nf"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DriveSaHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "get:f1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJpZCI6ICJmMSIsICJuYW1lIjogImEudHh0IiwgIm1pbWVUeXBlIjogInRleHQvcGxhaW4ifQ=="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "DRIVE_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

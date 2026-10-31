@@ -3,15 +3,17 @@
  "trait": "BearerVerifier",
  "cases": [
   {
-   "id": "emulator set: an unsigned token is handed to the claim policy",
+   "id": "emulator set: an unsigned token goes to jws/verify with allowUnsigned",
    "entity": {
     "emulator": true,
     "queue": [
      {
       "requestId": 7,
-      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      }
-    ]
+    ],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
    },
    "steps": [
     {
@@ -21,41 +23,7 @@
      "expect": {
       "emits": [
        {
-        "event": "JWS_VERIFIED",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ],
-   "skip": "needs PS1 config"
-  },
-  {
-   "id": "emulator set: the claim policy accepts the unsigned token's claims",
-   "entity": {
-    "emulator": true,
-    "requestId": 7
-   },
-   "steps": [
-    {
-     "from": "verifying",
-     "event": "JWS_VERIFIED",
-     "payload": {
-      "header": {
-       "alg": "none"
-      },
-      "payload": {
-       "iss": "",
-       "aud": "",
-       "sub": "u1",
-       "exp": 4102444800,
-       "extra": {}
-      }
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "BEARER_VERIFIED",
+        "event": "BEARER_CHECK",
         "payload": {}
        }
       ]
@@ -64,15 +32,50 @@
    ]
   },
   {
-   "id": "CONTROL emulator unset: an unsigned token is not handed to the claim policy",
+   "id": "emulator set: jws/verify accepts an unsigned token whose iss is the call issuer",
+   "entity": {
+    "emulator": true,
+    "requestId": 7,
+    "unsigned": true,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ.",
+    "keys": [],
+    "queue": [],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "BEARER_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "TOKEN_VERIFIED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL emulator unset: an unsigned token is not handed to jws/verify as an emulator token",
    "entity": {
     "emulator": false,
     "queue": [
      {
       "requestId": 7,
-      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      }
-    ]
+    ],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
    },
    "steps": [
     {
@@ -81,13 +84,12 @@
      "payload": {},
      "expect": {
       "neverEmits": [
-       "JWS_VERIFIED",
+       "BEARER_CHECK",
        "BEARER_VERIFIED"
       ]
      }
     }
-   ],
-   "skip": "needs PS1 config"
+   ]
   },
   {
    "id": "CONTROL emulator host read empty: an unsigned token is still not accepted",
@@ -96,9 +98,11 @@
     "queue": [
      {
       "requestId": 7,
-      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiIiLCJhdWQiOiIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0."
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      }
-    ]
+    ],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
    },
    "steps": [
     {
@@ -115,16 +119,15 @@
      "payload": {},
      "expect": {
       "neverEmits": [
-       "JWS_VERIFIED",
+       "BEARER_CHECK",
        "BEARER_VERIFIED"
       ]
      }
     }
-   ],
-   "skip": "needs PS1 config"
+   ]
   },
   {
-   "id": "x509 format: the fetched document goes to std-x509 one certificate at a time",
+   "id": "x509 format: the last certificate's key is handed to jws/verify as a base64url JWK",
    "config": {
     "jwksPath": "/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
     "issuer": "",
@@ -134,7 +137,6 @@
     "allowedTenants": [],
     "keyPrefix": "sk_live_",
     "maxQueue": 256,
-    "timeoutMs": 10000,
     "keysFormat": "x509"
    },
    "entity": {
@@ -172,24 +174,13 @@
      "expect": {
       "emits": [
        {
-        "event": "JWS_VERIFY",
-        "payload": {
-         "token": "a.b.c",
-         "jwk": {
-          "kty": "RSA",
-          "n": "wo1MounmDMHKtfdqQsIPszbTTUYtHgcLnO+aUNBhOGPbPKxnZtPs7Z8PSNHY2//RX8iq422JgTlFXKK8+HK4oKptOUy6B+o3HlxetQDLRVmyD16w6m8IHDu33YxkKF2/gGMXsNo5ggXz/OHuJ1KBJndnOg5O03/3BdASplnzCzcyyXSTzOqxS1PiXYL8JNblD4OlreqLnV9kQM6WB1sm1L8iDJD6GP05L5SdrMuO2diesL2YmEMXHmR4O5SL10GcDLYTeSoyMn9DNbR2Eew+1JjyftAajS5CmwHQCjIoJV/A9OIXWb1xiFzBoQSxYnqBrxJW7o0wEoGo3ksRek4h3w==",
-          "e": "AQAB",
-          "kid": "fb-key-1",
-          "alg": "RS256",
-          "use": "sig"
-         }
-        }
+        "event": "BEARER_CHECK",
+        "payload": {}
        }
       ]
      }
     }
-   ],
-   "skip": "needs PS1 config"
+   ]
   },
   {
    "id": "x509 format: a kid the document lacks is unknown-key",
@@ -202,7 +193,6 @@
     "allowedTenants": [],
     "keyPrefix": "sk_live_",
     "maxQueue": 256,
-    "timeoutMs": 10000,
     "keysFormat": "x509"
    },
    "entity": {
@@ -247,8 +237,7 @@
       ]
      }
     }
-   ],
-   "skip": "needs PS1 config"
+   ]
   },
   {
    "id": "x509 format: std-x509 refusing a certificate is keys-unavailable",
@@ -261,7 +250,6 @@
     "allowedTenants": [],
     "keyPrefix": "sk_live_",
     "maxQueue": 256,
-    "timeoutMs": 10000,
     "keysFormat": "x509"
    },
    "entity": {
@@ -305,8 +293,7 @@
       ]
      }
     }
-   ],
-   "skip": "needs PS1 config"
+   ]
   },
   {
    "id": "CONTROL jwks format: a certificate document never reaches std-x509",
@@ -358,8 +345,7 @@
        }
       ],
       "neverEmits": [
-       "JWS_VERIFY",
-       "JWS_VERIFIED",
+       "BEARER_CHECK",
        "BV_GET"
       ]
      }
@@ -392,8 +378,7 @@
        }
       ],
       "neverEmits": [
-       "JWS_VERIFY",
-       "JWS_VERIFIED"
+       "BEARER_CHECK"
       ]
      }
     }
@@ -504,36 +489,100 @@
    ]
   },
   {
-   "id": "a role claim that is not text is refused with the reason claims",
+   "id": "an unsigned token of another issuer is refused algorithm",
+   "note": "jws/verify accepts an unsigned token only for the emulator issuer",
    "entity": {
     "emulator": true,
-    "requestId": 7
+    "requestId": 7,
+    "unsigned": true,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL290aGVyLmV4YW1wbGUiLCJhdWQiOiJkZW1vIiwic3ViIjoidTEiLCJleHAiOjQxMDI0NDQ4MDB9.",
+    "keys": [],
+    "queue": [],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
    },
    "steps": [
     {
      "from": "verifying",
-     "event": "JWS_VERIFIED",
-     "payload": {
-      "header": {
-       "alg": "none"
-      },
-      "payload": {
-       "iss": "",
-       "aud": "",
-       "sub": "u1",
-       "exp": 4102444800,
-       "extra": {
-        "role": 5
-       }
-      }
-     },
+     "event": "BEARER_CHECK",
+     "payload": {},
      "expect": {
       "emits": [
        {
         "event": "BEARER_REFUSED",
         "payload": {
          "requestId": 7,
-         "reason": "claims"
+         "reason": "algorithm"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a token that is not marked unsigned is refused algorithm even from the emulator issuer",
+   "note": "",
+   "entity": {
+    "emulator": true,
+    "requestId": 7,
+    "unsigned": false,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ.",
+    "keys": [],
+    "queue": [],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "BEARER_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "algorithm"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unsigned token whose audience differs is refused audience",
+   "note": "",
+   "entity": {
+    "emulator": true,
+    "requestId": 7,
+    "unsigned": true,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoib3RoZXIiLCJzdWIiOiJ1MSIsImV4cCI6NDEwMjQ0NDgwMH0.",
+    "keys": [],
+    "queue": [],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "BEARER_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "audience"
         }
        }
       ]
@@ -542,36 +591,30 @@
    ]
   },
   {
-   "id": "a permissions claim that is not a list of text is refused with the reason claims",
+   "id": "an expired unsigned token is refused expired",
+   "note": "",
    "entity": {
     "emulator": true,
-    "requestId": 7
+    "requestId": 7,
+    "unsigned": true,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjoxMDAwfQ.",
+    "keys": [],
+    "queue": [],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
    },
    "steps": [
     {
      "from": "verifying",
-     "event": "JWS_VERIFIED",
-     "payload": {
-      "header": {
-       "alg": "none"
-      },
-      "payload": {
-       "iss": "",
-       "aud": "",
-       "sub": "u1",
-       "exp": 4102444800,
-       "extra": {
-        "permissions": "all"
-       }
-      }
-     },
+     "event": "BEARER_CHECK",
+     "payload": {},
      "expect": {
       "emits": [
        {
         "event": "BEARER_REFUSED",
         "payload": {
          "requestId": 7,
-         "reason": "claims"
+         "reason": "expired"
         }
        }
       ]
@@ -580,40 +623,123 @@
    ]
   },
   {
-   "id": "control: a text role and a list of text permissions are verified",
+   "id": "an API key answers BEARER_KEY_VERIFIED with its owner and claims",
+   "note": "",
    "entity": {
-    "emulator": true,
-    "requestId": 7
+    "requestId": 3,
+    "queue": []
    },
    "steps": [
     {
-     "from": "verifying",
-     "event": "JWS_VERIFIED",
+     "from": "idle",
+     "event": "API_KEY_VERIFIED",
      "payload": {
-      "header": {
-       "alg": "none"
-      },
-      "payload": {
-       "iss": "",
-       "aud": "",
-       "sub": "u1",
-       "exp": 4102444800,
-       "extra": {
-        "role": "admin",
-        "permissions": [
-         "read"
-        ]
+      "requestId": 3,
+      "owner": "o1",
+      "claims": [
+       {
+        "name": "scope",
+        "value": "read"
        }
-      }
+      ]
      },
      "expect": {
       "emits": [
        {
-        "event": "BEARER_VERIFIED",
+        "event": "BEARER_KEY_VERIFIED",
+        "payload": {
+         "requestId": 3,
+         "owner": "o1",
+         "claims": [
+          {
+           "name": "scope",
+           "value": "read"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a verifier with no issuer or audience configured refuses unconfigured",
+   "note": "",
+   "entity": {
+    "requestId": 7,
+    "unsigned": false,
+    "token": "a.b.c",
+    "keys": [],
+    "issuer": "",
+    "audience": "",
+    "queue": []
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "BEARER_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "unconfigured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an emulator issuer knob replaces the issuer for an unsigned token",
+   "config": {
+    "jwksPath": "/p",
+    "issuer": "",
+    "audience": "",
+    "clockSkewSeconds": 0,
+    "requireAuthTime": false,
+    "allowedTenants": [],
+    "keyPrefix": "sk_live_",
+    "maxQueue": 256,
+    "keysFormat": "jwks",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "emu-aud",
+    "issuerFromEnv": false,
+    "epoch": "1970-01-01T00:00:00.000Z"
+   },
+   "entity": {
+    "emulator": true,
+    "requestId": 7,
+    "unsigned": true,
+    "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZW11LWF1ZCIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ.",
+    "keys": [],
+    "issuer": "https://securetoken.google.com/demo",
+    "audience": "demo",
+    "queue": []
+   },
+   "steps": [
+    {
+     "from": "verifying",
+     "event": "BEARER_CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "TOKEN_VERIFIED",
         "payload": {
          "requestId": 7
         }
        }
+      ],
+      "neverEmits": [
+       "BEARER_REFUSED"
       ]
      }
     }

@@ -1,0 +1,334 @@
+app std-dev-persona-picker [
+  version: "1.0.0",
+  inbound: ["personas", "persona-sign-in"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST"],
+  net: { "127.0.0.1:9099": [tcp] },
+  egress: ["http://127.0.0.1:9099"],
+  description: "std-dev-persona-picker — the in-app way to sign in as a development persona. On start it asks std-dev-personas (composed here, rebound to the app's identity entity) for the personas and lists them by name as buttons; picking one asks for that persona's custom token and signs the session in with it through the server (TOKEN_SIGN_IN_REQUESTED { token } to the composed std-dev-personas, which runs jws/verify with allowUnsigned for the emulator issuer and then identity/sign-in), then shows who is signed in. When the personas are refused (the Auth emulator is not configured, so a deployment lists nobody), unreadable or none, it shows the empty state with the reason; a refused or failed sign-in shows its error with a retry. Every text is config. The picker's PersonaEvents instance of std-dev-personas is also the program's handler of the personas and persona-sign-in hooks, so a program mounts either this atom or std-identity's DevPersonas, never both. The sign-in token is the emulator's unsigned alg-none token, accepted by jws/verify only for the emulator issuer; this dev-only path is the one exception to tokens-never-in-payloads. The page is /dev/personas. An importing program restates the env, net and egress."
+]
+uses Spec from "almadar-std/dev-persona-picker"
+uses Personas from "std/behaviors/std-dev-personas"
+
+type PersonaOption = { id : string!, name : string }
+type PersonaListReply = { success : boolean, personas : [PersonaOption], error : string }
+type PersonaTokenReply = { success : boolean, customToken : string, error : string }
+
+orbital DevPersonaPickerOrbital [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "127.0.0.1:9099": [tcp] }] {
+  entity DevPersonaRow [persistent: dev_personas] {
+    id : string!
+    name : string
+    email : email
+    role : string
+  }
+
+  entity PersonaPickerView [runtime] {
+    id : string!
+    personas : [PersonaOption] @description "The personas last listed." = []
+    selectedId : string @description "The persona being signed in as, or signed in." = ""
+    message : string @description "Why the list is empty or the sign-in failed." = ""
+  }
+
+  trait PersonaEvents = Personas.traits.DevPersonas -> DevPersonaRow {
+    listens {
+      PERSONA_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+        @description "Internal: the HTTP client's reply from the Auth emulator, before its body is read as text."
+      PersonaHttp.HTTP_REPLIED -> PERSONA_REPLIED
+      PersonaHttp.HTTP_FAILED -> SIGN_IN_FAILED
+      PERSONAS_REQUESTED { }
+        @description "The picker asks for the persona list."
+      PersonaPicker.PERSONAS_REQUESTED -> PERSONAS_REQUESTED
+      TOKEN_SIGN_IN_REQUESTED {
+        token : string!
+      }
+        @description "The picker hands the persona's emulator token to be signed in."
+      PersonaPicker.TOKEN_SIGN_IN_REQUESTED -> TOKEN_SIGN_IN_REQUESTED
+      PERSONA_SIGN_IN_REQUESTED {
+        id : string!
+      }
+        @description "The picker asks to sign in as one persona."
+      PersonaPicker.PERSONA_SIGN_IN_REQUESTED -> PERSONA_SIGN_IN_REQUESTED
+      PERSONAS_CALLED {
+        rawBody : string
+      }
+        @description "Internal: a list by request."
+      SIGN_IN_CALLED {
+        rawBody : string
+      }
+        @description "Internal: a sign-in by id."
+    }
+  }
+
+  trait PersonaHttp = Personas.traits.PersonaHttp { }
+
+  trait PersonaPicker -> PersonaPickerView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+    }
+
+    state listing {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      LIST_ANSWERED -> listing when (and (= @payload.status 200) (!= (json/parse @payload.body PersonaListReply) null))
+        (emit LIST_READ { personas: (default (object/get (default (json/parse @payload.body PersonaListReply) {}) "personas") []) })
+      LIST_ANSWERED -> listing when (and (= @payload.status 200) (= (json/parse @payload.body PersonaListReply) null))
+        (emit LIST_REFUSED { message: @config.unreadableText })
+      LIST_ANSWERED -> listing when (!= @payload.status 200)
+        (emit LIST_REFUSED { message: (default (object/get (default (json/parse @payload.body PersonaListReply) {}) "error") @config.refusedText) })
+      LIST_READ -> ready when (> (array/len @payload.personas) 0)
+        (set @entity.personas @payload.personas)
+        (render-ui main @config.listContent)
+      LIST_READ -> empty when (= (array/len @payload.personas) 0)
+        (set @entity.message @config.noneText)
+        (render-ui main @config.emptyContent)
+      LIST_REFUSED -> empty
+        (set @entity.message @payload.message)
+        (render-ui main @config.emptyContent)
+    }
+
+    state ready {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      PERSONA_PICKED -> signing
+        (set @entity.selectedId @payload.id)
+        (emit PERSONA_SIGN_IN_REQUESTED { id: @payload.id })
+        (render-ui main @config.signingContent)
+    }
+
+    state signing {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      SIGN_IN_ANSWERED -> signing when (and (= @payload.status 200) (!= (default (object/get (default (json/parse @payload.body PersonaTokenReply) {}) "customToken") "") ""))
+        (emit TOKEN_SIGN_IN_REQUESTED { token: (default (object/get (default (json/parse @payload.body PersonaTokenReply) {}) "customToken") "") })
+      SIGN_IN_ANSWERED -> failed when (or (!= @payload.status 200) (= (default (object/get (default (json/parse @payload.body PersonaTokenReply) {}) "customToken") "") ""))
+        (set @entity.message (default (object/get (default (json/parse @payload.body PersonaTokenReply) {}) "error") @config.refusedText))
+        (render-ui main @config.failedContent)
+      SIGNED_IN -> signedIn
+        (render-ui main @config.signedInContent)
+      SIGN_IN_REFUSED -> failed
+        (set @entity.message (default @payload.error @config.refusedText))
+        (render-ui main @config.failedContent)
+    }
+
+    state signedIn {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      SWITCH_PERSONA -> listing
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+    }
+
+    state empty {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      RETRY -> listing
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+    }
+
+    state failed {
+      INIT -> listing
+        (set @entity.message "")
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+      RETRY -> listing
+        (emit PERSONAS_REQUESTED {})
+        (render-ui main @config.loadingContent)
+    }
+
+    emits {
+      PERSONAS_REQUESTED -> internal { }
+        @description "Ask std-dev-personas for the persona list; answered by PERSONAS_ANSWERED."
+        @tier "internal"
+      PERSONA_SIGN_IN_REQUESTED -> internal {
+        id : string!
+      }
+        @description "Ask std-dev-personas to sign in as the persona with this id; answered by PERSONA_SIGN_IN_ANSWERED."
+        @tier "internal"
+      LIST_READ -> internal {
+        personas : [PersonaOption]!
+      }
+        @description "Internal: the personas the list answer carried."
+        @tier "internal"
+      TOKEN_SIGN_IN_REQUESTED -> internal {
+        token : string!
+      }
+        @description "Ask std-dev-personas to sign the session in with the persona's emulator token; answered by PERSONA_SIGNED_IN or PERSONA_SIGN_IN_REFUSED."
+        @tier "internal"
+      LIST_REFUSED -> internal {
+        message : string!
+      }
+        @description "Internal: the list was refused or unreadable; message says why."
+        @tier "internal"
+    }
+
+    listens {
+      LIST_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the personas answer of std-dev-personas."
+      PersonaEvents.PERSONAS_ANSWERED -> LIST_ANSWERED
+      SIGN_IN_ANSWERED {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the persona sign-in answer of std-dev-personas."
+      PersonaEvents.PERSONA_SIGN_IN_ANSWERED -> SIGN_IN_ANSWERED
+      PERSONA_PICKED {
+        id : string!
+      }
+        @description "The viewer picked a persona to sign in as."
+      SWITCH_PERSONA { }
+        @description "The viewer asks to pick another persona."
+      RETRY { }
+        @description "The viewer asks for the personas again."
+      SIGNED_IN {
+        subject : string
+      }
+        @description "Internal: identity/sign-in bound the persona as the session identity."
+      PersonaEvents.PERSONA_SIGNED_IN -> SIGNED_IN
+      SIGN_IN_REFUSED {
+        error : string
+        kind : string
+      }
+        @description "Internal: the token was not accepted (unsealed), the persona has no identity row (no-identity) or the store failed."
+      PersonaEvents.PERSONA_SIGN_IN_REFUSED -> SIGN_IN_REFUSED
+    }
+
+    config {
+      loadingContent : render-ui = {
+        type: typography
+        variant: body
+        content: @config.loadingText
+      }
+        @label "Loading body"
+        @tier "internal"
+      listContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: sm
+        children: [{
+          type: typography
+          variant: h4
+          content: @config.title
+        }, {
+          type: stack
+          direction: vertical
+          gap: xs
+          children: (array/map @entity.personas (fn p {
+            type: button
+            variant: secondary
+            label: (default (object/get @p name "") (object/get @p id ""))
+            action: PERSONA_PICKED
+            actionPayload: { id: (object/get @p id "") }
+          }))
+        }]
+      }
+        @label "Persona list body"
+        @tier "internal"
+      emptyContent : render-ui = {
+        type: empty-state
+        icon: user-round
+        title: @config.emptyTitle
+        description: @entity.message
+        actionLabel: @config.retryLabel
+        onAction: RETRY
+      }
+        @label "Empty body"
+        @tier "internal"
+      signingContent : render-ui = {
+        type: typography
+        variant: body
+        content: @config.signingText
+      }
+        @label "Signing-in body"
+        @tier "internal"
+      signedInContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: sm
+        children: [{
+          type: typography
+          variant: body
+          content: (str/concat @config.signedInText (default (object/get (default (array/find @entity.personas (fn p (= (object/get @p id "") @entity.selectedId))) {}) "name") @entity.selectedId))
+        }, {
+          type: button
+          variant: ghost
+          label: @config.switchLabel
+          action: SWITCH_PERSONA
+        }]
+      }
+        @label "Signed-in body"
+        @tier "internal"
+      failedContent : render-ui = {
+        type: alert
+        variant: error
+        title: @config.failedTitle
+        message: @entity.message
+        actions: {
+          type: button
+          variant: secondary
+          label: @config.retryLabel
+          action: RETRY
+        }
+      }
+        @label "Failure body"
+        @tier "internal"
+      title : string = "Sign in as a development persona"
+        @label "Title"
+        @tier "presentation"
+      loadingText : string = "Loading personas"
+        @label "Loading text"
+        @tier "presentation"
+      signingText : string = "Signing in"
+        @label "Signing-in text"
+        @tier "presentation"
+      signedInText : string = "Signed in as "
+        @label "Signed-in text"
+        @tier "presentation"
+      emptyTitle : string = "No dev personas"
+        @label "Empty title"
+        @tier "presentation"
+      noneText : string = "The identity entity has no rows to sign in as."
+        @label "No personas text"
+        @tier "presentation"
+      refusedText : string = "The personas were refused."
+        @label "Refused text"
+        @tier "presentation"
+      unreadableText : string = "The personas answer could not be read."
+        @label "Unreadable text"
+        @tier "presentation"
+      failedTitle : string = "Sign-in failed"
+        @label "Failure title"
+        @tier "presentation"
+      retryLabel : string = "Try again"
+        @label "Retry label"
+        @tier "presentation"
+      switchLabel : string = "Switch persona"
+        @label "Switch label"
+        @tier "presentation"
+    }
+  }
+
+  page "/dev/personas" as DevPersonaPickerPage -> PersonaPicker, PersonaEvents, PersonaHttp
+}

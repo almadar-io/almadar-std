@@ -1,15 +1,90 @@
 app std-push [
-  version: "1.0.0",
-  description: "std-push — Web Push delivery to a browser PushSubscription: PUSH_SEND encrypts the notification (RFC 8291 aes128gcm), signs it with VAPID (RFC 8292) and posts it to the subscription endpoint. A push service reply answers PUSH_SEND_RESULT {statusCode, ok, expired} (expired when the subscription is gone, 404 or 410); a 5xx reply, a transport failure or an invalid subscription or VAPID setting answers PUSH_SEND_FAILED with the provider message. The request goes to the subscription endpoint, whose origin must be in the app egress list.",
-  egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://push.example.test", "https://push.example.test:8443"]
+  version: "2.0.0",
+  description: "std-push — Web Push delivery to a browser PushSubscription, done in .lolo over std-http-client: PUSH_SEND checks the subscription, draws a 16-byte salt, runs an ephemeral ECDH P-256 with the subscription key, derives the content key with HKDF-SHA256 and encrypts the notification as aes128gcm records of 4096 bytes (RFC 8291, RFC 8188), signs a VAPID ES256 token (RFC 8292) with the stored private key, and posts it to the subscription endpoint. A push service reply answers PUSH_SEND_RESULT {statusCode, ok, expired} (expired when the subscription is gone, 404 or 410); a 5xx reply, a transport failure, an invalid subscription or VAPID setting, an endpoint host outside pushHosts answers PUSH_SEND_FAILED with the message. The endpoint host must be one of the push services composed below and in the app egress list.",
+  egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
+  net: { "fcm.googleapis.com:443": [tcp], "android.googleapis.com:443": [tcp], "updates.push.services.mozilla.com:443": [tcp], "web.push.apple.com:443": [tcp], "*.notify.windows.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/push"
+uses Http from "std/behaviors/std-http-client"
 
+type HttpHeader = { name : string!, value : string! }
 type PushKeys = { p256dh : string, auth : string }
 type PushSubscription = { endpoint : string, keys : PushKeys }
 orbital PushOrbital {
   entity PushDelivery [runtime] {
     id : string!
+    endpoint : string = ""
+    p256dh : string = ""
+    auth : string = ""
+    payloadText : string = ""
+    problem : string @description "The first refusal found in the subscription or the VAPID setting, empty when the send may go on." = ""
+    uaPublic : bytes = ""
+    authSecret : bytes = ""
+  }
+
+  trait PushFcmHttp = Http.traits.HttpClient {
+    config {
+      host: "fcm.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "fcm.googleapis.com"
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "fcm.googleapis.com")
+    }
+  }
+
+  trait PushAndroidHttp = Http.traits.HttpClient {
+    config {
+      host: "android.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "android.googleapis.com"
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "android.googleapis.com")
+    }
+  }
+
+  trait PushMozillaHttp = Http.traits.HttpClient {
+    config {
+      host: "updates.push.services.mozilla.com"
+      port: 443
+      tls: true
+      serverName: "updates.push.services.mozilla.com"
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "updates.push.services.mozilla.com")
+    }
+  }
+
+  trait PushAppleHttp = Http.traits.HttpClient {
+    config {
+      host: "web.push.apple.com"
+      port: 443
+      tls: true
+      serverName: "web.push.apple.com"
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "web.push.apple.com")
+    }
+  }
+
+  trait PushWnsHttp = Http.traits.HttpClient {
+    config {
+      host: "*.notify.windows.com"
+      port: 443
+      tls: true
+      dynamicHost: true
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (validate/pattern ?host "^[A-Za-z0-9-]+[.]notify[.]windows[.]com$")
+    }
   }
 
   trait PushClient -> PushDelivery [optimistic] {
@@ -26,14 +101,57 @@ orbital PushOrbital {
         (emit PUSH_SEND_FAILED { message: "To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys." })
       PUSH_SEND -> idle when (and (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (!= (object/get @payload.subscription "endpoint" null) "") (!= (object/get @payload.subscription "keys.p256dh" null) "") (!= (object/get @payload.subscription "keys.auth" null) "")) (not (= (if (!= (if (validate/pattern (default @payload.subscription.keys.p256dh "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.p256dh "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 65) "The subscription p256dh value should be 65 bytes long." (if (< (if (validate/pattern (default @payload.subscription.keys.auth "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.auth "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 16) "The subscription auth key should be at least 16 bytes long" (if (not (validate/url (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")))) (str/concat "VAPID audience is not a url. " (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) ""))) (if (= @config.vapidSubject "") "No subject set in vapidDetails.subject." (if (not (or (validate/url @config.vapidSubject) (and (str/startsWith @config.vapidSubject "mailto:") (> (str/len @config.vapidSubject) 7)))) (str/concat "Vapid subject is not a valid URL. " @config.vapidSubject) (if (not (or (str/startsWith @config.vapidSubject "https:") (str/startsWith @config.vapidSubject "mailto:"))) (str/concat "Vapid subject is not an https: or mailto: URL. " @config.vapidSubject) (if (= @config.vapidPublicKey "") "No key set vapidDetails.publicKey" (if (not (validate/pattern @config.vapidPublicKey "^[A-Za-z0-9_-]+$")) "Vapid public key must be a URL safe Base 64 (without \"=\")" (if (!= (bytes/length (let ((x (str/replaceAll (str/replaceAll @config.vapidPublicKey "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) 65) "Vapid public key should be 65 bytes long when decoded." null))))))))) null)))
         (emit PUSH_SEND_FAILED { message: (if (!= (if (validate/pattern (default @payload.subscription.keys.p256dh "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.p256dh "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 65) "The subscription p256dh value should be 65 bytes long." (if (< (if (validate/pattern (default @payload.subscription.keys.auth "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.auth "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 16) "The subscription auth key should be at least 16 bytes long" (if (not (validate/url (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")))) (str/concat "VAPID audience is not a url. " (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) ""))) (if (= @config.vapidSubject "") "No subject set in vapidDetails.subject." (if (not (or (validate/url @config.vapidSubject) (and (str/startsWith @config.vapidSubject "mailto:") (> (str/len @config.vapidSubject) 7)))) (str/concat "Vapid subject is not a valid URL. " @config.vapidSubject) (if (not (or (str/startsWith @config.vapidSubject "https:") (str/startsWith @config.vapidSubject "mailto:"))) (str/concat "Vapid subject is not an https: or mailto: URL. " @config.vapidSubject) (if (= @config.vapidPublicKey "") "No key set vapidDetails.publicKey" (if (not (validate/pattern @config.vapidPublicKey "^[A-Za-z0-9_-]+$")) "Vapid public key must be a URL safe Base 64 (without \"=\")" "Vapid public key should be 65 bytes long when decoded.")))))))) })
-      PUSH_SEND -> idle when (and (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (!= (object/get @payload.subscription "endpoint" null) "") (!= (object/get @payload.subscription "keys.p256dh" null) "") (!= (object/get @payload.subscription "keys.auth" null) "")) (= (if (!= (if (validate/pattern (default @payload.subscription.keys.p256dh "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.p256dh "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 65) "The subscription p256dh value should be 65 bytes long." (if (< (if (validate/pattern (default @payload.subscription.keys.auth "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.auth "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 16) "The subscription auth key should be at least 16 bytes long" (if (not (validate/url (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")))) (str/concat "VAPID audience is not a url. " (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) ""))) (if (= @config.vapidSubject "") "No subject set in vapidDetails.subject." (if (not (or (validate/url @config.vapidSubject) (and (str/startsWith @config.vapidSubject "mailto:") (> (str/len @config.vapidSubject) 7)))) (str/concat "Vapid subject is not a valid URL. " @config.vapidSubject) (if (not (or (str/startsWith @config.vapidSubject "https:") (str/startsWith @config.vapidSubject "mailto:"))) (str/concat "Vapid subject is not an https: or mailto: URL. " @config.vapidSubject) (if (= @config.vapidPublicKey "") "No key set vapidDetails.publicKey" (if (not (validate/pattern @config.vapidPublicKey "^[A-Za-z0-9_-]+$")) "Vapid public key must be a URL safe Base 64 (without \"=\")" (if (!= (bytes/length (let ((x (str/replaceAll (str/replaceAll @config.vapidPublicKey "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) 65) "Vapid public key should be 65 bytes long when decoded." null))))))))) null))
-        (http POST (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")) (str/slice (default @payload.subscription.endpoint "") (str/len (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")))) {
-          webpush: {
-            subscription: { endpoint: @payload.subscription.endpoint, keys: { p256dh: @payload.subscription.keys.p256dh, auth: @payload.subscription.keys.auth } },
-            payload: (str/concat "{\"title\":" (json/stringify @payload.title) ",\"body\":" (json/stringify @payload.body) (if (and (!= @payload.url null) (!= @payload.url "")) (str/concat ",\"url\":" (json/stringify @payload.url)) "") (if (and (!= @payload.icon null) (!= @payload.icon "")) (str/concat ",\"icon\":" (json/stringify @payload.icon)) "") "}")
-          },
-          auth: { scheme: vapid, privateKey: @config.privateKeyCredential, publicKey: @config.vapidPublicKey, subject: @config.vapidSubject }
-        } { emit: { success: PUSH_SEND_REPLIED, failure: PUSH_SEND_HTTP_FAILED } })
+      PUSH_SEND -> idle when (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (!= (object/get @payload.subscription "endpoint" null) "") (!= (object/get @payload.subscription "keys.p256dh" null) "") (!= (object/get @payload.subscription "keys.auth" null) ""))
+        (set @entity.endpoint @payload.subscription.endpoint)
+        (set @entity.p256dh @payload.subscription.keys.p256dh)
+        (set @entity.auth @payload.subscription.keys.auth)
+        (set @entity.payloadText (str/concat "{\"title\":" (json/stringify @payload.title) ",\"body\":" (json/stringify @payload.body) (if (!= (default @payload.url "") "") (str/concat ",\"url\":" (json/stringify @payload.url)) "") (if (!= (default @payload.icon "") "") (str/concat ",\"icon\":" (json/stringify @payload.icon)) "") "}"))
+        (set @entity.problem (default (if (!= (if (validate/pattern (default @payload.subscription.keys.p256dh "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.p256dh "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 65) "The subscription p256dh value should be 65 bytes long." (if (< (if (validate/pattern (default @payload.subscription.keys.auth "") "^[A-Za-z0-9_-]+$") (let ((b (bytes/from-base64 (let ((x (str/replaceAll (str/replaceAll (default @payload.subscription.keys.auth "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @b null) -1 (bytes/length @b))) -1) 16) "The subscription auth key should be at least 16 bytes long" (if (not (validate/url (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) "")))) (str/concat "VAPID audience is not a url. " (str/concat (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 0) "") "//" (default (array/nth (str/split (default @payload.subscription.endpoint "") "/") 2) ""))) (if (= @config.vapidSubject "") "No subject set in vapidDetails.subject." (if (not (or (validate/url @config.vapidSubject) (and (str/startsWith @config.vapidSubject "mailto:") (> (str/len @config.vapidSubject) 7)))) (str/concat "Vapid subject is not a valid URL. " @config.vapidSubject) (if (not (or (str/startsWith @config.vapidSubject "https:") (str/startsWith @config.vapidSubject "mailto:"))) (str/concat "Vapid subject is not an https: or mailto: URL. " @config.vapidSubject) (if (= @config.vapidPublicKey "") "No key set vapidDetails.publicKey" (if (not (validate/pattern @config.vapidPublicKey "^[A-Za-z0-9_-]+$")) "Vapid public key must be a URL safe Base 64 (without \"=\")" (if (!= (bytes/length (let ((x (str/replaceAll (str/replaceAll @config.vapidPublicKey "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) 65) "Vapid public key should be 65 bytes long when decoded." null))))))))) ""))
+        (emit PUSH_CHECKED {})
+
+      PUSH_CHECKED -> idle when (!= @entity.problem "")
+        (emit PUSH_SEND_FAILED { message: @entity.problem })
+      PUSH_CHECKED -> idle when (and (= @entity.problem "") (not (array/some @config.pushHosts (fn p (if (str/startsWith @p "*.") (and (str/endsWith (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")) (str/slice @p 1)) (> (str/len (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))) (- (str/len @p) 1)) (not (str/includes (str/slice (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")) 0 (- (str/len (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))) (- (str/len @p) 1))) "."))) (= @p (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))))))))
+        (emit PUSH_SEND_FAILED { message: (str/concat "Push endpoint host is not configured: " (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))) })
+      PUSH_CHECKED -> idle when (and (= @entity.problem "") (array/some @config.pushHosts (fn p (if (str/startsWith @p "*.") (and (str/endsWith (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")) (str/slice @p 1)) (> (str/len (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))) (- (str/len @p) 1)) (not (str/includes (str/slice (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")) 0 (- (str/len (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))) (- (str/len @p) 1))) "."))) (= @p (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")))))))
+        (set @entity.uaPublic (default (let ((x (str/replaceAll (str/replaceAll @entity.p256dh "-" "+") "_" "/"))) (bytes/from-base64 (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) (bytes/from-string "")))
+        (set @entity.authSecret (default (let ((x (str/replaceAll (str/replaceAll @entity.auth "-" "+") "_" "/"))) (bytes/from-base64 (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) (bytes/from-string "")))
+        (random-bytes 16 { emit: { success: PUSH_SALT_DRAWN, failure: PUSH_SALT_FAILED } })
+
+      PUSH_SALT_FAILED -> idle
+        (emit PUSH_SEND_FAILED { message: (str/concat "Could not draw the push salt: " @payload.error) })
+      PUSH_SALT_DRAWN -> idle
+        (let ((eph (ecdh/p256-ephemeral @entity.uaPublic)))
+          (if (= @eph null)
+            (emit PUSH_SEND_FAILED { message: "Public key is not valid for specified curve" })
+            (emit PUSH_ENCRYPT { salt: (default (let ((x (str/replaceAll (str/replaceAll @payload.value "-" "+") "_" "/"))) (bytes/from-base64 (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) (bytes/from-string "")), asPublic: (default (object/get @eph public null) (bytes/from-string "")), shared: (default (object/get @eph shared null) (bytes/from-string "")) })))
+
+      PUSH_ENCRYPT -> idle
+        (let ((one (default (bytes/write-uint 1 1 "be") (bytes/from-string ""))))
+          (let ((prkKey (default (bytes/from-base64 (default (hmac/sha256-bytes @entity.authSecret @payload.shared "base64" "bytes") "")) (bytes/from-string ""))))
+            (let ((ikm (default (bytes/from-base64 (default (hmac/sha256-bytes @prkKey (bytes/concat [(bytes/from-string "WebPush: info") (default (bytes/write-uint 0 1 "be") (bytes/from-string "")) @entity.uaPublic @payload.asPublic @one]) "base64" "bytes") "")) (bytes/from-string ""))))
+              (let ((prk (default (bytes/from-base64 (default (hmac/sha256-bytes @payload.salt @ikm "base64" "bytes") "")) (bytes/from-string ""))))
+                (let ((cek (bytes/slice (default (bytes/from-base64 (default (hmac/sha256-bytes @prk (bytes/concat [(bytes/from-string "Content-Encoding: aes128gcm") (default (bytes/write-uint 0 1 "be") (bytes/from-string "")) @one]) "base64" "bytes") "")) (bytes/from-string "")) 0 16)) (nonce (bytes/slice (default (bytes/from-base64 (default (hmac/sha256-bytes @prk (bytes/concat [(bytes/from-string "Content-Encoding: nonce") (default (bytes/write-uint 0 1 "be") (bytes/from-string "")) @one]) "base64" "bytes") "")) (bytes/from-string "")) 0 12)))
+                  (let ((pt (bytes/from-string @entity.payloadText)))
+                    (let ((n (math/max 1 (math/ceil (/ (bytes/length @pt) 4079)))))
+                      (emit PUSH_SIGN { body: (bytes/concat [@payload.salt (default (bytes/write-uint 4096 4 "be") (bytes/from-string "")) (default (bytes/write-uint 65 1 "be") (bytes/from-string "")) @payload.asPublic (array/reduce (array/range 0 @n) (bytes/from-string "") (fn (acc i) (bytes/concat [@acc (aes-gcm/seal @cek (bytes/concat [(bytes/slice @nonce 0 8) (default (bytes/write-uint (default (bit/xor (default (bytes/read-uint @nonce 8 4 "be") 0) @i) 0) 4 "be") (bytes/from-string ""))]) (bytes/concat [(bytes/slice @pt (* @i 4079) (math/min (* (+ @i 1) 4079) (bytes/length @pt))) (default (bytes/write-uint (if (= (+ @i 1) @n) 2 1) 1 "be") (bytes/from-string ""))]) (bytes/from-string ""))])))]) }))))))))
+
+      PUSH_SIGN -> idle
+        (let ((exp (+ (time/diff (time/now) @config.epoch "second") @config.tokenLifetimeSeconds)))
+          (let ((signingInput (str/concat (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (bytes/from-string "{\"typ\":\"JWT\",\"alg\":\"ES256\"}")) "+" "-") "/" "_") "=" "") "." (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (bytes/from-string (str/concat "{\"aud\":" (json/stringify (str/lower (str/concat (default (array/nth (str/split @entity.endpoint "/") 0) "") "//" (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))))) ",\"exp\":" @exp ",\"sub\":" (json/stringify @config.vapidSubject) "}"))) "+" "-") "/" "_") "=" ""))))
+            (let ((signature (ecdsa/p256-sign @config.privateKeyCredential @signingInput)))
+              (if (and (= @signature null) (not (str/startsWith @entity.endpoint "https://android.googleapis.com/gcm/send")))
+                (emit PUSH_SEND_FAILED { message: "No key set in vapidDetails.privateKey" })
+                (emit PUSH_HTTP_SEND {
+                  key: "push",
+                  host: (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) "")),
+                  method: "POST",
+                  target: (str/slice @entity.endpoint (str/len (str/concat (default (array/nth (str/split @entity.endpoint "/") 0) "") "//" (str/lower (default (array/nth (str/split @entity.endpoint "/") 2) ""))))),
+                  headers: (array/concat [{ name: "ttl", value: (str/concat "" @config.ttlSeconds) }, { name: "urgency", value: @config.urgency }, { name: "content-encoding", value: "aes128gcm" }, { name: "content-type", value: "application/octet-stream" }] (if (str/startsWith @entity.endpoint "https://android.googleapis.com/gcm/send") [] [{ name: "authorization", value: (str/concat "vapid t=" @signingInput "." (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @signature (bytes/from-string ""))) "+" "-") "/" "_") "=" "") ", k=" @config.vapidPublicKey) }])),
+                  body: @payload.body,
+                  stream: "none"
+                })))))
+
       PUSH_SEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit PUSH_SEND_RESULT { statusCode: @payload.status, ok: true, expired: false })
       PUSH_SEND_REPLIED -> idle when (>= @payload.status 500)
@@ -42,13 +160,7 @@ orbital PushOrbital {
         (emit PUSH_SEND_RESULT { statusCode: @payload.status, ok: false, expired: (or (= @payload.status 404) (= @payload.status 410)) })
       PUSH_SEND_HTTP_FAILED -> idle when (= @payload.kind "timeout")
         (emit PUSH_SEND_FAILED { message: "Socket timeout" })
-      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @config.vapidSubject ""))
-        (emit PUSH_SEND_FAILED { message: "No subject set in vapidDetails.subject." })
-      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (!= @config.vapidSubject "") (= @config.vapidPublicKey ""))
-        (emit PUSH_SEND_FAILED { message: "No key set vapidDetails.publicKey" })
-      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (!= @config.vapidSubject "") (!= @config.vapidPublicKey ""))
-        (emit PUSH_SEND_FAILED { message: "No key set in vapidDetails.privateKey" })
-      PUSH_SEND_HTTP_FAILED -> idle when (and (!= @payload.kind "timeout") (!= @payload.kind "unconfigured"))
+      PUSH_SEND_HTTP_FAILED -> idle when (!= @payload.kind "timeout")
         (emit PUSH_SEND_FAILED { message: @payload.error })
     }
 
@@ -65,22 +177,44 @@ orbital PushOrbital {
         code : string
         message : string!
       }
-        @description "The notification was not sent: an invalid subscription, a missing or malformed VAPID setting, a timeout, a transport failure or a 5xx push service reply. message carries the provider text."
+        @description "The notification was not sent: an invalid subscription, a missing or malformed VAPID setting, an endpoint host not composed, a timeout, a transport failure or a 5xx push service reply. message carries the text."
         @synonyms "push failed, notification error, push rejected"
         @tier "primary"
-      PUSH_SEND_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the push service's HTTP reply."
+      PUSH_CHECKED
+        @description "Internal: the subscription and VAPID setting were checked."
         @tier "secondary"
-      PUSH_SEND_HTTP_FAILED {
-        error : string!
-        kind : string!
-        credential : string
+      PUSH_ENCRYPT {
+        salt : bytes!
+        asPublic : bytes!
+        shared : bytes!
       }
-        @description "Internal: the push request never produced a reply."
+        @description "Internal: the salt, the ephemeral public key and the ECDH shared secret; the content key, nonce and record follow."
+        @tier "secondary"
+      PUSH_SIGN {
+        body : bytes!
+      }
+        @description "Internal: the encrypted request body, ready for the VAPID token."
+        @tier "secondary"
+      PUSH_HTTP_SEND {
+        key : string!
+        host : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the push request, for the HTTP client of the endpoint host."
+        @tier "secondary"
+      PUSH_SALT_DRAWN {
+        value : string!
+      }
+        @description "Internal: the 16 random salt bytes, base64url."
+        @tier "secondary"
+      PUSH_SALT_FAILED {
+        error : string!
+      }
+        @description "Internal: the salt could not be drawn."
         @tier "secondary"
     }
 
@@ -94,6 +228,31 @@ orbital PushOrbital {
       }
         @description "Send a Web Push notification to a browser PushSubscription; url opens on click and icon is the notification icon, both dropped when empty."
         @synonyms "send push notification, web push, browser notification, notify subscriber"
+      PUSH_CHECKED
+      PUSH_SALT_DRAWN {
+        value : string!
+      }
+      PUSH_SALT_FAILED {
+        error : string!
+      }
+      PUSH_ENCRYPT {
+        salt : bytes!
+        asPublic : bytes!
+        shared : bytes!
+      }
+      PUSH_SIGN {
+        body : bytes!
+      }
+      PushFcmHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      PushFcmHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      PushAndroidHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      PushAndroidHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      PushMozillaHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      PushMozillaHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      PushAppleHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      PushAppleHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      PushWnsHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      PushWnsHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
       PUSH_SEND_REPLIED {
         status : number!
         headers : Map string string
@@ -102,14 +261,13 @@ orbital PushOrbital {
       PUSH_SEND_HTTP_FAILED {
         error : string!
         kind : string!
-        credential : string
       }
     }
 
     config {
       vapidPublicKey : string = ""
         @label "VAPID public key"
-        @description "The URL-safe base64 VAPID public key (65 bytes decoded) sent as the k= parameter and in the signed token."
+        @description "The URL-safe base64 VAPID public key (65 bytes decoded) sent as the k= parameter."
         @synonyms "vapid key, application server key, public key"
         @tier "infra"
       vapidSubject : string = ""
@@ -119,11 +277,31 @@ orbital PushOrbital {
         @tier "infra"
       privateKeyCredential : secret = "VAPID_PRIVATE_KEY"
         @label "VAPID private key credential"
-        @description "Name of the credential holding the URL-safe base64 VAPID private key (32 bytes decoded)."
+        @description "Name of the credential holding the VAPID P-256 private key as a PKCS#8 PEM; the kernel signs with it and the program never sees it."
         @synonyms "vapid private key, signing key"
+        @tier "infra"
+      epoch : instant = "1970-01-01T00:00:00Z"
+        @label "Epoch"
+        @description "The Unix epoch, the origin the token exp counts seconds from."
+        @tier "domain"
+      tokenLifetimeSeconds : number = 43200
+        @label "VAPID token lifetime"
+        @description "Seconds the signed token stays valid, 12 hours; RFC 8292 allows at most 86400."
+        @tier "infra"
+      ttlSeconds : number = 2419200
+        @label "Time to live"
+        @description "Seconds the push service keeps an undelivered message (the TTL header), 28 days."
+        @tier "infra"
+      urgency : string = "normal"
+        @label "Urgency"
+        @description "The Urgency header (RFC 8030): very-low, low, normal or high."
+        @tier "infra"
+      pushHosts : [string] = ["fcm.googleapis.com", "android.googleapis.com", "updates.push.services.mozilla.com", "web.push.apple.com", "*.notify.windows.com"]
+        @label "Push service hosts"
+        @description "The endpoint hosts, or host patterns with one leading wildcard label, that have a composed HTTP client above and a net grant; an endpoint on another host fails."
         @tier "infra"
     }
   }
 
-  page boot as PushPage -> PushClient
+  page boot as PushPage -> PushClient, PushFcmHttp, PushAndroidHttp, PushMozillaHttp, PushAppleHttp, PushWnsHttp
 }

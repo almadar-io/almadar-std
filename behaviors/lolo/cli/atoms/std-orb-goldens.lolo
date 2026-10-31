@@ -11,9 +11,8 @@ type GoldenPayload = Map string GoldenValue?
 type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
 type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], rendered : [GoldenPayload], entity : GoldenPayload }
-type GoldenClaim = { name : string!, value : GoldenValue! }
-type GoldenViewer = { id : string!, email : string?, name : string?, role : string, permissions : [string], claims : [GoldenClaim]! }
-type GoldenStep = { keep : string, keepField : string, now : number | string, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, options : GoldenPayload, expect : GoldenExpect }
+type GoldenIdentity = Map string GoldenValue?
+type GoldenStep = { keep : string, keepField : string, now : number | string, identity : GoldenPayload?, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, options : GoldenPayload, expect : GoldenExpect }
 type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, credentials : Map string string, defaults : [string], now : number | string, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenFull = { orbitals : [orbital] }
@@ -132,7 +131,7 @@ orbital GoldensOrbital {
           (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "credentials", "defaults", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
           (array/flatten (array/reduce (object/get @cc "steps") [] (fn acc s
             (array/append @acc (array/concat
-              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "options", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
+              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "identity", "entity", "trait", "orbital", "from", "event", "payload", "options", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
               (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "rendered", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
               (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] [])
               (if (object/has @s "options")
@@ -144,7 +143,7 @@ orbital GoldensOrbital {
                       (array/map (array/filter (object/keys @op) (fn k (and (array/includes ["render", "renderProps", "live"] @k) (not (validate/boolean (object/get @op @k)))))) (fn k (str/concat "step " (array/len @acc) ": option " @k " must be a boolean")))
                       (if (and (= (object/get @op "renderProps") true) (not (= (object/get @op "render") true))) [(str/concat "step " (array/len @acc) ": option renderProps needs render")] []))))
                 [])
-              (if (and (!= (object/get @s "viewer") null) (= (as (object/get @s "viewer") GoldenViewer) null)) [(str/concat "step " (array/len @acc) ": viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }")] [])))))))))
+              (if (and (!= (object/get @s "identity") null) (not (validate/string (object/get (default (as (object/get @s "identity") GoldenIdentity) {}) "id")))) [(str/concat "step " (array/len @acc) ": identity must be null or a row of the identity entity whose id is the subject")] [])))))))))
         (emit GOLDENS_PREFLIGHT {})
       GOLDENS_PREFLIGHT -> running when (> (array/len @entity.fails) 0)
         (set @entity.lines (array/concat @entity.lines [(str/concat "fail  " (object/get @entity.curCase "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
@@ -169,7 +168,7 @@ orbital GoldensOrbital {
               (let ((seed (object/merge (if (= (array/len @acc) 0) (object/get @cc "entity" {}) {}) (object/get @s "entity" {}))))
                 (if (or (= @seed null) (= (array/len (object/keys @seed)) 0)) {} { entity: @seed }))
               (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has @cc "now") { now: (object/get @cc "now") } {}))
-              (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {})
+              (if (object/has @s "identity") { identity: (object/get @s "identity") } {})
               (if (and (object/has @cc "config") (= (object/get @s "trait" (object/get @gf "trait")) (object/get @gf "trait"))) { config: (object/get @cc "config") } {})
               (if (object/has @cc "credentials") { credentials: (object/get @cc "credentials") } {}))))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } render: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "render") true))) renderProps: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "renderProps") true))) live: (array/some (object/get @entity.curCase "steps") (fn s (= (object/get (default (as (object/get @s "options" {}) GoldenPayload) {}) "live") true))) })

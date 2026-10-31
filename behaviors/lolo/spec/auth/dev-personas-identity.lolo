@@ -1,0 +1,60 @@
+app dev-personas-identity-fixture [
+  version: "1.0.0",
+  inbound: ["personas", "persona-sign-in"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST"],
+  net: { "127.0.0.1:9099": [tcp] },
+  description: "Fixture for the goldens of std-dev-personas that need a real [identity] entity: Person is a runtime identity, DevPersonas is composed over it, and Who answers WHOAMI with the session's @user so a golden can read who a session is. PERSONA_ACT_AS signs the session in as the persona; a session that never acted stays the anonymous viewer."
+]
+uses Personas from "std/behaviors/std-dev-personas"
+
+orbital PersonaIdentityFixture [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "127.0.0.1:9099": [tcp] }] {
+  entity Person [runtime, identity] {
+    id : string!
+    name : string
+    email : email
+    role : string = "member"
+  }
+
+  entity WhoRow [runtime] {
+    id : string!
+    seen : string @description "The id of the last @user asked about." = ""
+  }
+
+  trait Acting = Personas.traits.DevPersonas -> Person {
+    config {
+      emulatorIssuer: "firebase-auth-emulator@example.com"
+    }
+  }
+
+  trait PersonaHttp = Personas.traits.PersonaHttp { }
+
+  trait Who -> WhoRow [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.seen "")
+      WHO -> idle
+        (set @entity.seen @user.id)
+        (emit WHOAMI { id: @user.id, role: (default @user.role "") })
+    }
+
+    emits {
+      WHOAMI -> external {
+        id : string!
+        role : string
+      }
+        @description "The id and role of the session's @user."
+        @tier "primary"
+    }
+
+    listens {
+      WHO -> input {
+        ask : string
+      }
+        @description "Ask who the session is."
+    }
+  }
+
+  page boot as PersonaIdentityFixturePage -> Acting, PersonaHttp, Who
+}

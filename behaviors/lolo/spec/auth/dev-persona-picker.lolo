@@ -1,0 +1,49 @@
+app dev-persona-picker-spec [
+  version: "1.0.0",
+  description: "Design contract for the in-app dev persona picker: on start it asks std-dev-personas for the personas (PERSONAS_REQUESTED) and lists them; a refused, unreadable or empty answer shows the empty state with the reason; picking one asks the persona sign-in (PERSONA_SIGN_IN_REQUESTED { id }) and, on its token, signs the session in through the server (TOKEN_SIGN_IN_REQUESTED { token }, then jws/verify with allowUnsigned for the emulator issuer and identity/sign-in); a refused or failed sign-in shows its error with a retry."
+]
+
+type PersonaOption = { id : string!, name : string }
+
+orbital DevPersonaPickerSpec {
+  expects entity PersonaPickerView {
+    id : string!
+    selectedId : string
+    message : string
+  }
+  expects trait PersonaPicker {
+    state idle {
+      INIT -> listing
+    }
+    state listing {
+      LIST_ANSWERED -> listing
+      LIST_READ -> ready
+      LIST_REFUSED -> empty
+    }
+    state ready {
+      PERSONA_PICKED -> signing
+    }
+    state signing {
+      SIGN_IN_ANSWERED -> signing
+      SIGNED_IN -> signedIn
+      SIGN_IN_REFUSED -> failed
+    }
+    state signedIn {
+      SWITCH_PERSONA -> listing
+    }
+    state empty {
+      RETRY -> listing
+    }
+    state failed {
+      RETRY -> listing
+    }
+    emits {
+      PERSONAS_REQUESTED { }
+      PERSONA_SIGN_IN_REQUESTED { id : string! }
+      TOKEN_SIGN_IN_REQUESTED { token : string! }
+      LIST_READ { personas : [PersonaOption]! }
+      LIST_REFUSED { message : string! }
+    }
+  }
+  expects page "/dev/personas" -> PersonaPicker
+}

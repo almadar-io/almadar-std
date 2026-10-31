@@ -3,7 +3,7 @@ app std-http-server [
   env: ["CORS_ORIGIN", "PORT", "VAPID_PUBLIC_KEY", "ORB_TICK_INVOKER", "ALMADAR_API_KEY_SALT", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
   fs: { cwd: "dist/client/**": [read] },
   net: { "127.0.0.1:3000": [listen], "127.0.0.1", env PORT: [listen], "www.googleapis.com:443": [tcp] },
-  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). std-live-feed then subscribes the opened stream to the host's live broadcast (a keyed program/live for the ticket's viewer and the ?clientId= tab) and writes each item as a { type: bus, event, payload?, source, timestamp } frame, so a change made in one tab reaches the others; the stream's close cancels the subscription. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path; neither falls back. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; POST /api/hooks/:name delivers the body and headers to the program's inbound handler of that name through program/dispatch { inbound } and answers the handler's { status, body }."
+  description: "std-http-server — the HTTP server program that replaces orbital-server, first slice, composed from atoms and owning no topology of its own. std-http-boot-gate reads the declared environment at boot and asks std-boot-env-check what keeps it from working in production: under NODE_ENV=production a problem refuses the boot (BOOT_REFUSED, the listener never starts), elsewhere it only warns (BOOT_WARNED); the missing-credential lines of the host's boot check are not asked yet, no operator hands the credential catalog or store to a program. std-http-policy reads CORS_ORIGIN at boot (a comma list, trimmed, blanks dropped) and answers CORS_CONFIGURED; once the gate has heard that and a cleared check it answers BOOT_CLEARED, which tells std-http1 to bind the host and port knobs. std-http1 reads each connection and delivers one typed request; std-http-router asks std-http-policy to decide it (a preflight and a 413 are answered at once), counts an /api request in std-rate-limiter unless the rateLimit knob is false (ADMITTED or THROTTLED, a throttled one is 429 with ratelimit-* headers), routes it by method and path (GET /api/health answers 200 { status, version }, every other path 404 { error, code }) and hands the answer back to std-http1 as RESPOND. Requests are correlated by requestId, so any number are in flight at once. Bound to spec/net/server.lolo. GET /api/events?ticket=<t> is the live stream: the router asks std-stream-ticket to spend the ticket, TICKET_TAKEN opens the stream through std-sse and std-http1 (RESPOND_HEAD/RESPOND_CHUNK/RESPOND_END, heartbeats, close on client disconnect), a missing or bad ticket is 401 { error, code }. POST /api/events/ticket mints a ticket for the anonymous viewer and answers 200 { ticket } (503 if the mint fails). std-live-feed then subscribes the opened stream to the host's live broadcast (a keyed program/live for the ticket's viewer and the ?clientId= tab) and writes each item as a { type: bus, event, payload?, source, timestamp } frame, so a change made in one tab reaches the others; the stream's close cancels the subscription. A bearer starting with the API key prefix goes only to std-api-key-verifier (prefix-exclusive, as the Rust WithApiKeys), anything else only to the JWT path (std-bearer-verify over the native jws/verify operator); neither falls back. Each dispatch request's bearer is presented to its own client session by std-identity-binding (a program/dispatch of CREDENTIAL_PRESENTED, so jws/verify and identity/sign-in run in that session and the request event then runs with @user the identity row; no bearer signs that session out), with the identityEntity and createIdentity knobs. The program session never signs in. POST/GET under /api/orbitals (events, entity events, inputs, resolve-rows) are left by the router (externalPrefix) to std-http-dispatch, which dispatches through program/dispatch and answers the EventResponse wire; POST /api/hooks/:name delivers the body and headers to the program's inbound handler of that name through program/dispatch { inbound } and answers the handler's { status, body }."
 ]
 uses Spec from "almadar-std/server"
 uses H1 from "std/behaviors/std-http1"
@@ -24,9 +24,8 @@ uses Ticket from "std/behaviors/std-stream-ticket"
 uses Bearer from "std/behaviors/std-bearer-verify"
 uses Http from "std/behaviors/std-http-client"
 uses KeyVerifier from "std/behaviors/std-api-key-verifier"
-uses Jws from "std/behaviors/std-jws"
 uses X509 from "std/behaviors/std-x509"
-uses ViewerSource from "std/behaviors/std-viewer"
+uses Binding from "std/behaviors/std-identity-binding"
 orbital HttpServerOrbital {
   entity HttpServerProgram [runtime] {
     id : string!
@@ -34,12 +33,13 @@ orbital HttpServerOrbital {
 
   entity StreamTicket [persistent: stream_tickets] {
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
-    viewer : Viewer! @description "The viewer the ticket was minted for."
-    expiresAt : instant @description "When the ticket stops working."
+    clientId : string! @description "The client session the ticket was minted for; its identity is the stream's."
+    expiresAt : instant! @description "When the ticket stops working."
   }
 
   entity ViewerRow [persistent: viewer_rows] {
-    id : string! @description "The identity row's key: the verified uid."
+    id : string! @description "The identity row's key: the verified subject."
+    email : string @description "The person's email." = ""
     role : string @description "What the person may do in the app." = ""
     name : string @description "The person's display name." = ""
   }
@@ -90,26 +90,23 @@ orbital HttpServerOrbital {
       @label "Mock integrations"
       @description "Whether integrations are mocked regardless of the environment (the --mock flag); a mocked deployment is not asked for its integration credentials."
       @tier "policy"
-    viewerSource : "none" | "claims" | "directory" = none
-      @label "Viewer source"
-      @description "How a verified bearer becomes the dispatch viewer (std-viewer): none reads the token (uid, email, name, a `role` claim, every claim); claims reads only the token's declared fields; directory reads the row of viewerDirectory keyed by the uid for the role and claims."
-      @synonyms "role source, viewer directory, identity lookup"
+    ownOrbital : string = "HttpServerOrbital"
+      @label "Own orbital"
+      @description "The name of the orbital this server is composed in; the identity binding names it in the program/dispatch that presents a credential to the request's client session. Set it to the composing orbital's name."
+      @tier "infra"
+    ownTrait : string = "ServerBinding"
+      @label "Binding trait"
+      @description "The name the identity binding trait has in that orbital (the composing orbital's prefix included)."
+      @tier "infra"
+    identityEntity : entity = ViewerRow
+      @label "Identity entity"
+      @description "The [identity] entity whose row, keyed by the verified subject, supplies the signed-in viewer's role (the role comes only from this row, never from a claim). Bind the app's [identity] entity."
+      @synonyms "identity directory, viewer directory, role source"
       @tier "policy"
-    viewerDirectory : entity = ViewerRow
-      @label "Viewer directory"
-      @description "The [identity] entity whose row supplies role and name when viewerSource is directory."
-      @tier "policy"
-    viewerDirectoryClaims : [field (@entity @config.viewerDirectory) string] = []
-      @label "Viewer claims (text fields)"
-      @description "The text fields of the viewerDirectory row that become viewer claims, each readable as @user.<field>. A field not named here never reaches @user."
-      @tier "policy"
-    viewerDirectoryDateClaims : [field (@entity @config.viewerDirectory) datetime] = []
-      @label "Viewer claims (date and time fields)"
-      @description "The date-time fields of the viewerDirectory row that become viewer claims, each as ISO 8601 UTC text."
-      @tier "policy"
-    viewerCreateMissing : boolean = false
+    createIdentity : boolean = false
       @label "Create the first identity row"
-      @description "Under viewerSource directory, a verified uid with no row in viewerDirectory gets one (the uid, the token's name, the entity's declared defaults), so its declared role applies from the first request."
+      @description "A verified subject with no row in identityEntity gets one (id the subject, email and name from the claims, every other field its declared default) and the request signs in again; off, such a request is refused identity-no-identity."
+      @synonyms "auto-register, first sign-in row"
       @tier "policy"
   }
 
@@ -209,9 +206,6 @@ orbital HttpServerOrbital {
   }
 
   trait ServerRouter = Router.traits.HttpRouter {
-    events {
-      BEARER_VERIFIED: VIEWER_READY
-    }
     config {
       clientFallback: true
       externalPrefixes: ["/api/orbitals", "/api/hooks/"]
@@ -226,26 +220,27 @@ orbital HttpServerOrbital {
       Http1.STREAM_CLOSED -> STREAM_CLOSED
       StreamTicketer.TICKET_TAKEN -> TICKET_TAKEN
       StreamTicketer.TICKET_REFUSED -> TICKET_REFUSED
-      ServerViewer.VIEWER_RESOLVED -> VIEWER_READY with { requestId: ?requestId, viewer: ?viewer }
-      ServerViewer.VIEWER_REFUSED -> BEARER_REFUSED with { requestId: ?requestId, reason: (str/concat "viewer-" ?reason) }
+      ServerBearer.BEARER_VERIFIED -> BEARER_VERIFIED
       ServerBearer.BEARER_ANONYMOUS -> BEARER_ANONYMOUS
       ServerBearer.BEARER_REFUSED -> BEARER_REFUSED
+      ServerBinding.IDENTITY_BOUND -> IDENTITY_BOUND
+      ServerBinding.IDENTITY_ANONYMOUS -> IDENTITY_ANONYMOUS
+      ServerBinding.IDENTITY_REFUSED -> IDENTITY_REFUSED
     }
   }
 
   trait ServerDispatch = Dispatch.traits.ServerDispatch {
     events {
-      BEARER_VERIFIED: VIEWER_READY
+      BEARER_VERIFY: IDENTITY_REQUIRED
     }
     listens {
       Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED
       ServerRouter.ROUTE_EXTERNAL -> ROUTE_EXTERNAL
       ServerRouter.REQUEST_ANSWERED -> REQUEST_ANSWERED
       ServerStatic.REQUEST_ANSWERED -> REQUEST_ANSWERED
-      ServerViewer.VIEWER_RESOLVED -> VIEWER_READY with { requestId: ?requestId, viewer: ?viewer }
-      ServerViewer.VIEWER_REFUSED -> BEARER_REFUSED with { requestId: ?requestId, reason: (str/concat "viewer-" ?reason) }
-      ServerBearer.BEARER_ANONYMOUS -> BEARER_ANONYMOUS
-      ServerBearer.BEARER_REFUSED -> BEARER_REFUSED
+      ServerBinding.IDENTITY_BOUND -> IDENTITY_BOUND
+      ServerBinding.IDENTITY_ANONYMOUS -> IDENTITY_ANONYMOUS
+      ServerBinding.IDENTITY_REFUSED -> IDENTITY_REFUSED
     }
   }
 
@@ -258,16 +253,20 @@ orbital HttpServerOrbital {
     }
   }
 
-  trait ServerViewer = ViewerSource.traits.ViewerResolver {
+  trait ServerBinding = Binding.traits.IdentityBinder {
     config {
-      source: @config.viewerSource
-      directory: @config.viewerDirectory
-      directoryClaims: @config.viewerDirectoryClaims
-      directoryDateClaims: @config.viewerDirectoryDateClaims
-      createMissing: @config.viewerCreateMissing
+      identityEntity: @config.identityEntity
+      createIdentity: @config.createIdentity
+      ownOrbital: @config.ownOrbital
+      ownTrait: @config.ownTrait
     }
     listens {
-      ServerBearer.BEARER_VERIFIED -> VIEWER_RESOLVE with { requestId: ?requestId, verified: { uid: ?viewer.id, claims: ?viewer.claims } }
+      ServerDispatch.IDENTITY_REQUIRED -> BEARER_PRESENT
+      ServerRouter.MINT_IDENTITY_REQUIRED -> BEARER_PRESENT
+      ServerBearer.BEARER_VERIFIED -> BEARER_VERIFIED
+      ServerBearer.BEARER_KEY_VERIFIED -> KEY_SEEN with { requestId: ?requestId }
+      ServerBearer.BEARER_ANONYMOUS -> ANONYMOUS_SEEN
+      ServerBearer.BEARER_REFUSED -> REFUSED_SEEN
     }
   }
 
@@ -279,9 +278,7 @@ orbital HttpServerOrbital {
       ApiKeys.API_KEY_VERIFIED -> API_KEY_VERIFIED
       ApiKeys.API_KEY_REFUSED -> API_KEY_REFUSED
       ServerRouter.BEARER_VERIFY -> BEARER_VERIFY
-      ServerDispatch.BEARER_VERIFY -> BEARER_VERIFY
-      BearerJws.JWS_VERIFIED -> JWS_VERIFIED
-      BearerJws.JWS_REFUSED -> JWS_REFUSED
+      ServerBinding.BEARER_VERIFY -> BEARER_VERIFY
       BearerX509.X509_PARSED -> X509_PARSED
       BearerX509.X509_REFUSED -> X509_REFUSED
       BearerHttp.HTTP_REPLIED -> JWKS_RAW
@@ -313,28 +310,6 @@ orbital HttpServerOrbital {
     }
   }
 
-  trait BearerRsa = Jws.traits.JwsRsa {
-    listens {
-      BearerJws.JWS_RSA_VERIFY -> RSA_VERIFY
-    }
-  }
-
-  trait BearerEc = Jws.traits.JwsEc {
-    listens {
-      BearerJws.JWS_EC_VERIFY -> ECDSA_VERIFY
-    }
-  }
-
-  trait BearerJws = Jws.traits.JwsVerifier {
-    listens {
-      ServerBearer.JWS_VERIFY -> JWS_VERIFY
-      BearerRsa.RSA_VERIFIED -> RSA_OK
-      BearerRsa.RSA_REFUSED -> RSA_NO
-      BearerEc.ECDSA_VERIFIED -> EC_OK
-      BearerEc.ECDSA_REFUSED -> EC_NO
-    }
-  }
-
   trait StreamTicketer = Ticket.traits.StreamTicketer {
     listens {
       ServerRouter.STREAM_OPEN_REQUESTED -> TAKE_TICKET
@@ -362,5 +337,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerViewer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerEc, BearerHttp
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp
 }

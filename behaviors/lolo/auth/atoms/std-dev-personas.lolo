@@ -3,7 +3,7 @@ app std-dev-personas [
   inbound: ["personas", "persona-sign-in"],
   env: ["FIREBASE_AUTH_EMULATOR_HOST"],
   net: { "127.0.0.1:9099": [tcp] },
-  description: "std-dev-personas — sign in as a development persona against the local Firebase Auth emulator. Compose it with linkedEntity set to the app's identity entity: its rows are the personas. POST /api/hooks/personas answers 200 { success, personas, source } (every row with a non-empty id; source identity-entity, or none when there are no rows). POST /api/hooks/persona-sign-in with { id } makes that row an emulator user (uid = id, display name = name, every other non-null field but email a custom claim) and answers 200 { success, customToken, authEmulatorHost, projectId }, the token unsigned (alg none), which only the emulator accepts. Both answer 404 unless FIREBASE_AUTH_EMULATOR_HOST is 127.0.0.1:9099, so a deployment lists and signs in nobody; a body without an id is 400, an unknown id 404, a field named like a reserved token claim or an emulator refusal 500. The emulator calls go through the composed std-http-client trait PersonaHttp (127.0.0.1:9099 over plain TCP, net grant); its authorization header is the declared credential FIREBASE_AUTH_EMULATOR_OWNER (Bearer prefix), filled by the host at the send, so no token is written in the program."
+  description: "std-dev-personas — sign in as a development persona against the local Firebase Auth emulator. Compose it with linkedEntity set to the app's identity entity: its rows are the personas. POST /api/hooks/personas answers 200 { success, personas, source } (every row with a non-empty id; source identity-entity, or none when there are no rows). POST /api/hooks/persona-sign-in with { id } makes that row an emulator user (uid = id, display name = name, every other non-null field but email a custom claim) and answers 200 { success, customToken, authEmulatorHost, projectId }, the token unsigned (alg none), which only the emulator accepts. A composed client may also ask by event (PERSONAS_REQUESTED, PERSONA_SIGN_IN_REQUESTED { id }) and read the same answers (PERSONAS_ANSWERED, PERSONA_SIGN_IN_ANSWERED); the sign-in token it carries is the emulator's unsigned alg-none token, accepted only by the local emulator, and this dev-only path is the one exception to tokens-never-in-payloads. Both answer 404 unless FIREBASE_AUTH_EMULATOR_HOST is 127.0.0.1:9099, so a deployment lists and signs in nobody; a body without an id is 400, an unknown id 404, a field named like a reserved token claim or an emulator refusal 500. The emulator calls go through the composed std-http-client trait PersonaHttp (127.0.0.1:9099 over plain TCP, net grant); its authorization header is the declared credential FIREBASE_AUTH_EMULATOR_OWNER (Bearer prefix), filled by the host at the send, so no token is written in the program."
 ]
 uses Spec from "almadar-std/dev-personas"
 uses Http from "std/behaviors/std-http-client"
@@ -39,7 +39,27 @@ orbital DevPersonasOrbital {
     initial: ready
 
     state ready {
-      INIT -> ready
+      INIT -> ready when (= @config.autoSignIn "")
+      INIT -> ready when (!= @config.autoSignIn "")
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "auto" emit: { success: AUTO_HOST failure: AUTO_FAILED } })
+      AUTO_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
+        (emit TOKEN_MINT { key: @config.autoSignIn, purpose: "sign-in" })
+      AUTO_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
+      AUTO_FAILED -> ready
+      TOKEN_MINT -> ready
+        (emit TOKEN_MINTED { key: @payload.key, purpose: @payload.purpose, token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
+      TOKEN_MINTED -> ready when (= @payload.purpose "answer")
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 200, body: (json/stringify { success: true, customToken: @payload.token, authEmulatorHost: @config.authEmulatorHost, projectId: @config.projectId }) })
+      TOKEN_MINTED -> ready when (= @payload.purpose "sign-in")
+        (identity/sign-in (jws/verify @payload.token [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
+      PERSONA_ACT_AS -> ready
+        (emit TOKEN_MINT { key: @payload.persona, purpose: "sign-in" })
+      TOKEN_SIGN_IN_REQUESTED -> ready
+        (identity/sign-in (jws/verify @payload.token [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
+      PERSONA_SIGNED_IN -> ready
+      PERSONA_SIGN_IN_REFUSED -> ready
+      PERSONAS_REQUESTED -> ready
+        (emit PERSONAS_CALLED { rawBody: "" })
       PERSONAS_CALLED -> ready
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "list" emit: { success: PERSONAS_HOST failure: PERSONAS_FAILED } })
       PERSONAS_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
@@ -54,6 +74,8 @@ orbital DevPersonasOrbital {
       PERSONAS_FAILED -> ready
         (emit PERSONAS_ANSWERED { status: 500, body: (json/stringify { success: false, error: (default @payload.error "") }) })
 
+      PERSONA_SIGN_IN_REQUESTED -> ready
+        (emit SIGN_IN_CALLED { rawBody: (json/stringify { id: @payload.id }) })
       SIGN_IN_CALLED -> ready when (= (default (object/get (default (json/parse (default @payload.rawBody "{}") PersonaSignInBody) {}) "id") "") "")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 400, body: (json/stringify { success: false, error: "expected { id }" }) })
       SIGN_IN_CALLED -> ready when (!= (default (object/get (default (json/parse (default @payload.rawBody "{}") PersonaSignInBody) {}) "id") "") "")
@@ -79,7 +101,7 @@ orbital DevPersonasOrbital {
       SIGN_IN_UPDATED -> ready when (or (< @payload.status 200) (>= @payload.status 300))
         (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "the Auth emulator refused to update " @payload.key ": " (str/concat @payload.status) " " @payload.body) }) })
       SIGN_IN_UPDATED -> ready when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit PERSONA_SIGN_IN_ANSWERED { status: 200, body: (json/stringify { success: true, customToken: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit", iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: "firebase-auth-emulator@example.com", sub: "firebase-auth-emulator@example.com", uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") "."), authEmulatorHost: @config.authEmulatorHost, projectId: @config.projectId }) })
+        (emit TOKEN_MINT { key: @payload.key, purpose: "answer" })
       SIGN_IN_ROW_MISSED -> ready when (= @payload.code "not-found")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no persona with that id" }) })
       SIGN_IN_ROW_MISSED -> ready when (!= @payload.code "not-found")
@@ -89,18 +111,28 @@ orbital DevPersonasOrbital {
     }
 
     emits {
-      PERSONAS_ANSWERED -> internal {
+      PERSONAS_CALLED -> internal {
+        rawBody : string
+      }
+        @description "Internal: a list by request, handed to the same arms the personas hook runs."
+        @tier "internal"
+      SIGN_IN_CALLED -> internal {
+        rawBody : string
+      }
+        @description "Internal: a sign-in by id, handed to the same arms the persona-sign-in hook runs."
+        @tier "internal"
+      PERSONAS_ANSWERED -> external {
         status : number!
         body : string!
       }
-        @description "Internal: the answer of the personas hook."
-        @tier "internal"
-      PERSONA_SIGN_IN_ANSWERED -> internal {
+        @description "The answer of the personas hook, an HTTP-shaped answer (status, JSON text body) a composed client trait may read."
+        @tier "essential"
+      PERSONA_SIGN_IN_ANSWERED -> external {
         status : number!
         body : string!
       }
-        @description "Internal: the answer of the persona-sign-in hook."
-        @tier "internal"
+        @description "The answer of the persona-sign-in hook, an HTTP-shaped answer (status, JSON text body) a composed client trait may read."
+        @tier "essential"
       PERSONAS_HOST -> internal {
         value : string
       }
@@ -163,6 +195,44 @@ orbital DevPersonasOrbital {
       }
         @description "Internal: the persona row could not be read; code not-found when no row has that id."
         @tier "internal"
+      AUTO_HOST -> internal {
+        value : string
+        key : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST at a session's start (autoSignIn)."
+        @tier "internal"
+      AUTO_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the environment could not be read at a session's start; the session stays as it is."
+        @tier "internal"
+      TOKEN_MINT -> internal {
+        key : string!
+        purpose : string!
+      }
+        @description "Internal: build the emulator's unsigned custom token for the persona key; purpose answer returns it to the caller, purpose sign-in signs the session in with it."
+        @tier "internal"
+      TOKEN_MINTED -> internal {
+        key : string!
+        purpose : string!
+        token : string!
+      }
+        @description "Internal: the unsigned custom token of one persona."
+        @tier "internal"
+      PERSONA_SIGNED_IN -> external {
+        subject : string
+      }
+        @description "The session is signed in as the persona: jws/verify accepted its emulator token and identity/sign-in bound the subject."
+        @synonyms "persona signed in"
+        @tier "primary"
+      PERSONA_SIGN_IN_REFUSED -> external {
+        error : string
+        kind : string
+      }
+        @description "The emulator token was not accepted (kind unsealed: jws/verify refused it) or the persona has no identity row (no-identity, store)."
+        @synonyms "persona sign-in refused"
+        @tier "primary"
       SIGN_IN_FAILED -> internal {
         error : string
       }
@@ -190,6 +260,19 @@ orbital DevPersonasOrbital {
         @label "Epoch"
         @description "The instant token times (iat, exp) count seconds from."
         @tier "infra"
+      autoSignIn : string = ""
+        @label "Auto sign-in persona"
+        @description "A persona id; empty signs nobody in. A new session of an app running against the Auth emulator (FIREBASE_AUTH_EMULATOR_HOST equal to authEmulatorHost) signs in as this persona at its start: the persona's unsigned emulator token goes through jws/verify (allowUnsigned, the emulator issuer knob) and identity/sign-in, the same path as the persona picker. Never signs in anywhere else."
+        @synonyms "default persona, dev user, emulator user"
+        @tier "policy"
+      emulatorIssuer : string = ""
+        @label "Emulator issuer"
+        @description "The iss of the emulator custom tokens this atom mints and verifies; empty uses https://securetoken.google.com/<projectId>, the issuer of the emulator's ID tokens, so the same tokens verify in std-bearer-verify when its issuer is that. jws/verify accepts an unsigned token only when its iss equals the call's issuer."
+        @tier "infra"
+      emulatorAudience : string = ""
+        @label "Emulator audience"
+        @description "The aud of the emulator custom tokens; empty uses the projectId."
+        @tier "infra"
       reservedClaims : [string] = ["acr", "amr", "at_hash", "aud", "auth_time", "azp", "cnf", "c_hash", "exp", "firebase", "iat", "iss", "jti", "nbf", "nonce", "sub"]
         @label "Reserved claims"
         @description "Token claim names Firebase reserves; a persona field named like one refuses the sign-in."
@@ -205,8 +288,25 @@ orbital DevPersonasOrbital {
         body : bytes!
       }
         @description "Internal: the HTTP client's reply from the Auth emulator, before its body is read as text."
+      PERSONA_ACT_AS -> input {
+        persona : string!
+      }
+        @description "Sign the dispatching session in as the persona with this id (the seeder dispatches it into each per-owner session): its unsigned emulator token goes through jws/verify (allowUnsigned, the emulator issuer) and identity/sign-in in that session; answers PERSONA_SIGNED_IN { subject } or PERSONA_SIGN_IN_REFUSED { error, kind }."
+        @synonyms "act as persona, seed as persona"
+      TOKEN_SIGN_IN_REQUESTED {
+        token : string!
+      }
+        @description "Sign the session in with an emulator custom token a persona sign-in answered: jws/verify (allowUnsigned, the emulator issuer) then identity/sign-in; answers PERSONA_SIGNED_IN or PERSONA_SIGN_IN_REFUSED."
+        @synonyms "sign in with persona token"
       PersonaHttp.HTTP_REPLIED -> PERSONA_REPLIED
       PersonaHttp.HTTP_FAILED -> SIGN_IN_FAILED
+      PERSONAS_REQUESTED {
+      }
+        @description "A client asks for the persona list; answered by PERSONAS_ANSWERED, as the hook is."
+      PERSONA_SIGN_IN_REQUESTED {
+        id : string!
+      }
+        @description "A client asks to sign in as the persona with this id; answered by PERSONA_SIGN_IN_ANSWERED, as the hook is."
       PERSONAS_CALLED -> inbound "personas" answers PERSONAS_ANSWERED {
         headers : Map string string
         rawBody : string

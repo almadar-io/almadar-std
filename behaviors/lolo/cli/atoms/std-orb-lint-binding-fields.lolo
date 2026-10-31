@@ -53,7 +53,7 @@ orbital OrbLintBindingFieldsOrbital {
     (array/map
       (array/concat [(object/get @o "entity")] (object/get @o "auxiliaryEntities" []))
       (fn e [(object/get @e "name"), { name: (object/get @e "name"), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name"))) }]))))))
-  {})) (plIdx : Map string [BfField] (default (object/fromEntries
+  {})) (rootIdx : Map string BfDef (default (object/fromEntries (array/map (array/filter (object/keys @defIdx) (fn k (validate/pattern @k "^[A-Z][a-zA-Z0-9]*$"))) (fn k [@k, (object/get @defIdx @k)]))) {})) (plIdx : Map string [BfField] (default (object/fromEntries
   (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
     (let ((trts : [BfTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
       (array/flatten (array/map (array/range 0 (array/len @trts)) (fn ti
@@ -137,7 +137,7 @@ orbital OrbLintBindingFieldsOrbital {
                   (let ((s (object/get @h "s")) (c (object/get @x "c")) (p (str/concat (object/get @x "w") (object/get @h "rel"))))
               (array/concat
                 (if (and (array/includes ["g", "e", "k"] @c) (str/startsWith @s @pP))
-                  (let ((segs : [string] (array/filter (array/map (str/split (str/slice @s 9) ".") (fn q (str/replace-pattern @q "\\[.*$" ""))) (fn q (!= @q "")))))
+                  (let ((segs : [string] (array/filter (array/map (str/split (str/slice @s 9) ".") (fn q (default (array/first (str/split @q "[")) ""))) (fn q (!= @q "")))))
   (let ((f0 (array/first @segs)))
    (if (= @f0 null)
     @nof
@@ -160,7 +160,7 @@ orbital OrbLintBindingFieldsOrbital {
                   @nof)
                 (let ((s2 (if (and (= @c "k") (str/startsWith @s @fP)) (str/concat @eP (str/slice @s 12)) @s)))
   (if (str/startsWith @s2 @eP)
-    (let ((fld (str/replace-pattern (str/slice @s2 8) "[.\\[].*$" ""))
+    (let ((fld (default (array/first (str/split (default (array/first (str/split (str/slice @s2 8) ".")) "") "[")) ""))
           (lent (object/get @defIdx (object/get @x "lk") null)))
       (if (or (= @fld "") (array/includes ["id", "createdAt", "updatedAt"] @fld) (= @lent null) (array/includes (object/get @lent "fields" []) @fld))
         @nof
@@ -169,9 +169,9 @@ orbital OrbLintBindingFieldsOrbital {
       (let ((p0 (array/nth @parts 0)) (p1 (array/nth @parts 1)))
        (if (or (= @p0 null) (= @p1 null))
         @nof
-        (let ((root (str/replace-pattern @p0 "\\[.*$" "")) (fld (str/replace-pattern @p1 "\\[.*$" "")))
-          (let ((pent (object/get @defIdx @root null)))
-            (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
+        (let ((root (default (array/first (str/split @p0 "[")) "")) (fld (default (array/first (str/split @p1 "[")) "")))
+          (let ((pent (object/get @rootIdx @root null)))
+            (if (or (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
               [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))))))
         (emit LINT_FINISH { })

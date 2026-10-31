@@ -636,7 +636,7 @@
       ]
     },
     {
-      "id": "viewer-without-claims-fails",
+      "id": "identity-that-is-not-a-row-fails",
       "entity": {
         "golden": {
           "atom": "cli/atoms/std-orb-goldens.lolo",
@@ -649,9 +649,7 @@
                 {
                   "from": "ready",
                   "event": "OPEN",
-                  "viewer": {
-                    "id": "ann"
-                  },
+                  "identity": "ann",
                   "expect": {
                     "fired": true,
                     "state": "open"
@@ -784,7 +782,7 @@
                 "event": "GOLDENS_ANSWERED",
                 "payload": {
                   "status": 500,
-                  "body": "fail  c\n  step 0: viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+                  "body": "fail  c\n  step 0: identity must be null or a row of the identity entity whose id is the subject\n0 passed, 1 failed, 0 skipped in 0 file(s)"
                 }
               }
             ]
@@ -794,7 +792,7 @@
       "note": "G-STD-156 / S3: a step viewer is checked against the core Viewer shape before it is played; claims is required."
     },
     {
-      "id": "viewer-with-a-wrong-typed-field-fails",
+      "id": "identity-with-a-wrong-typed-id-fails",
       "entity": {
         "golden": {
           "atom": "cli/atoms/std-orb-goldens.lolo",
@@ -807,9 +805,8 @@
                 {
                   "from": "ready",
                   "event": "OPEN",
-                  "viewer": {
-                    "id": 7,
-                    "claims": []
+                  "identity": {
+                    "id": 7
                   },
                   "expect": {
                     "fired": true,
@@ -943,7 +940,7 @@
                 "event": "GOLDENS_ANSWERED",
                 "payload": {
                   "status": 500,
-                  "body": "fail  c\n  step 0: viewer does not fit the core Viewer type { id: string!, email: string?, name: string?, role: string, permissions: [string], claims: [{ name: string!, value }]! }\n0 passed, 1 failed, 0 skipped in 0 file(s)"
+                  "body": "fail  c\n  step 0: identity must be null or a row of the identity entity whose id is the subject\n0 passed, 1 failed, 0 skipped in 0 file(s)"
                 }
               }
             ]
@@ -953,7 +950,7 @@
       "note": "S3: a viewer whose id is not a string does not fit Viewer."
     },
     {
-      "id": "control-viewer-with-claims-reaches-the-step",
+      "id": "control-identity-with-a-role-reaches-the-step",
       "entity": {
         "golden": {
           "atom": "cli/atoms/std-orb-goldens.lolo",
@@ -966,15 +963,9 @@
                 {
                   "from": "ready",
                   "event": "OPEN",
-                  "viewer": {
+                  "identity": {
                     "id": "ann",
-                    "role": "admin",
-                    "claims": [
-                      {
-                        "name": "tier",
-                        "value": "gold"
-                      }
-                    ]
+                    "role": "admin"
                   },
                   "expect": {
                     "fired": true,
@@ -1121,7 +1112,7 @@
       "note": "S3 control: a viewer that fits Viewer reaches the step."
     },
     {
-      "id": "control-null-viewer-reaches-the-step",
+      "id": "control-null-identity-reaches-the-step",
       "entity": {
         "golden": {
           "atom": "cli/atoms/std-orb-goldens.lolo",
@@ -1134,7 +1125,7 @@
                 {
                   "from": "ready",
                   "event": "OPEN",
-                  "viewer": null,
+                  "identity": null,
                   "expect": {
                     "fired": true,
                     "state": "open"

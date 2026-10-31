@@ -1,6 +1,6 @@
 app std-http-dispatch [
   version: "1.0.0",
-  description: "std-http-dispatch — the dispatch routes of the HTTP server program that replace orbital-server's events, inputs and hooks routes, bound to spec/net/server-dispatch.lolo. It listens to REQUEST_RECEIVED from std-http1 for paths under dispatchPrefix and hooksPrefix and answers RESPOND { requestId, status, headers, body }; set std-http-router's externalPrefix to dispatchPrefix so the router counts such a request and leaves it here. Routes: POST orbitals/:orbital/events and POST orbitals/:orbital/traits/:trait/entities/:id/events dispatch an EventRequest { event, targetTrait?, entityId?, payload?, clientId?, locale?, traits?, mount?, delivery?, dispatchLog? } through a program/dispatch keyed dispatch-<requestId> (so it runs after the request's dispatch commits and its answer is matched by that key) with the option wire: true and the request’s stream flag, which asks the host for the EventResponse itself (success, transitioned, states, emittedEvents, clientEffectsByTrait, rejections, guardFailed, ...) instead of the model outcome; the body of the answer IS that wire, 200, except a rejection not-an-external-input or inbound-only-event, which is 403 with the same body. A failed dispatch answers { error, code } with 404 ORBITAL_NOT_FOUND, 400 LOCALE_NOT_DECLARED or NO_TRAIT, else 500 EVENT_PROCESSING_ERROR. A request naming no trait (discovery), a traits list (declared) or a mount list is the host's to resolve: the atom passes targetTrait, entityId, traits, mount, clientId and locale as options and does not guess. POST orbitals/:orbital/inputs dispatches only a declared external input (the host refuses the rest as not-an-external-input, 403) and GET orbitals/inputs answers 200 { success: true, inputs } from program/inputs. ?stream=true or an Accept of text/event-stream answers the same dispatch as server-sent events through std-sse: the host’s ordered items unchanged, including their timestamps and terminal { type: complete, data: the response, timestamp }, and { type: error, data: { message } } on failure. Every dispatch route verifies its bearer (BEARER_VERIFY, answered by std-bearer-verify): a verified one runs the dispatch as that viewer (the viewer option), a refused one is 401 { error: Unauthorized, code: UNAUTHORIZED }, and a request with no bearer runs anonymous, or is 401 when requireSignIn is on. POST hooks/:name, outside the guard, emits HOOK_DELIVERED { name, headers, body } and delivers the body text and headers to the program's inbound handler of that name with a keyed program/dispatch { inbound, body, headers }, which runs after the request's dispatch commits; the answer is the handler's { status, body } as application/json, which is 404 for a hook the program does not serve and 500 inbound-unanswered for a handler that answers nothing in its delivering dispatch, and a failed delivery is 500 { error, code: HOOK_DELIVERY_FAILED }. POST orbitals/resolve-rows reads { ref }, emits RESOLVE_ROWS_REQUESTED and resolves that reference with program/resolve-rows for the verified viewer (null for anonymous), answering 200 { rows, total }, or the failure the host names (a malformed reference is its 400 INVALID_REQUEST) else 500 RESOLVE_ROWS_ERROR; malformed JSON answers 400. Any other path under dispatchPrefix is 404 { error, code: NOT_FOUND }. Requests are told apart by requestId, so any number are in flight at once."
+  description: "std-http-dispatch — the dispatch routes of the HTTP server program that replace orbital-server's events, inputs and hooks routes, bound to spec/net/server-dispatch.lolo. It listens to REQUEST_RECEIVED from std-http1 for paths under dispatchPrefix and hooksPrefix and answers RESPOND { requestId, status, headers, body }; set std-http-router's externalPrefix to dispatchPrefix so the router counts such a request and leaves it here. Routes: POST orbitals/:orbital/events and POST orbitals/:orbital/traits/:trait/entities/:id/events dispatch an EventRequest { event, targetTrait?, entityId?, payload?, clientId?, locale?, traits?, mount?, delivery?, dispatchLog? } through a program/dispatch keyed dispatch-<requestId> (so it runs after the request's dispatch commits and its answer is matched by that key) with the option wire: true and the request’s stream flag, which asks the host for the EventResponse itself (success, transitioned, states, emittedEvents, clientEffectsByTrait, rejections, guardFailed, ...) instead of the model outcome; the body of the answer IS that wire, 200, except a rejection not-an-external-input or inbound-only-event, which is 403 with the same body. A failed dispatch answers { error, code } with 404 ORBITAL_NOT_FOUND, 400 LOCALE_NOT_DECLARED or NO_TRAIT, else 500 EVENT_PROCESSING_ERROR. A request naming no trait (discovery), a traits list (declared) or a mount list is the host's to resolve: the atom passes targetTrait, entityId, traits, mount, clientId and locale as options and does not guess. POST orbitals/:orbital/inputs dispatches only a declared external input (the host refuses the rest as not-an-external-input, 403) and GET orbitals/inputs answers 200 { success: true, inputs } from program/inputs. ?stream=true or an Accept of text/event-stream answers the same dispatch as server-sent events through std-sse: the host’s ordered items unchanged, including their timestamps and terminal { type: complete, data: the response, timestamp }, and { type: error, data: { message } } on failure. Every dispatch route presents its bearer and the clientId of its body (BEARER_VERIFY, answered by std-identity-binding with IDENTITY_BOUND, IDENTITY_ANONYMOUS or IDENTITY_REFUSED { requestId, reason }): a verified one is admitted once std-identity-binding has signed the request's client session in (the request event then runs with @user the identity row; the dispatch carries no viewer, and a request naming no client session cannot carry an identity), a refused one is 401 { error: Unauthorized, code: UNAUTHORIZED }, and a request with no bearer runs anonymous, or is 401 when requireSignIn is on. POST hooks/:name, outside the guard, emits HOOK_DELIVERED { name, headers, body } and delivers the body text and headers to the program's inbound handler of that name with a keyed program/dispatch { inbound, body, headers }, which runs after the request's dispatch commits; the answer is the handler's { status, body } as application/json, which is 404 for a hook the program does not serve and 500 inbound-unanswered for a handler that answers nothing in its delivering dispatch, and a failed delivery is 500 { error, code: HOOK_DELIVERY_FAILED }. POST orbitals/resolve-rows reads { ref, clientId? }, emits RESOLVE_ROWS_REQUESTED and resolves that reference with (program/resolve-rows ref { clientId }), so the kernel applies that client session's identity, answering 200 { rows, total }, or the failure the host names (a malformed reference is its 400 INVALID_REQUEST) else 500 RESOLVE_ROWS_ERROR; malformed JSON answers 400. Any other path under dispatchPrefix is 404 { error, code: NOT_FOUND }. Requests are told apart by requestId, so any number are in flight at once."
 ]
 uses Spec from "almadar-std/server-dispatch"
 type DispatchHeader = { name : string!, value : string! }
@@ -8,12 +8,12 @@ type DispatchJson = string | number | boolean | [DispatchJson?] | Map string Dis
 type DispatchBody = { event : string, targetTrait : string, entityId : string, payload : DispatchJson, clientId : string, locale : string, traits : [DispatchJson], mount : [DispatchJson], delivery : DispatchJson, dispatchLog : DispatchJson }
 type DispatchRejection = { code : string, trait : string, event : string, error : string }
 type DispatchWire = { items : [DispatchJson], success : boolean, transitioned : boolean, states : Map string string, emittedEvents : [DispatchJson], clientEffectsByTrait : [DispatchJson], rejections : [DispatchRejection], guardFailed : string, error : string }
-type DispatchRowsBody = { ref : DispatchJson! }
+type DispatchRowsBody = { ref : DispatchJson!, clientId : string }
 type DispatchRows = { rows : [DispatchJson]!, total : number! }
 type DispatchInputs = { inputs : [DispatchJson] }
 type DispatchFailure = { code : string, status : number }
-type DispatchOptions = { wire : boolean!, stream : boolean!, input : boolean!, orbital : string!, targetTrait : string!, entityId : string!, event : string!, traits : [DispatchJson]?, mount : [DispatchJson], clientId : string, locale : string, delivery : DispatchJson, dispatchLog : DispatchJson, viewer : Viewer? }
-type DispatchPending = { requestId : number!, kind : string!, orbital : string!, traitName : string!, entityId : string!, stream : boolean!, authorization : string!, body : bytes!, hookName : string!, hookKey : string, hookHeaders : Map string string, dispatchKey : string, responseHeaders : [DispatchHeader]!, viewer : Viewer }
+type DispatchOptions = { wire : boolean!, stream : boolean!, input : boolean!, orbital : string!, targetTrait : string!, entityId : string!, event : string!, traits : [DispatchJson]?, mount : [DispatchJson], clientId : string, locale : string, delivery : DispatchJson, dispatchLog : DispatchJson }
+type DispatchPending = { requestId : number!, kind : string!, orbital : string!, traitName : string!, entityId : string!, stream : boolean!, authorization : string!, body : bytes!, hookName : string!, hookKey : string, hookHeaders : Map string string, dispatchKey : string, responseHeaders : [DispatchHeader]! }
 type ServerErrorBody = { error : string!, code : string! }
 type HookAnswer = { status : number!, body : string! }
 type DispatchFrames = { requestId : number!, frames : [string]! }
@@ -25,7 +25,7 @@ orbital HttpDispatchOrbital {
 
   entity DispatchRun [runtime] {
     id : string!
-    pending : [DispatchPending] @description "Dispatch requests received and not yet answered, each with its route and the viewer it runs as." = []
+    pending : [DispatchPending] @description "Dispatch requests received and not yet answered, each with its route." = []
     inflight : number @description "The request id whose program/dispatch or program/inputs is in flight; 0 when none. A program/inputs answer carries no key, so one request runs at a time; a dispatch route's answer is matched by its dispatchKey." = 0
     waiting : [number] @description "Request ids admitted while one was in flight, oldest first." = []
     frames : [DispatchFrames] @description "Server-sent frames still to write, per streamed request, oldest first." = []
@@ -92,21 +92,20 @@ orbital HttpDispatchOrbital {
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.hookKey @payload.key))))
 
       ROUTE_DISPATCH -> serving when (and (!= @payload.kind "none") (!= @payload.kind "hook"))
-        (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "authorization") })
+        (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "authorization"), clientId: (let ((q (array/find @entity.pending (fn r (= @r.requestId @payload.requestId))))) (if (= @q null) "" (let ((raw (bytes/to-string (object/get @q "body")))) (if (== @raw null) "" (object/get (default (json/parse @raw DispatchBody) {}) "clientId" ""))))) })
 
-      BEARER_VERIFIED -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { viewer: @payload.viewer }) @p))))
+      IDENTITY_BOUND -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
         (emit DISPATCH_ADMITTED { requestId: @payload.requestId })
 
-      BEARER_ANONYMOUS -> serving when (and (not @config.requireSignIn) (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
+      IDENTITY_ANONYMOUS -> serving when (and (not @config.requireSignIn) (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
         (emit DISPATCH_ADMITTED { requestId: @payload.requestId })
 
-      BEARER_ANONYMOUS -> serving when (and @config.requireSignIn (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
+      IDENTITY_ANONYMOUS -> serving when (and @config.requireSignIn (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
         (emit REQUEST_UNAUTHORIZED { requestId: @payload.requestId, error: { error: "Unauthorized", code: "UNAUTHORIZED" } })
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (default (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "responseHeaders") []) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
 
-      BEARER_REFUSED -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
+      IDENTITY_REFUSED -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
         (emit REQUEST_UNAUTHORIZED { requestId: @payload.requestId, error: { error: "Unauthorized", code: "UNAUTHORIZED" } })
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (default (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "responseHeaders") []) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
@@ -149,16 +148,15 @@ orbital HttpDispatchOrbital {
                   clientId: (object/get @b "clientId" ""),
                   locale: (object/get @b "locale" ""),
                   delivery: (object/get @b "delivery" {}),
-                  dispatchLog: (object/get @b "dispatchLog" {}),
-                  viewer: (object/get @p "viewer" null)
+                  dispatchLog: (object/get @b "dispatchLog" {})
                 }
               })))))))
 
       DISPATCH_PREPARED -> serving when (not @payload.options.input)
-        (emit DISPATCH_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, clientId: (default @payload.options.clientId ""), locale: (default @payload.options.locale ""), stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream"), viewer: @payload.options.viewer })
+        (emit DISPATCH_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, clientId: (default @payload.options.clientId ""), locale: (default @payload.options.locale ""), stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream") })
         (program/dispatch @payload.address @payload.arguments @payload.options { key: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "dispatchKey"), emit: { success: DISPATCH_ANSWERED, failure: DISPATCH_FAILED } })
       DISPATCH_PREPARED -> serving when @payload.options.input
-        (emit INPUT_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream"), viewer: @payload.options.viewer })
+        (emit INPUT_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream") })
         (program/dispatch @payload.address @payload.arguments @payload.options { key: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "dispatchKey"), emit: { success: DISPATCH_ANSWERED, failure: DISPATCH_FAILED } })
 
       DISPATCH_RUN -> serving when (= (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "kind") "inputs-list")
@@ -173,15 +171,15 @@ orbital HttpDispatchOrbital {
               (do
                 (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "Failed to parse the request body as JSON") })
                 (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @payload.requestId)))))
-              (let ((rb (json/parse @text DispatchRowsBody)) (viewer (object/get @p "viewer" null)))
+              (let ((rb (json/parse @text DispatchRowsBody)))
                 (if (= @rb null)
                   (do
                     (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "The request body does not carry a rows reference") })
                     (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @payload.requestId)))))
-                  (emit RESOLVE_ROWS_REQUESTED { requestId: @payload.requestId, reference: (json/stringify (object/get @rb "ref")), viewer: @viewer }))))))
+                  (emit RESOLVE_ROWS_REQUESTED { requestId: @payload.requestId, reference: (json/stringify (object/get @rb "ref")), clientId: (object/get @rb "clientId" "") }))))))
 
       RESOLVE_ROWS_REQUESTED -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= @p.kind "resolve-rows"))))
-        (program/resolve-rows (json/parse @payload.reference DispatchJson) @payload.viewer { key: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "dispatchKey"), emit: { success: ROWS_ANSWERED, failure: ROWS_FAILED } })
+        (program/resolve-rows (json/parse @payload.reference DispatchJson) { clientId: (default @payload.clientId "") } { key: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "dispatchKey"), emit: { success: ROWS_ANSWERED, failure: ROWS_FAILED } })
 
       ROWS_ANSWERED -> serving when (array/some @entity.pending (fn p (and (= @p.kind "resolve-rows") (= @p.dispatchKey @payload.key))))
         (let ((p (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))))) (when (!= @p null) (emit RESPOND { requestId: (object/get @p "requestId"), status: 200, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) })))
@@ -286,6 +284,7 @@ orbital HttpDispatchOrbital {
       BEARER_VERIFY -> external {
         requestId : number!
         authorization : string
+        clientId : string
       }
       REQUEST_UNAUTHORIZED -> external {
         requestId : number!
@@ -300,7 +299,7 @@ orbital HttpDispatchOrbital {
       RESOLVE_ROWS_REQUESTED -> external {
         requestId : number!
         reference : string!
-        viewer : Viewer?
+        clientId : string
       }
       ROUTE_DISPATCH -> internal {
         requestId : number!
@@ -364,7 +363,6 @@ orbital HttpDispatchOrbital {
         clientId : string
         locale : string
         stream : boolean!
-        viewer : Viewer?
       }
       INPUT_REQUESTED -> external {
         requestId : number!
@@ -374,7 +372,6 @@ orbital HttpDispatchOrbital {
         event : string!
         payload : string
         stream : boolean!
-        viewer : Viewer?
       }
     }
 
@@ -398,14 +395,13 @@ orbital HttpDispatchOrbital {
         body : bytes
         peer : string
       }
-      BEARER_VERIFIED {
-        requestId : number
-        viewer : Viewer!
-      }
-      BEARER_ANONYMOUS {
+      IDENTITY_BOUND {
         requestId : number
       }
-      BEARER_REFUSED {
+      IDENTITY_ANONYMOUS {
+        requestId : number
+      }
+      IDENTITY_REFUSED {
         requestId : number
         reason : string!
       }

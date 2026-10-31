@@ -1,30 +1,106 @@
 app std-drive [
-  version: "1.0.0",
-  description: "std-drive — Google Drive through the REST API (www.googleapis.com/drive/v3): list, fetch, upload, create folders and share. Reads use the service account when its key is configured, else the user's refresh token; writes prefer the user's refresh token, then the service account. A failure answers DRIVE_FAILED with the provider's message.",
-  egress: ["https://www.googleapis.com", "https://oauth2.googleapis.com"]
+  version: "1.2.0",
+  description: "std-drive — Google Drive through the REST API (www.googleapis.com/drive/v3): list, fetch, upload, create folders and share. Reads and shares use the service account when its key is configured, else the user's refresh token; uploads and folders prefer the user's refresh token, then the service account. Both access tokens are minted by the host credential store (a jwt-bearer grant for the service account, a refresh_token grant for the user) and carried by two keyed HTTP clients, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state. A failure answers DRIVE_FAILED with the provider's message.",
+  egress: ["https://www.googleapis.com", "https://oauth2.googleapis.com"],
+  net: { "www.googleapis.com:443": [tcp] }
 ]
-type DriveListParams = { folderId : string, query : string, maxResults : number }
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
 type DriveFileRow = { id : string, name : string, mimeType : string, size : string, modifiedTime : string, webViewLink : string }
 type DriveListReply = { files : [DriveFileRow] }
 type DriveFileRecord = { id : string, name : string, mimeType : string, size : number?, modifiedTime : string, webViewLink : string }
-type DriveGetParams = { fileId : string }
 type DriveMeta = { id : string, name : string, mimeType : string }
-type DriveGetState = { fileId : string, id : string, name : string, mimeType : string }
-type DriveUploadParams = { name : string, content : string, mimeType : string, folderId : string }
 type DriveUploadReply = { id : string, name : string, webViewLink : string }
-type DriveFolderParams = { name : string, parentId : string }
 type DriveFolderReply = { id : string, name : string }
-type DriveShareParams = { fileId : string, email : string, role : string }
 type DriveShareReply = { id : string }
-type DriveCall = { op : string, auth : string, tried : number, p : string }
 type DriveApiErrorItem = { message : string }
 type DriveApiError = { code : number, message : string, errors : [DriveApiErrorItem] }
 type DriveErrorReply = { error : DriveApiError }
 type DriveErrorStringReply = { error : string }
-type DriveGrantError = { error : string, error_description : string, error_subtype : string }
 orbital DriveOrbital {
   entity DriveRequest [runtime] {
     id : string!
+    seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
+    op : string @description "The call in flight: list, meta, media, upload, folder or share; empty while the row is free." = ""
+    method : string = ""
+    target : string = ""
+    contentType : string @description "The content type of the request body; empty for none." = ""
+    body : bytes @description "The body of the request in flight." = ""
+    auth : string @description "The credential the request in flight runs under: sa or user." = "sa"
+    tried : number @description "0 while the request runs under its first credential, 1 after the fallback or for the media read." = 0
+    mintTried : boolean @description "True once this credential minted its access token after the store reported none held, so a second not-held answer falls back or fails instead of looping." = false
+    attempt : number @description "The std-retry attempt in flight for a list, meta or media read; 0 for the calls that are not retried." = 0
+    retrying : boolean @description "True while the request in flight runs under std-retry." = false
+    fileId : string @description "The file a get reads." = ""
+    name : string @description "The name an upload or folder was asked for, answered when the reply names none." = ""
+    metaId : string @description "The id of the file whose metadata was read, answered with its content." = ""
+    metaName : string = ""
+    metaMime : string = ""
+    metaReady : boolean @description "True once a metadata reply was read and the media read waits for std-retry to finish the metadata run." = false
+  }
+
+  trait DriveSaKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      DriveCall.DRIVE_SA_HTTP_SEND -> HTTP_SEND
+      DriveSaKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait DriveSaHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "www.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "www.googleapis.com"
+      credential: "GOOGLE_DRIVE_SA_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      DriveSaKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      DriveSaKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  trait DriveUserKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      DriveCall.DRIVE_USER_HTTP_SEND -> HTTP_SEND
+      DriveUserKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait DriveUserHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "www.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "www.googleapis.com"
+      credential: "GOOGLE_DRIVE_USER_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      DriveUserKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      DriveUserKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  ;; list, meta and media reads retry on 1xx, 408, 429, 5xx (three retries: 100, 500 then 1500 ms) and on a timeout or transport failure (two retries, the call stops them); 100 x 5^(n-1) capped at 1500 reproduces the schedule
+  trait DriveRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      DriveCall.DRIVE_RETRY_START -> START per @payload.key
+      DriveCall.DRIVE_RETRY_FAILED -> FAILED per @payload.key
+      DriveCall.DRIVE_RETRY_CANCEL -> CANCEL per @payload.key
+      DriveSaHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (or (str/startsWith ?key "list:") (str/startsWith ?key "get:")) (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+      DriveUserHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (or (str/startsWith ?key "list:") (str/startsWith ?key "get:")) (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+    }
   }
 
   trait DriveClient -> DriveRequest [optimistic] {
@@ -34,357 +110,311 @@ orbital DriveOrbital {
       INIT -> idle
 
       DRIVE_LIST_FILES -> idle
-        (http GET @config.origin "/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { q: (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
-          queryEncoding: rfc3986,
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "list", auth: "sa", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_LIST_FILES_AS_USER -> idle
-        (http GET @config.origin "/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { q: (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
-          queryEncoding: rfc3986,
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "list", auth: "user", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
+        (set @entity.seq (+ @entity.seq 1))
+        (emit DRIVE_READY { key: (str/concat "list:" (default @payload.folderId "") "|" (default @payload.query "") "|" (default @payload.maxResults 0) "#" @entity.seq), op: "list", method: "GET", target: (str/concat "/drive/v3/files?q=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll (default @payload.folderId "") "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " (default @payload.query "")) ""))) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "&pageSize=" (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults) "&fields=files%28id%2C%20name%2C%20mimeType%2C%20size%2C%20modifiedTime%2C%20webViewLink%29"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: "" })
       DRIVE_GET_FILE -> idle
-        (http GET @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId)) {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, mimeType, size" },
-          queryEncoding: rfc3986,
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "meta", auth: "sa", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_GET_FILE_AS_USER -> idle
-        (http GET @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId)) {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, mimeType, size" },
-          queryEncoding: rfc3986,
-          retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "meta", auth: "user", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
+        (set @entity.seq (+ @entity.seq 1))
+        (emit DRIVE_READY { key: (str/concat "get:" @payload.fileId "#" @entity.seq), op: "meta", method: "GET", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "?fields=id%2C%20name%2C%20mimeType%2C%20size"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: @payload.fileId })
       DRIVE_SHARE_FILE -> idle
-        (http POST @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions") {
-          headers: { Accept: "*/*" },
-          query: { fields: "id" },
-          queryEncoding: rfc3986,
-          json: { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "share", auth: "sa", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_SHARE_FILE_AS_USER -> idle
-        (http POST @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions") {
-          headers: { Accept: "*/*" },
-          query: { fields: "id" },
-          queryEncoding: rfc3986,
-          json: { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "share", auth: "user", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE -> idle when (and (str/startsWith @payload.content "data:") (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2) (= (array/nth (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";") 1) "base64") (str/includes @payload.content ","))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "") (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "user", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE -> idle when (and (not (and (str/startsWith @payload.content "data:") (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2) (= (array/nth (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";") 1) "base64") (str/includes @payload.content ","))) (not (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1))))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "user", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE -> idle when (and (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1)) (str/uri-component-valid (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "") (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "user", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE -> idle when (and (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1)) (not (str/uri-component-valid (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ","))))
-        (emit DRIVE_FAILED { message: "URI malformed" })
-      DRIVE_UPLOAD_FILE_AS_SA -> idle when (and (str/startsWith @payload.content "data:") (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2) (= (array/nth (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";") 1) "base64") (str/includes @payload.content ","))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "") (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "sa", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE_AS_SA -> idle when (and (not (and (str/startsWith @payload.content "data:") (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2) (= (array/nth (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";") 1) "base64") (str/includes @payload.content ","))) (not (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1))))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "sa", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE_AS_SA -> idle when (and (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1)) (str/uri-component-valid (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")))
-        (http POST @config.origin "/upload/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name, webViewLink", uploadType: "multipart" },
-          queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "") (array/first (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "upload", auth: "sa", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_UPLOAD_FILE_AS_SA -> idle when (and (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",") (not (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 2)) (= (array/len (str/split (default (array/first (str/split (str/slice @payload.content 5) ",")) "") ";")) 1)) (not (str/uri-component-valid (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ","))))
-        (emit DRIVE_FAILED { message: "URI malformed" })
+        (set @entity.seq (+ @entity.seq 1))
+        (emit DRIVE_READY { key: (str/concat "share:" @payload.fileId ":" @payload.email "#" @entity.seq), op: "share", method: "POST", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions?fields=id"), contentType: "application/json", body: (bytes/from-string (json/stringify { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email })), retry: false, auth: "sa", name: "", fileId: "" })
       DRIVE_CREATE_FOLDER -> idle
-        (http POST @config.origin "/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name" },
-          queryEncoding: rfc3986,
-          json: (if (!= (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
-          auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "folder", auth: "user", tried: 0, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_CREATE_FOLDER_AS_SA -> idle
-        (http POST @config.origin "/drive/v3/files" {
-          headers: { Accept: "*/*" },
-          query: { fields: "id, name" },
-          queryEncoding: rfc3986,
-          json: (if (!= (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
-          auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-        } { key: (json/stringify { op: "folder", auth: "sa", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
-      DRIVE_REPLIED -> idle when (= (json/parse @payload.key DriveCall) null)
-        (emit DRIVE_FAILED { message: "The call state could not be read back" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "list") (= (json/parse @payload.body DriveListReply) null))
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((parent (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)))
+          (emit DRIVE_READY { key: (str/concat "folder:" @parent "/" @payload.name "#" @entity.seq), op: "folder", method: "POST", target: "/drive/v3/files?fields=id%2C%20name", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= @parent "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [@parent] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }))), retry: false, auth: "user", name: @payload.name, fileId: "" }))
+      DRIVE_UPLOAD_FILE -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((folder (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)) (tail (if (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",")) (str/slice @payload.content 5) "")))
+          (let ((head (default (array/first (str/split @tail ",")) "")))
+            (let ((kind (if (= @tail "") "text" (let ((parts (str/split @head ";"))) (if (and (= (array/len @parts) 2) (= (array/nth @parts 1) "base64")) "base64" (if (= (array/len @parts) 1) "uri" "text"))))))
+              (emit DRIVE_UPLOAD_SOURCE { kind: @kind, mime: (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (and (!= @kind "text") (!= (default (array/first (str/split @head ";")) "") "")) (default (array/first (str/split @head ";")) "") "application/octet-stream")), text: (if (= @kind "text") @payload.content (str/join (array/drop (str/split @tail ",") 1) ",")), name: @payload.name, folder: @folder, seq: @entity.seq }))))
+      DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "text")
+        (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: (bytes/from-string @payload.text), name: @payload.name, folder: @payload.folder, seq: @payload.seq })
+      DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "uri")
+        (let ((t (str/decode-uri-component @payload.text)))
+          (if (== @t null)
+            (emit DRIVE_FAILED { message: "URI malformed" })
+            (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: (bytes/from-string @t), name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
+      DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "base64")
+        (let ((d (bytes/from-base64 @payload.text)))
+          (if (== @d null)
+            (emit DRIVE_FAILED { message: "The base64 content could not be decoded" })
+            (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: @d, name: @payload.name, folder: @payload.folder, seq: @payload.seq })))
+      DRIVE_UPLOAD_PART -> idle when (not (validate/pattern @payload.mime "^[^\\x00-\\x1f\\x7f]*$"))
+        (emit DRIVE_FAILED { message: "The content type is not valid" })
+      DRIVE_UPLOAD_PART -> idle when (validate/pattern @payload.mime "^[^\\x00-\\x1f\\x7f]*$")
+        (emit DRIVE_READY { key: (str/concat "upload:" @payload.folder "/" @payload.name "#" @payload.seq), op: "upload", method: "POST", target: "/upload/drive/v3/files?fields=id%2C%20name%2C%20webViewLink&uploadType=multipart", contentType: (str/concat "multipart/related; boundary=" @config.boundary), body: (bytes/concat [(bytes/from-string (str/concat "--" @config.boundary "\r\nContent-Type: application/json\r\n\r\n" (json/stringify (if (!= @payload.folder "") { name: @payload.name, parents: [@payload.folder] } { name: @payload.name })) "\r\n--" @config.boundary "\r\nContent-Type: " @payload.mime "\r\n\r\n")) @payload.data (bytes/from-string (str/concat "\r\n--" @config.boundary "--\r\n"))]), retry: false, auth: "user", name: @payload.name, fileId: "" })
+    }
+
+    emits {
+      DRIVE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Drive action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
+        @synonyms "drive error, drive failure"
+        @tier "primary"
+      DRIVE_READY {
+        key : string!
+        op : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+        auth : string!
+        name : string!
+        fileId : string!
+      }
+        @description "Internal: a built request, handed to the row of its key in DriveCall."
+        @tier "secondary"
+      DRIVE_UPLOAD_SOURCE -> internal {
+        kind : string!
+        mime : string!
+        text : string!
+        name : string!
+        folder : string!
+        seq : number!
+      }
+        @description "Internal: the upload content read as text, a base64 data URL or a percent-encoded data URL."
+        @tier "secondary"
+      DRIVE_UPLOAD_PART -> internal {
+        mime : string!
+        data : bytes!
+        name : string!
+        folder : string!
+        seq : number!
+      }
+        @description "Internal: the upload content as bytes with its content type, ready for the multipart body."
+        @tier "secondary"
+    }
+
+    listens {
+      DRIVE_LIST_FILES -> input {
+        folderId : string
+        query : string
+        maxResults : number
+      }
+        @description "List non-trashed Drive files, optionally inside a folder and filtered by a Drive query; maxResults defaults to 100."
+        @synonyms "list files, drive files"
+      DRIVE_GET_FILE -> input {
+        fileId : string!
+      }
+        @description "Fetch a file's metadata and base64 content."
+        @synonyms "download file, get file"
+      DRIVE_UPLOAD_FILE -> input {
+        name : string!
+        content : string!
+        mimeType : string
+        folderId : string
+      }
+        @description "Upload a file; content is text or a base64 data URL, the folder defaults to the configured one."
+        @synonyms "upload file, save file"
+      DRIVE_CREATE_FOLDER -> input {
+        name : string!
+        parentId : string
+      }
+        @description "Create a folder, optionally inside a parent."
+        @synonyms "new folder, make folder"
+      DRIVE_SHARE_FILE -> input {
+        fileId : string!
+        email : string!
+        role : string
+      }
+        @description "Share a file with a user by email; role defaults to reader."
+        @synonyms "share file, grant access"
+      DRIVE_UPLOAD_SOURCE {
+        kind : string!
+        mime : string!
+        text : string!
+        name : string!
+        folder : string!
+        seq : number!
+      }
+      DRIVE_UPLOAD_PART {
+        mime : string!
+        data : bytes!
+        name : string!
+        folder : string!
+        seq : number!
+      }
+    }
+
+    config {
+      defaultFolderId : string = ""
+        @label "Default folder id"
+        @description "Parent folder for uploads and new folders when the call names none; empty for the Drive root."
+        @synonyms "root folder, default parent"
+        @tier "infra"
+      boundary : string = "almadar-drive-multipart"
+        @label "Multipart boundary"
+        @description "The boundary string of the multipart/related upload body; it must not occur in the uploaded content."
+        @synonyms "multipart boundary"
+        @tier "infra"
+    }
+  }
+
+  trait DriveCall -> DriveRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle when (= @payload.retry false)
+        (set @entity.op @payload.op)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.auth @payload.auth)
+        (set @entity.tried 0)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+        (set @entity.fileId @payload.fileId)
+        (set @entity.name @payload.name)
+        (set @entity.metaReady false)
+        (emit DRIVE_DISPATCH {})
+      CALL_READY -> idle when (= @payload.retry true)
+        (set @entity.op @payload.op)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.auth @payload.auth)
+        (set @entity.tried 0)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying true)
+        (set @entity.fileId @payload.fileId)
+        (set @entity.name @payload.name)
+        (set @entity.metaReady false)
+        (emit DRIVE_RETRY_START { key: (as @payload.key CallKey) })
+      DRIVE_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit DRIVE_DISPATCH {})
+      DRIVE_DISPATCH -> idle when (= @entity.auth "sa")
+        (emit DRIVE_SA_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: (if (= @entity.contentType "") [{ name: "accept", value: "*/*" }] [{ name: "accept", value: "*/*" }, { name: "content-type", value: @entity.contentType }]), body: @entity.body, stream: "none" })
+      DRIVE_DISPATCH -> idle when (= @entity.auth "user")
+        (emit DRIVE_USER_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: (if (= @entity.contentType "") [{ name: "accept", value: "*/*" }] [{ name: "accept", value: "*/*" }, { name: "content-type", value: @entity.contentType }]), body: @entity.body, stream: "none" })
+
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list"))
+        (let ((r (json/parse @payload.body DriveListReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILES_LISTED { files: (array/map (object/get @r files []) (fn f { id: (default (object/get @f id "") ""), name: (default (object/get @f name "") ""), mimeType: (default (object/get @f mimeType "") ""), size: (str/to-number (default (object/get @f size "") "")), modifiedTime: (default (object/get @f modifiedTime "") ""), webViewLink: (default (object/get @f webViewLink "") "") })) })))
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "meta") (= (json/parse @payload.body DriveMeta) null))
         (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "meta") (= (json/parse @payload.body DriveMeta) null))
-        (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "upload") (= (json/parse @payload.body DriveUploadReply) null))
-        (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "folder") (= (json/parse @payload.body DriveFolderReply) null))
-        (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "share") (= (json/parse @payload.body DriveShareReply) null))
-        (emit DRIVE_FAILED { message: "The Drive answer could not be read" })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "list"))
-        (emit DRIVE_FILES_LISTED {
-          files: (array/map (default (object/get (default (json/parse @payload.body DriveListReply) {}) files []) []) (fn f {
-            id: (default (object/get @f id "") ""),
-            name: (default (object/get @f name "") ""),
-            mimeType: (default (object/get @f mimeType "") ""),
-            size: (str/to-number (default (object/get @f size "") "")),
-            modifiedTime: (default (object/get @f modifiedTime "") ""),
-            webViewLink: (default (object/get @f webViewLink "") "")
-          }))
-        })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "meta") (= (object/get (default (json/parse @payload.key DriveCall) {}) auth "") "sa"))
-        (let ((st (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" })
-          (http GET @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component (object/get @st fileId ""))) {
-            headers: { Accept: "*/*" },
-            query: { alt: "media" },
-            queryEncoding: rfc3986,
-            responseAs: bytes,
-            retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-            auth: {
-            scheme: jwt-bearer,
-            key: @config.serviceAccountKey,
-            alg: RS256,
-            claims: (if (= @config.subject "")
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") }
-              { scope: "https://www.googleapis.com/auth/drive", aud: "https://www.googleapis.com/oauth2/v4/token", exp: (+ (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s") 3600), iat: (time/diff @now (time/parse "1970-01-01T00:00:00Z") "s"), sub: @config.subject }),
-            tokenUrl: "https://www.googleapis.com/oauth2/v4/token",
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:service-account-token", scope: app },
-            grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-          } { key: (json/stringify { op: "media", auth: "sa", tried: 1, p: (json/stringify { fileId: (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}) fileId ""), id: (let ((mid (object/get (default (json/parse @payload.body DriveMeta) {}) id ""))) (if (!= @mid "") @mid (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}) fileId ""))), name: (default (object/get (default (json/parse @payload.body DriveMeta) {}) name "") ""), mimeType: (default (object/get (default (json/parse @payload.body DriveMeta) {}) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })))
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "meta") (= (object/get (default (json/parse @payload.key DriveCall) {}) auth "") "user"))
-        (let ((st (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" })
-          (http GET @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component (object/get @st fileId ""))) {
-            headers: { Accept: "*/*" },
-            query: { alt: "media" },
-            queryEncoding: rfc3986,
-            responseAs: bytes,
-            retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
-            auth: {
-            scheme: token-exchange,
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: { form: { refresh_token: { credential: @config.refreshToken }, client_id: { credential: @config.clientId }, client_secret: { credential: @config.clientSecret }, grant_type: "refresh_token" } },
-            expiresMarginMs: 300000,
-            storeAs: { name: "drive:user-token", scope: app },
-            grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
-          }
-          } { key: (json/stringify { op: "media", auth: "user", tried: 1, p: (json/stringify { fileId: (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}) fileId ""), id: (let ((mid (object/get (default (json/parse @payload.body DriveMeta) {}) id ""))) (if (!= @mid "") @mid (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}) fileId ""))), name: (default (object/get (default (json/parse @payload.body DriveMeta) {}) name "") ""), mimeType: (default (object/get (default (json/parse @payload.body DriveMeta) {}) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })))
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "media"))
-        (emit DRIVE_FILE_FETCHED {
-          id: (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetState) {}) id ""),
-          name: (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetState) {}) name ""),
-          mimeType: (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetState) {}) mimeType ""),
-          content: @payload.body,
-          size: (- (* (/ (str/len @payload.body) 4) 3) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0)))
-        })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "upload"))
-        (emit DRIVE_FILE_UPLOADED {
-          id: (default (object/get (default (json/parse @payload.body DriveUploadReply) {}) id "") ""),
-          name: (let ((rn (object/get (default (json/parse @payload.body DriveUploadReply) {}) name ""))) (if (!= @rn "") @rn (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveUploadParams) {}) name ""))),
-          webViewLink: (default (object/get (default (json/parse @payload.body DriveUploadReply) {}) webViewLink "") "")
-        })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "folder"))
-        (emit DRIVE_FOLDER_CREATED {
-          id: (default (object/get (default (json/parse @payload.body DriveFolderReply) {}) id "") ""),
-          name: (let ((rn (object/get (default (json/parse @payload.body DriveFolderReply) {}) name ""))) (if (!= @rn "") @rn (object/get (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveFolderParams) {}) name "")))
-        })
-      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "share"))
-        (emit DRIVE_FILE_SHARED { shared: true, permissionId: (default (object/get (default (json/parse @payload.body DriveShareReply) {}) id "") "") })
-      DRIVE_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "media"))
-        (emit DRIVE_FAILED { message: (let ((db (default (base64/decode @payload.body) @payload.body))) (let ((er (json/parse @db DriveErrorReply))) (if (= @er null) (if (>= @payload.status 400) @db (str/concat "Request failed with status code " @payload.status)) (if (= (object/get @er error null) null) (if (>= @payload.status 400) "[object Object]" (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @db DriveErrorStringReply))) (if (= @es null) @db (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") ""))))))) })
-      DRIVE_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "media"))
-        (emit DRIVE_FAILED { message: (let ((er (json/parse @payload.body DriveErrorReply))) (if (= @er null) (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status)) (if (= (object/get @er error null) null) (if (>= @payload.status 400) "[object Object]" (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @payload.body DriveErrorStringReply))) (if (= @es null) @payload.body (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") "")))))) })
-      DRIVE_CALL_FAILED -> idle when (and (= (json/parse @payload.key DriveCall) null) (or (= @payload.kind "unconfigured") (= @payload.phase "grant")))
-        (emit DRIVE_FAILED { message: "The call state could not be read back" })
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "list") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 0))
-        (let ((st (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveListParams))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" }) (emit DRIVE_LIST_FILES_AS_USER { folderId: (object/get @st folderId ""), query: (object/get @st query ""), maxResults: (object/get @st maxResults 0) })))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "meta") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 0))
-        (let ((st (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveGetParams) {}))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" }) (emit DRIVE_GET_FILE_AS_USER { fileId: (object/get @st fileId "") })))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "share") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 0))
-        (let ((st (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveShareParams))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" }) (emit DRIVE_SHARE_FILE_AS_USER { fileId: (object/get @st fileId ""), email: (object/get @st email ""), role: (object/get @st role "") })))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "upload") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 0))
-        (let ((st (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveUploadParams) {}))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" }) (emit DRIVE_UPLOAD_FILE_AS_SA { name: (object/get @st name ""), content: (object/get @st content ""), mimeType: (object/get @st mimeType ""), folderId: (object/get @st folderId "") })))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) op "") "folder") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 0))
-        (let ((st (default (json/parse (object/get (default (json/parse @payload.key DriveCall) {}) p "") DriveFolderParams) {}))) (if (= @st null) (emit DRIVE_FAILED { message: "The call state could not be read back" }) (emit DRIVE_CREATE_FOLDER_AS_SA { name: (object/get @st name ""), parentId: (object/get @st parentId "") })))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) tried 0) 1))
-        (credential-status { credential: @config.refreshToken, scope: app } { emit: { success: DRIVE_REFRESH_PROBED } })
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.phase "grant") (!= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) auth "") "sa"))
-        (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (emit DRIVE_FAILED { message: (let ((ge (json/parse @gb DriveGrantError))) (if (= @ge null) (let ((er (json/parse @gb DriveErrorReply))) (if (= @er null) (if (>= @gs 400) @gb (str/concat "Request failed with status code " @gs)) (if (= (object/get @er error null) null) (if (>= @gs 400) "[object Object]" (str/concat "Request failed with status code " @gs)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @gb DriveErrorStringReply))) (if (= @es null) @gb (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") "")))))) (if (!= (default (object/get @ge error "") "") "") (str/concat (default (object/get @ge error "") "") (if (!= (default (object/get @ge error_description "") "") "") (str/concat ": " (default (object/get @ge error_description "") "")) "")) (let ((er (json/parse @gb DriveErrorReply))) (if (= @er null) (if (>= @gs 400) @gb (str/concat "Request failed with status code " @gs)) (if (= (object/get @er error null) null) (if (>= @gs 400) "[object Object]" (str/concat "Request failed with status code " @gs)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @gb DriveErrorStringReply))) (if (= @es null) @gb (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") ""))))))))) }))
-      DRIVE_CALL_FAILED -> idle when (and (= @payload.phase "grant") (!= @payload.kind "unconfigured") (= (object/get (default (json/parse @payload.key DriveCall) {}) auth "") "user"))
-        (let ((gb (default @payload.grantBody "")) (gs (default @payload.grantStatus 0))) (emit DRIVE_FAILED { message: (let ((ge (json/parse @gb DriveGrantError))) (if (= @ge null) (let ((er (json/parse @gb DriveErrorReply))) (if (= @er null) (if (>= @gs 400) @gb (str/concat "Request failed with status code " @gs)) (if (= (object/get @er error null) null) (if (>= @gs 400) "[object Object]" (str/concat "Request failed with status code " @gs)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @gb DriveErrorStringReply))) (if (= @es null) @gb (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") "")))))) (if (and (= (default (object/get @ge error "") "") "invalid_grant") (str/includes (str/lower (default (object/get @ge error_description "") "")) "reauth")) (json/stringify @ge) (let ((er (json/parse @gb DriveErrorReply))) (if (= @er null) (if (>= @gs 400) @gb (str/concat "Request failed with status code " @gs)) (if (= (object/get @er error null) null) (if (>= @gs 400) "[object Object]" (str/concat "Request failed with status code " @gs)) (if (str/startsWith (json/stringify (object/get @er error null)) "\"") (let ((es (json/parse @gb DriveErrorStringReply))) (if (= @es null) @gb (object/get @es error ""))) (if (object/has @er "error.errors") (str/join (array/map (object/get @er "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @er "error.message" "") ""))))))))) }))
-      DRIVE_CALL_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.phase "grant"))
-        (emit DRIVE_FAILED { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "meta") (!= (json/parse @payload.body DriveMeta) null))
+        (set @entity.metaId (let ((mid (object/get (json/parse @payload.body DriveMeta) id ""))) (if (!= @mid "") @mid @entity.fileId)))
+        (set @entity.metaName (default (object/get (json/parse @payload.body DriveMeta) name "") ""))
+        (set @entity.metaMime (default (object/get (json/parse @payload.body DriveMeta) mimeType "") "application/octet-stream"))
+        (set @entity.metaReady true)
+      DRIVE_RETRY_DONE -> idle when (and (= @entity.op "meta") @entity.metaReady)
+        (set @entity.op "media")
+        (set @entity.target (str/concat "/drive/v3/files/" (str/encode-uri-component @entity.fileId) "?alt=media"))
+        (set @entity.contentType "")
+        (set @entity.body (bytes/from-string ""))
+        (set @entity.tried 1)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.metaReady false)
+        (emit DRIVE_RETRY_START { key: (as @entity.id CallKey) })
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "media"))
+        (emit DRIVE_FILE_FETCHED { id: @entity.metaId, name: @entity.metaName, mimeType: @entity.metaMime, content: @payload.content, size: (- (* (/ (str/len @payload.content) 4) 3) (if (str/endsWith @payload.content "==") 2 (if (str/endsWith @payload.content "=") 1 0))) })
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "upload"))
+        (let ((r (json/parse @payload.body DriveUploadReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILE_UPLOADED { id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)), webViewLink: (default (object/get @r webViewLink "") "") })))
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "folder"))
+        (let ((r (json/parse @payload.body DriveFolderReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FOLDER_CREATED { id: (default (object/get @r id "") ""), name: (let ((rn (object/get @r name ""))) (if (!= @rn "") @rn @entity.name)) })))
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "share"))
+        (let ((r (json/parse @payload.body DriveShareReply))) (if (= @r null) (emit DRIVE_FAILED { message: "The Drive answer could not be read" }) (emit DRIVE_FILE_SHARED { shared: true, permissionId: (default (object/get @r id "") "") })))
+        (emit DRIVE_CLEAR {})
+      DRIVE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit DRIVE_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body DriveErrorReply)) (es (json/parse @payload.body DriveErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+      DRIVE_REPLY_ERROR -> idle when (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
+        (emit DRIVE_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
+      DRIVE_REPLY_ERROR -> idle when (not (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))))
+        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_CLEAR {})
+      DRIVE_GAVE_UP -> idle
+        (emit DRIVE_FAILED { message: (default @payload.error "") })
+        (emit DRIVE_CLEAR {})
+
+      DRIVE_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (= @entity.auth "sa") (!= @config.subject ""))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.saToken, scope: app, tokenEndpoint: @config.saTokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccountKey, subject: @config.subject, audience: @config.saTokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: DRIVE_CONNECTED, failure: DRIVE_CONNECT_FAILED } })
+      DRIVE_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (= @entity.auth "sa") (= @config.subject ""))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.saToken, scope: app, tokenEndpoint: @config.saTokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccountKey, audience: @config.saTokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: DRIVE_CONNECTED, failure: DRIVE_CONNECT_FAILED } })
+      DRIVE_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false) (= @entity.auth "user"))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.userToken, scope: app, tokenEndpoint: @config.userTokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: DRIVE_CONNECTED, failure: DRIVE_CONNECT_FAILED } })
+      DRIVE_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+        (emit DRIVE_UNCONFIGURED {})
+      DRIVE_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") @entity.retrying (< @entity.attempt 3))
+        (emit DRIVE_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      DRIVE_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (not (and @entity.retrying (< @entity.attempt 3))))
+        (emit DRIVE_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+
+      DRIVE_CONNECTED -> idle when (= @payload.connected true)
+        (emit DRIVE_DISPATCH {})
+      DRIVE_CONNECTED -> idle when (= @payload.connected false)
+        (emit DRIVE_UNCONFIGURED {})
+      DRIVE_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit DRIVE_NOT_CONFIGURED {})
+      DRIVE_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit DRIVE_FAIL { message: (str/concat "Google token request failed: " @payload.error) })
+
+      DRIVE_UNCONFIGURED -> idle when (= @entity.tried 0)
+        (set @entity.tried 1)
+        (set @entity.auth (if (= @entity.auth "sa") "user" "sa"))
+        (set @entity.mintTried false)
+        (emit DRIVE_DISPATCH {})
+      DRIVE_UNCONFIGURED -> idle when (>= @entity.tried 1)
+        (credential-status { credential: @config.refreshToken, scope: app } { emit: { success: DRIVE_REFRESH_PROBED, failure: DRIVE_PROBE_FAILED } })
       DRIVE_REFRESH_PROBED -> idle when @payload.connected
-        (emit DRIVE_FAILED { message: "Drive not configured — set GOOGLE_DRIVE_SA_KEY (reads) and/or GOOGLE_DRIVE_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET (writes)" })
+        (emit DRIVE_FAIL { message: "Drive not configured — set GOOGLE_DRIVE_SA_KEY (reads) and/or GOOGLE_DRIVE_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET (writes)" })
       DRIVE_REFRESH_PROBED -> idle when (not @payload.connected)
-        (emit DRIVE_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID." })
+        (emit DRIVE_NOT_CONFIGURED {})
+      DRIVE_PROBE_FAILED -> idle
+        (emit DRIVE_NOT_CONFIGURED {})
+      DRIVE_NOT_CONFIGURED -> idle
+        (emit DRIVE_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: drive. Set GOOGLE_DRIVE_SA_KEY / GOOGLE_DRIVE_SUBJECT / GOOGLE_DRIVE_REFRESH_TOKEN / GOOGLE_DRIVE_FOLDER_ID." })
+
+      DRIVE_FAIL -> idle when (and @entity.retrying (= (default @payload.code "") ""))
+        (emit DRIVE_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_CLEAR {})
+      DRIVE_FAIL -> idle when (and @entity.retrying (!= (default @payload.code "") ""))
+        (emit DRIVE_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit DRIVE_FAILED { code: @payload.code, message: @payload.message })
+        (emit DRIVE_CLEAR {})
+      DRIVE_FAIL -> idle when (and (not @entity.retrying) (= (default @payload.code "") ""))
+        (emit DRIVE_FAILED { message: @payload.message })
+        (emit DRIVE_CLEAR {})
+      DRIVE_FAIL -> idle when (and (not @entity.retrying) (!= (default @payload.code "") ""))
+        (emit DRIVE_FAILED { code: @payload.code, message: @payload.message })
+        (emit DRIVE_CLEAR {})
+
+      DRIVE_CLEAR -> idle
+        (set @entity.op "")
+        (set @entity.method "")
+        (set @entity.target "")
+        (set @entity.contentType "")
+        (set @entity.body (bytes/from-string ""))
+        (set @entity.auth "sa")
+        (set @entity.tried 0)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+        (set @entity.fileId "")
+        (set @entity.name "")
+        (set @entity.metaId "")
+        (set @entity.metaName "")
+        (set @entity.metaMime "")
+        (set @entity.metaReady false)
     }
 
     emits {
@@ -433,151 +463,163 @@ orbital DriveOrbital {
         @description "A Drive action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
         @synonyms "drive error, drive failure"
         @tier "primary"
-      DRIVE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      DRIVE_SA_HTTP_SEND {
         key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: a Drive HTTP reply."
+        @description "Internal: the Drive request under the service-account token, for its keyed HTTP client."
         @tier "secondary"
-      DRIVE_CALL_FAILED {
+      DRIVE_USER_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the Drive request under the user token, for its keyed HTTP client."
+        @tier "secondary"
+      DRIVE_RETRY_START { key : CallKey! }
+        @description "Internal: hand a list, metadata or media read to std-retry."
+        @tier "secondary"
+      DRIVE_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      DRIVE_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      DRIVE_DISPATCH -> internal { }
+        @description "Internal: send the request in flight, again after a retry attempt, a minted token or a fallback to the other credential."
+        @tier "secondary"
+      DRIVE_REPLY_ERROR -> internal {
+        status : number!
+        message : string!
+      }
+        @description "Internal: a non-2xx Drive reply with the provider's message."
+        @tier "secondary"
+      DRIVE_UNCONFIGURED -> internal { }
+        @description "Internal: the credential of the request in flight is not configured; fall back to the other credential or probe the refresh token."
+        @tier "secondary"
+      DRIVE_NOT_CONFIGURED -> internal { }
+        @description "Internal: no Drive credential is configured."
+        @tier "secondary"
+      DRIVE_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @description "Internal: end the request in flight with a failure, cancelling its std-retry run."
+        @tier "secondary"
+      DRIVE_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      DRIVE_CONNECT_FAILED -> internal {
         error : string!
         kind : string!
-        credential : string
-        phase : string
-        grantStatus : number
-        grantBody : string
-        key : string!
       }
-        @description "Internal: a Drive request never produced a reply."
+        @description "Internal: the credential store could not mint the access token."
         @tier "secondary"
-      DRIVE_REFRESH_PROBED {
+      DRIVE_REFRESH_PROBED -> internal {
         connected : boolean!
+        label : string
       }
         @description "Internal: whether the user refresh token is configured."
         @tier "secondary"
-      DRIVE_LIST_FILES_AS_USER {
-        folderId : string
-        query : string
-        maxResults : number
+      DRIVE_PROBE_FAILED -> internal {
+        error : string!
       }
-        @description "Internal: list through the user client after the service account was unconfigured."
+        @description "Internal: the credential store could not tell whether the user refresh token is configured."
         @tier "secondary"
-      DRIVE_GET_FILE_AS_USER {
-        fileId : string!
-      }
-        @description "Internal: fetch through the user client."
-        @tier "secondary"
-      DRIVE_SHARE_FILE_AS_USER {
-        fileId : string!
-        email : string!
-        role : string
-      }
-        @description "Internal: share through the user client."
-        @tier "secondary"
-      DRIVE_UPLOAD_FILE_AS_SA {
-        name : string!
-        content : string!
-        mimeType : string
-        folderId : string
-      }
-        @description "Internal: upload through the service account after the user client was unconfigured."
-        @tier "secondary"
-      DRIVE_CREATE_FOLDER_AS_SA {
-        name : string!
-        parentId : string
-      }
-        @description "Internal: create a folder through the service account."
+      DRIVE_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
         @tier "secondary"
     }
 
     listens {
-      DRIVE_LIST_FILES -> input {
-        folderId : string
-        query : string
-        maxResults : number
-      }
-        @description "List non-trashed Drive files, optionally inside a folder and filtered by a Drive query; maxResults defaults to 100."
-        @synonyms "list files, drive files"
-      DRIVE_GET_FILE -> input {
-        fileId : string!
-      }
-        @description "Fetch a file's metadata and base64 content."
-        @synonyms "download file, get file"
-      DRIVE_UPLOAD_FILE -> input {
+      CALL_READY {
+        key : string!
+        op : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+        auth : string!
         name : string!
-        content : string!
-        mimeType : string
-        folderId : string
-      }
-        @description "Upload a file; content is text or a base64 data URL, the folder defaults to the configured one."
-        @synonyms "upload file, save file"
-      DRIVE_CREATE_FOLDER -> input {
-        name : string!
-        parentId : string
-      }
-        @description "Create a folder, optionally inside a parent."
-        @synonyms "new folder, make folder"
-      DRIVE_SHARE_FILE -> input {
         fileId : string!
-        email : string!
-        role : string
-      }
-        @description "Share a file with a user by email; role defaults to reader."
-        @synonyms "share file, grant access"
-      DRIVE_LIST_FILES_AS_USER {
-        folderId : string
-        query : string
-        maxResults : number
-      }
-      DRIVE_GET_FILE_AS_USER {
-        fileId : string!
-      }
-      DRIVE_SHARE_FILE_AS_USER {
-        fileId : string!
-        email : string!
-        role : string
-      }
-      DRIVE_UPLOAD_FILE_AS_SA {
-        name : string!
-        content : string!
-        mimeType : string
-        folderId : string
-      }
-      DRIVE_CREATE_FOLDER_AS_SA {
-        name : string!
-        parentId : string
       }
       DRIVE_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        content : string!
         key : string!
       }
-      DRIVE_CALL_FAILED {
+      DRIVE_REQUEST_FAILED {
         error : string!
         kind : string!
-        credential : string
-        phase : string
-        grantStatus : number
-        grantBody : string
         key : string!
+      }
+      DRIVE_DISPATCH
+      DRIVE_REPLY_ERROR {
+        status : number!
+        message : string!
+      }
+      DRIVE_UNCONFIGURED
+      DRIVE_NOT_CONFIGURED
+      DRIVE_FAIL {
+        code : string
+        message : string!
+      }
+      DRIVE_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      DRIVE_CONNECT_FAILED {
+        error : string!
+        kind : string!
       }
       DRIVE_REFRESH_PROBED {
         connected : boolean!
+        label : string
       }
+      DRIVE_PROBE_FAILED {
+        error : string!
+      }
+      DRIVE_CLEAR
+      DRIVE_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      DRIVE_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      DRIVE_RETRY_DONE {
+        key : string!
+        attempts : number!
+      }
+      DriveClient.DRIVE_READY -> CALL_READY per @payload.key
+      DriveSaHttp.HTTP_REPLIED -> DRIVE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), content: (if (str/startsWith ?key "get:") (bytes/to-base64 ?body) ""), key: ?key }
+      DriveUserHttp.HTTP_REPLIED -> DRIVE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), content: (if (str/startsWith ?key "get:") (bytes/to-base64 ?body) ""), key: ?key }
+      DriveSaHttp.HTTP_FAILED -> DRIVE_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      DriveUserHttp.HTTP_FAILED -> DRIVE_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      DriveRetry.ATTEMPT -> DRIVE_ATTEMPT per @payload.key
+      DriveRetry.GAVE_UP -> DRIVE_GAVE_UP per @payload.key
+      DriveRetry.COMPLETED -> DRIVE_RETRY_DONE per @payload.key
     }
 
     config {
-      origin : url = "https://www.googleapis.com"
-        @label "Google APIs origin"
-        @description "The Google APIs origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "drive url, api host"
-        @tier "infra"
       serviceAccountKey : secret = "GOOGLE_DRIVE_SA_KEY"
         @label "Service-account key credential"
-        @description "Name of the credential holding the service-account key JSON (raw or base64); reads prefer it."
+        @description "Name of the credential holding the service-account key JSON; the credential store reads iss and the default sub (client_email) and kid (private_key_id) from it and signs the RS256 assertion with its private key. Reads and shares prefer it."
         @synonyms "service account, sa key"
         @tier "infra"
       subject : string = ""
@@ -585,9 +627,24 @@ orbital DriveOrbital {
         @description "Workspace user the service account impersonates (domain-wide delegation); empty for none."
         @synonyms "impersonate, delegation"
         @tier "infra"
+      saToken : secret = "GOOGLE_DRIVE_SA_TOKEN"
+        @label "Service-account token credential"
+        @description "Host credential name the minted service-account access token lives under; the composed DriveSaHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "service account token, sa token name"
+        @tier "infra"
+      saTokenUrl : url = "https://www.googleapis.com/oauth2/v4/token"
+        @label "Service-account token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the signed assertion at; also the assertion audience. Must be declared in the app egress list."
+        @synonyms "jwt exchange endpoint, sa token url"
+        @tier "infra"
+      scope : string = "https://www.googleapis.com/auth/drive"
+        @label "OAuth scope"
+        @description "The scope claim of the signed service-account assertion."
+        @synonyms "drive scope, oauth scope"
+        @tier "infra"
       refreshToken : secret = "GOOGLE_DRIVE_REFRESH_TOKEN"
         @label "User refresh-token credential"
-        @description "Name of the credential holding the user's OAuth refresh token; writes prefer it."
+        @description "Name of the credential holding the user's OAuth refresh token; the credential store builds the user access token from it. Writes prefer it."
         @synonyms "refresh token, user token"
         @tier "infra"
       clientId : secret = "OAUTH_CLIENT_ID"
@@ -600,13 +657,18 @@ orbital DriveOrbital {
         @description "Name of the credential holding the OAuth client secret used with the refresh token."
         @synonyms "client secret"
         @tier "infra"
-      defaultFolderId : string = ""
-        @label "Default folder id"
-        @description "Parent folder for uploads and new folders when the call names none; empty for the Drive root."
-        @synonyms "root folder, default parent"
+      userToken : secret = "GOOGLE_DRIVE_USER_TOKEN"
+        @label "User token credential"
+        @description "Host credential name the minted user access token lives under; the composed DriveUserHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "user token name, access token name"
+        @tier "infra"
+      userTokenUrl : url = "https://oauth2.googleapis.com/token"
+        @label "User token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the refresh token at. Must be declared in the app egress list."
+        @synonyms "refresh endpoint, user token url"
         @tier "infra"
     }
   }
 
-  page boot as DrivePage -> DriveClient
+  page boot as DrivePage -> DriveClient, DriveCall, DriveSaKeyed, DriveSaHttp, DriveUserKeyed, DriveUserHttp, DriveRetry
 }

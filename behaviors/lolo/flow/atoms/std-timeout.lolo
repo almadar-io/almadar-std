@@ -26,20 +26,23 @@ orbital TimeoutOrbital {
         (set @entity.deadline null)
       SUCCEEDED -> idle when (== ?key @entity.key)
         (set @entity.deadline null)
-        (emit COMPLETED { key: @entity.key })
+        (emit COMPLETED { key: ?key })
       FAILED -> idle when (== ?key @entity.key)
         (set @entity.deadline null)
-        (emit ASK_FAILED { key: @entity.key, error: ?error })
+        (emit ASK_FAILED { key: ?key, error: ?error })
       CANCEL -> idle
         (cancel-call @entity.key)
         (set @entity.deadline null)
-      TIMER_DUE -> idle when @config.cancelOnDeadline
+      TIMER_DUE -> idle when (and @config.cancelOnDeadline (!= @entity.key null))
         (cancel-call @entity.key)
         (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
-      TIMER_DUE -> idle when (not @config.cancelOnDeadline)
+      TIMER_DUE -> idle when (and (not @config.cancelOnDeadline) (!= @entity.key null))
         (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
+      ;; no key means no run in flight, so idle is the meaning
+      TIMER_DUE -> idle when (= @entity.key null)
+        (set @entity.deadline null)
     }
 
     emits {

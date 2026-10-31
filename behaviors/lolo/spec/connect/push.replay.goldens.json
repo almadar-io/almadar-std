@@ -1,7 +1,7 @@
 {
  "atom": "connect/atoms/std-push.lolo",
  "trait": "PushClient",
- "note": "Pins std-push's observable behaviour before it moves off the http effect: the subscription pre-checks, the reply mapping and the failure mapping. The RFC 8291 section 5 byte-level vector (spec/connect/push.vectors.json) joins once the bytes-message hmac op lands.",
+ "note": "std-push over the composed std-http-client per push-service host: the pre-checks, the .lolo aes128gcm (RFC 8291) and VAPID ES256 (RFC 8292) steps, and the reply and failure mapping. The hmac/sha256-bytes steps run only on an orb that carries the bytes-message form (4th argument input).",
  "cases": [
   {
    "id": "pin-a-subscription-without-keys-is-refused",
@@ -31,6 +31,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -65,6 +72,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -99,6 +113,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -133,10 +154,17 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
-   "id": "pin-a-valid-subscription-asks-the-push-service",
+   "id": "a-valid-subscription-is-stored-and-checked",
    "config": {
     "vapidPublicKey": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
     "vapidSubject": "mailto:ops@example.test"
@@ -159,14 +187,19 @@
       "state": "idle",
       "effects": [
        {
-        "type": "http"
+        "type": "set"
        }
       ],
-      "neverEmits": [
-       "PUSH_SEND_FAILED"
-      ]
+      "emits": []
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -197,6 +230,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -227,6 +267,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -257,6 +304,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -287,6 +341,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -315,6 +376,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -342,87 +410,13 @@
       ]
      }
     }
-   ]
-  },
-  {
-   "id": "pin-an-unconfigured-call-with-no-subject-names-the-subject",
-   "config": {
-    "vapidPublicKey": "",
-    "vapidSubject": ""
-   },
-   "steps": [
-    {
-     "event": "PUSH_SEND_HTTP_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "unconfigured"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PUSH_SEND_FAILED",
-        "payload": {
-         "message": "No subject set in vapidDetails.subject."
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-an-unconfigured-call-with-no-public-key-names-the-public-key",
-   "config": {
-    "vapidPublicKey": "",
-    "vapidSubject": "mailto:ops@example.test"
-   },
-   "steps": [
-    {
-     "event": "PUSH_SEND_HTTP_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "unconfigured"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PUSH_SEND_FAILED",
-        "payload": {
-         "message": "No key set vapidDetails.publicKey"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-an-unconfigured-call-with-both-set-names-the-private-key",
-   "config": {
-    "vapidPublicKey": "BPubKey",
-    "vapidSubject": "mailto:ops@example.test"
-   },
-   "steps": [
-    {
-     "event": "PUSH_SEND_HTTP_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "unconfigured"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PUSH_SEND_FAILED",
-        "payload": {
-         "message": "No key set in vapidDetails.privateKey"
-        }
-       }
-      ]
-     }
-    }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -450,6 +444,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -484,6 +485,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -518,6 +526,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -552,6 +567,13 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
    ]
   },
   {
@@ -581,6 +603,1192 @@
         "event": "PUSH_SEND_FAILED",
         "payload": {
          "message": "Vapid public key should be 65 bytes long when decoded."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ]
+  },
+  {
+   "id": "an-endpoint-host-without-a-composed-client-is-refused",
+   "note": "the host is not in pushHosts, so no request is built",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://evil.example/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint host is not configured: evil.example"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-salt-draw-failure-answers-push-failed",
+   "note": "the random-bytes failure route",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SALT_FAILED",
+     "payload": {
+      "error": "entropy unavailable"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Could not draw the push salt: entropy unavailable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-peer-key-off-the-curve-answers-push-failed",
+   "note": "ecdh/p256-ephemeral answers null for a point that is not on the curve",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SALT_DRAWN",
+     "payload": {
+      "value": "DGv6ra1nlYgDCS1FRnbzlw"
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "x",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Public key is not valid for specified curve"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_ENCRYPT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-real-ephemeral-path-encrypts-signs-and-asks-the-endpoint-client",
+   "note": "state and route only: the ephemeral key, shared secret and ciphertext are not fixed here; the salt is fixed",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SALT_DRAWN",
+     "payload": {
+      "value": "DGv6ra1nlYgDCS1FRnbzlw"
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BCVxsr7N/eNgVRqvHtD0zTZsEc6+VV+JvLexhqUzORcxaOzi6+AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "{\"title\":\"Hi\",\"body\":\"There\"}",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "rfc-8291-appendix-a-known-answer-body-and-vapid-request",
+   "note": "RFC 8291 Appendix A: ua_public, auth_secret, salt, as_public and ecdh_secret fixed; the HKDF chain (ecdh_secret kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs -> ikm S4lYMb_L0FxCeq0WhDx813KgSYqU26kOyzWUdsXYyrg -> cek oIhVW04MRdy2XN9CiKLxTg, nonce 4h_95klXJ5E_qnoN) is pinned by the final body; the private key is scalar 9; exp = now 1700000000 + 43200; ttl 2419200 and urgency normal are the live host defaults",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_ENCRYPT",
+     "payload": {
+      "salt": "DGv6ra1nlYgDCS1FRnbzlw==",
+      "asPublic": "BP4z9KsN6nGRTbVYI/c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8=",
+      "shared": "kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs="
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BCVxsr7N/eNgVRqvHtD0zTZsEc6+VV+JvLexhqUzORcxaOzi6+AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "When I grow up, I want to be a watermelon",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "authorization",
+           "value": "vapid t=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJodHRwczovL2ZjbS5nb29nbGVhcGlzLmNvbSIsImV4cCI6MTcwMDA0MzIwMCwic3ViIjoibWFpbHRvOm9wc0BleGFtcGxlLnRlc3QifQ.0e56J7-vgQm2Mnc0XxBnxVj3GxlGzeUExiUK3xTaBM6-dQwF85ufoXm6YDe_KT29UBEEEpVg7mBhVbmDfI-8Ug, k=BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+          }
+         ],
+         "body": "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI/c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A/yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj/Qulcy4a+fN",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "multi-record-body-two-records-known-answer",
+   "note": "4179 plaintext bytes: record 1 carries 4079 bytes + 0x01, record 2 carries 100 bytes + 0x02 with nonce xor 1; expected body built independently with node crypto per RFC 8188 section 2.3 over the RFC 8291 Appendix A keys",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_ENCRYPT",
+     "payload": {
+      "salt": "DGv6ra1nlYgDCS1FRnbzlw==",
+      "asPublic": "BP4z9KsN6nGRTbVYI/c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8=",
+      "shared": "kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs="
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BCVxsr7N/eNgVRqvHtD0zTZsEc6+VV+JvLexhqUzORcxaOzi6+AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "authorization",
+           "value": "vapid t=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJodHRwczovL2ZjbS5nb29nbGVhcGlzLmNvbSIsImV4cCI6MTcwMDA0MzIwMCwic3ViIjoibWFpbHRvOm9wc0BleGFtcGxlLnRlc3QifQ.0e56J7-vgQm2Mnc0XxBnxVj3GxlGzeUExiUK3xTaBM6-dQwF85ufoXm6YDe_KT29UBEEEpVg7mBhVbmDfI-8Ug, k=BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+          }
+         ],
+         "body": "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",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "multi-record-body-exact-record-is-one-record",
+   "note": "4079 plaintext bytes fill exactly one record: a single record with the 0x02 delimiter and no empty trailing record, as the live scheme did",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_ENCRYPT",
+     "payload": {
+      "salt": "DGv6ra1nlYgDCS1FRnbzlw==",
+      "asPublic": "BP4z9KsN6nGRTbVYI/c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8=",
+      "shared": "kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs="
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BCVxsr7N/eNgVRqvHtD0zTZsEc6+VV+JvLexhqUzORcxaOzi6+AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvw",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "authorization",
+           "value": "vapid t=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJodHRwczovL2ZjbS5nb29nbGVhcGlzLmNvbSIsImV4cCI6MTcwMDA0MzIwMCwic3ViIjoibWFpbHRvOm9wc0BleGFtcGxlLnRlc3QifQ.0e56J7-vgQm2Mnc0XxBnxVj3GxlGzeUExiUK3xTaBM6-dQwF85ufoXm6YDe_KT29UBEEEpVg7mBhVbmDfI-8Ug, k=BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+          }
+         ],
+         "body": "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",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "multi-record-body-three-records-known-answer",
+   "note": "8159 plaintext bytes: records of 4079, 4079 and 1 bytes with delimiters 0x01, 0x01, 0x02 and nonce xor 0, 1, 2",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_ENCRYPT",
+     "payload": {
+      "salt": "DGv6ra1nlYgDCS1FRnbzlw==",
+      "asPublic": "BP4z9KsN6nGRTbVYI/c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8=",
+      "shared": "kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs="
+     },
+     "entity": {
+      "id": "d",
+      "uaPublic": "BCVxsr7N/eNgVRqvHtD0zTZsEc6+VV+JvLexhqUzORcxaOzi6+AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4=",
+      "authSecret": "BTBZMqHH6r4Tts7J/aSIgg==",
+      "payloadText": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "authorization",
+           "value": "vapid t=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJodHRwczovL2ZjbS5nb29nbGVhcGlzLmNvbSIsImV4cCI6MTcwMDA0MzIwMCwic3ViIjoibWFpbHRvOm9wc0BleGFtcGxlLnRlc3QifQ.0e56J7-vgQm2Mnc0XxBnxVj3GxlGzeUExiUK3xTaBM6-dQwF85ufoXm6YDe_KT29UBEEEpVg7mBhVbmDfI-8Ug, k=BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+          }
+         ],
+         "body": "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",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "a-legacy-gcm-endpoint-is-sent-without-a-vapid-authorization",
+   "note": "live scheme skipped VAPID for https://android.googleapis.com/gcm/send; no credential is held and the request still goes out",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SIGN",
+     "payload": {
+      "body": "AQID"
+     },
+     "entity": {
+      "id": "d",
+      "endpoint": "https://android.googleapis.com/gcm/send/legacy-token"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "android.googleapis.com",
+         "method": "POST",
+         "target": "/gcm/send/legacy-token",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          }
+         ],
+         "body": "AQID",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "a-windows-wns-endpoint-routes-with-its-own-host",
+   "note": "the one-label pattern *.notify.windows.com matches wns2-par02p: PUSH_HTTP_SEND carries that host for the pattern-capable client; the path keeps its query",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SIGN",
+     "payload": {
+      "body": "AQID"
+     },
+     "entity": {
+      "id": "d",
+      "endpoint": "https://wns2-par02p.notify.windows.com/?token=AwYAAA"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "wns2-par02p.notify.windows.com",
+         "method": "POST",
+         "target": "/?token=AwYAAA",
+         "body": "AQID",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "a-host-outside-the-patterns-is-refused-two-labels-under-the-wildcard",
+   "note": "the host is not matched by any pushHosts entry, so no request is built",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://a.b.notify.windows.com/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint host is not configured: a.b.notify.windows.com"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-host-outside-the-patterns-is-refused-the-bare-wildcard-suffix",
+   "note": "the host is not matched by any pushHosts entry, so no request is built",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://notify.windows.com/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint host is not configured: notify.windows.com"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-host-outside-the-patterns-is-refused-a-look-alike-suffix",
+   "note": "the host is not matched by any pushHosts entry, so no request is built",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://evilnotify.windows.com/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint host is not configured: evilnotify.windows.com"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-host-outside-the-patterns-is-refused-a-windows-host-with-a-trailing-path-dot",
+   "note": "the host is not matched by any pushHosts entry, so no request is built",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://notify.windows.com.evil.example/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Push endpoint host is not configured: notify.windows.com.evil.example"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-matching-wildcard-host-passes-the-host-check",
+   "note": "a one-label wns host is accepted by the check: the send reaches the salt draw",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://wns2-par02p.notify.windows.com/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "wns2-par02p.notify.windows.com",
+         "method": "POST",
+         "target": "/x",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "an-upper-case-endpoint-host-routes-to-the-lower-case-client",
+   "note": "DNS names are case-insensitive: the host is lower-cased before the host check and the routing key, so a WNS host in upper case reaches the Wns client",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SIGN",
+     "payload": {
+      "body": "AQID"
+     },
+     "entity": {
+      "id": "d",
+      "endpoint": "https://WNS2-Par02p.Notify.Windows.COM/x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "wns2-par02p.notify.windows.com",
+         "method": "POST",
+         "target": "/x",
+         "body": "AQID",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "an-upper-case-endpoint-host-passes-the-host-check",
+   "note": "the host check compares the lower-cased host with the lower-case pushHosts",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://FCM.GoogleAPIs.com/fcm/send/x",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/fcm/send/x",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "the-wns-client-connects-to-and-names-the-call-host",
+   "note": "needs the std-http-client per-call host change (096): the connect target and the Host header are the call's host (hostText) when the client knob is a pattern; the TLS serverName is the same hostText",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushWnsHttp",
+    "PushClient"
+   ],
+   "steps": [
+    {
+     "trait": "PushWnsHttp",
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "push",
+      "method": "POST",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "wns2-par02p.notify.windows.com"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "@entity.hostText",
+        "arg1": 443,
+        "arg2": {
+         "serverName": "@entity.hostText",
+         "alpn": [
+          "list",
+          "http/1.1"
+         ]
+        }
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "UE9TVCAveCBIVFRQLzEuMQ0KaG9zdDogd25zMi1wYXIwMnAubm90aWZ5LndpbmRvd3MuY29tDQpjb250ZW50LWxlbmd0aDogMA0KDQo="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-whole-wns-send-routes-to-the-wns-client-and-answers-its-reply",
+   "note": "PUSH_SEND to a WNS endpoint reaches PUSH_HTTP_SEND with the call host, then a 201 reply of the Wns client answers PUSH_SEND_RESULT; the socket, TLS and the 096 pattern grant are not exercised by the replay",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushWnsHttp",
+    "PushClient"
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "PUSH_SEND",
+     "payload": {
+      "subscription": {
+       "endpoint": "https://wns2-par02p.notify.windows.com/?token=AwYAAA",
+       "keys": {
+        "p256dh": "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
+        "auth": "BTBZMqHH6r4Tts7J_aSIgg"
+       }
+      },
+      "title": "Hi",
+      "body": "There"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "wns2-par02p.notify.windows.com",
+         "method": "POST",
+         "target": "/?token=AwYAAA",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PushWnsHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "push",
+      "status": 201,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PUSH_SEND_RESULT",
+        "payload": {
+         "statusCode": 201,
+         "ok": true,
+         "expired": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-vapid-token-is-signed-and-sent-as-the-authorization-header",
+   "note": "PUSH_SIGN alone: the ES256 signature is RFC 6979 over the signing input; the body is passed through",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SIGN",
+     "payload": {
+      "body": "AQID"
+     },
+     "entity": {
+      "id": "d",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_HTTP_SEND",
+        "payload": {
+         "key": "push",
+         "host": "fcm.googleapis.com",
+         "method": "POST",
+         "target": "/send/abc",
+         "headers": [
+          {
+           "name": "ttl",
+           "value": "2419200"
+          },
+          {
+           "name": "urgency",
+           "value": "normal"
+          },
+          {
+           "name": "content-encoding",
+           "value": "aes128gcm"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "authorization",
+           "value": "vapid t=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJodHRwczovL2ZjbS5nb29nbGVhcGlzLmNvbSIsImV4cCI6MTcwMDA0MzIwMCwic3ViIjoibWFpbHRvOm9wc0BleGFtcGxlLnRlc3QifQ.0e56J7-vgQm2Mnc0XxBnxVj3GxlGzeUExiUK3xTaBM6-dQwF85ufoXm6YDe_KT29UBEEEpVg7mBhVbmDfI-8Ug, k=BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+          }
+         ],
+         "body": "AQID",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "credentials": {
+    "VAPID_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "an-unheld-private-key-credential-answers-push-failed",
+   "note": "ecdsa/p256-sign answers null when the credential is not held",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SIGN",
+     "payload": {
+      "body": "AQID"
+     },
+     "entity": {
+      "id": "d",
+      "endpoint": "https://fcm.googleapis.com/send/abc"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "No key set in vapidDetails.privateKey"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PUSH_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "a-transport-timeout-answers-socket-timeout",
+   "note": "control: the timeout kind maps to the socket timeout message",
+   "config": {
+    "vapidPublicKey": "BOpo17b-3wtxh4k41R1x-HKeCsuMLG34s9eeikuQlJ7gKidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo",
+    "vapidSubject": "mailto:ops@example.test"
+   },
+   "defaults": [
+    "PushFcmHttp",
+    "PushAndroidHttp",
+    "PushMozillaHttp",
+    "PushAppleHttp",
+    "PushExampleHttp"
+   ],
+   "steps": [
+    {
+     "event": "PUSH_SEND_HTTP_FAILED",
+     "payload": {
+      "error": "timed out",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PUSH_SEND_FAILED",
+        "payload": {
+         "message": "Socket timeout"
         }
        }
       ]

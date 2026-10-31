@@ -121,6 +121,12 @@ export interface FailableMeta {
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */
 export type ResultSign = 'nonNegative' | 'sum' | 'product' | 'max' | 'min';
 
+/** A result chosen by the literal value of one key of the call's `options` parameter, as `http`'s `presign` request key chooses the signed url over the reply. */
+export interface ResultByOptionMeta {
+  option: string;
+  results: Record<string, OperatorTypeRef>;
+}
+
 /** The shape the validator holds a host-effect call to: arity from the operator, options closed to the keys the options parameter declares (and `emit` closed to the keys its type declares). */
 export interface ClosedCallMeta {
   /** The first parameter is a request object: a literal one carries only its declared fields, every one not listed in `optional` present. */
@@ -227,6 +233,8 @@ export interface OperatorMeta {
   sign?: ResultSign;
   /** The event names the bus never delivers, so a control or emit naming one fires nothing (on `emit`). */
   busExcluded?: string[];
+  /** A result selected by a literal option: `returnType` answers when the call states none, and each listed value of `option` (a key of the call's `options` parameter) answers its own type (on `program/step`). */
+  resultByOption?: ResultByOptionMeta;
   /** The options that name a dispatch's target; a request naming none of them is addressed at the calling trait (on `program/dispatch`). */
   targetOptions?: string[];
   /** What the call needs from the program's grants, one entry per need; `[]` for a call on a handle, whose grant was checked where the handle was made. Set on every `os/` and `kv/` operator. */
@@ -297,6 +305,7 @@ export const STD_MODULES = [
   'credential',
   'rsa',
   'ecdsa',
+  'jws',
   'ecdh',
   'aes-gcm',
   'gzip',

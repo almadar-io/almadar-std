@@ -682,7 +682,7 @@
         "payload": {
          "requestId": 7,
          "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
-         "viewer": null
+         "clientId": ""
         }
        }
       ]
@@ -981,18 +981,12 @@
      "payload": {
       "requestId": 7,
       "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
-      "viewer": {
-       "id": "alice",
-       "role": "user",
-       "permissions": [],
-       "claims": []
-      }
+      "clientId": "tab-1"
      },
      "expect": {
       "effects": [
        {
-        "type": "program/resolve-rows",
-        "arg1": "@payload.viewer"
+        "type": "program/resolve-rows"
        }
       ]
      }
@@ -1000,7 +994,7 @@
    ]
   },
   {
-   "id": "resolve-rows-preserves-the-verified-viewer",
+   "id": "resolve-rows-carries-the-body-client-session",
    "steps": [
     {
      "event": "REQUEST_RECEIVED",
@@ -1012,7 +1006,7 @@
       "headers": {
        "content-type": "application/json"
       },
-      "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9fQ==",
+      "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9LCAiY2xpZW50SWQiOiAidGFiLTEifQ==",
       "peer": "127.0.0.1:5000"
      }
     },
@@ -1028,12 +1022,7 @@
         "payload": {
          "requestId": 7,
          "reference": "{\"entityType\":\"Note\",\"ids\":[\"n1\"],\"total\":1}",
-         "viewer": {
-          "id": "alice",
-          "role": "user",
-          "permissions": [],
-          "claims": []
-         }
+         "clientId": "tab-1"
         }
        }
       ]
@@ -1045,13 +1034,7 @@
         "kind": "resolve-rows",
         "dispatchKey": "rows-7",
         "responseHeaders": [],
-        "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9fQ==",
-        "viewer": {
-         "id": "alice",
-         "role": "user",
-         "permissions": [],
-         "claims": []
-        }
+        "body": "eyJyZWYiOiB7ImVudGl0eVR5cGUiOiAiTm90ZSIsICJpZHMiOiBbIm4xIl0sICJ0b3RhbCI6IDF9LCAiY2xpZW50SWQiOiAidGFiLTEifQ=="
        }
       ]
      }
@@ -1129,6 +1112,176 @@
          "status": 400
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-identity-ask-carries-the-body-client-session",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "Bearer a.b.c",
+      "body": "eyJldmVudCI6ICJDUkVBVEUiLCAiY2xpZW50SWQiOiAidGFiLTEifQ==",
+      "hookName": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_DISPATCH",
+     "payload": {
+      "requestId": 7,
+      "kind": "events"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "authorization": "Bearer a.b.c",
+         "clientId": "tab-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-body-without-a-client-session-asks-with-an-empty-clientId",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "Bearer a.b.c",
+      "body": "eyJldmVudCI6IkNSRUFURSJ9",
+      "hookName": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_DISPATCH",
+     "payload": {
+      "requestId": 7,
+      "kind": "events"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "clientId": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bound-identity-admits-the-request",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "Bearer a.b.c",
+      "body": "eyJldmVudCI6ICJDUkVBVEUiLCAiY2xpZW50SWQiOiAidGFiLTEifQ==",
+      "hookName": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_BOUND",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_ADMITTED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-identity-is-401",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "Bearer a.b.c",
+      "body": "eyJldmVudCI6ICJDUkVBVEUiLCAiY2xpZW50SWQiOiAidGFiLTEifQ==",
+      "hookName": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "expired"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCH_ADMITTED"
       ]
      }
     }

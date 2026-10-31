@@ -1091,7 +1091,8 @@
       ]
      }
     }
-   ]
+   ],
+   "skip": "needs a sealed Verified step payload (the runner test-only identity option)"
   },
   {
    "id": "unverified-invoker-tick",
@@ -1143,7 +1144,8 @@
       ]
      }
     }
-   ]
+   ],
+   "skip": "needs a sealed Verified step payload (the runner test-only identity option)"
   },
   {
    "id": "wrong-invoker-tick",
@@ -1200,7 +1202,8 @@
       ]
      }
     }
-   ]
+   ],
+   "skip": "needs a sealed Verified step payload (the runner test-only identity option)"
   },
   {
    "id": "tick_answered-preserves-request",
@@ -1606,6 +1609,260 @@
         "payload": {
          "requestId": 9,
          "ip": "[::1]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "preflight-with-a-negative-status-is-answered-500-and-never-written",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 7,
+      "method": "OPTIONS",
+      "path": "/api/x",
+      "query": "",
+      "authorization": "",
+      "ip": "1.2.3.4",
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "ifNoneMatch": ""
+     }
+    ],
+    "vapidKey": "",
+    "tickInvoker": ""
+   },
+   "steps": [
+    {
+     "from": "routing",
+     "event": "HTTP_DECIDED",
+     "payload": {
+      "requestId": 7,
+      "verdict": "preflight",
+      "status": -1,
+      "responseHeaders": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "compress": "none"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "REQUEST_ANSWERED",
+        "payload": {
+         "requestId": 7,
+         "status": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "RATE_REQUEST",
+       "ROUTE_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-ticket-mint-presents-its-bearer-to-the-query-client-session",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=tab-1",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_REQUEST",
+     "payload": {
+      "requestId": 5,
+      "rateHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MINT_IDENTITY_REQUIRED",
+        "payload": {
+         "requestId": 5,
+         "authorization": "Bearer a.b.c",
+         "clientId": "tab-1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_VERIFY",
+       "MINT_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bound-session-mints-for-its-own-client-id",
+   "entity": {
+    "mints": [
+     5
+    ],
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=tab-1",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_BOUND",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MINT_REQUESTED",
+        "payload": {
+         "requestId": 5,
+         "clientId": "tab-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-signed-out-session-mints-for-its-own-client-id",
+   "entity": {
+    "mints": [
+     5
+    ],
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=tab-1",
+      "headers": {},
+      "authorization": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_ANONYMOUS",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MINT_REQUESTED",
+        "payload": {
+         "requestId": 5,
+         "clientId": "tab-1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-mint-whose-bearer-did-not-bind-the-named-session-is-401",
+   "note": "IDENTITY_REFUSED answers a mint naming a session the bearer did not sign in to: 401 and no ticket.",
+   "entity": {
+    "mints": [
+     5
+    ],
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=someone-elses",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_REFUSED",
+     "payload": {
+      "requestId": 5,
+      "reason": "expired"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 401
+        }
+       }
+      ],
+      "neverEmits": [
+       "MINT_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-ticket-mint-without-a-client-asks-with-an-empty-one",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_REQUEST",
+     "payload": {
+      "requestId": 5,
+      "rateHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MINT_IDENTITY_REQUIRED",
+        "payload": {
+         "requestId": 5,
+         "clientId": ""
         }
        }
       ]

@@ -179,15 +179,9 @@ orbital FirestoreOrbital {
         @synonyms "oauth token, bearer token"
         @tier "infra"
       serviceAccountCredential : secret = "FIREBASE_SERVICE_ACCOUNT"
-        @label "Service-account signing key"
-        @description "The credential name holding the service account's PKCS#8 PEM RSA private key; the credential store signs the RS256 assertion with it (auth service-account)."
+        @label "Service-account credential"
+        @description "The credential name holding the stored service-account JSON; the credential store signs the RS256 assertion with its private key and takes iss and sub from client_email and kid from private_key_id (auth service-account)."
         @synonyms "service account key, firebase admin key"
-        @tier "infra"
-      ;; serviceAccountEmail is read only in auth service-account mode; the other modes leave it absent
-      serviceAccountEmail : string?
-        @label "Service-account email"
-        @description "The service account's client_email, the assertion issuer (auth service-account); the stored credential is the PEM key only (G-ORBITAL-CORE-092)."
-        @synonyms "client email, assertion issuer"
         @tier "infra"
       serviceAccountTokenCredential : secret = "FIRESTORE_SERVICE_ACCOUNT_TOKEN"
         @label "Service-account access token credential"
@@ -319,17 +313,15 @@ orbital FirestoreOrbital {
           auth: { scheme: bearer, credential: @config.accessTokenCredential },
           text: (json/stringify @entity.body)
         } { emit: { success: FS_REPLIED, failure: FS_UNREACHABLE } })
-      FS_SEND -> busy when (and (= @config.auth "service-account") (!= @config.serviceAccountEmail null))
+      FS_SEND -> busy when (= @config.auth "service-account")
         (emit FS_WIRE { phase: @entity.phase, path: @entity.suffix, body: @entity.body })
         (set @entity.mintTried false)
         (emit FS_SA_DISPATCH { })
-      FS_SEND -> busy when (and (= @config.auth "service-account") (= @config.serviceAccountEmail null))
-        (emit FS_UNREACHABLE { error: "Firestore auth service-account needs serviceAccountEmail, the service account's client_email" })
       FS_SA_DISPATCH -> busy
         (emit FS_HTTP_SEND { key: "fs", method: "POST", target: (str/concat "/v1/projects/" @config.projectId "/databases/" @config.databaseId "/documents" @entity.suffix "?$alt=json%3Benum-encoding=int"), headers: [{ name: "accept", value: "*/*" }, { name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify @entity.body)), stream: "none" })
       FS_SA_FAILED -> busy when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
         (set @entity.mintTried true)
-        (credential-connect { credential: @config.serviceAccountTokenCredential, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccountCredential, issuer: @config.serviceAccountEmail, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: FS_SA_CONNECTED, failure: FS_SA_CONNECT_FAILED } })
+        (credential-connect { credential: @config.serviceAccountTokenCredential, scope: app, tokenEndpoint: @config.tokenUrl, grant: "jwt-bearer", signingKey: @config.serviceAccountCredential, audience: @config.tokenUrl, ttlSeconds: 3600, scopes: (str/split @config.scope " ") } { emit: { success: FS_SA_CONNECTED, failure: FS_SA_CONNECT_FAILED } })
       FS_SA_FAILED -> busy when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
         (emit FS_UNREACHABLE { error: "The Firestore service-account token is not held after the credential store minted it" })
       FS_SA_FAILED -> busy when (!= @payload.kind "unconfigured")

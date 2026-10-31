@@ -17,7 +17,7 @@ orbital SocialGraphOrbital {
     id : string!
     nodeKey : string @description "The node the member was on, as kind:id." @synonyms "topic key, node" = ""
     memberId : string @description "The member who was there." @synonyms "learner, user" = ""
-    lastSeenOnNode : instant @description "When the member last visited." @synonyms "last seen, presence"
+    lastSeenOnNode : instant! @description "When the member last visited." @synonyms "last seen, presence"
     reqMember : string @intrinsic = ""
     reqKey : string @intrinsic = ""
     reqStats : [SocialMemberStat] @intrinsic
@@ -384,7 +384,7 @@ orbital SocialGraphOrbital {
         (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
         (set @entity.reqOriginKind (object/get (array/first ?data) originKind ""))
         (set @entity.reqOriginId (object/get (array/first ?data) originId ""))
-        (emit BadgesReady { labels: (if (> (array/len (let ((noLabels : SocialStrings [])) (default @entity.reqLabels @noLabels))) 0) @entity.reqLabels [(object/get (array/first ?data) originId "")]) })
+        (let ((noLabels : SocialStrings []) (asked (default @entity.reqLabels @noLabels))) (emit BadgesReady { labels: (if (> (array/len @asked) 0) @asked [(object/get (array/first ?data) originId "")]) }))
       PendingLoaded -> cleaning when (and (> (array/len ?data) 0) (= @entity.reqOp "scored") (= (object/get (array/first ?data) kind "") "moderation"))
         (set @entity.pendingId (object/get (array/first ?data) id ""))
         (persist update SocialMessage { id: (object/get (array/first ?data) messageId ""), moderationScore: @entity.reqScore, flagged: (< @entity.reqScore @config.flagThreshold), moderationReason: @entity.reqReason } { emit: { success: ModerationStored, failure: ConnFailed } })

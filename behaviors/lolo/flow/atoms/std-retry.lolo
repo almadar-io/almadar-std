@@ -33,14 +33,14 @@ orbital RetryOrbital {
         (set @entity.dueAt null)
       SUCCEEDED -> idle when (== ?key @entity.key)
         @ensures (= @entity.attempt 0)
-        (emit COMPLETED { key: @entity.key, attempts: @entity.attempt })
+        (emit COMPLETED { key: ?key, attempts: @entity.attempt })
         (set @entity.attempt 0)
       FAILED -> backoff when (and (== ?key @entity.key) (< @entity.attempt @config.maxAttempts))
         @ensures (= @entity.attempt @fromEntity.attempt)
         (set @entity.dueAt (time/add @now (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))) "ms"))
-        (emit RETRY_SCHEDULED { key: @entity.key, attempt: @entity.attempt, delayMs: (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))), error: ?error })
+        (emit RETRY_SCHEDULED { key: ?key, attempt: @entity.attempt, delayMs: (math/min @config.maxDelayMs (* @config.baseDelayMs (default (math/pow @config.multiplier (- @entity.attempt 1)) @config.maxDelayMs))), error: ?error })
       FAILED -> idle when (and (== ?key @entity.key) (>= @entity.attempt @config.maxAttempts))
-        (emit GAVE_UP { key: @entity.key, attempts: @entity.attempt, error: ?error })
+        (emit GAVE_UP { key: ?key, attempts: @entity.attempt, error: ?error })
         (set @entity.attempt 0)
       CANCEL -> idle
         @ensures (= @entity.attempt 0)
@@ -52,11 +52,15 @@ orbital RetryOrbital {
       INIT -> idle
         (set @entity.attempt 0)
         (set @entity.dueAt null)
-      TIMER_DUE -> running
+      TIMER_DUE -> running when (!= @entity.key null)
         @ensures (and (= @entity.attempt (+ @fromEntity.attempt 1)) (= @entity.dueAt null))
         (set @entity.attempt (+ @entity.attempt 1))
         (set @entity.dueAt null)
         (emit ATTEMPT { key: @entity.key, attempt: @entity.attempt })
+      ;; no key means no run in flight, so idle is the meaning
+      TIMER_DUE -> idle when (= @entity.key null)
+        (set @entity.attempt 0)
+        (set @entity.dueAt null)
       CANCEL -> idle
         (set @entity.attempt 0)
         (set @entity.dueAt null)

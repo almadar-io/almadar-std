@@ -1,8 +1,8 @@
 app std-notify-on-event [
   version: "2.0.0",
   description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push through std-push (PUSH_SEND) (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
-  egress: ["https://api.sendgrid.com", "https://api.resend.com", "https://fcm.googleapis.com", "https://android.googleapis.com"],
-  net: { "api.twilio.com:443": [tcp], "hooks.example.test:443": [tcp] }
+  egress: ["https://api.sendgrid.com", "https://api.resend.com", "https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
+  net: { "api.twilio.com:443": [tcp], "hooks.example.test:443": [tcp], "fcm.googleapis.com:443": [tcp], "android.googleapis.com:443": [tcp], "updates.push.services.mozilla.com:443": [tcp], "web.push.apple.com:443": [tcp], "*.notify.windows.com:443": [tcp] }
 ]
 type PrefRow = { personId : string, eventKey : string, mode : string, channel : string, quietHours : string }
 type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : instant }
@@ -28,7 +28,7 @@ orbital NotifyOnEventOrbital {
     severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
     error : string @description "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription)." @synonyms "error message, failure reason, dispatch error" = ""
-    recordedAt : instant @description "When the notification record was created (ISO-8601 instant)." @synonyms "creation time, timestamp, date, when"
+    recordedAt : instant! @description "When the notification record was created (ISO-8601 instant)." @synonyms "creation time, timestamp, date, when"
     prefMode : string @description "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off)." @synonyms "resolved mode" = ""
     prefChannel : string @description "Scratch: channel override from the matched preference row; blank = no override." @synonyms "channel override" = ""
     prefQuietHours : string @description "Scratch: per-user quiet-hours window \"HH:MM-HH:MM\" from the matched preference row; blank = none." @synonyms "user quiet hours" = ""
@@ -90,6 +90,31 @@ orbital NotifyOnEventOrbital {
   trait NotifyPushApi = Push.traits.PushClient {
     listens {
       NotifyOnEventListener.PUSH_SEND -> PUSH_SEND
+      PUSH_CHECKED
+      PUSH_SALT_DRAWN {
+        value : string!
+      }
+      PUSH_SALT_FAILED {
+        error : string!
+      }
+      PUSH_ENCRYPT {
+        salt : bytes!
+        asPublic : bytes!
+        shared : bytes!
+      }
+      PUSH_SIGN {
+        body : bytes!
+      }
+      NotifyPushFcmHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      NotifyPushFcmHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      NotifyPushAndroidHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      NotifyPushAndroidHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      NotifyPushMozillaHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      NotifyPushMozillaHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      NotifyPushAppleHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      NotifyPushAppleHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
+      NotifyPushWnsHttp.HTTP_REPLIED -> PUSH_SEND_REPLIED with { status: ?status, headers: ?headers, body: "" }
+      NotifyPushWnsHttp.HTTP_FAILED -> PUSH_SEND_HTTP_FAILED with { error: ?error, kind: ?kind }
       PUSH_SEND_REPLIED {
         status : number!
         headers : Map string string
@@ -98,8 +123,37 @@ orbital NotifyOnEventOrbital {
       PUSH_SEND_HTTP_FAILED {
         error : string!
         kind : string!
-        credential : string
       }
+    }
+  }
+
+  trait NotifyPushFcmHttp = Push.traits.PushFcmHttp {
+    listens {
+      NotifyPushApi.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "fcm.googleapis.com")
+    }
+  }
+
+  trait NotifyPushAndroidHttp = Push.traits.PushAndroidHttp {
+    listens {
+      NotifyPushApi.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "android.googleapis.com")
+    }
+  }
+
+  trait NotifyPushMozillaHttp = Push.traits.PushMozillaHttp {
+    listens {
+      NotifyPushApi.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "updates.push.services.mozilla.com")
+    }
+  }
+
+  trait NotifyPushAppleHttp = Push.traits.PushAppleHttp {
+    listens {
+      NotifyPushApi.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "web.push.apple.com")
+    }
+  }
+
+  trait NotifyPushWnsHttp = Push.traits.PushWnsHttp {
+    listens {
+      NotifyPushApi.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (validate/pattern ?host "^[A-Za-z0-9-]+[.]notify[.]windows[.]com$")
     }
   }
 
@@ -604,5 +658,5 @@ orbital NotifyOnEventOrbital {
     }
   }
 
-  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
+  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
 }

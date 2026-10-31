@@ -1,0 +1,378 @@
+{
+ "atom": "net/atoms/std-http-client.lolo",
+ "trait": "HttpClient",
+ "spec": "spec/net/http-client.lolo",
+ "note": "G-ORBITAL-CORE-096: the dynamicHost knob (default false). On, a call that carries host connects to that host and uses it for the host header and the TLS server name (a separate guarded arm; the only computed os/tcp-connect target, covered by a pattern net grant), a call without host is refused, and a kept-alive socket serves only the host it was opened for. Off, a call's host is ignored and the host knob stays the connect target, host header and server name.",
+ "cases": [
+  {
+   "id": "dynamic-host-on-a-call-host-is-the-connect-target-the-host-header-and-the-tls-server-name",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 443,
+    "tls": true,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "push.notify.windows.com"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "@entity.hostText",
+        "arg1": 443,
+        "arg2": {
+         "serverName": "@entity.hostText",
+         "alpn": [
+          "list",
+          "http/1.1"
+         ]
+        }
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBwdXNoLm5vdGlmeS53aW5kb3dzLmNvbQ0KDQo="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dynamic-host-on-a-call-host-on-a-port-that-is-not-the-default-writes-host-colon-port",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 9000,
+    "tls": false,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "eu.notify.windows.com"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "@entity.hostText",
+        "arg1": 9000
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBldS5ub3RpZnkud2luZG93cy5jb206OTAwMA0KDQo="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dynamic-host-off-a-call-host-is-ignored-the-knob-host-is-the-connect-target-the-host-header-and-the-tls-server-name",
+   "config": {
+    "host": "api.example.test",
+    "port": 443,
+    "tls": true,
+    "serverName": "api.example.test"
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "other.example"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 443,
+        "arg2": {
+         "serverName": [
+          "if",
+          [
+           "validate/string",
+           "api.example.test"
+          ],
+          "api.example.test",
+          "@entity.hostText"
+         ],
+         "alpn": [
+          "list",
+          "http/1.1"
+         ]
+        }
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-dynamic-host-off-a-call-with-no-host-keeps-the-knob-host",
+   "config": {
+    "host": "api.example.test",
+    "port": 80,
+    "tls": false
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dynamic-host-on-with-no-host-is-refused-before-any-socket-opens",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 443,
+    "tls": true,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dynamic-host-on-with-an-empty-host-is-refused-before-any-socket-opens",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 443,
+    "tls": true,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dynamic-host-on-a-kept-alive-socket-is-closed-and-a-new-one-opened-when-the-call-names-another-host",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 80,
+    "tls": false,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "from": "ready",
+     "entity": {
+      "idle": 5,
+      "hostText": "a.notify.windows.com"
+     },
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "b.notify.windows.com"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/close",
+        "arg0": "@entity.idle"
+       },
+       {
+        "type": "os/tcp-connect",
+        "arg0": "@entity.hostText",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBiLm5vdGlmeS53aW5kb3dzLmNvbQ0KDQo="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-dynamic-host-on-a-kept-alive-socket-is-reused-when-the-call-names-the-same-host",
+   "config": {
+    "host": "*.notify.windows.com",
+    "port": 80,
+    "tls": false,
+    "dynamicHost": true
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "from": "ready",
+     "entity": {
+      "idle": 5,
+      "hostText": "a.notify.windows.com"
+     },
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "a.notify.windows.com"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-dynamic-host-off-a-kept-alive-socket-is-reused-whatever-host-the-call-names",
+   "config": {
+    "host": "api.example.test",
+    "port": 80,
+    "tls": false
+   },
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "from": "ready",
+     "entity": {
+      "idle": 5,
+      "hostText": "a.example"
+     },
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none",
+      "host": "b.example"
+     },
+     "expect": {
+      "state": "sending"
+     }
+    }
+   ]
+  }
+ ]
+}

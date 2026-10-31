@@ -1,13 +1,13 @@
 app stream-ticket-spec [
   version: "1.0.0",
-  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for a viewer on an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A request arriving while one is in flight is queued in arrival order and answered exactly once; beyond the queue bound it is refused busy. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
+  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for the client of an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A request arriving while one is in flight is queued in arrival order and answered exactly once; beyond the queue bound it is refused busy. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
 ]
 
-type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, viewer : Viewer, clientId : string }
+type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, clientId : string }
 orbital StreamTicketSpec {
   expects entity StreamTicket [persistent] {
     id : string!
-    viewer : Viewer!
+    clientId : string!
     expiresAt : instant
   }
   expects entity StreamTicketRun [runtime] {
@@ -42,7 +42,7 @@ orbital StreamTicketSpec {
     }
     emits {
       TICKET_MINTED { ticket : string!  expiresAt : instant!  requestId : number }
-      TICKET_TAKEN { ticket : string!  viewer : Viewer! }
+      TICKET_TAKEN { ticket : string!  clientId : string! }
       TICKET_REFUSED { code : "seed" | "store" | "unknown" | "expired" | "used" | "busy"  message : string!  ticket : string  requestId : number }
     }
   }

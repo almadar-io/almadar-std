@@ -1,6 +1,6 @@
 app std-bearer-verify [
   version: "1.0.0",
-  description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a Viewer over std-jws. BEARER_VERIFY { authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksPath knob with one GET asked of a composed std-http-client trait (BV_GET out; its HTTP_REPLIED routes to JWKS_RAW and its HTTP_FAILED to JWKS_UNREACHABLE; the host, port and TLS name are that trait's knobs), kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. The kid picks the key; without a kid each key is tried in order, one JWS_VERIFY per key. The atom emits JWS_VERIFY { token, jwk } and listens for JWS_VERIFIED and JWS_REFUSED from std-jws. Claim policy (knobs issuer, audience, clockSkewSeconds, requireAuthTime, allowedTenants): malformed, expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_VERIFIED with the owner as viewer id and the key claims. Success is BEARER_VERIFIED { viewer } with role and permissions mapped into the viewer (a non-string role or non-string-list permissions is refused claims) and every other claim as { name, value } carrying the claim JSON as is. Declare the JWKS host as a net grant on the program that composes the HTTP client.",
+  description: "std-bearer-verify — turns a raw Authorization header (the exact-case Bearer prefix, as Rust) into a sealed Verified through the native jws/verify operator. BEARER_VERIFY { requestId?, authorization? }: no header answers BEARER_ANONYMOUS; a header that is not Bearer <three-segment token> refuses malformed. Keys are fetched from the jwksPath knob with one GET asked of a composed std-http-client trait (BV_GET out; its HTTP_REPLIED routes to JWKS_RAW and its HTTP_FAILED to JWKS_UNREACHABLE; the host, port and TLS name are that trait's knobs), as a JWK Set or as x509 certificates (each read through std-x509 and converted to a base64url JWK), kept until now plus the response max-age, and refetched on expiry or when the token kid is absent from the cache. jws/verify checks the signature (the kid picks the key), exp, nbf, iss, aud and sub against the issuer, audience and clockSkewSeconds knobs; a failure refuses with its kind (malformed, algorithm, key, signature, expired, not-yet-valid, issuer, audience). The atom then applies the claim policy over Verified.claims (knobs requireAuthTime, allowedTenants): issued-in-future, auth-time, tenant. Success is BEARER_VERIFIED { requestId, verified } carrying the sealed Verified; the role is never read from a claim. A bearer starting with the keyPrefix knob goes only to std-api-key-verifier (VERIFY_KEY, answers API_KEY_VERIFIED/API_KEY_REFUSED, correlated by requestId) when ALMADAR_API_KEY_SALT is set (read at boot), else is refused keys-disabled; it never falls back to the JWT path, and a non-key bearer never reaches the key path. A verified key is BEARER_KEY_VERIFIED with the owner and the key claims (an API key makes no Verified). With FIREBASE_AUTH_EMULATOR_HOST set, an unsigned (alg none) token is verified by jws/verify against the emulatorIssuer and emulatorAudience knobs (the issuer and audience when empty) with allowUnsigned. Declare the JWKS host as a net grant on the program that composes the HTTP client.",
   env: ["ALMADAR_API_KEY_SALT", "FIREBASE_AUTH_EMULATOR_HOST", "AUTH_PROVIDER", "FIREBASE_PROJECT_ID", "OIDC_ISSUER_URL", "OIDC_AUDIENCE"]
 ]
 uses Spec from "almadar-std/bearer-verify"
@@ -11,13 +11,10 @@ type BearerHeader = { kid : string, alg : string }
 type BearerJwk = { kty : string!, n : string, e : string, crv : string, x : string, y : string, alg : string, kid : string, use : string }
 type BearerJwks = { keys : [BearerJwk] }
 type BearerFirebase = { tenant : string }
+type BearerFailure = { error : string!, kind : string! }
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
-type BearerExtra = Map string JsonValue
-type BearerClaims = { iss : string, sub : string, aud : (string | [string]), exp : number, nbf : number, iat : number, auth_time : number, email : string, name : string, firebase : BearerFirebase, extra : BearerExtra }
 type BearerCerts = Map string string
 type BearerCert = { kid : string!, pem : string! }
-type BearerAudList = [string]
-type BearerRolePerms = { role : string, permissions : [string] }
 type BearerJwsHeader = { alg : string, typ : string, kid : string }
 orbital BearerVerifyOrbital {
   entity BearerCheck [runtime] {
@@ -28,15 +25,13 @@ orbital BearerVerifyOrbital {
     kid : string @description "The kid in the token header, empty when absent." = ""
     keys : [BearerJwk] @description "The cached key set." = []
     expiresAt : instant @description "When the cached key set stops being fresh."
-    candidates : [BearerJwk] @description "The keys to try for the token in hand, in order." = []
     keysEnabled : boolean @description "Whether ALMADAR_API_KEY_SALT is set, read at boot; keys are accepted only then." = false
     emulator : boolean @description "Whether FIREBASE_AUTH_EMULATOR_HOST is set, read at boot; an unsigned (alg none) token is accepted only then." = false
     issuer : string @description "The iss every token must carry: the issuer knob, or with issuerFromEnv the one the environment names." = ""
     audience : string @description "The aud every token must carry: the audience knob, or with issuerFromEnv the one the environment names." = ""
     certQueue : [BearerCert] @description "Certificates of the fetched document still to be read for their keys, in document order." = []
     certKeys : [BearerJwk] @description "Keys read so far from the fetched certificates." = []
-    attempt : number @description "Index of the candidate last asked of std-jws." = 0
-    @invariant (>= @entity.attempt 0)
+    unsigned : boolean @description "Whether the token in hand is an unsigned emulator token, verified against the emulator issuer with no key." = false
   }
 
   trait BearerVerifier -> BearerCheck [optimistic] {
@@ -80,7 +75,7 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> idle when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> idle
-        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_KEY_VERIFIED { requestId: (default @payload.requestId 0), owner: @payload.owner, claims: @payload.claims })
       API_KEY_REFUSED -> idle
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> idle when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
@@ -103,31 +98,27 @@ orbital BearerVerifyOrbital {
         (emit BEARER_NEXT {})
       BEARER_PUMP -> verifying when (and @entity.emulator (> (array/len @entity.queue) 0) (str/startsWith (default (object/get (array/first @entity.queue) "authorization") "") "Bearer ") (= (array/len (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".")) 3) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (= (object/get (default (json/parse @hd BearerJwsHeader) { alg: "" typ: "" kid: "" }) "alg" "") "none"))))
         (let ((token (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") "")))))
-          (let ((pj (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 1) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))
-            (let ((header (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) null (json/parse @hd BearerJwsHeader)))) (claims (if (= @pj null) null (json/parse @pj BearerClaims))) (xtra (if (= @pj null) null (json/parse @pj BearerExtra))))
-              (do
-                (set @entity.token @token)
-                (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
-                (set @entity.queue (array/slice @entity.queue 1))
-                (if (or (= @header null) (= @claims null) (= @xtra null))
-                  (emit JWS_REFUSED { reason: "malformed" })
-                  (emit JWS_VERIFIED { header: (default @header {}), payload: (default (object/set @claims extra @xtra) {}) }))))))
+          (do
+            (set @entity.token @token)
+            (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
+            (set @entity.unsigned true)
+            (set @entity.queue (array/slice @entity.queue 1))
+            (emit BEARER_CHECK {})))
       BEARER_PUMP -> verifying when (and (> (array/len @entity.queue) 0) (and (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (default (object/get (array/first @entity.queue) "authorization") "") "Bearer ") (= (array/len (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".")) 3) (time/isAfter (default @entity.expiresAt @now) @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (let ((kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))
         (let ((token (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") "")))))
           (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split @token ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (let ((kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" "")))
-            (let ((cands (array/filter @entity.keys (fn k (and (or (= @kid "") (= (object/get @k "kid" "") @kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))))
-              (do
-                (set @entity.token @token)
-                (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
-                (set @entity.kid @kid)
-                (set @entity.candidates @cands)
-                (set @entity.attempt 0)
-                (emit JWS_VERIFY { token: @token, jwk: (default (array/nth @cands 0) { kty: "" }) })))))))
+            (do
+              (set @entity.token @token)
+              (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
+              (set @entity.kid @kid)
+              (set @entity.unsigned false)
+              (emit BEARER_CHECK {}))))))
         (set @entity.queue (array/slice @entity.queue 1))
       BEARER_PUMP -> fetching when (and (> (array/len @entity.queue) 0) (!= (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) null) (and (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (default (object/get (array/first @entity.queue) "authorization") "") "Bearer ") (= (array/len (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".")) 3) (not (and (time/isAfter (default @entity.expiresAt @now) @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") ""))) ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (let ((kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid))))))))))
         (let ((token (str/slice (default (object/get (array/first @entity.queue) "authorization") "") 7 (str/len (default (object/get (array/first @entity.queue) "authorization") "")))))
           (do
             (set @entity.token @token)
+            (set @entity.unsigned false)
                 (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
             (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split @token ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" "")) (emit BV_GET { key: "jwks", method: "GET", target: @config.jwksPath, headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" }))))))
         (set @entity.queue (array/slice @entity.queue 1))
@@ -149,7 +140,7 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> fetching when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> fetching
-        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_KEY_VERIFIED { requestId: (default @payload.requestId 0), owner: @payload.owner, claims: @payload.claims })
       API_KEY_REFUSED -> fetching
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
@@ -171,13 +162,11 @@ orbital BearerVerifyOrbital {
         (emit BEARER_PUMP {})
       JWKS_REPLIED -> verifying when (and (= @payload.status 200) (json/valid @payload.body) (= @config.keysFormat "jwks") (> (array/len (array/filter (object/get (default (json/parse @payload.body BearerJwks) { keys: [] }) "keys" []) (fn k (and (or (= @entity.kid "") (= (object/get @k "kid" "") @entity.kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))) 0))
         (let ((keys (object/get (default (json/parse @payload.body BearerJwks) { keys: [] }) "keys" [])))
-          (let ((cands (array/filter @keys (fn k (and (or (= @entity.kid "") (= (object/get @k "kid" "") @entity.kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))))
-            (do
-              (set @entity.keys @keys)
-              (set @entity.expiresAt (time/add @now (* 1000 (let ((hdrs : BearerCerts (default @payload.headers {})) (cc (array/find (object/keys @hdrs) (fn h (= (str/lower @h) "cache-control"))))) (if (= @cc null) 0 (let ((parts (str/split (default (object/get @hdrs @cc) "") "max-age="))) (if (< (array/len @parts) 2) 0 (str/to-number (default (array/nth (str/split (default (array/nth @parts 1) "") ",") 0) "0"))))))) "ms"))
-              (set @entity.candidates @cands)
-              (set @entity.attempt 0)
-              (emit JWS_VERIFY { token: @entity.token, jwk: (default (array/nth @cands 0) { kty: "" }) }))))
+          (do
+            (set @entity.keys @keys)
+            (set @entity.expiresAt (time/add @now (* 1000 (let ((hdrs : BearerCerts (default @payload.headers {})) (cc (array/find (object/keys @hdrs) (fn h (= (str/lower @h) "cache-control"))))) (if (= @cc null) 0 (let ((parts (str/split (default (object/get @hdrs @cc) "") "max-age="))) (if (< (array/len @parts) 2) 0 (str/to-number (default (array/nth (str/split (default (array/nth @parts 1) "") ",") 0) "0"))))))) "ms"))
+            (set @entity.unsigned false)
+            (emit BEARER_CHECK {})))
       JWKS_REPLIED -> idle when (and (= @payload.status 200) (json/valid @payload.body) (= @config.keysFormat "x509") (let ((none : BearerCerts {})) (= (array/len (object/keys (default (json/parse @payload.body BearerCerts) @none))) 0)))
         (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "keys-unavailable" })
         (emit BEARER_PUMP {})
@@ -207,7 +196,7 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> certifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> certifying
-        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_KEY_VERIFIED { requestId: (default @payload.requestId 0), owner: @payload.owner, claims: @payload.claims })
       API_KEY_REFUSED -> certifying
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
@@ -221,14 +210,12 @@ orbital BearerVerifyOrbital {
         (emit X509_PARSE { pem: (object/get (default (array/nth @entity.certQueue 1) { kid: "" pem: "" }) "pem") })
       X509_PARSED -> verifying when (and (= (array/len @entity.certQueue) 1) (> (array/len (let ((all (array/append @entity.certKeys { kty: "RSA", n: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.n }) "+" "-") "/" "_") "=" ""), e: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.e }) "+" "-") "/" "_") "=" ""), kid: (object/get (default (array/first @entity.certQueue) { kid: "" pem: "" }) "kid"), alg: "RS256", use: "sig" }))) (array/filter @all (fn k (and (or (= @entity.kid "") (= (object/get @k "kid" "") @entity.kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig"))))))) 0))
         (let ((all (array/append @entity.certKeys { kty: "RSA", n: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.n }) "+" "-") "/" "_") "=" ""), e: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.e }) "+" "-") "/" "_") "=" ""), kid: (object/get (default (array/first @entity.certQueue) { kid: "" pem: "" }) "kid"), alg: "RS256", use: "sig" })))
-          (let ((cands (array/filter @all (fn k (and (or (= @entity.kid "") (= (object/get @k "kid" "") @entity.kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))))
-            (do
-              (set @entity.keys @all)
-              (set @entity.certKeys [])
-              (set @entity.certQueue [])
-              (set @entity.candidates @cands)
-              (set @entity.attempt 0)
-              (emit JWS_VERIFY { token: @entity.token, jwk: (default (array/nth @cands 0) { kty: "" }) }))))
+          (do
+            (set @entity.keys @all)
+            (set @entity.certKeys [])
+            (set @entity.certQueue [])
+            (set @entity.unsigned false)
+            (emit BEARER_CHECK {})))
       X509_PARSED -> idle when (and (= (array/len @entity.certQueue) 1) (= (array/len (let ((all (array/append @entity.certKeys { kty: "RSA", n: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.n }) "+" "-") "/" "_") "=" ""), e: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.e }) "+" "-") "/" "_") "=" ""), kid: (object/get (default (array/first @entity.certQueue) { kid: "" pem: "" }) "kid"), alg: "RS256", use: "sig" }))) (array/filter @all (fn k (and (or (= @entity.kid "") (= (object/get @k "kid" "") @entity.kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig"))))))) 0))
         (set @entity.keys (array/append @entity.certKeys { kty: "RSA", n: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.n }) "+" "-") "/" "_") "=" ""), e: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.e }) "+" "-") "/" "_") "=" ""), kid: (object/get (default (array/first @entity.certQueue) { kid: "" pem: "" }) "kid"), alg: "RS256", use: "sig" }))
         (set @entity.certKeys [])
@@ -256,7 +243,7 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> verifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> verifying
-        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_KEY_VERIFIED { requestId: (default @payload.requestId 0), owner: @payload.owner, claims: @payload.claims })
       API_KEY_REFUSED -> verifying
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
@@ -264,28 +251,23 @@ orbital BearerVerifyOrbital {
       BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
-      JWS_REFUSED -> verifying when (and (= @entity.kid "") (array/includes ["signature", "key-type", "alg-mismatch", "curve", "key-missing"] @payload.reason) (< (+ @entity.attempt 1) (array/len @entity.candidates)))
-        (emit JWS_VERIFY { token: @entity.token, jwk: (default (array/nth @entity.candidates (+ @entity.attempt 1)) { kty: "" }) })
-        (set @entity.attempt (+ @entity.attempt 1))
-      JWS_REFUSED -> idle when (not (and (= @entity.kid "") (array/includes ["signature", "key-type", "alg-mismatch", "curve", "key-missing"] @payload.reason) (< (+ @entity.attempt 1) (array/len @entity.candidates))))
-        (emit BEARER_REFUSED { requestId: @entity.requestId, reason: (if (= @payload.reason "alg-not-allowed") "algorithm" @payload.reason) })
+      BEARER_CHECK -> idle when (or (= (if @entity.unsigned (if (!= @config.emulatorIssuer "") @config.emulatorIssuer @entity.issuer) @entity.issuer) "") (= (if @entity.unsigned (if (!= @config.emulatorAudience "") @config.emulatorAudience @entity.audience) @entity.audience) ""))
+        (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "unconfigured" })
         (emit BEARER_PUMP {})
-      JWS_VERIFIED -> idle
-        (let ((nowS (time/diff @now @config.epoch "s")) (skew @config.clockSkewSeconds) (c @payload.payload))
-          (let ((why (if (or (= @c.exp null) (<= @c.exp 0)) "malformed"
-                       (if (<= @c.exp (- @nowS @skew)) "expired"
-                         (if (and (!= @c.nbf null) (> @c.nbf 0) (> @c.nbf (+ @nowS @skew))) "not-yet-valid"
-                           (if (and (!= @c.iat null) (> @c.iat 0) (> @c.iat (+ @nowS @skew))) "issued-in-future"
-                             (if (!= (default @c.iss "") @entity.issuer) "issuer"
-                               (if (not (if (str/startsWith (json/stringify @c.aud) "[") (let ((auds (as @c.aud BearerAudList))) (if (= @auds null) false (array/includes @auds @entity.audience))) (= (json/stringify @c.aud) (json/stringify @entity.audience)))) "audience"
-                                 (if (= (default @c.sub "") "") "subject"
-                                   (if (and @config.requireAuthTime (or (<= (default @c.auth_time 0) 0) (> @c.auth_time @nowS))) "auth-time"
-                                     (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants (default (object/get (default @c.firebase {}) "tenant" "") "")))) "tenant" (if (and (array/includes (object/keys (default @c.extra {})) "role") (not (str/startsWith (json/stringify (object/get (default @c.extra {}) "role")) "\""))) "claims" (if (and (array/includes (object/keys (default @c.extra {})) "permissions") (not (validate/pattern (json/stringify (object/get (default @c.extra {}) "permissions")) "^\\[(?:\"(?:[^\"\\\\]|\\\\.)*\"(?:,\"(?:[^\"\\\\]|\\\\.)*\")*)?\\]$"))) "claims" "")))))))))))))
+      BEARER_CHECK -> idle when (not (or (= (if @entity.unsigned (if (!= @config.emulatorIssuer "") @config.emulatorIssuer @entity.issuer) @entity.issuer) "") (= (if @entity.unsigned (if (!= @config.emulatorAudience "") @config.emulatorAudience @entity.audience) @entity.audience) "")))
+        (let ((r (jws/verify @entity.token (if @entity.unsigned [] (array/filter @entity.keys (fn k (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig"))))) { issuer: (if @entity.unsigned (if (!= @config.emulatorIssuer "") @config.emulatorIssuer @entity.issuer) @entity.issuer), audience: (if @entity.unsigned (if (!= @config.emulatorAudience "") @config.emulatorAudience @entity.audience) @entity.audience), allowUnsigned: @entity.unsigned, clockSkewMs: (* @config.clockSkewSeconds 1000) })))
+          (if (object/has @r "kind")
+            (do
+              (emit BEARER_REFUSED { requestId: @entity.requestId, reason: (object/get (default (as @r BearerFailure) { error: "", kind: "" }) "kind") })
+              (emit BEARER_PUMP {}))
+            (emit TOKEN_VERIFIED { requestId: @entity.requestId, verified: @r })))
+      TOKEN_VERIFIED -> idle
+        (let ((nowS (time/diff @now @config.epoch "s")) (skew @config.clockSkewSeconds) (iat (let ((f (array/find @payload.verified.claims (fn c (= @c.name "iat"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (authTime (let ((f (array/find @payload.verified.claims (fn c (= @c.name "auth_time"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (tenant (let ((f (array/find @payload.verified.claims (fn c (= @c.name "firebase"))))) (if (= @f null) "" (default (object/get (default (as @f.value BearerFirebase) { tenant: "" }) "tenant") "")))))
+          (let ((why (if (and (> @iat 0) (> @iat (+ @nowS @skew))) "issued-in-future"
+                       (if (and @config.requireAuthTime (or (<= @authTime 0) (> @authTime @nowS))) "auth-time"
+                         (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants @tenant))) "tenant" "")))))
             (if (= @why "")
-              (let ((v (as (object/merge { id: (default @c.sub ""), claims: (array/map (object/entries (object/omit (default @c.extra {}) ["iss", "aud", "exp", "nbf", "iat", "auth_time", "sub", "email", "name", "role", "permissions"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } (if (object/has @c "email") { email: (default @c.email "") } {}) (if (object/has @c "name") { name: (default @c.name "") } {}) (if (array/includes (object/keys (default @c.extra {})) "role") { role: (object/get (default (as @c.extra BearerRolePerms) { role: "" permissions: [] }) "role" "") } {}) (if (array/includes (object/keys (default @c.extra {})) "permissions") { permissions: (object/get (default (as @c.extra BearerRolePerms) { role: "" permissions: [] }) "permissions" []) } {})) Viewer)))
-                (if (= @v null)
-                  (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "claims" })
-                  (emit BEARER_VERIFIED { requestId: @entity.requestId, viewer: (default @v { id: "", claims: [] }) })))
+              (emit BEARER_VERIFIED { requestId: @entity.requestId, verified: @payload.verified })
               (emit BEARER_REFUSED { requestId: @entity.requestId, reason: @why }))))
         (emit BEARER_PUMP {})
     }
@@ -293,10 +275,18 @@ orbital BearerVerifyOrbital {
     emits {
       BEARER_VERIFIED -> external {
         requestId : number
-        viewer : Viewer!
+        verified : Verified!
       }
-        @description "The bearer verified and passed the claim policy; the viewer it identifies."
+        @description "The bearer verified through jws/verify and passed the claim policy; the sealed Verified it carries is what identity/sign-in binds."
         @synonyms "bearer ok, token accepted, signed in"
+        @tier "primary"
+      BEARER_KEY_VERIFIED -> external {
+        requestId : number
+        owner : string!
+        claims : [BearerKeyClaim]!
+      }
+        @description "std-api-key-verifier accepted an API key; its owner and claims. An API key makes no Verified, so it binds no identity."
+        @synonyms "api key ok"
         @tier "primary"
       BEARER_ANONYMOUS -> external {
         requestId : number
@@ -308,25 +298,17 @@ orbital BearerVerifyOrbital {
         requestId : number
         reason : string!
       }
-        @description "The bearer was refused: malformed, keys-unavailable, unknown-key, algorithm, a std-jws reason, or a policy reason (expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant)."
+        @description "The bearer was refused: malformed, keys-unavailable, unknown-key, unconfigured, algorithm, the jws/verify kind (malformed, algorithm, key, signature, expired, not-yet-valid, issuer, audience), or a policy reason (expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant)."
         @synonyms "bearer refused, token rejected"
         @tier "primary"
-      JWS_VERIFY -> external {
-        token : string!
-        jwk : BearerJwk!
-      }
-        @description "Internal: ask std-jws to verify the token against one key."
+      BEARER_CHECK {}
+        @description "Internal: the token and keys in hand are handed to jws/verify."
         @tier "internal"
-      JWS_VERIFIED {
-        header : BearerJwsHeader!
-        payload : BearerClaims!
+      TOKEN_VERIFIED {
+        requestId : number
+        verified : Verified!
       }
-        @description "Internal: an unsigned token from the Auth emulator is handed to the claim policy as if std-jws had verified it."
-        @tier "internal"
-      JWS_REFUSED {
-        reason : string!
-      }
-        @description "Internal: an unsigned token from the Auth emulator whose header or claims do not read is refused as malformed, as if std-jws had refused it."
+        @description "Internal: jws/verify accepted the token; the claim policy reads it next."
         @tier "internal"
       X509_PARSE -> external {
         pem : string!
@@ -443,15 +425,6 @@ orbital BearerVerifyOrbital {
         message : string!
       }
         @description "Internal: std-api-key-verifier refused the key."
-      JWS_VERIFIED {
-        header : BearerJwsHeader!
-        payload : BearerClaims!
-      }
-        @description "Internal: std-jws verified the signature."
-      JWS_REFUSED {
-        reason : string!
-      }
-        @description "Internal: std-jws refused the token."
       X509_PARSED {
         n : bytes!
         e : bytes!
@@ -460,7 +433,7 @@ orbital BearerVerifyOrbital {
       X509_REFUSED {
         reason : string!
       }
-        @description "Internal: std-jws refused the token."
+        @description "Internal: std-x509 refused the certificate."
     }
 
     config {
@@ -489,6 +462,14 @@ orbital BearerVerifyOrbital {
         @description "The aud every token must carry, as the string or a list entry."
         @synonyms "token audience, client id"
         @tier "domain"
+      emulatorIssuer : string = ""
+        @label "Emulator issuer"
+        @description "The iss an unsigned (alg none) Auth emulator token must carry when FIREBASE_AUTH_EMULATOR_HOST is set; empty uses the issuer, so an emulator ID token (https://securetoken.google.com/<project>) verifies. jws/verify accepts an unsigned token only when its iss equals this call's issuer."
+        @tier "infra"
+      emulatorAudience : string = ""
+        @label "Emulator audience"
+        @description "The aud an unsigned Auth emulator token must carry; empty uses the audience."
+        @tier "infra"
       epoch : instant = "1970-01-01T00:00:00.000Z"
         @description "The Unix epoch; token exp, nbf and iat are NumericDate seconds counted from it."
         @tier "infra"

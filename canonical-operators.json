@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-31T10:43:51.160Z",
+  "generated": "2026-10-31T19:19:59.272Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -741,7 +741,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Ask the kernel for the verdict of an entity access policy: whether viewer may create, read, update or delete row of entity, evaluated by the same evaluator fetch and persist enforce. The success payload is { allowed }; an entity with no policy for the action allows every viewer, a null viewer is nobody. An entity the program does not declare, an unknown action or a request missing a key fails with { error }.",
+      "description": "Ask the kernel for the verdict of an entity access policy: whether the subject `identity` (an [identity] row, `id` the subject: policy data, never `@user`) may create, read, update or delete row of entity, evaluated by the same evaluator fetch and persist enforce. The success payload is { allowed }; an entity with no policy for the action allows every subject, a null identity is nobody. An entity the program does not declare, an unknown action or a request missing a key, or one that still names the removed `viewer` field, fails with { error }.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -789,7 +789,7 @@
               "row": {
                 "kind": "entityRef"
               },
-              "viewer": {
+              "identity": {
                 "kind": "union",
                 "of": [
                   {
@@ -803,7 +803,7 @@
               }
             }
           },
-          "description": "The entity name, the action, the candidate row (the incoming data for create, the existing row otherwise) and the viewer (null for nobody)"
+          "description": "The entity name, the action, the candidate row (the incoming data for create, the existing row otherwise) and the identity (an [identity] row, `id` the subject; null for nobody)"
         },
         {
           "name": "options",
@@ -830,7 +830,7 @@
         }
       ],
       "examples": [
-        "(access-check {\"entity\":\"Task\",\"action\":\"create\",\"row\":{\"ownerId\":\"u1\"},\"viewer\":{\"id\":\"u1\"}} {\"emit\":{\"success\":\"CHECKED\",\"failure\":\"CHECK_FAILED\"}})"
+        "(access-check {\"entity\":\"Task\",\"action\":\"create\",\"row\":{\"ownerId\":\"u1\"},\"identity\":{\"id\":\"u1\"}} {\"emit\":{\"success\":\"CHECKED\",\"failure\":\"CHECK_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -6876,6 +6876,7 @@
       "visual": {
         "form": "block"
       },
+      "sign": "nonNegative",
       "params": [
         {
           "name": "data",
@@ -7288,7 +7289,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored private key signingKey names; iss, sub, scope, aud and ttlSeconds are declared) or json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. A jwt-bearer credential is re-signed by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) or json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7358,7 +7359,6 @@
               },
               "refreshCredential": "string",
               "signingKey": "string",
-              "issuer": "string",
               "subject": "string",
               "audience": "string",
               "ttlSeconds": "number",
@@ -7381,7 +7381,6 @@
               "scopes",
               "refreshCredential",
               "signingKey",
-              "issuer",
               "subject",
               "audience",
               "ttlSeconds",
@@ -7394,7 +7393,7 @@
               "refreshBodyField"
             ]
           },
-          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, issuer?, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? }"
+          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? }"
         },
         {
           "name": "options",
@@ -8507,6 +8506,7 @@
                 "kind": "array",
                 "of": "string"
               },
+              "key": "string",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -8522,7 +8522,7 @@
             },
             "open": true
           },
-          "description": "Fetch options: id | filter | limit | offset | include | emit",
+          "description": "Fetch options: id | filter | limit | offset | include | key | emit. key (a non-empty string expression) is echoed as key in the success and failure payloads; absent, the payloads carry no key",
           "optional": true
         }
       ],
@@ -11429,6 +11429,121 @@
       ],
       "docsSource": "generated"
     },
+    "identity/sign-in": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Bind a verified credential as the session's identity (EXEC-IDENTITY-3): (identity/sign-in verified { emit }). Only a Verified, which jws/verify alone makes, is accepted; validate refuses any other type and the kernel refuses an unsealed value with failure kind unsealed. @user becomes the program's [identity] row whose id is the Verified's subject, and a session already signed in is replaced. A [persistent] identity with no row for the subject answers failure kind no-identity (the program creates the row in .lolo and signs in again); a [runtime] identity row is created from the Verified: its declared defaults, id the subject, and each declared field that a claim of the same name carries. The identity takes hold when the step commits, so effects after the sign-in in the same step still read the previous @user. A store that cannot be read answers failure kind store. The success payload is { subject }; the failure payload is { error, kind }. A server-only effect: a client kernel hands it to the server and never binds an identity itself (EXEC-IDENTITY-4).",
+      "module": "core",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "subject": "string"
+          }
+        }
+      },
+      "emitKeys": [
+        "success",
+        "failure"
+      ],
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "verified",
+          "type": "Verified",
+          "description": "The credential jws/verify checked"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { subject } payload and the { error, kind } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(identity/sign-in @payload.credential {\"emit\":{\"success\":\"SIGNED_IN\",\"failure\":\"SIGN_IN_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "identity/sign-out": {
+      "category": "effect",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Return the session to the anonymous viewer { id: \"anonymous\", role: \"anonymous\" } (EXEC-IDENTITY-3): (identity/sign-out { emit }). The success payload is { subject }, the subject that was signed in (anonymous when none was); like a sign-in it takes hold when the step commits. A server-only effect.",
+      "module": "core",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "subject": "string"
+          }
+        }
+      },
+      "emitKeys": [
+        "success",
+        "failure"
+      ],
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { subject } payload and the { error, kind } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(identity/sign-out {\"emit\":{\"success\":\"SIGNED_OUT\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "if": {
       "category": "logic",
       "minArity": 3,
@@ -11601,6 +11716,123 @@
       ],
       "examples": [
         "(json/valid \"null\") // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "jws/verify": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "Verified",
+          {
+            "kind": "object",
+            "fields": {
+              "error": "string",
+              "kind": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "malformed"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "algorithm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "key"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "signature"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "expired"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "not-yet-valid"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "issuer"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "audience"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "description": "Verify a compact JWS (RFC 7515) and answer a sealed Verified, or a typed failure. The alg must be RS256 (RSASSA-PKCS1-v1_5 / SHA-256) or ES256 (ECDSA P-256 / SHA-256); the key is a JWK record of the key set (kty RSA with base64url n and e, or kty EC with crv P-256 and base64url x and y). The kid header picks the key; a token without a kid is tried against every key of the right type. After the signature, exp (verified against the dispatch clock, so a replay agrees), nbf, iss (equal to the issuer option) and aud (a string or list that names the audience option) are checked, with clockSkewMs of tolerance (default 0). The answer is a Verified { subject, issuer, audience, claims, expiresAt } (claims is every claim of the token as { name, value }, expiresAt is exp in epoch milliseconds) which a program can read and pass but never construct: no literal, json/parse, as or set makes one, and a payload field typed Verified is refused when it arrives from outside the kernel. A failure is { error, kind }, kind one of malformed, algorithm, key, signature, expired, not-yet-valid, issuer, audience; tell the two answers apart with (object/has result \"kind\"). An unsigned token (alg none) verifies only when allowUnsigned is true and the issuer option and the token iss are the local emulator issuer (EXEC-IDENTITY-5); otherwise it is algorithm. A call whose options are missing issuer or audience, or carry anything else, is an evaluation error.",
+      "module": "jws",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "token",
+          "type": "string",
+          "description": "The compact JWS: three dot-separated unpadded base64url segments"
+        },
+        {
+          "name": "keys",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "kty": "string",
+                "kid": "string",
+                "alg": "string",
+                "n": "string",
+                "e": "string",
+                "crv": "string",
+                "x": "string",
+                "y": "string"
+              },
+              "optional": [
+                "kid",
+                "alg",
+                "n",
+                "e",
+                "crv",
+                "x",
+                "y"
+              ],
+              "open": true
+            }
+          },
+          "description": "The key set: JWK records with base64url members"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "issuer": "string",
+              "audience": "string",
+              "clockSkewMs": "number",
+              "allowUnsigned": "boolean"
+            },
+            "optional": [
+              "clockSkewMs",
+              "allowUnsigned"
+            ]
+          },
+          "description": "The issuer and audience the token must carry, the clock skew in milliseconds, and whether the emulator issuer may be unsigned"
+        }
+      ],
+      "examples": [
+        "[\"jws/verify\", \"<token>\", \"@entity.keys\", { issuer: \"https://issuer.test\", audience: \"app-1\" }] // => Verified | { error, kind }"
       ],
       "docsSource": "generated"
     },
@@ -24306,7 +24538,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch) and `viewer` (the dispatch's `@user`). Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
+      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -24448,27 +24680,11 @@
                   }
                 },
                 "open": true
-              },
-              "viewer": {
-                "kind": "union",
-                "of": [
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "id": "string"
-                    },
-                    "open": true
-                  },
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
               }
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`, `viewer`)",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`)",
           "optional": true
         },
         {
@@ -24815,7 +25031,7 @@
         },
         "open": true
       },
-      "description": "Subscribe to the host's live broadcast, the feed `orb serve`'s `/api/events` stream carries (the success emits of `persist` and running calls' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer's row only when `viewer` may read it (an absent or `null` viewer receives every row, as a sign-in-free ticket does), never an item `clientId`'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program's own gate.",
+      "description": "Subscribe to the host's live broadcast, the feed `orb serve`'s `/api/events` stream carries (the success emits of `persist` and running calls' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer's row only when the identity bound to the `clientId` session may read it (the anonymous viewer when none is bound), never an item `clientId`'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program's own gate.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -24829,27 +25045,11 @@
           "type": {
             "kind": "object",
             "fields": {
-              "viewer": {
-                "kind": "union",
-                "of": [
-                  {
-                    "kind": "object",
-                    "fields": {
-                      "id": "string"
-                    },
-                    "open": true
-                  },
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
               "clientId": "string"
             },
             "open": true
           },
-          "description": "Whose feed it is: the `viewer` whose `@read` filters peers' rows, and the `clientId` whose own items are left out",
+          "description": "Whose feed it is: the `clientId` session, whose bound identity's `@read` filters peers' rows and whose own items are left out",
           "optional": true
         },
         {
@@ -24878,7 +25078,7 @@
         }
       ],
       "examples": [
-        "(program/live {\"viewer\":\"@payload.viewer\",\"clientId\":\"@payload.clientId\"} {\"key\":\"@payload.streamKey\",\"emit\":{\"onMessage\":\"LIVE_ITEM\",\"failure\":\"LIVE_FAILED\"}})"
+        "(program/live {\"clientId\":\"@payload.clientId\"} {\"key\":\"@payload.streamKey\",\"emit\":{\"onMessage\":\"LIVE_ITEM\",\"failure\":\"LIVE_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -25340,8 +25540,8 @@
     },
     "program/resolve-rows": {
       "category": "std-program",
-      "minArity": 2,
-      "maxArity": 3,
+      "minArity": 1,
+      "maxArity": 2,
       "returnType": {
         "kind": "object",
         "fields": {
@@ -25358,7 +25558,7 @@
           "total": "number"
         }
       },
-      "description": "Resolve a row-set reference (`{ entityType, ids, total, query }`, the `ref` a rendered row set carries) against the store as it is now, FOR THE VIEWER NAMED: the entity's `@read` policy is applied for that viewer inside the one resolver every renderer reaches, so a row they may not read is omitted, as is a row deleted since the reference was made. The viewer is always stated (`null` is the anonymous viewer), never taken from the asking dispatch. Success carries `{ result: { rows, total } }`; a malformed reference fails.",
+      "description": "Resolve a row-set reference (`{ entityType, ids, total, query }`, the `ref` a rendered row set carries) against the store as it is now, FOR THE SESSION `clientId` NAMES (the asking dispatch's session without one): the entity's `@read` policy is applied for the identity bound to that session (the anonymous viewer when none is) inside the one resolver every renderer reaches, so a row they may not read is omitted, as is a row deleted since the reference was made. The identity is never stated by the call, only the session (EXEC-IDENTITY-1); `clientId` is the only option besides `key` and `emit`, and a `viewer` option or argument is refused. Success carries `{ result: { rows, total } }`; a malformed reference fails.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -25384,21 +25584,11 @@
           "description": "The row-set reference to resolve"
         },
         {
-          "name": "viewer",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "id": "string"
-            },
-            "open": true
-          },
-          "description": "The viewer the rows are resolved for (`null` is anonymous)"
-        },
-        {
           "name": "options",
           "type": {
             "kind": "object",
             "fields": {
+              "clientId": "string",
               "key": "string",
               "emit": {
                 "kind": "object",
@@ -25418,12 +25608,12 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } })",
+          "description": "The session to resolve for ({ clientId }) and emit configuration ({ emit: { success, failure } })",
           "optional": true
         }
       ],
       "examples": [
-        "(program/resolve-rows @payload.ref @payload.viewer {\"key\":\"@payload.requestId\",\"emit\":{\"success\":\"ROWS_RESOLVED\",\"failure\":\"ROWS_UNRESOLVED\"}})"
+        "(program/resolve-rows @payload.ref {\"clientId\":\"@payload.clientId\",\"key\":\"@payload.requestId\",\"emit\":{\"success\":\"ROWS_RESOLVED\",\"failure\":\"ROWS_UNRESOLVED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -25480,14 +25670,171 @@
       "maxArity": 3,
       "returnType": {
         "kind": "array",
-        "of": "PlayedStep"
+        "of": {
+          "kind": "object",
+          "fields": {
+            "orbital": "string",
+            "trait": "string",
+            "from": "string",
+            "event": "string",
+            "payload": {
+              "kind": "object",
+              "fields": {},
+              "open": true
+            },
+            "result": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "event": "string",
+                "transitionFired": "boolean",
+                "effects": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {},
+                    "open": true
+                  }
+                },
+                "emitted": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {},
+                    "open": true
+                  }
+                },
+                "guards": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {},
+                    "open": true
+                  }
+                },
+                "ensures": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {},
+                    "open": true
+                  }
+                },
+                "pendingAsks": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {},
+                    "open": true
+                  }
+                },
+                "outcomes": {
+                  "kind": "array",
+                  "of": {
+                    "kind": "object",
+                    "fields": {
+                      "orbital": "string",
+                      "trait": "string",
+                      "event": "string",
+                      "from": "string",
+                      "to": "string",
+                      "fired": "boolean",
+                      "effects": {
+                        "kind": "array",
+                        "of": {
+                          "kind": "object",
+                          "fields": {},
+                          "open": true
+                        }
+                      },
+                      "emitted": {
+                        "kind": "array",
+                        "of": {
+                          "kind": "object",
+                          "fields": {},
+                          "open": true
+                        }
+                      }
+                    },
+                    "open": true
+                  }
+                }
+              },
+              "open": true
+            }
+          },
+          "open": true
+        }
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), dispatch as a user (`viewer`: a user object, or null for nobody) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references) With `options.renderProps: true` (needs `render: true`) each rendered slot also carries `props`, the slot's content exactly as the kernel resolved it for a host to paint (`@entity` read after the step's `set`s, `let` bindings in scope, calls evaluated), and `fault` (`{ code, error }`) when the slot's repaint failed and it keeps its last paint.",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), run as an identity (`identity`: an identity row, `id` the subject, bound to the replay kernel's session for that step only; null or absent is the anonymous viewer) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references) With `options.renderProps: true` (needs `render: true`) each rendered slot also carries `props`, the slot's content exactly as the kernel resolved it for a host to paint (`@entity` read after the step's `set`s, `let` bindings in scope, calls evaluated), and `fault` (`{ code, error }`) when the slot's repaint failed and it keeps its last paint.",
       "module": "program",
       "visual": {
         "form": "actuator"
       },
       "hasSideEffects": true,
+      "resultByOption": {
+        "option": "report",
+        "results": {
+          "raw": {
+            "kind": "object",
+            "fields": {
+              "success": "boolean",
+              "steps": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "outcomes": {
+                      "kind": "array",
+                      "of": {
+                        "kind": "object",
+                        "fields": {},
+                        "open": true
+                      }
+                    },
+                    "states": {
+                      "kind": "map",
+                      "key": "string",
+                      "value": "string"
+                    },
+                    "pendingAsks": {
+                      "kind": "array",
+                      "of": {
+                        "kind": "object",
+                        "fields": {},
+                        "open": true
+                      }
+                    }
+                  },
+                  "open": true
+                }
+              },
+              "dispatchModes": {
+                "kind": "map",
+                "key": "string",
+                "value": "string"
+              },
+              "error": "string",
+              "trait": "string",
+              "outcomes": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {},
+                  "open": true
+                }
+              }
+            },
+            "optional": [
+              "steps",
+              "dispatchModes",
+              "error",
+              "trait",
+              "outcomes"
+            ]
+          }
+        }
+      },
       "runsOn": "server",
       "host": "program",
       "params": [
@@ -25513,7 +25860,7 @@
               "open": true
             }
           },
-          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, viewer?, now?, settleMs? }` each"
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs? }` each"
         },
         {
           "name": "options",

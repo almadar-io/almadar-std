@@ -79,14 +79,14 @@ orbital WebhookOrbital {
     state sending {
       INIT -> idle
 
-      WEBHOOK_ATTEMPT -> sending when @config.signed
+      WEBHOOK_ATTEMPT -> sending when (and @config.signed (!= @entity.key null))
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
         (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @now (time/startOf @now "second"))) 3 "0") "Z\"}"))
               (signature (hmac/sha256 @config.signingSecret @body "hex")))
           (if (= @signature null)
             (do (set @entity.lastError "the signing secret credential is not held")
-                (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: "the signing secret credential is not held" }))
+                (emit WEBHOOK_SECRET_MISSING {}))
             (emit WEBHOOK_HTTP_SEND {
               key: (str/concat "webhook:" @entity.seq),
               method: "POST",
@@ -95,6 +95,8 @@ orbital WebhookOrbital {
               body: (bytes/from-string @body),
               stream: "none"
             })))
+      ;; no key means no send in flight, so there is nothing to attempt or report and idle is the meaning
+      WEBHOOK_ATTEMPT -> idle when (and @config.signed (= @entity.key null))
       WEBHOOK_ATTEMPT -> sending when (not @config.signed)
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
@@ -108,20 +110,27 @@ orbital WebhookOrbital {
             stream: "none"
           }))
 
-      WEBHOOK_REPLIED -> sending when (>= @payload.status 500)
+      WEBHOOK_REPLIED -> sending when (and (>= @payload.status 500) (!= @entity.key null))
         (set @entity.lastError (str/concat "Webhook endpoint returned " @payload.status))
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: (str/concat "Webhook endpoint returned " @payload.status) })
-      WEBHOOK_REPLIED -> idle when (< @payload.status 500)
+      WEBHOOK_REPLIED -> idle when (and (>= @payload.status 500) (= @entity.key null))
+      WEBHOOK_REPLIED -> idle when (and (< @payload.status 500) (!= @entity.key null))
         (emit WEBHOOK_RETRY_SUCCEEDED { key: @entity.key })
         (emit WEBHOOK_RESULT { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), durationMs: (time/diff @now @entity.startedAt) })
-      WEBHOOK_UNREACHABLE -> sending
+      WEBHOOK_REPLIED -> idle when (and (< @payload.status 500) (= @entity.key null))
+      WEBHOOK_UNREACHABLE -> sending when (!= @entity.key null)
         (set @entity.lastError @payload.error)
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: @payload.error })
+      WEBHOOK_SECRET_MISSING -> sending when (!= @entity.key null)
+        (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: "the signing secret credential is not held" })
+      WEBHOOK_SECRET_MISSING -> idle when (= @entity.key null)
+      WEBHOOK_UNREACHABLE -> idle when (= @entity.key null)
       WEBHOOK_GAVE_UP -> idle
         (emit WEBHOOK_FAILED { message: @entity.lastError, attempts: @entity.attempts })
     }
 
     emits {
+      WEBHOOK_SECRET_MISSING -> internal {}
       WEBHOOK_RESULT -> external {
         status : number!
         ok : boolean!

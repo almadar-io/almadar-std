@@ -10,7 +10,7 @@
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
 import { OS_SEGMENT_ENCODE } from './os-common.js';
-import { BOOLEAN, BYTES, NUMBER, STRING, shape, lit, nullable, union } from '../signature.js';
+import { BOOLEAN, BYTES, NUMBER, STRING, shape, lit, list, nullable, union } from '../signature.js';
 
 const DIGEST_ENCODING: OperatorTypeRef = union(lit('hex'), lit('base64'));
 
@@ -264,6 +264,49 @@ export const RSA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'message', type: STRING, description: 'The message to sign, hashed as its UTF-8 bytes' },
     ],
     example: '["rsa/sign", "@config.signingKey", "header.payload"] // => "<signature>"',
+  },
+};
+
+const JWK: OperatorTypeRef = {
+  kind: 'object',
+  fields: { kty: STRING, kid: STRING, alg: STRING, n: STRING, e: STRING, crv: STRING, x: STRING, y: STRING },
+  optional: ['kid', 'alg', 'n', 'e', 'crv', 'x', 'y'],
+  open: true,
+};
+
+const JWS_FAILURE_KIND: OperatorTypeRef = union(
+  lit('malformed'),
+  lit('algorithm'),
+  lit('key'),
+  lit('signature'),
+  lit('expired'),
+  lit('not-yet-valid'),
+  lit('issuer'),
+  lit('audience'),
+);
+
+export const JWS_OPERATORS: Record<string, StdOperatorMeta> = {
+  'jws/verify': {
+    module: 'jws',
+    category: 'std-codec',
+    minArity: 3,
+    maxArity: 3,
+    description: 'Verify a compact JWS (RFC 7515) and answer a sealed Verified, or a typed failure. The alg must be RS256 (RSASSA-PKCS1-v1_5 / SHA-256) or ES256 (ECDSA P-256 / SHA-256); the key is a JWK record of the key set (kty RSA with base64url n and e, or kty EC with crv P-256 and base64url x and y). The kid header picks the key; a token without a kid is tried against every key of the right type. After the signature, exp (verified against the dispatch clock, so a replay agrees), nbf, iss (equal to the issuer option) and aud (a string or list that names the audience option) are checked, with clockSkewMs of tolerance (default 0). The answer is a Verified { subject, issuer, audience, claims, expiresAt } (claims is every claim of the token as { name, value }, expiresAt is exp in epoch milliseconds) which a program can read and pass but never construct: no literal, json/parse, as or set makes one, and a payload field typed Verified is refused when it arrives from outside the kernel. A failure is { error, kind }, kind one of malformed, algorithm, key, signature, expired, not-yet-valid, issuer, audience; tell the two answers apart with (object/has result "kind"). An unsigned token (alg none) verifies only when allowUnsigned is true and the issuer option and the token iss are the local emulator issuer (EXEC-IDENTITY-5); otherwise it is algorithm. A call whose options are missing issuer or audience, or carry anything else, is an evaluation error.',
+    hasSideEffects: false,
+    returnType: union('Verified', shape({ error: STRING, kind: JWS_FAILURE_KIND })),
+    params: [
+      { name: 'token', type: STRING, description: 'The compact JWS: three dot-separated unpadded base64url segments' },
+      { name: 'keys', type: list(JWK), description: 'The key set: JWK records with base64url members' },
+      {
+        name: 'options',
+        type: shape(
+          { issuer: STRING, audience: STRING, clockSkewMs: NUMBER, allowUnsigned: BOOLEAN },
+          ['clockSkewMs', 'allowUnsigned'],
+        ),
+        description: 'The issuer and audience the token must carry, the clock skew in milliseconds, and whether the emulator issuer may be unsigned',
+      },
+    ],
+    example: '["jws/verify", "<token>", "@entity.keys", { issuer: "https://issuer.test", audience: "app-1" }] // => Verified | { error, kind }',
   },
 };
 

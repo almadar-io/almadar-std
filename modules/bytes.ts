@@ -80,6 +80,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: `Number of bytes (not the length of the base64 text). ${REPRESENTATION}`,
     hasSideEffects: false,
+    sign: 'nonNegative',
     returnType: NUMBER,
     params: [{ name: 'data', type: BYTES, description: 'The bytes to measure' }],
     example: '["bytes/length", "aGVsbG8="] // => 5',
