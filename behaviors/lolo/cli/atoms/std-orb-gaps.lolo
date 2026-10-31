@@ -127,12 +127,10 @@ orbital OrbGapsOrbital {
 
     state ready {
       INIT -> ready
-      GAPS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      GAPS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit GAPS_ANSWERED { status: 500, body: "Error: orb gaps: the command arguments could not be read" })
-      GAPS_CALLED -> ready when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "cwd"))
-        (set @entity.cmd (default (array/first (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv")) ""))
-        (emit GAPS_ARGS_PARSE { stage: "gaps" argv: (array/drop (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) flags: [{ name: "from" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "write" aliases: [] takesValue: false repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
+      GAPS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit GAPS_ANSWERED { status: 500, body: "Error: orb gaps: the command arguments could not be read" }) (let ((c (array/first (object/get @a "argv")))) (if (= @c null) (emit GAPS_ANSWERED { status: 400, body: "usage: orb gaps check | sync [--from master|repos] [--write | --check | --out <dir>] | status | rollup [--write | --check | --out <dir>] | plans [--write | --check]" }) (do (set @entity.cwd (object/get @a "cwd")) (set @entity.cmd @c) (emit GAPS_ARGS_PARSE { stage: "gaps" argv: (array/drop (object/get @a "argv") 1) flags: [{ name: "from" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "write" aliases: [] takesValue: false repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] }))))))
       GAPS_ARGS_DONE -> ready
         (set @entity.mode (if (object/has @payload.flags "write") "write" (if (object/has @payload.flags "check") "check" (if (object/has @payload.flags "out") "out" "preview"))))
         (set @entity.outDir (if (object/has @payload.flags "out") (default (array/first (default (object/get @payload.flags "out") [])) "") ""))
@@ -971,7 +969,7 @@ orbital OrbGapsOrbital {
     listens {
       GAPS_CALLED -> inbound "cli-gaps" answers GAPS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb gaps` with its arguments and working directory."
         @synonyms "orb gaps, check gap ledgers, sync gap ledgers"

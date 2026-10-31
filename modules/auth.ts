@@ -25,6 +25,20 @@ export const AUTH_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["auth/sign-in", { "method": "email", "email": "ada@example.com", "password": "secret" }, { "emit": { "success": "SIGNED_IN", "failure": "SIGN_IN_FAILED" } }]',
   },
+  'auth/consent': {
+    module: 'auth', category: 'std-auth',
+    host: 'substrate',
+    minArity: 1, maxArity: 2,
+    description: 'Send the viewer to an authorization URL through the host and return the redirect it ends on. The request is { authorizeUrl }; the host opens it, waits for the redirect back, and answers the code and state query params of the final URL as they are (state checking stays in the program). Success carries { code, state }; failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.',
+    hasSideEffects: true, runsOn: 'client', returnType: 'void',
+    exampleSource: 'module',
+    effect: { kind: 'custom', produces: withKey(shape({ code: STRING, state: STRING }, [])) },
+    params: [
+      { name: 'request', type: shape({ authorizeUrl: STRING }, []), description: 'The authorization URL the viewer is sent to' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Optional trailing options: { emit: { success, failure, key? } } routes the { code, state } payload and the { error, kind } failure', optional: true }
+    ],
+    example: '["auth/consent", { "authorizeUrl": "@entity.authorizeUrl" }, { "emit": { "success": "CONSENT_GRANTED", "failure": "CONSENT_FAILED" } }]',
+  },
   'auth/sign-out': {
     module: 'auth', category: 'std-auth',
     host: 'substrate',

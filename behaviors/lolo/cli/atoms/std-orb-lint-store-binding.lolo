@@ -62,13 +62,14 @@ orbital OrbLintStoreBindingOrbital {
                         [])
                       (if (!= (array/first (array/filter (array/range 0 (array/len @bound)) (fn j (= (object/get (array/nth @bound @j) "driver") @d)))) @bi)
                         []
-                        (if (not (array/includes @names @d))
+                        (let ((dorb (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d))))))
+                         (if (= @dorb null)
                           [{ code: @config.codes.storeUnknownOrbital.code, path: (object/get @b "path"), message: (str/concat "store " @d " names no orbital of this program"), suggestion: "", severity: "error" }]
-                          (let ((handled (array/flatten (array/map (object/get (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d)))) "traits" []) (fn t (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (object/get @x "event" ""))))))))
-                            (let ((missing (array/filter (array/concat ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (if (array/includes ["runtime", "deploy"] (object/get (object/get (object/get (object/get (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d)))) "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")) ["ROWS_ENSURE_INDEXES"] [])) (fn v (not (array/includes @handled @v))))))
+                          (let ((handled (array/flatten (array/map (object/get @dorb "traits" []) (fn t (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (object/get @x "event" ""))))))))
+                            (let ((missing (array/filter (array/concat ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (if (array/includes ["runtime", "deploy"] (object/get (object/get (object/get (object/get @dorb "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")) ["ROWS_ENSURE_INDEXES"] [])) (fn v (not (array/includes @handled @v))))))
                               (if (= (array/len @missing) 0)
                                 []
-                                [{ code: @config.codes.storeDriverContract.code, path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }]))))))))))))
+                                [{ code: @config.codes.storeDriverContract.code, path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }])))))))))))))
 (let ((drivers (array/filter (array/unique (array/concat (if (object/has @payload.program "store") [(object/get @payload.program "store")] [])
                                 (array/flatten (array/map @orbitals (fn o (array/map (array/filter (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn e (object/has @e "store"))) (fn e (object/get @e "store"))))))))
                             (fn d (array/includes @names @d)))))
@@ -76,7 +77,7 @@ orbital OrbLintStoreBindingOrbital {
                 []
                 (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((orb (array/nth @orbitals @oi)))
-                    (if (array/includes @drivers (object/get @orb "name"))
+                    (if (array/includes @drivers (object/get @orb "name" ""))
                       []
                       (array/flatten (array/map (object/get @orb "traits" []) (fn td
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
@@ -98,17 +99,18 @@ orbital OrbLintStoreBindingOrbital {
                       (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
                           (array/flatten (array/map (object/get @tr "effects" []) (fn ef
-                            (let ((fres (if (= (as @ef StoreShape) null) null (array/flatten (array/map (array/filter (object/get (default (as (tree/index (if (validate/array @ef) @ef []) ["persist"]) StIndex) {}) "persist" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (validate/array @n) (let ((v0 (array/nth @n 1)) (e0 (array/nth @n 2))) (if (and (validate/string @v0) (or (= @v0 "delete") (= @v0 "update")) (validate/string @e0)) [@e0] [])) [])))))))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map
+                            (let ((fres (if (= (as @ef StoreShape) null) null (array/flatten (array/map (array/filter (object/get (default (as (tree/index (if (validate/array @ef) @ef []) ["persist"]) StIndex) {}) "persist" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (validate/array @n) (let ((v0 (array/nth @n 1)) (e0 (array/nth @n 2))) (if (and (validate/string @v0) (or (= @v0 "delete") (= @v0 "update")) (validate/string @e0)) [@e0] [])) [])))))))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map
                               @fres
                               (fn en
                                 (let ((hits (array/filter @bnd (fn x (= (object/get @x "name") @en)))))
-                                  (if (= (array/len @hits) 0)
+                                  (let ((lh (array/last @hits)))
+                                   (if (= @lh null)
                                     []
-                                    (let ((dv (object/get (array/last @hits) "driver")))
-                                      (let ((drv (array/filter @orbitals (fn o (= (object/get @o "name") @dv)))))
-                                        (if (and (> (array/len @drv) 0) (= (object/get (object/get (object/get (object/get (array/first @drv) "config" {}) "writeCapabilities" {}) "default" {}) "conditional" null) false))
-                                          [{ code: @config.codes.storeDriverNotConditional.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"), message: (str/concat "persist on " @en " is one conditional op (EXEC-STEP-8), and its store driver " @dv " declares writeCapabilities.conditional false"), suggestion: "Bind the entity to a driver that writes conditionally, or take rows through a persist batch", severity: "error" }]
-                                          []))))))))))))))))))))))))))))))
+                                    (let ((dv (object/get @lh "driver")))
+                                      (let ((dr (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @dv))))))
+                                        (if (and (!= @dr null) (= (object/get (object/get (object/get (object/get @dr "config" {}) "writeCapabilities" {}) "default" {}) "conditional" null) false))
+                                          [{ code: @config.codes.storeDriverNotConditional.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"), message: (str/concat "persist on " @en " is one conditional op (EXEC-STEP-8), and its store driver " @dv " declares writeCapabilities.conditional false"), suggestion: "Bind the entity to a driver that writes conditionally, or take rows through a persist batch", severity: "error" }]
+                                          [])))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "store-binding", scope: @entity.scope, findings: @entity.findings })
@@ -124,7 +126,7 @@ orbital OrbLintStoreBindingOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StoreBindProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StoreBindProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -141,12 +143,12 @@ orbital OrbLintStoreBindingOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (= @a null))
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint store-binding: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint store-binding <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint store-binding <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint store-binding <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -180,7 +182,7 @@ orbital OrbLintStoreBindingOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-store-binding" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint store-binding` with its arguments and working directory."
         @synonyms "orb lint store-binding, orb lint store-binding, store binding, store driver, store on non persistent"

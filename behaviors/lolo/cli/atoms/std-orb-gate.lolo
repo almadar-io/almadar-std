@@ -21,12 +21,10 @@ orbital GateOrbital {
 
     state ready {
       INIT -> ready
-      GATE_CALLED -> ready when (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs))) (or (= @args null) (!= (array/len (object/get @args "argv")) 2) (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p)))))
+      GATE_CALLED -> ready when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (or (= @args null) (!= (array/len (object/get @args "argv")) 2) (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p)))))
         (emit GATE_ANSWERED { status: 400, body: "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)" })
-      GATE_CALLED -> reading when (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @args null) (= (array/len (object/get @args "argv")) 2) (not (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p))))))
-        (set @entity.knownPath (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
-        (set @entity.observedPath (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) ""))
-        (os/read-file { anchor: "cwd" path: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") } { key: "known" emit: { success: GATE_KNOWN_READ, failure: GATE_FAILED } })
+      GATE_CALLED -> reading when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @args null) (= (array/len (object/get @args "argv")) 2) (not (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p))))))
+        (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (if (= @args null) (emit GATE_ANSWERED { status: 400, body: "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)" }) (let ((kp (array/first (object/get @args "argv"))) (op (array/nth (object/get @args "argv") 1))) (if (or (= @kp null) (= @op null)) (emit GATE_ANSWERED { status: 400, body: "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)" }) (do (set @entity.knownPath @kp) (set @entity.observedPath @op) (os/read-file { anchor: "cwd" path: @kp } { key: "known" emit: { success: GATE_KNOWN_READ, failure: GATE_FAILED } }))))))
     }
 
     state reading {
@@ -81,7 +79,7 @@ orbital GateOrbital {
     listens {
       GATE_CALLED -> inbound "cli-gate" answers GATE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb gate` with its arguments and working directory."
         @synonyms "orb gate, release gate, known failures, ratchet"

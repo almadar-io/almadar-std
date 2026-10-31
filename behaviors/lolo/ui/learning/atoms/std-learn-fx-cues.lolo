@@ -56,13 +56,13 @@ orbital LearnFxCuesOrbital {
         (emit BURST { particles: [ (object/merge (if ?correct @config.correctCue @config.wrongCue) { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       ESTIMATE_JUDGED -> active when @config.running
-        (let ((hit (as (array/first (array/filter @config.bandCues (fn b (== (object/get @b band) ?band)))) FxBandCue)))
+        (let ((hit (array/first (array/filter @config.bandCues (fn b (== (object/get @b band) ?band))))))
           (if (!= @hit null)
             (emit BURST { particles: [ (object/merge (object/get @hit cue) { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
             null))
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       CLASSIFY_UPDATED -> active when @config.running
-        (let ((hit (as (array/first (array/filter @config.verdictCues (fn v (== (object/get @v band) ?verdict)))) FxBandCue)))
+        (let ((hit (array/first (array/filter @config.verdictCues (fn v (== (object/get @v band) ?verdict))))))
           (if (!= @hit null)
             (emit BURST { particles: [ (object/merge (object/get @hit cue) { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
             null))

@@ -48,11 +48,11 @@ orbital OrbServeOrbital {
 
     state ready {
       INIT -> ready
-      SERVE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SERVE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SERVE_ANSWERED { status: 400, body: "", stderr: "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]" })
-      SERVE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.path (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit SERVE_ARGS_PARSE { stage: "serve" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "client-dir" aliases: [] takesValue: true repeatable: false }, { name: "no-mock" aliases: [] takesValue: false repeatable: false }, { name: "open" aliases: [] takesValue: false repeatable: false }, { name: "no-emulators" aliases: [] takesValue: false repeatable: false }] })
+      SERVE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.path (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit SERVE_ARGS_PARSE { stage: "serve" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "client-dir" aliases: [] takesValue: true repeatable: false }, { name: "no-mock" aliases: [] takesValue: false repeatable: false }, { name: "open" aliases: [] takesValue: false repeatable: false }, { name: "no-emulators" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -121,7 +121,7 @@ orbital OrbServeOrbital {
     listens {
       SERVE_CALLED -> inbound "cli-serve" answers SERVE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb serve`."
         @synonyms "orb serve, serve a program, run the app on a port, http server for a lolo program"

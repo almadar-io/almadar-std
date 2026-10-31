@@ -15,7 +15,7 @@ type TickDecl = { name : string, interval : TickInterval, effects : [TickShape?]
 type TickEntity = { name : string, persistence : string }
 type TickTrait = { name : string, linkedEntity : string, ticks : [TickDecl] }
 type TickOrbital = { name : string, entity : TickEntity, auxiliaryEntities : [TickEntity], traits : [TickTrait] }
-type TickProgram = { orbitals : [TickOrbital] }
+type TickProgram = { orbitals : [TickOrbital]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintTickRequiresRuntimeCodes = { tickRequiresRuntime : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , tickAsyncEffect : LintCodeDecl }
@@ -37,7 +37,7 @@ orbital OrbLintTickRequiresRuntimeOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (llm ["llm/call-tools" "llm/compact" "llm/embed" "llm/generate" "llm/switch" "llm/token-count"]))
-          (let ((ents (array/flatten (array/map @orbitals (fn o (array/filter (array/concat (array/append [] (object/get @o "entity" null)) (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e))))))))
+          (let ((ents (array/flatten (array/map @orbitals (fn o (array/filter (array/concat (let ((e0 (object/get @o "entity"))) (if (= @e0 null) [] [@e0])) (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e))))))))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
@@ -48,7 +48,7 @@ orbital OrbLintTickRequiresRuntimeOrbital {
                           (if (or (= (array/len @ticks) 0) (not (array/some @tks (fn t (object/get @t "nc")))) (= @linked ""))
                             []
                             (let ((owners (array/filter @ents (fn e (= (object/get @e "name" "") @linked)))))
-                              (if (or (= (array/len @owners) 0) (!= (object/get (array/last @owners) "persistence" "persistent") "persistent"))
+                              (if (let ((lo (array/last @owners))) (or (= @lo null) (!= (object/get @lo "persistence" "persistent") "persistent")))
                                 []
                                 [{ code: @config.codes.tickRequiresRuntime.code, path: (str/concat @where ".ticks"), message: (str/concat "trait \"" @tn "\" runs a non-cron tick against entity \"" @linked "\", which is Persistent — a persistent entity mutated on every tick is usually meant to be [runtime]"), suggestion: (str/concat "Mark entity \"" @linked "\" [runtime], or switch the tick to a Cron interval if it's a server-scheduled job"), severity: "error" }])))
                           (array/flatten (array/map @tks (fn t
@@ -82,7 +82,7 @@ orbital OrbLintTickRequiresRuntimeOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TickProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TickProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -99,10 +99,10 @@ orbital OrbLintTickRequiresRuntimeOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint tick-requires-runtime <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint tick-requires-runtime <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint tick-requires-runtime <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -136,7 +136,7 @@ orbital OrbLintTickRequiresRuntimeOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-tick-requires-runtime" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint tick-requires-runtime` with its arguments and working directory."
         @synonyms "orb lint tick-requires-runtime"

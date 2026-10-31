@@ -28,10 +28,10 @@ orbital OrbEmbedsOrbital {
 
     state ready {
       INIT -> ready
-      EMBEDS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      EMBEDS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit EMBEDS_ANSWERED { status: 400, body: "", stderr: "usage: orb embeds <file.lolo> | --stdin" })
-      EMBEDS_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
+      EMBEDS_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -78,7 +78,7 @@ orbital OrbEmbedsOrbital {
     listens {
       EMBEDS_CALLED -> inbound "cli-embeds" answers EMBEDS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb embeds`."
         @synonyms "orb embeds, the inline behavior embeds of a lolo file, list embedded behaviors"

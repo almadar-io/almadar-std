@@ -10,11 +10,14 @@ uses Spec from "almadar-std/lint-finding-codes"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type FcDocValue = string | number | boolean | [FcDocValue] | Map string FcDocValue
-type FcKnob = { default : FcDocValue }
+type FcCodeEntry = { code : string! }
+type FcCodesKnob = { default : Map string FcCodeEntry }
+type FcConfig = { codes : FcCodesKnob }
+type FcCoded = { code : string! }
 type FcTransition = { effects : [FcDocValue] }
 type FcMachine = { transitions : [FcTransition] }
 type FcTick = { effects : [FcDocValue] }
-type FcTrait = { name : string, config : Map string FcKnob, stateMachine : FcMachine, ticks : [FcTick] }
+type FcTrait = { name : string, config : FcConfig, stateMachine : FcMachine, ticks : [FcTick] }
 type FcOrbital = { name : string, traits : [FcTrait] }
 type FcProgram = { orbitals : [FcOrbital] }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -42,20 +45,19 @@ orbital OrbLintFindingCodesOrbital {
               (let ((trs (object/get @orb "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                   (let ((td (array/nth @trs @ti)))
-                    (if (not (validate/object (object/get (object/get @td "config" {}) "codes" null)))
+                    (let ((codes (object/get (object/get @td "config" {}) "codes")))
+                     (if (= @codes null)
                       []
-                      (let ((dflt (object/get (object/get (object/get @td "config") "codes") "default" null)) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
-                        (let ((declared (if (validate/object @dflt) (array/map (object/values @dflt) (fn d (object/get @d "code" ""))) []))
+                      (let ((dflt (object/get @codes "default" {})) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
+                        (let ((declared (array/map (object/values @dflt) (fn d (object/get @d "code"))))
                               (effects (array/concat (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr (object/get @tr "effects" [])))) (array/flatten (array/map (object/get @td "ticks" []) (fn tk (object/get @tk "effects" [])))))))
                           (array/flatten (array/map (json/nodes [@effects]) (fn n
-                            (if (validate/object @n)
-                              (let ((c (object/get @n "code" null)))
-                                (if (validate/string @c)
-                                  (if (array/includes @declared @c)
-                                    []
-                                    [{ code: @config.codes.findingCodeUndeclared.code, path: @where, message: (str/concat "A finding names the code '" @c "', which the rule's `codes` record does not declare"), suggestion: "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`", severity: "error" }])
-                                  []))
-                              []))))))))))))))))))
+                            (let ((f (as @n FcCoded)))
+                              (if (= @f null)
+                                []
+                                (if (array/includes @declared (object/get @f "code"))
+                                  []
+                                  [{ code: @config.codes.findingCodeUndeclared.code, path: @where, message: (str/concat "A finding names the code '" (object/get @f "code") "', which the rule's `codes` record does not declare"), suggestion: "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`", severity: "error" }])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "finding-codes", scope: @entity.scope, findings: @entity.findings })
@@ -91,7 +93,7 @@ orbital OrbLintFindingCodesOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint finding-codes <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint finding-codes <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {

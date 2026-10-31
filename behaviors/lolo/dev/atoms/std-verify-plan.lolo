@@ -103,7 +103,7 @@ orbital VerifyPlanOrbital {
         (set @entity.steps [])
         (emit PLAN_FAILED { error: "verify-plan: the program could not be read for planning" })
       PLAN_READ -> ready when (and (!= @entity.program null) (!= @entity.seedProgram null) (!= @entity.fullProgram null))
-        (let ((noIds : PlanIds {}) (names (array/unique (array/map (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (object/get @e "name" ""))))))
+        (let ((noIds : PlanIds {}) (names (array/unique (array/map (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (if (== @e null) "" (object/get @e "name" "")))))))
           (do
             (set @entity.seedIds (array/reduce @names @noIds (fn (acc name) (object/set @acc @name (if (and (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (default (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) "") (str/concat @name "-verify-seed-1"))))))
             (set @entity.newIds (array/reduce @names @noIds (fn (acc name) (object/set @acc @name (if (and (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (default (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) "") (str/concat @name "-verify-new-1"))))))))
@@ -240,7 +240,7 @@ orbital VerifyPlanOrbital {
                   (if (or (= @hit null) (= @hit "")) @acc2 (object/set @acc2 @k (object/get @entity.newIds @hit (str/concat @hit "-verify-new-1")))))))))])))))
         (set @entity.rowJobs (let ((ents (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" []))))))
           (array/reduce (array/unique (array/map @entity.rowRefs (fn rf (object/get @rf "entity")))) [] (fn (acc name)
-            (let ((def (array/find @ents (fn e (= (object/get @e "name" "") @name)))))
+            (let ((def (array/find @ents (fn e (and (!= @e null) (= (object/get @e "name" "") @name))))))
              (if (= @def null) @acc (if (= (object/get @def "name" "") "") @acc
                 (array/concat @acc [{ entity: @name, runtime: (= (object/get @def "persistence" "") "runtime"), identity: (object/get @def "identity" false),
                   fields: (array/map (object/get @def "fields" []) (fn f

@@ -51,7 +51,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
       FIRED_HEARD -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (be @payload.byEffect))
-          (let ((allinb (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine" {}) "events" []) (fn ev (if (object/has @ev "inbound") [{ t: (object/get @t "name" ""), a: (object/get (object/get @ev "inbound") "answers" "") }] []))))))))))))
+          (let ((allinb (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine" {}) "events" []) (fn ev (let ((inb (object/get @ev "inbound"))) (if (= @inb null) [] [{ t: (object/get @t "name" ""), a: (object/get @inb "answers") }])))))))))))))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((o (array/nth @orbitals @oi)))
                 (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
@@ -87,7 +87,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IafProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IafProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
@@ -110,7 +110,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound-answer-foreign <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound-answer-foreign <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -144,7 +144,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-inbound-answer-foreign" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint inbound-answer-foreign` with its arguments and working directory."
         @synonyms "orb lint inbound-answer-foreign"
@@ -163,7 +163,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
       FIRED_WALK_HEARD { slots : Map string WalkSlot! }
         @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
-      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD

@@ -118,7 +118,7 @@ orbital OrbLintConfigRoleListsOrbital {
           (if (validate/object @x)
             (array/map (object/keys @x)
               (fn key { x: (object/get @x @key), sc: @sc, t: @t }))
-            @nowork)))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (= (object/get @hk @hq) true)))))) RlShape) true))) []) RlWorkList) @nowork)))
+            @nowork)))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hn) (array/includes @hk true) (if (validate/object @hn) (array/some (object/values @hk) (fn hv (= @hv true))) false)))) RlShape) true))) []) RlWorkList) @nowork)))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       RL_STEP -> ready when (= (array/len @entity.frontier) 0)
         (set @entity.findings (let ((nof : [OrbFinding] []) (nostr : [string] []) (nox : [RlShape] []) (nosites : [RlSite] []) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
@@ -154,7 +154,7 @@ orbital OrbLintConfigRoleListsOrbital {
             (let ((orb (default (array/nth @orbs @oi) {})))
               (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
                 (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (default (array/first @exps) {})))
-                  (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) []))) (idName (if @hasDecl (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
+                  (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if (!= @declared null) (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) []))) (idName (if (!= @declared null) (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
                     (let ((rf (default (as (default (object/fromEntries (array/flatten (array/map @flds (fn f (let ((v1 (object/get @f "values" @nostr))) (let ((vs (if (> (array/len @v1) 0) @v1 (object/get (object/get @f "items" { values: [] }) "values" @nostr)))) (if (> (array/len @vs) 0) [[(object/get @f "name" ""), @vs]] @nopair))))))) {}) RlRfMap) @norf)))
                       (if (or (not @hasEnv) (= (array/len (object/keys @rf)) 0))
                         @noctx
@@ -172,7 +172,7 @@ orbital OrbLintConfigRoleListsOrbital {
   (array/map (array/range 0 (array/len @entity.ctxs))
     (fn t
       (let ((cx (default (array/nth @entity.ctxs @t) {})))
-        (let ((td (default (array/nth (object/get (array/nth @orbs (object/get @cx "o" 0)) "traits" []) (object/get @cx "i" 0)) {})))
+        (let ((td (default (array/nth (object/get (default (array/nth @orbs (object/get @cx "o" 0)) {}) "traits" []) (object/get @cx "i" 0)) {})))
           (let ((trs (object/get (object/get @td "stateMachine" { transitions: [] }) "transitions" [])) (tks (object/get @td "ticks" [])) (lss (object/get @td "listens" [])))
             (array/concat
   (array/concat
@@ -203,7 +203,7 @@ orbital OrbLintConfigRoleListsOrbital {
               (array/map (object/keys @pm)
                 (fn pk { x: (object/get @pm @pk), sc: @nosc, t: @t }))))))))
   (array/map (object/keys (object/get @cx "cfg" @nocfg))
-    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t }))))))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (= (object/get @hk @hq) true)))))) RlShape) true)))))
+    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t }))))))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hn) (array/includes @hk true) (if (validate/object @hn) (array/some (object/values @hk) (fn hv (= @hv true))) false)))) RlShape) true)))))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "config-role-lists", scope: @entity.scope, findings: @entity.findings })
@@ -242,10 +242,10 @@ orbital OrbLintConfigRoleListsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint config-role-lists <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint config-role-lists <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -279,7 +279,7 @@ orbital OrbLintConfigRoleListsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-config-role-lists" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint config-role-lists` with its arguments and working directory."
         @synonyms "orb lint config-role-lists"

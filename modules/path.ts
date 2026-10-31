@@ -9,7 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { list } from '../signature.js';
+import { NUMBER, list, shape } from '../signature.js';
 
 /**
  * Path module operators.
@@ -22,7 +22,7 @@ export const PATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 6,
     description: 'A* shortest path on a w×h grid; returns cells start→goal (incl. both) or [] if none',
     hasSideEffects: false,
-    returnType: list('cell'),
+    returnType: list(shape({ x: NUMBER, y: NUMBER })),
     params: [
       { name: 'start', type: 'vector', description: 'Start cell {x,y}' },
       { name: 'goal', type: 'vector', description: 'Goal cell {x,y}' },
@@ -40,7 +40,7 @@ export const PATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 6,
     description: 'BFS cells reachable within N moves from start (incl. start); sorted row-major',
     hasSideEffects: false,
-    returnType: list('cell'),
+    returnType: list(shape({ x: NUMBER, y: NUMBER })),
     params: [
       { name: 'start', type: 'vector', description: 'Start cell {x,y}' },
       { name: 'steps', type: 'number', description: 'Maximum number of moves' },

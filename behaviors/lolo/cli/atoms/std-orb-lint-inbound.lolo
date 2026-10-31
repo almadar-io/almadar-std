@@ -45,13 +45,13 @@ orbital OrbLintInboundOrbital {
                       (array/flatten (array/map (array/filter (array/range 0 (array/len @trs)) (fn ti (validate/object (array/nth @trs @ti)))) (fn ti
                         (let ((td (array/nth @trs @ti)))
                           (let ((evs (object/get (object/get @td "stateMachine" {}) "events" [])) (emitted (array/map (object/get @td "emits" []) (fn x (object/get @x "event" "")))))
-                            (array/map (array/filter (array/range 0 (array/len @evs)) (fn ei (object/has (array/nth @evs @ei) "inbound"))) (fn ei
+                            (array/flatten (array/map (array/range 0 (array/len @evs)) (fn ei
                               (let ((ev (array/nth @evs @ei)))
                                 (let ((inb (object/get @ev "inbound")))
-                                  { at: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].stateMachine.events[" @ei "]"),
+                                  (if (= @inb null) [] [{ at: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].stateMachine.events[" @ei "]"),
                                     key: (object/get @ev "key" ""), name: (object/get @inb "name" ""), ans: (object/get @inb "answers" ""),
                                     hasV: (object/has @inb "verifies"), hdr: (object/get (object/get @inb "verifies" {}) "header" ""), cred: (object/get (object/get @inb "verifies" {}) "credential" ""),
-                                    emitted: @emitted }))))))))))))))))
+                                    emitted: @emitted }]))))))))))))))))))
             (array/concat
               (array/flatten (array/map (array/range 0 (array/len @entries)) (fn i
                 (let ((en (array/nth @entries @i)))
@@ -84,7 +84,7 @@ orbital OrbLintInboundOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : InboundProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : InboundProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -104,7 +104,7 @@ orbital OrbLintInboundOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint inbound <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -138,7 +138,7 @@ orbital OrbLintInboundOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-inbound" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint inbound` with its arguments and working directory."
         @synonyms "orb lint inbound, inbound hooks"

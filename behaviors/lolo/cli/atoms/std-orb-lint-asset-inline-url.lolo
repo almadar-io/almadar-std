@@ -93,12 +93,12 @@ orbital OrbLintAssetInlineUrlOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint asset-inline-url: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint asset-inline-url <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint asset-inline-url <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -132,7 +132,7 @@ orbital OrbLintAssetInlineUrlOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-asset-inline-url" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint asset-inline-url` with its arguments and working directory."
         @synonyms "orb lint asset-inline-url"

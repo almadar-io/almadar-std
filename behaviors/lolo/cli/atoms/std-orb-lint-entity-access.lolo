@@ -47,11 +47,10 @@ orbital OrbLintEntityAccessOrbital {
   (let ((idDefs (array/filter @allDefs (fn d (object/get @d "identity" false))))
         (hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0)))
         (allIdNames (array/unique (array/map (array/concat @primIds @auxIds) (fn e (object/get @e "name" ""))))))
-   (let ((hasId (> (array/len @idDefs) 0))
-         (declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
+   (let ((declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
     (array/concat
-     (if (not @hasId) []
- (let ((idName (object/get (array/first @idDefs) "name" "")))
+     (let ((idDef (array/first @idDefs))) (if (= @idDef null) []
+ (let ((idName (object/get @idDef "name" "")))
   (let ((lowId (str/lower @idName))
         (sid (let ((d0 (default (array/first (array/filter @allDefs (fn d (= (object/get @d "name" "") @idName)))) {}))) (array/includes (array/concat (array/concat (if (object/has @d0 "read_policy") (let ((cs (tree/fold (object/get @d0 "read_policy") (fn (n k)
  (if (validate/array @n)
@@ -125,16 +124,17 @@ orbital OrbLintEntityAccessOrbital {
   [])) AccShape))) (if (validate/array @cs) @cs [])) []))))))
             (l4 (array/flatten (array/map @same (fn e (if (object/has @e "collection") (let ((c (object/get @e "collection" ""))) (array/filter (array/unique (array/flatten (array/map (array/filter @allDefs (fn f (and (object/has @f "collection") (= (object/get @f "collection" "") @c)))) (fn f (array/map (array/filter (object/get @f "fields" []) (fn fd (and (object/has @fd "name") (not (object/get @fd "intrinsic" false)) (object/has @fd "relation") (= (object/get (object/get @fd "relation" {}) "entity" "") @idName)))) (fn fd (object/get @fd "name" ""))))))) (fn col (> (array/len (array/filter (object/get @e "fields" []) (fn fd (= (object/get @fd "name" "") @col)))) 0)))) []))))))
        (let ((owners (array/concat @l1 (array/filter (array/unique (array/concat (array/concat @l2 @l3) @l4)) (fn col (not (array/includes @l1 @col)))))))
-        (if (or (= (array/len @owners) 0) (object/has @dd "read_policy") (and (object/has @dd "access_waivers") (object/has (object/get @dd "access_waivers" {}) "read"))) []
-         [{ code: @config.codes.entityOwnerColumnUnscoped.code, path: (str/concat (object/get @dd "name" "") ".@read"), message: (str/concat (object/get @dd "name" "") " declares owner column(s) " (str/join (array/map @owners (fn col (str/concat "`" @col "`"))) ", ") " pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row"), suggestion: (str/concat "declare @read on " (object/get @dd "name" "") " scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity " (array/first @owners) "), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING"), severity: "error" }])))))))))))
+ (let ((ownerCol (array/first @owners)))
+        (if (or (= @ownerCol null) (object/has @dd "read_policy") (and (object/has @dd "access_waivers") (object/has (object/get @dd "access_waivers" {}) "read"))) []
+         [{ code: @config.codes.entityOwnerColumnUnscoped.code, path: (str/concat (object/get @dd "name" "") ".@read"), message: (str/concat (object/get @dd "name" "") " declares owner column(s) " (str/join (array/map @owners (fn col (str/concat "`" @col "`"))) ", ") " pointing at the [identity] entity, but no @read directive — and an undeclared policy is ALLOW-ALL, not deny-all, so every viewer reads every row"), suggestion: (str/concat "declare @read on " (object/get @dd "name" "") " scoping rows to the viewer, e.g. @read [\"=\", (object/get @entity " @ownerCol "), @user.id] — or, when visibility genuinely depends on a DIFFERENT entity (a membership/enrolment join a per-row predicate cannot express), omit @read and state that reason in a comment on the entity, citing R-ENTITY-ACCESS-NO-COLLECTION-AGGREGATE-BINDING"), severity: "error" }])))))))))))))
      (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
       (let ((orb (default (array/nth @orbs @oi) {})))
        (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s1 (object/get @e "kind" ""))) (if (validate/string @s1) @s1 "")) "identity")))))
         (let ((hasExp (> (array/len @exps) 0)))
          (let ((exp (default (array/first @exps) {})))
           (let ((hasShape (and @hasExp (object/has @exp "shape"))))
-           (let ((idF (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) [])))
-                 (idNm (if @hasDecl (object/get @declared "name" "") (if @hasShape (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user")) (quote "@user"))))
+           (let ((idF (if (= @declared null) (if @hasShape (object/get @exp "shape" []) []) (object/get @declared "fields" [])))
+                 (idNm (if (= @declared null) (if @hasShape (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user")) (quote "@user")) (object/get @declared "name" "")))
                  (idDecl (or @hasDecl @hasExp)))
             (let ((idNames (array/unique (array/concat (array/concat [@idNm] @allIdNames) (if (and @hasExp (object/has @exp "name")) [(object/get @exp "name" "")] [])))))
              (array/flatten (array/map (array/flatten (array/map (array/concat [(object/get @orb "entity" {})] (object/get @orb "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] [])))) (fn en
@@ -192,7 +192,7 @@ orbital OrbLintEntityAccessOrbital {
  []))
     (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s2 (object/get @h "rel" ""))) (if (validate/string @s2) @s2 ""))), kind: (let ((s3 (object/get @h "kind" ""))) (if (validate/string @s3) @s3 "")), a: (let ((s4 (object/get @h "a" ""))) (if (validate/string @s4) @s4 "")), b: (let ((s5 (object/get @h "b" ""))) (if (validate/string @s5) @s5 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
   (if (validate/string @n) (if (str/startsWith @n (quote "@"))
- (let ((root (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "["))))
+ (let ((root (str/replace-pattern (str/slice @n 1) "[.\\[].*" "")))
   (if (= @root "entity")
    (let ((ef (if (and (validate/string @n) (str/startsWith @n (quote "@entity.")) (> (str/len @n) 8) (not (str/includes (str/slice @n 8) ".")) (not (str/includes (str/slice @n 8) "["))) (str/slice @n 8) ""))) (if (= @ef "") [] (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @ef)))))
  (if (> (array/len @fm) 0)
@@ -253,10 +253,10 @@ orbital OrbLintEntityAccessOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-access <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-access <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -290,7 +290,7 @@ orbital OrbLintEntityAccessOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-entity-access" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint entity-access` with its arguments and working directory."
         @synonyms "orb lint entity-access, orb lint entity-access, entity access"

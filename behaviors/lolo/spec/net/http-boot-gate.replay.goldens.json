@@ -2,7 +2,7 @@
  "atom": "net/atoms/std-http-boot-gate.lolo",
  "trait": "BootGate",
  "source": "orbital-rust/crates/orbital-shell-rust/src/host/boot.rs (boot_env_problems and the production refusal) and orbital-server lib.rs boot_env_tests",
- "note": "Twin of the host boot path: production with a problem refuses the boot, elsewhere the problem only warns. The os/getenv effects of INIT and of each READ_<NAME> step are not played (the replay would run them with no grant); READ_ALMADAR_INTEGRATIONS_MODE, the last read, has no effect and is played, and ENV_COLLECTED stands for the nine answers. The replay ignores a case-level entity. The credential-list effect (ENV_COLLECTED with services and no mock) is not played; its answer is stubbed as CRED_LISTED / CRED_UNLISTED, and the services reach the replay in the ENV_COLLECTED payload because the replay ignores case-level config. The Rust twin is boot_env_tests (missing credential and unreadable catalog lines); the line texts come from std-boot-env-check and std-credential-admin, whose own goldens pin them. PENDING: credential-held-in-environment and missing-credential-refuses cases wait for the environment view of credential-list; until then every required credential of a called service counts as held.",
+ "note": "Twin of the host boot path: production with a problem refuses the boot, elsewhere the problem only warns. The os/getenv effects of INIT and of each READ_<NAME> step are not played (the replay would run them with no grant); READ_ALMADAR_INTEGRATIONS_MODE, the last read, has no effect and is played, and ENV_COLLECTED stands for the nine answers. The replay ignores a case-level entity. The credential-list effect (ENV_COLLECTED with services and no mock) is not played; its answer is stubbed as CRED_LISTED / CRED_UNLISTED, and the services reach the replay in the ENV_COLLECTED payload because the replay ignores case-level config. The Rust twin is boot_env_tests (missing credential and unreadable catalog lines); the line texts come from std-boot-env-check and std-credential-admin, whose own goldens pin them. held is the store entry names plus the credential-list env names; a required credential in neither is owed (CRED_ADMIN_OWED, played through std-credential-admin's own goldens) and reaches the refusal route as missingCredentials.",
  "cases": [
   {
    "id": "last-variable-collects-all-reads",
@@ -946,7 +946,8 @@
          }
         ]
        }
-      ]
+      ],
+      "env": []
      },
      "expect": {
       "emits": [
@@ -1180,7 +1181,7 @@
    ]
   },
   {
-   "id": "nothing-stored-still-counts-required-credentials-held-until-the-environment-view",
+   "id": "required-credential-held-in-the-environment-is-held",
    "steps": [
     {
      "event": "ENV_COLLECTED",
@@ -1233,6 +1234,12 @@
      "payload": {
       "enabled": true,
       "entries": [],
+      "env": [
+       {
+        "name": "STRIPE_SECRET_KEY",
+        "last4": "abcd"
+       }
+      ],
       "declared": [],
       "services": [
        {
@@ -1273,6 +1280,428 @@
          ],
          "held": [
           "STRIPE_SECRET_KEY"
+         ],
+         "catalog": [
+          {
+           "service": "stripe",
+           "backend": "production",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "STRIPE_SECRET_KEY",
+             "required": true,
+             "description": "API key",
+             "oneOf": ""
+            },
+            {
+             "envVar": "STRIPE_WEBHOOK",
+             "required": false,
+             "description": "hook",
+             "oneOf": ""
+            }
+           ]
+          },
+          {
+           "service": "llm",
+           "backend": "",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "LLM_KEY",
+             "required": true,
+             "description": "key",
+             "oneOf": ""
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "required-credential-in-neither-is-not-held",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       }
+      ],
+      "services": [
+       "stripe"
+      ]
+     }
+    },
+    {
+     "event": "CRED_LISTED",
+     "payload": {
+      "enabled": true,
+      "entries": [],
+      "env": [],
+      "declared": [],
+      "services": [
+       {
+        "name": "stripe",
+        "backend": "production",
+        "credentials": [
+         {
+          "envVar": "STRIPE_SECRET_KEY",
+          "required": true,
+          "description": "API key"
+         },
+         {
+          "envVar": "STRIPE_WEBHOOK",
+          "required": false,
+          "description": "hook"
+         }
+        ]
+       },
+       {
+        "name": "llm",
+        "credentials": [
+         {
+          "envVar": "LLM_KEY",
+          "required": true,
+          "description": "key"
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CRED_ADMIN_BOOT_CHECK",
+        "payload": {
+         "services": [
+          "stripe"
+         ],
+         "held": [],
+         "catalog": [
+          {
+           "service": "stripe",
+           "backend": "production",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "STRIPE_SECRET_KEY",
+             "required": true,
+             "description": "API key",
+             "oneOf": ""
+            },
+            {
+             "envVar": "STRIPE_WEBHOOK",
+             "required": false,
+             "description": "hook",
+             "oneOf": ""
+            }
+           ]
+          },
+          {
+           "service": "llm",
+           "backend": "",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "LLM_KEY",
+             "required": true,
+             "description": "key",
+             "oneOf": ""
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "store-and-environment-holding-the-same-name-list-it-once",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       }
+      ],
+      "services": [
+       "stripe"
+      ]
+     }
+    },
+    {
+     "event": "CRED_LISTED",
+     "payload": {
+      "enabled": true,
+      "entries": [
+       {
+        "service": "stripe",
+        "name": "STRIPE_SECRET_KEY"
+       }
+      ],
+      "env": [
+       {
+        "name": "STRIPE_SECRET_KEY"
+       }
+      ],
+      "declared": [],
+      "services": [
+       {
+        "name": "stripe",
+        "backend": "production",
+        "credentials": [
+         {
+          "envVar": "STRIPE_SECRET_KEY",
+          "required": true,
+          "description": "API key"
+         },
+         {
+          "envVar": "STRIPE_WEBHOOK",
+          "required": false,
+          "description": "hook"
+         }
+        ]
+       },
+       {
+        "name": "llm",
+        "credentials": [
+         {
+          "envVar": "LLM_KEY",
+          "required": true,
+          "description": "key"
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CRED_ADMIN_BOOT_CHECK",
+        "payload": {
+         "services": [
+          "stripe"
+         ],
+         "held": [
+          "STRIPE_SECRET_KEY"
+         ],
+         "catalog": [
+          {
+           "service": "stripe",
+           "backend": "production",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "STRIPE_SECRET_KEY",
+             "required": true,
+             "description": "API key",
+             "oneOf": ""
+            },
+            {
+             "envVar": "STRIPE_WEBHOOK",
+             "required": false,
+             "description": "hook",
+             "oneOf": ""
+            }
+           ]
+          },
+          {
+           "service": "llm",
+           "backend": "",
+           "listed": true,
+           "credentials": [
+            {
+             "envVar": "LLM_KEY",
+             "required": true,
+             "description": "key",
+             "oneOf": ""
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-environment-name-no-called-service-requires-is-only-held",
+   "steps": [
+    {
+     "event": "ENV_COLLECTED",
+     "payload": {
+      "vars": [
+       {
+        "name": "NODE_ENV",
+        "value": "production"
+       },
+       {
+        "name": "AUTH_PROVIDER",
+        "value": ""
+       },
+       {
+        "name": "OIDC_ISSUER_URL",
+        "value": ""
+       },
+       {
+        "name": "OIDC_AUDIENCE",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_PROJECT_ID",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_SERVICE_ACCOUNT_PATH",
+        "value": ""
+       },
+       {
+        "name": "FIREBASE_AUTH_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "FIRESTORE_EMULATOR_HOST",
+        "value": ""
+       },
+       {
+        "name": "ALMADAR_INTEGRATIONS_MODE",
+        "value": ""
+       }
+      ],
+      "services": [
+       "stripe"
+      ]
+     }
+    },
+    {
+     "event": "CRED_LISTED",
+     "payload": {
+      "enabled": true,
+      "entries": [],
+      "env": [
+       {
+        "name": "LLM_KEY"
+       }
+      ],
+      "declared": [],
+      "services": [
+       {
+        "name": "stripe",
+        "backend": "production",
+        "credentials": [
+         {
+          "envVar": "STRIPE_SECRET_KEY",
+          "required": true,
+          "description": "API key"
+         },
+         {
+          "envVar": "STRIPE_WEBHOOK",
+          "required": false,
+          "description": "hook"
+         }
+        ]
+       },
+       {
+        "name": "llm",
+        "credentials": [
+         {
+          "envVar": "LLM_KEY",
+          "required": true,
+          "description": "key"
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CRED_ADMIN_BOOT_CHECK",
+        "payload": {
+         "services": [
+          "stripe"
+         ],
+         "held": [
+          "LLM_KEY"
          ],
          "catalog": [
           {

@@ -108,10 +108,10 @@ orbital OrbRunnersOrbital {
 
     state ready {
       INIT -> ready
-      RN_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      RN_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit RN_ARGS_UNREAD { })
-      RN_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit RN_ARGS_PARSE { stage: "runners" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })
+      RN_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit RN_ARGS_PARSE { stage: "runners" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -152,10 +152,10 @@ orbital OrbRunnersOrbital {
         (os/getenv "RUNNER_DIR" { key: "RUNNER_DIR" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
       RN_ENV_NEXT -> reading when (= @entity.cursor 9)
         (os/getenv "RUNNER_LABELS" { key: "RUNNER_LABELS" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
-      RN_ENV_READ -> ready when (or (= @payload.key null) (= (object/fromEntries [[@payload.key, (default @payload.value "")]]) null))
+      RN_ENV_READ -> ready when (= @payload.key null)
         (emit RUNNERS_ANSWERED { status: 500, body: "an environment variable answered without its name" })
-      RN_ENV_READ -> reading when (and (!= @payload.key null) (!= (object/fromEntries [[@payload.key, (default @payload.value "")]]) null))
-        (set @entity.vars (let ((entry (object/fromEntries [[@payload.key, (default @payload.value "")]]))) (if (= @entry null) @entity.vars (object/merge @entity.vars @entry))))
+      RN_ENV_READ -> reading when (!= @payload.key null)
+        (set @entity.vars (object/merge @entity.vars (object/fromEntries [[@payload.key, (default @payload.value "")]])))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RN_ENV_NEXT { })
       RN_ENV_NEXT -> ready when (and (>= @entity.cursor 10) (!= (object/get @entity.vars "RUNNER_COUNT") "") (= (str/to-number (object/get @entity.vars "RUNNER_COUNT")) null))
@@ -431,7 +431,7 @@ orbital OrbRunnersOrbital {
     listens {
       RN_CALLED -> inbound "cli-runners" answers RUNNERS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb runners` with its verb."
         @synonyms "orb runners, ephemeral self-hosted runners"

@@ -14,8 +14,8 @@ type Scanned = { name : string!, kind : string! }
 type FoundPack = { name : string!, version : string!, stage : number!, compiler : string!, vocab : string!, code : string! }
 type OrbBlock = { compiler : string?, vocabulary : string? }
 type OrbLanguageManifest = { name : string?, version : string?, orbLanguage : OrbBlock?, orbVocabulary : OrbBlock? }
-type VocabMeta = { code : string? }
-type VocabFile = { meta : VocabMeta? }
+type VocabMeta = { code : string! }
+type VocabFile = { meta : VocabMeta! }
 
 orbital OrbLanguageOrbital {
   uses Args from "std/behaviors/std-args"
@@ -58,11 +58,10 @@ orbital OrbLanguageOrbital {
 
     state ready {
       INIT -> ready
-      LANGUAGE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      LANGUAGE_CALLED -> ready when (not (and (validate/required @payload.rawBody) (!= (json/parse @payload.rawBody OrbCommandArgs) null)))
         (emit LANGUAGE_ANSWERED { status: 400, body: "", stderr: "usage: orb language which" })
-      LANGUAGE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit LANG_ARGS_PARSE { stage: "language" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
+      LANGUAGE_CALLED -> parsing when (and (validate/required @payload.rawBody) (!= (json/parse @payload.rawBody OrbCommandArgs) null))
+        (if (validate/required @payload.rawBody) (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (if (= @args null) (emit LANGUAGE_ANSWERED { status: 400, body: "", stderr: "usage: orb language which" }) (do (set @entity.cwd (object/get @args "cwd")) (emit LANG_ARGS_PARSE { stage: "language" argv: (object/get @args "argv") flags: [] })))) (emit LANGUAGE_ANSWERED { status: 400, body: "", stderr: "usage: orb language which" }))
     }
 
     state parsing {
@@ -182,35 +181,18 @@ orbital OrbLanguageOrbital {
         (set @entity.codes [])
         (emit LANG_PACK_LIST { tag: "0" })
       LANG_READ -> probing when (< @entity.stage (- (array/len @entity.roots) 1))
-        (os/read-file (str/concat "/" (str/slice (array/nth @entity.roots @entity.stage) 1) "/" (object/get (array/nth @entity.pkgs @entity.cursor) "name") "/package.json") { key: "manifest" emit: { success: LANG_FILE, failure: LANG_ABSENT } })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (let ((r (array/nth @entity.roots @entity.stage))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the stage is past the roots" }) (os/read-file (str/concat "/" (str/slice @r 1) "/" (object/get @p "name") "/package.json") { key: "manifest" emit: { success: LANG_FILE, failure: LANG_ABSENT } })))))
       LANG_READ -> probing when (= @entity.stage (- (array/len @entity.roots) 1))
-        (os/read-file (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.pkgs @entity.cursor) "name") "/package.json") { key: "manifest" emit: { success: LANG_FILE, failure: LANG_ABSENT } })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (os/read-file (str/concat "~/.orb/node_modules/" (object/get @p "name") "/package.json") { key: "manifest" emit: { success: LANG_FILE, failure: LANG_ABSENT } })))
       LANG_ABSENT -> probing when (< (+ @entity.stage 1) (array/len @entity.roots))
         (set @entity.stage (+ @entity.stage 1))
         (emit LANG_READ { tag: (str/concat @entity.stage ":" @entity.cursor) })
       LANG_ABSENT -> probing when (>= (+ @entity.stage 1) (array/len @entity.roots))
-        (set @entity.lines (array/append @entity.lines (let ((p (array/nth @entity.pkgs @entity.cursor))) (str/concat (object/get @p "name") " → " (object/get @p "code") ": " (object/get @p "name") " is not installed — run `" (object/get @p "hint") "` (or with `--global`)"))))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit LANGUAGE_ROW { line: (array/last @entity.lines) })
-        (emit LANG_NEXT { tag: (str/concat "" @entity.cursor) })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (let ((row (str/concat (object/get @p "name") " → " (object/get @p "code") ": " (object/get @p "name") " is not installed — run `" (object/get @p "hint") "` (or with `--global`)"))) (do (set @entity.lines (array/append @entity.lines @row)) (set @entity.cursor (+ @entity.cursor 1)) (emit LANGUAGE_ROW { line: @row }) (emit LANG_NEXT { tag: (str/concat "" @entity.cursor) })))))
       LANG_FILE -> probing
         (emit LANG_MANIFEST { text: (default (bytes/to-string @payload.data) "") })
-      LANG_MANIFEST -> probing when (= (json/parse @payload.text OrbLanguageManifest) null)
-        (set @entity.ver "")
-        (set @entity.kind "json")
-        (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: "" kind: "json" })
-      LANG_MANIFEST -> probing when (and (!= (json/parse @payload.text OrbLanguageManifest) null) (= (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") null))
-        (set @entity.ver (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") ""))
-        (set @entity.kind "block")
-        (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") "") kind: "block" })
-      LANG_MANIFEST -> probing when (and (!= (json/parse @payload.text OrbLanguageManifest) null) (!= (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") null) (= (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") "compiler") null))
-        (set @entity.ver (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") ""))
-        (set @entity.kind "range")
-        (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") "") kind: "range" })
-      LANG_MANIFEST -> probing when (and (!= (json/parse @payload.text OrbLanguageManifest) null) (!= (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") "compiler") null))
-        (set @entity.ver (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") ""))
-        (set @entity.compiler (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") "compiler"))
-        (emit LANG_SEMVER { requestId: (str/concat "pkg:" @entity.cursor ":" @entity.stage) version: @entity.running range: (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbLanguage") "compiler") })
+      LANG_MANIFEST -> probing
+        (let ((m (json/parse @payload.text OrbLanguageManifest))) (if (= @m null) (do (set @entity.ver "") (set @entity.kind "json") (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: "" kind: "json" })) (let ((ver (default (object/get @m "version") "")) (blk (object/get @m "orbLanguage"))) (if (= @blk null) (do (set @entity.ver @ver) (set @entity.kind "block") (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: @ver kind: "block" })) (let ((comp (object/get @blk "compiler"))) (if (= @comp null) (do (set @entity.ver @ver) (set @entity.kind "range") (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: @ver kind: "range" })) (do (set @entity.ver @ver) (set @entity.compiler @comp) (emit LANG_SEMVER { requestId: (str/concat "pkg:" @entity.cursor ":" @entity.stage) version: @entity.running range: @comp }))))))))
       LANG_SAT -> probing when @payload.value
         (set @entity.kind "")
         (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: @entity.ver kind: "" })
@@ -221,16 +203,11 @@ orbital OrbLanguageOrbital {
         (set @entity.kind (str/concat "semver:" @payload.reason))
         (emit LANG_ROOT_ASK { tag: (str/concat @entity.stage ":" @entity.cursor) version: @entity.ver kind: (str/concat "semver:" @payload.reason) })
       LANG_ROOT_ASK -> probing when (< @entity.stage (- (array/len @entity.roots) 1))
-        (os/realpath (str/concat "/" (str/slice (array/nth @entity.roots @entity.stage) 1) "/" (object/get (array/nth @entity.pkgs @entity.cursor) "name")) { key: "root" emit: { success: LANG_ROOT, failure: LANG_ROOT_FAILED } })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (let ((r (array/nth @entity.roots @entity.stage))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the stage is past the roots" }) (os/realpath (str/concat "/" (str/slice @r 1) "/" (object/get @p "name")) { key: "root" emit: { success: LANG_ROOT, failure: LANG_ROOT_FAILED } })))))
       LANG_ROOT_ASK -> probing when (= @entity.stage (- (array/len @entity.roots) 1))
-        (os/realpath (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.pkgs @entity.cursor) "name")) { key: "root" emit: { success: LANG_ROOT, failure: LANG_ROOT_FAILED } })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (os/realpath (str/concat "~/.orb/node_modules/" (object/get @p "name")) { key: "root" emit: { success: LANG_ROOT, failure: LANG_ROOT_FAILED } })))
       LANG_ROOT -> probing
-        (set @entity.coreRoot (if (and (= (object/get (array/nth @entity.pkgs @entity.cursor) "name") (str/concat (quote "@") "almadar/core")) (= @entity.kind "")) @payload.path @entity.coreRoot))
-        (set @entity.stdRoot (if (and (= (object/get (array/nth @entity.pkgs @entity.cursor) "name") (str/concat (quote "@") "almadar/std")) (= @entity.kind "")) @payload.path @entity.stdRoot))
-        (set @entity.lines (array/append @entity.lines (let ((n (object/get (array/nth @entity.pkgs @entity.cursor) "name")) (invalid (str/concat (object/get (array/nth @entity.pkgs @entity.cursor) "name") " → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @payload.path "/package.json")) ": "))) (if (= @entity.kind "") (str/concat @n (quote "@") @entity.ver " → " @payload.path) (if (= @entity.kind "block") (str/concat @invalid "missing `orbLanguage` block") (if (= @entity.kind "range") (str/concat @invalid "missing `orbLanguage.compiler` range") (if (= @entity.kind "json") (str/concat @invalid "invalid JSON") (if (= @entity.kind "incompat") (str/concat @n " → ORB_LANGUAGE_DATA_INCOMPATIBLE: installed " @n (quote "@") @entity.ver " requires orb " @entity.compiler ", but this orb is " @entity.running " — install a " @n " whose `orbLanguage.compiler` accepts " @entity.running ", or upgrade orb") (str/concat @invalid "`orbLanguage.compiler` " (json/stringify @entity.compiler) " is not a semver range: " (str/slice @entity.kind 7))))))))))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit LANGUAGE_ROW { line: (array/last @entity.lines) })
-        (emit LANG_NEXT { tag: (str/concat "" @entity.cursor) })
+        (let ((p (array/nth @entity.pkgs @entity.cursor))) (if (= @p null) (emit LANG_ROOT_FAILED { error: "no language package at the cursor" }) (do (set @entity.coreRoot (if (and (= (object/get @p "name") (str/concat (quote "@") "almadar/core")) (= @entity.kind "")) @payload.path @entity.coreRoot)) (set @entity.stdRoot (if (and (= (object/get @p "name") (str/concat (quote "@") "almadar/std")) (= @entity.kind "")) @payload.path @entity.stdRoot)) (let ((n (object/get @p "name"))) (let ((invalid (str/concat @n " → ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @payload.path "/package.json")) ": "))) (let ((row (if (= @entity.kind "") (str/concat @n (quote "@") @entity.ver " → " @payload.path) (if (= @entity.kind "block") (str/concat @invalid "missing `orbLanguage` block") (if (= @entity.kind "range") (str/concat @invalid "missing `orbLanguage.compiler` range") (if (= @entity.kind "json") (str/concat @invalid "invalid JSON") (if (= @entity.kind "incompat") (str/concat @n " → ORB_LANGUAGE_DATA_INCOMPATIBLE: installed " @n (quote "@") @entity.ver " requires orb " @entity.compiler ", but this orb is " @entity.running " — install a " @n " whose `orbLanguage.compiler` accepts " @entity.running ", or upgrade orb") (str/concat @invalid "`orbLanguage.compiler` " (json/stringify @entity.compiler) " is not a semver range: " (str/slice @entity.kind 7))))))))) (do (set @entity.lines (array/append @entity.lines @row)) (set @entity.cursor (+ @entity.cursor 1)) (emit LANGUAGE_ROW { line: @row }) (emit LANG_NEXT { tag: (str/concat "" @entity.cursor) }))))))))
       LANG_ROOT_FAILED -> idle
         (emit SCAN_ANSWERED { status: 500, body: "", stderr: @payload.error })
     }
@@ -238,7 +215,7 @@ orbital OrbLanguageOrbital {
     state scanning {
       INIT -> scanning
       LANG_PACK_LIST -> scanning when (< @entity.stage (- (array/len @entity.roots) 1))
-        (os/list-dir (str/concat "/" (str/slice (array/nth @entity.roots @entity.stage) 1)) { key: "root" emit: { success: LANG_PACK_ROOTDIR, failure: LANG_PACK_NOROOT } })
+        (let ((r (array/nth @entity.roots @entity.stage))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the stage is past the roots" }) (os/list-dir (str/concat "/" (str/slice @r 1)) { key: "root" emit: { success: LANG_PACK_ROOTDIR, failure: LANG_PACK_NOROOT } })))
       LANG_PACK_LIST -> scanning when (= @entity.stage (- (array/len @entity.roots) 1))
         (os/list-dir "~/.orb/node_modules" { key: "root" emit: { success: LANG_PACK_ROOTDIR, failure: LANG_PACK_NOROOT } })
       LANG_PACK_NOROOT -> scanning when (= @payload.kind "not-found")
@@ -252,29 +229,27 @@ orbital OrbLanguageOrbital {
         (set @entity.scopes (array/map (array/filter @payload.entries (fn e (str/startsWith (object/get @e "name") (quote "@")))) (fn e (object/get @e "name"))))
         (emit LANG_PACK_SCOPE { tag: (str/concat @entity.stage ":root") })
       LANG_PACK_SCOPE -> scanning when (and (< @entity.stage (- (array/len @entity.roots) 1)) (> (array/len @entity.scopes) 0))
-        (os/list-dir (str/concat "/" (str/slice (array/nth @entity.roots @entity.stage) 1) "/" (array/first @entity.scopes)) { key: "scope" emit: { success: LANG_PACK_SCOPED, failure: LANG_PACK_SCOPE_FAILED } })
+        (let ((sc (array/first @entity.scopes))) (if (= @sc null) (emit LANG_ROOT_FAILED { error: "no scope to list" }) (let ((r (array/nth @entity.roots @entity.stage))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the stage is past the roots" }) (os/list-dir (str/concat "/" (str/slice @r 1) "/" @sc) { key: "scope" emit: { success: LANG_PACK_SCOPED, failure: LANG_PACK_SCOPE_FAILED } })))))
       LANG_PACK_SCOPE -> scanning when (and (= @entity.stage (- (array/len @entity.roots) 1)) (> (array/len @entity.scopes) 0))
-        (os/list-dir (str/concat "~/.orb/node_modules/" (array/first @entity.scopes)) { key: "scope" emit: { success: LANG_PACK_SCOPED, failure: LANG_PACK_SCOPE_FAILED } })
+        (let ((sc (array/first @entity.scopes))) (if (= @sc null) (emit LANG_ROOT_FAILED { error: "no scope to list" }) (os/list-dir (str/concat "~/.orb/node_modules/" @sc) { key: "scope" emit: { success: LANG_PACK_SCOPED, failure: LANG_PACK_SCOPE_FAILED } })))
       LANG_PACK_SCOPE -> scanning when (= (array/len @entity.scopes) 0)
         (set @entity.packCursor 0)
         (emit LANG_PACK_READ { tag: (str/concat @entity.stage ":0") })
       LANG_PACK_SCOPED -> scanning
-        (set @entity.packNames (array/concat @entity.packNames (array/map (array/filter @payload.entries (fn e (array/includes ["dir", "symlink"] (object/get @e "kind")))) (fn e (str/concat (array/first @entity.scopes) "/" (object/get @e "name"))))))
-        (set @entity.scopes (array/drop @entity.scopes 1))
-        (emit LANG_PACK_SCOPE { tag: (str/concat @entity.stage ":" (array/len @entity.scopes)) })
+        (let ((sc (array/first @entity.scopes))) (if (= @sc null) (emit LANG_ROOT_FAILED { error: "no scope to list" }) (do (set @entity.packNames (array/concat @entity.packNames (array/map (array/filter @payload.entries (fn e (array/includes ["dir", "symlink"] (object/get @e "kind")))) (fn e (str/concat @sc "/" (object/get @e "name")))))) (set @entity.scopes (array/drop @entity.scopes 1)) (emit LANG_PACK_SCOPE { tag: (str/concat @entity.stage ":" (array/len @entity.scopes)) }))))
       LANG_PACK_SCOPE_FAILED -> scanning
         (set @entity.scopes (array/drop @entity.scopes 1))
         (emit LANG_PACK_SCOPE { tag: (str/concat @entity.stage ":f" (array/len @entity.scopes)) })
       LANG_PACK_READ -> scanning when (and (< @entity.stage (- (array/len @entity.roots) 1)) (< @entity.packCursor (array/len @entity.packNames)))
-        (os/read-file (str/concat "/" (str/slice (array/nth @entity.roots @entity.stage) 1) "/" (array/nth @entity.packNames @entity.packCursor) "/package.json") { key: "pack" emit: { success: LANG_PACK_FILE, failure: LANG_PACK_UNREAD } })
+        (let ((nm (array/nth @entity.packNames @entity.packCursor))) (if (= @nm null) (emit LANG_ROOT_FAILED { error: "no pack name at the pack cursor" }) (let ((r (array/nth @entity.roots @entity.stage))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the stage is past the roots" }) (os/read-file (str/concat "/" (str/slice @r 1) "/" @nm "/package.json") { key: "pack" emit: { success: LANG_PACK_FILE, failure: LANG_PACK_UNREAD } })))))
       LANG_PACK_READ -> scanning when (and (= @entity.stage (- (array/len @entity.roots) 1)) (< @entity.packCursor (array/len @entity.packNames)))
-        (os/read-file (str/concat "~/.orb/node_modules/" (array/nth @entity.packNames @entity.packCursor) "/package.json") { key: "pack" emit: { success: LANG_PACK_FILE, failure: LANG_PACK_UNREAD } })
+        (let ((nm (array/nth @entity.packNames @entity.packCursor))) (if (= @nm null) (emit LANG_ROOT_FAILED { error: "no pack name at the pack cursor" }) (os/read-file (str/concat "~/.orb/node_modules/" @nm "/package.json") { key: "pack" emit: { success: LANG_PACK_FILE, failure: LANG_PACK_UNREAD } })))
       LANG_PACK_READ -> scanning when (and (>= @entity.packCursor (array/len @entity.packNames)) (< (+ @entity.stage 1) (array/len @entity.roots)))
         (set @entity.stage (+ @entity.stage 1))
         (set @entity.packNames [])
         (emit LANG_PACK_LIST { tag: (str/concat "" @entity.stage) })
       LANG_PACK_READ -> scanning when (and (>= @entity.packCursor (array/len @entity.packNames)) (>= (+ @entity.stage 1) (array/len @entity.roots)))
-        (set @entity.found (array/sort (array/filter @entity.found (fn f (= (object/get @f "stage") (object/get (array/find @entity.found (fn g (= (object/get @g "name") (object/get @f "name")))) "stage")))) "name" "asc"))
+        (set @entity.found (array/sort (array/filter @entity.found (fn f (not (array/some @entity.found (fn g (and (= (object/get @g "name") (object/get @f "name")) (< (object/get @g "stage") (object/get @f "stage")))))))) "name" "asc"))
         (set @entity.foundCursor 0)
         (emit LANG_PACK_CHECK { tag: "0" })
       LANG_PACK_FILE -> scanning
@@ -282,57 +257,31 @@ orbital OrbLanguageOrbital {
       LANG_PACK_UNREAD -> scanning
         (set @entity.packCursor (+ @entity.packCursor 1))
         (emit LANG_PACK_READ { tag: (str/concat @entity.stage ":u" @entity.packCursor) })
-      LANG_PACK_MANIFEST -> scanning when (or (= (json/parse @payload.text OrbLanguageManifest) null) (= (object/get (json/parse @payload.text OrbLanguageManifest) "orbVocabulary") null) (= (object/get (json/parse @payload.text OrbLanguageManifest) "name") null))
-        (emit LANG_PACK_NEXT { tag: (str/concat @entity.stage ":" @entity.packCursor) })
-      LANG_PACK_MANIFEST -> scanning when (and (!= (json/parse @payload.text OrbLanguageManifest) null) (!= (object/get (json/parse @payload.text OrbLanguageManifest) "orbVocabulary") null) (!= (object/get (json/parse @payload.text OrbLanguageManifest) "name") null))
-        (emit LANG_PACK_FOUND { name: (object/get (json/parse @payload.text OrbLanguageManifest) "name") version: (default (object/get (json/parse @payload.text OrbLanguageManifest) "version") "") compiler: (default (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbVocabulary") "compiler") "") vocab: (default (object/get (object/get (json/parse @payload.text OrbLanguageManifest) "orbVocabulary") "vocabulary") "") })
+      LANG_PACK_MANIFEST -> scanning
+        (let ((m (json/parse @payload.text OrbLanguageManifest))) (if (= @m null) (emit LANG_PACK_NEXT { tag: (str/concat @entity.stage ":" @entity.packCursor) }) (let ((voc (object/get @m "orbVocabulary"))) (if (= @voc null) (emit LANG_PACK_NEXT { tag: (str/concat @entity.stage ":" @entity.packCursor) }) (let ((nm (object/get @m "name"))) (if (= @nm null) (emit LANG_PACK_NEXT { tag: (str/concat @entity.stage ":" @entity.packCursor) }) (emit LANG_PACK_FOUND { name: @nm version: (default (object/get @m "version") "") compiler: (default (object/get @voc "compiler") "") vocab: (default (object/get @voc "vocabulary") "") })))))))
       LANG_PACK_FOUND -> scanning
         (set @entity.found (array/append @entity.found { name: @payload.name, version: @payload.version, stage: @entity.stage, compiler: @payload.compiler, vocab: @payload.vocab, code: "" }))
         (emit LANG_PACK_NEXT { tag: (str/concat @entity.stage ":" @entity.packCursor) })
       LANG_PACK_NEXT -> scanning
         (set @entity.packCursor (+ @entity.packCursor 1))
         (emit LANG_PACK_READ { tag: (str/concat @entity.stage ":" @entity.packCursor) })
-      LANG_PACK_CHECK -> scanning when (>= @entity.foundCursor (array/len @entity.found))
-        (emit LANG_DONE { })
-      LANG_PACK_CHECK -> scanning when (and (< @entity.foundCursor (array/len @entity.found)) (= (object/get (array/nth @entity.found @entity.foundCursor) "compiler") ""))
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/package.json")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": `orbVocabulary.compiler` is missing") })
-      LANG_PACK_CHECK -> scanning when (and (< @entity.foundCursor (array/len @entity.found)) (!= (object/get (array/nth @entity.found @entity.foundCursor) "compiler") ""))
-        (emit LANG_SEMVER { requestId: (str/concat "pack:" @entity.foundCursor) version: @entity.running range: (object/get (array/nth @entity.found @entity.foundCursor) "compiler") })
-      LANG_SAT -> scanning when (and @payload.value (= (object/get (array/nth @entity.found @entity.foundCursor) "vocab") ""))
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/package.json")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": `orbVocabulary.vocabulary` is missing") })
-      LANG_SAT -> scanning when (and (< (object/get (array/nth @entity.found @entity.foundCursor) "stage") (- (array/len @entity.roots) 1)) (and @payload.value (!= (object/get (array/nth @entity.found @entity.foundCursor) "vocab") "")))
-        (os/read-file (str/concat "/" (str/slice (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) 1) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab")) { key: "vocab" emit: { success: LANG_VOCAB_FILE, failure: LANG_VOCAB_UNREAD } })
-      LANG_SAT -> scanning when (and (= (object/get (array/nth @entity.found @entity.foundCursor) "stage") (- (array/len @entity.roots) 1)) (and @payload.value (!= (object/get (array/nth @entity.found @entity.foundCursor) "vocab") "")))
-        (os/read-file (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab")) { key: "vocab" emit: { success: LANG_VOCAB_FILE, failure: LANG_VOCAB_UNREAD } })
-      LANG_SAT -> scanning when (not @payload.value)
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INCOMPATIBLE: installed language pack " (object/get (array/nth @entity.found @entity.foundCursor) "name") (quote "@") (object/get (array/nth @entity.found @entity.foundCursor) "version") " requires orb " (object/get (array/nth @entity.found @entity.foundCursor) "compiler") ", but this orb is " @entity.running " — update the pack (`orb update`) or upgrade orb") })
+      LANG_PACK_CHECK -> scanning
+        (if (>= @entity.foundCursor (array/len @entity.found)) (emit LANG_DONE { }) (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (if (= (object/get @f "compiler") "") (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @r "/" (object/get @f "name") "/package.json")) ": " (object/get @f "name") ": `orbVocabulary.compiler` is missing") }) (emit LANG_SEMVER { requestId: (str/concat "pack:" @entity.foundCursor) version: @entity.running range: (object/get @f "compiler") })))))))
+      LANG_SAT -> scanning
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (if @payload.value (if (= (object/get @f "vocab") "") (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @r "/" (object/get @f "name") "/package.json")) ": " (object/get @f "name") ": `orbVocabulary.vocabulary` is missing") }) (if (< (object/get @f "stage") (- (array/len @entity.roots) 1)) (os/read-file (str/concat "/" (str/slice @r 1) "/" (object/get @f "name") "/" (object/get @f "vocab")) { key: "vocab" emit: { success: LANG_VOCAB_FILE, failure: LANG_VOCAB_UNREAD } }) (os/read-file (str/concat "~/.orb/node_modules/" (object/get @f "name") "/" (object/get @f "vocab")) { key: "vocab" emit: { success: LANG_VOCAB_FILE, failure: LANG_VOCAB_UNREAD } }))) (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INCOMPATIBLE: installed language pack " (object/get @f "name") (quote "@") (object/get @f "version") " requires orb " (object/get @f "compiler") ", but this orb is " @entity.running " — update the pack (`orb update`) or upgrade orb") }))))))
       LANG_SAT_REFUSED -> scanning
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/package.json")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": `orbVocabulary.compiler` " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "compiler")) " is not a semver range: " @payload.reason) })
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @r "/" (object/get @f "name") "/package.json")) ": " (object/get @f "name") ": `orbVocabulary.compiler` " (json/stringify (object/get @f "compiler")) " is not a semver range: " @payload.reason) })))))
       LANG_VOCAB_UNREAD -> scanning
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": " @payload.error) })
-      LANG_VOCAB_FILE -> scanning when (= (bytes/to-string @payload.data) null)
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": the file is not text") })
-      LANG_VOCAB_FILE -> scanning when (and (!= (bytes/to-string @payload.data) null) (= (json/parse (default (bytes/to-string @payload.data) "") VocabFile) null))
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": invalid JSON") })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (default (bytes/to-string @payload.data) "") VocabFile) null) (= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en"))
-        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": English is built in and cannot be replaced") })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (default (bytes/to-string @payload.data) "") VocabFile) null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en") (array/includes @entity.codes (default (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "")))
-        (emit LANG_PACK_PROBLEM { text: (let ((code (default (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") ""))) (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": language " (json/stringify @code) " is claimed by two packs: " (object/get (array/nth @entity.found (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) @code)))) "name") " and " (object/get (array/nth @entity.found @entity.foundCursor) "name"))) })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (default (bytes/to-string @payload.data) "") VocabFile) null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en") (not (array/includes @entity.codes (default (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") ""))))
-        (set @entity.codes (array/append @entity.codes (default (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "")))
-        (emit LANGUAGE_PACK_VOCAB { name: (object/get (array/nth @entity.found @entity.foundCursor) "name") text: (default (bytes/to-string @payload.data) "") })
-        (emit LANG_PACK_REALASK { tag: (str/concat "" @entity.foundCursor) })
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @r "/" (object/get @f "name") "/" (object/get @f "vocab"))) ": " (object/get @f "name") ": " @payload.error) })))))
+      LANG_VOCAB_FILE -> scanning
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (let ((inv (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat @r "/" (object/get @f "name") "/" (object/get @f "vocab"))) ": " (object/get @f "name") ": "))) (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LANG_PACK_PROBLEM { text: (str/concat @inv "the file is not text") }) (let ((v (json/parse @text VocabFile))) (if (= @v null) (emit LANG_PACK_PROBLEM { text: (str/concat @inv "invalid JSON") }) (let ((code (object/get (object/get @v "meta") "code"))) (if (= @code "en") (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get @f "name")) ": " (object/get @f "name") ": English is built in and cannot be replaced") }) (if (array/includes @entity.codes @code) (let ((ix (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) @code))))) (if (= @ix null) (emit LANG_ROOT_FAILED { error: "the claimed code has no earlier pack" }) (let ((prior (array/nth @entity.found @ix))) (if (= @prior null) (emit LANG_ROOT_FAILED { error: "the claimed code has no earlier pack" }) (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get @f "name")) ": language " (json/stringify @code) " is claimed by two packs: " (object/get @prior "name") " and " (object/get @f "name")) }))))) (do (set @entity.codes (array/append @entity.codes @code)) (emit LANGUAGE_PACK_VOCAB { name: (object/get @f "name") text: @text }) (emit LANG_PACK_REALASK { tag: (str/concat "" @entity.foundCursor) }))))))))))))))
       LANG_PACK_PROBLEM -> scanning
         (set @entity.packProblem @payload.text)
         (emit LANG_DONE { })
-      LANG_PACK_REALASK -> scanning when (< (object/get (array/nth @entity.found @entity.foundCursor) "stage") (- (array/len @entity.roots) 1))
-        (os/realpath (str/concat "/" (str/slice (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) 1) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name")) { key: "root" emit: { success: LANG_PACK_ROOT, failure: LANG_ROOT_FAILED } })
-      LANG_PACK_REALASK -> scanning when (= (object/get (array/nth @entity.found @entity.foundCursor) "stage") (- (array/len @entity.roots) 1))
-        (os/realpath (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.found @entity.foundCursor) "name")) { key: "root" emit: { success: LANG_PACK_ROOT, failure: LANG_ROOT_FAILED } })
+      LANG_PACK_REALASK -> scanning
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (let ((r (array/nth @entity.roots (object/get @f "stage")))) (if (= @r null) (emit LANG_ROOT_FAILED { error: "the pack's stage is past the roots" }) (if (< (object/get @f "stage") (- (array/len @entity.roots) 1)) (os/realpath (str/concat "/" (str/slice @r 1) "/" (object/get @f "name")) { key: "root" emit: { success: LANG_PACK_ROOT, failure: LANG_ROOT_FAILED } }) (os/realpath (str/concat "~/.orb/node_modules/" (object/get @f "name")) { key: "root" emit: { success: LANG_PACK_ROOT, failure: LANG_ROOT_FAILED } }))))))
       LANG_PACK_ROOT -> scanning
-        (set @entity.packLines (array/append @entity.packLines (str/concat (object/get (array/nth @entity.found @entity.foundCursor) "name") (quote "@") (object/get (array/nth @entity.found @entity.foundCursor) "version") " → " @payload.path)))
-        (set @entity.foundCursor (+ @entity.foundCursor 1))
-        (emit LANG_PACK_CHECK { tag: (str/concat "" @entity.foundCursor) })
+        (let ((f (array/nth @entity.found @entity.foundCursor))) (if (= @f null) (emit LANG_ROOT_FAILED { error: "no pack at the found cursor" }) (do (set @entity.packLines (array/append @entity.packLines (str/concat (object/get @f "name") (quote "@") (object/get @f "version") " → " @payload.path))) (set @entity.foundCursor (+ @entity.foundCursor 1)) (emit LANG_PACK_CHECK { tag: (str/concat "" @entity.foundCursor) }))))
       LANG_ROOT_FAILED -> idle
         (emit SCAN_ANSWERED { status: 500, body: "", stderr: @payload.error })
       LANG_DONE -> idle
@@ -356,7 +305,7 @@ orbital OrbLanguageOrbital {
       LANG_SEMVER { requestId : string!  version : string!  range : string! }
         @description "Internal: ask std-semver whether a version satisfies a range."
         @tier "internal"
-      LANG_START_FAILED { kind : string  error : string }
+      LANG_START_FAILED { kind : string  error : string! }
         @description "Internal: a host call failed."
         @tier "internal"
       LANG_PATH_READ { value : string }
@@ -380,7 +329,7 @@ orbital OrbLanguageOrbital {
       LANG_FILE { data : bytes! }
         @description "Internal: a package.json."
         @tier "internal"
-      LANG_ABSENT { kind : string  error : string }
+      LANG_ABSENT { kind : string  error : string! }
         @description "Internal: a package.json could not be read."
         @tier "internal"
       LANG_MANIFEST { text : string! }
@@ -392,7 +341,7 @@ orbital OrbLanguageOrbital {
       LANG_ROOT { path : string! }
         @description "Internal: the canonical root."
         @tier "internal"
-      LANG_ROOT_FAILED { kind : string  error : string }
+      LANG_ROOT_FAILED { kind : string  error : string! }
         @description "Internal: a root could not be resolved."
         @tier "internal"
       LANG_PACK_LIST { tag : string }
@@ -401,7 +350,7 @@ orbital OrbLanguageOrbital {
       LANG_PACK_ROOTDIR { entries : [Scanned]! }
         @description "Internal: node_modules entries."
         @tier "internal"
-      LANG_PACK_NOROOT { kind : string  error : string }
+      LANG_PACK_NOROOT { kind : string  error : string! }
         @description "Internal: node_modules could not be listed."
         @tier "internal"
       LANG_PACK_SCOPE { tag : string }
@@ -410,7 +359,7 @@ orbital OrbLanguageOrbital {
       LANG_PACK_SCOPED { entries : [Scanned]! }
         @description "Internal: a scope listing."
         @tier "internal"
-      LANG_PACK_SCOPE_FAILED { kind : string  error : string }
+      LANG_PACK_SCOPE_FAILED { kind : string  error : string! }
         @description "Internal: a scope could not be listed."
         @tier "internal"
       LANG_PACK_READ { tag : string }
@@ -419,7 +368,7 @@ orbital OrbLanguageOrbital {
       LANG_PACK_FILE { data : bytes! }
         @description "Internal: a candidate package.json."
         @tier "internal"
-      LANG_PACK_UNREAD { kind : string  error : string }
+      LANG_PACK_UNREAD { kind : string  error : string! }
         @description "Internal: a candidate package.json could not be read."
         @tier "internal"
       LANG_PACK_MANIFEST { text : string! }
@@ -440,7 +389,7 @@ orbital OrbLanguageOrbital {
       LANG_VOCAB_FILE { data : bytes! }
         @description "Internal: a pack's vocabulary file."
         @tier "internal"
-      LANG_VOCAB_UNREAD { kind : string  error : string }
+      LANG_VOCAB_UNREAD { kind : string  error : string! }
         @description "Internal: a pack's vocabulary file could not be read."
         @tier "internal"
       LANG_PACK_REALASK { tag : string }

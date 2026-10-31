@@ -46,10 +46,10 @@ orbital OrbCensusOrbital {
 
     state ready {
       INIT -> ready
-      CENSUS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      CENSUS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
-      CENSUS_CALLED -> ready when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit CENSUS_ARGS_PARSE { stage: "census" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "root" aliases: [] takesValue: true repeatable: true }, { name: "path" aliases: [] takesValue: true repeatable: true }, { name: "max-bytes" aliases: [] takesValue: true repeatable: true }] })
+      CENSUS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit CENSUS_ARGS_PARSE { stage: "census" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "root" aliases: [] takesValue: true repeatable: true }, { name: "path" aliases: [] takesValue: true repeatable: true }, { name: "max-bytes" aliases: [] takesValue: true repeatable: true }] })
       CENSUS_ARGS_DONE -> ready when (and (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (= (str/to-number (default (array/last (object/get @payload.flags "max-bytes")) "")) null))
         (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
       CENSUS_ARGS_DONE -> ready when (not (and (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (= (str/to-number (default (array/last (object/get @payload.flags "max-bytes")) "")) null)))
@@ -251,7 +251,7 @@ orbital OrbCensusOrbital {
     listens {
       CENSUS_CALLED -> inbound "cli-census" answers CENSUS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb census` with its arguments and working directory."
         @synonyms "orb census, retire consumer census"

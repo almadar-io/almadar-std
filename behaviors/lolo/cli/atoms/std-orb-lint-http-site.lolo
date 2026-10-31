@@ -13,11 +13,11 @@ type HsVal = string | number | boolean | [HsVal?] | Map string HsVal?
 type HsNode = [HsVal?]
 type HsCall = { path : string!, node : HsVal! }
 type HsIndex = Map string [HsCall]
-type HsTransition = { event : string, effects : [HsVal]? }
-type HsTick = { name : string, runsInBackground : boolean?, effects : [HsVal]? }
+type HsTransition = { event : string!, effects : [HsVal]? }
+type HsTick = { name : string!, runsInBackground : boolean?, effects : [HsVal]? }
 type HsMachine = { transitions : [HsTransition]? }
-type HsTrait = { name : string, dispatch : string?, stateMachine : HsMachine?, ticks : [HsTick]? }
-type HsEntity = { name : string, browser : boolean? }
+type HsTrait = { name : string!, dispatch : string?, stateMachine : HsMachine?, ticks : [HsTick]? }
+type HsEntity = { name : string!, browser : boolean? }
 type HsOrbital = { name : string, entity : HsEntity?, auxiliaryEntities : [HsEntity]?, traits : [HsVal] }
 type HsProgram = { orbitals : [HsOrbital] }
 type HsTypeRef = string | HsTypeNode
@@ -25,6 +25,9 @@ type HsTypeNode = { kind : string }
 type HsParam = { name : string, type : HsTypeRef }
 type HsShape = { runsOn : string?, params : [HsParam] }
 type HsRes = { f : boolean!, h : boolean!, ch : [boolean]! }
+type HsKids = [HsRes?]
+type SfKids = [SfRes?]
+type HsFlags = Map string boolean?
 type SfRes = { sf : boolean!, st : boolean! }
 type HsInfo = { server : boolean!, keyless : boolean!, keyed : number! }
 type HsGroup = { site : string!, tname : string!, dispatch : string!, kind : string!, i : number!, label : string!, bg : boolean!, infos : [HsInfo]! }
@@ -58,16 +61,16 @@ orbital OrbLintHttpSiteOrbital {
               (let ((ty (object/get (array/nth @ps @i) "type" null)))
                 (if (validate/object @ty)
                   (let ((nd (as @ty HsTypeNode)))
-                    (if (and (!= @nd null) (= (object/get @nd "kind" "") "entity")) [[@k, @i]] []))
+                    (if (= (object/get @nd "kind" "") "entity") [[@k, @i]] []))
                   [])))))))))))
       SHAPES_UNREAD -> ready
         (set @entity.shapesUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so where an effect runs is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
-          (let ((servers @entity.servers) (entityIdx @entity.entityIdx) (orbitals (object/get @payload.program "orbitals" [])) (nos : [string] []))
+          (let ((servers @entity.servers) (entityIdx @entity.entityIdx) (orbitals (object/get @payload.program "orbitals" [])) (nos : [string] []) (noent : [HsEntity] []))
             (let ((browser (array/flatten (array/map @orbitals (fn o
-                    (array/map (array/filter (array/concat (if (validate/object (object/get @o "entity" null)) [(object/get @o "entity")] (array/take (object/get @o "auxiliaryEntities" []) 0)) (object/get @o "auxiliaryEntities" [])) (fn e (object/get @e "browser" false))) (fn e (object/get @e "name"))))))))
+                    (array/map (array/filter (array/concat (let ((en0 (object/get @o "entity" null))) (if (= @en0 null) @noent [@en0])) (object/get @o "auxiliaryEntities" [])) (fn e (object/get @e "browser" false))) (fn e (object/get @e "name"))))))))
               (array/flatten (array/map (array/zip (array/range 0 (array/len @orbitals)) @orbitals) (fn op
  (let ((oi (array/nth @op 0)) (o (array/nth @op 1)))
   (let ((trs (object/get @o "traits" [])))
@@ -75,40 +78,40 @@ orbital OrbLintHttpSiteOrbital {
     (let ((ti (array/nth @tp 0)) (t (as (array/nth @tp 1) HsTrait)))
      (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
       []
-      (let ((st (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name")) (dispatch (object/get @t "dispatch" "")))
-       (let ((trans (default (object/get (object/get @t "stateMachine") "transitions" []) [])) (ticks (default (object/get @t "ticks" []) [])))
+      (let ((st (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name")) (dispatch (object/get @t "dispatch" "")) (notr : [HsTransition] []))
+       (let ((trans (let ((sm (object/get @t "stateMachine" null))) (if (= @sm null) @notr (object/get @sm "transitions" [])))) (ticks (object/get @t "ticks" [])))
         (let ((grps (array/concat
                       (array/map (array/zip (array/range 0 (array/len @trans)) @trans) (fn q { kind: "t", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "event"), bg: false, effs: (default (object/get (array/nth @q 1) "effects" []) []) }))
                       (array/map (array/zip (array/range 0 (array/len @ticks)) @ticks) (fn q { kind: "k", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "name"), bg: (object/get (array/nth @q 1) "runsInBackground" false), effs: (default (object/get (array/nth @q 1) "effects" []) []) })))))
          (let ((gis (array/map @grps (fn g
                  (let ((effs (object/get @g "effs")))
-                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (= (object/get @hk @hq) true)))))) HsVal) (array/map (object/get (default (as (tree/index @eff ["http"]) HsIndex) {}) "http" []) (fn c
+                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (let ((fm (as @hk HsFlags))) (if (= @fm null) false (array/includes (object/values @fm) true)))))) HsVal) (array/map (object/get (default (as (tree/index @eff ["http"]) HsIndex) {}) "http" []) (fn c
   (let ((n (default (as (object/get @c "node") HsNode) [])))
     (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
       (if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque")))))) @nos)))))
                    { kind: (object/get @g "kind"), i: (object/get @g "i"), label: (object/get @g "label"), bg: (object/get @g "bg"),
                      keyed: (array/map @cls (fn c (array/len (array/filter @c (fn x (= @x "keyed")))))),
-                     mixed: (if (array/some @cls (fn c (array/includes @c "keyless"))) (array/some @effs (fn eff (object/get (tree/fold @eff (fn (n k)
+                     mixed: (if (array/some @cls (fn c (array/includes @c "keyless"))) (array/some @effs (fn eff (object/get (default (as (default (tree/fold @eff (fn (n k)
   (let ((nob : [boolean] []) (nos : [string] []))
     (if (validate/array @n)
-      (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids @k))
-        (let ((anyf (array/some @kids (fn c (if (validate/object @c) (= (object/get @c "f") true) false)))) (chs (array/map @kids (fn c (if (validate/object @c) (object/get @c "h") false)))))
+      (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids : [HsRes] (array/map (default (as @k HsKids) []) (fn c (default @c { f: false, h: false, ch: [] })))))
+        (let ((anyf (array/some @kids (fn c (object/get @c "f")))) (chs (array/map @kids (fn c (object/get @c "h")))))
           (if (and (validate/string @h) (array/includes ["if", "when"] @h) (>= @len 3))
             (let ((cn (array/nth @n 1)))
-              (let ((live (not (object/get (tree/fold @cn (fn (c kk)
+              (let ((live (not (object/get (default (as (default (tree/fold @cn (fn (c kk)
   (if (validate/array @c)
     (if (= (array/len @c) 0)
       { sf: true, st: false }
       (let ((op (array/first @c)))
         (if (not (validate/string @op))
           { sf: false, st: true }
-          (let ((args (array/slice @c 1 (array/len @c))) (ars (array/slice @kk 1 (array/len @kk))))
+          (let ((args (array/slice @c 1 (array/len @c))) (ars : [SfRes] (array/map (array/slice (default (as @kk SfKids) []) 1 (array/len @kk)) (fn r (default @r { sf: false, st: false })))))
             (if (= @op "and")
               { sf: (array/some @ars (fn r (object/get @r "sf"))), st: (and (> (array/len @ars) 0) (array/every @ars (fn r (object/get @r "st")))) }
               (if (= @op "or")
                 { sf: (and (> (array/len @ars) 0) (array/every @ars (fn r (object/get @r "sf")))), st: (array/some @ars (fn r (object/get @r "st"))) }
                 (if (= @op "not")
-                  { sf: (and (= (array/len @ars) 1) (object/get (array/first @ars) "st")), st: (and (= (array/len @ars) 1) (object/get (array/first @ars) "sf")) }
+                  { sf: (and (= (array/len @ars) 1) (array/every @ars (fn r (object/get @r "st")))), st: (and (= (array/len @ars) 1) (array/every @ars (fn r (object/get @r "sf")))) }
                   (if (and (array/includes ["=", "==", "!="] @op) (= (array/len @args) 2))
                     (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
                       (if (and (or (= @a0 null) (validate/boolean @a0) (validate/number @a0) (and (validate/string @a0) (not (str/startsWith @a0 (quote "@")))))
@@ -120,16 +123,16 @@ orbital OrbLintHttpSiteOrbital {
     (if (validate/object @c)
       { sf: (= (array/len (object/keys @c)) 0), st: (> (array/len (object/keys @c)) 0) }
       { sf: (or (= @c null) (and (validate/boolean @c) (not @c)) (and (validate/number @c) (= @c 0)) (and (validate/string @c) (= @c ""))),
-        st: (or (and (validate/boolean @c) @c) (and (validate/number @c) (!= @c 0)) (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))) }))) HsVal) "sf"))))
-                (let ((f (or (and @live (object/get (array/nth @kids 2) "f")) (and (= @h "if") (> @len 3) (object/get (array/nth @kids 3) "f")) (and (= @h "when") @live (array/some (array/slice @kids 3 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false)))))))
+        st: (or (and (validate/boolean @c) @c) (and (validate/number @c) (!= @c 0)) (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))) }))) HsVal) { sf: false, st: false }) SfRes) { sf: false, st: false }) "sf"))))
+                (let ((f (or (and @live (object/get (default (array/nth @kids 2) { f: false, h: false, ch: [] }) "f")) (and (= @h "if") (> @len 3) (object/get (default (array/nth @kids 3) { f: false, h: false, ch: [] }) "f")) (and (= @h "when") @live (array/some (array/slice @kids 3 (array/len @kids)) (fn c (object/get @c "f")))))))
                   { f: @f, h: @f, ch: @chs })))
             (if (and (validate/string @h) (= @h "let") (>= @len 2))
-              (let ((b (array/nth @kids 1)))
+              (let ((b (default (array/nth @kids 1) { f: false, h: false, ch: [] })))
                 (let ((bound (if (validate/array (array/nth @n 1)) (array/some (object/get @b "ch") (fn x @x)) (object/get @b "f"))))
-                  (let ((f (or @bound (array/some (array/slice @kids 2 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false))))))
+                  (let ((f (or @bound (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f"))))))
                     { f: @f, h: @f, ch: @chs })))
               (if (and (validate/string @h) (array/includes ["fn"] @h) (>= @len 3))
-                (let ((f (array/some (array/slice @kids 2 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false)))))
+                (let ((f (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f")))))
                   { f: @f, h: @f, ch: @chs })
                 { f: (or @anyf
                          (and (validate/string @h) (array/includes @servers @h)
@@ -172,7 +175,7 @@ orbital OrbLintHttpSiteOrbital {
                   h: @anyf, ch: @chs })))))
       (if (validate/object @n)
         { f: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), h: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), ch: @nob }
-        { f: false, h: false, ch: @nob })))) HsVal) "f"))) false) }))))))
+        { f: false, h: false, ch: @nob })))) HsVal) { f: false, h: false, ch: [] }) HsRes) { f: false, h: false, ch: [] }) "f"))) false) }))))))
           (array/concat
            (array/flatten (array/map @gis (fn gi (if (object/get @gi "mixed") [{ code: @config.codes.xMixedResidence.code, path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "transition '" "tick '") (object/get @gi "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }] [])))) 
            (array/flatten (array/map @gis (fn gi
@@ -196,7 +199,7 @@ orbital OrbLintHttpSiteOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : HsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : HsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       SHAPES_HEARD { operators : Map string HsShape! }
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator's runsOn site and params; a server operator with an entity param is a data effect that runs on the client for a browser-stored entity."
@@ -222,7 +225,7 @@ orbital OrbLintHttpSiteOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-site <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-site <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-site <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -256,7 +259,7 @@ orbital OrbLintHttpSiteOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-http-site" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint http-site` with its arguments and working directory."
         @synonyms "orb lint http-site"

@@ -100,7 +100,7 @@ orbital OrbLintListenSourceUnresolvedOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LsuProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LsuProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       PRODUCED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-produced-events' PRODUCED_EVENTS: the events each trait's effect trees produce, by a control or by an effect."
@@ -123,7 +123,7 @@ orbital OrbLintListenSourceUnresolvedOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-source-unresolved <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-source-unresolved <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -157,7 +157,7 @@ orbital OrbLintListenSourceUnresolvedOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-listen-source-unresolved" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint listen-source-unresolved` with its arguments and working directory."
         @synonyms "orb lint listen-source-unresolved"
@@ -178,7 +178,7 @@ orbital OrbLintListenSourceUnresolvedOrbital {
         @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
       PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
-      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD

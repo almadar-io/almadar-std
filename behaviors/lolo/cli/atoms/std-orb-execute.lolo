@@ -47,11 +47,11 @@ orbital OrbExecuteOrbital {
 
     state ready {
       INIT -> ready
-      EXEC_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      EXEC_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit EXEC_ANSWERED { status: 400, body: "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]" })
-      EXEC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }, { name: "played" aliases: [] takesValue: false repeatable: false }] })
+      EXEC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }, { name: "played" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -159,7 +159,7 @@ orbital OrbExecuteOrbital {
     listens {
       EXEC_CALLED -> inbound "cli-execute" answers EXEC_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb execute`."
         @synonyms "orb execute, play events through the kernel, cascade report, run steps against a program"

@@ -58,12 +58,12 @@ orbital OrbSandboxOrbital {
 
     state ready {
       INIT -> ready
-      SB_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SB_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SANDBOX_ANSWERED { status: 400, body: "usage: orb sandbox smoke [all|build|up|check|down] [--deploy DIR] [--src DIR]" })
-      SB_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.deploy (str/concat (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") "/tools/orbital-sandbox"))
-        (set @entity.src (str/concat (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") "/orbital-rust"))
-        (emit SB_ARGS_PARSE { stage: "sandbox" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "deploy" aliases: [] takesValue: true repeatable: false }, { name: "src" aliases: [] takesValue: true repeatable: false }] })
+      SB_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.deploy (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/tools/orbital-sandbox"))
+        (set @entity.src (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/orbital-rust"))
+        (emit SB_ARGS_PARSE { stage: "sandbox" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "deploy" aliases: [] takesValue: true repeatable: false }, { name: "src" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -157,7 +157,7 @@ orbital OrbSandboxOrbital {
     listens {
       SB_CALLED -> inbound "cli-sandbox" answers SANDBOX_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb sandbox smoke`."
         @synonyms "orb sandbox, sandbox smoke test"

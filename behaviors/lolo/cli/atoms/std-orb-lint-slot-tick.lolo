@@ -54,16 +54,16 @@ orbital OrbLintSlotTickOrbital {
   (if (validate/array @n)
     (let ((len (array/len @n)) (op (array/nth @n 0)))
       (if (not (validate/string @op)) { f: (= @len 0), t: (> @len 0) }
-        (let ((rs (array/map (array/range 1 @len) (fn i (array/nth @k @i)))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
+        (let ((rs (array/flatten (array/map (array/range 1 @len) (fn i (let ((r (as (array/nth @k @i) SlFt))) (if (= @r null) [] [@r])))))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
           (if (= @op "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))) }
           (if (= @op "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))) }
-          (if (= @op "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")) }
+          (if (= @op "not") (let ((r0 (array/first @rs))) (if (or (= @r0 null) (!= (array/len @rs) 1)) { f: false, t: false } { f: (object/get @r0 "t"), t: (object/get @r0 "f") }))
           (if (or (= @op "=") (= @op "==") (= @op "!="))
             (let ((eq (= (json/stringify (array/nth @n 1)) (json/stringify (array/nth @n 2)))))
               { f: (and @lit (= @eq (= @op "!="))), t: (and @lit (= @eq (!= @op "!="))) })
             { f: false, t: false })))))))
     { f: false, t: false }))))))) "SlVal") "f")) true)))
-    (array/sort (array/unique (array/map (array/filter (object/get @t "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (object/get @u "resource")))))
+    (array/sort (array/unique (array/flatten (array/map (array/filter (object/get @t "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (let ((rsrc (object/get @u "resource" null))) (if (validate/string @rsrc) [@rsrc] [])))))))
     @nos) }])))))
                 (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                   (let ((pg (array/nth @pgs @pj)))
@@ -80,16 +80,16 @@ orbital OrbLintSlotTickOrbital {
   (if (validate/array @n)
     (let ((len (array/len @n)) (op (array/nth @n 0)))
       (if (not (validate/string @op)) { f: (= @len 0), t: (> @len 0) }
-        (let ((rs (array/map (array/range 1 @len) (fn i (array/nth @k @i)))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
+        (let ((rs (array/flatten (array/map (array/range 1 @len) (fn i (let ((r (as (array/nth @k @i) SlFt))) (if (= @r null) [] [@r])))))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
           (if (= @op "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))) }
           (if (= @op "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))) }
-          (if (= @op "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")) }
+          (if (= @op "not") (let ((r0 (array/first @rs))) (if (or (= @r0 null) (!= (array/len @rs) 1)) { f: false, t: false } { f: (object/get @r0 "t"), t: (object/get @r0 "f") }))
           (if (or (= @op "=") (= @op "==") (= @op "!="))
             (let ((eq (= (json/stringify (array/nth @n 1)) (json/stringify (array/nth @n 2)))))
               { f: (and @lit (= @eq (= @op "!="))), t: (and @lit (= @eq (!= @op "!="))) })
             { f: false, t: false })))))))
     { f: false, t: false }))))))) "SlVal") "f")) true)))
-    (array/sort (array/unique (array/map (array/filter (object/get @m "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (object/get @u "resource")))))
+    (array/sort (array/unique (array/flatten (array/map (array/filter (object/get @m "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (let ((rsrc (object/get @u "resource" null))) (if (validate/string @rsrc) [@rsrc] [])))))))
     @nos) }]
                                   (let ((sm (object/get @byName (object/get @m "name" (object/get @m "ref" "")) null))) (if (= @sm null) [] [@sm]))))))))
                             (ppath (object/get @pg "path" "")))
@@ -98,9 +98,9 @@ orbital OrbLintSlotTickOrbital {
                             (let ((names (array/sort (array/map (array/filter @ms (fn s (array/includes (object/get @s "slots") @sl))) (fn s (object/get @s "n"))))))
                               (if (< (array/len @names) 2) @nof
                                 (let ((q (array/map @names (fn nm (str/concat "'" @nm "'")))))
-                                  [{ code: @config.codes.slotContentionTick.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "]"),
-                                    message: (str/concat "page \"" @ppath "\": traits " (str/join (array/take @q (- (array/len @q) 1)) ", ") " and " (array/nth @q (- (array/len @q) 1)) " both render into slot '" @sl "' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot '" @sl "' on every frame and the runtime stacks them into one growing column instead of showing either"),
-                                    suggestion: (str/concat "Give exactly one trait slot '" @sl "': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)"), severity: "error" }]))))))))))))))))))))
+                                  (array/map (array/take (array/reverse @q) 1) (fn lq { code: @config.codes.slotContentionTick.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "]"),
+                                    message: (str/concat "page \"" @ppath "\": traits " (str/join (array/take @q (- (array/len @q) 1)) ", ") " and " @lq " both render into slot '" @sl "' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot '" @sl "' on every frame and the runtime stacks them into one growing column instead of showing either"),
+                                    suggestion: (str/concat "Give exactly one trait slot '" @sl "': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)"), severity: "error" }))))))))))))))))))))))
         (emit LINT_FINISH { })
 
       LINT_FINISH -> ready
@@ -117,7 +117,7 @@ orbital OrbLintSlotTickOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -134,10 +134,10 @@ orbital OrbLintSlotTickOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot-tick <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot-tick <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot-tick <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -171,7 +171,7 @@ orbital OrbLintSlotTickOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-slot-tick" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint slot-tick` with its arguments and working directory."
         @synonyms "orb lint slot-tick"

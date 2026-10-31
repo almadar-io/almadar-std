@@ -15,9 +15,9 @@ type SgTick = { effects : [SgShape] }
 type SgState = { holds : SgShape? }
 type SgMachine = { transitions : [SgTransition], states : [SgState]? }
 type SgTrait = { name : string, stateMachine : SgMachine, ticks : [SgTick] }
-type SgEntity = { invariants : [SgShape]? }
+type SgEntity = { invariants : [SgShape] }
 type SgOrbital = { name : string, traits : [SgTrait], entity : SgEntity?, auxiliaryEntities : [SgEntity]? }
-type SgProgram = { orbitals : [SgOrbital] }
+type SgProgram = { orbitals : [SgOrbital]! }
 type SgOpShape = { category : string, minArity : number }
 type SgProgType = { type : string }
 type SgHit = { rel : string, r : string }
@@ -66,59 +66,59 @@ orbital OrbLintSigilContextOrbital {
       (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
       (if @entity.factsUnread [{ code: @config.codes.lintLanguageFactsUnread.code, path: "bindingRules", message: "the installed @almadar/core language facts could not be read, so the sigils allowed in a guard, an effect and a tick are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares bindingRules", severity: "error" }] @nof))
     (let ((roots : [SgRoot] (array/flatten
-  (array/map (array/range 0 (array/len @orbitals))
-    (fn oi
-      (let ((o (array/nth @orbitals @oi)))
+  (array/map @orbitals
+    (fn o
+      (let ((oi @index))
         (let ((trts : [SgTrait] (object/get @o "traits" [])))
           (array/concat
             (array/flatten
-              (array/map (array/range 0 (array/len @trts))
-                (fn ti
-                  (let ((t (array/nth @trts @ti)))
+              (array/map @trts
+                (fn t
+                  (let ((ti @index))
                     (if (not (object/has @t "stateMachine"))
                       @noroots
                       (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SgTransition] (object/get @t "stateMachine.transitions" [])) (tks : [SgTick] (object/get @t "ticks" [])))
                       (array/concat
                         (array/flatten
-                          (array/map (array/range 0 (array/len @trs))
-                            (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                          (array/map @trs
+                            (fn tr
+                              (let ((xp (str/concat @tp ".stateMachine.transitions[" @index "]")))
                                 (let ((effs : [SgShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (array/concat
                                       (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
-                                      (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), c: "effect" })))
+                                      (array/map @effs (fn e { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" })))
                                     (let ((ens : [SgShape] (object/get @tr "ensures" [])))
-                                      (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]"), c: "ensures" })))))))))
+                                      (array/map @ens (fn e { x: @e, w: (str/concat @xp ".ensures[" @index "]"), c: "ensures" })))))))))
                         (array/concat
                         (let ((sts : [SgState] (object/get @t "stateMachine.states" [])))
                           (array/flatten
-                            (array/map (array/range 0 (array/len @sts))
-                              (fn si
-                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
-                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds"), c: "holds" }] @noroots))))))
+                            (array/map @sts
+                              (fn st
+                                (let ((h (object/get @st "holds" null)))
+                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @index "].holds"), c: "holds" }] @noroots))))))
                         (array/flatten
-                          (array/map (array/range 0 (array/len @tks))
-                            (fn ki
-                              (let ((teffs : [SgShape] (object/get (array/nth @tks @ki) "effects" [])))
-                                (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "tick" }))))))))))))))
+                          (array/map @tks
+                            (fn tk
+                              (let ((ki @index) (teffs : [SgShape] (object/get @tk "effects" [])))
+                                (array/map @teffs (fn e { x: @e, w: (str/concat @tp ".ticks[" @ki "].effects[" @index "]"), c: "tick" }))))))))))))))
             (array/concat
             (let ((ent (object/get @o "entity" null)))
               (if (validate/object @ent)
                 (let ((invs : [SgShape] (object/get @ent "invariants" [])))
-                  (array/map (array/range 0 (array/len @invs)) (fn n { x: (array/nth @invs @n), w: (str/concat "orbitals[" @oi "].entity.invariants[" @n "]"), c: "invariant" })))
+                  (let ((r : [SgRoot] (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].entity.invariants[" @index "]"), c: "invariant" })))) @r))
                 @noroots))
             (let ((auxs : [SgEntity] (object/get @o "auxiliaryEntities" [])))
               (array/flatten
-                (array/map (array/range 0 (array/len @auxs))
-                  (fn ai
-                    (let ((invs : [SgShape] (object/get (array/nth @auxs @ai) "invariants" [])))
-                      (array/map (array/range 0 (array/len @invs)) (fn n { x: (array/nth @invs @n), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @n "]"), c: "invariant" }))))))))))))))))
+                (array/map @auxs
+                  (fn a
+                    (let ((ai @index) (invs : [SgShape] (object/get @a "invariants" [])))
+                      (let ((r : [SgRoot] (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "invariant" })))) @r)))))))))))))))
       (let ((nroot : SgRoot { x: null, w: "", c: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null))))))))
         (let ((firstIdx : Map string number (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {})))
           (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
   (if (and (str/startsWith @n (quote "@")) (>= (str/len @n) 2))
-    (let ((root (array/first (str/split (str/replaceAll (str/slice @n 1) "[" ".") "."))))
+    (let ((root (str/replace-pattern (str/replaceAll (str/slice @n 1) "[" ".") "\\..*$" "")))
       (if (or (= @root "") (validate/pattern @root "^[A-Z]"))
         @nohits
         [{ rel: "", r: @root }]))
@@ -189,7 +189,7 @@ orbital OrbLintSigilContextOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SgProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SgProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       SHAPES_HEARD { operators : Map string SgOpShape! }
@@ -224,7 +224,7 @@ orbital OrbLintSigilContextOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sigil-context <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sigil-context <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -258,7 +258,7 @@ orbital OrbLintSigilContextOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-sigil-context" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint sigil-context` with its arguments and working directory."
         @synonyms "orb lint sigil-context"

@@ -63,8 +63,8 @@ orbital OrbProducedEventsOrbital {
                   (emitEv (if @hasEm
                             (let ((em (object/get @n "emit" null)))
                               (if (validate/object @em)
-                                (array/map (array/flatten (array/map @slots (fn sl (let ((v (object/get @em @sl null))) (if (validate/string @v) [(str/concat @v "")] []))))) (fn x ["e", @x]))
-                                (if (validate/string @em) [["e", (str/concat @em "")]] [])))
+                                (array/map (array/flatten (array/map @slots (fn sl (let ((v (object/get @em @sl null))) (if (validate/string @v) [@v] []))))) (fn x ["e", @x]))
+                                (if (validate/string @em) [["e", @em]] [])))
                             []))
                   (rows (if (validate/string @ty) (object/get @rowsBy (str/replaceAll (str/replaceAll @ty "~" "~t") "." "~d") []) [])))
               (let ((ctlItems (if (= (array/len @rows) 0) [] (array/flatten (array/map @rows (fn row
@@ -75,24 +75,25 @@ orbital OrbProducedEventsOrbital {
     (let ((len (array/len @n)) (kk : [FiredLf] (array/map @k (fn r (default (as @r FiredLf) @nl)))))
       (let ((argc (- @len 1)))
         (let ((sl (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (default (object/get @sem @h) @noslot) @noslot))) (sm (object/get @sl "kind" "")))
-          (let ((lamIdx (if (= @sm "lambdaResult") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
-                (picked (if (= @sm "listed") (object/get @sl "args" []) [])))
-            (let ((sel (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/range 2 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                         (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map (array/range 1 @len) (fn j (object/get (array/nth @kk @j) "lf")))))
-                           (if (= @sm "last") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
-                             (if (= @sm "lambdaResult") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
-                               (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc)))))) (array/flatten (array/map @picked (fn i (object/get (array/nth @kk (+ @i 1)) "lf")))) null)))))))
-              { lf: (if (= @sel null) [@n] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [@n] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
+          (let ((picked (if (= @sm "listed") (object/get @sl "args" []) [])))
+            (let ((tail (array/drop @kk 1)) (lastc (array/last @kk)))
+             (let ((pairs (array/zip (array/range 0 (if (> @argc 0) @argc 0)) @tail)) (lamKids (array/filter (array/zip (array/drop @n 1) @tail) (fn p (let ((a (array/nth @p 0))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d"))))))))))
+              (let ((sel (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/drop @kk 2) (fn c (object/get @c "lf")))))
+                         (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map @tail (fn c (object/get @c "lf")))))
+                           (if (= @sm "last") (if (and (>= @argc 1) (!= @lastc null)) (object/get @lastc "lf") null)
+                             (if (= @sm "lambdaResult") (let ((lamc (array/last @lamKids))) (if (= @lamc null) null (object/get (array/nth @lamc 1) "ll")))
+                               (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc)))))) (array/flatten (array/map @picked (fn i (array/flatten (array/map (array/filter @pairs (fn p (= (array/nth @p 0) @i))) (fn p (object/get (array/nth @p 1) "lf"))))))) null)))))))
+              { lf: (if (= @sel null) [@n] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [@n] @sel)), ll: (if (= @lastc null) [] (object/get @lastc "lf")) })))))))
     { lf: [@n], ll: [] })) "FiredNode"))) (default (as (object/get @sr "lf" []) FiredNodes) [])) (if (= @v null) [] [@v])))))
         (if (= @field "")
-          (array/map (array/flatten (array/map @leaves (fn lf (if (validate/string @lf) [(str/concat @lf "")] [])))) (fn x ["c", @x]))
-          (array/map (array/flatten (array/map @leaves (fn lf (let ((items : FiredNodes (if (validate/array @lf) (default (as @lf FiredNodes) []) [@lf]))) (array/flatten (array/map @items (fn it (let ((m : FiredMap? (as @it FiredMap))) (if (= @m null) [] (let ((fv : FiredNode? (object/get @m @field null))) (if (validate/string @fv) [(str/concat @fv "")] []))))))))))) (fn x ["c", @x]))))
+          (array/map (array/flatten (array/map @leaves (fn lf (if (validate/string @lf) [@lf] [])))) (fn x ["c", @x]))
+          (array/map (array/flatten (array/map @leaves (fn lf (let ((items : FiredNodes (if (validate/array @lf) (default (as @lf FiredNodes) []) [@lf]))) (array/flatten (array/map @items (fn it (let ((m : FiredMap? (as @it FiredMap))) (if (= @m null) [] (let ((fv : FiredNode? (object/get @m @field null))) (if (validate/string @fv) [@fv] []))))))))))) (fn x ["c", @x]))))
       []))))))))
                 (let ((all (array/concat (array/concat @kids @emitEv) @ctlItems)))
                   (if (= (array/len @all) 0) @nr @all)))))))
       @nr))) "FiredNode")))
                         (let ((items (array/filter (default @fr []) (fn x (validate/array @x)))))
-                          { trait: (object/get @t "name" ""), ev: (array/map (array/filter @items (fn x (= (array/nth @x 0) "e"))) (fn x (array/nth @x 1))), ctl: (array/map (array/filter @items (fn x (= (array/nth @x 0) "c"))) (fn x (array/nth @x 1))) }))))))))))
+                          { trait: (object/get @t "name" ""), ev: (array/flatten (array/map @items (fn x (let ((nm (array/nth @x 1))) (if (and (= (array/nth @x 0) "e") (validate/string @nm)) [@nm] []))))), ctl: (array/flatten (array/map @items (fn x (let ((nm (array/nth @x 1))) (if (and (= (array/nth @x 0) "c") (validate/string @nm)) [@nm] []))))) }))))))))))
             (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
                   (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d")))))
               (emit PRODUCED_EVENTS {
@@ -116,7 +117,7 @@ orbital OrbProducedEventsOrbital {
         @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
       PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
-      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "A program whose produced events are asked."
     }
   }

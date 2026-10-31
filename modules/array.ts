@@ -245,6 +245,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Flatten nested arrays one level',
     hasSideEffects: false,
     returnType: list(tv('T')),
+    returnSemantics: 'identity-of-arg<0>',
     params: [{ name: 'arr', type: list(list(tv('T'))), description: 'The array' }],
     example: '["array/flatten", [[1, 2], [3, 4]]] // => [1, 2, 3, 4]',
   },

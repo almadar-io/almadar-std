@@ -82,7 +82,7 @@ orbital OrbLintHostCallsOrbital {
         (emit HC_DRAIN { })
       HC_RUN -> ready when (not @entity.failed)
         (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: false, facts: (default (as (default (object/fromEntries (array/flatten (array/map (array/filter (array/unique (array/concat @payload.operators (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f)))))))) (fn n (object/has @entity.shapes @n))) (fn n
-          (let ((e (as (object/merge (object/get @entity.shapes @n {}) (object/get @entity.extras @n {})) HcOpEntry)))
+          (let ((e (let ((sh (object/get @entity.shapes @n))) (if (= @sh null) null (as (object/merge @sh (object/get @entity.extras @n {})) HcOpEntry)))))
             (if (= @e null)
               []
               (let ((ps (object/get @e "params" [])) (first (array/first (object/get @e "params" []))))
@@ -114,7 +114,7 @@ orbital OrbLintHostCallsOrbital {
                         (if (validate/array @n)
                           (array/flatten (default (as @k HcIdxLists) []))
                           @none))))) HcVal) []) HcIdxList) []) (fn en { p: (str/concat @nm (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") })))))) HcIdxList) [])))
-                        [[@n, (object/merge (object/pick @e ["minArity", "maxArity", "runsOn", "host", "closedCall", "oauth", "grant", "defaultPorts", "family", "httpWire"]) { params: (array/map @ps (fn pr (if (= (object/get @pr "optional" false) true) (object/pick @pr ["name", "optional", "type"]) (object/pick @pr ["name", "type"])))), hasOptions: (and (!= @lt null) (= (object/get @lt "kind") "object")), optionKeys: (if (and (!= @lt null) (= (object/get @lt "kind") "object")) (array/sort (object/keys (object/get @lt "fields" {}))) []), emitKeys: (if (= @et null) [] (array/sort (object/keys (object/get @et "fields" {})))), hasRequest: (and (!= @ft null) (= (object/get @ft "kind") "object")), requestFields: @rf, requestRequired: (array/filter @rf (fn k (not (array/includes (object/get @ft "optional" []) @k)))),
+                        [[@n, (object/merge (object/pick @e ["minArity", "maxArity", "runsOn", "host", "closedCall", "oauth", "grant", "defaultPorts", "family", "httpWire"]) { params: (array/map @ps (fn pr (if (= (object/get @pr "optional" false) true) (object/pick @pr ["name", "optional", "type"]) (object/pick @pr ["name", "type"])))), hasOptions: (and (!= @lt null) (= (object/get @lt "kind") "object")), optionKeys: (if (and (!= @lt null) (= (object/get @lt "kind") "object")) (array/sort (object/keys (object/get @lt "fields" {}))) []), emitKeys: (if (= @et null) [] (array/sort (object/keys (object/get @et "fields" {})))), hasRequest: (and (!= @ft null) (= (object/get @ft "kind") "object")), requestFields: @rf, requestRequired: (if (= @ft null) [] (array/filter @rf (fn k (not (array/includes (object/get @ft "optional" []) @k))))),
                           words: (default (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "w"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}),
                           keys: (default (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "k"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}) } (if (object/has @e "emitKeys") { emitOrder: (object/get @e "emitKeys") } {}))]]))))))))))) {})  HcFacts) {}), calls: (default (as (let ((orbitals @payload.orbitals) (heads (array/unique (array/concat @payload.heads (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f))))))))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
@@ -122,10 +122,12 @@ orbital OrbLintHostCallsOrbital {
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                   (let ((t (as (array/nth @trs @ti) HcTrait)))
-                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                    (if (= @t null) []
+                   (let ((sm (object/get @t "stateMachine")))
+                    (if (= @sm null)
                       []
                       (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name" "")) (tcfg (default (object/get @t "config" null) {})) (decl (array/map (default (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
-                        (let ((trans (default (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (default (object/get @t "ticks" null) [])))
+                        (let ((trans (default (object/get @sm "transitions" null) [])) (ticks (default (object/get @t "ticks" null) [])))
                           (let ((places (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                                     (let ((tr (array/nth @trans @i)))
@@ -144,7 +146,7 @@ orbital OrbLintHostCallsOrbital {
                                   (array/concat
                                     (if (and (validate/array @nd) (> (array/len @nd) 0) (validate/string (array/first @nd)) (array/includes @heads (array/first @nd))) [@nd] [])
                                     (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (default (object/get @kids @key []) [])))) [])))) HcVal) []) HcCalls) [])
-                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") })))))))))))))))))))  HcCallList) []) })
+                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") })))))))))))))))))))))  HcCallList) []) })
         (emit HC_DRAIN { })
     }
 

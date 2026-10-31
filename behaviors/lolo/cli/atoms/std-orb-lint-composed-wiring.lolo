@@ -21,7 +21,7 @@ type CwField = { type : string, default : CwNode? }
 type CwSb = { behavior : string }
 type CwTrait = { name : string, sourceBehavior : CwSb?, stateMachine : CwMachine, listens : [CwListen], config : Map string CwField? }
 type CwOrbital = { name : string, traits : [CwTrait] }
-type CwProgram = { orbitals : [CwOrbital] }
+type CwProgram = { orbitals : [CwOrbital]! }
 type CwG = { f : boolean!, t : boolean!, lit : boolean!, v : string! }
 type CwS = { s : [string]!, b : boolean! }
 type CwTr = { f : [string]!, e : string!, to : string!, live : boolean! }
@@ -98,10 +98,10 @@ orbital OrbLintComposedWiringOrbital {
                         (sts : [CwState] (object/get @t "stateMachine.states" @nost))
                         (trs : [CwTransition] (object/get @t "stateMachine.transitions" @notr))
                         (cfg (object/get @t "config" {})))
-                    (if (= (array/len @sts) 0) @nof
+                    (let ((fst (array/first @sts))) (if (= @fst null) @nof
                       (let ((kn (default (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (and (not (str/includes @key ".")) (let ((d (object/get (default (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d)))))) (fn key [@key, (json/stringify (object/get (object/get @cfg @key) "default"))]))) {}))
                             (initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
-                        (let ((initial (if (= @initRow null) (object/get (array/first @sts) "name" "") (object/get @initRow "name" "")))
+                        (let ((initial (if (= @initRow null) (object/get @fst "name" "") (object/get @initRow "name" "")))
                               (tl : [CwTr] (array/map @trs (fn x
                                 (let ((fr (object/get @x "from" "")) (g (object/get @x "guard" null)))
                                   { f: (if (validate/string @fr) (array/append @nos @fr) @fr),
@@ -122,10 +122,10 @@ orbital OrbLintComposedWiringOrbital {
         (let ((rs (array/map (array/range 1 @len) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @ng @r))))))
           (if (= @hd "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))), lit: false, v: "" }
           (if (= @hd "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))), lit: false, v: "" }
-          (if (= @hd "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")), lit: false, v: "" }
+          (if (= @hd "not") { f: (and (= (array/len @rs) 1) (let ((r0 (array/nth @rs 0))) (if (= @r0 null) false (object/get @r0 "t")))), t: (and (= (array/len @rs) 1) (let ((r0 (array/nth @rs 0))) (if (= @r0 null) false (object/get @r0 "f")))), lit: false, v: "" }
           (if (or (= @hd "=") (= @hd "==") (= @hd "!="))
-            (if (and (= (array/len @rs) 2) (object/get (array/nth @rs 0) "lit") (object/get (array/nth @rs 1) "lit"))
-              (let ((eq (= (object/get (array/nth @rs 0) "v") (object/get (array/nth @rs 1) "v")))) { f: (= @eq (= @hd "!=")), t: (= @eq (!= @hd "!=")), lit: false, v: "" })
+            (if (and (= (array/len @rs) 2) (let ((r0 (array/nth @rs 0))) (if (= @r0 null) false (object/get @r0 "lit"))) (let ((r1 (array/nth @rs 1))) (if (= @r1 null) false (object/get @r1 "lit"))))
+              (let ((r0 (array/nth @rs 0)) (r1 (array/nth @rs 1))) (if (or (= @r0 null) (= @r1 null)) { f: false, t: false, lit: false, v: "" } (let ((eq (= (object/get @r0 "v") (object/get @r1 "v")))) { f: (= @eq (= @hd "!=")), t: (= @eq (!= @hd "!=")), lit: false, v: "" })))
               { f: false, t: false, lit: false, v: "" })
             { f: false, t: false, lit: false, v: "" })))))))
     { f: false, t: false, lit: false, v: "" }))))))) "CwNode"))) (if (= @q null) @ng @q)) "f"))) }))))
@@ -138,10 +138,10 @@ orbital OrbLintComposedWiringOrbital {
                                   (array/concat
                                     (if (= (array/len @dead) 0) @nof
                                       (let ((missing (array/sort (array/unique (array/map (array/filter @live (fn x (and (array/includes @dead (object/get @x "to")) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "e")))))))
-                                        [{ code: @config.codes.composedStateUnreachable.code, path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (if (> (array/len @missing) 0) (array/first @missing) "<EVENT>") " }` on '" @tn "'"), severity: "error" }]))
+                                        [{ code: @config.codes.composedStateUnreachable.code, path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (let ((m0 (array/first @missing))) (if (= @m0 null) "<EVENT>" @m0)) " }` on '" @tn "'"), severity: "error" }]))
                                     (let ((deadEv (array/sort (array/unique (array/map (array/filter @live (fn x (and (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e"))) (not (array/includes @declared (object/get @x "e"))) (array/includes @reached (object/get @x "to")) (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @reached @s))))))) (fn x (object/get @x "e")))))))
                                       (if (= (array/len @deadEv) 0) @nof
-                                        [{ code: @config.codes.composedTransitionUnreachable.code, path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (array/first @deadEv) " }` on '" @tn "'"), severity: "error" }]))))))))))))))))))))
+                                        [{ code: @config.codes.composedTransitionUnreachable.code, path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (let ((d0 (array/first @deadEv))) (if (= @d0 null) "<EVENT>" @d0)) " }` on '" @tn "'"), severity: "error" }])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) @entity.haveBus))
       LINT_FINISH -> ready
@@ -194,10 +194,10 @@ orbital OrbLintComposedWiringOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint composed-wiring <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint composed-wiring <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint composed-wiring <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -231,7 +231,7 @@ orbital OrbLintComposedWiringOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-composed-wiring" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint composed-wiring` with its arguments and working directory."
         @synonyms "orb lint composed-wiring"
@@ -250,7 +250,7 @@ orbital OrbLintComposedWiringOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
       FIRED_WALK_HEARD { slots : Map string WalkSlot! }
         @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
-      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : CwProgram  scope : string! }
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : CwProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD

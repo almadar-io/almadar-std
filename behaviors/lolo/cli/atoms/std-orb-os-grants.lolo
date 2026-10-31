@@ -19,11 +19,11 @@ orbital OrbOsGrantsOrbital {
 
     state ready {
       INIT -> ready
-      GRANTS_CALLED -> ready when (not (let ((a (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final")))))))
+      GRANTS_CALLED -> ready when (not (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final")))))))
         (emit GRANTS_ANSWERED { status: 400, body: "", stderr: "usage: orb os-grants <FILE> [--final]" })
-      GRANTS_CALLED -> checking when (let ((a (json/parse (default @payload.rawBody "") OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final"))))))
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (program/os-grants null { path: (let ((f (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") @f))), final: (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2) } { key: "os-grants" emit: { success: GRANTS_DONE, failure: GRANTS_REFUSED } })
+      GRANTS_CALLED -> checking when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (let ((n (array/len (object/get @a "argv")))) (or (= @n 1) (and (= @n 2) (= (array/nth (object/get @a "argv") 1) "--final"))))))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (program/os-grants null { path: (let ((f (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") @f))), final: (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) } { key: "os-grants" emit: { success: GRANTS_DONE, failure: GRANTS_REFUSED } })
     }
 
     state checking {
@@ -47,7 +47,7 @@ orbital OrbOsGrantsOrbital {
     listens {
       GRANTS_CALLED -> inbound "cli-os-grants" answers GRANTS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb os-grants`."
         @synonyms "orb os-grants, prove the invariants of a program, check holds and ensures"

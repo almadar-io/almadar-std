@@ -41,9 +41,9 @@ orbital OrbLintStateUnreachableOrbital {
             (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
                 (let ((td (array/nth @trList @ti)))
-                  (if (not (validate/object (object/get @td "stateMachine" null)))
-                    []
-                    (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
+                  (let ((sm (object/get @td "stateMachine" null)) (tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
+                    (if (= @sm null)
+                      []
                       (let ((sts (object/get @sm "states" [])) (where (str/concat @tpath ".stateMachine")))
                         (if (= (array/len @sts) 0)
                           []
@@ -74,7 +74,7 @@ orbital OrbLintStateUnreachableOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StUnreachProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StUnreachProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -94,7 +94,7 @@ orbital OrbLintStateUnreachableOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint state-unreachable <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint state-unreachable <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -128,7 +128,7 @@ orbital OrbLintStateUnreachableOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-state-unreachable" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint state-unreachable` with its arguments and working directory."
         @synonyms "orb lint state-unreachable"

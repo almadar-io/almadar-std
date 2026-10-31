@@ -230,11 +230,11 @@ orbital VerifyWalkOrbital {
 
     state judging {
       INIT -> judging
-      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (!= (array/nth @entity.judgeSteps (array/len @entity.judged)) null) (!= (array/nth @entity.played (array/len @entity.judged)) null))
+      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (!= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
         (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @entity.program })
       WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (= @entity.program null))
         (emit WALK_FAILED { error: "the program could not be read back" })
-      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (or (= (array/nth @entity.judgeSteps (array/len @entity.judged)) null) (= (array/nth @entity.played (array/len @entity.judged)) null)))
+      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
         (emit WALK_FAILED { error: "the judged step has no planned or played row" })
       WALK_JUDGE_ANSWERED -> judging
         (set @entity.judged (array/concat @entity.judged [{ verdicts: @payload.verdicts }]))

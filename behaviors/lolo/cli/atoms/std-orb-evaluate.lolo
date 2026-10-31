@@ -42,10 +42,10 @@ orbital OrbEvaluateOrbital {
 
     state ready {
       INIT -> ready
-      EVALUATE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      EVALUATE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit EVALUATE_ANSWERED { status: 400, body: "", stderr: "error: the arguments could not be read\n\nUsage: orb evaluate [OPTIONS] [EXPR]\n\nFor more information, try '--help'." })
-      EVALUATE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit EVALUATE_ARGS_PARSE { stage: "evaluate" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "entity" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: [] takesValue: true repeatable: false }] })
+      EVALUATE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit EVALUATE_ARGS_PARSE { stage: "evaluate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "entity" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -95,7 +95,7 @@ orbital OrbEvaluateOrbital {
     listens {
       EVALUATE_CALLED -> inbound "cli-evaluate" answers EVALUATE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb evaluate`."
         @synonyms "orb evaluate, evaluate an s-expression, probe an expression with entity and payload"

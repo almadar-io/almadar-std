@@ -506,6 +506,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Literal array constructor — evaluates each argument and returns them as an array. Lowering wraps a literal list bound for a literal-array slot in `list` so it is unambiguously data, never a call (disambiguates a list whose first element collides with an operator name, e.g. [path method …]).',
     hasSideEffects: false,
     returnType: list(each('T')),
+    returnSemantics: 'union-of-args',
     params: [{ name: '...items', type: each('T'), description: 'Items to collect into a literal array' }],
     example: '["list", "path", "method", "status"] // => ["path", "method", "status"]',
   },
@@ -1179,7 +1180,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared, services }.",
+      "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the declared credential names the host's own environment holds (env: name and, for a value of eight or more characters, its last four; empty on a host that reads no environment), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, env, declared, services }.",
     hasSideEffects: true,
     runsOn: 'server',
     closedCall: { request: true },
@@ -1194,7 +1195,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-list", { "service": "llm" }, { "emit": { "success": "LISTED" } }]',
-    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, entries: list(shape({ service: STRING, name: STRING, last4: STRING }, ['last4'])), declared: list(openShape({ group: STRING, envVar: STRING, description: STRING })), services: list(shape({ name: STRING, backend: STRING, credentials: list(shape({ envVar: STRING, required: BOOLEAN, description: STRING })) }, ['backend'])) }) },
+    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, entries: list(shape({ service: STRING, name: STRING, last4: STRING }, ['last4'])), env: list(shape({ name: STRING, last4: STRING }, ['last4'])), declared: list(openShape({ group: STRING, envVar: STRING, description: STRING })), services: list(shape({ name: STRING, backend: STRING, credentials: list(shape({ envVar: STRING, required: BOOLEAN, description: STRING })) }, ['backend'])) }) },
   },
   'credential-set': {
     module: 'core',

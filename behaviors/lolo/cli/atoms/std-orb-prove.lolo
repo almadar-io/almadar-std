@@ -21,11 +21,11 @@ orbital OrbProveOrbital {
 
     state ready {
       INIT -> ready
-      PROVE_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      PROVE_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit PROVE_ANSWERED { status: 400, body: "", stderr: "usage: orb prove <FILE>" })
-      PROVE_CALLED -> proving when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (program/prove null { path: (let ((f (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") @f))) } { key: "prove" emit: { success: PROVE_DONE, failure: PROVE_REFUSED } })
+      PROVE_CALLED -> proving when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (program/prove null { path: (let ((f (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") @f))) } { key: "prove" emit: { success: PROVE_DONE, failure: PROVE_REFUSED } })
     }
 
     state proving {
@@ -49,7 +49,7 @@ orbital OrbProveOrbital {
     listens {
       PROVE_CALLED -> inbound "cli-prove" answers PROVE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb prove`."
         @synonyms "orb prove, prove the invariants of a program, check holds and ensures"

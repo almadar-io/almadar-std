@@ -17,10 +17,10 @@ type IdRefsEntity = { id : string, extendsId : string, extends : string, fields 
 type IdRefsEmit = { eventId : string, event : string }
 type IdRefsSource = { kind : string, orbitalId : string, orbital : string, traitId : string, trait : string }
 type IdRefsListen = { eventId : string, event : string, triggersId : string, triggers : string, source : IdRefsSource }
-type IdRefsHit = { rel : string, id : string, name : string }
+type IdRefsHit = { rel : string!, id : string!, name : string! }
 type IdRefsHits = [IdRefsHit]
 type IdRefsHitMap = Map string IdRefsHits
-type IdRefsPos = { id : string, exp : string, name : string, hasName : boolean, path : string }
+type IdRefsPos = { id : string!, exp : string!, name : string!, hasName : boolean!, path : string! }
 type IdRefsPositions = [IdRefsPos]
 type IdRefsForm = [IdRefsExpr?]
 type IdRefsConfig = { default : IdRefsExpr }
@@ -53,7 +53,7 @@ orbital OrbLintIdRefsOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((emptyHits (json/parse "[]" IdRefsHits)) (orbitals (object/get @payload.program "orbitals" [])) (ledgerEntries (object/get (object/get @payload.program "ledger" {}) "entries" {})))
+        (set @entity.findings (let ((emptyHits : IdRefsHits []) (orbitals (object/get @payload.program "orbitals" [])) (ledgerEntries (object/get (object/get @payload.program "ledger" {}) "entries" {})))
           (let ((slots (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((orb (array/nth @orbitals @oi)))
                     (let ((op (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]")) (trs (object/get @orb "traits" [])) (pgs (object/get @orb "pages" [])))
@@ -63,8 +63,7 @@ orbital OrbLintIdRefsOrbital {
                           (let ((pg (array/nth @pgs @pix)))
                             (let ((pts (object/get @pg "traits" [])) (isObj (object/has @pg "ref")))
                               (array/map (array/filter (array/range 0 (array/len @pts)) (fn ti (validate/object (array/nth @pts @ti))))
-                                (fn ti { t: (array/nth @pts @ti), tp: (if @isObj (str/concat @op ".pages[" @pix "].traits[" @ti "]") (str/concat @op ".pages[" @pix " (" (object/get @pg "name" "") ")].traits[" @ti "]")), own: (not @isObj) }))))))))))))))
-                (sortedKeys (array/sort (object/keys @ledgerEntries))))
+                                (fn ti { t: (array/nth @pts @ti), tp: (if @isObj (str/concat @op ".pages[" @pix "].traits[" @ti "]") (str/concat @op ".pages[" @pix " (" (object/get @pg "name" "") ")].traits[" @ti "]")), own: (not @isObj) })))))))))))))))
             (let ((ownInline (array/filter @slots (fn s (and (object/get @s "own") (object/has (object/get @s "t") "stateMachine")))))
                   (inlineSlots (array/filter @slots (fn s (object/has (object/get @s "t") "stateMachine"))))
                   (refSlots (array/filter @slots (fn s (not (object/has (object/get @s "t") "stateMachine"))))))
@@ -106,8 +105,8 @@ orbital OrbLintIdRefsOrbital {
                                   (if (object/has @pg "linkedEntityId") [{ id: (object/get @pg "linkedEntityId"), exp: "ent_", name: (object/get @pg "linkedEntity" ""), hasName: (object/has @pg "linkedEntity"), path: (str/concat @pp ".linkedEntity") }] [])
                                   (array/map (array/filter (array/range 0 (array/len @rids)) (fn ti (!= (array/nth @rids @ti) "")))
                                     (fn ti (let ((tn (if (< @ti (array/len @pts)) (array/nth @pts @ti) null)))
-                                      (let ((named (if (validate/object @tn) (or (object/has @tn "stateMachine") (object/has @tn "ref") (object/has @tn "name")) false)))
-                                        { id: (array/nth @rids @ti), exp: "trt_", name: (if @named (if (object/has @tn "stateMachine") (object/get @tn "name" "") (if (object/has @tn "ref") (object/get @tn "ref" "") (object/get @tn "name" ""))) ""), hasName: @named, path: (str/concat @pp ".traitRefIds[" @ti "]") }))))))))))))))))
+                                      (if (= @tn null) { id: (array/nth @rids @ti), exp: "trt_", name: "", hasName: false, path: (str/concat @pp ".traitRefIds[" @ti "]") } (let ((named (or (object/has @tn "stateMachine") (object/has @tn "ref") (object/has @tn "name"))))
+                                        { id: (array/nth @rids @ti), exp: "trt_", name: (if @named (if (object/has @tn "stateMachine") (object/get @tn "name" "") (if (object/has @tn "ref") (object/get @tn "ref" "") (object/get @tn "name" ""))) ""), hasName: @named, path: (str/concat @pp ".traitRefIds[" @ti "]") })))))))))))))))))
                     (fieldFolds (array/flatten (array/map @entBodies (fn eb (let ((fl (object/get (object/get @eb "ent") "fields" []))) (array/map (array/range 0 (array/len @fl)) (fn fi { eb: @eb, fi: @fi, res: (tree/fold (array/nth @fl @fi) (fn (n k)
                               (array/concat
                                 (let ((rl (object/get @n "relation" null))) (if (and (validate/object @rl) (object/has @rl "entityId")) [{ rel: "", id: (object/get @rl "entityId"), name: (object/get @rl "entity" "") }] []))
@@ -134,19 +133,19 @@ orbital OrbLintIdRefsOrbital {
                           (array/concat
                             (if (object/has @tr "refId") [{ id: (object/get @tr "refId"), exp: "trt_", name: (object/get @tr "ref" ""), hasName: (object/has @tr "ref"), path: (str/concat @tp ".ref") }] [])
                             (if (object/has @tr "linkedEntityId") [{ id: (object/get @tr "linkedEntityId"), exp: "ent_", name: (object/get @tr "linkedEntity" ""), hasName: (object/has @tr "linkedEntity"), path: (str/concat @tp ".linkedEntity") }] []))))))))
-                    (ledgerTraitKeys (array/filter @sortedKeys (fn key (= (object/get (object/get @ledgerEntries @key) "kind" "") "trait")))))
+                    (ledgerTraitRows (array/filter (object/values @ledgerEntries) (fn le (= (object/get @le "kind" "") "trait")))))
                 (let ((positions (as (array/concat @extendsPos @fieldPos @pagePos @trPositions) IdRefsPositions))
                       (embedSeen (array/flatten (array/map @slots (fn s
                         (let ((tr (object/get @s "t")))
                           (let ((isInline (object/has @tr "stateMachine")) (cfg (let ((c (object/get @tr "config" null))) (if (validate/object @c) (object/values @c) []))))
                             (let ((names (array/flatten (array/concat
-                                    (if @isInline (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn a (array/map (array/filter (default (as (json/nodes (array/filter (object/get @a "effects" []) (fn r (not (validate/object @r))))) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) ""))))) [])
-                                    (if @isInline (array/map (object/get @tr "ticks" []) (fn tk (array/map (array/filter (default (as (json/nodes (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r))))) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) ""))))) [])
-                                    (array/map (array/filter @cfg (fn c (object/has @c "default"))) (fn c (array/map (array/filter (default (as (json/nodes (object/get @c "default")) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) ""))))))))
+                                    (if @isInline (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn a (array/flatten (array/map (array/filter (default (as (json/nodes (array/filter (object/get @a "effects" []) (fn r (not (validate/object @r))))) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))) [])
+                                    (if @isInline (array/map (object/get @tr "ticks" []) (fn tk (array/flatten (array/map (array/filter (default (as (json/nodes (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r))))) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))) [])
+                                    (array/map (array/filter @cfg (fn c (object/has @c "default"))) (fn c (array/flatten (array/map (array/filter (default (as (json/nodes (object/get @c "default")) IdRefsForm) []) (fn n (if (validate/string @n) (and (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7)) false))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))))))
                                   (embedIdList (if @isInline (object/values (object/get @tr "traitEmbedIds" {})) []))
                                   (embedKeys (if @isInline (object/keys (object/get @tr "traitEmbedIds" {})) [])))
                                 (array/concat @embedIdList
-                                  (array/map (array/filter (array/map (array/filter @names (fn nm (and (!= @nm "") (not (array/includes @embedKeys @nm))))) (fn nm (array/find @ledgerTraitKeys (fn key (= (object/get (object/get @ledgerEntries @key) "curName" "") @nm))))) (fn key (validate/string @key))) (fn key (object/get (object/get @ledgerEntries @key) "id" ""))))))))))))
+                                  (array/flatten (array/map (array/filter @names (fn nm (and (!= @nm "") (not (array/includes @embedKeys @nm))))) (fn nm (array/map (array/take (array/filter @ledgerTraitRows (fn le (= (object/get @le "curName" "") @nm))) 1) (fn le (object/get @le "id" "")))))))))))))))
                   (let ((seen (array/concat @declared (array/map (default @positions []) (fn p (object/get @p "id"))) @embedSeen))
                         (configHolders (array/filter @ownInline (fn s (array/some (let ((c (object/get (object/get @s "t") "config" null))) (if (validate/object @c) (object/values @c) [])) (fn c (validate/string (object/get @c "default" null))))))))
                     (array/concat
@@ -161,12 +160,11 @@ orbital OrbLintIdRefsOrbital {
                                 (if (and (object/get @p "hasName") (not (str/includes @nm ".")) (object/has @ledgerEntries @id) (!= @cur @nm) (not (and (str/startsWith @cur (quote "@config.")) (let ((holder (array/last (array/filter @configHolders (fn s (= (object/get (object/get @s "t") "id" "") @parent)))))) (and (validate/object @holder) (= (object/get (object/get (object/get (object/get @holder "t") "config" {}) (str/slice @cur 8 (str/len @cur)) {}) "default" null) @nm))))))
                                   [{ code: @config.codes.idNameMismatch.code, path: (object/get @p "path" ""), message: (str/concat "name `" @nm "` disagrees with ledger curName `" @cur "` for id `" @id "`."), suggestion: "", severity: "error" }]
                                   [])]))))))))
-                      (array/flatten (array/map @sortedKeys (fn key
-                        (let ((e (object/get @ledgerEntries @key)))
+                      (array/flatten (array/map (array/sort (object/values @ledgerEntries) "id") (fn e
                           (let ((eid (object/get @e "id" "")) (ekind (object/get @e "kind" "")) (eparent (object/get @e "parent" "")))
                             (if (or (array/includes @seen @eid) (and (= @ekind "event") (!= @eparent "") (array/includes @declTraitIds @eparent)))
                               []
-                              [{ code: @config.codes.idLedgerOrphan.code, path: (str/concat "ledger.entries[" @eid "]"), message: (str/concat "ledger row `" @eid "` (kind `" (object/get { orbital: "orb", entity: "ent", trait: "trt", event: "evt", page: "pag", service: "svc", theme: "thm", palette: "pal" } @ekind "") "`, curName `" (object/get @e "curName" "") "`) is carried by no node in the schema — stale."), suggestion: "", severity: "error" }]))))))
+                              [{ code: @config.codes.idLedgerOrphan.code, path: (str/concat "ledger.entries[" @eid "]"), message: (str/concat "ledger row `" @eid "` (kind `" (object/get { orbital: "orb", entity: "ent", trait: "trt", event: "evt", page: "pag", service: "svc", theme: "thm", palette: "pal" } @ekind "") "`, curName `" (object/get @e "curName" "") "`) is carried by no node in the schema — stale."), suggestion: "", severity: "error" }])))))
                       (array/flatten (array/map @fieldFolds (fn r (let ((res (object/get @r "res"))) (if (= @res null) [{ code: @config.codes.lintNodeUnchecked.code, path: (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]"), message: (str/concat @payload.file ": schema node at " (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]") " is not a IdRefsField; this rule could not check it"), suggestion: "", severity: "error" }] [])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -183,7 +181,7 @@ orbital OrbLintIdRefsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IdRefsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IdRefsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -203,7 +201,7 @@ orbital OrbLintIdRefsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-refs <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-refs <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-refs <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -237,7 +235,7 @@ orbital OrbLintIdRefsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-id-refs" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint id-refs` with its arguments and working directory."
         @synonyms "orb lint id-refs, id refs"

@@ -30,11 +30,11 @@ orbital OrbLowerOrbital {
 
     state ready {
       INIT -> ready
-      LOWER_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      LOWER_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LOWER_ANSWERED { status: 500, body: "", stderr: "Error: orb lower: the command arguments could not be read" })
-      LOWER_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [] })
+      LOWER_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
     }
 
     state parsing {
@@ -78,7 +78,7 @@ orbital OrbLowerOrbital {
     listens {
       LOWER_CALLED -> inbound "cli-lower" answers LOWER_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lower`."
         @synonyms "orb lower, lower lolo files to orb programs, one json line per file"

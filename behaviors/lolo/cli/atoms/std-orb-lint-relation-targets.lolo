@@ -90,7 +90,7 @@ orbital OrbLintRelationTargetsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RelTargetsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RelTargetsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -110,7 +110,7 @@ orbital OrbLintRelationTargetsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint relation-targets <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint relation-targets <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -144,7 +144,7 @@ orbital OrbLintRelationTargetsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-relation-targets" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint relation-targets` with its arguments and working directory."
         @synonyms "orb lint relation-targets, duplicate field names"

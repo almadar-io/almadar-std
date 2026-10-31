@@ -42,9 +42,10 @@ orbital OrbLintTransitionRefsOrbital {
             (let ((trList (object/get (array/nth @orbitals @oi) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
                 (let ((td (array/nth @trList @ti)))
-                  (if (not (validate/object (object/get @td "stateMachine" null)))
+                  (let ((sm (object/get @td "stateMachine")))
+                   (if (= @sm null)
                     []
-                    (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
+                    (let ((tpath (str/concat "orbitals[" @oi "].traits[" @ti "]")))
                       (let ((sts (object/get @sm "states" [])) (where (str/concat @tpath ".stateMachine")))
                         (if (= (array/len @sts) 0)
                           []
@@ -55,7 +56,7 @@ orbital OrbLintTransitionRefsOrbital {
                                   (array/flatten [
                                     (array/flatten (array/map @froms (fn f (if (and (!= @f "*") (not (array/includes @names @f))) [{ code: @config.codes.tInvalidTransition.code, path: (str/concat @p ".from"), message: (str/concat "Source state '" @f "' does not exist"), suggestion: "", severity: "error" }] []))))
                                     (if (not (array/includes @names (object/get @tr "to" ""))) [{ code: @config.codes.tInvalidTransition.code, path: (str/concat @p ".to"), message: (str/concat "Target state '" (object/get @tr "to" "") "' does not exist"), suggestion: "", severity: "error" }] [])
-                                    (if (and (> (array/len @evs) 0) (!= @ev "INIT") (not (array/includes @evs @ev))) [{ code: @config.codes.tUndefinedEvent.code, path: (str/concat @p ".event"), message: (str/concat "Event '" @ev "' is not defined in events array"), suggestion: "Add the event to the stateMachine.events array", severity: "error" }] [])])))))))))))))))))))))
+                                    (if (and (> (array/len @evs) 0) (!= @ev "INIT") (not (array/includes @evs @ev))) [{ code: @config.codes.tUndefinedEvent.code, path: (str/concat @p ".event"), message: (str/concat "Event '" @ev "' is not defined in events array"), suggestion: "Add the event to the stateMachine.events array", severity: "error" }] [])]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "transition-refs", scope: @entity.scope, findings: @entity.findings })
@@ -71,7 +72,7 @@ orbital OrbLintTransitionRefsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TrRefsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TrRefsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -91,7 +92,7 @@ orbital OrbLintTransitionRefsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint transition-refs <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint transition-refs <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -125,7 +126,7 @@ orbital OrbLintTransitionRefsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-transition-refs" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint transition-refs` with its arguments and working directory."
         @synonyms "orb lint transition-refs"

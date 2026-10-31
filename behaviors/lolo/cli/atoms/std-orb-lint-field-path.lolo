@@ -78,12 +78,14 @@ orbital OrbLintFieldPathOrbital {
     (array/flatten (array/map @fields (fn f (if (and (validate/string @f) (str/includes @f "."))
      (let ((fp @f)) (let ((segs (str/split @fp ".")))
       (let ((first (array/nth @segs 0)) (second (array/nth @segs 1)))
+       (if (or (= @first null) (= @second null))
+        [{ p: "", m: (str/concat "Field path '" @fp "' has no field after its first segment"), s: "Write the path as relation.field" }]
        (let ((rel (array/find (object/get @base "fields" []) (fn f (and (= (object/get @f "type" "") "relation") (validate/string (object/get @f "name" null)) (or (= (object/get @f "name") @first) (= (object/get @f "name") (str/concat @first "Id"))))))))
         (if (= @rel null)
          [{ p: "", m: (str/concat "Field path '" @fp "' - '" @ename "' has no relation field '" @first "' to traverse"), s: (str/concat "Add a relation field for '" @first "' or use a direct field reference") }]
          (let ((rl (object/get @rel "relation" null)))
-          (if (not (and (validate/object @rl) (validate/string (object/get @rl "entity" null)))) @noh
-           (let ((tname (object/get @rl "entity")))
+          (if (not (validate/object @rl)) @noh
+           (let ((tname (object/get @rl "entity" null))) (if (not (validate/string @tname)) @noh
             (let ((target (array/find @ents (fn e (= (object/get @e "name") @tname)))))
              (if (= @target null) @noh
               (array/concat
@@ -91,7 +93,7 @@ orbital OrbLintFieldPathOrbital {
                 [{ p: "", m: (str/concat "Field path '" @fp "' - '" @ename "' has no field '" @second "' on related entity '" @tname "'"), s: (str/concat "Check that '" @tname "' entity has a '" @second "' field") }])
                (if (> (array/len @segs) 2)
                 [{ p: "", m: (str/concat "Field path '" @fp "' has more than 2 levels of nesting (max recommended: 2)"), s: "Consider flattening the data structure or using a custom pattern" }]
-                @noh))))))))))))
+                @noh))))))))))))))
      []))))))
   @noh))
                     (if (= @ch null) (object/get @nr "nd")
@@ -136,10 +138,10 @@ orbital OrbLintFieldPathOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint field-path <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint field-path <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint field-path <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -173,7 +175,7 @@ orbital OrbLintFieldPathOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-field-path" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint field-path` with its arguments and working directory."
         @synonyms "orb lint field-path"

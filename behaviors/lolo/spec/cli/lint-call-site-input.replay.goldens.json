@@ -142,10 +142,30 @@
                     "ref": "A.traits.X"
                   },
                   "declaration": {
-                    "name": "X"
+                    "file": "a.orb",
+                    "orbital": 1,
+                    "trait": 0
                   }
                 }
-              ]
+              ],
+              "files": {
+                "a.orb": {
+                  "orbitals": [
+                    {
+                      "name": "U",
+                      "traits": []
+                    },
+                    {
+                      "name": "V",
+                      "traits": [
+                        {
+                          "name": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
             }
           },
           "expect": {
@@ -257,7 +277,8 @@
                   }
                 ]
               },
-              "references": []
+              "references": [],
+              "files": {}
             }
           },
           "expect": {
@@ -363,8 +384,8 @@
                     "ref": "A.orbitals.U"
                   },
                   "declaration": {
-                    "name": "U",
-                    "traits": []
+                    "file": "a.orb",
+                    "index": 0
                   }
                 },
                 {
@@ -376,10 +397,30 @@
                     "ref": "A.traits.X"
                   },
                   "declaration": {
-                    "name": "X"
+                    "file": "a.orb",
+                    "orbital": 1,
+                    "trait": 0
                   }
                 }
-              ]
+              ],
+              "files": {
+                "a.orb": {
+                  "orbitals": [
+                    {
+                      "name": "U",
+                      "traits": []
+                    },
+                    {
+                      "name": "V",
+                      "traits": [
+                        {
+                          "name": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
             }
           },
           "expect": {
@@ -429,7 +470,17 @@
                       "declaration": {
                         "name": "U",
                         "traits": []
-                      }
+                      },
+                      "aliasOrbitals": [
+                        {
+                          "name": "V",
+                          "traits": [
+                            {
+                              "name": "X"
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "kind": "trait",
@@ -478,6 +529,139 @@
               "reference": {
                 "ref": "A.orbitals.U"
               }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "control-a-uses-reference-is-forwarded-as-read",
+      "steps": [
+        {
+          "event": "LINT_REFS_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "p",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "uses": [
+                      {
+                        "from": "./a.orb",
+                        "as": "A"
+                      }
+                    ],
+                    "traits": [
+                      {
+                        "ref": "A.traits.X",
+                        "linkedEntity": "E"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "references": [
+                {
+                  "kind": "uses",
+                  "alias": "A",
+                  "name": "a",
+                  "path": "orbitals[0].uses[0]",
+                  "callSite": {
+                    "as": "A",
+                    "config": {}
+                  },
+                  "declaration": {
+                    "k": {
+                      "default": 1
+                    }
+                  }
+                }
+              ],
+              "files": {}
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_COMPOSE",
+                "payload": {}
+              },
+              {
+                "event": "LINT_CALL_SITES",
+                "payload": {
+                  "file": "c.orb",
+                  "program": {
+                    "name": "p",
+                    "orbitals": [
+                      {
+                        "name": "O",
+                        "uses": [
+                          {
+                            "from": "./a.orb",
+                            "as": "A"
+                          }
+                        ],
+                        "traits": [
+                          {
+                            "ref": "A.traits.X",
+                            "linkedEntity": "E"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "kept": [],
+                  "references": [
+                    {
+                      "kind": "uses",
+                      "alias": "A",
+                      "name": "a",
+                      "path": "orbitals[0].uses[0]",
+                      "callSite": {
+                        "as": "A",
+                        "config": {}
+                      },
+                      "declaration": {
+                        "k": {
+                          "default": 1
+                        }
+                      }
+                    }
+                  ],
+                  "stamped": null
+                }
+              }
+            ]
+          },
+          "trait": "CallSiteInput"
+        }
+      ],
+      "entity": {
+        "file": "c.orb",
+        "cwd": "/w",
+        "raw": "{}",
+        "withStamp": false,
+        "withRefs": true,
+        "program": {
+          "name": "p",
+          "orbitals": [
+            {
+              "name": "O",
+              "uses": [
+                {
+                  "from": "./a.orb",
+                  "as": "A"
+                }
+              ],
+              "traits": [
+                {
+                  "ref": "A.traits.X",
+                  "linkedEntity": "E"
+                }
+              ]
             }
           ]
         }
@@ -2570,6 +2754,560 @@
                     }
                   ],
                   "stamped": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reference-to-a-file-the-answer-does-not-hold-is-unread",
+      "steps": [
+        {
+          "event": "LINT_REFS_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "p",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "uses": [
+                      {
+                        "from": "./a.orb",
+                        "as": "A"
+                      }
+                    ],
+                    "entity": "A.orbitals.U.entity",
+                    "traits": [
+                      {
+                        "ref": "A.traits.X"
+                      }
+                    ],
+                    "reference": {
+                      "ref": "A.orbitals.U"
+                    }
+                  }
+                ]
+              },
+              "references": [
+                {
+                  "kind": "orbital",
+                  "alias": "A",
+                  "name": "U",
+                  "path": "orbitals[0]",
+                  "callSite": {
+                    "ref": "A.orbitals.U"
+                  },
+                  "declaration": {
+                    "file": "gone.orb",
+                    "index": 0
+                  }
+                },
+                {
+                  "kind": "trait",
+                  "alias": "A",
+                  "name": "X",
+                  "path": "orbitals[name=O].traits[0]",
+                  "callSite": {
+                    "ref": "A.traits.X"
+                  },
+                  "declaration": {
+                    "file": "a.orb",
+                    "orbital": 1,
+                    "trait": 0
+                  }
+                }
+              ],
+              "files": {
+                "a.orb": {
+                  "orbitals": [
+                    {
+                      "name": "U",
+                      "traits": []
+                    },
+                    {
+                      "name": "V",
+                      "traits": [
+                        {
+                          "name": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_REFS_JOINED",
+                "payload": {}
+              },
+              {
+                "event": "LINT_CALL_SITES_UNREAD",
+                "payload": {
+                  "file": "c.orb",
+                  "error": "a reference names a declaration its imported file's orbitals do not hold"
+                }
+              }
+            ]
+          },
+          "trait": "CallSiteInput"
+        }
+      ],
+      "entity": {
+        "file": "c.orb",
+        "cwd": "/w",
+        "raw": "{}",
+        "withStamp": false,
+        "withRefs": true,
+        "program": {
+          "name": "p",
+          "orbitals": [
+            {
+              "name": "O",
+              "uses": [
+                {
+                  "from": "./a.orb",
+                  "as": "A"
+                }
+              ],
+              "entity": "A.orbitals.U.entity",
+              "traits": [
+                {
+                  "ref": "A.traits.X"
+                }
+              ],
+              "reference": {
+                "ref": "A.orbitals.U"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a-reference-to-an-orbital-index-out-of-range-is-unread",
+      "steps": [
+        {
+          "event": "LINT_REFS_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "p",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "uses": [
+                      {
+                        "from": "./a.orb",
+                        "as": "A"
+                      }
+                    ],
+                    "entity": "A.orbitals.U.entity",
+                    "traits": [
+                      {
+                        "ref": "A.traits.X"
+                      }
+                    ],
+                    "reference": {
+                      "ref": "A.orbitals.U"
+                    }
+                  }
+                ]
+              },
+              "references": [
+                {
+                  "kind": "orbital",
+                  "alias": "A",
+                  "name": "U",
+                  "path": "orbitals[0]",
+                  "callSite": {
+                    "ref": "A.orbitals.U"
+                  },
+                  "declaration": {
+                    "file": "a.orb",
+                    "index": 5
+                  }
+                },
+                {
+                  "kind": "trait",
+                  "alias": "A",
+                  "name": "X",
+                  "path": "orbitals[name=O].traits[0]",
+                  "callSite": {
+                    "ref": "A.traits.X"
+                  },
+                  "declaration": {
+                    "file": "a.orb",
+                    "orbital": 1,
+                    "trait": 0
+                  }
+                }
+              ],
+              "files": {
+                "a.orb": {
+                  "orbitals": [
+                    {
+                      "name": "U",
+                      "traits": []
+                    },
+                    {
+                      "name": "V",
+                      "traits": [
+                        {
+                          "name": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_REFS_JOINED",
+                "payload": {}
+              },
+              {
+                "event": "LINT_CALL_SITES_UNREAD",
+                "payload": {
+                  "file": "c.orb",
+                  "error": "a reference names a declaration its imported file's orbitals do not hold"
+                }
+              }
+            ]
+          },
+          "trait": "CallSiteInput"
+        }
+      ],
+      "entity": {
+        "file": "c.orb",
+        "cwd": "/w",
+        "raw": "{}",
+        "withStamp": false,
+        "withRefs": true,
+        "program": {
+          "name": "p",
+          "orbitals": [
+            {
+              "name": "O",
+              "uses": [
+                {
+                  "from": "./a.orb",
+                  "as": "A"
+                }
+              ],
+              "entity": "A.orbitals.U.entity",
+              "traits": [
+                {
+                  "ref": "A.traits.X"
+                }
+              ],
+              "reference": {
+                "ref": "A.orbitals.U"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a-reference-to-a-trait-index-out-of-range-is-unread",
+      "steps": [
+        {
+          "event": "LINT_REFS_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "p",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "uses": [
+                      {
+                        "from": "./a.orb",
+                        "as": "A"
+                      }
+                    ],
+                    "entity": "A.orbitals.U.entity",
+                    "traits": [
+                      {
+                        "ref": "A.traits.X"
+                      }
+                    ],
+                    "reference": {
+                      "ref": "A.orbitals.U"
+                    }
+                  }
+                ]
+              },
+              "references": [
+                {
+                  "kind": "orbital",
+                  "alias": "A",
+                  "name": "U",
+                  "path": "orbitals[0]",
+                  "callSite": {
+                    "ref": "A.orbitals.U"
+                  },
+                  "declaration": {
+                    "file": "a.orb",
+                    "index": 0
+                  }
+                },
+                {
+                  "kind": "trait",
+                  "alias": "A",
+                  "name": "X",
+                  "path": "orbitals[name=O].traits[0]",
+                  "callSite": {
+                    "ref": "A.traits.X"
+                  },
+                  "declaration": {
+                    "file": "a.orb",
+                    "orbital": 1,
+                    "trait": 3
+                  }
+                }
+              ],
+              "files": {
+                "a.orb": {
+                  "orbitals": [
+                    {
+                      "name": "U",
+                      "traits": []
+                    },
+                    {
+                      "name": "V",
+                      "traits": [
+                        {
+                          "name": "X"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_REFS_JOINED",
+                "payload": {}
+              },
+              {
+                "event": "LINT_CALL_SITES_UNREAD",
+                "payload": {
+                  "file": "c.orb",
+                  "error": "a reference names a declaration its imported file's orbitals do not hold"
+                }
+              }
+            ]
+          },
+          "trait": "CallSiteInput"
+        }
+      ],
+      "entity": {
+        "file": "c.orb",
+        "cwd": "/w",
+        "raw": "{}",
+        "withStamp": false,
+        "withRefs": true,
+        "program": {
+          "name": "p",
+          "orbitals": [
+            {
+              "name": "O",
+              "uses": [
+                {
+                  "from": "./a.orb",
+                  "as": "A"
+                }
+              ],
+              "entity": "A.orbitals.U.entity",
+              "traits": [
+                {
+                  "ref": "A.traits.X"
+                }
+              ],
+              "reference": {
+                "ref": "A.orbitals.U"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a-null-config-knob-in-a-reference-declaration-is-unread",
+      "entity": {
+        "file": "c.orb",
+        "program": {
+          "ledger": {
+            "entries": {
+              "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                "bakedName": "Account",
+                "curName": "Account",
+                "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                "kind": "orbital",
+                "owner": "workspace",
+                "renames": []
+              }
+            },
+            "schemaVersion": 1
+          },
+          "name": "c",
+          "orbitals": [
+            {
+              "entity": "Up.orbitals.NoteOrbital.entity",
+              "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+              "name": "Account",
+              "reference": {
+                "omit": [
+                  "T3"
+                ],
+                "ref": "Up.orbitals.NoteOrbital"
+              },
+              "traits": [],
+              "uses": [
+                {
+                  "as": "Up",
+                  "from": "./upstream.orb"
+                }
+              ]
+            }
+          ],
+          "schemaVersion": 1,
+          "version": "1.0.0"
+        },
+        "refs": [
+          {
+            "kind": "orbital",
+            "alias": "Up",
+            "name": "NoteOrbital",
+            "path": "orbitals[0]",
+            "callSite": {
+              "ref": "Up.orbitals.NoteOrbital",
+              "omit": [
+                "T3"
+              ]
+            },
+            "declaration": {
+              "name": "NoteOrbital",
+              "traits": [
+                {
+                  "name": "T1",
+                  "id": "trt_0HFPJ829R14W0YYPPXPZYGMKBF",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "OPEN"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "OPEN",
+                        "effects": [
+                          [
+                            "render-ui",
+                            "main",
+                            {
+                              "type": "stack",
+                              "children": [
+                                "@trait.T2"
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "config": {
+                    "k": null
+                  }
+                },
+                {
+                  "name": "T2",
+                  "id": "trt_9Q0GV13ABAN5NBQ4QBW10J9M2P",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "OPEN"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "OPEN",
+                        "effects": []
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "T3",
+                  "id": "trt_57T3FSHEQQQBVXGR9B3NPAYA2S",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "OPEN"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "OPEN",
+                        "effects": []
+                      }
+                    ]
+                  }
+                }
+              ],
+              "entity": {
+                "name": "Note",
+                "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                "persistence": "persistent",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "withRefs": true,
+        "withStamp": false,
+        "raw": "{}"
+      },
+      "steps": [
+        {
+          "trait": "CallSiteInput",
+          "event": "LINT_COMPOSE",
+          "from": "reading",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_CALL_SITES_UNREAD",
+                "payload": {
+                  "file": "c.orb",
+                  "error": "a reference declaration holds a null config knob: T1.k"
                 }
               }
             ]

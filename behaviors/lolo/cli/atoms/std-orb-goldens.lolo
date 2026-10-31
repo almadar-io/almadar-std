@@ -51,21 +51,21 @@ orbital GoldensOrbital {
 
     state ready {
       INIT -> ready
-      GOLDENS_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      GOLDENS_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit GOLDENS_ANSWERED { status: 400, body: "usage: orb goldens <file.goldens.json>" })
-      GOLDENS_CALLED -> reading when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (str/endsWith (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") ".goldens.json"))
-        (set @entity.files [(default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")])
+      GOLDENS_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json"))
+        (set @entity.files [(default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")])
         (set @entity.fileCursor 0)
         (set @entity.lines [])
         (emit GOLDENS_FILE_NEXT {})
-      GOLDENS_CALLED -> listing when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") ".goldens.json")) (not (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))))
-        (set @entity.dir (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (not (os/path-is-absolute (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))))
+        (set @entity.dir (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (set @entity.lines [])
-        (os/glob { anchor: "cwd" path: (os/path-join (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") "**" "*.replay.goldens.json") } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
-      GOLDENS_CALLED -> listing when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "")))
-        (set @entity.dir (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))
+        (os/glob { anchor: "cwd" path: (os/path-join (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "**" "*.replay.goldens.json") } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") ".goldens.json")) (os/path-is-absolute (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "")))
+        (set @entity.dir (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (set @entity.lines [])
-        (os/glob (str/concat "/" (str/slice (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") 1 (str/len (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) "/**/*.replay.goldens.json") { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
+        (os/glob (str/concat "/" (str/slice (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") 1 (str/len (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))) "/**/*.replay.goldens.json") { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
     }
 
     state listing {
@@ -265,7 +265,7 @@ orbital GoldensOrbital {
     listens {
       GOLDENS_CALLED -> inbound "cli-goldens" answers GOLDENS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb goldens` with its arguments and working directory."
         @synonyms "orb goldens, replay goldens, parity goldens"

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-30T11:36:05.139Z",
+  "generated": "2026-10-30T20:31:23.347Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -1650,6 +1650,13 @@
       "visual": {
         "form": "block"
       },
+      "returnSemantics": "identity-of-arg<0>",
+      "valueSourceSlots": {
+        "kind": "listed",
+        "args": [
+          0
+        ]
+      },
       "title": "Flatten",
       "params": [
         {
@@ -3192,6 +3199,77 @@
       ],
       "docsSource": "generated"
     },
+    "auth/consent": {
+      "category": "std-auth",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Send the viewer to an authorization URL through the host and return the redirect it ends on. The request is { authorizeUrl }; the host opens it, waits for the redirect back, and answers the code and state query params of the final URL as they are (state checking stays in the program). Success carries { code, state }; failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.",
+      "module": "auth",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "code": "string",
+            "state": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "authorizeUrl": "string"
+            }
+          },
+          "description": "The authorization URL the viewer is sent to"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the { code, state } payload and the { error, kind } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(auth/consent {\"authorizeUrl\":\"@entity.authorizeUrl\"} {\"emit\":{\"success\":\"CONSENT_GRANTED\",\"failure\":\"CONSENT_FAILED\"}})"
+      ],
+      "docsSource": "module"
+    },
     "auth/sign-in": {
       "category": "std-auth",
       "minArity": 1,
@@ -3723,11 +3801,38 @@
                   "value": null
                 }
               ]
+            },
+            "vectorsRel": {
+              "kind": "union",
+              "of": [
+                "string",
+                {
+                  "kind": "literal",
+                  "value": null
+                }
+              ]
+            },
+            "vectorsIn": {
+              "kind": "union",
+              "of": [
+                {
+                  "kind": "union",
+                  "of": [
+                    "node-modules",
+                    "sidecars",
+                    "outside"
+                  ]
+                },
+                {
+                  "kind": "literal",
+                  "value": null
+                }
+              ]
             }
           }
         }
       },
-      "description": "The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none).",
+      "description": "The installed behavior packages, each `{ root, prefix, vectors, vectorsRel, vectorsIn }`: its directory, its behavior prefix and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none). `vectorsIn` is a fixed anchor a program spells as a literal and `vectorsRel` the snapshot relative to it: `node-modules` (`<cwd>/node_modules`, `vectorsRel` starting at the package name), `sidecars` (the default `~/.almadar/sidecars`, `vectorsRel` the cached name) or `outside` (a node_modules higher up the ancestors, a linked package whose real path is elsewhere, a custom sidecar cache; `vectorsRel` `null`). No snapshot answers `vectorsRel` and `vectorsIn` `null`.",
       "module": "behavior",
       "visual": {
         "form": "actuator"
@@ -7353,7 +7458,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared, services }.",
+      "description": "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service, name and, for a secret of eight or more characters, its last four; never a value), the declared credential names the host's own environment holds (env: name and, for a value of eight or more characters, its last four; empty on a host that reads no environment), the credentials the registered programs declare (group, envVar, description) and the services registry's catalog (name, backend, credentials with envVar, required, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, env, declared, services }.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7378,6 +7483,19 @@
                   "last4"
                 ],
                 "open": false
+              }
+            },
+            "env": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "name": "string",
+                  "last4": "string"
+                },
+                "optional": [
+                  "last4"
+                ]
               }
             },
             "declared": {
@@ -7407,15 +7525,13 @@
                         "envVar": "string",
                         "required": "boolean",
                         "description": "string"
-                      },
-                      "open": false
+                      }
                     }
                   }
                 },
                 "optional": [
                   "backend"
-                ],
-                "open": false
+                ]
               }
             }
           }
@@ -11919,6 +12035,10 @@
       "visual": {
         "form": "block"
       },
+      "returnSemantics": "union-of-args",
+      "valueSourceSlots": {
+        "kind": "args"
+      },
       "title": "List",
       "params": [
         {
@@ -13747,24 +13867,14 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": {
-        "kind": "union",
-        "of": [
-          {
-            "kind": "mergeOf",
-            "of": "R"
-          },
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
+        "kind": "mergeOf",
+        "of": "R"
       },
-      "description": "Deep merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
+      "description": "Deep merge objects (later wins).",
       "module": "object",
       "visual": {
         "form": "block"
       },
-      "failable": {},
       "title": "Deep Merge",
       "params": [
         {
@@ -13940,31 +14050,21 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": {
-        "kind": "union",
-        "of": [
-          {
-            "kind": "map",
-            "key": {
-              "kind": "var",
-              "name": "K"
-            },
-            "value": {
-              "kind": "var",
-              "name": "V"
-            }
-          },
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
+        "kind": "map",
+        "key": {
+          "kind": "var",
+          "name": "K"
+        },
+        "value": {
+          "kind": "var",
+          "name": "V"
+        }
       },
-      "description": "Create object from [key, value] pairs. A `__proto__` key (or path segment) is refused with an error",
+      "description": "Create object from [key, value] pairs.",
       "module": "object",
       "visual": {
         "form": "block"
       },
-      "failable": {},
       "title": "From Entries",
       "params": [
         {
@@ -14135,31 +14235,21 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "union",
-        "of": [
-          {
-            "kind": "map",
-            "key": {
-              "kind": "var",
-              "name": "J"
-            },
-            "value": {
-              "kind": "var",
-              "name": "V"
-            }
-          },
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
+        "kind": "map",
+        "key": {
+          "kind": "var",
+          "name": "J"
+        },
+        "value": {
+          "kind": "var",
+          "name": "V"
+        }
       },
-      "description": "Transform all keys. A `__proto__` key (or path segment) is refused with an error",
+      "description": "Transform all keys.",
       "module": "object",
       "visual": {
         "form": "conveyor"
       },
-      "failable": {},
       "lambdaArgPosition": 1,
       "title": "Map Keys",
       "params": [
@@ -14267,24 +14357,14 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": {
-        "kind": "union",
-        "of": [
-          {
-            "kind": "mergeOf",
-            "of": "R"
-          },
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
+        "kind": "mergeOf",
+        "of": "R"
       },
-      "description": "Shallow merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
+      "description": "Shallow merge objects (later wins).",
       "module": "object",
       "visual": {
         "form": "block"
       },
-      "failable": {},
       "title": "Merge",
       "params": [
         {
@@ -14408,7 +14488,7 @@
           }
         ]
       },
-      "description": "Set nested value by path (returns new object). A `__proto__` key (or path segment) is refused with an error",
+      "description": "Set nested value by path (returns new object).",
       "module": "object",
       "visual": {
         "form": "block"
@@ -23177,7 +23257,13 @@
       "maxArity": 6,
       "returnType": {
         "kind": "array",
-        "of": "cell"
+        "of": {
+          "kind": "object",
+          "fields": {
+            "x": "number",
+            "y": "number"
+          }
+        }
       },
       "description": "A* shortest path on a w×h grid; returns cells start→goal (incl. both) or [] if none",
       "module": "path",
@@ -23232,7 +23318,13 @@
       "maxArity": 6,
       "returnType": {
         "kind": "array",
-        "of": "cell"
+        "of": {
+          "kind": "object",
+          "fields": {
+            "x": "number",
+            "y": "number"
+          }
+        }
       },
       "description": "BFS cells reachable within N moves from start (incl. start); sorted row-major",
       "module": "path",

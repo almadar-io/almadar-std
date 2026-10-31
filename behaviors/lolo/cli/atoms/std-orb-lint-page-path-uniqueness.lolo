@@ -52,13 +52,14 @@ orbital OrbLintPagePathUniquenessOrbital {
                                              (json/stringify @addr)))))))
                             (if (= @key null) []
                               [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: @pth, key: @key }])))))))))))))
-            (let ((keys (array/map @entries (fn en (object/get @en "key")))))
-              (array/flatten (array/map (array/range 0 (array/len @keys)) (fn ki
-                (let ((key (array/nth @keys @ki)))
-                  (let ((at (array/filter (array/range 0 (array/len @keys)) (fn j (= (array/nth @keys @j) @key)))))
-                    (if (or (< (array/len @at) 2) (!= (array/first @at) @ki))
+            (array/flatten (array/map @entries (fn en
+              (let ((same (array/filter @entries (fn e (= (object/get @e "key") (object/get @en "key"))))))
+                (if (< (array/len @same) 2)
+                  []
+                  (let ((lead (array/first @same)))
+                    (if (or (= @lead null) (!= (object/get @lead "loc") (object/get @en "loc")))
                       []
-                      [{ code: @config.codes.pDuplicatePath.code, path: (object/get (array/nth @entries @ki) "loc"), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "path")))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
+                      [{ code: @config.codes.pDuplicatePath.code, path: (object/get @en "loc"), message: (str/concat "Duplicate page path (normalized to '" (object/get @en "key") "'): [" (str/join (array/map @same (fn e (json/stringify (object/get @e "path")))) ", ") "] found at: [" (str/join (array/map @same (fn e (json/stringify (object/get @e "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-path-uniqueness", scope: @entity.scope, findings: @entity.findings })
@@ -74,7 +75,7 @@ orbital OrbLintPagePathUniquenessOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageUniquenessProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageUniquenessProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -91,10 +92,10 @@ orbital OrbLintPagePathUniquenessOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path-uniqueness <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path-uniqueness <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path-uniqueness <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -128,7 +129,7 @@ orbital OrbLintPagePathUniquenessOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-page-path-uniqueness" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint page-path-uniqueness` with its arguments and working directory."
         @synonyms "orb lint page-path-uniqueness"

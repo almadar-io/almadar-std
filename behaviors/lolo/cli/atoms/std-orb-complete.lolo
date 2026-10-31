@@ -85,11 +85,11 @@ orbital OrbCompleteOrbital {
 
     state ready {
       INIT -> ready
-      COMPLETE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      COMPLETE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit COMPLETE_ANSWERED { status: 400, body: "usage: orb complete <file.lolo> --offset <n>" })
-      COMPLETE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit COMPLETE_ARGS_PARSE { stage: "complete" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "offset" aliases: [] takesValue: true repeatable: false }, { name: "stdin" aliases: [] takesValue: false repeatable: false }] })
+      COMPLETE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit COMPLETE_ARGS_PARSE { stage: "complete" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "offset" aliases: [] takesValue: true repeatable: false }, { name: "stdin" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -134,7 +134,7 @@ orbital OrbCompleteOrbital {
     listens {
       COMPLETE_CALLED -> inbound "cli-complete" answers COMPLETE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb complete`."
         @synonyms "orb complete, what is valid at a cursor offset in a lolo file"

@@ -30,10 +30,10 @@ orbital OrbParseOrbital {
 
     state ready {
       INIT -> ready
-      PARSE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      PARSE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit PARSE_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'." })
-      PARSE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [] })
+      PARSE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
     }
 
     state parsing {
@@ -79,7 +79,7 @@ orbital OrbParseOrbital {
     listens {
       PARSE_CALLED -> inbound "cli-parse" answers PARSE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb parse`."
         @synonyms "orb parse, summarize a lolo program, orbital and trait counts"

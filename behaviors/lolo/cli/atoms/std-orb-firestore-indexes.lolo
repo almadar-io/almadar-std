@@ -34,11 +34,11 @@ orbital OrbFirestoreIndexesOrbital {
 
     state ready {
       INIT -> ready
-      FIRESTORE_INDEXES_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      FIRESTORE_INDEXES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit FIRESTORE_INDEXES_ANSWERED { status: 400, body: "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]" })
-      FIRESTORE_INDEXES_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit FIRESTORE_INDEXES_ARGS_PARSE { stage: "firestore-indexes" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "scope" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
+      FIRESTORE_INDEXES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit FIRESTORE_INDEXES_ARGS_PARSE { stage: "firestore-indexes" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "scope" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -130,7 +130,7 @@ orbital OrbFirestoreIndexesOrbital {
     listens {
       FIRESTORE_INDEXES_CALLED -> inbound "cli-firestore-indexes" answers FIRESTORE_INDEXES_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb firestore-indexes`."
         @synonyms "orb firestore-indexes, generate firestore.indexes.json, composite indexes from @index, firestore index file"

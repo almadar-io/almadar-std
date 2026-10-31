@@ -20,7 +20,7 @@ type EfMachineRB = { events : [EfKey], transitions : [EfTransitionRB] }
 type EfTraitRB = { name : string, linkedEntity : string, emits : [EfEvt], listens : [EfListen], stateMachine : EfMachineRB }
 type EfEntity = { name : string, fields : [EfVal?] }
 type EfOrbitalRB = { name : string, entity : EfEntity, auxiliaryEntities : [EfEntity], traits : [EfTraitRB] }
-type EfProgramRB = { orbitals : [EfOrbitalRB] }
+type EfProgramRB = { orbitals : [EfOrbitalRB]! }
 type EfStale = { pat : string!, prop : string!, ev : string! }
 type EfSetHit = { f : string!, v : EfVal?, nm : string! }
 type EfPropShape = { kind : string? }
@@ -179,7 +179,7 @@ orbital OrbLintRuiBindingOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRB  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRB!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
@@ -193,10 +193,10 @@ orbital OrbLintRuiBindingOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-binding <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-binding <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-binding <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -230,7 +230,7 @@ orbital OrbLintRuiBindingOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-rui-binding" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint rui-binding` with its arguments and working directory."
         @synonyms "orb lint rui-binding"

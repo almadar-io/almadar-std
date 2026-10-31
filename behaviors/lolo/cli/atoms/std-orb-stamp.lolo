@@ -27,11 +27,11 @@ orbital OrbStampOrbital {
 
     state ready {
       INIT -> ready
-      STAMP_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      STAMP_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit STAMP_ANSWERED { status: 400, body: "", stderr: "usage: orb stamp <FILE> [--prior FILE] [-o|--output FILE] [--imports DIR]" })
-      STAMP_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit STAMP_ARGS_PARSE { stage: "stamp" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "prior" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "imports" aliases: [] takesValue: true repeatable: false }] })
+      STAMP_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit STAMP_ARGS_PARSE { stage: "stamp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "prior" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "imports" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -75,7 +75,7 @@ orbital OrbStampOrbital {
     listens {
       STAMP_CALLED -> inbound "cli-stamp" answers STAMP_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb stamp`."
         @synonyms "orb stamp, assign ids to an orb schema, V4 identity ledger, byte-stable re-stamp"

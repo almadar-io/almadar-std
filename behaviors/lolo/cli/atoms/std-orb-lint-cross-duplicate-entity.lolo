@@ -9,8 +9,11 @@ app std-orb-lint-cross-duplicate-entity [
 uses Spec from "almadar-std/lint-cross-duplicate-entity"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type CrossDupEntity = { name : string }
-type CrossDupOrbital = { name : string, entity : CrossDupEntity }
+type CrossDupField = { name : string!, type : string! }
+type CrossDupEntity = { name : string, collection : string, fields : [CrossDupField] }
+type CrossDupOrbital = { name : string, entity : CrossDupEntity, auxiliaryEntities : [CrossDupEntity] }
+type CrossDupDecl = { orb : string!, owned : boolean!, name : string!, collection : string!, fields : [CrossDupField]! }
+type CrossDupFit = { c : CrossDupDecl!, w : CrossDupDecl! }
 type CrossDupProgram = { orbitals : [CrossDupOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -34,12 +37,34 @@ orbital OrbLintCrossDuplicateEntityOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((owners (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") null)))))
+            (let ((dupNames (array/filter @owners (fn x (and (!= @x null) (> (array/len (array/filter @owners (fn y (= @y @x)))) 1))))))
+             (let ((ents (array/flatten (array/map @orbitals (fn o
+                    (array/concat
+                      (if (validate/object (object/get @o "entity" {})) [{ orb: (default @o.name ""), owned: true, name: (default @o.entity.name ""), collection: (default @o.entity.collection ""), fields: (default @o.entity.fields []) }] [])
+                      (array/map (default @o.auxiliaryEntities []) (fn a { orb: (default @o.name ""), owned: false, name: (default @a.name ""), collection: (default @a.collection ""), fields: (default @a.fields []) }))))))))
+              (array/concat
+                (let ((ownedFindings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (let ((owners (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") null)))))
             (array/flatten (array/map (array/range 0 (array/len @owners)) (fn oi
               (let ((nm (array/nth @owners @oi)))
                 (if (or (= @nm null) (!= (array/first (array/filter (array/range 0 (array/len @owners)) (fn j (= (array/nth @owners @j) @nm)))) @oi) (< (array/len (array/filter @owners (fn x (= @x @nm)))) 2))
                   []
-                  (let ((places (array/map (array/filter @orbitals (fn o (= (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") null) @nm))) (fn o (str/concat "\"" (object/get @o "name") "\"")))))
-                    [{ code: @config.codes.xDuplicateEntity.code, path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals: [" (str/join @places ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }])))))))))
+                  (let ((places (array/map (array/filter @orbitals (fn o (= (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") null) @nm))) (fn o (str/concat "\"" (default (object/get @o "name") "") "\"")))))
+                    [{ code: @config.codes.xDuplicateEntity.code, path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals: [" (str/join @places ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }]))))))))))
+                  @ownedFindings)
+                (array/flatten (array/map (array/unique (array/map @ents (fn x @x.name))) (fn nm
+                  (let ((group (array/filter @ents (fn x (= @x.name @nm)))))
+                    (let ((involved (array/unique (array/map (array/filter @group (fn x (array/some @group (fn y (and (!= @x.orb @y.orb)
+                      (let ((dir (array/map [{ c: @x, w: @y }, { c: @y, w: @x }] (fn d
+                        (and (= @d.c.collection @d.w.collection)
+                          (array/every @d.c.fields (fn f (array/some @d.w.fields (fn g (and (= @g.name @f.name) (= @g.type @f.type)))))))))))
+                        (if (= @x.owned true) (not (default (array/nth @dir 1) false))
+                          (if (= @y.owned true) (not (default (array/nth @dir 0) false))
+                            (not (or (default (array/nth @dir 0) false) (default (array/nth @dir 1) false)))))))))))
+                      (fn x @x.orb)))))
+                      (if (or (array/includes @dupNames @nm) (= (array/len @involved) 0))
+                        []
+                        [{ code: @config.codes.xDuplicateEntity.code, path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals with different shapes: [" (str/join (array/map @involved (fn o (str/concat "\"" @o "\""))) ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "cross-duplicate-entity", scope: @entity.scope, findings: @entity.findings })
@@ -72,10 +97,10 @@ orbital OrbLintCrossDuplicateEntityOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint cross-duplicate-entity <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint cross-duplicate-entity <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -109,7 +134,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-cross-duplicate-entity" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint cross-duplicate-entity` with its arguments and working directory."
         @synonyms "orb lint cross-duplicate-entity, orb lint cross-duplicate-entity, values union default"

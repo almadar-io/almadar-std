@@ -11,9 +11,9 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ListenTransition = { event : string }
 type ListenMachine = { transitions : [ListenTransition] }
 type ListenEntry = { event : string, triggers : string }
-type ListenTrait = { name : string, stateMachine : ListenMachine, listens : [ListenEntry] }
-type ListenOrbital = { name : string, traits : [ListenTrait] }
-type ListenProgram = { orbitals : [ListenOrbital] }
+type ListenTrait = { name : string!, stateMachine : ListenMachine, listens : [ListenEntry] }
+type ListenOrbital = { name : string!, traits : [ListenTrait] }
+type ListenProgram = { orbitals : [ListenOrbital]! }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -40,7 +40,7 @@ orbital OrbLintListenTriggerOrbital {
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/filter @trs (fn t (and (object/has @t "stateMachine") (object/has @t "listens")))) (fn t
-                  (let ((handled (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (object/get @x "event"))))
+                  (let ((handled (let ((sm (object/get @t "stateMachine"))) (if (= @sm null) [] (array/map (object/get @sm "transitions" []) (fn x (object/get @x "event"))))))
                         (lsn (object/get @t "listens" [])))
                     (array/map (array/filter @lsn (fn l (not (array/includes @handled (object/get @l "triggers" (object/get @l "event"))))))
                       (fn l { code: @config.codes.xListenTriggerUnmatched.code, path: (str/concat "orbitals." (object/get @o "name") ".traits." (object/get @t "name") ".listens"), message: (str/concat "Listen entry in '" (object/get @o "name") "." (object/get @t "name") "' triggers '" (object/get @l "triggers" (object/get @l "event")) "' but no transition in the same trait reacts to it."), suggestion: "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.", severity: "error" })))))))))))))
@@ -59,7 +59,7 @@ orbital OrbLintListenTriggerOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ListenProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ListenProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -78,10 +78,10 @@ orbital OrbLintListenTriggerOrbital {
       INIT -> ready
       LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint listen-trigger: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-trigger <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-trigger <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-trigger <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -115,7 +115,7 @@ orbital OrbLintListenTriggerOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-listen-trigger" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint listen-trigger` with its arguments and working directory."
         @synonyms "orb lint listen-trigger, orb lint listen-trigger, values union default"

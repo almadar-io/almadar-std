@@ -38,11 +38,11 @@ orbital OrbLaunchpadOrbital {
 
     state ready {
       INIT -> ready
-      LAUNCHPAD_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      LAUNCHPAD_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
-      LAUNCHPAD_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit LAUNCHPAD_ARGS_PARSE { stage: "launchpad" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }] })
+      LAUNCHPAD_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit LAUNCHPAD_ARGS_PARSE { stage: "launchpad" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: ["-p"] takesValue: true repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -128,7 +128,7 @@ orbital OrbLaunchpadOrbital {
     listens {
       LAUNCHPAD_CALLED -> inbound "cli-launchpad" answers LAUNCHPAD_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb launchpad`."
         @synonyms "orb launchpad, open the launchpad, browse every installed behavior and run one"

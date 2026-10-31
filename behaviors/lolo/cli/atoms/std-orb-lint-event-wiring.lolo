@@ -19,12 +19,12 @@ type EwTick = { effects : [EwNode?] }
 type EwSb = { behavior : string }
 type EwTrait = { name : string, sourceBehavior : EwSb?, emits : [EwEmit], listens : [EwListen], stateMachine : EwMachine, ticks : [EwTick] }
 type EwOrbital = { name : string, traits : [EwTrait] }
-type EwProgram = { orbitals : [EwOrbital] }
+type EwProgram = { orbitals : [EwOrbital]! }
 type EwEmitRec = { event : string!, scope : string!, knob : boolean!, ovr : boolean! }
 type EwListenRec = { event : string!, trig : string!, scope : string!, kind : string!, st : string!, so : string! }
 type EwRec = { o : string!, n : string!, imp : boolean!, dyn : boolean!, em : [EwEmitRec]!, ls : [EwListenRec]!, te : [string]!, top : [string]!, fe : [string]!, ae : [string]!, ps : [string]! }
 type EwRecMap = Map string [EwRec]
-type EwPair = { ev : string!, t : string!, key : string! }
+type EwPair = { ev : string!, t : string!, key : string!, ek : string! }
 type EwPairMap = Map string [EwPair]
 type EwStrMap = Map string [string]
 type EwR = { s : [string]!, o : [string]!, a : [string]!, oa : [string]!, b : boolean! }
@@ -206,7 +206,7 @@ orbital OrbLintEventWiringOrbital {
                     (trigEvs (array/flatten (array/map @recs (fn r (object/get @r "te")))))
                     (lisEvs (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (!= (object/get @l "scope") "external"))) (fn l (object/get @l "event")))))))
                     (psAll (array/flatten (array/map @recs (fn r (object/get @r "ps"))))))
-                (let ((emU : [EwPair] (let ((g : EwPairMap (array/groupBy @emPairs "ek"))) (array/map (array/sort (array/unique (array/map @emPairs (fn p (object/get @p "key"))))) (fn kk (array/first (object/get @g (str/replaceAll (str/replaceAll @kk "~" "~t") "." "~d")))))))
+                (let ((emU : [EwPair] (let ((g : EwPairMap (array/groupBy @emPairs "ek"))) (array/sort (array/flatten (array/map (object/values @g) (fn grp (array/take @grp 1)))) "key")))
                       (emSet (default (object/fromEntries (array/map @emPairs (fn x [ (str/replaceAll (str/replaceAll (object/get @x "ev") "~" "~t") "." "~d"), true]))) {}))
                       (softSet (default (object/fromEntries (array/map @softEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
                       (trigSet (default (object/fromEntries (array/map @trigEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
@@ -216,7 +216,7 @@ orbital OrbLintEventWiringOrbital {
                       (expSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "external"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
                       (csSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (and (= (object/get @x "scope") "external") (object/get @x "ovr")))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
                       (offSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (object/get @x "knob"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {})))
-                  (let ((orphanPairs : [EwPair] (let ((ol : [EwPair] (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (and (!= (object/get @l "scope") "external") (!= (object/get @l "kind") "any") (!= (object/get @l "kind") "orbital") (not (object/has @emSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @softSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @trigSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d")))))) (fn l { ev: (object/get @l "event"), t: (object/get @r "n"), key: (str/concat (object/get @l "event") "|" (object/get @r "n")), ek: (str/replaceAll (str/replaceAll (str/concat (object/get @l "event") "|" (object/get @r "n")) "~" "~t") "." "~d") }))))))) (let ((g : EwPairMap (array/groupBy @ol "ek"))) (array/map (array/sort (array/unique (array/map @ol (fn p (object/get @p "key"))))) (fn kk (array/first (object/get @g (str/replaceAll (str/replaceAll @kk "~" "~t") "." "~d"))))))))
+                  (let ((orphanPairs : [EwPair] (let ((ol : [EwPair] (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (and (!= (object/get @l "scope") "external") (!= (object/get @l "kind") "any") (!= (object/get @l "kind") "orbital") (not (object/has @emSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @softSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @trigSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d")))))) (fn l { ev: (object/get @l "event"), t: (object/get @r "n"), key: (str/concat (object/get @l "event") "|" (object/get @r "n")), ek: (str/replaceAll (str/replaceAll (str/concat (object/get @l "event") "|" (object/get @r "n")) "~" "~t") "." "~d") }))))))) (let ((g : EwPairMap (array/groupBy @ol "ek"))) (array/sort (array/flatten (array/map (object/values @g) (fn grp (array/take @grp 1)))) "key"))))
                         (byOrb : EwRecMap (array/groupBy @recs "o")))
                     (array/concat
                       (array/concat
@@ -299,10 +299,10 @@ orbital OrbLintEventWiringOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-wiring <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-wiring <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-wiring <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -336,7 +336,7 @@ orbital OrbLintEventWiringOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-event-wiring" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint event-wiring` with its arguments and working directory."
         @synonyms "orb lint event-wiring"
@@ -355,7 +355,7 @@ orbital OrbLintEventWiringOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
       FIRED_WALK_HEARD { slots : Map string WalkSlot! }
         @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
-      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
@@ -373,7 +373,7 @@ orbital OrbLintEventWiringOrbital {
         @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
       PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
-      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD

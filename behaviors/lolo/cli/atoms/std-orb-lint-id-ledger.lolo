@@ -9,15 +9,16 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type IdVal = string | number | boolean | [IdVal?] | Map string IdVal?
 type IdEntity = { id : string, extends : string }
+type IdAcc = { n : number!, rows : [IdNode]! }
 type IdEvent = { id : string }
 type IdMachine = { events : [IdEvent] }
 type IdTrait = { id : string, ref : string, stateMachine : IdMachine? }
 type IdPage = { id : string, ref : string }
-type IdOrbital = { id : string, entity : IdVal?, auxiliaryEntities : [IdVal?], traits : [IdTrait], pages : [IdPage] }
+type IdOrbital = { id : string, entity : IdEntity!, auxiliaryEntities : [IdEntity], traits : [IdTrait], pages : [IdPage] }
 type IdProgram = { orbitals : [IdOrbital] }
 type IdRef = { kind : string!, path : string!, name : string! }
 type IdKept = { orbital : number!, traits : [string]! }
-type IdNode = { path : string!, before : string, after : string }
+type IdNode = { path : string!, before : string!, after : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintIdLedgerCodes = { idAuthoredWithoutLedger : LintCodeDecl }
@@ -38,38 +39,33 @@ orbital OrbLintIdLedgerOrbital {
       LINT_CALL_SITES -> ready
         (set @entity.findings (if (= @payload.stamped null)
           []
-          (let ((authored (object/get @payload.program "orbitals" [])) (stamped (object/get @payload.stamped "orbitals" [])))
+          (let ((init : IdAcc { n: 0, rows: [] }))
             (array/map
                 (array/filter
-                  (array/flatten (array/map (array/range 0 (array/len @authored)) (fn oi
-                    (let ((a (array/nth @authored @oi)) (s (array/nth @stamped @oi)))
-                      (let ((at (str/concat "orbitals[" @oi "]")) (ae (if (validate/object (object/get @a "entity" null)) (as (object/get @a "entity" null) IdEntity) null)) (se (if (validate/object (object/get @s "entity" null)) (as (object/get @s "entity" null) IdEntity) null)))
-                        (array/concat
-                          [{ path: (str/concat @at ".id"), before: (object/get @a "id" ""), after: (object/get @s "id" "") }]
-                          (array/concat
-                            (if (and (!= @ae null) (= (object/get @ae "extends" "") ""))
-                              [{ path: (str/concat @at ".entity.id"), before: (object/get @ae "id" ""), after: (object/get @se "id" "") }]
-                              [])
-                            (array/concat
-                              (array/flatten (array/map (array/range 0 (array/len (object/get @a "auxiliaryEntities" []))) (fn ai
-                                (let ((xe (if (validate/object (array/nth (object/get @a "auxiliaryEntities" []) @ai)) (as (array/nth (object/get @a "auxiliaryEntities" []) @ai) IdEntity) null)) (ye (if (validate/object (array/nth (object/get @s "auxiliaryEntities" []) @ai)) (as (array/nth (object/get @s "auxiliaryEntities" []) @ai) IdEntity) null)))
-                                  (if (and (!= @xe null) (= (object/get @xe "extends" "") ""))
-                                    [{ path: (str/concat @at ".auxiliaryEntities[" @ai "].id"), before: (object/get @xe "id" ""), after: (object/get @ye "id" "") }]
-                                    [])))))
-                              (array/concat
-                                (array/flatten (array/map (array/range 0 (array/len (object/get @a "traits" []))) (fn ti
-                                  (let ((t (array/nth (object/get @a "traits" []) @ti)) (u (array/nth (object/get @s "traits" []) @ti)))
-                                    (array/concat
-                                      [{ path: (str/concat @at ".traits[" @ti "].id"), before: (object/get @t "id" ""), after: (object/get @u "id" "") }]
-                                      (if (and (= (object/get @t "ref" "") "") (!= (object/get @t "stateMachine" null) null))
-                                        (array/map (array/range 0 (array/len (object/get (object/get @t "stateMachine" {}) "events" []))) (fn ei
-                                          { path: (str/concat @at ".traits[" @ti "].stateMachine.events[" @ei "].id"), before: (object/get (array/nth (object/get (object/get @t "stateMachine" {}) "events" []) @ei) "id" ""), after: (object/get (array/nth (object/get (object/get @u "stateMachine" {}) "events" []) @ei) "id" "") }))
-                                        []))))))
-                                (array/flatten (array/map (array/range 0 (array/len (object/get @a "pages" []))) (fn pi
-                                  (let ((p (array/nth (object/get @a "pages" []) @pi)) (q (array/nth (object/get @s "pages" []) @pi)))
-                                    (if (= (object/get @p "ref" "") "")
-                                      [{ path: (str/concat @at ".pages[" @pi "].id"), before: (object/get @p "id" ""), after: (object/get @q "id" "") }]
-                                      []))))))))))))))
+                  (object/get (array/reduce (array/zip (object/get @payload.program "orbitals" []) (object/get @payload.stamped "orbitals" [])) @init (fn (oa op)
+                    (let ((a (array/nth @op 0)) (s (array/nth @op 1)) (at (str/concat "orbitals[" (object/get @oa "n") "]")))
+                      { n: (+ (object/get @oa "n") 1), rows: (array/concat (object/get @oa "rows")
+                        [{ path: (str/concat @at ".id"), before: (object/get @a "id" ""), after: (object/get @s "id" "") }]
+                        (if (= (object/get (object/get @a "entity") "extends" "") "")
+                          [{ path: (str/concat @at ".entity.id"), before: (object/get (object/get @a "entity") "id" ""), after: (object/get (object/get @s "entity") "id" "") }]
+                          [])
+                        (object/get (array/reduce (array/zip (object/get @a "auxiliaryEntities" []) (object/get @s "auxiliaryEntities" [])) @init (fn (xa xp)
+                          (let ((xe (array/nth @xp 0)) (ye (array/nth @xp 1)))
+                            { n: (+ (object/get @xa "n") 1), rows: (if (= (object/get @xe "extends" "") "")
+                              (array/concat (object/get @xa "rows") [{ path: (str/concat @at ".auxiliaryEntities[" (object/get @xa "n") "].id"), before: (object/get @xe "id" ""), after: (object/get @ye "id" "") }])
+                              (object/get @xa "rows")) }))) "rows")
+                        (object/get (array/reduce (array/zip (object/get @a "traits" []) (object/get @s "traits" [])) @init (fn (ta tp)
+                          (let ((t (array/nth @tp 0)) (u (array/nth @tp 1)) (tm (object/get (array/nth @tp 0) "stateMachine")) (um (object/get (array/nth @tp 1) "stateMachine")))
+                            { n: (+ (object/get @ta "n") 1), rows: (array/concat (object/get @ta "rows")
+                              [{ path: (str/concat @at ".traits[" (object/get @ta "n") "].id"), before: (object/get @t "id" ""), after: (object/get @u "id" "") }]
+                              (if (or (!= (object/get @t "ref" "") "") (= @tm null) (= @um null)) []
+                                (object/get (array/reduce (array/zip (object/get @tm "events" []) (object/get @um "events" [])) @init (fn (ea ep)
+                                  { n: (+ (object/get @ea "n") 1), rows: (array/concat (object/get @ea "rows") [{ path: (str/concat @at ".traits[" (object/get @ta "n") "].stateMachine.events[" (object/get @ea "n") "].id"), before: (object/get (array/nth @ep 0) "id" ""), after: (object/get (array/nth @ep 1) "id" "") }]) })) "rows"))) }))) "rows")
+                        (object/get (array/reduce (array/zip (object/get @a "pages" []) (object/get @s "pages" [])) @init (fn (pa pp)
+                          (let ((p (array/nth @pp 0)) (q (array/nth @pp 1)))
+                            { n: (+ (object/get @pa "n") 1), rows: (if (= (object/get @p "ref" "") "")
+                              (array/concat (object/get @pa "rows") [{ path: (str/concat @at ".pages[" (object/get @pa "n") "].id"), before: (object/get @p "id" ""), after: (object/get @q "id" "") }])
+                              (object/get @pa "rows")) }))) "rows")) }))) "rows")
                   (fn n (and (!= (object/get @n "before") "") (!= (object/get @n "before") (object/get @n "after")))))
                 (fn n { code: @config.codes.idAuthoredWithoutLedger.code, path: (object/get @n "path"), message: (str/concat (object/get @n "path") " \"" (object/get @n "before") "\" is replaced on load: the .orb has no ledger"), suggestion: "add a ledger, or drop the id", severity: "warning" })))))
         (emit LINT_FINISH { })
@@ -107,7 +103,7 @@ orbital OrbLintIdLedgerOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-ledger <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: true, references: false })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint id-ledger <file>" }) (emit LINT_CALL_SITES_REQUEST { file: @argFile, stamp: true, references: false })))
     }
 
     state waiting {
@@ -141,7 +137,7 @@ orbital OrbLintIdLedgerOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-id-ledger" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint id-ledger` with its arguments and working directory."
         @synonyms "orb lint id-ledger"

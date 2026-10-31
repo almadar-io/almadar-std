@@ -17,9 +17,9 @@ type SsTick = { effects : [SsExpr] }
 type SsMachine = { transitions : [SsTr], events : [SsEvent] }
 type SsCfg = { default : SsExpr }
 type SsTrait = { name : string, linkedEntity : string, stateMachine : SsMachine, ticks : [SsTick], config : Map string SsCfg }
-type SsName = { name : string, intrinsic : boolean }
-type SsEntity = { name : string, shared : boolean, persistence : string, fields : [SsName] }
-type SsOrbital = { name : string, entity : SsEntity, auxiliaryEntities : [SsEntity], traits : [SsTrait] }
+type SsName = { name : string!, intrinsic : boolean? }
+type SsEntity = { name : string!, shared : boolean?, persistence : string?, fields : [SsName]? }
+type SsOrbital = { name : string, entity : SsEntity!, auxiliaryEntities : [SsEntity]?, traits : [SsTrait] }
 type SsProgram = { orbitals : [SsOrbital] }
 type SsDef = { shared : boolean, persistent : boolean, exempt : [string] }
 type SsAsk = { oi : number!, ti : number!, w : string!, j : number!, x : SsExpr? }
@@ -67,9 +67,9 @@ orbital OrbLintBindingSettersOrbital {
         (set @entity.semanticsHeard true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.orbitals (let ((nProg : SsProgram { orbitals: [] })) (object/get (default @payload.program @nProg) "orbitals" [])))
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
         (emit BS_ASK { asks: (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nProg : SsProgram { orbitals: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nxs : [SsAsk] []))
-          (let ((orbitals : [SsOrbital] (object/get (default @payload.program @nProg) "orbitals" [])))
+          (let ((orbitals : [SsOrbital] (object/get @payload.program "orbitals" [])))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((o : SsOrbital (default (array/nth @orbitals @oi) @nOrb)))
                 (let ((trts : [SsTrait] (object/get @o "traits" [])))
@@ -153,7 +153,7 @@ orbital OrbLintBindingSettersOrbital {
       BS_FIND -> ready
         (set @entity.findings (let ((nof : [OrbFinding] []) (nosc : [SsSiteC] []) (nopairs : [SsPair] []) (npair : SsPair { f: "", ev: "" }) (nostr : [string] []) (nonum : [number] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nolinks : [SsLink] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nrow : SsT { oi: 0, n: "", l: "", tp: "", trs: [], tk: [], cfg: [], hasCfg: false, ro: false, pls: {} }) (ntr : SsRow { ev: "", g: [], e: [] }) (nsc : SsSiteC { emb: [], site: { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false } }) (nSets : SsSets { n: "", s: [] }) (nDef : SsDef { shared: false, persistent: false, exempt: [] }) (nPay : SsPay { schema: null }) (nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (ncl : SsLink { c: "", i: 0 }) (nf : SsField { name: "", properties: null }) (nfm : SsWalk { lv: [], miss: "", stop: false })
               (busEx : [string] @entity.busExcluded) (eP : string (str/concat (quote "@") "entity.")) (eB : string (str/concat (quote "@") "entity")) (cpP : string (str/concat (quote "@") "callsitePayload."))
-              (entIdx : Map string SsDef (default (object/fromEntries (array/flatten (array/map @entity.orbitals (fn o (array/map (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e))) (fn e [(object/get @e "name" ""), { shared: (object/get @e "shared" false), persistent: (= (object/get @e "persistence" "persistent") "persistent"), exempt: (array/map (array/filter (object/get @e "fields" []) (fn f (or (object/get @f "intrinsic" false) (object/has @f "default")))) (fn f (object/get @f "name" ""))) }])))))) {})))
+              (entIdx : Map string SsDef (default (object/fromEntries (array/flatten (array/map @entity.orbitals (fn o (array/map (array/concat [(object/get @o "entity")] (object/get @o "auxiliaryEntities" [])) (fn e [(object/get @e "name"), { shared: (object/get @e "shared" false), persistent: (= (object/get @e "persistence" "persistent") "persistent"), exempt: (array/map (array/filter (object/get @e "fields" []) (fn f (or (object/get @f "intrinsic" false) (object/has @f "default")))) (fn f (object/get @f "name"))) }])))))) {})))
           (array/flatten (array/map (array/range 0 (array/len @entity.orbitals)) (fn oi
             (let ((rows : [SsT] (array/filter @entity.rows (fn r (= (object/get @r "oi") @oi)))))
               (let ((names : [string] (array/map @rows (fn r (object/get @r "n" ""))))
@@ -306,10 +306,10 @@ orbital OrbLintBindingSettersOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-setters <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-setters <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -343,7 +343,7 @@ orbital OrbLintBindingSettersOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-binding-setters" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint binding-setters` with its arguments and working directory."
         @synonyms "orb lint binding-setters"

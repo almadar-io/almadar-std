@@ -46,11 +46,11 @@ orbital OrbMcpInstallOrbital {
 
     state ready {
       INIT -> ready
-      MCP_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      MCP_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit MCP_ARGS_UNREAD { })
-      MCP_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })
+      MCP_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -167,7 +167,7 @@ orbital OrbMcpInstallOrbital {
     listens {
       MCP_CALLED -> inbound "cli-mcp-install" answers MCP_INSTALL_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb mcp install` with its --client flag."
         @synonyms "orb mcp install, register the orb mcp server in a client config"

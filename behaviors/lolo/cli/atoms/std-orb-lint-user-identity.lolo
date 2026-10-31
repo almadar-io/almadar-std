@@ -52,18 +52,16 @@ orbital OrbLintUserIdentityOrbital {
        (primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))
        (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
   (let ((hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0))))
-   (let ((declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
+   (let ((declList (if (> (array/len @primIds) 0) (array/take @primIds 1) (array/take @auxIds 1))))
     (array/concat (array/concat (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
  (let ((orb (array/nth @orbs @oi)))
   (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s24 (object/get @e "kind" ""))) (if (validate/string @s24) @s24 "")) "identity"))))
         (trlist (object/get @orb "traits" [])))
    (let ((hasExp (> (array/len @exps) 0)))
-    (let ((exp (array/first @exps)))
-     (let ((hasShape (and @hasExp (object/has @exp "shape"))))
-      (let ((expNm (if (and @hasExp (object/has @exp "name")) (object/get @exp "name" "") (quote "@user"))))
-       (let ((envs (array/concat
-                    (if @hasDecl [{ f: (object/get @declared "fields" []), nm: (object/get @declared "name" ""), skip: false }] (if @hasShape [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))
-                    (if (and @hasDecl @hasShape) [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))))
+    (let ((exp0 (array/take @exps 1)))
+     (let ((envs (array/concat
+                    (array/flatten (array/map @declList (fn declared [{ f: (object/get @declared "fields" []), nm: (object/get @declared "name" ""), skip: false }])))
+                    (array/flatten (array/map (array/filter @exp0 (fn e (object/has @e "shape"))) (fn exp [{ f: (object/get @exp "shape" []), nm: (let ((nmx (object/get @exp "name" null))) (if (validate/string @nmx) @nmx (quote "@user"))), skip: true }]))))))
         (array/flatten (array/map @envs (fn env
          (let ((idF (object/get @env "f")) (idNm (object/get @env "nm")) (skip (object/get @env "skip")))
           (array/flatten (array/map (array/range 0 (array/len @trlist)) (fn ti
@@ -84,10 +82,7 @@ orbital OrbLintUserIdentityOrbital {
       (if (= (array/len @sns) 0) []
        (let ((sn (array/first @sns)))
         (let ((vocab (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @sn)))))
- (if (= (array/len @vf) 0) @nov
-  (let ((fd0 (array/first @vf)))
-   (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
-    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov)))))))
+ (array/flatten (array/map (array/take @vf 1) (fn fd0 (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov) (let ((it (object/get @fd0 "items" null))) (if (= @it null) @nov (object/get @it "values" @nov))))))))))
          (if (= (array/len @vocab) 0) []
           (let ((lits (if @incl
                        (let ((lit0 (array/first @litSide)))
@@ -108,15 +103,12 @@ orbital OrbLintUserIdentityOrbital {
   [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }]
   [])))))
                @nof))
-             @nof)))))))))))))))))))  (if (not @hasDecl) @nof
+             @nof)))))))))))))))))  (array/flatten (array/map @declList (fn declared
  (let ((idF (object/get @declared "fields" [])) (idnm (object/get @declared "name" "")))
   (let ((rf (array/flatten (array/map @idF (fn fd (if (object/has @fd "name") (let ((nmv (object/get @fd "name" ""))) (let ((vc (let ((vf (array/filter @idF (fn fd (= (object/get @fd "name" "") @nmv)))))
- (if (= (array/len @vf) 0) @nov
-  (let ((fd0 (array/first @vf)))
-   (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov)
-    (if (object/has @fd0 "items") (object/get (object/get @fd0 "items") "values" @nov) @nov))))))) (if (> (array/len @vc) 0) [{ name: @nmv, vocab: @vc }] []))) []))))))
+ (array/flatten (array/map (array/take @vf 1) (fn fd0 (if (> (array/len (object/get @fd0 "values" @nov)) 0) (object/get @fd0 "values" @nov) (let ((it (object/get @fd0 "items" null))) (if (= @it null) @nov (object/get @it "values" @nov)))))))))) (if (> (array/len @vc) 0) [{ name: @nmv, vocab: @vc }] []))) []))))))
    (if (= (array/len @rf) 0) @nof
-    (let ((first0 (array/first @rf)))
+    (array/flatten (array/map (array/take @rf 1) (fn first0
      (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
       (let ((pgs (object/get (array/nth @orbs @oi) "pages" [])))
        (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn k
@@ -124,12 +116,12 @@ orbital OrbLintUserIdentityOrbital {
          (if (validate/object @pg)
           (array/flatten (array/map (array/filter (object/get @pg "roles" []) (fn role (not (array/some @rf (fn r (array/includes (object/get @r "vocab") @role)))))) (fn role
            [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
-          @nof)))))))))))))) ) (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+          @nof)))))))))))))))))) ) (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
  (let ((orb (array/nth @orbs @oi)))
   (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
    (let ((td (array/nth (object/get @orb "traits" []) @ti)))
     (if (validate/object (object/get @td "stateMachine" null))
-     (let ((emits (object/get @td "emits" [])) (trs (object/get (object/get @td "stateMachine") "transitions" [])))
+     (let ((emits (object/get @td "emits" [])) (trs (let ((sm (object/get @td "stateMachine" null))) (if (validate/object @sm) (object/get @sm "transitions" []) []))))
       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn xi
        (let ((tr (array/nth @trs @xi)) (path (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]")))
         (let ((g (object/get @tr "guard" null)))
@@ -162,7 +154,7 @@ orbital OrbLintUserIdentityOrbital {
          (if (and (validate/string @e1) (validate/object @e2))
           (let ((decls (array/filter @emits (fn d (= (object/get @d "event" "") @e1)))))
            (if (= (array/len @decls) 0) @nos
-            (array/flatten (array/map (object/get (array/first @decls) "payloadSchema" []) (fn f
+            (array/flatten (array/map (array/flatten (array/map (array/take @decls 1) (fn d0 (object/get @d0 "payloadSchema" [])))) (fn f
              (let ((fnm (object/get @f "name" "")) (v (object/get @e2 (object/get @f "name" "") null)))
               (if (and (object/get @f "required" false) (and (validate/string @v) (= @v (quote "@user")))) [{ a: (str/concat "Emit '" @e1 "' payload field '" @fnm "'") }] @nos)))))))
           @nos))
@@ -172,7 +164,7 @@ orbital OrbLintUserIdentityOrbital {
          (if (and (validate/string @e1) (or (= @e1 "create") (= @e1 "update") (= @e1 "upsert")) (validate/string @e2) (validate/object @e3))
           (let ((defs (array/filter @ents (fn d (= (object/get @d "name" "") @e2)))))
            (if (= (array/len @defs) 0) @nos
-            (array/flatten (array/map (array/filter (object/get (array/first @defs) "fields" []) (fn f (and (object/get @f "required" false) (object/has @f "name")))) (fn f
+            (array/flatten (array/map (array/filter (array/flatten (array/map (array/take @defs 1) (fn d0 (object/get @d0 "fields" [])))) (fn f (and (object/get @f "required" false) (object/has @f "name")))) (fn f
              (let ((fnm (object/get @f "name" "")) (v (object/get @e3 (object/get @f "name" "") null)))
               (if (and (validate/string @v) (= @v (quote "@user"))) [{ a: (str/concat "Entity '" @e2 "' field '" @fnm "'") }] @nos)))))))
           @nos))
@@ -200,7 +192,7 @@ orbital OrbLintUserIdentityOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UidProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UidProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
         @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses; a trait gates on its roots holding @user."
@@ -220,10 +212,10 @@ orbital OrbLintUserIdentityOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint user-identity <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint user-identity <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint user-identity <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -257,7 +249,7 @@ orbital OrbLintUserIdentityOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-user-identity" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint user-identity` with its arguments and working directory."
         @synonyms "orb lint user-identity, orb lint user-identity, user identity"

@@ -17,7 +17,7 @@ type TrSrc = { behavior : string }
 type TrSrcEnt = { name : string }
 type TrContract = { requires : [string] }
 type TrTrait = { name : string, id : string, linkedEntity : string, ref : string, sourceBehavior : TrSrc, sourceEntityDefinition : TrSrcEnt, entityRebindable : boolean, entityContract : TrContract, stateMachine : TrVal }
-type TrOrbital = { name : string, entity : TrEntity, auxiliaryEntities : [TrEntity], expects : [TrExpect], traits : [TrTrait] }
+type TrOrbital = { name : string, entity : TrEntity!, auxiliaryEntities : [TrEntity], expects : [TrExpect], traits : [TrTrait] }
 type TrProgram = { orbitals : [TrOrbital] }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintTraitRefsCodes = { tUndefinedTrait : LintCodeDecl , eInvalidRelation : LintCodeDecl , tRebindTargetUnresolved : LintCodeDecl , tEntityNotRebindable : LintCodeDecl , tRebindMissingFields : LintCodeDecl , tInvalidFormat : LintCodeDecl , tDuplicateName : LintCodeDecl }
@@ -54,7 +54,7 @@ orbital OrbLintTraitRefsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TrProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TrProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -74,7 +74,7 @@ orbital OrbLintTraitRefsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-refs <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-refs <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -108,7 +108,7 @@ orbital OrbLintTraitRefsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-trait-refs" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint trait-refs` with its arguments and working directory."
         @synonyms "orb lint trait-refs"

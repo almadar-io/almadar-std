@@ -6,7 +6,7 @@ app std-ci-status [
 uses Spec from "almadar-std/ci-status"
 type CiWorkflow = { name : string }
 type CiWorkflowRun = { databaseId : number!, url : string!, createdAt : string!, workflow : CiWorkflow }
-type CiCheckSuite = { status : string!, conclusion : string?, workflowRun : CiWorkflowRun! }
+type CiCheckSuite = { status : string!, conclusion : string?, workflowRun : CiWorkflowRun? }
 type CiSuiteConnection = { nodes : [CiCheckSuite] }
 type CiCommit = { checkSuites : CiSuiteConnection }
 type CiHistory = { nodes : [CiCommit] }
@@ -19,9 +19,9 @@ type CiOrganization = { repositories : CiRepositoryConnection }
 type CiData = { organization : CiOrganization }
 type CiReply = { data : CiData }
 type CiRun = { repo : string, fullName : string, status : string, conclusion : string?, name : string, url : string, databaseId : number, createdAt : string }
-type CiRunRow = { id : string, repo : string, name : string, status : string, conclusion : string?, createdAt : string, runId : number }
-type CiExtraRepo = { owner : string, name : string, displayName : string }
-type CiGithubRun = { id : number, name : string, status : string, conclusion : string?, created_at : string, html_url : string }
+type CiRunRow = { id : string!, repo : string!, name : string!, status : string!, conclusion : string?, createdAt : string!, runId : number! }
+type CiExtraRepo = { owner : string!, name : string!, displayName : string! }
+type CiGithubRun = { id : number!, name : string!, status : string!, conclusion : string?, created_at : string!, html_url : string! }
 orbital CiStatusOrbital {
   uses Github from "std/behaviors/std-github"
   uses Retry from "std/behaviors/std-retry"
@@ -29,7 +29,7 @@ orbital CiStatusOrbital {
   entity CiStatusBoard [runtime] {
     id : string!
     runs : [CiRun] @description "The board last answered." = []
-    fetchedAt : string @description "ISO time of the read the board came from; empty before the first." = ""
+    fetchedAt : instant @description "When the read the board came from began; the epoch before the first." = "1970-01-01T00:00:00.000Z"
     cachedAt : instant @description "ISO-8601 instant at which the board was cached." = "1970-01-01T00:00:00.000Z"
     hasCache : boolean @description "Whether a board has been cached." = false
     loading : boolean @description "Whether a read is in flight." = false
@@ -73,9 +73,10 @@ orbital CiStatusOrbital {
       INIT -> idle when @config.loadOnInit
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (emit CI_STATUS_LOAD { })
+      ;; the nth defaults never fire: the row id is owner/repo, built from fullName
       CI_RUN_OPEN -> idle when (= @payload.row.conclusion "failure")
-        (emit CI_RUN_SELECTED { owner: (array/nth (str/split @payload.id "/") 0), repo: (array/nth (str/split @payload.id "/") 1), runId: (str/concat @payload.row.runId) })
-        (when (!= @config.logsPage "") (navigate (str/concat "/" @config.logsPage "/" (array/nth (str/split @payload.id "/") 0) "/" (array/nth (str/split @payload.id "/") 1) "/" @payload.row.runId)))
+        (emit CI_RUN_SELECTED { owner: (default (array/nth (str/split @payload.id "/") 0) ""), repo: (default (array/nth (str/split @payload.id "/") 1) ""), runId: (str/concat @payload.row.runId) })
+        (when (!= @config.logsPage "") (navigate (str/concat "/" @config.logsPage "/" (default (array/nth (str/split @payload.id "/") 0) "") "/" (default (array/nth (str/split @payload.id "/") 1) "") "/" @payload.row.runId)))
       CI_RUN_OPEN -> idle when (!= @payload.row.conclusion "failure")
       CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs))
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
@@ -110,12 +111,14 @@ orbital CiStatusOrbital {
       CI_ATTEMPT -> loading when (== @payload.key @entity.key)
         (emit CI_GQL { query: (str/concat "\nquery OrgRuns($org: String!, $appId: Int!, $cursor: String) {\n  organization(login: $org) {\n    repositories(first: " @config.pageSize ", after: $cursor, orderBy: {field: PUSHED_AT, direction: DESC}) {\n      pageInfo { hasNextPage endCursor }\n      nodes {\n        name\n        defaultBranchRef {\n          target {\n            ... on Commit {\n              history(first: " @config.historyDepth ") {\n                nodes {\n                  checkSuites(first: " @config.checkSuiteDepth ", filterBy: {appId: $appId}) {\n                    nodes {\n                      status\n                      conclusion\n                      workflowRun {\n                        databaseId\n                        url\n                        createdAt\n                        workflow { name }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"), variables: (json/stringify { org: @config.org, appId: @config.appId, cursor: (if (= @entity.page 1) null @entity.cursor) }) })
 
-      CI_GQL_ANSWERED -> loading
+      CI_GQL_ANSWERED -> loading when (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))
         (emit CI_RETRY_SUCCEEDED { key: @entity.key })
-          (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: @s.workflowRun.createdAt, suite: @s })) "at" "desc"))) (if (= (array/len @ss) 0) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" } (let ((s (object/get (array/nth @ss 0) "suite"))) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: @s.workflowRun.url, databaseId: @s.workflowRun.databaseId, createdAt: @s.workflowRun.createdAt })))))))
+          (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: (object/get @s "workflowRun.createdAt" ""), suite: @s })) "at" "desc"))) (let ((top (array/nth @ss 0))) (if (== @top null) (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @r.name, fullName: (str/concat @config.org "/" @r.name) })) (let ((s @top.suite)) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: (object/get @s "workflowRun.url" ""), databaseId: (object/get @s "workflowRun.databaseId" 0), createdAt: (object/get @s "workflowRun.createdAt" "") }))))))))
         (set @entity.more (and (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.hasNextPage" false) (!= (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" "") "") (< @entity.page @config.maxPages)))
         (set @entity.cursor (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" ""))
         (emit CI_PAGE_READ { })
+      CI_GQL_ANSWERED -> loading when (not (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null)))
+        (emit CI_RETRY_FAILED { key: @entity.key, error: "GitHub answered something that is not an organization repository list" })
       CI_PAGE_READ -> loading when @entity.more
         (set @entity.page (+ @entity.page 1))
         (set @entity.seq (+ @entity.seq 1))
@@ -183,7 +186,7 @@ orbital CiStatusOrbital {
     emits {
       CI_STATUS -> external {
         runs : [CiRun]!
-        fetchedAt : string!
+        fetchedAt : instant!
         stale : boolean!
       }
         @description "The board: per repository its latest run's status, conclusion (absent while running), workflow name, url, run id and creation time, or status unknown; fetchedAt is when it was read, and stale says GitHub could not be read this time."

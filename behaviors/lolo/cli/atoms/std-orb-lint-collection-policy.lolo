@@ -9,9 +9,10 @@ app std-orb-lint-collection-policy [
 uses Spec from "almadar-std/lint-collection-policy"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type PolicyValue = string | number | boolean | [PolicyValue] | Map string PolicyValue
-type PolicyEntity = { name : string, collection : string, read_policy : PolicyValue, create_policy : PolicyValue, update_policy : PolicyValue, delete_policy : PolicyValue }
+type PolicyEntity = { name : string!, collection : string, read_policy : PolicyValue, create_policy : PolicyValue, update_policy : PolicyValue, delete_policy : PolicyValue }
 type PolicyOrbital = { entity : PolicyEntity, auxiliaryEntities : [PolicyEntity] }
-type PolicyProgram = { orbitals : [PolicyOrbital] }
+type PolicyScan = { firsts : [PolicyEntity]!, found : [OrbFinding]! }
+type PolicyProgram = { orbitals : [PolicyOrbital]! }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -33,18 +34,18 @@ orbital OrbLintCollectionPolicyOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((es (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((o (default (array/nth @orbitals @oi) {})))
-              (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))
-                (fn en (and (validate/object @en) (object/has @en "collection") (or (object/has @en "read_policy") (object/has @en "create_policy") (object/has @en "update_policy") (object/has @en "delete_policy")))))))))))
-            (array/flatten (array/map (array/range 0 (array/len @es)) (fn i
-              (let ((en (default (array/nth @es @i) {})))
-                (let ((fi (array/first (array/filter (array/range 0 (array/len @es)) (fn j (= (object/get (default (array/nth @es @j) {}) "collection") (object/get @en "collection"))))))
-                      (first (default (array/find @es (fn x (= (object/get @x "collection") (object/get @en "collection")))) {})))
-                  (if (and (!= @fi @i) (!= [(object/get @first "read_policy" "") (object/get @first "create_policy" "") (object/get @first "update_policy" "") (object/get @first "delete_policy" "")] [(object/get @en "read_policy" "") (object/get @en "create_policy" "") (object/get @en "update_policy" "") (object/get @en "delete_policy" "")]))
-                    [{ code: @config.codes.sCollectionPolicyConflict.code, path: (str/concat (object/get @en "name" "") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
-                    [])))))))))
+        (set @entity.findings (let ((es (array/flatten (array/map @payload.program.orbitals (fn o
+            (array/filter (array/concat (let ((e0 (object/get @o "entity"))) (if (= @e0 null) [] [@e0])) (object/get @o "auxiliaryEntities" []))
+              (fn en (and (validate/object @en) (object/has @en "collection") (or (object/has @en "read_policy") (object/has @en "create_policy") (object/has @en "update_policy") (object/has @en "delete_policy")))))))))
+          (st0 : PolicyScan { firsts: [], found: [] }))
+          (object/get (array/reduce @es @st0 (fn (acc en)
+            (let ((firsts : [PolicyEntity] (object/get @acc "firsts" [])) (found : [OrbFinding] (object/get @acc "found" [])))
+              (let ((first : PolicyEntity? (array/find @firsts (fn x (= (object/get @x "collection") (object/get @en "collection"))))))
+                (if (= @first null)
+                  { firsts: (array/append @firsts @en), found: @found }
+                  (if (!= [(object/get @first "read_policy" "") (object/get @first "create_policy" "") (object/get @first "update_policy" "") (object/get @first "delete_policy" "")] [(object/get @en "read_policy" "") (object/get @en "create_policy" "") (object/get @en "update_policy" "") (object/get @en "delete_policy" "")])
+                    { firsts: @firsts, found: (array/append @found { code: @config.codes.sCollectionPolicyConflict.code, path: (str/concat @en.name ".@access"), message: (str/concat "entities `" @first.name "` and `" @en.name "` both bind collection `" (object/get @en "collection" "") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }) }
+                    { firsts: @firsts, found: @found })))))) "found" [])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "collection-policy", scope: @entity.scope, findings: @entity.findings })
@@ -77,10 +78,10 @@ orbital OrbLintCollectionPolicyOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint collection-policy <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint collection-policy <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint collection-policy <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -114,7 +115,7 @@ orbital OrbLintCollectionPolicyOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-collection-policy" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint collection-policy` with its arguments and working directory."
         @synonyms "orb lint collection-policy, orb lint collection-policy, shared collection access directives"

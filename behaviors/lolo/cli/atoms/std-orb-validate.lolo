@@ -37,13 +37,13 @@ orbital OrbValidateOrbital {
     json : boolean = false
     denyWarnings : boolean = false
     finalProgram : boolean = false
-    report : ValidationReport
+    report : ValidationReport = { success: true, valid: true }
     cascade : [CascadeRoot] = []
     dropped : [CascadeDrop] = []
     errors : [ReportFinding] = []
     warnings : [ReportFinding] = []
     valid : boolean = false
-    options : ValidateOptions
+    options : ValidateOptions = { report: true, path: "", denyWarnings: false }
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -68,8 +68,9 @@ orbital OrbValidateOrbital {
       INIT -> parsing
       VALIDATE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
         (emit VALIDATE_ANSWERED { status: 400, body: "", stderr: "usage: orb validate <FILE> [--json] [--patterns <PATH>] [--services <PATH>] [--deny-warnings] [--final]" })
+      ;; the positional default never fires: this arm requires exactly one positional
       VALIDATE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (emit VALIDATE_START { file: (array/first @payload.positionals), path: (if (os/path-is-absolute (array/first @payload.positionals)) (array/first @payload.positionals) (os/path-join @entity.cwd (array/first @payload.positionals))), cwd: @entity.cwd, json: (!= (object/get @payload.flags "json") null), denyWarnings: (!= (object/get @payload.flags "deny-warnings") null), finalProgram: (!= (object/get @payload.flags "final") null), hasPatterns: (!= (object/get @payload.flags "patterns") null), patterns: (default (array/first (default (object/get @payload.flags "patterns") [""])) ""), hasServices: (!= (object/get @payload.flags "services") null), services: (default (array/first (default (object/get @payload.flags "services") [""])) "") })
+        (emit VALIDATE_START { file: (default (array/first @payload.positionals) ""), path: (if (os/path-is-absolute (default (array/first @payload.positionals) "")) (default (array/first @payload.positionals) "") (os/path-join @entity.cwd (default (array/first @payload.positionals) ""))), cwd: @entity.cwd, json: (object/has @payload.flags "json"), denyWarnings: (object/has @payload.flags "deny-warnings"), finalProgram: (object/has @payload.flags "final"), hasPatterns: (object/has @payload.flags "patterns"), patterns: (default (array/first (default (object/get @payload.flags "patterns") [""])) ""), hasServices: (object/has @payload.flags "services"), services: (default (array/first (default (object/get @payload.flags "services") [""])) "") })
     }
 
     state working {
@@ -112,7 +113,7 @@ orbital OrbValidateOrbital {
     listens {
       VALIDATE_CALLED -> inbound "cli-validate" answers VALIDATE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb validate`."
         @synonyms "orb validate, check a program, the 0 errors 0 warnings bar, validate a lolo file"
@@ -153,7 +154,7 @@ orbital OrbValidateOrbital {
         (set @entity.cascade (array/map (array/filter (array/flatten (array/map (array/filter @payload.found (fn r (= (object/get @r "rule") @config.cascadeRule))) (fn r (object/get @r "findings")))) (fn f (or (!= (object/get @f "entity" null) null) (!= (object/get @f "field" null) null)))) (fn f (object/merge (object/merge { orbital: (if (str/startsWith (object/get @f "path" "") (quote "orbitals[")) (default (str/to-int (default (array/first (str/split (default (array/first (str/split (str/slice (object/get @f "path" "") 9 (str/len (object/get @f "path" ""))) "]")) "") " ")) "")) -1) -1), code: (object/get @f "code"), path: (object/get @f "path"), message: (object/get @f "message") } (if (!= (object/get @f "entity" null) null) { entity: (object/get @f "entity") } {})) (if (!= (object/get @f "field" null) null) { field: (object/get @f "field") } {})))))
         (program/validate null (object/merge @entity.options { findings: (if @entity.finalProgram (array/concat @payload.findings @payload.final) @payload.findings) }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
       LINT_INPUT_UNREAD -> validating
-        (program/validate null (object/merge (default @entity.options {}) { findings: [{ code: @config.codes.lintInputUnread.code, path: "", message: (str/concat "the lint rules did not run: " @payload.file " could not be read or lowered" (if (= @payload.error "") "" (str/concat ": " @payload.error))), suggestion: "Fix the read error; the std lint rules need the file read and lowered before they run.", severity: "error", validValues: [] }] }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
+        (program/validate null (object/merge @entity.options { findings: [{ code: @config.codes.lintInputUnread.code, path: "", message: (str/concat "the lint rules did not run: " @payload.file " could not be read or lowered" (if (= @payload.error "") "" (str/concat ": " @payload.error))), suggestion: "Fix the read error; the std lint rules need the file read and lowered before they run.", severity: "error", validValues: [] }] }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
     }
 
     state validating {
@@ -175,10 +176,12 @@ orbital OrbValidateOrbital {
         (emit VALIDATE_ANSWERED { status: 200, body: (json/stringify (object/merge (object/merge (object/merge { success: (object/get @entity.report "success" true), valid: @entity.valid } (if (> (array/len @entity.errors) 0) { errors: @entity.errors } {})) (if (> (array/len @entity.warnings) 0) { warnings: @entity.warnings } {})) (if (object/has @entity.report "stats") { stats: (object/get @entity.report "stats") } {})) { pretty: true }) })
       VALIDATE_RENDER -> idle when (and (not @entity.json) (> (array/len @entity.errors) 0) (= (object/get (array/first @entity.errors) "code" "") "FILE_READ_ERROR"))
         (emit VALIDATE_ANSWERED { status: 500, body: (str/concat "Validating schema: " @entity.file), stderr: (str/concat "Error: " (str/replace (object/get (array/first @entity.errors) "message" "") "Failed to read schema file: " "")) })
+      ;; the line and suggestion defaults never fire: each is read only after object/has
       VALIDATE_RENDER -> idle when (and (not @entity.json) (> (array/len @entity.errors) 0) (!= (object/get (array/first @entity.errors) "code" "") "FILE_READ_ERROR"))
-        (emit VALIDATE_ANSWERED { status: 500, body: (str/concat "Validating schema: " @entity.file), stderr: (str/join (array/concat ["Schema validation errors:"] (array/map @entity.errors (fn f (str/concat "  ❌ " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line") ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion")) "")))) [(str/concat "Error: Schema validation failed with " (array/len @entity.errors) " error(s)")]) "\n") })
+        (emit VALIDATE_ANSWERED { status: 500, body: (str/concat "Validating schema: " @entity.file), stderr: (str/join (array/concat ["Schema validation errors:"] (array/map @entity.errors (fn f (str/concat "  ❌ " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line" 0) ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion" "")) "")))) [(str/concat "Error: Schema validation failed with " (array/len @entity.errors) " error(s)")]) "\n") })
+      ;; the line and suggestion defaults never fire: each is read only after object/has
       VALIDATE_RENDER -> idle when (and (not @entity.json) (= (array/len @entity.errors) 0) (> (array/len @entity.warnings) 0))
-        (emit VALIDATE_ANSWERED { status: (if @entity.denyWarnings 500 200), body: (str/join (array/concat [(str/concat "Validating schema: " @entity.file), "Schema validation warnings:"] (array/map @entity.warnings (fn f (str/concat "  ⚠️  " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line") ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion")) ""))))) "\n"), stderr: (if @entity.denyWarnings (str/concat "Error: Schema validation failed: " (array/len @entity.warnings) " warning(s) under --deny-warnings") "") })
+        (emit VALIDATE_ANSWERED { status: (if @entity.denyWarnings 500 200), body: (str/join (array/concat [(str/concat "Validating schema: " @entity.file), "Schema validation warnings:"] (array/map @entity.warnings (fn f (str/concat "  ⚠️  " (if (= (object/get @f "code" "") "") "" (str/concat "[" (object/get @f "code") "] " (object/get @f "path" "") ": ")) (object/get @f "message") (if (object/has @f "line") (str/concat " @ " (object/get @f "line" 0) ":" (object/get @f "column" 0)) "") (if (object/has @f "suggestion") (str/concat " 💡 " (object/get @f "suggestion" "")) ""))))) "\n"), stderr: (if @entity.denyWarnings (str/concat "Error: Schema validation failed: " (array/len @entity.warnings) " warning(s) under --deny-warnings") "") })
       VALIDATE_RENDER -> idle when (and (not @entity.json) (= (array/len @entity.errors) 0) (= (array/len @entity.warnings) 0))
         (emit VALIDATE_ANSWERED { status: 200, body: (str/concat "Validating schema: " @entity.file) })
     }
@@ -192,7 +195,7 @@ orbital OrbValidateOrbital {
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
       VALIDATE_REFUSED {
-        error : string
+        error : string!
       }
         @description "The host could not run the validation."
         @tier "internal"

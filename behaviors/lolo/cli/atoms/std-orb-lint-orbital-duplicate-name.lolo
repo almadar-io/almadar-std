@@ -36,9 +36,9 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
             (array/flatten (array/map (array/range 0 (array/len @names)) (fn oi
               (let ((nm (array/nth @names @oi)))
                 (let ((at (array/filter (array/range 0 (array/len @names)) (fn j (= (array/nth @names @j) @nm)))))
-                  (if (or (< (array/len @at) 2) (!= (array/first @at) @oi))
+                  (let ((second (array/nth @at 1))) (if (or (= @second null) (!= (array/first @at) @oi))
                     []
-                    [{ code: @config.codes.oDuplicateName.code, path: (str/concat "orbitals[" (array/nth @at 1) "]"), message: (str/concat "Orbital '" @nm "' is declared " (array/len @at) " times (orbitals [" (str/join (array/map @at (fn j (str/concat @j))) ", ") "])"), suggestion: "Give each orbital its own name", severity: "error" }])))))))))
+                    [{ code: @config.codes.oDuplicateName.code, path: (str/concat "orbitals[" @second "]"), message: (str/concat "Orbital '" @nm "' is declared " (array/len @at) " times (orbitals [" (str/join (array/map @at (fn j (str/concat @j))) ", ") "])"), suggestion: "Give each orbital its own name", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "orbital-duplicate-name", scope: @entity.scope, findings: @entity.findings })
@@ -54,7 +54,7 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DuplicateNameProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DuplicateNameProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -74,7 +74,7 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint orbital-duplicate-name <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint orbital-duplicate-name <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -108,7 +108,7 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-orbital-duplicate-name" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint orbital-duplicate-name` with its arguments and working directory."
         @synonyms "orb lint orbital-duplicate-name, orb lint orbital-duplicate-name, duplicate orbital name, orbital name uniqueness"

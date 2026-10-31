@@ -56,10 +56,10 @@ orbital OrbShellCheckOrbital {
 
     state ready {
       INIT -> ready
-      SC_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SC_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SHELL_CHECK_ANSWERED { status: 500, body: "Error: orb shell check: the command arguments could not be read", errors: [] })
-      SC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
+      SC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
       SHELL_LAYOUT_EVALUATE -> ready
         (set @entity.errors (array/concat
           (array/map (array/filter @payload.roots (fn dir (not (or (array/includes @config.fixedRoots @dir) (array/includes @config.metadataRoots @dir) (array/includes (array/map @config.roleRules (fn rule (object/get @rule "directory"))) @dir))))) (fn dir (str/concat "unexpected root directory: " @dir)))
@@ -156,7 +156,7 @@ orbital OrbShellCheckOrbital {
     }
 
     listens {
-      SC_CALLED -> inbound "cli-shell-check" answers SHELL_CHECK_ANSWERED { headers : Map string string rawBody : string }
+      SC_CALLED -> inbound "cli-shell-check" answers SHELL_CHECK_ANSWERED { headers : Map string string rawBody : string! }
       SC_ARGS_DONE { stage : string! flags : Map string [string]! positionals : [string]! errors : [string]! words : [string]! }
       ArgsCli.ARGS_PARSED -> SC_ARGS_DONE
     }

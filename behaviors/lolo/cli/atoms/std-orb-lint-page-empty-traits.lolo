@@ -49,9 +49,12 @@ orbital OrbLintPageEmptyTraitsOrbital {
                     (if (and (not (object/has @pg "traits")) (not (object/has @pg "primaryEntity")))
                       [{ code: @config.codes.pMissingTraits.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].traits"), message: "Page should have traits array for trait-driven UI", suggestion: "Add traits: ['TraitName'] to define page behavior", severity: "error" }]
                       [])
-                    (if (and (object/has @pg "viewType") (not (array/some ["list" "detail" "create" "edit" "dashboard" "custom"] (fn vt (= @vt (object/get @pg "viewType"))))))
-                      [{ code: @config.codes.pInvalidViewType.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].viewType"), message: (str/concat "Invalid view type: '" (object/get @pg "viewType") "'"), suggestion: "", severity: "error" }]
-                      [])
+                    (let ((viewType (object/get @pg "viewType" null)))
+                      (if (= @viewType null)
+                        []
+                        (if (array/some ["list" "detail" "create" "edit" "dashboard" "custom"] (fn vt (= @vt @viewType)))
+                          []
+                          [{ code: @config.codes.pInvalidViewType.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].viewType"), message: (str/concat "Invalid view type: '" @viewType "'"), suggestion: "", severity: "error" }])))
                     (array/flatten (array/map (array/range 0 (array/len (object/get @pg "traits" []))) (fn ti
                       (let ((tr (array/nth (object/get @pg "traits" []) @ti)))
                         (let ((tp (str/concat "orbitals[" @oi "].pages[" @pj "].traits[" @ti " (" (if (object/has @tr "stateMachine") (object/get @tr "name" "") (if (object/has @tr "ref") (object/get @tr "ref") (if (object/has @tr "name") (object/get @tr "name") "<anonymous>"))) ")]")))
@@ -82,7 +85,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageTraitsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageTraitsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -102,7 +105,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-empty-traits <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-empty-traits <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -136,7 +139,7 @@ orbital OrbLintPageEmptyTraitsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-page-empty-traits" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint page-empty-traits` with its arguments and working directory."
         @synonyms "orb lint page-empty-traits, duplicate field names"

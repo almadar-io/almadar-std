@@ -51,9 +51,9 @@ orbital OrbLintEffectFormsOrbital {
         (set @entity.opNames @payload.names)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.orbitals (object/get (default @payload.program { orbitals: [] }) "orbitals" []))
-        (set @entity.known (let ((orbitals (object/get (default @payload.program { orbitals: [] }) "orbitals" []))) (array/unique (array/filter (array/concat (array/map (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (object/get @x "name" ""))) (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "expects" []) (fn x (or (= (object/get @x "kind" "") "entity") (= (object/get @x "kind" "") "identity")))) (fn x (object/get @x "name" ""))))))) (fn n (!= @n ""))))))
-        (set @entity.defs (let ((orbitals (object/get (default @payload.program { orbitals: [] }) "orbitals" []))) (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] [])))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (default (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x]))) {})))))
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
+        (set @entity.known (let ((orbitals (object/get @payload.program "orbitals" []))) (array/unique (array/filter (array/concat (array/map (array/flatten (array/map @orbitals (fn o (array/concat (let ((oe (object/get @o "entity"))) (if (!= @oe null) [@oe] [])) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (object/get @x "name" ""))) (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "expects" []) (fn x (or (= (object/get @x "kind" "") "entity") (= (object/get @x "kind" "") "identity")))) (fn x (object/get @x "name" ""))))))) (fn n (!= @n ""))))))
+        (set @entity.defs (let ((orbitals (object/get @payload.program "orbitals" []))) (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (let ((oe (object/get @o "entity"))) (if (!= @oe null) [@oe] []))))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (default (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (let ((oe (object/get @o "entity"))) (if (!= @oe null) [@oe] [])) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x]))) {})))))
         (emit EF_POLICY { })
       EF_POLICY -> ready
         (emit LINT_EXPR_ASK { requestId: (str/concat "effect-forms-policy:" @entity.scope), items: (array/map (object/values @entity.defs) (fn d { e: (object/get @d "create_policy" null), eff: false })) })
@@ -113,10 +113,10 @@ orbital OrbLintEffectFormsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint effect-forms <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint effect-forms <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint effect-forms <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -150,7 +150,7 @@ orbital OrbLintEffectFormsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-effect-forms" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint effect-forms` with its arguments and working directory."
         @synonyms "orb lint effect-forms"

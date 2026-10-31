@@ -14,7 +14,7 @@ type ClientTickEntity = { name : string, persistence : string, shared : boolean 
 type ClientTickTrait = { name : string, ref : string, linkedEntity : string, dispatch : string, ticks : [ClientTickDecl], stateMachine : ClientTickMachine }
 type ClientTickMachine = { states : [ClientTickState] }
 type ClientTickState = { name : string }
-type ClientTickOrbital = { name : string, entity : ClientTickEntity, auxiliaryEntities : [ClientTickEntity], traits : [ClientTickTrait] }
+type ClientTickOrbital = { name : string, entity : ClientTickEntity!, auxiliaryEntities : [ClientTickEntity], traits : [ClientTickTrait] }
 type ClientTickLocalityProgram = { orbitals : [ClientTickOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -86,10 +86,10 @@ orbital OrbLintClientTickLocalityOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint client-tick-locality <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint client-tick-locality <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -123,7 +123,7 @@ orbital OrbLintClientTickLocalityOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-client-tick-locality" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint client-tick-locality` with its arguments and working directory."
         @synonyms "orb lint client-tick-locality"

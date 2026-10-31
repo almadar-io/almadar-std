@@ -1,13 +1,14 @@
 app std-http-boot-gate [
   version: "1.0.0",
   env: ["NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
-  description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. With services called and integrations not mocked it asks credential-list and sends std-credential-admin CRED_ADMIN_BOOT_CHECK: the catalog is the registry services, held is the names the store holds. The environment cannot be read by name (os/getenv needs a literal), so until credential-list answers it every required credential of a called service counts as held and the check never refuses on a credential. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
+  description: "std-http-boot-gate — the boot gate of the HTTP server program: what the orbital-server boot path does with boot_env_problems. At INIT it reads the declared variables one at a time with os/getenv (an unset one reads as blank) and, when the last is read, asks std-boot-env-check ENV_CHECK { env, production, mock }: production is NODE_ENV equal to production, mock is the mock knob or ALMADAR_INTEGRATIONS_MODE equal to mock. It hears ENV_CHECKED { problems, ok } and CORS_CONFIGURED; when it has heard both and the deployment is cleared it emits BOOT_CLEARED, which tells std-http1 to bind. Under production a non-empty problems list emits BOOT_REFUSED { problems } and the boot never clears; outside production it emits BOOT_WARNED { problems } and clears. A variable the grant does not let the gate read emits BOOT_REFUSED with the reason. With services called and integrations not mocked it asks credential-list and sends std-credential-admin CRED_ADMIN_BOOT_CHECK: the catalog is the registry services, held is the names the store holds plus the declared names the host environment sets (credential-list env). A required credential of a called service in neither is owed: under production the boot is refused naming it, elsewhere it warns. Bound to spec/net/http-boot-gate.lolo and spec/net/http-boot-gate.replay.goldens.json."
 ]
 uses Spec from "almadar-std/http-boot-gate"
 type GateVar = { name : string!, value : string! }
-type GateDeclared = { envVar : string!, required : boolean!, description : string!, oneOf : string! }
+type GateDeclared = { envVar : string!, required : boolean!, description : string! }
 type GateGroup = { service : string!, backend : string!, listed : boolean!, credentials : [GateDeclared]! }
 type GateEntry = { service : string!, name : string!, last4 : string }
+type GateEnvName = { name : string!, last4 : string }
 type GateProgramCred = { group : string!, envVar : string!, description : string! }
 type GateServiceCred = { envVar : string!, required : boolean!, description : string! }
 type GateService = { name : string!, backend : string, credentials : [GateServiceCred]! }
@@ -88,12 +89,11 @@ orbital HttpBootGateOrbital {
         (set @entity.production (= (object/get (default (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) { name: "", value: "" }) "value") "production"))
         (credential-list {} { emit: { success: CRED_LISTED failure: CRED_UNLISTED } })
 
-      ;; Interim: the environment view of credential-list does not exist yet, so a required credential of a called service that the store lacks may be in the environment and counts as held; the check never refuses on it, as before. Replace with the store names alone once credential-list answers the environment.
       CRED_LISTED -> reading
         (emit CRED_ADMIN_BOOT_CHECK {
-          catalog: (array/map @payload.services (fn sv { service: @sv.name, backend: (default @sv.backend ""), listed: true, credentials: (array/map @sv.credentials (fn c { envVar: @c.envVar, required: @c.required, description: @c.description, oneOf: "" })) })),
+          catalog: (array/map @payload.services (fn sv { service: @sv.name, backend: (default @sv.backend ""), listed: true, credentials: (array/map @sv.credentials (fn c { envVar: @c.envVar, required: @c.required, description: @c.description })) })),
           services: @entity.services,
-          held: (array/unique (array/concat (array/map @payload.entries (fn e @e.name)) (array/flatten (array/map (array/filter @payload.services (fn sv (array/includes @entity.services @sv.name))) (fn sv (array/map (array/filter @sv.credentials (fn c @c.required)) (fn c @c.envVar)))))))
+          held: (array/unique (array/concat (array/map @payload.entries (fn e @e.name)) (array/map @payload.env (fn e @e.name))))
         })
       CRED_UNLISTED -> reading
         (emit ENV_ASK { missing: [], error: @payload.error })
@@ -205,6 +205,7 @@ orbital HttpBootGateOrbital {
       CRED_LISTED {
         enabled : boolean!
         entries : [GateEntry]!
+        env : [GateEnvName]!
         declared : [GateProgramCred]!
         services : [GateService]!
       }
@@ -294,6 +295,7 @@ orbital HttpBootGateOrbital {
       CRED_LISTED {
         enabled : boolean!
         entries : [GateEntry]!
+        env : [GateEnvName]!
         declared : [GateProgramCred]!
         services : [GateService]!
       }

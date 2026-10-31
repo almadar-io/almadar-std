@@ -20,7 +20,7 @@ type BrExpect = { kind : string, name : string }
 type BrOrbitalBR = { name : string, expects : [BrExpect], entity : BrEntity, auxiliaryEntities : [BrEntity], traits : [BrTraitBR] }
 type BrProgramBR = { orbitals : [BrOrbitalBR] }
 type BrOpShape = { category : string, minArity : number }
-type BrHit = { rel : string, r : string, s : string }
+type BrHit = { rel : string!, r : string!, s : string! }
 type BrRoot = { x : BrShape?, w : string!, c : string! }
 type BrRH = { x : BrRoot, hs : [BrHit] }
 
@@ -125,7 +125,7 @@ orbital OrbLintBindingRootsOrbital {
                       @noroots)))))))))))) (knownIdx (default (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
       (rh (let ((nroot : BrRoot { x: null, w: "", c: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null)))))))) (let ((firstIdx (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {}))) (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@"))
-    [{ rel: "", r: (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "[")), s: @n }]
+    [{ rel: "", r: (str/replace-pattern (str/slice @n 1) "[.\\[].*$" ""), s: @n }]
     @nohits)
   (if (validate/array @n)
     (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
@@ -245,10 +245,10 @@ orbital OrbLintBindingRootsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-roots <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-roots <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -282,7 +282,7 @@ orbital OrbLintBindingRootsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-binding-roots" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint binding-roots` with its arguments and working directory."
         @synonyms "orb lint binding-roots"

@@ -11,6 +11,8 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type ThVal = string | number | boolean | [ThVal?] | Map string ThVal?
 type ThMap = Map string string
+type ThStr = string
+type ThSite = { path : string!, value : string!, kind : string! }
 type ThScale = Map string ThVal
 type ThTokens = { colors : ThMap, radii : ThMap, spacing : ThMap, typography : ThMap, typeScale : ThScale }
 type ThVariant = { colors : ThMap, typography : ThMap, typeScale : ThScale }
@@ -41,24 +43,25 @@ orbital OrbLintThemeValuesOrbital {
                     (let ((t (object/get @payload.program "theme" null))) (if (validate/object @t) [{ p: "theme", d: @t }] []))
                     (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                       (let ((t (object/get (array/nth @orbitals @oi) "theme" null))) (if (validate/object @t) [{ p: (str/concat "orbitals[" @oi "].theme"), d: @t }] []))))))))
-            (let ((sites (array/flatten (array/map @themes (fn th
+            (let ((sites : [ThSite] (array/flatten (array/map @themes (fn th
                     (let ((p (object/get @th "p")) (d (object/get @th "d")))
                       (let ((tk (object/get @d "tokens" {})) (vs (object/get @d "variants" {})))
-                        (let ((zero 0))
                           (array/concat
                             (if (and (validate/string (object/get @d "name" null)) (!= (object/get @d "name" "") "")) [] [{ path: (str/concat @p ".name"), value: "", kind: "name" }])
-                            (array/flatten (array/map [[(str/concat @p ".tokens.colors.") "color" (object/entries (object/get @tk "colors" {}))]
-                                                       [(str/concat @p ".tokens.radii.") "radius" (object/entries (object/get @tk "radii" {}))]
-                                                       [(str/concat @p ".tokens.spacing.") "spacing" (object/entries (object/get @tk "spacing" {}))]
-                                                       [(str/concat @p ".tokens.typeScale.") "font" (array/filter (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k [@k (object/get (object/get @tk "typeScale" {}) @k null)])) (fn kv (validate/string (array/nth @kv 1))))]
-                                                       [(str/concat @p ".tokens.typography.") "font" (array/filter (object/entries (object/get @tk "typography" {})) (fn kv (str/startsWith (array/nth @kv 0) "font-family")))]]
-                              (fn g (array/map (array/filter (array/nth @g 2) (fn kv (validate/string (array/nth @kv 1)))) (fn kv { path: (str/concat (array/nth @g 0) (array/nth @kv 0)), value: (array/nth @kv 1), kind: (array/nth @g 1) })))))
+                            (array/flatten (array/map [{ pre: (str/concat @p ".tokens.colors."), kind: "color", only: "", m: (object/get @tk "colors" {}) } { pre: (str/concat @p ".tokens.radii."), kind: "radius", only: "", m: (object/get @tk "radii" {}) } { pre: (str/concat @p ".tokens.spacing."), kind: "spacing", only: "", m: (object/get @tk "spacing" {}) }]
+                              (fn g (array/flatten (array/map (array/filter (object/keys (object/get @g "m")) (fn k (str/startsWith @k (object/get @g "only")))) (fn k (let ((v (object/get (object/get @g "m") @k))) (if (= @v null) [] [{ path: (str/concat (object/get @g "pre") @k), value: @v, kind: (object/get @g "kind") }]))))))))
+                            (array/flatten (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k (let ((v (as (object/get (object/get @tk "typeScale" {}) @k null) ThStr))) (if (= @v null) [] [{ path: (str/concat (str/concat @p ".tokens.typeScale.") @k), value: @v, kind: "font" }])))))
+                            (array/flatten (array/map [{ pre: (str/concat @p ".tokens.typography."), kind: "font", only: "font-family", m: (object/get @tk "typography" {}) }]
+                              (fn g (array/flatten (array/map (array/filter (object/keys (object/get @g "m")) (fn k (str/startsWith @k (object/get @g "only")))) (fn k (let ((v (object/get (object/get @g "m") @k))) (if (= @v null) [] [{ path: (str/concat (object/get @g "pre") @k), value: @v, kind: (object/get @g "kind") }]))))))))
                             (array/flatten (array/map (array/sort (object/keys @vs)) (fn vn
                               (let ((vr (object/get @vs @vn)) (vp (str/concat @p ".variants." @vn)))
-                                (array/flatten (array/map [[(str/concat @vp ".typeScale.") "font" (array/filter (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k [@k (object/get (object/get @vr "typeScale" {}) @k null)])) (fn kv (validate/string (array/nth @kv 1))))]
-                                                           [(str/concat @vp ".typography.") "font" (array/filter (object/entries (object/get @vr "typography" {})) (fn kv (str/startsWith (array/nth @kv 0) "font-family")))]
-                                                           [(str/concat @vp ".colors.") "color" (object/entries (object/get @vr "colors" {}))]]
-                                  (fn g (array/map (array/filter (array/nth @g 2) (fn kv (validate/string (array/nth @kv 1)))) (fn kv { path: (str/concat (array/nth @g 0) (array/nth @kv 0)), value: (array/nth @kv 1), kind: (array/nth @g 1) }))))))))))))))))))
+                                (if (= @vr null) []
+                                  (array/concat
+                                    (array/flatten (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k (let ((v (as (object/get (object/get @vr "typeScale" {}) @k null) ThStr))) (if (= @v null) [] [{ path: (str/concat (str/concat @vp ".typeScale.") @k), value: @v, kind: "font" }])))))
+                                    (array/flatten (array/map [{ pre: (str/concat @vp ".typography."), kind: "font", only: "font-family", m: (object/get @vr "typography" {}) }]
+                              (fn g (array/flatten (array/map (array/filter (object/keys (object/get @g "m")) (fn k (str/startsWith @k (object/get @g "only")))) (fn k (let ((v (object/get (object/get @g "m") @k))) (if (= @v null) [] [{ path: (str/concat (object/get @g "pre") @k), value: @v, kind: (object/get @g "kind") }]))))))))
+                                    (array/flatten (array/map [{ pre: (str/concat @vp ".colors."), kind: "color", only: "", m: (object/get @vr "colors" {}) }]
+                              (fn g (array/flatten (array/map (array/filter (object/keys (object/get @g "m")) (fn k (str/startsWith @k (object/get @g "only")))) (fn k (let ((v (object/get (object/get @g "m") @k))) (if (= @v null) [] [{ path: (str/concat (object/get @g "pre") @k), value: @v, kind: (object/get @g "kind") }]))))))))))))))))))))))
               (array/map (array/filter @sites (fn s (let ((v (object/get @s "value")) (k (object/get @s "kind")))
                   (if (= @k "name") true
                     (if (= @k "font") (not (let ((st (array/reduce (str/split @v "") { q: "", d: 0, cur: "", items: [] } (fn a c
@@ -93,7 +96,7 @@ orbital OrbLintThemeValuesOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -112,7 +115,7 @@ orbital OrbLintThemeValuesOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-values <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-values <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -146,7 +149,7 @@ orbital OrbLintThemeValuesOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-theme-values" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint theme-values` with its arguments and working directory."
         @synonyms "orb lint theme-values"

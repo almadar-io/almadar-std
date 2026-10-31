@@ -64,11 +64,11 @@ orbital OrbReferenceOrbital {
 
     state ready {
       INIT -> ready
-      REFERENCE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      REFERENCE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit REFERENCE_ANSWERED { status: 400, body: "usage: orb reference [TOPIC]" })
-      REFERENCE_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit REFERENCE_ARGS_PARSE { stage: "reference" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [] })
+      REFERENCE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit REFERENCE_ARGS_PARSE { stage: "reference" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
     }
 
     state parsing {
@@ -110,7 +110,7 @@ orbital OrbReferenceOrbital {
     listens {
       REFERENCE_CALLED -> inbound "cli-reference" answers REFERENCE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb reference`."
         @synonyms "orb reference, the language reference, a construct, the vocabulary, validation codes"

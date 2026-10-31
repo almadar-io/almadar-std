@@ -49,9 +49,9 @@ orbital OrbLintEntityFieldTypeOrbital {
                             (array/concat
                               (if (and (object/has @f "name") (= (object/get @f "name" "x") ""))
                                 [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: "Field name cannot be empty", suggestion: "Provide a valid camelCase field name", severity: "error" }]
-                                (if (and @payload.latin (validate/string (object/get @f "name" null)) (not (validate/pattern (object/get @f "name") "^[a-z][a-zA-Z0-9]*$")))
-                                  [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Field name '" (object/get @f "name") "' should be camelCase"), suggestion: "Use camelCase for field names (e.g., 'firstName', 'createdAt')", severity: "error" }]
-                                  []))
+                                (let ((nm (object/get @f "name" null))) (if (and @payload.latin (validate/string @nm) (not (validate/pattern @nm "^[a-z][a-zA-Z0-9]*$")))
+                                  [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Field name '" @nm "' should be camelCase"), suggestion: "Use camelCase for field names (e.g., 'firstName', 'createdAt')", severity: "error" }]
+                                  [])))
                               (if (array/includes @config.fieldTypes (object/get @f "type" "string"))
                                 []
                                 [{ code: @config.codes.eInvalidFieldType.code, path: (str/concat @base ".fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error", validValues: @config.fieldTypes }])
@@ -94,10 +94,10 @@ orbital OrbLintEntityFieldTypeOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-field-type <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-field-type <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-field-type <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -131,7 +131,7 @@ orbital OrbLintEntityFieldTypeOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-entity-field-type" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint entity-field-type` with its arguments and working directory."
         @synonyms "orb lint entity-field-type, entity field type"

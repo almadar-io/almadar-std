@@ -18,7 +18,7 @@ type FbEvent = { key : string, payloadSchema : [FbField] }
 type FbTransition = { effects : [FbVal] }
 type FbMachine = { events : [FbEvent], transitions : [FbTransition] }
 type FbTrait = { name : string, emits : [FbEmit], stateMachine : FbMachine }
-type FbHit = { i : number, e : string, id : boolean }
+type FbHit = { i : number!, e : string!, id : boolean! }
 type FbOrbital = { name : string, traits : [FbVal] }
 type FbProgram = { orbitals : [FbOrbital] }
 type FbFound = { e : string, id : boolean }
@@ -54,7 +54,7 @@ orbital OrbLintFetchByIdPayloadOrbital {
                       []
                       (let ((sm (default (object/get @t "stateMachine") {})))
                         (let ((trans (object/get @sm "transitions" [])))
-                          (let ((found  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
+                          (let ((found : [FbHit] (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                                   (let ((pre (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @i "].effects[")))
                                     (array/flatten (array/map (array/filter @fetches (fn c (and (str/startsWith (object/get @c "path" "") @pre) (not (str/includes (str/slice (object/get @c "path" "") (str/len @pre)) "."))))) (fn c
                                       (let ((n (object/get @c "node" null)))
@@ -76,10 +76,10 @@ orbital OrbLintFetchByIdPayloadOrbital {
                                       (let ((fields  (array/concat
                                               (array/flatten (array/map (array/filter (object/get @t "emits" []) (fn e (= (object/get @e "event" "") @ev))) (fn e (object/get @e "payloadSchema" []))))
                                               (array/flatten (array/map (array/filter (object/get @sm "events" []) (fn e (= (object/get @e "key" "") @ev))) (fn e (object/get @e "payloadSchema" [])))))))
-                                        (let ((field  (array/find @fields (fn f (= (object/get @f "name" "") "data")))))
-                                          (if (or (= @field null) (not (str/startsWith (object/get @field "type" "") "[")))
+                                        (let ((field  (array/find @fields (fn f (= (object/get @f "name" "") "data")))) (ih (array/find @ids (fn p (= (object/get @p "e") @ev)))))
+                                          (if (or (= @field null) (= @ih null) (not (str/startsWith (object/get @field "type" "") "[")))
                                             []
-                                            [{ code: @config.codes.effFetchByIdPayloadList.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get (array/find @ids (fn p (= (object/get @p "e") @ev))) "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))))
+                                            [{ code: @config.codes.effFetchByIdPayloadList.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @ih "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "fetch-by-id-payload", scope: @entity.scope, findings: @entity.findings })
@@ -112,10 +112,10 @@ orbital OrbLintFetchByIdPayloadOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint fetch-by-id-payload <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint fetch-by-id-payload <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -149,7 +149,7 @@ orbital OrbLintFetchByIdPayloadOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-fetch-by-id-payload" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint fetch-by-id-payload` with its arguments and working directory."
         @synonyms "orb lint fetch-by-id-payload"

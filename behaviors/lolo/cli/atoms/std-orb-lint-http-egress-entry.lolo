@@ -51,7 +51,7 @@ orbital OrbLintHttpEgressEntryOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : HttpEgressProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : HttpEgressProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -71,7 +71,7 @@ orbital OrbLintHttpEgressEntryOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-egress-entry <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-egress-entry <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -105,7 +105,7 @@ orbital OrbLintHttpEgressEntryOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-http-egress-entry" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint http-egress-entry` with its arguments and working directory."
         @synonyms "orb lint http-egress-entry, http egress entry"

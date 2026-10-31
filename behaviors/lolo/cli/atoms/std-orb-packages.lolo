@@ -113,11 +113,11 @@ orbital OrbPackagesOrbital {
 
     state ready {
       INIT -> ready
-      PACKAGES_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      PACKAGES_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit PKG_ARGS_UNREAD { })
-      PACKAGES_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (let ((argv (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv"))) (if (= @argv null) (emit PKG_ARGS_UNREAD { }) (emit PKG_ARGS_PARSE { stage: "packages" argv: @argv flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "global" aliases: [] takesValue: false repeatable: false }, { name: "ancestors" aliases: [] takesValue: false repeatable: false }] })))
+      PACKAGES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit PKG_ARGS_UNREAD { }) (emit PKG_ARGS_PARSE { stage: "packages" argv: @argv flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "global" aliases: [] takesValue: false repeatable: false }, { name: "ancestors" aliases: [] takesValue: false repeatable: false }] })))
     }
 
     state parsing {
@@ -790,7 +790,7 @@ orbital OrbPackagesOrbital {
       SourceHttp.HTTP_FAILED -> PK_FAILED
       PACKAGES_CALLED -> inbound "cli-packages" answers PACKAGES_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb list|add|update|remove` with its arguments and working directory."
         @synonyms "orb add, orb remove, orb list, orb update, install a package"

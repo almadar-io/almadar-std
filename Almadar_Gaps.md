@@ -10,7 +10,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 
 
-Next code: `G-STD-224`
+Next code: `G-STD-225`
 
 - **G-STD-223** [mechanical] — `orb test` on std-http-boot-gate fails in the std verify walk with a PLAN_STEPPED payload error (`result[0].idx` missing), so `orb test` cannot be used as a check on that atom (goldens pass 16/16). Owner: std cli verify atoms (std-verify-walk / std-verify-plan). Repro: `orb test packages/almadar-std/behaviors/lolo/net/atoms/std-http-boot-gate.lolo`. Rung: (3) the verifiers. Root cause: T2.
 

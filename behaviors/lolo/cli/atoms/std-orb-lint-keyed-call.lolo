@@ -15,7 +15,7 @@ type KcTick = { effects : [KcVal]? }
 type KcMachine = { transitions : [KcTransition]? }
 type KcTrait = { name : string, stateMachine : KcMachine?, ticks : [KcTick]? }
 type KcOrbital = { name : string, traits : [KcVal] }
-type KcProgram = { orbitals : [KcOrbital] }
+type KcProgram = { orbitals : [KcOrbital]! }
 type KcHeads = [string]
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -48,7 +48,7 @@ orbital OrbLintKeyedCallOrbital {
                             [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
             (let ((places (array/flatten (array/map @sites (fn s
                     (let ((sm (object/get (object/get @s "trait") "stateMachine")) (ticks (default (object/get (object/get @s "trait") "ticks" []) [])))
-                      (let ((trans (default (object/get @sm "transitions" []) [])))
+                      (let ((trans (if (= @sm null) [] (default (object/get @sm "transitions" []) []))))
                         (array/concat
                           (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                             (let ((effs (default (object/get (array/nth @trans @i) "effects" []) [])))
@@ -67,7 +67,7 @@ orbital OrbLintKeyedCallOrbital {
                         (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (default (object/get @k @key []) [])))) [])))) KcVal) []) KcHeads) []) (fn head
                     { code: @config.codes.effectOptionDropped.code, path: (object/get @pl "path"), message: (str/concat "`" @head "` carries no `key`, so its completion would never echo the `key` its options declare"), suggestion: (str/concat "Remove `key` from the `" @head "` options, or tell the arm apart by its event"), severity: "error" })))))
                 (array/flatten (array/map @sites (fn s
-                  (let ((trans (default (object/get (object/get (object/get @s "trait") "stateMachine") "transitions" []) [])))
+                  (let ((sm (object/get (object/get @s "trait") "stateMachine")) (trans (if (= @sm null) [] (default (object/get @sm "transitions" []) []))))
                     (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                       (let ((effs (default (object/get (array/nth @trans @i) "effects" []) [])))
                         (let ((keys (array/map @effs (fn e
@@ -98,7 +98,7 @@ orbital OrbLintKeyedCallOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : KcProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : KcProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -115,10 +115,10 @@ orbital OrbLintKeyedCallOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -152,7 +152,7 @@ orbital OrbLintKeyedCallOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-keyed-call" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint keyed-call` with its arguments and working directory."
         @synonyms "orb lint keyed-call"

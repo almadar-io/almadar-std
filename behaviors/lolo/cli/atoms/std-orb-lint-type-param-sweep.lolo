@@ -19,7 +19,7 @@ type SweepEvent = { key : string, payloadSchema : [SweepShape] }
 type SweepMachine = { events : [SweepEvent] }
 type SweepTrait = { name : string, ref : string, linkedEntity : string, typeParams : [SweepParam], config : Map string SweepKnob, emits : [SweepEmit], stateMachine : SweepMachine }
 type SweepOrbital = { name : string, expects : [SweepExpect], entity : SweepEntityRef, auxiliaryEntities : [SweepEntity], traits : [SweepTrait] }
-type SweepProgram = { orbitals : [SweepOrbital] }
+type SweepProgram = { orbitals : [SweepOrbital]! }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -156,7 +156,7 @@ orbital OrbLintTypeParamSweepOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SweepProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SweepProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -173,10 +173,10 @@ orbital OrbLintTypeParamSweepOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint type-param-sweep <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint type-param-sweep <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint type-param-sweep <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -210,7 +210,7 @@ orbital OrbLintTypeParamSweepOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-type-param-sweep" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint type-param-sweep` with its arguments and working directory."
         @synonyms "orb lint type-param-sweep, orb lint type-param-sweep, type param sweep"

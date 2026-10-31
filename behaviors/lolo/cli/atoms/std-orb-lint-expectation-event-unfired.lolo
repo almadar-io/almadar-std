@@ -65,7 +65,7 @@ orbital OrbLintExpectationEventUnfiredOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((bc @payload.byControl) (be @payload.byEffect) (names @entity.names)) (let ((orbs (object/get @entity.program "orbitals" [])))
  (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
-       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
+       (alltr (array/flatten (array/map @orbs (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (let ((sm (object/get @t "stateMachine"))) (if (= @sm null) [] [{ t: @t, sm: @sm, on: (object/get @o "name" "") }])))))))))
        (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
   (let ((o (default (array/nth @orbs @oi) {})))
@@ -80,7 +80,7 @@ orbital OrbLintExpectationEventUnfiredOrbital {
       (if (and (array/some (object/get (object/get @tr "t") "emits" []) (fn m (= (object/get @m "event" "") (object/get @x "event" ""))))
                (not (array/includes (object/get @bc (object/get @x "traitName" "") []) (object/get @x "event" "")))
                (not (array/includes (object/get @be (object/get @x "traitName" "") []) (object/get @x "event" "")))
-               (not (array/some (let ((nn (as (json/nodes [(array/map (object/get (object/get (object/get @tr "t") "stateMachine") "transitions" []) (fn t (object/get @t "effects" []))), (array/map (object/get (object/get @tr "t") "ticks" []) (fn t (object/get @t "effects" [])))]) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((o (as @n LObj))) (and (!= @o null) (array/some (object/keys @o) (fn k (and (array/includes @names @k) (str/startsWith (default (as (object/get @o @k null) LStr) "") (str/concat (quote "@") "")))))))))))
+               (not (array/some (let ((nn (as (json/nodes [(array/map (object/get (object/get @tr "sm") "transitions" []) (fn t (object/get @t "effects" []))), (array/map (object/get (object/get @tr "t") "ticks" []) (fn t (object/get @t "effects" [])))]) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((o (as @n LObj))) (and (!= @o null) (array/some (object/keys @o) (fn k (and (array/includes @names @k) (str/startsWith (default (as (object/get @o @k null) LStr) "") (str/concat (quote "@") "")))))))))))
         [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects trait `" (object/get @x "traitName" "") "` to fire `" (object/get @x "event" "") "`, but nothing in this program provides it — `" (object/get @x "traitName" "") "` declares `" (object/get @x "event" "") "` in `emits` but nothing in it fires it."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]
         [])))
   []))))))))))))))))
@@ -122,10 +122,10 @@ orbital OrbLintExpectationEventUnfiredOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-event-unfired <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-event-unfired <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -159,7 +159,7 @@ orbital OrbLintExpectationEventUnfiredOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-expectation-event-unfired" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint expectation-event-unfired` with its arguments and working directory."
         @synonyms "orb lint expectation-event-unfired"
@@ -178,7 +178,7 @@ orbital OrbLintExpectationEventUnfiredOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the function-returning operators."
       FIRED_WALK_HEARD { slots : Map string WalkSlot! }
         @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
-      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD

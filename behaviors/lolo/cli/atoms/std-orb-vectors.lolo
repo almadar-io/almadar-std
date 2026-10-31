@@ -1,7 +1,7 @@
 app std-orb-vectors [
   version: "1.0.0",
   inbound: ["cli-behaviors-vectors-snapshot"],
-  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  fs: { cwd: "**": [read, write, remove, create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   exec: ["kill"],
   net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
@@ -296,8 +296,9 @@ orbital OrbVectorsOrbital {
       VECTORS_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (!= (array/len (default (object/get @payload.flags "package") [])) 1))
         (emit VECTORS_CMD_ANSWERED { status: 400, body: "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]" })
       VECTORS_ARGS_DONE -> packaging when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (array/len (default (object/get @payload.flags "package") [])) 1))
-        (set @entity.pkgDir (array/first (object/get @payload.flags "package")))
-        (set @entity.outArg (array/first (default (object/get @payload.flags "out") [""])))
+        ;; the guard fixed --package at exactly one value, so the default never answers
+        (set @entity.pkgDir (default (array/first (object/get @payload.flags "package")) ""))
+        (set @entity.outArg (default (array/first (default (object/get @payload.flags "out") [""])) ""))
         (emit VECTORS_PACKAGE_NEEDED { dir: @entity.pkgDir })
     }
 
@@ -485,7 +486,7 @@ orbital OrbVectorsOrbital {
     listens {
       SNAPSHOT_CALLED -> inbound "cli-behaviors-vectors-snapshot" answers VECTORS_CMD_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb behaviors vectors snapshot` with its arguments."
         @synonyms "orb behaviors vectors snapshot, write vectors.vec"

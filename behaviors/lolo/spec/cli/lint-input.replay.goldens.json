@@ -12527,6 +12527,291 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-child-request-past-the-lazy-list-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "raw": "app x [\n]\n",
+    "lazy": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_CHILD_REQUEST",
+     "payload": {
+      "index": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the lazy child index is out of range"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-file-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "raw": "",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the file is empty"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-comment-only-file-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "raw": ";; just a note\n\n",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the file is empty"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-file-with-a-first-token-decides-its-language",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "raw": "app x [\n]\n",
+    "packs": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "LINT_LANGUAGE",
+        "payload": {
+         "latin": true
+        }
+       },
+       {
+        "event": "LINT_CORE_READ",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-pack-vocabulary-that-does-not-parse-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "raw": "app x [\n]\n",
+    "packs": [
+     {
+      "name": "@almadar/lolo-x",
+      "text": "{nope"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LANGUAGE_PACKS_DONE_HEARD",
+     "payload": {
+      "problem": "",
+      "coreRoot": "/core",
+      "stdRoot": "/std"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "a language pack vocabulary is not a vocabulary"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-core-manifest-that-is-not-json-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "e25vcGU="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/core package.json is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-std-manifest-that-is-not-json-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_STD_MANIFEST",
+     "payload": {
+      "data": "e25vcGU="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the installed @almadar/std package.json is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "facts-done-without-the-pending-program-is-an-unread-error",
+   "entity": {
+    "file": "a.lolo",
+    "latin": true,
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "factsDone": false,
+    "factsWaiting": true,
+    "lazy": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_FACTS_DONE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_LAZY",
+        "payload": {
+         "orbitals": []
+        }
+       },
+       {
+        "event": "LINT_INPUT_UNREAD",
+        "payload": {
+         "file": "a.lolo",
+         "error": "the program was not read"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

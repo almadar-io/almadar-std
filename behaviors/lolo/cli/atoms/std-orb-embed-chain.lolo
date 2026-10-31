@@ -11,6 +11,8 @@ type FiredMachine = { transitions : [FiredTransition] }
 type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
 type FiredOrbital = { traits : [FiredTrait] }
 type FiredProgram = { orbitals : [FiredOrbital] }
+type EmbedSlot = { k : number!, t : FiredTrait! }
+type EmbedAcc = { i : number!, inl : [EmbedSlot]! }
 type RedNodes = [FiredNode?]
 type EmbedMap = Map string [string]
 
@@ -30,11 +32,11 @@ orbital OrbEmbedChainOrbital {
       EMBED_INPUT_HEARD -> ready
         (let ((nr : [string] []))
           (let ((res (let ((orbs (object/get @payload.program "orbitals" []))) (array/map (array/range 0 (array/len @orbs)) (fn oi (let ((o (array/nth @orbs @oi)))
-          (let ((trs0 (object/get @o "traits" []))) (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine"))))) (let ((inl (array/map @inlK (fn i (array/nth @trs0 @i)))))
-            (let ((names (array/map @inl (fn t (object/get @t "name" ""))))
-                  (pairs (array/flatten (array/map (array/range 0 (array/len @inl)) (fn kx
-                    (let ((t (array/nth @inl @kx))) (let ((tn (object/get @t "name" "")))
-                      (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" (array/nth @inlK @kx)) []) (quote "@trait")))) (let ((roots (if @gt (array/concat (array/concat
+          (let ((trs0 (object/get @o "traits" []))) (let ((acc0 : EmbedAcc { i: 0, inl: [] })) (let ((inl (object/get (array/reduce @trs0 @acc0 (fn (acc t) { i: (+ (object/get @acc "i") 1), inl: (if (object/has @t "stateMachine") (array/append (object/get @acc "inl") { k: (object/get @acc "i"), t: @t }) (object/get @acc "inl")) })) "inl")))
+            (let ((names (array/map @inl (fn e (object/get (object/get @e "t") "name" ""))))
+                  (pairs (array/flatten (array/map @inl (fn e
+                    (let ((t (object/get @e "t"))) (let ((tn (object/get @t "name" "")))
+                      (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" (object/get @e "k")) []) (quote "@trait")))) (let ((roots (if @gt (array/concat (array/concat
                                       (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get (default @f {}) "default" null) }))
                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }]))))
                                       (array/flatten (array/map (object/get @t "ticks" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }])))) [])))
@@ -42,7 +44,7 @@ orbital OrbEmbedChainOrbital {
                           (let ((fr (tree/fold @roots (fn (n k)
   (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r))))
     (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r))))
-      (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) [(array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "["))] @nr)))) "FiredNode")))
+      (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) (let ((h1 (array/first (str/split (str/slice @n 7 (str/len @n)) ".")))) (if (= @h1 null) @nr (let ((h2 (array/first (str/split @h1 "[")))) (if (= @h2 null) @nr [@h2])))) @nr)))) "FiredNode")))
                             (array/map (array/filter (array/unique (default @fr [])) (fn c (and (!= @c "") (!= @c @tn)))) (fn c [@c, @tn])))
                           []))))))))))
               (let ((hosts (default (object/fromEntries (array/reverse @pairs)) {})))
@@ -57,7 +59,7 @@ orbital OrbEmbedChainOrbital {
     }
 
     listens {
-      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
         @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses; a trait is searched for @trait references only when its roots hold @trait."

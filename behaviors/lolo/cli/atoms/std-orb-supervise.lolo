@@ -68,12 +68,12 @@ orbital OrbSuperviseOrbital {
 
     state ready {
       INIT -> ready
-      SUPERVISE_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SUPERVISE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
-      SUPERVISE_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (not (array/includes (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") "--")))
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--")))
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
-      SUPERVISE_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (array/includes (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") "--"))
-        (let ((argv (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")))
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--"))
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
           (let ((cut (array/reduce (array/range (array/len @argv)) -1 (fn acc i (if (and (< @acc 0) (= (array/nth @argv @i) "--")) @i @acc)))))
             (do
               (set @entity.command (array/drop @argv (+ @cut 1)))
@@ -174,7 +174,7 @@ orbital OrbSuperviseOrbital {
     listens {
       SUPERVISE_CALLED -> inbound "cli-supervise" answers SUPERVISE_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb supervise` with its arguments and working directory."
         @synonyms "orb supervise, restart on change, keep running"

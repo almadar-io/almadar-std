@@ -33,7 +33,7 @@ orbital OrbLintSignInRouteOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((sgi (if (object/has @payload.program "site") (object/get (object/get @payload.program "site") "signIn" "") "")) (allp (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb (object/get @orb "pages" [])))))
+        (set @entity.findings (let ((sgi (let ((st (object/get @payload.program "site"))) (if (= @st null) "" (object/get @st "signIn" "")))) (allp (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb (object/get @orb "pages" [])))))
         (lazyp (object/get @payload.program "lazyPages" [])))
           (array/flatten [
             (array/flatten (array/map (array/filter (array/concat @allp @lazyp) (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
@@ -62,7 +62,7 @@ orbital OrbLintSignInRouteOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SignInProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SignInProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -79,10 +79,10 @@ orbital OrbLintSignInRouteOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sign-in-route <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sign-in-route <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sign-in-route <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -116,7 +116,7 @@ orbital OrbLintSignInRouteOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-sign-in-route" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint sign-in-route` with its arguments and working directory."
         @synonyms "orb lint sign-in-route"

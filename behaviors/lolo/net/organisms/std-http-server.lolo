@@ -99,6 +99,14 @@ orbital HttpServerOrbital {
       @label "Viewer directory"
       @description "The [identity] entity whose row supplies role and name when viewerSource is directory."
       @tier "policy"
+    viewerDirectoryClaims : [field (@entity @config.viewerDirectory) string] = []
+      @label "Viewer claims (text fields)"
+      @description "The text fields of the viewerDirectory row that become viewer claims, each readable as @user.<field>. A field not named here never reaches @user."
+      @tier "policy"
+    viewerDirectoryDateClaims : [field (@entity @config.viewerDirectory) datetime] = []
+      @label "Viewer claims (date and time fields)"
+      @description "The date-time fields of the viewerDirectory row that become viewer claims, each as ISO 8601 UTC text."
+      @tier "policy"
     viewerCreateMissing : boolean = false
       @label "Create the first identity row"
       @description "Under viewerSource directory, a verified uid with no row in viewerDirectory gets one (the uid, the token's name, the entity's declared defaults), so its declared role applies from the first request."
@@ -254,6 +262,8 @@ orbital HttpServerOrbital {
     config {
       source: @config.viewerSource
       directory: @config.viewerDirectory
+      directoryClaims: @config.viewerDirectoryClaims
+      directoryDateClaims: @config.viewerDirectoryDateClaims
       createMissing: @config.viewerCreateMissing
     }
     listens {

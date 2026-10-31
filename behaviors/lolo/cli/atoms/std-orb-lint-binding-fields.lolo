@@ -17,11 +17,11 @@ type BfState = { holds : BfShape? }
 type BfTick = { effects : [BfShape] }
 type BfMachine = { states : [BfState], events : [BfEvent], transitions : [BfTransition] }
 type BfTrait = { name : string, linkedEntity : string, stateMachine : BfMachine, ticks : [BfTick] }
-type BfName = { name : string }
-type BfEntity = { name : string, fields : [BfName], invariants : [BfShape] }
-type BfOrbital = { name : string, entity : BfEntity, auxiliaryEntities : [BfEntity], traits : [BfTrait] }
+type BfName = { name : string! }
+type BfEntity = { name : string!, fields : [BfName]?, invariants : [BfShape] }
+type BfOrbital = { name : string, entity : BfEntity!, auxiliaryEntities : [BfEntity]?, traits : [BfTrait] }
 type BfProgram = { orbitals : [BfOrbital] }
-type BfDef = { name : string, fields : [string] }
+type BfDef = { name : string!, fields : [string] }
 type BfHit = { rel : string, s : string }
 type BfRoot = { x : BfShape?, w : string!, c : string!, ev : string!, pk : string!, lk : string! }
 type BfAcc = { lv : [BfField], miss : string, stop : boolean }
@@ -51,8 +51,8 @@ orbital OrbLintBindingFieldsOrbital {
   (let ((defIdx : Map string BfDef (default (object/fromEntries
   (array/flatten (array/map @orbitals (fn o
     (array/map
-      (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e)))
-      (fn e [(object/get @e "name" ""), { name: (object/get @e "name" ""), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name" ""))) }]))))))
+      (array/concat [(object/get @o "entity")] (object/get @o "auxiliaryEntities" []))
+      (fn e [(object/get @e "name"), { name: (object/get @e "name"), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name"))) }]))))))
   {})) (plIdx : Map string [BfField] (default (object/fromEntries
   (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
     (let ((trts : [BfTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
@@ -137,10 +137,11 @@ orbital OrbLintBindingFieldsOrbital {
                   (let ((s (object/get @h "s")) (c (object/get @x "c")) (p (str/concat (object/get @x "w") (object/get @h "rel"))))
               (array/concat
                 (if (and (array/includes ["g", "e", "k"] @c) (str/startsWith @s @pP))
-                  (let ((segs : [string] (array/filter (array/map (str/split (str/slice @s 9) ".") (fn q (array/first (str/split @q "[")))) (fn q (!= @q "")))))
-  (if (= (array/len @segs) 0)
+                  (let ((segs : [string] (array/filter (array/map (str/split (str/slice @s 9) ".") (fn q (str/replace-pattern @q "\\[.*$" ""))) (fn q (!= @q "")))))
+  (let ((f0 (array/first @segs)))
+   (if (= @f0 null)
     @nof
-    (let ((schema : [BfField]? (object/get @plIdx (object/get @x "pk") null)) (f0 (array/first @segs)) (ev (object/get @x "ev")))
+    (let ((schema : [BfField]? (object/get @plIdx (object/get @x "pk") null)) (ev (object/get @x "ev")))
       (let ((hybrid (and (>= (array/len @segs) 2) (= @f0 "payload") (or (= @schema null) (= (array/len (array/filter @schema (fn q (= (object/get @q "name") "payload")))) 0))))
             (restPath (str/join (array/slice @segs 1 (array/len @segs)) ".")))
         (if (!= @schema null)
@@ -155,23 +156,24 @@ orbital OrbLintBindingFieldsOrbital {
             (if (= (object/get @res "miss") "")
               @nof
               [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Payload field '" (object/get @res "miss") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
-          [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if (array/includes ["INIT", "LOAD", "$MOUNT"] @ev) (str/concat "'" @ev "' is a lifecycle event and carries NO payload — @payload." @f0 " (written `?" @f0 "` in .lolo) can never resolve here. Read entity/config state instead, or move this logic to the transition for the event that actually delivers '" @f0 "'.") (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "declare the field in the event's `emits` payload block: `" @ev " -> external { " @f0 " : <type> }` — an event read via @payload." @f0 " must declare that field"))), severity: "error" }])))))
+          [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if (array/includes ["INIT", "LOAD", "$MOUNT"] @ev) (str/concat "'" @ev "' is a lifecycle event and carries NO payload — @payload." @f0 " (written `?" @f0 "` in .lolo) can never resolve here. Read entity/config state instead, or move this logic to the transition for the event that actually delivers '" @f0 "'.") (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "declare the field in the event's `emits` payload block: `" @ev " -> external { " @f0 " : <type> }` — an event read via @payload." @f0 " must declare that field"))), severity: "error" }]))))))
                   @nof)
                 (let ((s2 (if (and (= @c "k") (str/startsWith @s @fP)) (str/concat @eP (str/slice @s 12)) @s)))
   (if (str/startsWith @s2 @eP)
-    (let ((fld (default (array/first (str/split (array/first (str/split (str/slice @s2 8) ".")) "[")) ""))
+    (let ((fld (str/replace-pattern (str/slice @s2 8) "[.\\[].*$" ""))
           (lent (object/get @defIdx (object/get @x "lk") null)))
       (if (or (= @fld "") (array/includes ["id", "createdAt", "updatedAt"] @fld) (= @lent null) (array/includes (object/get @lent "fields" []) @fld))
         @nof
         [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") "entity." @fld " — field '" @fld "' not found on entity '" (object/get @lent "name") "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" (object/get @lent "name") "' or fix the binding path"), severity: "error" }]))
     (let ((parts (str/split (str/slice @s2 1) ".")))
-      (if (< (array/len @parts) 2)
+      (let ((p0 (array/nth @parts 0)) (p1 (array/nth @parts 1)))
+       (if (or (= @p0 null) (= @p1 null))
         @nof
-        (let ((root (default (array/first (str/split (array/first @parts) "[")) {})) (fld (default (array/first (str/split (array/nth @parts 1) "[")) "")))
+        (let ((root (str/replace-pattern @p0 "\\[.*$" "")) (fld (str/replace-pattern @p1 "\\[.*$" "")))
           (let ((pent (object/get @defIdx @root null)))
             (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
-              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }]))))))))))))))))))))))
+              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-fields", scope: @entity.scope, findings: @entity.findings })
@@ -206,10 +208,10 @@ orbital OrbLintBindingFieldsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-fields <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-fields <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -243,7 +245,7 @@ orbital OrbLintBindingFieldsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-binding-fields" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint binding-fields` with its arguments and working directory."
         @synonyms "orb lint binding-fields"

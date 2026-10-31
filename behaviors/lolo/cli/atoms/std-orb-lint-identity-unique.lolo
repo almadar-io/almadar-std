@@ -9,8 +9,8 @@ app std-orb-lint-identity-unique [
 uses Spec from "almadar-std/lint-identity-unique"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type IdentityEntity = { name : string, identity : boolean }
-type IdentityOrbital = { entity : IdentityEntity, auxiliaryEntities : [IdentityEntity] }
+type IdentityEntity = { name : string!, identity : boolean }
+type IdentityOrbital = { entity : IdentityEntity!, auxiliaryEntities : [IdentityEntity] }
 type IdentityProgram = { orbitals : [IdentityOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -33,11 +33,8 @@ orbital OrbLintIdentityUniqueOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((prim (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                        (let ((en (object/get (array/nth @orbitals @oi) "entity" {})))
-                          (if (and (validate/object @en) (object/get @en "identity" false)) [(object/get @en "name")] []))))))
-                (aux (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                        (array/map (array/filter (object/get (array/nth @orbitals @oi) "auxiliaryEntities" []) (fn en (and (validate/object @en) (object/get @en "identity" false)))) (fn en (object/get @en "name"))))))))
+          (let ((prim : [string] (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity"))) (if (object/get @en "identity" false) [(object/get @en "name")] []))))))
+                (aux : [string] (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "auxiliaryEntities" []) (fn en (object/get @en "identity" false))) (fn en (object/get @en "name"))))))))
             (let ((names (array/unique (if (> (array/len @prim) 0) @prim @aux))))
               (if (> (array/len @names) 1)
                 [{ code: @config.codes.sIdentityNotUnique.code, path: "orbitals", message: (str/concat (array/len @names) " entities are tagged [identity]: " (str/join (array/sort @names) ", ") ". `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous."), suggestion: "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).", severity: "error" }]
@@ -57,7 +54,7 @@ orbital OrbLintIdentityUniqueOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IdentityProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IdentityProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -79,7 +76,7 @@ orbital OrbLintIdentityUniqueOrbital {
       LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint identity-unique <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint identity-unique <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -113,7 +110,7 @@ orbital OrbLintIdentityUniqueOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-identity-unique" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint identity-unique` with its arguments and working directory."
         @synonyms "orb lint identity-unique, orb lint identity-unique, one identity entity"

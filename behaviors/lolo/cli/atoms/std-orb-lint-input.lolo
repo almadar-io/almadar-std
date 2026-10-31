@@ -55,6 +55,8 @@ type LintArr = [LintValue?]
 type LintScope = { nm : string!, root : number!, lo : number! }
 type LintExprNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
 type LintExprItem = { e : LintValue?, eff : boolean! }
+type LintIndexRow = { k : string!, h : [string]!, r : [string]! }
+type LintIndexAcc = { n : number!, rows : [LintIndexRow]! }
 type OperatorEntry = { category : string, valueSourceSlots : OpSlots, fieldProjection : OpProjection, returnType : OperatorReturnType, busExcluded : [string], targetOptions : [string], params : [OpParam] }
 type PatternEventProp = { pattern : string!, prop : string!, field : string! }
 type ControlProp = { pattern : string!, prop : string!, kind : string!, notification : boolean! }
@@ -221,31 +223,9 @@ orbital OrbLintInputOrbital {
         (set @entity.packs [])
         (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
       LINT_CHILD_REQUEST -> ready
-        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @payload.index) "program"), scope: (object/get (array/nth @entity.lazy @payload.index) "orbital") })
+        (let ((c (array/nth @entity.lazy @payload.index))) (if (= @c null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the lazy child index is out of range" }) (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get @c "program"), scope: (object/get @c "orbital") })))
       LINT_INPUT_OFFER -> ready
-        (let ((nov : [string] []))
-          (let ((rows (let ((orbs (object/get @payload.program "orbitals" [])))
-            (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
-              (let ((trs (object/get (array/nth @orbs @oi) "traits" [])))
-                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (array/nth @trs @ti)))
-                    (if (object/has @t "stateMachine")
-                      (let ((tms (object/get @t "stateMachine.transitions" [])))
-                        (let ((rest : LintValue (object/merge @t { stateMachine: (object/merge (object/get @t "stateMachine") { transitions: (array/map @tms (fn x (object/merge @x { effects: [] }))) }) })))
-                          (let ((ix (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u (array/unique (default (tree/fold (if (= @u 0) @rest (object/get (array/nth @tms (- @u 1)) "effects" [])) (fn (n k)
-                          (if (validate/string @n)
-                            (if (str/startsWith @n (quote "@")) [(str/concat "r:" (array/first (str/split @n ".")))] [])
-                            (if (validate/array @n)
-                              (array/concat
-                                (let ((o0 (array/nth @n 0))) (if (validate/string @o0) [(str/concat "h:" @o0)] []))
-                                (array/flatten (array/filter @k (fn r (!= @r null)))))
-                              (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn r (!= @r null)))) [])))) "LintValue") @nov))))))
-                            (let ((all (array/unique (array/flatten @ix))))
-                              (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u
-                                (let ((tk (if (= @u 0) @all (array/nth @ix @u))))
-                                  { k: (if (= @u 0) (str/concat @oi "-" @ti) (str/concat @oi "-" @ti "-" (- @u 1))), h: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "h:"))) (fn s (str/slice @s 2 (str/len @s))))), r: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "r:"))) (fn s (str/slice @s 2 (str/len @s))))) })))))))
-                      []))))))))))))
-            (emit LINT_INDEX { scope: @payload.scope, heads: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "h")]))) {}), roots: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "r")]))) {}) })))
+        (let ((init : LintIndexAcc { n: 0, rows: [] })) (let ((rows (object/get (array/reduce (object/get @payload.program "orbitals" []) @init (fn (oa orb) (let ((oi (object/get @oa "n"))) { n: (+ @oi 1), rows: (array/concat (object/get @oa "rows") (object/get (array/reduce (object/get @orb "traits" []) @init (fn (ta t) (let ((ti (object/get @ta "n"))) { n: (+ @ti 1), rows: (array/concat (object/get @ta "rows") (let ((sm (object/get @t "stateMachine"))) (if (= @sm null) [] (let ((tms (object/get @sm "transitions" []))) (let ((rest : LintValue (as (object/merge @t { stateMachine: (object/merge @sm { transitions: (array/map @tms (fn x (object/merge @x { effects: [] }))) }) }) LintValue))) (let ((tks (array/map @tms (fn tm (array/unique (tree/fold (object/get @tm "effects" []) (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@")) [(str/concat "r:" (str/replace-pattern @n "\\..*$" ""))] []) (if (validate/array @n) (array/concat (let ((o0 (array/nth @n 0))) (if (validate/string @o0) [(str/concat "h:" @o0)] [])) (array/flatten (array/filter @k (fn r (validate/array @r))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn r (validate/array @r)))) [])))) "LintValue")))))) (let ((all (array/unique (array/flatten (array/concat [(array/unique (tree/fold @rest (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@")) [(str/concat "r:" (str/replace-pattern @n "\\..*$" ""))] []) (if (validate/array @n) (array/concat (let ((o0 (array/nth @n 0))) (if (validate/string @o0) [(str/concat "h:" @o0)] [])) (array/flatten (array/filter @k (fn r (validate/array @r))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn r (validate/array @r)))) [])))) "LintValue"))] @tks))))) (object/get (array/reduce (array/concat [@all] @tks) @init (fn (ua tk) { n: (+ (object/get @ua "n") 1), rows: (array/append (object/get @ua "rows") { k: (if (= (object/get @ua "n") 0) (str/concat @oi "-" @ti) (str/concat @oi "-" @ti "-" (- (object/get @ua "n") 1))), h: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "h:"))) (fn s (str/slice @s 2 (str/len @s))))), r: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "r:"))) (fn s (str/slice @s 2 (str/len @s))))) }) })) "rows")))))))) }))) "rows")) }))) "rows"))) (emit LINT_INDEX { scope: @payload.scope, heads: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "h")]))) {}), roots: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "r")]))) {}) })))
         (emit LINT_INPUT { file: @payload.file, raw: @payload.raw, latin: @payload.latin, program: @payload.program, scope: @payload.scope })
     }
 
@@ -267,35 +247,20 @@ orbital OrbLintInputOrbital {
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: @payload.problem })
       LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (str/startsWith (str/trim @entity.raw) "{") (= (json/parse @entity.raw DocObject) null))
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the file is not a valid JSON document" })
+      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (not (str/startsWith (str/trim @entity.raw) "{")) (= (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;")))))) null))
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the file is empty" })
+      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (array/some (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab))) (fn v (= @v null))))
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: "a language pack vocabulary is not a vocabulary" })
       LANGUAGE_PACKS_DONE_HEARD -> reading when (= @payload.problem "")
-        (set @entity.latin (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab)))))
-          (if (str/startsWith (str/trim @entity.raw) "{")
-            (let ((keys (object/keys (default (json/parse @entity.raw DocObject) {}))))
-              (or (array/includes @keys "orbitals") (not (array/some @vocabs (fn v (array/includes @keys (object/get (object/get @v "orb" {}) "orbitals" "")))))))
-            (let ((tok (array/first (str/split (array/first (str/split (array/first (str/split (str/trim (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;"))))))) " ")) "[")) "("))))
-              (or (array/includes @words @tok) (not (array/some @vocabs (fn v (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))))
-        (emit LINT_LANGUAGE { latin: @entity.latin })
-        (set @entity.coreRoot @payload.coreRoot)
-        (set @entity.stdRoot @payload.stdRoot)
-        (emit LINT_CORE_READ { })
+        (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab))))) (if (str/startsWith (str/trim @entity.raw) "{") (let ((doc (json/parse @entity.raw DocObject))) (if (= @doc null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the file is not a valid JSON document" }) (let ((keys (object/keys @doc))) (let ((latin (or (array/includes @keys "orbitals") (not (array/some @vocabs (fn v (if (= @v null) false (array/includes @keys (object/get (object/get @v "orb" {}) "orbitals" ""))))))))) (do (set @entity.latin @latin) (emit LINT_LANGUAGE { latin: @entity.latin }) (set @entity.coreRoot @payload.coreRoot) (set @entity.stdRoot @payload.stdRoot) (emit LINT_CORE_READ { })))))) (let ((first (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;")))))))) (if (= @first null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the file is empty" }) (let ((tok (str/replace-pattern (str/trim @first) "[ \\[(].*$" ""))) (let ((latin (or (array/includes @words @tok) (not (array/some @vocabs (fn v (if (= @v null) false (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))) (do (set @entity.latin @latin) (emit LINT_LANGUAGE { latin: @entity.latin }) (set @entity.coreRoot @payload.coreRoot) (set @entity.stdRoot @payload.stdRoot) (emit LINT_CORE_READ { }))))))))
       LINT_CORE_READ -> ready when (= @entity.coreRoot "")
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/core" })
       LINT_CORE_READ -> reading when (!= @entity.coreRoot "")
         (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot "package.json"))) { key: "lint-input-core" emit: { success: LINT_CORE_MANIFEST, failure: LINT_FILE_UNREAD } })
-      LINT_CORE_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (object/get (object/get (json/parse @text CoreManifest) "orbLanguage" {}) "componentMapping" "") "")))
-        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (if (= (bytes/to-string @payload.data) null) "the installed @almadar/core package.json is not valid text" "the installed @almadar/core declares no orbLanguage.componentMapping") })
-      LINT_CORE_MANIFEST -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (object/get (object/get (json/parse @text CoreManifest) "orbLanguage" {}) "componentMapping" "") "")))
-        (set @entity.patternsFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "patterns" ""))
-        (set @entity.typesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "programTypes" ""))
-        (set @entity.rulesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "bindingRules" ""))
-        (set @entity.vocabFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "vocabulary" ""))
-        (set @entity.uiVocabFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "uiVocabulary" ""))
-        (set @entity.servicesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "services" ""))
-        (emit LINT_FACTS_READ { })
-        (let ((text (bytes/to-string @payload.data)))
-          (if (= @text null)
-            (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid text" })
-            (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get (object/get (json/parse @text CoreManifest) "orbLanguage" {}) "componentMapping" "")))) { key: "lint-input-components" emit: { success: LINT_MAPPING_READ, failure: LINT_FILE_UNREAD } })))
+      LINT_CORE_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (if (= @text null) true (let ((m (json/parse @text CoreManifest))) (if (= @m null) true (= (object/get (object/get @m "orbLanguage" {}) "componentMapping" "") "")))))
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (let ((text (bytes/to-string @payload.data))) (if (= @text null) "the installed @almadar/core package.json is not valid text" (let ((m (json/parse @text CoreManifest))) (if (= @m null) "the installed @almadar/core package.json is not valid JSON" "the installed @almadar/core declares no orbLanguage.componentMapping")))) })
+      LINT_CORE_MANIFEST -> reading when (let ((text (bytes/to-string @payload.data))) (if (= @text null) false (let ((m (json/parse @text CoreManifest))) (if (= @m null) false (!= (object/get (object/get @m "orbLanguage" {}) "componentMapping" "") "")))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid text" }) (let ((m (json/parse @text CoreManifest))) (if (= @m null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core package.json is not valid JSON" }) (let ((blk (object/get @m "orbLanguage" {}))) (do (set @entity.patternsFile (object/get @blk "patterns" "")) (set @entity.typesFile (object/get @blk "programTypes" "")) (set @entity.rulesFile (object/get @blk "bindingRules" "")) (set @entity.vocabFile (object/get @blk "vocabulary" "")) (set @entity.uiVocabFile (object/get @blk "uiVocabulary" "")) (set @entity.servicesFile (object/get @blk "services" "")) (emit LINT_FACTS_READ { }) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get @blk "componentMapping" "")))) { key: "lint-input-components" emit: { success: LINT_MAPPING_READ, failure: LINT_FILE_UNREAD } })))))))
       LINT_MAPPING_READ -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text ComponentMappingFile) null)))
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: (if (= (bytes/to-string @payload.data) null) "the installed @almadar/core component mapping is not valid text" "the installed @almadar/core component mapping is not a component mapping") })
       LINT_MAPPING_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text ComponentMappingFile) null)))
@@ -316,8 +281,8 @@ orbital OrbLintInputOrbital {
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry is not valid text" })
             (let ((pats (object/get (json/parse @text PatternRegistry) "patterns")))
               (let ((rows (array/flatten (array/map (array/sort (object/keys @pats)) (fn pn
-                      (let ((ps (object/get (object/get @pats @pn) "propsSchema" {})))
-                        (array/map (object/keys @ps) (fn k { pattern: @pn, prop: @k, kind: (object/get (object/get @ps @k) "kind" ""), field: (object/get (object/get @ps @k) "eventField" ""), notification: (object/get (object/get @ps @k) "notification" false) }))))))))
+                      (let ((pe (object/get @pats @pn))) (if (= @pe null) [] (let ((ps (object/get @pe "propsSchema" {})))
+                        (array/map (object/keys @ps) (fn k { pattern: @pn, prop: @k, kind: (object/get (object/get @ps @k) "kind" ""), field: (object/get (object/get @ps @k) "eventField" ""), notification: (object/get (object/get @ps @k) "notification" false) }))))))))))
                 (let ((listenMap (object/fromEntries (array/map (array/unique (array/map (array/filter @rows (fn r (= (object/get @r "kind") "event-listen"))) (fn r (object/get @r "pattern")))) (fn pn [@pn, (array/map (array/filter @rows (fn r (and (= (object/get @r "pattern") @pn) (= (object/get @r "kind") "event-listen")))) (fn r (object/get @r "prop")))])))))
                   (if (= @listenMap null)
                     (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry has event-listen props that cannot be grouped by pattern" })
@@ -367,13 +332,10 @@ orbital OrbLintInputOrbital {
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/std" })
       LINT_STD_READ -> reading when (!= @entity.stdRoot "")
         (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot "package.json"))) { key: "lint-input-std" emit: { success: LINT_STD_MANIFEST, failure: LINT_FILE_UNREAD } })
-      LINT_STD_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (object/get (object/get (json/parse @text StdManifest) "orbLanguage" {}) "operators" "") "")))
-        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (if (= (bytes/to-string @payload.data) null) "the installed @almadar/std package.json is not valid text" "the installed @almadar/std declares no orbLanguage.operators") })
-      LINT_STD_MANIFEST -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (object/get (object/get (json/parse @text StdManifest) "orbLanguage" {}) "operators" "") "")))
-        (let ((text (bytes/to-string @payload.data)))
-          (if (= @text null)
-            (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std package.json is not valid text" })
-            (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot (object/get (object/get (json/parse @text StdManifest) "orbLanguage" {}) "operators" "")))) { key: "lint-input-operators" emit: { success: LINT_TABLE_READ, failure: LINT_FILE_UNREAD } })))
+      LINT_STD_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (if (= @text null) true (let ((m (json/parse @text StdManifest))) (if (= @m null) true (= (object/get (object/get @m "orbLanguage" {}) "operators" "") "")))))
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (let ((text (bytes/to-string @payload.data))) (if (= @text null) "the installed @almadar/std package.json is not valid text" (let ((m (json/parse @text StdManifest))) (if (= @m null) "the installed @almadar/std package.json is not valid JSON" "the installed @almadar/std declares no orbLanguage.operators")))) })
+      LINT_STD_MANIFEST -> reading when (let ((text (bytes/to-string @payload.data))) (if (= @text null) false (let ((m (json/parse @text StdManifest))) (if (= @m null) false (!= (object/get (object/get @m "orbLanguage" {}) "operators" "") "")))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std package.json is not valid text" }) (let ((m (json/parse @text StdManifest))) (if (= @m null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std package.json is not valid JSON" }) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot (object/get (object/get @m "orbLanguage" {}) "operators" "")))) { key: "lint-input-operators" emit: { success: LINT_TABLE_READ, failure: LINT_FILE_UNREAD } })))))
       LINT_TABLE_READ -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text OperatorTable) null) (= (object/get (object/get (object/get (json/parse @text OperatorTable) "operators") "emit" {}) "busExcluded" null) null) (= (object/get (object/get (object/get (json/parse @text OperatorTable) "operators") "program/dispatch" {}) "targetOptions" null) null)))
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: (if (= (bytes/to-string @payload.data) null) "the installed @almadar/std operator table is not valid text" (if (= (json/parse (bytes/to-string @payload.data) OperatorTable) null) "the installed @almadar/std operator table is not an operator table" "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions")) })
       LINT_TABLE_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text OperatorTable) null) (!= (object/get (object/get (object/get (json/parse @text OperatorTable) "operators") "emit" {}) "busExcluded" null) null) (!= (object/get (object/get (object/get (json/parse @text OperatorTable) "operators") "program/dispatch" {}) "targetOptions" null) null)))
@@ -404,11 +366,12 @@ orbital OrbLintInputOrbital {
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
             (let ((ops (object/get (json/parse @text OperatorTable) "operators")))
+              (let ((be (object/get (object/get @ops "emit") "busExcluded"))) (if (= @be null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" }) (let ((to (object/get (object/get @ops "program/dispatch") "targetOptions"))) (if (= @to null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" })
               (emit LINT_OPERATOR_SEMANTICS {
-                busExcluded: (object/get (object/get @ops "emit") "busExcluded"),
-                targetOptions: (object/get (object/get @ops "program/dispatch") "targetOptions"),
+                busExcluded: @be,
+                targetOptions: @to,
                 functions: (array/sort (array/filter (object/keys @ops) (fn n (let ((rt (object/get (object/get @ops @n) "returnType" ""))) (and (validate/object @rt) (= (object/get @rt "kind" "") "fn")))))),
-                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (default (as @ty OpShape) { kind: "", fields: {} }) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (default (as @em OpShape) { kind: "", fields: {} }) "fields" {})) [])) [])))))))))) }))))
+                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (default (as @ty OpShape) { kind: "", fields: {} }) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (default (as @em OpShape) { kind: "", fields: {} }) "fields" {})) [])) [])))))))))) }))))))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
@@ -437,14 +400,14 @@ orbital OrbLintInputOrbital {
         (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core services registry is not a services registry" })
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text SrRawRegistry) null)))
-        (emit LINT_SERVICES { services: (let ((reg (object/get (json/parse (default (bytes/to-string @payload.data) "") SrRawRegistry) "services")))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core services registry is not valid text" }) (let ((parsed (json/parse @text SrRawRegistry))) (if (= @parsed null) (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core services registry is not a services registry" }) (emit LINT_SERVICES { services: (let ((reg (object/get @parsed "services")))
           (object/mapValues @reg (fn s
             { actions: (default (object/fromEntries (array/map (object/get @s "actions" []) (fn a
                 [(object/get @a "name"), { hasKey: (object/has (object/get @a "responseShape" {}) "key"),
-                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) })
+                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) })))))
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FAILED -> reading
-        (emit LINT_SERVICES_UNREAD { error: (default @payload.error "") })
+        (emit LINT_SERVICES_UNREAD { error: @payload.error })
         (emit LINT_PROGRAM_START { })
       LINT_PROGRAM_START -> reading
         (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
@@ -463,20 +426,15 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_TYPES -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text ProgTypeFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core program types are not a program type table" })
       LINT_FACTS_TYPES -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text ProgTypeFile) null)))
-        (set @entity.progTypes (default (json/parse (default (bytes/to-string @payload.data) "") ProgTypeFile) {}))
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.rulesFile))) { key: "lint-input-binding-rules" emit: { success: LINT_FACTS_RULES, failure: LINT_FACTS_FAILED } })
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core program types are not valid text" }) (let ((tt (json/parse @text ProgTypeFile))) (if (= @tt null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core program types are not a valid table" }) (do (set @entity.progTypes @tt) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.rulesFile))) { key: "lint-input-binding-rules" emit: { success: LINT_FACTS_RULES, failure: LINT_FACTS_FAILED } }))))))
       LINT_FACTS_RULES -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text BindingRulesFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core binding rules are not a binding rule table" })
       LINT_FACTS_RULES -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text BindingRulesFile) null)))
-        (set @entity.guardSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "guard" { allowed: [] }) "allowed" []))
-        (set @entity.effectSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "effect" { allowed: [] }) "allowed" []))
-        (set @entity.tickSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "tick" { allowed: [] }) "allowed" []))
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.vocabFile))) { key: "lint-input-vocabulary" emit: { success: LINT_FACTS_VOCAB, failure: LINT_FACTS_FAILED } })
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core binding rules are not valid text" }) (let ((br (json/parse @text BindingRulesFile))) (if (= @br null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core binding rules are not a valid table" }) (do (set @entity.guardSigils (object/get (object/get @br "guard") "allowed")) (set @entity.effectSigils (object/get (object/get @br "effect") "allowed")) (set @entity.tickSigils (object/get (object/get @br "tick") "allowed")) (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.vocabFile))) { key: "lint-input-vocabulary" emit: { success: LINT_FACTS_VOCAB, failure: LINT_FACTS_FAILED } }))))))
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text VocabularyFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary is not a vocabulary" })
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text VocabularyFile) null)))
-        (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabularyFile) "types" []) })
-        (emit LINT_UI_VOCAB_READ { })
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not valid text" }) (let ((vf (json/parse @text VocabularyFile))) (if (= @vf null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not a valid table" }) (do (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get @vf "types") }) (emit LINT_UI_VOCAB_READ { }))))))
       LINT_UI_VOCAB_READ -> reading when (= @entity.uiVocabFile "")
         (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core declares no orbLanguage.uiVocabulary" })
         (emit LINT_FACTS_DONE { })
@@ -486,23 +444,22 @@ orbital OrbLintInputOrbital {
         (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core UI vocabulary is not a UI vocabulary" })
         (emit LINT_FACTS_DONE { })
       LINT_UI_VOCAB_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text UiVocabularyFile) null)))
-        (emit LINT_UI_VOCAB { slots: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "slots" []), itemActionBaseProps: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "itemActionBaseProps" []), lucideIcons: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "lucideIcons" []), themeKeys: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "themeKeys" []), deliveryRoots: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "deliveryRoots" []), eventSourceKeys: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "eventSourceKeys" []) })
-        (emit LINT_FACTS_DONE { })
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_UI_VOCAB_FAILED { error: "the installed @almadar/core UI vocabulary is not valid text" }) (let ((uv (json/parse @text UiVocabularyFile))) (if (= @uv null) (emit LINT_UI_VOCAB_FAILED { error: "the installed @almadar/core UI vocabulary is not a UI vocabulary" }) (do (emit LINT_UI_VOCAB { slots: (object/get @uv "slots"), itemActionBaseProps: (object/get @uv "itemActionBaseProps"), lucideIcons: (object/get @uv "lucideIcons"), themeKeys: (object/get @uv "themeKeys"), deliveryRoots: (object/get @uv "deliveryRoots"), eventSourceKeys: (object/get @uv "eventSourceKeys") }) (emit LINT_FACTS_DONE { }))))))
       LINT_UI_VOCAB_FAILED -> reading
-        (emit LINT_UI_VOCAB_UNREAD { error: (default @payload.error "") })
+        (emit LINT_UI_VOCAB_UNREAD { error: @payload.error })
         (emit LINT_FACTS_DONE { })
       LINT_FACTS_FAILED -> reading
-        (emit LINT_LANGUAGE_FACTS_UNREAD { error: (default @payload.error "") })
+        (emit LINT_LANGUAGE_FACTS_UNREAD { error: @payload.error })
         (emit LINT_FACTS_DONE { })
       LINT_FACTS_DONE -> ready when @entity.factsWaiting
         (set @entity.factsDone true)
         (set @entity.factsWaiting false)
         (emit LINT_LAZY { orbitals: (array/map @entity.lazy (fn c (object/get @c "orbital"))) })
-        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @entity.pendingProgram, scope: "" })
+        (let ((pp @entity.pendingProgram)) (if (= @pp null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the program was not read" }) (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @pp, scope: "" })))
       LINT_FACTS_DONE -> reading when (not @entity.factsWaiting)
         (set @entity.factsDone true)
       LINT_FILE_UNREAD -> ready
-        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (default @payload.error "") })
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: @payload.error })
     }
 
     emits {
@@ -575,7 +532,7 @@ orbital OrbLintInputOrbital {
       LINT_SERVICES_FILE { data : bytes! }
         @description "The installed @almadar/core services registry read."
         @tier "internal"
-      LINT_SERVICES_FAILED { error : string }
+      LINT_SERVICES_FAILED { error : string! }
         @description "Internal: the services registry file could not be read."
         @tier "internal"
       LINT_PROGRAM_START { }
@@ -587,7 +544,7 @@ orbital OrbLintInputOrbital {
       LINT_UI_VOCAB_FILE { data : bytes! }
         @description "The installed @almadar/core UI vocabulary read."
         @tier "internal"
-      LINT_UI_VOCAB_FAILED { error : string }
+      LINT_UI_VOCAB_FAILED { error : string! }
         @description "Internal: the UI vocabulary file could not be read."
         @tier "internal"
       LINT_FACTS_READ { }
@@ -602,7 +559,7 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_VOCAB { data : bytes! }
         @description "The installed @almadar/core vocabulary read."
         @tier "internal"
-      LINT_FACTS_FAILED { error : string }
+      LINT_FACTS_FAILED { error : string! }
         @description "Internal: the language facts could not be read."
         @tier "internal"
       LINT_FACTS_DONE { }
@@ -644,7 +601,7 @@ orbital OrbLintInputOrbital {
       LINT_FILE_READ { data : bytes! }
         @description "The file read."
         @tier "internal"
-      LINT_FILE_UNREAD { error : string }
+      LINT_FILE_UNREAD { error : string! }
         @description "The file could not be read or lowered."
         @tier "internal"
       LINT_PROGRAM_READ { result : ResolvedProgram! }

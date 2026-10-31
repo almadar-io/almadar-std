@@ -126,8 +126,8 @@ orbital OrbLintRuiEffectsOrbital {
                                               (fn r { code: @config.codes.effMissingFetchForEntity.code, path: (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" (object/get @r "j") "]"),
                                                       message: (str/concat "render-ui references entity '" (object/get @r "re") "' but no [\"fetch\", \"" (object/get @r "re") "\"] effect exists in this or any predecessor transition"),
                                                       suggestion: (str/concat "Add [\"fetch\", \"" (object/get @r "re") "\"] before the render-ui effect so the pattern has data to display"), severity: "error" })))))))))))
-                                (array/flatten (array/map (array/range 0 (array/len @info)) (fn ti
-                                  (array/concat (object/get (array/nth @info @ti) "fs") (if @anyRend (array/nth @fetchF @ti) [])))))))))))))))))))))
+                                (array/flatten (array/map (array/zip @info @fetchF) (fn pr
+                                  (array/concat (object/get (array/nth @pr 0) "fs") (if @anyRend (array/nth @pr 1) [])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "rui-effects", scope: @entity.scope, findings: @entity.findings })
@@ -143,7 +143,7 @@ orbital OrbLintRuiEffectsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRE  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRE!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShapeRE! }
@@ -172,7 +172,7 @@ orbital OrbLintRuiEffectsOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-effects <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-effects <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -206,7 +206,7 @@ orbital OrbLintRuiEffectsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-rui-effects" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint rui-effects` with its arguments and working directory."
         @synonyms "orb lint rui-effects"

@@ -25,10 +25,12 @@ describe('returnSemantics provenance declarations', () => {
     expect(declared('array/insert')).toBe('union-of-args<0,2>');
     expect(declared('do')).toBe('last-of-args');
     expect(declared('let')).toBe('identity-of-arg<1>');
+    expect(declared('array/flatten')).toBe('identity-of-arg<0>');
+    expect(declared('list')).toBe('union-of-args');
   });
 
   it('operators that create new elements stay undeclared', () => {
-    for (const name of ['range', 'zip', 'groupBy', 'partition', 'flatten']) {
+    for (const name of ['range', 'zip', 'groupBy', 'partition']) {
       expect(STD_OPERATORS[`array/${name}`]?.returnSemantics, name).toBeUndefined();
     }
   });

@@ -243,6 +243,60 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "unreadable-graphql-answer-goes-to-the-retry-failure-route",
+   "steps": [
+    {
+     "event": "CI_GQL_ANSWERED",
+     "payload": {
+      "body": "<html>bad gateway</html>"
+     },
+     "from": "loading",
+     "entity": {
+      "id": "b",
+      "key": "ci-status:2",
+      "page": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_RETRY_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "CI_RETRY_SUCCEEDED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-readable-graphql-answer-succeeds-the-retry",
+   "steps": [
+    {
+     "event": "CI_GQL_ANSWERED",
+     "payload": {
+      "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}"
+     },
+     "from": "loading",
+     "entity": {
+      "id": "b",
+      "key": "ci-status:2",
+      "page": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_RETRY_SUCCEEDED"
+       }
+      ],
+      "neverEmits": [
+       "CI_RETRY_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

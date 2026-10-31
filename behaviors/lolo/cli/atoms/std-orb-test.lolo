@@ -90,11 +90,11 @@ orbital OrbTestOrbital {
       INIT -> ready
       TEST_DONE -> ready
         (emit TEST_ANSWERED { status: @payload.status, body: @payload.body })
-      TEST_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      TEST_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit TEST_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
-      TEST_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit TEST_ARGS_PARSE { stage: "test" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
+      TEST_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit TEST_ARGS_PARSE { stage: "test" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -132,7 +132,7 @@ orbital OrbTestOrbital {
     listens {
       TEST_CALLED -> inbound "cli-test" answers TEST_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb test`."
         @synonyms "orb test, play every transition of a program, state machine tests"

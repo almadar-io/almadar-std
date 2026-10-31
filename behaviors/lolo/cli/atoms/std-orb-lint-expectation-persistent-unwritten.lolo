@@ -27,7 +27,8 @@ type ExPageTrait = { ref : string, name : string }
 type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
 type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
 type ExProgram = { orbitals : [ExOrbital] }
-type BwR = { lok : boolean, les : [string], eok : boolean, ees : [string], bok : boolean, bes : [string], aok : boolean, aes : [string], rok : boolean, res : [string], arr : boolean, head : string, hstr : boolean }
+type BwKids = [BwR?]
+type BwR = { lok : boolean!, les : [string]!, eok : boolean!, ees : [string]!, bok : boolean!, bes : [string]!, aok : boolean!, aes : [string]!, rok : boolean!, res : [string]!, arr : boolean!, head : string!, hstr : boolean! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintExpectationPersistentUnwrittenCodes = { sExpectationUnsatisfied : LintCodeDecl }
@@ -60,7 +61,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
       (let ((x (default (array/nth @xs @j) {})))
        (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
         (if (and (= @kind "entity") @strict (= (object/get @x "persistence" "") "persistent") (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) (not (array/some @alltr (fn p
-  (array/some (let ((nn (as (json/nodes [(array/map (object/get (object/get (object/get @p "t") "stateMachine") "transitions" []) (fn t (object/get @t "effects" []))), (array/map (object/get (object/get @p "t") "ticks" []) (fn t (object/get @t "effects" [])))]) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((l (default (as @n LNodes) [])))
+  (array/some (let ((nn (as (json/nodes [(let ((sm (object/get (object/get @p "t") "stateMachine"))) (if (= @sm null) [] (array/map (object/get @sm "transitions" []) (fn t (object/get @t "effects" []))))), (array/map (object/get (object/get @p "t") "ticks" []) (fn t (object/get @t "effects" [])))]) LNodes))) (if (= @nn null) [] @nn)) (fn n (let ((l (default (as @n LNodes) [])))
   (let ((h (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "")) (a1 (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
     (and (= @h "persist")
       (if (= @a1 "batch")
@@ -68,32 +69,33 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
           (let ((r (tree/fold (array/nth @l 2) (fn (n k)
   (let ((f : BwR { lok: false, les: [], eok: false, ees: [], bok: false, bes: [], aok: false, aes: [], rok: false, res: [], arr: false, head: "", hstr: false }))
     (if (not (validate/array @n)) @f
-    (let ((l @n)) (let ((len (array/len @l)) (head (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "")) (hstr (!= (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) null)) (kr (array/map @k (fn r (default @r @f)))))
-     (let ((rest (array/drop @kr 1)) (ent (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
+    (let ((ks (as @k BwKids))) (if (= @ks null) @f
+    (let ((l @n)) (let ((len (array/len @l)) (head (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "")) (hstr (!= (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) null)) (kr : [BwR] (array/map @ks (fn r (default @r @f)))))
+     (let ((rest (array/drop @kr 1)) (k1 (default (array/nth @kr 1) @f)) (k2 (default (array/nth @kr 2) @f)) (k3 (default (array/nth @kr 3) @f)) (ent (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
       (let ((allL { ok: (array/every @kr (fn r (object/get @r "lok"))), es: (array/flatten (array/map @kr (fn r (object/get @r "les")))) }) (restL { ok: (array/every @rest (fn r (object/get @r "lok"))), es: (array/flatten (array/map @rest (fn r (object/get @r "les")))) }) (restE { ok: (array/every @rest (fn r (object/get @r "eok"))), es: (array/flatten (array/map @rest (fn r (object/get @r "ees")))) }) (allE { ok: (array/every @kr (fn r (object/get @r "eok"))), es: (array/flatten (array/map @kr (fn r (object/get @r "ees")))) }))
        (let ((istup (and (> @len 0) (array/includes ["create", "update", "delete"] @head))))
-        (let ((e (if @istup (if (or (= @ent "") (str/startsWith @ent (str/concat (quote "@") ""))) { ok: false, es: [] } { ok: true, es: (if (= @head "delete") [] [@ent]) })
-                   (if (and (= @head "if") (= @len 4)) { ok: (array/every [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "eok"))), es: (array/flatten (array/map [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "ees")))) } { ok: false, es: [] }))))
+        (let ((e (if @istup (if (or (= @ent "") (str/startsWith @ent (quote "@"))) { ok: false, es: [] } { ok: true, es: (if (= @head "delete") [] [@ent]) })
+                   (if (and (= @head "if") (= @len 4)) { ok: (array/every [@k2, @k3] (fn r (object/get @r "eok"))), es: (array/flatten (array/map [@k2, @k3] (fn r (object/get @r "ees")))) } { ok: false, es: [] }))))
          (let ((lst (if (= @len 0) { ok: true, es: [] }
                       (if @hstr
                         (if (= @head "list") @restE
                           (if (= @head "array/concat") @restL
                             (if (and (array/includes ["array/prepend", "array/append"] @head) (= @len 3))
-                              { ok: (and (object/get (array/nth @kr 1) "lok") (object/get (array/nth @kr 2) "eok")), es: (array/concat (object/get (array/nth @kr 1) "les") (object/get (array/nth @kr 2) "ees")) }
-                              (if (and (= @head "array/filter") (= @len 3)) { ok: (object/get (array/nth @kr 1) "lok"), es: (object/get (array/nth @kr 1) "les") }
-                                (if (and (= @head "array/map") (= @len 3)) { ok: (object/get (array/nth @kr 2) "bok"), es: (object/get (array/nth @kr 2) "bes") }
+                              { ok: (and (object/get @k1 "lok") (object/get @k2 "eok")), es: (array/concat (object/get @k1 "les") (object/get @k2 "ees")) }
+                              (if (and (= @head "array/filter") (= @len 3)) { ok: (object/get @k1 "lok"), es: (object/get @k1 "les") }
+                                (if (and (= @head "array/map") (= @len 3)) { ok: (object/get @k2 "bok"), es: (object/get @k2 "bes") }
                                   (if (and (= @head "array/flatten") (= @len 2))
                                     (let ((m (default (array/nth @kr 1) {})))
                                       (if (not (object/get @m "arr")) { ok: false, es: [] }
                                         (if (and (object/get @m "hstr") (= (object/get @m "head") "list")) { ok: (object/get @m "rok"), es: (object/get @m "res") }
                                           (if (object/get @m "hstr") { ok: false, es: [] } { ok: (object/get @m "aok"), es: (object/get @m "aes") }))))
                                     (if (and (= @head "array/take") (= @len 3))
-                                      (if (= (json/stringify (array/nth @l 2)) "0") { ok: true, es: [] } { ok: (object/get (array/nth @kr 1) "lok"), es: (object/get (array/nth @kr 1) "les") })
-                                      (if (and (= @head "if") (= @len 4)) { ok: (array/every [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "lok"))), es: (array/flatten (array/map [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "les")))) } { ok: false, es: [] }))))))))
+                                      (if (= (json/stringify (array/nth @l 2)) "0") { ok: true, es: [] } { ok: (object/get @k1 "lok"), es: (object/get @k1 "les") })
+                                      (if (and (= @head "if") (= @len 4)) { ok: (array/every [@k2, @k3] (fn r (object/get @r "lok"))), es: (array/flatten (array/map [@k2, @k3] (fn r (object/get @r "les")))) } { ok: false, es: [] }))))))))
                         { ok: (object/get @allE "ok"), es: (object/get @allE "es") }))))
-          (let ((body (if (and (array/includes ["fn"] @head) (>= @len 3)) (array/last @kr) @f)))
+          (let ((body (if (and (array/includes ["fn"] @head) (>= @len 3)) (default (array/last @kr) @f) @f)))
            { lok: (object/get @lst "ok"), les: (object/get @lst "es"), eok: (object/get @e "ok"), ees: (object/get @e "es"), bok: (object/get @body "eok"), bes: (object/get @body "ees"),
-             aok: (object/get @allL "ok"), aes: (object/get @allL "es"), rok: (object/get @restL "ok"), res: (object/get @restL "es"), arr: true, head: @head, hstr: @hstr }))))))))))) "LNode")))
+             aok: (object/get @allL "ok"), aes: (object/get @allL "es"), rok: (object/get @restL "ok"), res: (object/get @restL "es"), arr: true, head: @head, hstr: @hstr }))))))))))))) "LNode")))
             (if (and (!= @r null) (object/get @r "lok"))
               (array/includes (object/get @r "les" []) (object/get @x "name" ""))
               (array/some (let ((ops (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
@@ -104,7 +106,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
               []))
           @ops)) (fn el (default (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
         (fn tp (let ((a (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (default (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
-          (if (or (= @a "delete") (= @en "") (str/startsWith @en (str/concat (quote "@") ""))) []
+          (if (or (= @a "delete") (= @en "") (str/startsWith @en (quote "@"))) []
             (let ((dp (if (= @a "create") 2 3)))
               [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (as (if (> (array/len @tp) @dp) (array/nth @tp @dp) null) LObj) }]))))))) (fn w (= (object/get @w "e") (object/get @x "name" "")))))))
         (and (array/includes ["create", "upsert", "update"] @a1) (= (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LStr) "") (object/get @x "name" "")))))))))))))
@@ -142,10 +144,10 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-persistent-unwritten <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-persistent-unwritten <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-persistent-unwritten <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -179,7 +181,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-expectation-persistent-unwritten" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint expectation-persistent-unwritten` with its arguments and working directory."
         @synonyms "orb lint expectation-persistent-unwritten"

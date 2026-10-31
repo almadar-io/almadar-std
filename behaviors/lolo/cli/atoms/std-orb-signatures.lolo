@@ -41,10 +41,10 @@ orbital OrbSignaturesOrbital {
 
     state ready {
       INIT -> ready
-      SIGNATURES_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SIGNATURES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SIGNATURES_ANSWERED { status: 400, body: "", stderr: "usage: orb signatures [--out FILE]" })
-      SIGNATURES_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
+      SIGNATURES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -86,7 +86,7 @@ orbital OrbSignaturesOrbital {
     listens {
       SIGNATURES_CALLED -> inbound "cli-signatures" answers SIGNATURES_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb signatures`."
         @synonyms "orb signatures, the language catalog, every construct operator and pattern"

@@ -362,12 +362,7 @@
           "name": "Ada Lovelace",
           "role": "admin",
           "permissions": [],
-          "claims": [
-           {
-            "name": "name",
-            "value": "Ada Lovelace"
-           }
-          ]
+          "claims": []
          }
         }
        }
@@ -580,12 +575,7 @@
           "name": "Ada",
           "role": "learner",
           "permissions": [],
-          "claims": [
-           {
-            "name": "name",
-            "value": "Ada"
-           }
-          ]
+          "claims": []
          }
         }
        }
@@ -719,6 +709,246 @@
    ],
    "config": {
     "createMissing": true
+   }
+  },
+  {
+   "id": "directory: a declared field is a claim",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-1",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-1"
+        },
+        {
+         "name": "role",
+         "value": "teacher"
+        },
+        {
+         "name": "plan",
+         "value": "pro"
+        },
+        {
+         "name": "iss",
+         "value": "https://issuer"
+        }
+       ]
+      },
+      "sourceEntity": "Member"
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_FOUND",
+     "payload": {
+      "data": {
+       "id": "u-1",
+       "role": "admin",
+       "name": "Ada Lovelace",
+       "plan": "pro",
+       "seen": "2026-10-30T12:34:56Z",
+       "tier": "teams"
+      }
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada Lovelace",
+          "role": "admin",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "tier",
+            "value": "teams"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Only the fields named in directoryClaims become claims.",
+   "config": {
+    "directoryClaims": [
+     "tier"
+    ]
+   }
+  },
+  {
+   "id": "directory: an undeclared field is not a claim",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-1",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-1"
+        },
+        {
+         "name": "role",
+         "value": "teacher"
+        },
+        {
+         "name": "plan",
+         "value": "pro"
+        },
+        {
+         "name": "iss",
+         "value": "https://issuer"
+        }
+       ]
+      },
+      "sourceEntity": "Member"
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_FOUND",
+     "payload": {
+      "data": {
+       "id": "u-1",
+       "role": "admin",
+       "name": "Ada Lovelace",
+       "plan": "pro",
+       "seen": "2026-10-30T12:34:56Z",
+       "tier": "teams"
+      }
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada Lovelace",
+          "role": "admin",
+          "permissions": [],
+          "claims": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "No directoryClaims: none of the row fields (plan, tier, seen) reach the viewer.",
+   "config": {}
+  },
+  {
+   "id": "directory: a declared datetime is ISO text",
+   "steps": [
+    {
+     "event": "VIEWER_RESOLVE",
+     "payload": {
+      "requestId": 1,
+      "sourceKind": "directory",
+      "verified": {
+       "uid": "u-1",
+       "email": "ada@example.com",
+       "name": "Ada",
+       "claims": [
+        {
+         "name": "sub",
+         "value": "u-1"
+        },
+        {
+         "name": "role",
+         "value": "teacher"
+        },
+        {
+         "name": "plan",
+         "value": "pro"
+        },
+        {
+         "name": "iss",
+         "value": "https://issuer"
+        }
+       ]
+      },
+      "sourceEntity": "Member"
+     }
+    },
+    {
+     "event": "VIEWER_PUMP",
+     "payload": {}
+    },
+    {
+     "event": "DIRECTORY_FOUND",
+     "payload": {
+      "data": {
+       "id": "u-1",
+       "role": "admin",
+       "name": "Ada Lovelace",
+       "plan": "pro",
+       "seen": "2026-10-30T12:34:56Z",
+       "tier": "teams"
+      }
+     },
+     "from": "looking",
+     "expect": {
+      "emits": [
+       {
+        "event": "VIEWER_RESOLVED",
+        "payload": {
+         "requestId": 1,
+         "viewer": {
+          "id": "u-1",
+          "email": "ada@example.com",
+          "name": "Ada Lovelace",
+          "role": "admin",
+          "permissions": [],
+          "claims": [
+           {
+            "name": "seen",
+            "value": "2026-10-30T12:34:56Z"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "A field named in directoryDateClaims is formatted as ISO 8601 UTC text.",
+   "config": {
+    "directoryDateClaims": [
+     "seen"
+    ]
    }
   }
  ]

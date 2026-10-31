@@ -146,8 +146,10 @@ orbital RevisionOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
-      OPEN_REVISION -> viewing_single
+      OPEN_REVISION -> viewing_single when (!= (if (= ?row null) (array/find @entity.revisions (fn x (= (object/get @x id) ?id))) ?row) null)
         (let ((rev (if (= ?row null) (array/find @entity.revisions (fn x (= (object/get @x id) ?id))) ?row)))
+          ;; the arm guard proved the revision exists, so the null branch is unreachable
+          (if (!= @rev null)
           (do
             (set @entity.id (object/get @rev id))
             (set @entity.documentId (object/get @rev documentId))
@@ -157,7 +159,8 @@ orbital RevisionOrbital {
             (set @entity.authorName (object/get @rev authorName))
             (set @entity.content (object/get @rev content))
             (set @entity.summary (object/get @rev summary))
-            (set @entity.createdAt (object/get @rev createdAt))))
+            (set @entity.createdAt (object/get @rev createdAt)))
+            null))
         (render-ui main {
           children: [{
             align: center
@@ -312,6 +315,9 @@ orbital RevisionOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
+      ;; A selected id that is no longer in the loaded history cannot be opened; say so instead of showing nothing.
+      OPEN_REVISION -> browsing when (= (if (= ?row null) (array/find @entity.revisions (fn x (= (object/get @x id) ?id))) ?row) null)
+        (notify error "That revision is no longer in the history.")
     }
 
     state viewing_single {

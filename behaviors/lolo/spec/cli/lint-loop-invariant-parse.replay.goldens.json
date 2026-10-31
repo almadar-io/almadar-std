@@ -2107,6 +2107,910 @@
           }
         }
       ]
+    },
+    {
+      "id": "cross-transition: a field set from json/stringify in one arm and json/parsed in another is an error",
+      "note": "Owner hard rule: the round trip across transitions launders the type the same way.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                [
+                                  "json/stringify",
+                                  {
+                                    "graphId": "@payload.g"
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    "@entity.saved",
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_JSON_ROUNDTRIP",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2][1]",
+                      "message": "json/parse re-parses entity field 'saved' whose every write is a json/stringify (written in orbitals[0].traits[0].stateMachine.transitions[0]): this round trip launders the value's type past the checker",
+                      "suggestion": "Store the typed value in the field, or narrow it with `(as value T)`; keep json/parse for text that arrives as text (a body, a file, rawBody).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cross-transition: a parse in a guard of a field only ever stringified is an error",
+      "note": "The guard is a parse site too.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                [
+                                  "json/stringify",
+                                  {
+                                    "graphId": "@payload.g"
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ]
+                            ],
+                            "guard": [
+                              "!=",
+                              [
+                                "json/parse",
+                                "@entity.saved",
+                                "Req"
+                              ],
+                              null
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_JSON_ROUNDTRIP",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].guard[1]",
+                      "message": "json/parse re-parses entity field 'saved' whose every write is a json/stringify (written in orbitals[0].traits[0].stateMachine.transitions[0]): this round trip launders the value's type past the checker",
+                      "suggestion": "Store the typed value in the field, or narrow it with `(as value T)`; keep json/parse for text that arrives as text (a body, a file, rawBody).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cross-transition: a queue element key stringified on append and parsed from the head is an error",
+      "note": "The backlog form: array/append of a record whose body is json/stringify, read by object/get of array/first.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.backlog",
+                                [
+                                  "array/append",
+                                  "@entity.backlog",
+                                  {
+                                    "event": "E",
+                                    "body": [
+                                      "json/stringify",
+                                      {
+                                        "graphId": "@payload.g"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        "@entity.backlog"
+                                      ],
+                                      "body",
+                                      "{}"
+                                    ],
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.backlog",
+                                [
+                                  "array/drop",
+                                  "@entity.backlog",
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_JSON_ROUNDTRIP",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2][1]",
+                      "message": "json/parse re-parses entity field 'backlog.body' whose every write is a json/stringify (written in orbitals[0].traits[0].stateMachine.transitions[0]): this round trip launders the value's type past the checker",
+                      "suggestion": "Store the typed value in the field, or narrow it with `(as value T)`; keep json/parse for text that arrives as text (a body, a file, rawBody).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a field written from rawBody and parsed is clean",
+      "note": "Text that arrives as text.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GOT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                "@payload.rawBody"
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    "@entity.saved",
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a field written from both a stringify and real text is clean",
+      "note": "One non-stringify write makes the parse legitimate.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                [
+                                  "json/stringify",
+                                  {
+                                    "graphId": "@payload.g"
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GOT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                "@payload.rawBody"
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    "@entity.saved",
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a queue whose body is also appended from text is clean",
+      "note": "The element key has a text write.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.backlog",
+                                [
+                                  "array/append",
+                                  "@entity.backlog",
+                                  {
+                                    "event": "E",
+                                    "body": [
+                                      "json/stringify",
+                                      {
+                                        "graphId": "@payload.g"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GOT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.backlog",
+                                [
+                                  "array/append",
+                                  "@entity.backlog",
+                                  {
+                                    "event": "E",
+                                    "body": "@payload.rawBody"
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        "@entity.backlog"
+                                      ],
+                                      "body",
+                                      "{}"
+                                    ],
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.backlog",
+                                [
+                                  "array/drop",
+                                  "@entity.backlog",
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a stringified field only sent as a body and never parsed is clean",
+      "note": "No parse site.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                [
+                                  "json/stringify",
+                                  {
+                                    "graphId": "@payload.g"
+                                  }
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SEND",
+                            "effects": [
+                              [
+                                "call-service",
+                                "http",
+                                "post",
+                                {
+                                  "body": "@entity.saved"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: the same field name stringified in another orbital is clean",
+      "note": "The write and the parse are in different orbitals.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PUT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.saved",
+                                [
+                                  "json/stringify",
+                                  {
+                                    "graphId": "@payload.g"
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NEXT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.gid",
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    "@entity.saved",
+                                    "Req"
+                                  ],
+                                  "graphId",
+                                  ""
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

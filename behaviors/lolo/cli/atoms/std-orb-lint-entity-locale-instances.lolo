@@ -10,7 +10,7 @@ uses Spec from "almadar-std/lint-entity-locale-instances"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type LocaleValue = string | number | boolean | [LocaleValue?] | Map string LocaleValue?
-type LocaleField = { name : string, required : boolean, default : LocaleValue }
+type LocaleField = { name : string!, required : boolean, default : LocaleValue }
 type LocaleRow = Map string LocaleValue?
 type LocaleEntity = { name : string, browser : boolean, fields : [LocaleField], instances : [LocaleRow], localeInstances : Map string [LocaleRow] }
 type LocaleEntityRef = LocaleEntity | string
@@ -44,7 +44,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
                       (array/flatten (array/map (array/range 0 (array/len @aux)) (fn ai (let ((ea (array/nth @aux @ai))) (if (validate/object @ea) [{ pth: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "]"), ee: @ea, sp: (object/get (default (array/nth @orbitals @oi) {}) "spec" false) }] []))))))))))))
             (let ((jobs (array/flatten (array/map @ents (fn it
                     (array/concat (if (object/get @it "sp") [] [{ ee: (object/get @it "ee"), rows: (object/get (object/get @it "ee") "instances" []), rp: (str/concat (object/get @it "pth") ".instances") }])
-                      (array/map (object/keys (object/get (object/get @it "ee") "localeInstances" {})) (fn k { ee: (object/get @it "ee"), rows: (object/get (object/get (object/get @it "ee") "localeInstances") @k), rp: (str/concat (object/get @it "pth") ".localeInstances." @k) }))))))))
+                      (let ((li (object/get (object/get @it "ee") "localeInstances" {}))) (array/map (object/keys @li) (fn k { ee: (object/get @it "ee"), rows: (object/get @li @k), rp: (str/concat (object/get @it "pth") ".localeInstances." @k) })))))))))
               (array/concat
                 (array/flatten (array/map @ents (fn it
                   (let ((ee (object/get @it "ee")))
@@ -105,12 +105,12 @@ orbital OrbLintEntityLocaleInstancesOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint entity-locale-instances: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-locale-instances <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-locale-instances <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-locale-instances <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -144,7 +144,7 @@ orbital OrbLintEntityLocaleInstancesOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-entity-locale-instances" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint entity-locale-instances` with its arguments and working directory."
         @synonyms "orb lint entity-locale-instances, per-locale instances"

@@ -16,11 +16,12 @@ type BtCfg = { type : string, default : BtShape? }
 type BtTransition = { guard : BtShape?, effects : [BtShape] }
 type BtTick = { guard : BtShape?, effects : [BtShape] }
 type BtMachine = { transitions : [BtTransition] }
-type BtTrait = { name : string, stateMachine : BtMachine, ticks : [BtTick], config : Map string BtCfg }
+type BtTrait = { name : string?, stateMachine : BtMachine, ticks : [BtTick], config : Map string BtCfg }
 type BtOrbital = { name : string, traits : [BtTrait] }
-type BtProgram = { orbitals : [BtOrbital] }
+type BtProgram = { orbitals : [BtOrbital]! }
 type BtHit = { rel : string, s : string, rd : boolean }
-type BtRoot = { x : BtShape?, w : string!, allow : boolean!, tn : string!, oi : number!, only : boolean! }
+type BtRoot = { x : BtShape?, w : string!, allow : boolean!, tn : string!, oi : number!, only : boolean!, kn : [string]! }
+type BtIdx = { ti : number!, t : BtTrait!, nm : string! }
 type BtWalk = { st : [string], ix : [number], col : Map string number, done : boolean, res : [string] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -44,47 +45,47 @@ orbital OrbLintBindingTraitsOrbital {
 
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
-  (let ((knownAll : [[string]] (array/map @orbitals (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "name"))) (fn t (object/get @t "name" ""))))))
-        (roots : [BtRoot] (array/flatten
-  (array/map (array/range 0 (array/len @orbitals))
-    (fn oi
-      (let ((o (default (array/nth @orbitals @oi) {})) (trts : [BtTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
-        (array/flatten
-          (array/map (array/range 0 (array/len @trts))
-            (fn ti
-              (let ((t (default (array/nth @trts @ti) {})))
-                (if (not (object/has @t "stateMachine"))
-                  @noroots
-                  (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
-                    (array/concat
-                      (array/flatten
-                        (array/map (array/sort (object/keys @cfg))
-                          (fn kn
-                            (let ((cf (default (object/get @cfg @kn) {})) (dv (object/get (object/get @cfg @kn) "default" null)))
-                              (if (= (object/get @cf "type" "") "trait")
-                                (if (validate/string @dv)
-                                  (if (str/startsWith @dv @tP2)
-                                    [{ x: @dv, w: (str/concat @tp ".config." @kn), allow: true, tn: @tn, oi: @oi, only: true }]
-                                    @noroots)
-                                  @noroots)
-                                @noroots)))))
+        (set @entity.findings (let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (noidx : [BtIdx] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
+  (let ((roots : [BtRoot] (object/get (array/reduce @orbitals { i: 0, out: @noroots } (fn (oa o)
+          (let ((oi : number (object/get @oa "i")) (trts : [BtTrait] (object/get @o "traits" [])) (tkn : [string] (object/get (array/reduce @trts { i: 0, out: @nostr } (fn (ka t) (let ((nmv (object/get @t "name" null))) (if (= @nmv null) @ka { i: 0, out: (array/append (object/get @ka "out") @nmv) }))))  "out")))
+            { i: (+ @oi 1), out: (array/concat (object/get @oa "out") (object/get (array/reduce @trts { i: 0, out: @noroots } (fn (ta t)
+              (let ((ti : number (object/get @ta "i")))
+                { i: (+ @ti 1), out: (array/concat (object/get @ta "out")
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
                       (array/concat
                         (array/flatten
-                          (array/map (array/range 0 (array/len @trs))
-                            (fn xi
-                              (let ((tr (default (array/nth @trs @xi) {})) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
-                                (let ((effs : [BtShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
-                                  (array/concat
-                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
-                                    (array/map (array/filter (array/range 0 (array/len @effs)) (fn ei (not (validate/object (array/nth @effs @ei))))) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false }))))))))
-                        (array/flatten
-                          (array/map (array/range 0 (array/len @tks))
-                            (fn ki
-                              (let ((tk (array/nth @tks @ki)) (teffs : [BtShape] (object/get (default (array/nth @tks @ki) {}) "effects" [])) (tg (object/get (default (array/nth @tks @ki) {}) "guard" null)))
-                                (array/concat
-                                  (if (!= @tg null) [{ x: @tg, w: (str/concat @tp ".ticks[" @ki "].guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
-                                  (array/map (array/filter (array/range 0 (array/len @teffs)) (fn ei (not (validate/object (array/nth @teffs @ei))))) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false })))))))))))))))))))))
+                          (array/map (array/sort (object/keys @cfg))
+                            (fn kn
+                              (let ((cf : BtCfg? (object/get @cfg @kn)))
+                                (if (= @cf null)
+                                  @noroots
+                                  (let ((dv (object/get @cf "default" null)))
+                                    (if (= (object/get @cf "type" "") "trait")
+                                      (if (validate/string @dv)
+                                        (if (str/startsWith @dv @tP2)
+                                          [{ x: @dv, w: (str/concat @tp ".config." @kn), allow: true, tn: @tn, oi: @oi, only: true, kn: @tkn }]
+                                          @noroots)
+                                        @noroots)
+                                      @noroots)))))))
+                        (array/concat
+                          (object/get (array/reduce @trs { i: 0, out: @noroots } (fn (xa tr)
+                            (let ((xi : number (object/get @xa "i")) (effs : [BtShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
+                              (let ((xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                { i: (+ @xi 1), out: (array/concat (object/get @xa "out")
+                                  (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), allow: false, tn: @tn, oi: @oi, only: false, kn: @tkn }] @noroots)
+                                  (object/get (array/reduce @effs { i: 0, out: @noroots } (fn (ea ef)
+                                    (let ((ei : number (object/get @ea "i")))
+                                      { i: (+ @ei 1), out: (if (validate/object @ef) (object/get @ea "out") (array/append (object/get @ea "out") { x: @ef, w: (str/concat @xp ".effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false, kn: @tkn })) }))) "out")) })))) "out")
+                          (object/get (array/reduce @tks { i: 0, out: @noroots } (fn (ka tk)
+                            (let ((ki : number (object/get @ka "i")) (teffs : [BtShape] (object/get @tk "effects" [])) (tg (object/get @tk "guard" null)))
+                              { i: (+ @ki 1), out: (array/concat (object/get @ka "out")
+                                (if (!= @tg null) [{ x: @tg, w: (str/concat @tp ".ticks[" @ki "].guard"), allow: false, tn: @tn, oi: @oi, only: false, kn: @tkn }] @noroots)
+                                (object/get (array/reduce @teffs { i: 0, out: @noroots } (fn (ea ef)
+                                  (let ((ei : number (object/get @ea "i")))
+                                    { i: (+ @ei 1), out: (if (validate/object @ef) (object/get @ea "out") (array/append (object/get @ea "out") { x: @ef, w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false, kn: @tkn })) }))) "out")) }))) "out")))))) }))) "out")) })))
+          "out")))
     (array/concat
       (array/flatten
         (array/map @roots
@@ -106,7 +107,7 @@ orbital OrbLintBindingTraitsOrbital {
               (array/flatten
                 (array/map @hs
                   (fn h
-                    (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (tn (object/get @x "tn")) (known : [string] (array/nth @knownAll (object/get @x "oi"))))
+                    (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (tn (object/get @x "tn")) (known : [string] (object/get @x "kn")))
               (if (not (or (object/get @x "allow") (object/get @h "rd")))
                 (if (object/get @x "only") @nof [{ code: @config.codes.bindingTraitOutsideRenderUi.code, path: @p, message: (str/concat (quote "@") "trait binding '" @s "' appears outside a render-ui effect; @trait references are render-only composition primitives and may only be used inside a (render-ui ...) pattern tree"), suggestion: "Move the @trait reference into a render-ui children array, or replace it with the intended data/payload binding", severity: "error" }])
                 (let ((fnds : [OrbFinding] (if (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$"))
@@ -123,50 +124,57 @@ orbital OrbLintBindingTraitsOrbital {
                                 [{ code: @config.codes.bindingTraitUnknown.code, path: @p, message: (str/concat (quote "@") "trait." @nm " references a trait not declared in this orbital"), suggestion: "Declare the trait in the orbital, or check spelling", severity: "error" }]
                                 (if (> (array/len @parts) 2) [{ code: @config.codes.bindingTraitInvalidFormat.code, path: @p, message: (str/concat (quote "@") "trait binding has too many segments: '" @s "' (expected " (quote "@") "trait.<Name>)"), suggestion: "", severity: "error" }] @nof))))))))))
                   (if (object/get @x "only") (array/filter @fnds (fn f (= (object/get @f "code") "ORB_BINDING_TRAIT_UNKNOWN"))) @fnds)))))))))))
-      (array/flatten
-  (array/map (array/range 0 (array/len @orbitals))
-    (fn oi
-      (let ((trts : [BtTrait] (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
-        (let ((inl (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (default (array/nth @trts @ti) {}) "stateMachine")))))
-          (let ((names : [string] (array/map @inl (fn ti (object/get (default (array/nth @trts @ti) {}) "name" "")))))
-            (let ((adj : Map string [string] (default (object/fromEntries (array/map @inl (fn ti
-                    (let ((t (default (array/nth @trts @ti) {})))
-                      [(object/get @t "name" ""),
-                       (array/unique (array/flatten (array/map
+      (object/get (array/reduce @orbitals { i: 0, out: @nof } (fn (oa o)
+        (let ((oi : number (object/get @oa "i")) (trts : [BtTrait] (object/get @o "traits" [])))
+          { i: (+ @oi 1), out: (array/concat (object/get @oa "out")
+            (let ((inl : [BtIdx] (object/get (array/reduce @trts { i: 0, out: @noidx } (fn (ia t)
+                    (let ((ti : number (object/get @ia "i")) (nmv (object/get @t "name" null)))
+                      { i: (+ @ti 1), out: (if (= @nmv null) (object/get @ia "out") (if (object/has @t "stateMachine") (array/append (object/get @ia "out") { ti: @ti, t: @t, nm: @nmv }) (object/get @ia "out"))) }))) "out")))
+              (let ((names : [string] (array/map @inl (fn e (object/get @e "nm")))))
+                (let ((adj : Map string [string] (object/fromEntries (array/map @inl (fn e
+                        (let ((t : BtTrait (object/get @e "t")))
+                          [(object/get @e "nm"),
+                           (array/unique (array/flatten (array/map
                          (array/concat
                            (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
                            (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
-                         (fn e (array/map (array/filter (array/map (array/filter (default (as (json/nodes @e) BtNodes) []) (fn y (validate/string @y))) (fn y (default (as @y BtS) ""))) (fn y (and (str/startsWith @y @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @y 7) ".")) "[")) "")))) (fn y (array/first (str/split (str/slice @y 7) "."))))))))]))))
-   {})))
-              (if (= (array/len (array/flatten (object/values @adj))) 0)
-                @nof
-                (let ((w (array/reduce (array/range 0 (+ (* 3 (array/len @names)) (array/len (array/flatten (object/values @adj))) 2)) { stack: @nostr, idx: @nonum, vis: @nostr, found: @nostr }
-                  (fn (acc step)
-                    (if (> (array/len (object/get @acc "found")) 0)
-                      @acc
-                      (let ((stack (object/get @acc "stack")) (idx (object/get @acc "idx")) (vis (object/get @acc "vis")))
-                        (if (= (array/len @stack) 0)
-                          (let ((rts (array/filter @names (fn nm (not (array/includes @vis @nm))))))
-                            (if (= (array/len @rts) 0)
-                              @acc
-                              (let ((r0 (array/first @rts))) { stack: [@r0], idx: [0], vis: (array/append @vis @r0), found: @nostr })))
-                          (let ((top (default (array/last @stack) {})) (i (default (array/last @idx) [])))
-                            (let ((kids (object/get @adj @top @nostr)))
-                              (if (>= @i (array/len @kids))
-                                { stack: (array/dropLast @stack 1), idx: (array/dropLast @idx 1), vis: @vis, found: @nostr }
-                                (let ((d (array/nth @kids @i)))
-                                  (if (not (object/has @adj @d))
-                                    { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
-                                    (if (array/includes @stack @d)
-                                      { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: (array/append (array/slice @stack (array/indexOf @stack @d) (array/len @stack)) @d) }
-                                      (if (array/includes @vis @d)
-                                        { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
-                                        { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nostr }))))))))))))))
-                  (let ((cy : [string] (object/get @w "found")))
-                    (if (> (array/len @cy) 0)
-                      [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (array/nth @inl (array/indexOf @names (array/first @cy))) " (" (array/first @cy) ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]
-                      @nof)
-                    ))))))))))))))
+                         (fn e (array/map (array/filter (array/map (array/filter (default (as (json/nodes @e) BtNodes) []) (fn y (validate/string @y))) (fn y (default (as @y BtS) ""))) (fn y (and (str/startsWith @y @tP2) (!= (str/replace-pattern (str/slice @y 7) "[.\\[].*$" "") "")))) (fn y (str/replace-pattern (str/slice @y 7) "\\..*$" "")))))))]))))))
+                  (if (= (array/len (array/flatten (object/values @adj))) 0)
+                    @nof
+                    (let ((w (array/reduce (array/range 0 (+ (* 3 (array/len @names)) (array/len (array/flatten (object/values @adj))) 2)) { stack: @nostr, idx: @nonum, vis: @nostr, found: @nostr }
+                      (fn (acc step)
+                        (if (> (array/len (object/get @acc "found")) 0)
+                          @acc
+                          (let ((stack (object/get @acc "stack")) (idx (object/get @acc "idx")) (vis (object/get @acc "vis")))
+                            (if (= (array/len @stack) 0)
+                              (let ((r0 (array/first (array/filter @names (fn nm (not (array/includes @vis @nm)))))))
+                                (if (= @r0 null)
+                                  @acc
+                                  { stack: [@r0], idx: [0], vis: (array/append @vis @r0), found: @nostr }))
+                              (let ((top (array/last @stack)) (i (array/last @idx)))
+                                (if (= @top null)
+                                  @acc
+                                  (if (= @i null)
+                                    @acc
+                                    (let ((kids (object/get @adj @top @nostr)))
+                                      (let ((d (array/nth @kids @i)))
+                                        (if (= @d null)
+                                          { stack: (array/dropLast @stack 1), idx: (array/dropLast @idx 1), vis: @vis, found: @nostr }
+                                          (if (not (object/has @adj @d))
+                                            { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
+                                            (if (array/includes @stack @d)
+                                              { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: (array/append (array/slice @stack (array/indexOf @stack @d) (array/len @stack)) @d) }
+                                              (if (array/includes @vis @d)
+                                                { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
+                                                { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nostr }))))))))))))))))
+                      (let ((cy : [string] (object/get @w "found")))
+                        (let ((c0 (array/first @cy)))
+                          (if (= @c0 null)
+                            @nof
+                            (let ((ent (array/find @inl (fn e (= (object/get @e "nm") @c0)))))
+                              (if (= @ent null)
+                                @nof
+                                [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (object/get @ent "ti") " (" @c0 ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]))))))))))) }))) "out")))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-traits", scope: @entity.scope, findings: @entity.findings })
@@ -201,10 +209,10 @@ orbital OrbLintBindingTraitsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-traits <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-traits <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-traits <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -238,7 +246,7 @@ orbital OrbLintBindingTraitsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-binding-traits" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint binding-traits` with its arguments and working directory."
         @synonyms "orb lint binding-traits"

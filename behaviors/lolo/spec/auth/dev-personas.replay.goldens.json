@@ -426,6 +426,56 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-unreadable-refusal-body-on-create-is-a-500",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "create:p1",
+      "status": 502,
+      "headers": {},
+      "body": "PGh0bWw+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unreadable-body-on-a-2xx-create-goes-on-to-read-the-row",
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_REPLIED",
+     "payload": {
+      "key": "create:p1",
+      "status": 200,
+      "headers": {},
+      "body": "PGh0bWw+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIGN_IN_ROW_MISSED",
+        "payload": {
+         "code": "not-found"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -149,11 +149,11 @@ orbital OrbMcpOrbital {
 
     state starting {
       INIT -> starting
-      MCP_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      MCP_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit MCP_ARGS_UNREAD { })
-      MCP_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "cwd"))
-        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "argv") flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })
+      MCP_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "cwd"))
+        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -589,7 +589,7 @@ orbital OrbMcpOrbital {
     listens {
       MCP_CALLED -> inbound "cli-mcp" answers MCP_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb mcp`, the MCP server over stdio."
         @synonyms "orb mcp, the orb MCP server, language tools for an agent"

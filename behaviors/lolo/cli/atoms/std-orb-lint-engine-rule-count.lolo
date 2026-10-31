@@ -34,7 +34,7 @@ orbital OrbLintEngineRuleCountOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (array/flatten (array/map (default (object/get (default @payload.program {}) "orbitals") []) (fn o
+        (set @entity.findings (array/flatten (array/map (default (object/get @payload.program "orbitals") []) (fn o
           (array/flatten (array/map (array/filter (default (object/get @o "traits") []) (fn t (!= (object/get (default (object/get @t "config") {}) "ruleCount") null))) (fn t
             (let ((cfg (default (object/get @t "config") {})))
               (let ((knob (default (object/get (default (object/get @cfg "ruleCount") {}) "default") 0))
@@ -75,10 +75,10 @@ orbital OrbLintEngineRuleCountOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint engine-rule-count <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint engine-rule-count <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -112,7 +112,7 @@ orbital OrbLintEngineRuleCountOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-engine-rule-count" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint engine-rule-count` with its arguments and working directory."
         @synonyms "orb lint engine-rule-count"

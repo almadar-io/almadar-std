@@ -47,12 +47,12 @@ orbital OrbLintPagePathOrbital {
                   (if (or (object/has @pg "protocol") (not (object/has @pg "path")))
                     []
                     (let ((route (object/get @pg "path")))
-                      (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "].path")))
+                      (if (= @route null) [] (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "].path")))
                         (array/flatten [
                           (if (= @route "") [{ code: @config.codes.pMissingPath.code, path: @where, message: "Page path is required", suggestion: "Add a path starting with / (e.g., '/tasks', '/users/:id')", severity: "error" }] [])
                           (if (and (!= @route "") (not (str/startsWith @route "/"))) [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Page path must start with '/': '" @route "'"), suggestion: "Prefix the path with / (e.g., '/tasks' instead of 'tasks')", severity: "error" }] [])
                           (if (and (!= @route "") @payload.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
-                          (if (str/startsWith @route "/api") [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
+                          (if (str/startsWith @route "/api") [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])]))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-path", scope: @entity.scope, findings: @entity.findings })
@@ -68,7 +68,7 @@ orbital OrbLintPagePathOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PagePathProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -85,10 +85,10 @@ orbital OrbLintPagePathOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-path <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -122,7 +122,7 @@ orbital OrbLintPagePathOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-page-path" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint page-path` with its arguments and working directory."
         @synonyms "orb lint page-path, page route path"

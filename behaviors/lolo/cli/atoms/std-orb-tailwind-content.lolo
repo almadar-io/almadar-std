@@ -38,10 +38,10 @@ orbital OrbTailwindContentOrbital {
 
     state ready {
       INIT -> ready
-      TAILWIND_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      TAILWIND_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
-      TAILWIND_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
+      TAILWIND_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -163,7 +163,7 @@ orbital OrbTailwindContentOrbital {
     listens {
       TAILWIND_CALLED -> inbound "cli-tailwind-content" answers TAILWIND_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb tailwind-content`."
         @synonyms "orb tailwind-content, regenerate the tailwind content list, class token list for the web client"

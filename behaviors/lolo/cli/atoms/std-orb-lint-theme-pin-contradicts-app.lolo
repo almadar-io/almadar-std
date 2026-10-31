@@ -62,7 +62,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThemePinProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThemePinProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -82,7 +82,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-pin-contradicts-app <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-pin-contradicts-app <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -116,7 +116,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-theme-pin-contradicts-app" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint theme-pin-contradicts-app` with its arguments and working directory."
         @synonyms "orb lint theme-pin-contradicts-app"

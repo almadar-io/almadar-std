@@ -11,14 +11,14 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type InitFrom = string | [string]
 type InitGuard = string | number | boolean | [InitGuard?] | Map string InitGuard?
-type InitState = { name : string, isInitial : boolean }
+type InitState = { name : string!, isInitial : boolean }
 type InitTransition = { from : InitFrom!, event : string!, to : string!, guard : InitGuard }
 type InitMachine = { states : [InitState], transitions : [InitTransition] }
-type InitTrait = { name : string, stateMachine : InitMachine }
+type InitTrait = { name : string!, stateMachine : InitMachine }
 type InitPageTrait = { ref : string, name : string, stateMachine : InitMachine }
 type InitPage = { traits : [InitPageTrait] }
-type InitOrbital = { name : string, pages : [InitPage], traits : [InitTrait] }
-type InitProgram = { orbitals : [InitOrbital] }
+type InitOrbital = { name : string!, pages : [InitPage], traits : [InitTrait] }
+type InitProgram = { orbitals : [InitOrbital]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintInitCoverageCodes = { lintNodeUnchecked : LintCodeDecl , circuitInitUncoveredState : LintCodeDecl }
@@ -51,7 +51,7 @@ orbital OrbLintInitCoverageOrbital {
                             (arms (array/map (object/get @sm "transitions" []) (fn a
                               (let ((raw (object/get @a "from" ""))
                                     (g0 (object/get @a "guard" null))
-                                    (gr (if (= @g0 null) null (tree/fold @g0 (fn (n k) (if (validate/array @n) (let ((len (array/len @k)) (kk (array/map @k (fn r (if (= @r null) { f: true, t: false, lit: true, v: "null" } @r))))) (let ((op (if (and (> @len 0) (validate/string (array/nth @n 0))) (array/nth @n 0) null)) (args (array/drop @kk 1))) (if (= @len 0) { f: true, t: false, lit: false, v: "" } (if (= @op null) { f: false, t: true, lit: false, v: "" } (if (= @op "and") { f: (array/some @args (fn x (object/get @x "f"))), t: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "t")))), lit: false, v: "" } (if (= @op "or") { f: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "f")))), t: (array/some @args (fn x (object/get @x "t"))), lit: false, v: "" } (if (= @op "not") { f: (and (= @len 2) (object/get (array/nth @kk 1) "t")), t: (and (= @len 2) (object/get (array/nth @kk 1) "f")), lit: false, v: "" } (if (array/includes ["=", "==", "!="] @op) (if (and (= @len 3) (object/get (array/nth @kk 1) "lit") (object/get (array/nth @kk 2) "lit")) (let ((eq (= (object/get (array/nth @kk 1) "v") (object/get (array/nth @kk 2) "v")))) { f: (= @eq (= @op "!=")), t: (= @eq (!= @op "!=")), lit: false, v: "" }) { f: false, t: false, lit: false, v: "" }) { f: false, t: false, lit: false, v: "" })))))))) (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0), lit: false, v: "" } (if (validate/string @n) { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith (json/stringify @n) "\"@"))), lit: (not (str/startsWith (json/stringify @n) "\"@")), v: (json/stringify @n) } (if (validate/number @n) { f: (= @n 0), t: (!= @n 0), lit: true, v: (json/stringify @n) } { f: (not @n), t: @n, lit: true, v: (json/stringify @n) }))))) "InitGuard"))))
+                                    (gr (if (= @g0 null) null (tree/fold @g0 (fn (n k) (if (validate/array @n) (let ((len (array/len @k)) (kk (array/map @k (fn r (if (= @r null) { f: true, t: false, lit: true, v: "null" } @r))))) (let ((op (if (and (> @len 0) (validate/string (array/nth @n 0))) (array/nth @n 0) null)) (args (array/drop @kk 1))) (if (= @len 0) { f: true, t: false, lit: false, v: "" } (if (= @op null) { f: false, t: true, lit: false, v: "" } (if (= @op "and") { f: (array/some @args (fn x (object/get @x "f"))), t: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "t")))), lit: false, v: "" } (if (= @op "or") { f: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "f")))), t: (array/some @args (fn x (object/get @x "t"))), lit: false, v: "" } (if (= @op "not") { f: (and (= @len 2) (let ((k1 (array/nth @kk 1))) (if (= @k1 null) false (object/get @k1 "t")))), t: (and (= @len 2) (let ((k1 (array/nth @kk 1))) (if (= @k1 null) false (object/get @k1 "f")))), lit: false, v: "" } (if (array/includes ["=", "==", "!="] @op) (if (and (= @len 3) (let ((k1 (array/nth @kk 1))) (if (= @k1 null) false (object/get @k1 "lit"))) (let ((k2 (array/nth @kk 2))) (if (= @k2 null) false (object/get @k2 "lit")))) (let ((k1 (array/nth @kk 1)) (k2 (array/nth @kk 2))) (if (or (= @k1 null) (= @k2 null)) { f: false, t: false, lit: false, v: "" } (let ((eq (= (object/get @k1 "v") (object/get @k2 "v")))) { f: (= @eq (= @op "!=")), t: (= @eq (!= @op "!=")), lit: false, v: "" }))) { f: false, t: false, lit: false, v: "" }) { f: false, t: false, lit: false, v: "" })))))))) (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0), lit: false, v: "" } (if (validate/string @n) { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith (json/stringify @n) "\"@"))), lit: (not (str/startsWith (json/stringify @n) "\"@")), v: (json/stringify @n) } (if (validate/number @n) { f: (= @n 0), t: (!= @n 0), lit: true, v: (json/stringify @n) } { f: (not @n), t: @n, lit: true, v: (json/stringify @n) }))))) "InitGuard"))))
                                 { froms: (if (validate/array @raw) @raw [@raw]), event: (object/get @a "event" ""), to: (object/get @a "to" ""), unk: (and (!= @g0 null) (= @gr null)), dead: (if (= @gr null) false (object/get @gr "f")) }))))
                             (initialRow (array/find (object/get @sm "states" []) (fn s (= (object/get @s "isInitial" false) true)))))
                         (array/concat (array/flatten (array/map (array/range 0 (array/len @arms)) (fn ai (if (object/get (array/nth @arms @ai) "unk") (let ((up (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.transitions[" @ai "].guard"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a InitGuard; this rule could not check it"), suggestion: "", severity: "error" }]) [])))) (if (or (= @initialRow null) (not (array/includes @pageTraits (object/get @t "name"))))
@@ -78,7 +78,7 @@ orbital OrbLintInitCoverageOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : InitProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : InitProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -95,10 +95,10 @@ orbital OrbLintInitCoverageOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint init-coverage <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint init-coverage <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint init-coverage <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -132,7 +132,7 @@ orbital OrbLintInitCoverageOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-init-coverage" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint init-coverage` with its arguments and working directory."
         @synonyms "orb lint init-coverage, page trait INIT coverage"

@@ -285,6 +285,85 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "non-numeric-bucket-total-warns-and-leaves-the-bucket-out",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "signal": 0,
+      "stdoutBytes": "",
+      "stage": "bucket",
+      "exitCode": 0,
+      "stdout": "2025-01-01 a\n\nTotal Objects: many\n   Total Size: 2048\n",
+      "stderr": ""
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "buckets": [
+       "bk"
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "emits": [
+       {
+        "event": "AWS_BUCKET_NEXT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-numeric-bucket-totals-add-the-bucket",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "signal": 0,
+      "stdoutBytes": "",
+      "stage": "bucket",
+      "exitCode": 0,
+      "stdout": "2025-01-01 a\n\nTotal Objects: 3\n   Total Size: 2048\n",
+      "stderr": ""
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "buckets": [
+       "bk"
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "AWS_BUCKET_NEXT"
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

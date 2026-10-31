@@ -20,7 +20,7 @@ type CycMachine = { transitions : [CycTransition] }
 type CycTrait = { name : string, emits : [CycEmit], listens : [CycListen], stateMachine : CycMachine }
 type CycOrbital = { name : string, traits : [CycTrait] }
 type CycProgram = { orbitals : [CycOrbital] }
-type CycRow = { tr : string, orb : string, arm : string, emitted : string, ek : string, guarded : boolean }
+type CycRow = { tr : string!, orb : string!, arm : string!, emitted : string!, ek : string!, guarded : boolean! }
 type CycOut = { ev : [string] }
 type CycTypeRef = string | CycTypeNode
 type CycTypeNode = { kind : string, fields : Map string CycTypeRef? }
@@ -87,12 +87,12 @@ orbital OrbLintCircularDependenciesOrbital {
                         (let ((trn (object/get @rtd "name" "")))
                           (array/flatten (array/map (object/get (object/get @rtd "stateMachine" {}) "transitions" @notr) (fn rx
                             (let ((arm (object/get @rx "event" ""))
-                                  (guarded (and (object/has @rx "guard") (!= (object/get @rx "guard" null) null))))
+                                  (guarded (object/has @rx "guard")))
                               (array/map (array/unique (array/flatten (array/map (object/get @rx "effects" @nonodes) (fn re
                                 (let ((txt (json/stringify @re)))
                                 (if (not (str/includes @txt "\"emit\"")) @nos
                                 (if (and (str/startsWith @txt "[\"emit\"") (= (array/len (str/split @txt "\"emit\"")) 2))
-                                  (let ((fpa (json/parse @txt CycNodes))) (if (= @fpa null) @nos (if (< (array/len @fpa) 2) @nos (let ((m1 (array/nth @fpa 1))) (if (validate/string @m1) [(str/concat @m1 "")] @nos)))))
+                                  (let ((fpa (json/parse @txt CycNodes))) (if (= @fpa null) @nos (if (< (array/len @fpa) 2) @nos (let ((m1 (array/nth @fpa 1))) (if (validate/string @m1) [@m1] @nos)))))
                                   (object/get (default (tree/fold @re (fn (tn fk)
                                     (let ((nr : CycOut { ev: [] }))
                                       (if (validate/array @tn)
@@ -102,7 +102,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                               (if (= @len 0) @nos
                                                 (array/concat
                                                   (if (and (>= @len 2) (= (json/stringify @hd) (json/stringify "emit")))
-                                                    (let ((m1 (array/nth @tn 1))) (if (validate/string @m1) [(str/concat @m1 "")] @nos))
+                                                    (let ((m1 (array/nth @tn 1))) (if (validate/string @m1) [@m1] @nos))
                                                     @nos)
                                                   (if (or (= (json/stringify @hd) (json/stringify "fetch")) (= (json/stringify @hd) (json/stringify "persist")))
                                                     (array/flatten (array/map @tn (fn mi
@@ -114,14 +114,14 @@ orbital OrbLintCircularDependenciesOrbital {
                                                                 (let ((me (as @mem CycMap)))
                                                                   (if (= @me null) @nos
                                                                     (array/flatten (array/map (object/values @me) (fn mv
-                                                                      (if (and (validate/string @mv) (!= (str/concat @mv "") "")) [(str/concat @mv "")] @nos))))))))))))))
+                                                                      (if (and (validate/string @mv) (!= @mv "")) [@mv] @nos))))))))))))))
                                                     @nos)))
                                               (array/flatten (array/map (default @fk @nokids) (fn fr (object/get (if (= @fr null) @nr @fr) "ev" @nos))))) })
                                         (if (validate/object @tn)
                                           { ev: (let ((mo (as @tn CycMap)))
                                               (if (= @mo null) @nos
                                                 (let ((ev2 (object/get @mo "emit" null)))
-                                                  (if (validate/string @ev2) [(str/concat @ev2 "")] @nos)))) }
+                                                  (if (validate/string @ev2) [@ev2] @nos)))) }
                                           @nr))))
                                     "CycNode") @nout) "ev" @nos))))))))
                                 (fn rev { tr: @trn, orb: @orn, arm: @arm, emitted: @rev, ek: (str/replaceAll (str/replaceAll @rev "~" "~t") "." "~d"), guarded: @guarded }))))))))))))))))
@@ -147,11 +147,9 @@ orbital OrbLintCircularDependenciesOrbital {
                                                     (and (>= (array/len @pa) 2)
                                                       (or (and (= (json/stringify (array/nth @pa 0)) (json/stringify "emit")) (validate/string (array/nth @pa 1)))
                                                           (let ((p0 (array/nth @pa 0)))
-                                                            (and (validate/string @p0) (array/includes @propops (str/concat @p0 ""))
+                                                            (and (validate/string @p0) (array/includes @propops @p0)
                                                               (array/some (array/drop @pa 1) (fn po
-                                                                (and (validate/object @po)
-                                                                  (let ((pmo (as @po CycMap)))
-                                                                    (and (!= @pmo null) (object/has @pmo "emit")))))))))))))
+                                                                (and (validate/object @po) (object/has @po "emit")))))))))))
                                               (if (validate/object @pe)
                                                 (let ((pm2 (as @pe CycMap)))
                                                   (if (= @pm2 null) false
@@ -162,7 +160,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                             (trig (object/get @l "triggers" (object/get @l "event" "")))
                                             (src (object/get @l "source" {}))
                                             (lsc (object/get @l "scope" ""))
-                                            (lguard (and (object/has @l "guard") (!= (object/get @l "guard" null) null))))
+                                            (lguard (object/has @l "guard")))
                                         (let ((sk (object/get @src "kind" ""))
                                               (st (object/get @src "trait" ""))
                                               (so (object/get @src "orbital" "")))
@@ -198,7 +196,9 @@ orbital OrbLintCircularDependenciesOrbital {
                                             (let ((roots (array/filter @keys (fn kk (not (array/includes @vis @kk))))))
                                               (if (= (array/len @roots) 0) @wst
                                                 (let ((r0 (array/first @roots))) { stack: [@r0], idx: [0], vis: (array/append @vis @r0), found: @nos })))
-                                            (let ((top (array/last @stack)) (i (default (array/last @idx) [])))
+                                            (let ((top (array/last @stack)) (ilast (array/last @idx)))
+                                            (if (= @ilast null) @wst
+                                            (let ((i @ilast))
                                               (let ((ae (array/find @adj (fn az (= (object/get @az "k" "") @top)))))
                                                 (let ((deps (if (= @ae null) @nos (object/get @ae "deps" @nos))))
                                                   (if (>= @i (array/len @deps))
@@ -208,7 +208,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                                         { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: (array/append @stack @d) }
                                                         (if (array/includes @vis @d)
                                                           { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nos }
-                                                          { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nos }))))))))))))) "found")))
+                                                          { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nos }))))))))))))))) "found")))
                             (if (= (array/len @found) 0) []
                               [{ code: @config.codes.xCircularDependency.code, path: "traits", message: (str/concat "Circular event dependency detected: " (str/join @found " -> ")), suggestion: "Break the cycle by removing one of the listener/emitter relationships", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
@@ -249,10 +249,10 @@ orbital OrbLintCircularDependenciesOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circular-dependencies <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circular-dependencies <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -286,7 +286,7 @@ orbital OrbLintCircularDependenciesOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-circular-dependencies" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint circular-dependencies` with its arguments and working directory."
         @synonyms "orb lint circular-dependencies"

@@ -13,6 +13,9 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type PageModsPage = { path : string, protocol : string, name : string, access : string, title : string, description : string, indexing : string, translationOf : string }
 type PageModsOrbital = { pages : [PageModsPage] }
 type PageModsSite = { signIn : string }
+type PmEnt = { g : string!, l : string!, p : string! }
+type PmKey = { g : string!, l : string! }
+type PmScan = { done : [PmKey]!, found : [OrbFinding]! }
 type PageModsProgram = { site : PageModsSite, locales : [string], orbitals : [PageModsOrbital]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -34,15 +37,16 @@ orbital OrbLintPageModifiersOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((sgi (if (object/has @payload.program "site") (object/get (object/get @payload.program "site") "signIn" "") "")) (orbitals (object/get @payload.program "orbitals" [])) (locs (object/get @payload.program "locales" [])))
+        (set @entity.findings (let ((sgi (let ((site (object/get @payload.program "site"))) (if (= @site null) "" (object/get @site "signIn" "")))) (orbitals (object/get @payload.program "orbitals" [])) (locs (object/get @payload.program "locales" [])))
           (array/flatten [
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
               (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                 (let ((pg (array/nth @pgs @pj)))
-                  (if (or (not (object/has @pg "path")) (object/has @pg "protocol"))
+                  (let ((rt (object/get @pg "path")))
+                  (if (or (= @rt null) (object/has @pg "protocol"))
                     []
-                    (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "]")) (rt (object/get @pg "path")) (pname (object/get @pg "name" "")) (pacc (object/get @pg "access" "")))
+                    (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "]")) (pname (object/get @pg "name" "")) (pacc (object/get @pg "access" "")))
                       (let ((lacks (array/flatten [
                           (if (!= @pacc "public") ["`access: public`"] [])
                           (if (object/has @pg "title") [] ["`title:`"])
@@ -56,21 +60,24 @@ orbital OrbLintPageModifiersOrbital {
                             [])
                           (if (and (= @pacc "authenticated") (= @sgi ""))
                             [{ code: @config.codes.pAuthNoSignIn.code, path: @where, message: (str/concat "page '" @pname "' (" @rt ") is `access: authenticated` but the app declares no `signIn:` route"), suggestion: (str/concat "add `signIn: " "\"" "/<route>" "\"" "` to the app bracket — the page a non-admitted viewer is sent to"), severity: "error" }]
-                            [])]))))))))))))
-          (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                  (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
-                    (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
-                      (let ((pg (array/nth @pgs @pj)))
-                        (if (and (object/has @pg "path") (not (object/has @pg "protocol")) (object/has @pg "translationOf") (> (array/len @locs) 0))
-                          (let ((segs (array/filter (str/split (object/get @pg "path") "/") (fn s (!= @s "")))) (seg (if (> (array/len @segs) 0) (array/first @segs) "")))
-                            [{ g: (object/get @pg "translationOf"), l: (if (array/some @locs (fn lc (= @lc @seg))) @seg (array/first @locs)), p: (object/get @pg "path") }])
-                          [])))))))))))
-            (array/flatten (array/map (array/range 0 (array/len @ents)) (fn ei
-              (let ((en (array/nth @ents @ei)))
-                (let ((same (array/filter (array/range 0 (array/len @ents)) (fn k (and (= (object/get (array/nth @ents @k) "g") (object/get @en "g")) (= (object/get (array/nth @ents @k) "l") (object/get @en "l")))))))
-                  (if (and (> (array/len @same) 1) (= (array/first @same) @ei))
-                    [{ code: @config.codes.pTranslationDuplicateLocale.code, path: (object/get (array/nth @ents (array/nth @same 1)) "p"), message: (str/concat "translation group '" (object/get @en "g") "' holds " (array/len @same) " pages in locale '" (object/get @en "l") "' (" (str/join (array/map @same (fn k (object/get (array/nth @ents @k) "p"))) ", ") "); each locale may hold one"), suggestion: "give each page its own locale prefix, or a different `translationOf:`", severity: "error" }]
-                    []))))))) ])))
+                            [])])))))))))))))
+          (let ((f0 (array/first @locs)) (ents : [PmEnt] (array/flatten (array/map @orbitals (fn o
+                  (array/flatten (array/map (object/get @o "pages" []) (fn pg
+                      (let ((pth (object/get @pg "path")) (tr (object/get @pg "translationOf")))
+                        (if (and (!= @pth null) (!= @tr null) (not (object/has @pg "protocol")) (!= @f0 null))
+                          (let ((segs (array/filter (str/split @pth "/") (fn s (!= @s "")))) (seg (if (> (array/len @segs) 0) (array/first @segs) "")))
+                            [{ g: @tr, l: (if (array/some @locs (fn lc (= @lc @seg))) @seg @f0), p: @pth }])
+                          [])))))))))
+              (st0 : PmScan { done: [], found: [] }))
+            (object/get (array/reduce @ents @st0 (fn (acc en)
+              (let ((done : [PmKey] (object/get @acc "done" [])) (found : [OrbFinding] (object/get @acc "found" [])))
+                (if (array/some @done (fn d (and (= (object/get @d "g") (object/get @en "g")) (= (object/get @d "l") (object/get @en "l")))))
+                  @acc
+                  (let ((same (array/filter @ents (fn x (and (= (object/get @x "g") (object/get @en "g")) (= (object/get @x "l") (object/get @en "l")))))))
+                    (let ((second (array/nth @same 1)))
+                      (if (= @second null)
+                        @acc
+                        { done: (array/append @done { g: (object/get @en "g"), l: (object/get @en "l") }), found: (array/append @found { code: @config.codes.pTranslationDuplicateLocale.code, path: (object/get @second "p"), message: (str/concat "translation group '" (object/get @en "g") "' holds " (array/len @same) " pages in locale '" (object/get @en "l") "' (" (str/join (array/map @same (fn x (object/get @x "p"))) ", ") "); each locale may hold one"), suggestion: "give each page its own locale prefix, or a different `translationOf:`", severity: "error" }) }))))))) "found" [])) ])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-modifiers", scope: @entity.scope, findings: @entity.findings })
@@ -86,7 +93,7 @@ orbital OrbLintPageModifiersOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageModsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PageModsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -105,10 +112,10 @@ orbital OrbLintPageModifiersOrbital {
       INIT -> ready
       LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint page-modifiers: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-modifiers <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-modifiers <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-modifiers <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -142,7 +149,7 @@ orbital OrbLintPageModifiersOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-page-modifiers" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint page-modifiers` with its arguments and working directory."
         @synonyms "orb lint page-modifiers"

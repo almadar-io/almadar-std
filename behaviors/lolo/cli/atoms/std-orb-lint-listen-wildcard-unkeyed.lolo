@@ -17,7 +17,7 @@ type CkEmit = { event : string, payloadSchema : [CkField] }
 type CkSource = { kind : string }
 type CkListen = { event : string, triggers : string, source : CkSource, guard : CkVal }
 type CkTraitView = { name : string, emits : [CkEmit], listens : [CkListen] }
-type CkOrbital = { name : string, traits : [CkVal] }
+type CkOrbital = { name : string, traits : [CkTraitView] }
 type CkProgram = { orbitals : [CkOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -42,17 +42,15 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((keyed (array/flatten (array/map @orbitals (fn orb
                   (array/flatten (array/map (object/get @orb "traits" []) (fn tr
-                    (let ((td (as @tr CkTraitView)))
-                      (array/flatten (array/map (object/get @td "emits" []) (fn em
+                    (array/flatten (array/map (object/get @tr "emits" []) (fn em
                         (if (array/some (object/get @em "payloadSchema" []) (fn f (and (= (object/get @f "name" "") "key") (= (object/get @f "type" "") "CallKey"))))
                           [(object/get @em "event" "")]
-                          [])))))))))))))
+                          []))))))))))))
             (array/flatten (array/map @orbitals (fn orb
               (array/flatten (array/map (object/get @orb "traits" []) (fn tr
-                (let ((td (as @tr CkTraitView)))
-                  (if (not (array/some (object/get (default (as (tree/index @tr ["as"]) CkIndex) {}) "as" []) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (= (array/len @n) 3) (validate/string (array/nth @n 0)) (validate/string (array/nth @n 2)) (= (array/nth @n 0) "as") (= (array/nth @n 2) "CallKey"))))))
+                (if (not (array/some (object/get (default (as (tree/index @tr ["as"]) CkIndex) {}) "as" []) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (= (array/len @n) 3) (validate/string (array/nth @n 0)) (validate/string (array/nth @n 2)) (= (array/nth @n 0) "as") (= (array/nth @n 2) "CallKey"))))))
                     []
-                    (array/flatten (array/map (object/get @td "listens" []) (fn l
+                    (array/flatten (array/map (object/get @tr "listens" []) (fn l
                       (let ((ev (object/get @l "event" "")) (triggered (object/get @l "triggers" (object/get @l "event" ""))))
                         (if (and (= (object/get (object/get @l "source" {}) "kind" "") "any")
                                  (array/includes @keyed @ev)
@@ -62,8 +60,8 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
                                          (if (validate/array @n)
                                            (array/some @k (fn r (= @r true)))
                                            (if (validate/object @n) (array/some (object/values @k) (fn r (= @r true))) false)))) CkVal) true))
-                          [{ code: @config.codes.listenWildcardUnkeyed.code, path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "listens route `*." @ev " -> " @triggered "` in `" (object/get @orb "name" "") "." (object/get @td "name" "") "` hears every caller's `" @ev "`, whose payload carries the call's `key`, and its guard never reads it"), suggestion: (str/concat "guard the route on the call's own key: `*." @ev " -> " @triggered " when (= ?key <the key this trait sent>)`"), severity: "warning" }]
-                          []))))))))))))))))
+                          [{ code: @config.codes.listenWildcardUnkeyed.code, path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @tr "name" "") ".listens"), message: (str/concat "listens route `*." @ev " -> " @triggered "` in `" (object/get @orb "name" "") "." (object/get @tr "name" "") "` hears every caller's `" @ev "`, whose payload carries the call's `key`, and its guard never reads it"), suggestion: (str/concat "guard the route on the call's own key: `*." @ev " -> " @triggered " when (= ?key <the key this trait sent>)`"), severity: "warning" }]
+                          [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "listen-wildcard-unkeyed", scope: @entity.scope, findings: @entity.findings })
@@ -79,7 +77,7 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CkProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CkProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -99,7 +97,7 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-wildcard-unkeyed <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint listen-wildcard-unkeyed <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -133,7 +131,7 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-listen-wildcard-unkeyed" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint listen-wildcard-unkeyed` with its arguments and working directory."
         @synonyms "orb lint listen-wildcard-unkeyed"

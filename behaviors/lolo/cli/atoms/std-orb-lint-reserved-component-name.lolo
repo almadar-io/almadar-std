@@ -8,8 +8,10 @@ app std-orb-lint-reserved-component-name [
 ]
 uses Spec from "almadar-std/lint-reserved-component-name"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type ReservedNameEntity = { name : string }
-type ReservedNameOrbital = { name : string, spec : boolean, entity : ReservedNameEntity, auxiliaryEntities : [ReservedNameEntity] }
+type ReservedNameEntity = { name : string! }
+type RnHit = { name : string!, path : string! }
+type RnAcc = { n : number!, rows : [RnHit]! }
+type ReservedNameOrbital = { name : string, spec : boolean, entity : ReservedNameEntity!, auxiliaryEntities : [ReservedNameEntity] }
 type ReservedNameProgram = { orbitals : [ReservedNameOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 
@@ -36,17 +38,16 @@ orbital OrbLintReservedComponentNameOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (array/map
-            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-              (let ((o (array/nth @orbitals @oi)))
-                (if (object/get @o "spec" false) []
-                  (array/filter
-                    (array/concat
-                      [(if (validate/object (object/get @o "entity" null)) { name: (object/get (object/get @o "entity" {}) "name" ""), path: (str/concat "orbitals[" @oi "].entity.name") } null)]
-                      (array/map (array/range 0 (array/len (object/get @o "auxiliaryEntities" []))) (fn ai
-                        (if (validate/object (array/nth (object/get @o "auxiliaryEntities" []) @ai)) { name: (object/get (array/nth (object/get @o "auxiliaryEntities" []) @ai) "name" ""), path: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].name") } null))))
-                    (fn x (and (!= @x null) (array/includes @entity.components (object/get @x "name"))))))))))
-            (fn x { code: @config.codes.eInvalidFieldName.code, path: (object/get @x "path"), message: (str/concat "Entity name '" (object/get @x "name") "' collides with a UI component name. This causes duplicate identifier errors in compiled output."), suggestion: (str/concat "Rename the entity to avoid the collision (e.g., '" (object/get @x "name") "Entry', '" (object/get @x "name") "Record', '" (object/get @x "name") "Data')"), severity: "error" }))))
+          (let ((init : RnAcc { n: 0, rows: [] }))
+            (array/map
+              (array/filter
+                (object/get (array/reduce @orbitals @init (fn (oa o)
+                  { n: (+ (object/get @oa "n") 1), rows: (if (object/get @o "spec" false) (object/get @oa "rows")
+                      (array/concat (object/get @oa "rows") [{ name: (object/get (object/get @o "entity") "name"), path: (str/concat "orbitals[" (object/get @oa "n") "].entity.name") }]
+                        (object/get (array/reduce (object/get @o "auxiliaryEntities" []) @init (fn (aa e)
+                          { n: (+ (object/get @aa "n") 1), rows: (array/concat (object/get @aa "rows") [{ name: (object/get @e "name"), path: (str/concat "orbitals[" (object/get @oa "n") "].auxiliaryEntities[" (object/get @aa "n") "].name") }]) })) "rows"))) })) "rows")
+                (fn x (array/includes @entity.components (object/get @x "name"))))
+            (fn x { code: @config.codes.eInvalidFieldName.code, path: (object/get @x "path"), message: (str/concat "Entity name '" (object/get @x "name") "' collides with a UI component name. This causes duplicate identifier errors in compiled output."), suggestion: (str/concat "Rename the entity to avoid the collision (e.g., '" (object/get @x "name") "Entry', '" (object/get @x "name") "Record', '" (object/get @x "name") "Data')"), severity: "error" })))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "reserved-component-name", scope: @entity.scope, findings: @entity.findings })
@@ -64,7 +65,7 @@ orbital OrbLintReservedComponentNameOrbital {
     listens {
       LINT_COMPONENTS_HEARD { names : [string]! }
         @description "std-orb-lint-input's LINT_COMPONENTS: the installed UI component names, sent before LINT_INPUT."
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ReservedNameProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ReservedNameProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_COMPONENTS -> LINT_COMPONENTS_HEARD
       OrbLintInput.LINT_INPUT -> LINT_INPUT
@@ -85,7 +86,7 @@ orbital OrbLintReservedComponentNameOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint reserved-component-name <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint reserved-component-name <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -119,7 +120,7 @@ orbital OrbLintReservedComponentNameOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-reserved-component-name" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint reserved-component-name` with its arguments and working directory."
         @synonyms "orb lint reserved-component-name"

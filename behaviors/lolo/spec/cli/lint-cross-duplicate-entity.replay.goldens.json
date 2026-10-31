@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-cross-duplicate-entity.lolo",
   "trait": "OrbLintCrossDuplicateEntity",
-  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_entity_uniqueness (cross_orbital/entity.rs): every inline primary entity is grouped by name, and a group of more than one is listed by orbital name in order; test_duplicate_entity and test_valid_schema are the existing pair. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it).",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for the same program. Added cases follow validate_entity_uniqueness (cross_orbital/entity.rs): every inline primary entity is grouped by name, and a group of more than one is listed by orbital name in order; test_duplicate_entity and test_valid_schema are the existing pair. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). Auxiliary entities follow the compiler's drop_shadowed_auxiliaries: an auxiliary that is a narrower view of a same-named primary (every field the primary's, same type, same collection) is dropped by the compiler and is clean here; any survivor is a real conflict, reported once per name listing every orbital involved. Two auxiliaries of the same name are compatible when one is a narrower view of the other.",
   "cases": [
     {
       "id": "entity-declared-by-two-orbitals",
@@ -1855,6 +1855,1046 @@
                       "traits": [
                         {
                           "ref": "TB"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-with-a-different-shape-than-another-orbitals-primary-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "F",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "extra",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals with different shapes: [\"A\", \"B\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-with-a-field-of-another-type-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "F",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "number"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals with different shapes: [\"A\", \"B\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-in-a-different-collection-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "es"
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "F",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ],
+                      "collection": "others"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals with different shapes: [\"A\", \"B\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "two-auxiliary-entities-with-incompatible-shapes-are-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "X",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "a",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Y",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "b",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals with different shapes: [\"A\", \"B\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "an-auxiliary-entity-against-a-primary-and-an-auxiliary-lists-each-orbital-once",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "F",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "b",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "C",
+                  "entity": {
+                    "name": "G",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "c",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals with different shapes: [\"A\", \"B\", \"C\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-an-auxiliary-entity-that-is-a-narrower-view-of-the-primary-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "F",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "title",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-two-auxiliary-entities-one-a-narrower-view-of-the-other-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "X",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "a",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Y",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-an-incompatible-auxiliary-inside-its-own-orbital-is-not-compared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "extra",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-primary-duplicates-are-reported-once-even-with-an-auxiliary-of-the-name",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "C",
+                  "entity": {
+                    "name": "G",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "E",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "c",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_DUPLICATE_ENTITY",
+                      "path": "orbitals",
+                      "message": "Entity 'E' is defined in multiple orbitals: [\"A\", \"B\"]",
+                      "suggestion": "Each entity name must be unique across all orbitals",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-distinct-auxiliary-names-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "X",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "P",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Y",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Q",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "z",
+                          "type": "string"
                         }
                       ]
                     }

@@ -30,11 +30,11 @@ orbital OrbFormatOrbital {
 
     state ready {
       INIT -> ready
-      FORMAT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      FORMAT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
-      FORMAT_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
+      FORMAT_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -121,7 +121,7 @@ orbital OrbFormatOrbital {
     listens {
       FORMAT_CALLED -> inbound "cli-format" answers FORMAT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb format`."
         @synonyms "orb format, pretty-print a program, format a lolo file, rewrite a file formatted"

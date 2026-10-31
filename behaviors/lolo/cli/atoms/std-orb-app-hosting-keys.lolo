@@ -31,14 +31,14 @@ orbital OrbAppHostingKeysOrbital {
 
     state ready {
       INIT -> ready
-      APP_HOSTING_KEYS_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      APP_HOSTING_KEYS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit APP_HOSTING_KEYS_ANSWERED { status: 400, body: "usage: orb app-hosting-keys <program> <apphosting.yaml>" })
-      APP_HOSTING_KEYS_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2))
+      APP_HOSTING_KEYS_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2))
         (emit APP_HOSTING_KEYS_ANSWERED { status: 400, body: "usage: orb app-hosting-keys <program> <apphosting.yaml>" })
-      APP_HOSTING_KEYS_CALLED -> parsing when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 2))
-        (set @entity.program (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 0) ""))
-        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (set @entity.file (default (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) ""))
+      APP_HOSTING_KEYS_CALLED -> parsing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2))
+        (set @entity.program (default (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 0) ""))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.file (default (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) ""))
         (emit APP_HOSTING_KEYS_READ_PROGRAM {})
     }
 
@@ -108,7 +108,7 @@ orbital OrbAppHostingKeysOrbital {
     listens {
       APP_HOSTING_KEYS_CALLED -> inbound "cli-app-hosting-keys" answers APP_HOSTING_KEYS_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb app-hosting-keys`."
         @synonyms "orb app-hosting-keys, check apphosting.yaml env keys, App Hosting key check, declared env versus apphosting.yaml"

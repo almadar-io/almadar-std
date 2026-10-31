@@ -23,6 +23,7 @@ type SbProgram = { orbitals : [SbOrbital] }
 type SbHit = { rel : string, s : string, b : [string] }
 type SbRoot = { x : SbShape?, w : string! }
 type SbFront = { f : SbField, w : string }
+type SbDepth = { d : number! }
 type SbLevel = { front : [SbFront], acc : [SbRoot] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -88,7 +89,7 @@ orbital OrbLintSexprBindingOrbital {
     (fn oi
       (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
         (if (not (validate/object @ent)) @noroots
-          (let ((fl : [SbField] (object/get @ent "fields" [])) (bound (+ 2 (object/get (tree/fold (object/get @ent "fields" []) (fn (n k) { d: (+ 1 (array/reduce (if (validate/array @n) (array/map @k (fn r (object/get @r "d"))) (if (validate/object @n) (array/map (object/keys @k) (fn q (object/get (object/get @k @q) "d"))) [0])) 0 (fn (m v) (if (> @v @m) @v @m)))) }) "SbShape") "d" 0))))
+          (let ((fl : [SbField] (object/get @ent "fields" [])) (bound (+ 2 (object/get (tree/fold (object/get @ent "fields" []) (fn (n k) { d: (+ 1 (array/reduce (if (validate/array @n) (array/map @k (fn r (let ((rd (as @r SbDepth))) (if (= @rd null) 1 (object/get @rd "d"))))) (if (validate/object @n) (array/map (object/keys @k) (fn q (object/get (object/get @k @q) "d"))) [0])) 0 (fn (m v) (if (> @v @m) @v @m)))) }) "SbShape") "d" 0))))
             (object/get (array/reduce (array/range 0 @bound)
               { front: (array/map (array/range 0 (array/len @fl)) (fn fi { f: (array/nth @fl @fi), w: (str/concat "orbitals[" @oi "].entity.fields[" @fi "]") })), acc: @noroots }
               (fn (st _i)
@@ -143,7 +144,7 @@ orbital OrbLintSexprBindingOrbital {
                     (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (bnd (object/get @h "b" [])))
                       (let ((parts (str/split (str/slice @s 1) ".")))
                         (let ((root (array/first @parts)))
-                          (if (= @root "")
+                          (if (or (= @root null) (= @root ""))
                             [{ code: @config.codes.sexprInvalidBinding.code, path: @p, message: (str/concat "Invalid binding: '" @s "'"), suggestion: "Bindings should be @root.field format", severity: "error" }]
                             (array/concat
                               (let ((c0 (str/slice @root 0 1)))
@@ -169,7 +170,7 @@ orbital OrbLintSexprBindingOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SbProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SbProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
@@ -186,10 +187,10 @@ orbital OrbLintSexprBindingOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sexpr-binding <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sexpr-binding <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sexpr-binding <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -223,7 +224,7 @@ orbital OrbLintSexprBindingOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-sexpr-binding" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint sexpr-binding` with its arguments and working directory."
         @synonyms "orb lint sexpr-binding"

@@ -36,6 +36,8 @@ type TrcKept = { orbital : number!, traits : [string]! }
 type TrcSite = { path : string!, reference : string!, up : TrcTrait!, config : Map string TrcField?, events : Map string string?, local : boolean }
 type TrcCallSite = { config : Map string TrcField?, events : Map string string? }
 type TrcRef = { kind : string!, alias : string!, name : string!, path : string!, callSite : TrcCallSite!, declaration : TrcTrait! }
+type TrcEntry = { site : TrcSite!, known : [string]! }
+type TrcStr = string
 type TrcProduced = { si : number!, names : [string]! }
 type TrcFiredProgram = { orbitals : [TrcFiredOrbital]! }
 type TrcFiredOrbital = { traits : [TrcTrait]! }
@@ -53,8 +55,8 @@ orbital OrbLintTraitRefConfigOrbital {
     id : string!
     findings : [OrbFinding] = []
     sites : [TrcSite] = []
-    knowns : [TrcStrings] = []
-    pending : [number] = []
+    entries : [TrcEntry] = []
+    queue : [TrcEntry] = []
     cursor : number = 0
     file : string = ""
     propsReady : boolean = false
@@ -68,16 +70,16 @@ orbital OrbLintTraitRefConfigOrbital {
       INIT -> ready
       LINT_CALL_SITES -> ready
         (set @entity.file @payload.file)
-        (set @entity.sites (array/concat (array/map (array/filter @payload.references (fn r (= (object/get @r "kind") "trait"))) (fn r { path: (object/get @r "path"), reference: (object/get @r "name"), up: (object/get @r "declaration"), config: (object/get (object/get @r "callSite") "config" {}), events: (object/get (object/get @r "callSite") "events" {}) })) (array/reduce (array/range 0 (array/len (object/get @payload.program "orbitals" []))) [] (fn acc oi (let ((o (array/nth (object/get @payload.program "orbitals" []) @oi))) (array/concat @acc (array/reduce (array/range 0 (array/len (object/get @o "traits" []))) [] (fn a2 ti (array/concat @a2 (let ((t (array/nth (object/get @o "traits" []) @ti)) (path (str/concat "orbitals[" (str/concat @oi "") " (" (object/get @o "name" "") ")].traits[" (str/concat @ti "") " (" (if (validate/string (object/get (array/nth (object/get @o "traits" []) @ti) "ref" null)) (object/get (array/nth (object/get @o "traits" []) @ti) "ref") (object/get (array/nth (object/get @o "traits" []) @ti) "name" "")) ")]"))) (let ((rf (object/get @t "ref" null)) (tgt0 (object/get @t "name" ""))) (let ((tgt (if (validate/string @rf) (array/nth (str/split @rf ".") (- (array/len (str/split @rf ".")) 1)) @tgt0))) (let ((matches (array/filter (array/reduce (array/range 0 (array/len (object/get @payload.program "orbitals" []))) [] (fn acc xi (array/concat @acc (array/filter (object/get (array/nth (object/get @payload.program "orbitals" []) @xi) "traits" []) (fn y (!= (object/get @y "stateMachine" null) null)))))) (fn y (= (object/get @y "name" "") @tgt))))) (if (and (= (object/get @t "stateMachine" null) null) (validate/string @tgt) (!= @tgt "") (validate/object (object/get @t "events" null)) (> (array/len (object/keys (object/get @t "events" {}))) 0) (not (array/includes (array/map @payload.references (fn r (object/get @r "path"))) @path)) (> (array/len @matches) 0)) [{ path: @path, reference: @tgt, up: { name: @tgt, config: {}, emits: (array/reduce @matches [] (fn a y (array/concat @a (array/map (object/get @y "emits" []) (fn em (let ((ev (object/get @em "event" ""))) (if (str/startsWith @ev (str/concat (quote "@") "config.")) (let ((f (object/get (object/get @y "config" {}) (str/slice @ev 8 (str/len @ev)) null))) (let ((d (object/get @f "default" null))) (if (and (!= @f null) (or (= (object/get @f "type" "") "string") (= (object/get @f "type" "") "event")) (validate/string @d)) { event: (str/concat @d "") } @em))) @em))))))), ticks: (array/reduce @matches [] (fn a y (array/concat @a (object/get @y "ticks" [])))), stateMachine: { events: (array/reduce @matches [] (fn a y (array/concat @a (object/get (object/get @y "stateMachine" {}) "events" [])))), transitions: (array/reduce @matches [] (fn a y (array/concat @a (object/get (object/get @y "stateMachine" {}) "transitions" [])))) } }, config: {}, events: (object/get @t "events" {}), local: true }] []))))))))))))))
-        (set @entity.knowns (array/map @entity.sites (fn s (array/sort (array/unique (array/concat (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "events" []) (fn ev (object/get @ev "key"))) (array/concat (array/map (object/get (object/get @s "up") "emits" []) (fn em (let ((ev (object/get @em "event"))) (if (str/startsWith @ev (str/concat (quote "@") "config.")) (let ((knob (str/slice @ev 8 (str/len @ev)))) (let ((f (object/get (object/get (object/get @s "up") "config" {}) @knob null))) (let ((e (if (and (object/has (object/get @s "config" {}) @knob) (!= (object/get (object/get (object/get @s "config" {}) @knob) "default" null) null)) (object/get (object/get (object/get @s "config" {}) @knob) "default") (object/get (object/get (object/get (object/get @s "up") "config" {}) @knob {}) "default" null)))) (if (and (!= @f null) (or (= (object/get @f "type" "") "string") (= (object/get @f "type" "") "event")) (!= (object/get @f "default" null) null) (validate/string @e)) (str/concat @e "") @ev)))) @ev)))) (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "transitions" []) (fn tr (object/get @tr "event"))))))))))
-        (set @entity.pending (array/filter (array/range 0 (array/len @entity.sites)) (fn si (let ((s (array/nth @entity.sites @si)) (known (array/nth @entity.knowns @si))) (array/some (object/keys (object/get @s "events" {})) (fn f (and (!= @f "") (not (array/includes @known @f)))))))))
+        (set @entity.sites (array/concat (array/map (array/filter @payload.references (fn r (= (object/get @r "kind") "trait"))) (fn r { path: (object/get @r "path"), reference: (object/get @r "name"), up: (object/get @r "declaration"), config: (object/get (object/get @r "callSite") "config" {}), events: (object/get (object/get @r "callSite") "events" {}) })) (array/reduce (object/get @payload.program "orbitals" []) [] (fn acc o (let ((oi (array/indexOf (object/get @payload.program "orbitals" []) @o))) (array/concat @acc (array/reduce (object/get @o "traits" []) [] (fn a2 t (array/concat @a2 (let ((ti (array/indexOf (object/get @o "traits" []) @t)) (path (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (default (object/get @t "ref") (object/get @t "name" "")) ")]"))) (let ((rf (object/get @t "ref" null)) (tgt0 (object/get @t "name" ""))) (let ((tgt (if (validate/string @rf) (array/nth (str/split @rf ".") (- (array/len (str/split @rf ".")) 1)) @tgt0))) (let ((matches (array/filter (array/reduce (object/get @payload.program "orbitals" []) [] (fn acc x (array/concat @acc (array/filter (object/get @x "traits" []) (fn y (!= (object/get @y "stateMachine" null) null)))))) (fn y (= (object/get @y "name" "") @tgt))))) (if (and (= (object/get @t "stateMachine" null) null) (validate/string @tgt) (!= @tgt "") (validate/object (object/get @t "events" null)) (> (array/len (object/keys (object/get @t "events" {}))) 0) (not (array/includes (array/map @payload.references (fn r (object/get @r "path"))) @path)) (> (array/len @matches) 0)) [{ path: @path, reference: @tgt, up: { name: @tgt, config: {}, emits: (array/reduce @matches [] (fn a y (array/concat @a (array/map (object/get @y "emits" []) (fn em (let ((ev (object/get @em "event" ""))) (if (str/startsWith @ev (str/concat (quote "@") "config.")) (let ((f (object/get (object/get @y "config" {}) (str/slice @ev 8 (str/len @ev)) null))) (if (= @f null) @em (let ((d (as (object/get @f "default" null) TrcStr))) (if (and (or (= (object/get @f "type" "") "string") (= (object/get @f "type" "") "event")) (!= @d null)) { event: @d } @em)))) @em))))))), ticks: (array/reduce @matches [] (fn a y (array/concat @a (object/get @y "ticks" [])))), stateMachine: { events: (array/reduce @matches [] (fn a y (array/concat @a (object/get (object/get @y "stateMachine" {}) "events" [])))), transitions: (array/reduce @matches [] (fn a y (array/concat @a (object/get (object/get @y "stateMachine" {}) "transitions" [])))) } }, config: {}, events: (object/get @t "events" {}), local: true }] []))))))))))))))
+        (set @entity.entries (array/map @entity.sites (fn s { site: @s, known: (array/sort (array/unique (array/concat (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "events" []) (fn ev (object/get @ev "key"))) (array/concat (array/map (object/get (object/get @s "up") "emits" []) (fn em (let ((ev (object/get @em "event"))) (if (str/startsWith @ev (str/concat (quote "@") "config.")) (let ((knob (str/slice @ev 8 (str/len @ev)))) (let ((f (object/get (object/get (object/get @s "up") "config" {}) @knob null))) (let ((e (as (if (and (object/has (object/get @s "config" {}) @knob) (!= (object/get (object/get (object/get @s "config" {}) @knob) "default" null) null)) (object/get (object/get (object/get @s "config" {}) @knob) "default") (object/get (object/get (object/get (object/get @s "up") "config" {}) @knob {}) "default" null)) TrcStr))) (if (and (!= @f null) (or (= (object/get @f "type" "") "string") (= (object/get @f "type" "") "event")) (!= (object/get @f "default" null) null) (!= @e null)) @e @ev)))) @ev)))) (array/map (object/get (object/get (object/get @s "up") "stateMachine" {}) "transitions" []) (fn tr (object/get @tr "event"))))))) })))
         (set @entity.cursor 0)
+        (set @entity.queue (array/filter @entity.entries (fn en (array/some (object/keys (object/get (object/get @en "site") "events" {})) (fn f (and (!= @f "") (not (array/includes (object/get @en "known") @f))))))))
         (emit LINT_PENDING { })
-      LINT_PENDING -> ready when (= (array/len @entity.pending) 0)
+      LINT_PENDING -> ready when (= (array/len @entity.queue) 0)
         (emit LINT_FINISH { })
-      LINT_PENDING -> ready when (and (> (array/len @entity.pending) 0) @entity.propsReady)
+      LINT_PENDING -> ready when (and (> (array/len @entity.queue) 0) @entity.propsReady)
         (emit FIRED_NEXT { })
-      LINT_PENDING -> ready when (and (> (array/len @entity.pending) 0) (not @entity.propsReady))
+      LINT_PENDING -> ready when (and (> (array/len @entity.queue) 0) (not @entity.propsReady))
         (set @entity.waiting true)
         (emit LINT_PROPS_REQUEST { file: @entity.file })
       LINT_PROPS_DONE -> ready when @entity.waiting
@@ -86,17 +88,16 @@ orbital OrbLintTraitRefConfigOrbital {
         (emit FIRED_NEXT { })
       LINT_PROPS_DONE -> ready when (not @entity.waiting)
         (set @entity.propsReady true)
-      FIRED_NEXT -> ready when (>= @entity.cursor (array/len @entity.pending))
-        (emit LINT_FINISH { })
-      FIRED_NEXT -> ready when (< @entity.cursor (array/len @entity.pending))
-        (emit FIRED_SITE { file: @entity.file, raw: "", latin: true, program: { orbitals: [{ traits: [(object/get (array/nth @entity.sites (array/nth @entity.pending @entity.cursor)) "up")] }] }, scope: (str/concat "" @entity.cursor) })
+      FIRED_NEXT -> ready
+        (let ((cur (array/first @entity.queue))) (if (= @cur null) (emit LINT_FINISH { }) (emit FIRED_SITE { file: @entity.file, raw: "", latin: true, program: { orbitals: [{ traits: [(object/get (object/get @cur "site") "up")] }] }, scope: (str/concat "" @entity.cursor) })))
       FIRED_HEARD -> ready
-        (set @entity.knowns (array/map (array/range 0 (array/len @entity.knowns)) (fn i (if (= @i (array/nth @entity.pending @entity.cursor)) (array/sort (array/unique (array/concat (array/nth @entity.knowns @i) (array/filter (let ((nm (object/get (object/get (array/nth @entity.sites (array/nth @entity.pending @entity.cursor)) "up") "name"))) (array/concat (object/get @payload.byControl @nm []) (object/get @payload.byEffect @nm []))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))) (array/nth @entity.knowns @i)))))
+        (set @entity.entries (let ((cur (array/first @entity.queue))) (array/map @entity.entries (fn en (if (= @cur null) @en (if (= (object/get (object/get @en "site") "path") (object/get (object/get @cur "site") "path")) { site: (object/get @en "site"), known: (array/sort (array/unique (array/concat (object/get @en "known") (array/filter (let ((nm (object/get (object/get (object/get @cur "site") "up") "name"))) (if (= @nm null) [] (array/concat (object/get @payload.byControl @nm []) (object/get @payload.byEffect @nm [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))) } @en))))))
+        (set @entity.queue (array/drop @entity.queue 1))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit FIRED_NEXT { })
       LINT_FINISH -> ready
-        (set @entity.findings (array/flatten (array/map (array/range 0 (array/len @entity.sites)) (fn si
-          (let ((s (array/nth @entity.sites @si)) (known (array/nth @entity.knowns @si)))
+        (set @entity.findings (array/flatten (array/map @entity.entries (fn en
+          (let ((s (object/get @en "site")) (known (object/get @en "known")))
             (let ((up (object/get @s "up")) (cfg (object/get @s "config" {})) (evs (object/get @s "events" {})) (path (object/get @s "path")) (nm (object/get @s "reference")))
               (let ((declared (object/get @up "config" {})))
                 (let ((declKeys (array/sort (array/unique (array/concat (object/keys @declared) (array/filter (object/keys @cfg) (fn k (let ((f (object/get @cfg @k))) (not (and (= (object/get @f "type" "unknown") "unknown") (= (object/get @f "label" null) null) (= (object/get @f "description" null) null) (= (object/get @f "synonyms" null) null) (= (object/get @f "tier" null) null)))))))))))
@@ -161,7 +162,7 @@ orbital OrbLintTraitRefConfigOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-ref-config <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: false, references: true })
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-ref-config <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-ref-config <file>" }) (emit LINT_CALL_SITES_REQUEST { file: @f, stamp: false, references: true })))))
     }
 
     state waiting {
@@ -197,7 +198,7 @@ orbital OrbLintTraitRefConfigOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-trait-ref-config" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint trait-ref-config` with its arguments and working directory."
         @synonyms "orb lint trait-ref-config"

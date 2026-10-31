@@ -11,8 +11,8 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type EmitRefValue = string | number | boolean | [EmitRefValue] | Map string EmitRefValue
 type EmitRefKnob = { type : string, default : EmitRefValue }
 type EmitRefEmit = { event : string }
-type EmitRefTrait = { name : string, emits : [EmitRefEmit], config : Map string EmitRefKnob }
-type EmitRefOrbital = { name : string, traits : [EmitRefTrait] }
+type EmitRefTrait = { name : string!, emits : [EmitRefEmit], config : Map string EmitRefKnob }
+type EmitRefOrbital = { name : string!, traits : [EmitRefTrait] }
 type EmitRefProgram = { orbitals : [EmitRefOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
@@ -91,12 +91,12 @@ orbital OrbLintEmitConfigRefOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint emit-config-ref: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-config-ref <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-config-ref <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
@@ -130,7 +130,7 @@ orbital OrbLintEmitConfigRefOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-emit-config-ref" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint emit-config-ref` with its arguments and working directory."
         @synonyms "orb lint emit-config-ref, duplicate trait ids"

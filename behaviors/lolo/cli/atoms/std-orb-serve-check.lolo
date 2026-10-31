@@ -80,11 +80,11 @@ orbital OrbServeCheckOrbital {
 
     state ready {
       INIT -> ready
-      SC_CALLED -> parsing when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+      SC_CALLED -> parsing when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SC_ARGS_UNREAD { })
-      SC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
-        (set @entity.invokeCwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit SC_ARGS_PARSE { stage: "serve-check" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })
+      SC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.invokeCwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit SC_ARGS_PARSE { stage: "serve-check" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
@@ -274,7 +274,7 @@ orbital OrbServeCheckOrbital {
     listens {
       SC_CALLED -> inbound "cli-serve-check" answers SERVE_CHECK_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb serve-check` with its program."
         @synonyms "orb serve-check, check orb serve end to end"

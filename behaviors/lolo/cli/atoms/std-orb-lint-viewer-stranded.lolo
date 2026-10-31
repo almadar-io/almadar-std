@@ -277,7 +277,7 @@ orbital OrbLintViewerStrandedOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint viewer-stranded <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint viewer-stranded <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint viewer-stranded <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -316,6 +316,7 @@ orbital OrbLintViewerStrandedOrbital {
         @description "Run `orb lint viewer-stranded` with its arguments and working directory."
         @synonyms "orb lint viewer-stranded"
       OrbLintViewerStranded.LINT_FOUND -> LINT_FOUND
+      OrbLintPageContentOwner.LINT_FOUND -> LINT_FOUND
       LINT_INPUT_UNREAD { file : string! }
         @description "The lint input could not read or lower the file."
       OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD

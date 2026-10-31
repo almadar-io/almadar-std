@@ -1,6 +1,6 @@
 app std-viewer [
   version: "1.0.0",
-  description: "std-viewer — the one place a verified token becomes the program's viewer (@user). VIEWER_RESOLVE { requestId?, verified?, sourceKind, sourceFields?, sourceEntity? }: no token answers the anonymous viewer under every source. Source none: id is the uid, email and name the token's, a role claim the role, every claim plus uid readable in claims. Source claims: id, email and name only from the token, only the declared fields (other than id, email, name) read from the claims. Source directory: the row keyed by the verified uid (rebind ViewerRow to the identity entity) supplies role and the claims, with no row the viewer carries only the token id, email and name. Overlapping resolutions queue first-in first-out (maxQueue, beyond it refused busy); each is answered once, in order. Source derivation from the schema stays in the compiler. Answers VIEWER_RESOLVED { requestId, viewer } or VIEWER_REFUSED."
+  description: "std-viewer — the one place a verified token becomes the program's viewer (@user). VIEWER_RESOLVE { requestId?, verified?, sourceKind, sourceFields?, sourceEntity? }: no token answers the anonymous viewer under every source. Source none: id is the uid, email and name the token's, a role claim the role, every claim plus uid readable in claims. Source claims: id, email and name only from the token, only the declared fields (other than id, email, name) read from the claims. Source directory: the row keyed by the verified uid (rebind ViewerRow to the identity entity) supplies role and, as claims, only the fields named in directoryClaims (text) and directoryDateClaims (ISO text), with no row the viewer carries only the token id, email and name. Overlapping resolutions queue first-in first-out (maxQueue, beyond it refused busy); each is answered once, in order. Source derivation from the schema stays in the compiler. Answers VIEWER_RESOLVED { requestId, viewer } or VIEWER_REFUSED."
 ]
 uses Spec from "almadar-std/viewer"
 type Claim = { name : string!, value : string! }
@@ -84,7 +84,7 @@ orbital ViewerOrbital {
         (emit VIEWER_REFUSED { requestId: @entity.requestId, reason: "no-lookup" })
         (emit VIEWER_PUMP {})
       DIRECTORY_FOUND -> idle
-        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (let ((noClaims : [Claim] [])) (array/concat (array/flatten (array/map @config.directoryClaims (fn f (let ((v (object/get @payload.data @f))) (if (== @v null) @noClaims [{ name: (str/concat "" @f), value: @v }]))))) (array/flatten (array/map @config.directoryDateClaims (fn f (let ((v (object/get @payload.data @f))) (if (== @v null) @noClaims [{ name: (str/concat "" @f), value: (str/concat (time/format @v "YYYY-MM-DDTHH:mm:ss") "Z") }]))))))) } })
         (emit VIEWER_PUMP {})
       DIRECTORY_ABSENT -> creating when (and (= @payload.code "not-found") @config.createMissing)
         (persist create @config.directory { id: @entity.verified.uid, name: (default @entity.verified.name "") } { emit: { success: DIRECTORY_CREATED, failure: DIRECTORY_CREATE_FAILED } })
@@ -102,7 +102,7 @@ orbital ViewerOrbital {
     state refetching {
       INIT -> idle
       DIRECTORY_FOUND -> idle
-        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (array/map (object/entries (object/omit @payload.data ["id", "role"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) } })
+        (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: (default @payload.data.name @entity.verified.name), role: @payload.data.role, permissions: [], claims: (let ((noClaims : [Claim] [])) (array/concat (array/flatten (array/map @config.directoryClaims (fn f (let ((v (object/get @payload.data @f))) (if (== @v null) @noClaims [{ name: (str/concat "" @f), value: @v }]))))) (array/flatten (array/map @config.directoryDateClaims (fn f (let ((v (object/get @payload.data @f))) (if (== @v null) @noClaims [{ name: (str/concat "" @f), value: (str/concat (time/format @v "YYYY-MM-DDTHH:mm:ss") "Z") }]))))))) } })
         (emit VIEWER_PUMP {})
       DIRECTORY_ABSENT -> idle
         (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
@@ -165,6 +165,14 @@ orbital ViewerOrbital {
       directory : entity = ViewerRow
         @label "Identity directory"
         @description "The entity whose row, keyed by the verified uid, supplies the viewer's role and claims under source directory. Bind the app's [identity] entity (it must declare `role` and `name`)."
+        @tier "policy"
+      directoryClaims : [field (@entity @config.directory) string] = []
+        @label "Directory claims (text fields)"
+        @description "The text fields of the directory row that become viewer claims under source directory, each readable as @user.<field>. A field not named here never reaches the viewer."
+        @tier "policy"
+      directoryDateClaims : [field (@entity @config.directory) datetime] = []
+        @label "Directory claims (date and time fields)"
+        @description "The date-time fields of the directory row that become viewer claims under source directory, each as ISO 8601 UTC text (YYYY-MM-DDTHH:mm:ssZ)."
         @tier "policy"
       maxQueue : number = 32
         @label "Queue limit"

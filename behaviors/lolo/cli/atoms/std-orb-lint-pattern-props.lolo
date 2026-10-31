@@ -95,7 +95,7 @@ orbital OrbLintPatternPropsOrbital {
     (if (validate/array @n)
       (let ((len (array/len @n))
             (hd (let ((h0 (if (> (array/len @n) 0) (array/nth @n 0) null))) (if (validate/string @h0) @h0 "")))
-            (kids (array/map (array/range 0 (array/len @n)) (fn i (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0))))))
+            (kids (array/map (array/range 0 (array/len @n)) (fn i (let ((r0 (as (array/nth @k @i) PtRes))) (if (= @r0 null) @nr @r0))))))
         (let ((lv (if (= @len 3) (array/nth @n 2) null)))
         (let ((la (if (validate/array @lv) @lv [])))
         (let ((lh (let ((h1 (if (> (array/len @la) 0) (array/nth @la 0) null))) (if (validate/string @h1) @h1 "")))
@@ -107,7 +107,7 @@ orbital OrbLintPatternPropsOrbital {
               (isOp (and (!= @hd "") (object/has @ops @hd))))
           { v: (if @isCond
                  (array/flatten (array/map (array/range 2 @len) (fn ix
-                   (let ((c (array/nth @kids @ix)) (av (array/nth @n @ix)))
+                   (let ((c (default (array/nth @kids @ix) @nr)) (av (array/nth @n @ix)))
                      (let ((ce (object/get @c "e")))
                        (if (object/get @c "mp")
                          (array/map (object/get @c "mv") (fn h { c: (object/get @h "c"), p: (str/concat "[" @ix "]" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") }))
@@ -125,8 +125,8 @@ orbital OrbLintPatternPropsOrbital {
                      (if (array/some @kids (fn c (object/get @c "op")))
                        (array/flatten (array/map @kids (fn c (if (and (object/get @c "op") (not (object/get @c "mp")) (not (object/get @c "cd"))) (object/get @c "e") [{ v: (object/get @c "v"), m: (object/get @c "mv"), mp: (object/get @c "mp") }]))))
                        (array/map @kids (fn c { v: (object/get @c "v"), m: (object/get @c "mv"), mp: (object/get @c "mp") })))))),
-            lb: (if @isLam (object/get (array/nth @kids 2) "v") @noh),
-            mv: (if @isMapped (object/get (array/nth @kids 2) "lb") @noh),
+            lb: (if @isLam (object/get (default (array/nth @kids 2) @nr) "v") @noh),
+            mv: (if @isMapped (object/get (default (array/nth @kids 2) @nr) "lb") @noh),
             mp: @isMapped, op: @isOp, cd: @isCond, ar: true }))))))
       (if (validate/object @n)
         (let ((t (object/get @n "type" null)) (b0 (object/get @n "behavior" null)) (t0 (object/get @n "trait" null)) (okeys (object/keys @n)))
@@ -170,7 +170,7 @@ orbital OrbLintPatternPropsOrbital {
                                           (let ((fs (object/get @n "fields" null))) (and (validate/array @fs) (array/includes @fs @f)))
                                           (object/has @n @f)
                                           (let ((needle (str/concat (quote "@") "entity." @f)))
-                                            (tree/fold @n (fn (nn kk) (if (validate/string @nn) (or (= @nn @needle) (str/startsWith @nn (str/concat @needle "."))) (if (validate/array @nn) (array/some @kk (fn x @x)) (if (validate/object @nn) (array/some (object/values @kk) (fn x @x)) false)))) PtVal)))
+                                            (tree/fold @n (fn (nn kk) (if (validate/string @nn) (or (= @nn @needle) (str/startsWith @nn (str/concat @needle "."))) (if (validate/array @nn) (array/some @kk (fn x (= @x true))) (if (validate/object @nn) (array/some (object/values @kk) (fn x (= @x true))) false)))) PtVal)))
                                     @noh
                                     [{ c: "ORB_X_ENTITY_PROP_CONTRACT", p: "", m: (str/concat "Component '" @pt "' requires entity field '" @f "', but the bound entity '" @bound "' does not provide it (declare the field, or remap one with a field map)"), s: (str/concat "Add field '" @f "' to entity '" @bound "', or remap an existing field onto '" @f "' via the pattern's columns/fields map") }])))))))))))))))
                 @noh)))
@@ -205,7 +205,7 @@ orbital OrbLintPatternPropsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PtProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PtProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       LINT_PATTERNS_HEARD { patterns : Map string PtPatternShape! }
@@ -234,10 +234,10 @@ orbital OrbLintPatternPropsOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint pattern-props <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint pattern-props <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint pattern-props <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -271,7 +271,7 @@ orbital OrbLintPatternPropsOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-pattern-props" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint pattern-props` with its arguments and working directory."
         @synonyms "orb lint pattern-props"

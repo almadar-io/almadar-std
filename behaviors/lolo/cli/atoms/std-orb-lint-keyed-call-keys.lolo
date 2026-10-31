@@ -15,7 +15,7 @@ type KkTick = { effects : [KkVal]? }
 type KkMachine = { transitions : [KkTransition]? }
 type KkTrait = { name : string, stateMachine : KkMachine?, ticks : [KkTick]? }
 type KkOrbital = { name : string, traits : [KkVal] }
-type KkProgram = { orbitals : [KkOrbital] }
+type KkProgram = { orbitals : [KkOrbital]! }
 type KkTypeRef = string | KkTypeNode
 type KkTypeNode = { kind : string, fields : Map string KkTypeRef? }
 type KkParam = { name : string, type : KkTypeRef }
@@ -71,7 +71,7 @@ orbital OrbLintKeyedCallKeysOrbital {
                               [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
               (let ((places (array/flatten (array/map @sites (fn s
                       (let ((sm (object/get (object/get @s "trait") "stateMachine")) (ticks (default (object/get (object/get @s "trait") "ticks" []) [])))
-                        (let ((trans (default (object/get @sm "transitions" []) [])))
+                        (let ((trans (if (= @sm null) [] (default (object/get @sm "transitions" []) []))))
                           (array/concat
                             (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                               (let ((tr (array/nth @trans @i)))
@@ -158,7 +158,7 @@ orbital OrbLintKeyedCallKeysOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : KkProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : KkProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       SHAPES_HEARD { operators : Map string KkShape! }
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator's params with their types; a param whose object type has a `key` field makes the operator keyed."
@@ -181,10 +181,10 @@ orbital OrbLintKeyedCallKeysOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call-keys <file>" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call-keys <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call-keys <file>" }) (emit LINT_REQUEST { file: @f })))))
     }
 
     state waiting {
@@ -218,7 +218,7 @@ orbital OrbLintKeyedCallKeysOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-keyed-call-keys" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint keyed-call-keys` with its arguments and working directory."
         @synonyms "orb lint keyed-call-keys"
