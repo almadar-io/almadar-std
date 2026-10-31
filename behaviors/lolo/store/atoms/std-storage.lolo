@@ -1,8 +1,13 @@
 app std-storage [
-  version: "1.0.0",
-  description: "std-storage — S3-compatible object storage over SigV4-signed HTTP (AWS S3, MinIO, any S3 emulator through the origin knob). STORAGE_UPLOAD stores one object (a file payload with a base64 data URL, or a key + content pair), STORAGE_UPLOAD_MANY stores a batch of file payloads one after another, STORAGE_DOWNLOAD returns an object as base64, STORAGE_LIST lists keys, STORAGE_DELETE removes one, STORAGE_GET_SIGNED_URL presigns a get or put URL. Every action answers with its result event, or STORAGE_FAILED ({code, message}) when the store refuses, is unreachable or the input cannot be uploaded.",
-  egress: ["http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"]
+  version: "1.3.0",
+  description: "std-storage — S3-compatible object storage over SigV4-signed HTTP, signed in .lolo and sent through the composed std-http-keyed under keyed std-retry and std-timeout, so every call (upload, batch item, download, list, delete, presigned url) runs on its own row under its own key and concurrent calls stay independent. The host comes from the STORAGE_S3_HOST environment variable (granted as an env-anchored net entry, read at boot) and the signing region from STORAGE_S3_REGION (the region knob when unset), so a virtual-hosted bucket host, a regional endpoint or an emulator is a deployment setting. STORAGE_UPLOAD stores one object (a file payload with a base64 data URL, or a key + content pair), STORAGE_UPLOAD_MANY stores a batch one after another, STORAGE_DOWNLOAD returns an object as base64, STORAGE_LIST lists keys, STORAGE_DELETE removes one, STORAGE_GET_SIGNED_URL presigns a get or put url. A request that reaches the store is retried on 429, 500, 502, 503, 504, a timeout or a transport failure: three attempts in all, 100 then 200 ms apart, each attempt signed again with a fresh date. Every action answers with its result event, or STORAGE_FAILED ({code, message}). One signing step (STORAGE_SIGN, STORAGE_SIGN_KEY, STORAGE_SIGN_KEYED) builds the canonical request, the string to sign and the signature for every request and every presigned url; the secret access key never enters program data, it is a credential slot of hmac/sha256. The StorageClient tls and port knobs and the StorageHttp tls and port must agree, since the signed host header is the host the client sends.",
+  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"],
+  net: { env STORAGE_S3_HOST, 443: [tcp] }
 ]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Timeout from "std/behaviors/std-timeout"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
 type StorageMetadata = Map string string
 type S3ErrorDoc = { Code : string, Message : string, message : string }
 type S3Entry = { Key : string, Size : string, LastModified : string }
@@ -11,19 +16,122 @@ type StorageFile = { name : string, size : number, type : string, content : stri
 type StorageInstant = instant
 type StorageKey = { key : string, size : number, lastModified : number }
 type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
-type StoragePending = { mode : string!, bucket : string!, key : string!, size : number!, isPublic : boolean!, fileName : string!, fileSize : number!, fileKind : string!, etag : string!, batch : string! }
 type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
 orbital StorageOrbital {
   entity StorageObject [runtime] {
     id : string!
+    seq : number @description "The last call number the client handed out; call keys are verb:number." = 0
+    hostText : string @description "The host STORAGE_S3_HOST held at boot; on a call row, the host the call is signed for." = ""
+    authority : string @description "The host header value: the host, plus the port when it is not the scheme default." = ""
+    origin : string @description "scheme://authority." = ""
+    keyId : string @description "The S3 access key id STORAGE_ACCESS_KEY_ID held at boot; on a call row, the id it is signed with." = ""
+    regionName : string @description "On the client, the region STORAGE_S3_REGION held at boot (empty selects the region knob); on a call row, the region it is signed for." = ""
+    verb : string @description "The call this row runs: put, download, list, delete or signed; empty when none." = ""
+    lastStatus : number @description "The last retryable status answered; 0 when the last failure had no response." = 0
+    lastBody : string @description "The body of that reply as text." = ""
+    reqMethod : string @description "The method of the call." = ""
+    reqBucket : string @description "The bucket of the call." = ""
+    reqKey : string @description "The object key of the call." = ""
+    reqQuery : [HttpHeader] @description "The query parameters of the call." = []
+    reqHeaders : [HttpHeader] @description "The headers of the call, before the signature." = []
+    reqB64 : string @description "The base64 body of the call." = ""
+    reqExpires : number @description "Seconds a presigned url lives." = 0
+    putMode : string @description "single or batch, for a put." = ""
+    putSize : number @description "The byte size of a put." = 0
+    putPublic : boolean @description "A put is public-read." = false
+    putFileName : string @description "The declared file name of a put." = ""
+    putFileSize : number @description "The declared file size of a put." = 0
+    putFileKind : string @description "The declared mime type of a put." = ""
+    putEtag : string @description "The etag answered for a put." = ""
+    batch : StorageBatch? @description "The batch a batch put belongs to." = null
+  }
+
+  trait StorageKeyed = Keyed.traits.HttpKeyed {
+    events {
+      HTTP_SEND: STORAGE_NET_SEND
+      HTTP_CANCEL: STORAGE_NET_CANCEL
+      HTTP_FAILED: STORAGE_NET_KEY_FAILED
+    }
+    listens {
+      StorageCall.STORAGE_HTTP_SEND -> STORAGE_NET_SEND
+      StorageTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_NET_CANCEL with { key: ?key }
+      StorageKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait StorageHttp = Keyed.traits.KeyedHttp {
+    events {
+      HTTP_SEND: STORAGE_NET_ROW_SEND
+      HTTP_CANCEL: STORAGE_NET_ROW_CANCEL
+      HTTP_REPLIED: STORAGE_NET_REPLIED
+      HTTP_FAILED: STORAGE_NET_FAILED
+    }
+    config {
+      host: { anchor: { env: "STORAGE_S3_HOST" } }
+      port: 443
+      tls: true
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      StorageKeyed.KEYED_SEND -> STORAGE_NET_ROW_SEND per @payload.key
+      StorageKeyed.KEYED_CANCEL -> STORAGE_NET_ROW_CANCEL per @payload.key
+    }
+  }
+
+  trait StorageTimeout = Timeout.traits.Timeout {
+    events {
+      START: STORAGE_CLOCK_START
+      SUCCEEDED: STORAGE_CLOCK_SUCCEEDED
+      FAILED: STORAGE_CLOCK_FAILED
+      CANCEL: STORAGE_CLOCK_CANCEL
+      ASK_STARTED: STORAGE_CLOCK_STARTED
+      COMPLETED: STORAGE_CLOCK_COMPLETED
+      ASK_FAILED: STORAGE_CLOCK_ASK_FAILED
+      TIMED_OUT: STORAGE_CLOCK_TIMED_OUT
+      TIMER_DUE: STORAGE_CLOCK_TIMER_DUE
+    }
+    config {
+      timeoutMs: 300000
+      cancelOnDeadline: false
+    }
+    listens {
+      StorageCall.STORAGE_HTTP_SEND -> STORAGE_CLOCK_START per @payload.key with { key: (as ?key CallKey) }
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_CLOCK_SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+      StorageHttp.STORAGE_NET_FAILED -> STORAGE_CLOCK_FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  ;; the live host policy retry {max 2, on [500,502,503,504,429,timeout,failed], backoffMs 100}: two retries, 100 x 2^(n-1) ms (100, 200), so three attempts in all
+  trait StorageRetry = Retry.traits.Retry {
+    events {
+      START: STORAGE_RUN_START
+      SUCCEEDED: STORAGE_RUN_SUCCEEDED
+      FAILED: STORAGE_RUN_FAILED
+      CANCEL: STORAGE_RUN_CANCEL
+      ATTEMPT: STORAGE_RUN_ATTEMPT
+      RETRY_SCHEDULED: STORAGE_RUN_SCHEDULED
+      COMPLETED: STORAGE_RUN_COMPLETED
+      GAVE_UP: STORAGE_RUN_GAVE_UP
+      TIMER_DUE: STORAGE_RUN_TIMER_DUE
+    }
+    config {
+      maxAttempts: 3
+      baseDelayMs: 100
+      multiplier: 2
+      maxDelayMs: 200
+    }
+    listens {
+      StorageCall.STORAGE_RETRY_START -> STORAGE_RUN_START per @payload.key
+      StorageCall.STORAGE_RETRY_FAILED -> STORAGE_RUN_FAILED per @payload.key
+      StorageCall.STORAGE_RETRY_END -> STORAGE_RUN_CANCEL per @payload.key
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_RUN_SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (= ?status 429) (= ?status 500) (= ?status 502) (= ?status 503) (= ?status 504)))
+    }
   }
 
   trait StorageClient -> @rebindable StorageObject [optimistic] {
     initial: idle
 
     state idle {
-      INIT -> idle
-
       STORAGE_UPLOAD -> idle
         (let ((pf (default @payload.file {}))) (emit STORAGE_RESOLVE {
           mode: "single",
@@ -38,7 +146,7 @@ orbital StorageOrbital {
           contentType: (default @payload.contentType ""),
           acl: (default @payload.acl ""),
           maxSize: (default @payload.maxSize 0),
-          batch: ""
+          batch: null
         }))
 
       STORAGE_RESOLVE -> idle when (and @payload.hasFile (> @payload.maxSize 0) (> @payload.fileSize @payload.maxSize))
@@ -66,230 +174,68 @@ orbital StorageOrbital {
         })))))
       STORAGE_RESOLVE -> idle when (and (not @payload.hasFile) (not (and (not @payload.hasFile) (!= @payload.key "") @payload.hasContent)))
         (emit STORAGE_FAILED { message: "upload requires either `file` (with content) or the `key` + `content` pair" })
-
       STORAGE_PUT -> idle when (= @payload.bucket "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
-      STORAGE_PUT -> idle when (and (!= @payload.bucket "") (not @payload.isPublic))
-        (http PUT (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len @payload.bucket) 3) (<= (str/len @payload.bucket) 63) (not (str/startsWith @payload.bucket "-")) (not (str/endsWith @payload.bucket "-")) (array/every (array/filter (str/split @payload.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" @payload.bucket ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len @payload.bucket) 3) (<= (str/len @payload.bucket) 63) (not (str/startsWith @payload.bucket "-")) (not (str/endsWith @payload.bucket "-")) (array/every (array/filter (str/split @payload.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.bucket) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-            query: { "x-id": "PutObject" },
-            queryEncoding: rfc3986,
-            headers: { "Content-Type": @payload.contentType },
-            bytes: @payload.b64,
-            auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-            timeoutMs: @config.timeoutMs,
-            retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
-          } { key: (json/stringify { mode: @payload.mode, bucket: @payload.bucket, key: @payload.key, size: @payload.size, isPublic: false, fileName: @payload.fileName, fileSize: @payload.fileSize, fileKind: @payload.fileKind, etag: @payload.etag, batch: @payload.batch }), emit: { success: STORAGE_PUT_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_PUT -> idle when (and (!= @payload.bucket "") @payload.isPublic)
-        (http PUT (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len @payload.bucket) 3) (<= (str/len @payload.bucket) 63) (not (str/startsWith @payload.bucket "-")) (not (str/endsWith @payload.bucket "-")) (array/every (array/filter (str/split @payload.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" @payload.bucket ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len @payload.bucket) 3) (<= (str/len @payload.bucket) 63) (not (str/startsWith @payload.bucket "-")) (not (str/endsWith @payload.bucket "-")) (array/every (array/filter (str/split @payload.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.bucket) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-            query: { "x-id": "PutObject" },
-            queryEncoding: rfc3986,
-            headers: { "Content-Type": @payload.contentType, "x-amz-acl": "public-read" },
-            bytes: @payload.b64,
-            auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-            timeoutMs: @config.timeoutMs,
-            retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
-          } { key: (json/stringify { mode: @payload.mode, bucket: @payload.bucket, key: @payload.key, size: @payload.size, isPublic: true, fileName: @payload.fileName, fileSize: @payload.fileSize, fileKind: @payload.fileKind, etag: @payload.etag, batch: @payload.batch }), emit: { success: STORAGE_PUT_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (let ((pk (json/parse @payload.key StoragePending))) (if (= @pk null) false (object/get @pk isPublic false))))
-        (let ((u (json/parse @payload.key StoragePending)))
-          (if (= @u null)
-            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
-          (emit STORAGE_PUT_DONE { url: (if (!= @config.publicUrlBase "") (str/concat (if (str/endsWith @config.publicUrlBase "/") (str/slice @config.publicUrlBase 0 (- (str/len @config.publicUrlBase) 1)) @config.publicUrlBase) "/" @u.key) (if (!= @config.endpoint "") (str/concat (if (str/endsWith @config.endpoint "/") (str/slice @config.endpoint 0 (- (str/len @config.endpoint) 1)) @config.endpoint) "/" @u.bucket "/" @u.key) (str/concat "https://" @u.bucket ".s3." @config.region ".amazonaws.com/" @u.key))), state: (json/stringify @u) })))
-      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (let ((pk (json/parse @payload.key StoragePending))) (if (= @pk null) false (object/get @pk isPublic false)))))
-        (let ((u (json/parse @payload.key StoragePending)))
-          (if (= @u null)
-            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
-          (http GET (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len @u.bucket) 3) (<= (str/len @u.bucket) 63) (not (str/startsWith @u.bucket "-")) (not (str/endsWith @u.bucket "-")) (array/every (array/filter (str/split @u.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" @u.bucket ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len @u.bucket) 3) (<= (str/len @u.bucket) 63) (not (str/startsWith @u.bucket "-")) (not (str/endsWith @u.bucket "-")) (array/every (array/filter (str/split @u.bucket "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @u.bucket) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @u.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @u.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-              query: { "x-amz-checksum-mode": "ENABLED", "x-id": "GetObject" },
-              auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-              presign: { expiresSec: 3600 }
-            } { key: (json/stringify @u), emit: { success: STORAGE_PUT_PRESIGNED, failure: STORAGE_HTTP_FAILED } })))
-      STORAGE_PUT_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit STORAGE_HTTP_ERROR { text: @payload.body })
-      STORAGE_PUT_PRESIGNED -> idle
-        (emit STORAGE_PUT_DONE { url: @payload.url, state: @payload.key })
-      STORAGE_PUT_DONE -> idle when (= (json/parse @payload.state StoragePending) null)
-        (emit STORAGE_FAILED { message: "The upload state could not be read back" })
-      STORAGE_PUT_DONE -> idle when (= (let ((ps (json/parse @payload.state StoragePending))) (if (= @ps null) "" (object/get @ps mode "single"))) "single")
-        (let ((u (json/parse @payload.state StoragePending)))
-          (if (= @u null)
-            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
-            (emit STORAGE_UPLOADED { key: @u.key, bucket: @u.bucket, size: @u.size, etag: @u.etag, id: @u.key, url: @payload.url })))
-      STORAGE_PUT_DONE -> idle when (= (let ((ps (json/parse @payload.state StoragePending))) (if (= @ps null) "" (object/get @ps mode "single"))) "batch")
-        (let ((u (json/parse @payload.state StoragePending)))
-          (if (= @u null)
-            (emit STORAGE_FAILED { message: "The upload state could not be read back" })
-            (let ((b (json/parse @u.batch StorageBatch)))
-              (if (= @b null)
-                (emit STORAGE_FAILED { message: "The batch state could not be read back" })
-                (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: @b.files, idx: (+ @b.idx 1), acl: @b.acl, maxSize: @b.maxSize, bucket: @b.bucket, items: (array/append @b.items { id: @u.key, key: @u.key, url: @payload.url, name: @u.fileName, sizeBytes: @u.fileSize, mimeType: @u.fileKind }) }) })))))
-
+      STORAGE_PUT -> idle when (!= @payload.bucket "")
+        (emit STORAGE_REQUEST { verb: "put", method: "PUT", bucket: @payload.bucket, objKey: @payload.key, query: [{ name: "x-id", value: "PutObject" }], headers: (if @payload.isPublic [{ name: "content-type", value: @payload.contentType }, { name: "x-amz-acl", value: "public-read" }] [{ name: "content-type", value: @payload.contentType }]), b64: @payload.b64, expires: 0, putMode: @payload.mode, putSize: @payload.size, putPublic: @payload.isPublic, putFileName: @payload.fileName, putFileSize: @payload.fileSize, putFileKind: @payload.fileKind, putEtag: @payload.etag, batch: @payload.batch })
       STORAGE_UPLOAD_MANY -> idle when (= (array/len (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null))))) 0)
         (emit STORAGE_FAILED { message: "uploadMany requires a non-empty `files` array (UploadDropZone batch shape)" })
       STORAGE_UPLOAD_MANY -> idle when (> (array/len (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null))))) 0)
-        (emit STORAGE_BATCH_NEXT { batch: (json/stringify { files: (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null)))), idx: 0, acl: (default @payload.acl ""), maxSize: (default @payload.maxSize 0), bucket: (default @payload.bucket @config.bucket), items: [] }) })
-      STORAGE_BATCH_NEXT -> idle when (= (json/parse @payload.batch StorageBatch) null)
-        (emit STORAGE_FAILED { message: "The batch state could not be read back" })
-      STORAGE_BATCH_NEXT -> idle when (let ((pb (json/parse @payload.batch StorageBatch))) (if (= @pb null) false (>= @pb.idx (array/len @pb.files))))
-        (let ((b (json/parse @payload.batch StorageBatch)))
-          (if (= @b null)
-            (emit STORAGE_FAILED { message: "The batch state could not be read back" })
-            (emit STORAGE_UPLOADED_MANY { items: @b.items, count: (array/len @b.items) })))
-      STORAGE_BATCH_NEXT -> idle when (let ((pb (json/parse @payload.batch StorageBatch))) (if (= @pb null) false (< @pb.idx (array/len @pb.files))))
-        (let ((b (json/parse @payload.batch StorageBatch)))
-          (if (= @b null)
-            (emit STORAGE_FAILED { message: "The batch state could not be read back" })
-            (let ((f (array/nth @b.files @b.idx)))
-              (if (= @f null)
-                (emit STORAGE_FAILED { message: "The batch has no file at this position" })
-                (emit STORAGE_RESOLVE {
-                  mode: "batch",
-                  bucket: @b.bucket,
-                  hasFile: true,
-                  fileName: (default @f.name ""),
-                  fileSize: (object/get @f size 0),
-                  fileType: (default (object/get @f type "") "application/octet-stream"),
-                  hasContent: false,
-                  raw: (object/get @f content ""),
-                  key: "",
-                  contentType: "",
-                  acl: @b.acl,
-                  maxSize: @b.maxSize,
-                  batch: @payload.batch
-                })))))
+        (emit STORAGE_BATCH_NEXT { batch: { files: (array/filter (default @payload.files []) (fn f (validate/required (object/get @f name null)))), idx: 0, acl: (default @payload.acl ""), maxSize: (default @payload.maxSize 0), bucket: (default @payload.bucket @config.bucket), items: (array/take (default @payload.files []) 0) } })
+      STORAGE_BATCH_NEXT -> idle when (>= @payload.batch.idx (array/len @payload.batch.files))
+        (emit STORAGE_UPLOADED_MANY { items: @payload.batch.items, count: (array/len @payload.batch.items) })
+      STORAGE_BATCH_NEXT -> idle when (< @payload.batch.idx (array/len @payload.batch.files))
+        (let ((f (array/nth @payload.batch.files @payload.batch.idx)))
+          (if (= @f null)
+            (emit STORAGE_FAILED { message: "The batch has no file at this position" })
+            (emit STORAGE_RESOLVE {
+              mode: "batch",
+              bucket: @payload.batch.bucket,
+              hasFile: true,
+              fileName: (default @f.name ""),
+              fileSize: (object/get @f size 0),
+              fileType: (default (object/get @f type "") "application/octet-stream"),
+              hasContent: false,
+              raw: (object/get @f content ""),
+              key: "",
+              contentType: "",
+              acl: @payload.batch.acl,
+              maxSize: @payload.batch.maxSize,
+              batch: @payload.batch
+            })))
 
       STORAGE_DOWNLOAD -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
       STORAGE_DOWNLOAD -> idle when (!= (default @payload.bucket @config.bucket) "")
-        (http GET (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" (default @payload.bucket @config.bucket) ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.bucket @config.bucket)) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-          query: { "x-id": "GetObject" },
-            queryEncoding: rfc3986,
-          auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-          timeoutMs: @config.timeoutMs,
-          responseAs: bytes,
-          retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
-        } { emit: { success: STORAGE_DOWNLOAD_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_DOWNLOAD_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get (default @payload.headers {}) "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (object/merge { } { }) })
-      STORAGE_DOWNLOAD_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (if (base64/valid @payload.body) (let ((bd (base64/decode @payload.body))) (if (= @bd null) (emit STORAGE_FAILED { message: "The storage error response could not be decoded" }) (emit STORAGE_HTTP_ERROR { text: (default @bd "") }))) (emit STORAGE_FAILED { message: "The storage error response could not be decoded" }))
+        (emit STORAGE_REQUEST { verb: "download", method: "GET", bucket: (default @payload.bucket @config.bucket), objKey: @payload.key, query: [{ name: "x-id", value: "GetObject" }], headers: [], b64: "", expires: 0, putMode: "", putSize: 0, putPublic: false, putFileName: "", putFileSize: 0, putFileKind: "", putEtag: "", batch: null })
 
       STORAGE_LIST -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
       STORAGE_LIST -> idle when (!= (default @payload.bucket @config.bucket) "")
-        (http GET (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" (default @payload.bucket @config.bucket) ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.bucket @config.bucket)) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/") "/") {
-          queryEncoding: rfc3986,
-          query: {
-            "continuation-token": (if (!= (default @payload.continuationToken "") "") @payload.continuationToken null),
-            "list-type": 2,
-            "max-keys": (if (!= @payload.maxKeys null) @payload.maxKeys 1000),
-            prefix: (if (!= (default @payload.prefix "") "") @payload.prefix null)
-          },
-          auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-          timeoutMs: @config.timeoutMs,
-          retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
-        } { emit: { success: STORAGE_LIST_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (xml/valid @payload.body)))
-        (emit STORAGE_FAILED { message: (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") })
-      ;; a listing entry whose Size or LastModified does not read fails the whole listing above, so the size and lastModified defaults below never fire
-      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))
-        (let ((l (xml/parse @payload.body S3Listing))) (if (or (= @l null) (not (array/every (object/get @l Contents []) (fn e (and (!= (as (object/get @e LastModified "") StorageInstant) null) (!= (str/to-number (object/get @e Size "0")) null)))))) (emit STORAGE_FAILED { message: "The listing could not be read" })
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (let ((t (as (object/get @e LastModified "") StorageInstant)) (epoch : StorageInstant "1970-01-01T00:00:00Z")) (if (= @t null) 0 (default (time/diff @t @epoch "ms") 0))) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") })))
-      ;; a listing entry whose Size or LastModified does not read fails the whole listing above, so the size and lastModified defaults below never fire
-      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (not (and (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))))
-        (let ((l (xml/parse @payload.body S3Listing))) (if (or (= @l null) (not (array/every (object/get @l Contents []) (fn e (and (!= (as (object/get @e LastModified "") StorageInstant) null) (!= (str/to-number (object/get @e Size "0")) null)))))) (emit STORAGE_FAILED { message: "The listing could not be read" })
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (let ((t (as (object/get @e LastModified "") StorageInstant)) (epoch : StorageInstant "1970-01-01T00:00:00Z")) (if (= @t null) 0 (default (time/diff @t @epoch "ms") 0))) })), truncated: (= (object/get @l IsTruncated "") "true") })))
-      STORAGE_LIST_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit STORAGE_HTTP_ERROR { text: @payload.body })
+        (emit STORAGE_REQUEST { verb: "list", method: "GET", bucket: (default @payload.bucket @config.bucket), objKey: "", query: (array/filter [{ name: "continuation-token", value: (default @payload.continuationToken "") }, { name: "list-type", value: "2" }, { name: "max-keys", value: (str/concat "" (default @payload.maxKeys 1000)) }, { name: "prefix", value: (default @payload.prefix "") }] (fn q (!= @q.value ""))), headers: [], b64: "", expires: 0, putMode: "", putSize: 0, putPublic: false, putFileName: "", putFileSize: 0, putFileKind: "", putEtag: "", batch: null })
 
       STORAGE_DELETE -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
       STORAGE_DELETE -> idle when (!= (default @payload.bucket @config.bucket) "")
-        (http DELETE (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" (default @payload.bucket @config.bucket) ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.bucket @config.bucket)) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-          query: { "x-id": "DeleteObject" },
-            queryEncoding: rfc3986,
-          auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-          timeoutMs: @config.timeoutMs,
-          retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
-        } { emit: { success: STORAGE_DELETE_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_DELETE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit STORAGE_DELETED { deleted: true })
-      STORAGE_DELETE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit STORAGE_HTTP_ERROR { text: @payload.body })
+        (emit STORAGE_REQUEST { verb: "delete", method: "DELETE", bucket: (default @payload.bucket @config.bucket), objKey: @payload.key, query: [{ name: "x-id", value: "DeleteObject" }], headers: [], b64: "", expires: 0, putMode: "", putSize: 0, putPublic: false, putFileName: "", putFileSize: 0, putFileKind: "", putEtag: "", batch: null })
 
       STORAGE_GET_SIGNED_URL -> idle when (= (default @payload.bucket @config.bucket) "")
         (emit STORAGE_FAILED { message: "No value provided for input HTTP label: Bucket." })
-      STORAGE_GET_SIGNED_URL -> idle when (and (!= (default @payload.bucket @config.bucket) "") (= @payload.operation "put"))
-        (http PUT (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" (default @payload.bucket @config.bucket) ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.bucket @config.bucket)) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-          query: { "x-amz-checksum-crc32": "AAAAAA==", "x-amz-sdk-checksum-algorithm": "CRC32", "x-id": "PutObject" },
-          auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-          presign: { expiresSec: (if (!= @payload.expiresIn null) @payload.expiresIn 3600) }
-        } { emit: { success: STORAGE_SIGNED_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_GET_SIGNED_URL -> idle when (and (!= (default @payload.bucket @config.bucket) "") (!= @payload.operation "put"))
-        (http GET (if (!= @config.endpoint "") @config.endpoint (if (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))) (str/concat "https://" (default @payload.bucket @config.bucket) ".s3." @config.region ".amazonaws.com") (str/concat "https://s3." @config.region ".amazonaws.com"))) (if (or (!= @config.endpoint "") (not (and (>= (str/len (default @payload.bucket @config.bucket)) 3) (<= (str/len (default @payload.bucket @config.bucket)) 63) (not (str/startsWith (default @payload.bucket @config.bucket) "-")) (not (str/endsWith (default @payload.bucket @config.bucket) "-")) (array/every (array/filter (str/split (default @payload.bucket @config.bucket) "") (fn c (!= @c ""))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789-" @c)))))) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.bucket @config.bucket)) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/")) (str/concat "/" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.key) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") "%2F" "/"))) {
-          query: { "x-amz-checksum-mode": "ENABLED", "x-id": "GetObject" },
-          auth: { scheme: aws-sigv4, accessKeyId: @config.accessKeyId, secretAccessKey: @config.secretAccessKey, region: @config.region, service: "s3" },
-          presign: { expiresSec: (if (!= @payload.expiresIn null) @payload.expiresIn 3600) }
-        } { emit: { success: STORAGE_SIGNED_REPLIED, failure: STORAGE_HTTP_FAILED } })
-      STORAGE_SIGNED_REPLIED -> idle
-        (let ((ex (str/to-number (default (array/nth (str/split (default (array/nth (str/split @payload.url "X-Amz-Expires=") 1) "") "&") 0) ""))))
-          (if (= @ex null)
-            (emit STORAGE_FAILED { message: "The signed url carries no expiry" })
-            (emit STORAGE_SIGNED_URL { url: @payload.url, expiresAt: (time/add @now (* @ex 1000) "ms") })))
-
-      STORAGE_HTTP_ERROR -> idle
-        (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (if (= @doc null) "UnknownError" (default (object/get @doc Message "") (default (object/get @doc message "") "UnknownError")))))) })
-      STORAGE_HTTP_FAILED -> idle
-        (emit STORAGE_FAILED { message: (if (= @payload.kind "timeout") "Connection timed out" (if (= @payload.kind "unconfigured") (str/concat "Storage credential not configured: " (default @payload.credential "")) @payload.error)) })
+      STORAGE_GET_SIGNED_URL -> idle when (and (!= (default @payload.bucket @config.bucket) "") (or (< (default @payload.expiresIn 3600) 1) (> (default @payload.expiresIn 3600) 604800) (!= (default @payload.expiresIn 3600) (math/floor (default @payload.expiresIn 3600)))))
+        (emit STORAGE_FAILED { message: "A presigned url expires in a whole number of seconds from 1 to 604800" })
+      STORAGE_GET_SIGNED_URL -> idle when (and (!= (default @payload.bucket @config.bucket) "") (not (or (< (default @payload.expiresIn 3600) 1) (> (default @payload.expiresIn 3600) 604800) (!= (default @payload.expiresIn 3600) (math/floor (default @payload.expiresIn 3600))))) (= @payload.operation "put"))
+        (emit STORAGE_REQUEST { verb: "signed", method: "PUT", bucket: (default @payload.bucket @config.bucket), objKey: @payload.key, query: [{ name: "x-amz-checksum-crc32", value: "AAAAAA==" }, { name: "x-amz-sdk-checksum-algorithm", value: "CRC32" }, { name: "x-id", value: "PutObject" }], headers: [], b64: "", expires: (default @payload.expiresIn 3600), putMode: "", putSize: 0, putPublic: false, putFileName: "", putFileSize: 0, putFileKind: "", putEtag: "", batch: null })
+      STORAGE_GET_SIGNED_URL -> idle when (and (!= (default @payload.bucket @config.bucket) "") (not (or (< (default @payload.expiresIn 3600) 1) (> (default @payload.expiresIn 3600) 604800) (!= (default @payload.expiresIn 3600) (math/floor (default @payload.expiresIn 3600))))) (!= @payload.operation "put"))
+        (emit STORAGE_REQUEST { verb: "signed", method: "GET", bucket: (default @payload.bucket @config.bucket), objKey: @payload.key, query: [{ name: "x-amz-checksum-mode", value: "ENABLED" }, { name: "x-id", value: "GetObject" }], headers: [], b64: "", expires: (default @payload.expiresIn 3600), putMode: "", putSize: 0, putPublic: false, putFileName: "", putFileSize: 0, putFileKind: "", putEtag: "", batch: null })
     }
 
     emits {
-      STORAGE_UPLOADED -> external {
-        key : string!
-        bucket : string!
-        size : number!
-        etag : string!
-        id : string!
-        url : string!
-      }
-        @description "The stored object: its key, bucket, byte size, the ETag the store answered with, and a url (public base or origin url for a public acl, otherwise a one-hour presigned get)."
-        @synonyms "file uploaded, object stored, upload complete"
-        @tier "primary"
       STORAGE_UPLOADED_MANY -> external {
         items : [StorageItem]!
         count : number!
       }
         @description "The batch result: one item per uploaded file, in order, with the declared size and mime type."
         @synonyms "files uploaded, batch stored, upload batch complete"
-        @tier "primary"
-      STORAGE_DOWNLOADED -> external {
-        content : string!
-        contentType : string!
-        size : number!
-        metadata : Map string string!
-      }
-        @description "The object body as base64, its content type (octet-stream when the store sent none) and byte size; metadata is always empty."
-        @synonyms "file downloaded, object content, fetched object"
-        @tier "primary"
-      STORAGE_LISTED -> external {
-        keys : [StorageKey]!
-        truncated : boolean!
-        nextToken : string
-      }
-        @description "One page of keys with size and last-modified epoch ms; nextToken is present only on a truncated page."
-        @synonyms "list objects, bucket listing, keys page"
-        @tier "primary"
-      STORAGE_DELETED -> external {
-        deleted : boolean!
-      }
-        @description "The delete was accepted by the store."
-        @synonyms "object deleted, file removed"
-        @tier "primary"
-      STORAGE_SIGNED_URL -> external {
-        url : string!
-        expiresAt : instant!
-      }
-        @description "A presigned url and the instant it stops working."
-        @synonyms "presigned url, signed link, upload url"
         @tier "primary"
       STORAGE_FAILED -> external {
         code : string
@@ -298,7 +244,7 @@ orbital StorageOrbital {
         @description "An action failed: the store refused, could not be reached, a credential is missing, or the upload input was rejected."
         @synonyms "storage error, upload failed, s3 error"
         @tier "primary"
-      STORAGE_RESOLVE {
+      STORAGE_RESOLVE -> internal {
         mode : string!
         bucket : string!
         hasFile : boolean!
@@ -311,11 +257,11 @@ orbital StorageOrbital {
         contentType : string!
         acl : string!
         maxSize : number!
-        batch : string!
+        batch : StorageBatch?
       }
         @description "Internal: an upload input to validate and turn into a put."
         @tier "secondary"
-      STORAGE_PUT {
+      STORAGE_PUT -> internal {
         mode : string!
         bucket : string!
         key : string!
@@ -327,74 +273,34 @@ orbital StorageOrbital {
         fileName : string!
         fileSize : number!
         fileKind : string!
-        batch : string!
+        batch : StorageBatch?
       }
         @description "Internal: a validated object ready to put."
         @tier "secondary"
-      STORAGE_PUT_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the put's HTTP reply."
-        @tier "secondary"
-      STORAGE_PUT_PRESIGNED {
-        url : string!
-        key : string!
-      }
-        @description "Internal: the presigned get url of an uploaded object."
-        @tier "secondary"
-      STORAGE_PUT_DONE {
-        url : string!
-        state : string!
-      }
-        @description "Internal: an upload finished with its url."
-        @tier "secondary"
-      STORAGE_BATCH_NEXT {
-        batch : string!
+      STORAGE_BATCH_NEXT -> internal {
+        batch : StorageBatch!
       }
         @description "Internal: the next file of a batch upload."
         @tier "secondary"
-      STORAGE_DOWNLOAD_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      STORAGE_REQUEST {
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
       }
-        @description "Internal: the download's HTTP reply (body is base64)."
-        @tier "secondary"
-      STORAGE_LIST_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the listing's HTTP reply."
-        @tier "secondary"
-      STORAGE_DELETE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the delete's HTTP reply."
-        @tier "secondary"
-      STORAGE_SIGNED_REPLIED {
-        url : string!
-        key : string
-      }
-        @description "Internal: the presigned url."
-        @tier "secondary"
-      STORAGE_HTTP_ERROR {
-        text : string!
-      }
-        @description "Internal: a non-2xx reply body to turn into a failure message."
-        @tier "secondary"
-      STORAGE_HTTP_FAILED {
-        error : string!
-        kind : string!
-        credential : string
-        key : string
-      }
-        @description "Internal: a storage call never produced a reply."
+        @description "Internal: a built request, handed to the gate that numbers it and adds the environment."
         @tier "secondary"
     }
 
@@ -464,7 +370,7 @@ orbital StorageOrbital {
         contentType : string!
         acl : string!
         maxSize : number!
-        batch : string!
+        batch : StorageBatch?
       }
       STORAGE_PUT {
         mode : string!
@@ -478,7 +384,566 @@ orbital StorageOrbital {
         fileName : string!
         fileSize : number!
         fileKind : string!
-        batch : string!
+        batch : StorageBatch?
+      }
+      STORAGE_BATCH_NEXT {
+        batch : StorageBatch!
+      }
+      StorageCall.STORAGE_BATCH_DONE -> STORAGE_BATCH_NEXT
+    }
+
+    config {
+      bucket : string = ""
+        @label "Default bucket"
+        @description "The bucket used when an action names none."
+        @synonyms "default bucket, bucket name"
+        @tier "infra"
+    }
+  }
+
+  trait StorageGate -> StorageObject [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (os/getenv "STORAGE_S3_HOST" { key: "host" emit: { success: STORAGE_ENV_HOST, failure: STORAGE_ENV_HOST_UNREAD } })
+        (os/getenv "STORAGE_S3_REGION" { key: "region" emit: { success: STORAGE_ENV_REGION, failure: STORAGE_ENV_REGION_UNREAD } })
+        (os/getenv "STORAGE_ACCESS_KEY_ID" { key: "keyid" emit: { success: STORAGE_ENV_KEY_ID, failure: STORAGE_ENV_KEY_ID_UNREAD } })
+      STORAGE_ENV_HOST -> idle
+        (set @entity.hostText (str/trim (default @payload.value "")))
+        (set @entity.authority (if (= (str/trim (default @payload.value "")) "") "" (str/concat (str/trim (default @payload.value "")) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)))))
+        (set @entity.origin (if (= (str/trim (default @payload.value "")) "") "" (str/concat (if @config.tls "https" "http") "://" (str/trim (default @payload.value "")) (if (= @config.port (if @config.tls 443 80)) "" (str/concat ":" @config.port)))))
+      STORAGE_ENV_HOST_UNREAD -> idle
+        (emit STORAGE_FAILED { message: (str/concat "Storage host could not be read: " (default @payload.error "")) })
+      STORAGE_ENV_REGION -> idle
+        (set @entity.regionName (str/trim (default @payload.value "")))
+      STORAGE_ENV_REGION_UNREAD -> idle
+        (emit STORAGE_FAILED { message: (str/concat "Storage region could not be read: " (default @payload.error "")) })
+      STORAGE_ENV_KEY_ID -> idle
+        (set @entity.keyId (str/trim (default @payload.value "")))
+      STORAGE_ENV_KEY_ID_UNREAD -> idle
+        (emit STORAGE_FAILED { message: (str/concat "Storage access key id could not be read: " (default @payload.error "")) })
+      STORAGE_REQUEST -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (emit STORAGE_READY { key: (str/concat @payload.verb ":" @entity.seq), verb: @payload.verb, method: @payload.method, bucket: @payload.bucket, objKey: @payload.objKey, query: @payload.query, headers: @payload.headers, b64: @payload.b64, expires: @payload.expires, putMode: @payload.putMode, putSize: @payload.putSize, putPublic: @payload.putPublic, putFileName: @payload.putFileName, putFileSize: @payload.putFileSize, putFileKind: @payload.putFileKind, putEtag: @payload.putEtag, batch: @payload.batch, hostText: @entity.hostText, keyId: @entity.keyId, authority: @entity.authority, origin: @entity.origin, region: (if (= @entity.regionName "") @config.region @entity.regionName) })
+    }
+
+    emits {
+      STORAGE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The host or region variable could not be read."
+        @tier "primary"
+      STORAGE_READY {
+        key : string!
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+        hostText : string!
+        keyId : string!
+        authority : string!
+        origin : string!
+        region : string!
+      }
+        @description "Internal: a numbered request with the environment, handed to the row of its key in StorageCall."
+        @tier "secondary"
+    }
+
+    listens {
+      STORAGE_REQUEST {
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+      }
+      STORAGE_ENV_HOST {
+        value : string
+      }
+      STORAGE_ENV_REGION {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_HOST_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_REGION_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      StorageClient.STORAGE_REQUEST -> STORAGE_REQUEST
+    }
+
+    config {
+      tls : boolean = true
+        @label "TLS"
+        @description "True addresses https, false http; it and the port knob build the host header the request is signed with, so they must equal the StorageHttp tls and port."
+        @synonyms "https, secure"
+        @tier "infra"
+      port : number = 443
+        @label "Port"
+        @description "The storage port; with the host from STORAGE_S3_HOST it is the host header authority. Must equal the StorageHttp port, whose net grant names it."
+        @synonyms "storage port"
+        @tier "infra"
+      region : string = "us-east-1"
+        @label "Signing region"
+        @description "The AWS region requests and presigned urls are signed for when STORAGE_S3_REGION is unset or blank."
+        @synonyms "aws region, s3 region"
+        @tier "infra"
+    }
+  }
+
+  trait StorageCall -> StorageObject [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      STORAGE_CALL_READY -> idle
+        (set @entity.verb @payload.verb)
+        (set @entity.lastStatus 0)
+        (set @entity.lastBody "")
+        (set @entity.reqMethod @payload.method)
+        (set @entity.reqBucket @payload.bucket)
+        (set @entity.reqKey @payload.objKey)
+        (set @entity.reqQuery @payload.query)
+        (set @entity.reqHeaders @payload.headers)
+        (set @entity.reqB64 @payload.b64)
+        (set @entity.reqExpires @payload.expires)
+        (set @entity.putMode @payload.putMode)
+        (set @entity.putSize @payload.putSize)
+        (set @entity.putPublic @payload.putPublic)
+        (set @entity.putFileName @payload.putFileName)
+        (set @entity.putFileSize @payload.putFileSize)
+        (set @entity.putFileKind @payload.putFileKind)
+        (set @entity.putEtag @payload.putEtag)
+        (set @entity.batch @payload.batch)
+        (set @entity.hostText @payload.hostText)
+        (set @entity.keyId @payload.keyId)
+        (set @entity.authority @payload.authority)
+        (set @entity.origin @payload.origin)
+        (set @entity.regionName @payload.region)
+        (if (= @payload.verb "signed")
+          (emit STORAGE_SIGN { tag: @entity.id, mode: "signed", method: @payload.method, bucket: @payload.bucket, key: @payload.objKey, query: @payload.query, headers: [], b64: "", expires: @payload.expires })
+          (emit STORAGE_RETRY_START { key: (as @payload.key CallKey) }))
+      STORAGE_ATTEMPT -> idle
+        (emit STORAGE_SIGN { tag: @entity.id, mode: "header", method: @entity.reqMethod, bucket: @entity.reqBucket, key: @entity.reqKey, query: @entity.reqQuery, headers: @entity.reqHeaders, b64: @entity.reqB64, expires: 0 })
+      STORAGE_GAVE_UP -> idle when (> @entity.lastStatus 0)
+        (emit STORAGE_HTTP_ERROR { text: @entity.lastBody })
+        (emit STORAGE_CLEAR {})
+      STORAGE_GAVE_UP -> idle when (= @entity.lastStatus 0)
+        (emit STORAGE_FAILED { message: (default @payload.error "") })
+        (emit STORAGE_CLEAR {})
+
+      STORAGE_PUT_REPLIED -> idle when (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+        (set @entity.lastStatus @payload.status)
+        (set @entity.lastBody @payload.body)
+        (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) @entity.putPublic)
+        (emit STORAGE_PUT_DONE { url: (if (!= @config.publicUrlBase "") (str/concat (if (str/endsWith @config.publicUrlBase "/") (str/slice @config.publicUrlBase 0 (- (str/len @config.publicUrlBase) 1)) @config.publicUrlBase) "/" @entity.reqKey) (str/concat @entity.origin @config.pathPrefix "/" (if @config.pathStyle (str/concat @entity.reqBucket "/") "") @entity.reqKey)) })
+      STORAGE_PUT_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not @entity.putPublic))
+        (emit STORAGE_SIGN { tag: @entity.id, mode: "put", method: "GET", bucket: @entity.reqBucket, key: @entity.reqKey, query: [{ name: "x-amz-checksum-mode", value: "ENABLED" }, { name: "x-id", value: "GetObject" }], headers: [], b64: "", expires: 3600 })
+      STORAGE_PUT_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (emit STORAGE_HTTP_ERROR { text: @payload.body })
+        (emit STORAGE_CLEAR {})
+      STORAGE_PUT_PRESIGNED -> idle
+        (emit STORAGE_PUT_DONE { url: @payload.url })
+      STORAGE_PUT_DONE -> idle when (= @entity.putMode "single")
+        (emit STORAGE_UPLOADED { key: @entity.reqKey, bucket: @entity.reqBucket, size: @entity.putSize, etag: @entity.putEtag, id: @entity.reqKey, url: @payload.url })
+        (emit STORAGE_CLEAR {})
+      STORAGE_PUT_DONE -> idle when (= @entity.putMode "batch")
+        (let ((nf : [StorageFile] []) (ni : [StorageItem] []))
+          (let ((b (default @entity.batch { files: @nf, idx: 0, acl: "", maxSize: 0, bucket: "", items: @ni })))
+            (emit STORAGE_BATCH_DONE { batch: { files: @b.files, idx: (+ @b.idx 1), acl: @b.acl, maxSize: @b.maxSize, bucket: @b.bucket, items: (array/append @b.items { id: @entity.reqKey, key: @entity.reqKey, url: @payload.url, name: @entity.putFileName, sizeBytes: @entity.putFileSize, mimeType: @entity.putFileKind }) } })))
+        (emit STORAGE_CLEAR {})
+
+      STORAGE_DOWNLOAD_REPLIED -> idle when (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+        (set @entity.lastStatus @payload.status)
+        (set @entity.lastBody (if (base64/valid @payload.body) (default (base64/decode @payload.body) "") ""))
+        (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
+      STORAGE_DOWNLOAD_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get (default @payload.headers {}) "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (object/merge { } { }) })
+        (emit STORAGE_CLEAR {})
+      STORAGE_DOWNLOAD_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (if (base64/valid @payload.body) (let ((bd (base64/decode @payload.body))) (if (= @bd null) (emit STORAGE_FAILED { message: "The storage error response could not be decoded" }) (emit STORAGE_HTTP_ERROR { text: (default @bd "") }))) (emit STORAGE_FAILED { message: "The storage error response could not be decoded" }))
+        (emit STORAGE_CLEAR {})
+
+      STORAGE_LIST_REPLIED -> idle when (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+        (set @entity.lastStatus @payload.status)
+        (set @entity.lastBody @payload.body)
+        (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
+      STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (xml/valid @payload.body)))
+        (emit STORAGE_FAILED { message: (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") })
+        (emit STORAGE_CLEAR {})
+      ;; a listing entry whose Size or LastModified does not read fails the whole listing above, so the size and lastModified defaults below never fire
+      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))
+        (let ((l (xml/parse @payload.body S3Listing))) (if (or (= @l null) (not (array/every (object/get @l Contents []) (fn e (and (!= (as (object/get @e LastModified "") StorageInstant) null) (!= (str/to-number (object/get @e Size "0")) null)))))) (emit STORAGE_FAILED { message: "The listing could not be read" })
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (let ((t (as (object/get @e LastModified "") StorageInstant)) (epoch : StorageInstant "1970-01-01T00:00:00Z")) (if (= @t null) 0 (default (time/diff @t @epoch "ms") 0))) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") })))
+        (emit STORAGE_CLEAR {})
+      ;; a listing entry whose Size or LastModified does not read fails the whole listing above, so the size and lastModified defaults below never fire
+      STORAGE_LIST_REPLIED -> idle when (let ((gl (xml/parse @payload.body S3Listing))) (if (= @gl null) false (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (not (and (= (object/get @gl IsTruncated "") "true") (!= (object/get @gl NextContinuationToken null) null))))))
+        (let ((l (xml/parse @payload.body S3Listing))) (if (or (= @l null) (not (array/every (object/get @l Contents []) (fn e (and (!= (as (object/get @e LastModified "") StorageInstant) null) (!= (str/to-number (object/get @e Size "0")) null)))))) (emit STORAGE_FAILED { message: "The listing could not be read" })
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (default (str/to-number (object/get @e Size "0")) 0), lastModified: (let ((t (as (object/get @e LastModified "") StorageInstant)) (epoch : StorageInstant "1970-01-01T00:00:00Z")) (if (= @t null) 0 (default (time/diff @t @epoch "ms") 0))) })), truncated: (= (object/get @l IsTruncated "") "true") })))
+        (emit STORAGE_CLEAR {})
+      STORAGE_LIST_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (emit STORAGE_HTTP_ERROR { text: @payload.body })
+        (emit STORAGE_CLEAR {})
+
+      STORAGE_DELETE_REPLIED -> idle when (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+        (set @entity.lastStatus @payload.status)
+        (set @entity.lastBody @payload.body)
+        (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (str/concat "status " @payload.status) })
+      STORAGE_DELETE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit STORAGE_DELETED { deleted: true })
+        (emit STORAGE_CLEAR {})
+      STORAGE_DELETE_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (or (= @payload.status 429) (= @payload.status 500) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (emit STORAGE_HTTP_ERROR { text: @payload.body })
+        (emit STORAGE_CLEAR {})
+
+      STORAGE_SIGNED_REPLIED -> idle
+        (let ((ex (str/to-number (default (array/nth (str/split (default (array/nth (str/split @payload.url "X-Amz-Expires=") 1) "") "&") 0) ""))))
+          (if (= @ex null)
+            (emit STORAGE_FAILED { message: "The signed url carries no expiry" })
+            (emit STORAGE_SIGNED_URL { url: @payload.url, expiresAt: (time/add @now (* @ex 1000) "ms") })))
+        (emit STORAGE_CLEAR {})
+      STORAGE_HTTP_ERROR -> idle
+        (emit STORAGE_FAILED { message: (if (= (str/trim @payload.text) "") "UnknownError" (if (not (xml/valid @payload.text)) (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") (let ((doc (xml/parse @payload.text S3ErrorDoc))) (if (= @doc null) "UnknownError" (default (object/get @doc Message "") (default (object/get @doc message "") "UnknownError")))))) })
+
+      STORAGE_HTTP_FAILED -> idle when (and (!= @entity.verb "") (array/includes ["timeout", "io", "tls"] @payload.kind))
+        (set @entity.lastStatus 0)
+        (emit STORAGE_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "Connection timed out" @payload.error) })
+      STORAGE_HTTP_FAILED -> idle when (and (!= @entity.verb "") (not (array/includes ["timeout", "io", "tls"] @payload.kind)))
+        (emit STORAGE_RETRY_END { key: (as @payload.key CallKey) })
+        (emit STORAGE_FAILED { message: (if (= @payload.kind "timeout") "Connection timed out" @payload.error) })
+        (emit STORAGE_CLEAR {})
+      STORAGE_HTTP_FAILED -> idle when (= @entity.verb "")
+        (emit STORAGE_FAILED { message: (if (= @payload.kind "timeout") "Connection timed out" @payload.error) })
+        (emit STORAGE_CLEAR {})
+      STORAGE_SIGN_FAILED -> idle when (= @payload.mode "header")
+        (emit STORAGE_RETRY_END { key: (as @entity.id CallKey) })
+        (emit STORAGE_FAILED { message: @payload.message })
+        (emit STORAGE_CLEAR {})
+      STORAGE_SIGN_FAILED -> idle when (!= @payload.mode "header")
+        (emit STORAGE_FAILED { message: @payload.message })
+        (emit STORAGE_CLEAR {})
+      STORAGE_CLEAR -> idle
+        (set @entity.verb "")
+        (set @entity.lastStatus 0)
+        (set @entity.lastBody "")
+        (set @entity.reqMethod "")
+        (set @entity.reqBucket "")
+        (set @entity.reqKey "")
+        (set @entity.reqQuery (array/take @entity.reqQuery 0))
+        (set @entity.reqHeaders (array/take @entity.reqHeaders 0))
+        (set @entity.reqB64 "")
+        (set @entity.reqExpires 0)
+        (set @entity.putMode "")
+        (set @entity.putSize 0)
+        (set @entity.putPublic false)
+        (set @entity.putFileName "")
+        (set @entity.putFileSize 0)
+        (set @entity.putFileKind "")
+        (set @entity.putEtag "")
+        (set @entity.batch null)
+        (set @entity.hostText "")
+        (set @entity.keyId "")
+        (set @entity.authority "")
+        (set @entity.origin "")
+        (set @entity.regionName "")
+
+      STORAGE_SIGN -> idle when (= @entity.keyId "")
+        (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage access key id not configured" })
+      STORAGE_SIGN -> idle when (and (!= @entity.keyId "") (= @entity.hostText ""))
+        (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage host not configured: set STORAGE_S3_HOST" })
+      STORAGE_SIGN -> idle when (and (!= @entity.keyId "") (!= @entity.hostText ""))
+        (let ((region @entity.regionName)
+              (day (time/format @now "YYYYMMDD"))
+              (stamp (str/concat (time/format @now "YYYYMMDDTHHmmss") "Z"))
+              (presign (!= @payload.mode "header"))
+              (encs (array/map [@payload.bucket @payload.key] (fn s (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @s) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29")))))
+          (let ((scope (str/concat @day "/" @region "/s3/aws4_request"))
+                (path (str/concat @config.pathPrefix "/" (if @config.pathStyle (str/concat (default (array/nth @encs 0) "") "/") "") (str/replaceAll (default (array/nth @encs 1) "") "%2F" "/"))))
+            (let ((params (if @presign (array/concat @payload.query [{ name: "X-Amz-Algorithm", value: "AWS4-HMAC-SHA256" }, { name: "X-Amz-Credential", value: (str/concat @entity.keyId "/" @scope) }, { name: "X-Amz-Date", value: @stamp }, { name: "X-Amz-Expires", value: (str/concat "" @payload.expires) }, { name: "X-Amz-SignedHeaders", value: "host" }]) @payload.query)))
+              (let ((cq (str/join (array/map (array/sort (array/map @params (fn q { name: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.name) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29"), value: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @q.value) "!" "%21") "*" "%2A") "'" "%27") "(" "%28") ")" "%29") })) "name") (fn q (str/concat @q.name "=" @q.value))) "&"))
+                    (ph (if @presign "UNSIGNED-PAYLOAD" (hash/sha256 @payload.b64 "hex" "bytes"))))
+                (if (= @ph null)
+                  (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The upload content could not be hashed" })
+                  (let ((sent (array/concat @payload.headers [{ name: "x-amz-content-sha256", value: @ph }, { name: "x-amz-date", value: @stamp }])))
+                    (let ((hdrs (array/sort (if @presign [{ name: "host", value: @entity.authority }] (array/append @sent { name: "host", value: @entity.authority })) "name")))
+                      (let ((signedNames (str/join (array/map @hdrs (fn h @h.name)) ";")))
+                        (let ((creq (str/join [@payload.method, @path, @cq, (str/join (array/map @hdrs (fn h (str/concat @h.name ":" (str/trim @h.value) "\n"))) ""), @signedNames, @ph] "\n")))
+                          (let ((ch (hash/sha256 @creq "hex")))
+                            (if (= @ch null)
+                              (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                              (emit STORAGE_SIGN_KEY {
+                                day: @day,
+                                region: @region,
+                                service: "s3",
+                                tag: @payload.tag,
+                                mode: @payload.mode,
+                                method: @payload.method,
+                                target: (str/concat @path (if (= @cq "") "" (str/concat "?" @cq))),
+                                origin: @entity.origin,
+                                headers: (if @presign [] @sent),
+                                b64: @payload.b64,
+                                sts: (str/join ["AWS4-HMAC-SHA256", @stamp, @scope, @ch] "\n"),
+                                signedNames: @signedNames,
+                                scope: @scope
+                              }))))))))))))
+      STORAGE_SIGN_KEY -> idle
+        (let ((kd (hmac/sha256 @config.secretAccessKey @payload.day "base64" "AWS4")))
+          (if (= @kd null)
+            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage credential not configured" })
+            (let ((bd (bytes/from-base64 @kd)))
+              (if (= @bd null)
+                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                (let ((kr (hmac/sha256-bytes @bd @payload.region "base64")))
+                  (if (= @kr null)
+                    (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                    (let ((br (bytes/from-base64 @kr)))
+                      (if (= @br null)
+                        (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                        (let ((ks (hmac/sha256-bytes @br @payload.service "base64")))
+                          (if (= @ks null)
+                            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                            (let ((bs (bytes/from-base64 @ks)))
+                              (if (= @bs null)
+                                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                                (let ((kg (hmac/sha256-bytes @bs "aws4_request" "base64")))
+                                  (if (= @kg null)
+                                    (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                                    (emit STORAGE_SIGN_KEYED { kDate: @kd, signing: @kg, tag: @payload.tag, mode: @payload.mode, method: @payload.method, target: @payload.target, origin: @payload.origin, headers: @payload.headers, b64: @payload.b64, sts: @payload.sts, signedNames: @payload.signedNames, scope: @payload.scope })))))))))))))))
+      STORAGE_SIGN_KEYED -> idle
+        (let ((kb (bytes/from-base64 @payload.signing)) (body (bytes/from-base64 @payload.b64)))
+          (if (or (= @kb null) (= @body null))
+            (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+            (let ((sig (hmac/sha256-bytes @kb @payload.sts "hex")))
+              (if (= @sig null)
+                (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
+                (if (= @payload.mode "header")
+                  (emit STORAGE_HTTP_SEND { key: @payload.tag, method: @payload.method, target: @payload.target, headers: (array/append @payload.headers { name: "authorization", value: (str/concat "AWS4-HMAC-SHA256 Credential=" @entity.keyId "/" @payload.scope ", SignedHeaders=" @payload.signedNames ", Signature=" @sig) }), body: @body, stream: "none", host: @entity.hostText })
+                  (if (= @payload.mode "signed")
+                    (emit STORAGE_SIGNED_REPLIED { url: (str/concat @payload.origin @payload.target "&X-Amz-Signature=" @sig) })
+                    (emit STORAGE_PUT_PRESIGNED { url: (str/concat @payload.origin @payload.target "&X-Amz-Signature=" @sig) })))))))
+    }
+
+    emits {
+      STORAGE_UPLOADED -> external {
+        key : string!
+        bucket : string!
+        size : number!
+        etag : string!
+        id : string!
+        url : string!
+      }
+        @description "The stored object: its key, bucket, byte size, the ETag the store answered with, and a url (public base or origin url for a public acl, otherwise a one-hour presigned get)."
+        @synonyms "file uploaded, object stored, upload complete"
+        @tier "primary"
+      STORAGE_DOWNLOADED -> external {
+        content : string!
+        contentType : string!
+        size : number!
+        metadata : Map string string!
+      }
+        @description "The object body as base64, its content type (octet-stream when the store sent none) and byte size; metadata is always empty."
+        @synonyms "file downloaded, object content, fetched object"
+        @tier "primary"
+      STORAGE_LISTED -> external {
+        keys : [StorageKey]!
+        truncated : boolean!
+        nextToken : string
+      }
+        @description "One page of keys with size and last-modified epoch ms; nextToken is present only on a truncated page."
+        @synonyms "list objects, bucket listing, keys page"
+        @tier "primary"
+      STORAGE_DELETED -> external {
+        deleted : boolean!
+      }
+        @description "The delete was accepted by the store."
+        @synonyms "object deleted, file removed"
+        @tier "primary"
+      STORAGE_SIGNED_URL -> external {
+        url : string!
+        expiresAt : instant!
+      }
+        @description "A presigned url and the instant it stops working."
+        @synonyms "presigned url, signed link, upload url"
+        @tier "primary"
+      STORAGE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "An action failed: the store refused, could not be reached, a credential is missing, or the upload input was rejected."
+        @synonyms "storage error, upload failed, s3 error"
+        @tier "primary"
+      STORAGE_BATCH_DONE {
+        batch : StorageBatch!
+      }
+        @description "Internal: a batch file was stored; the client takes the next one."
+        @tier "secondary"
+      STORAGE_PUT_PRESIGNED -> internal {
+        url : string!
+      }
+        @description "Internal: the presigned get url of an uploaded object."
+        @tier "secondary"
+      STORAGE_PUT_DONE -> internal {
+        url : string!
+      }
+        @description "Internal: an upload finished with its url."
+        @tier "secondary"
+      STORAGE_SIGNED_REPLIED -> internal {
+        url : string!
+      }
+        @description "Internal: the presigned url."
+        @tier "secondary"
+      STORAGE_HTTP_ERROR -> internal {
+        text : string!
+      }
+        @description "Internal: a non-2xx reply body to turn into a failure message."
+        @tier "secondary"
+      STORAGE_SIGN_FAILED -> internal {
+        mode : string!
+        message : string!
+      }
+        @description "Internal: the signing of a request failed; a request in flight ends its retry run."
+        @tier "secondary"
+      STORAGE_SIGN -> internal {
+        tag : string!
+        mode : string!
+        method : string!
+        bucket : string!
+        key : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+      }
+        @description "Internal: a request or presign to sign (mode header signs a request, signed and put presign a url); builds the canonical request and the string to sign."
+        @tier "secondary"
+      STORAGE_SIGN_KEY -> internal {
+        day : string!
+        region : string!
+        service : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+        @description "Internal: a string to sign, ready for the signing key derived from the secret access key for that day, region and service."
+        @tier "secondary"
+      STORAGE_SIGN_KEYED -> internal {
+        kDate : string!
+        signing : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+        @description "Internal: the derived signing key (base64), with the string to sign; answers the signed request or the presigned url."
+        @tier "secondary"
+      STORAGE_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+        host : string!
+      }
+        @description "Internal: the signed storage request, for the HTTP client; host is the text the client writes as the host header."
+        @tier "secondary"
+      STORAGE_RETRY_START {
+        key : CallKey!
+      }
+        @description "Internal: hand the call to std-retry under its key."
+        @tier "secondary"
+      STORAGE_RETRY_FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      STORAGE_RETRY_END {
+        key : CallKey!
+      }
+        @description "Internal: end std-retry run for this key without another attempt."
+        @tier "secondary"
+      STORAGE_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      STORAGE_CALL_READY {
+        key : string!
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+        hostText : string!
+        keyId : string!
+        authority : string!
+        origin : string!
+        region : string!
       }
       STORAGE_PUT_REPLIED {
         status : number!
@@ -486,35 +951,32 @@ orbital StorageOrbital {
         body : string!
         key : string!
       }
-      STORAGE_PUT_PRESIGNED {
-        url : string!
-        key : string!
-      }
-      STORAGE_PUT_DONE {
-        url : string!
-        state : string!
-      }
-      STORAGE_BATCH_NEXT {
-        batch : string!
-      }
       STORAGE_DOWNLOAD_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_LIST_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_DELETE_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
       }
       STORAGE_SIGNED_REPLIED {
         url : string!
-        key : string
       }
       STORAGE_HTTP_ERROR {
         text : string!
@@ -522,49 +984,96 @@ orbital StorageOrbital {
       STORAGE_HTTP_FAILED {
         error : string!
         kind : string!
-        credential : string
-        key : string
+        key : string!
       }
+      STORAGE_SIGN_FAILED {
+        mode : string!
+        message : string!
+      }
+      STORAGE_SIGN {
+        tag : string!
+        mode : string!
+        method : string!
+        bucket : string!
+        key : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+      }
+      STORAGE_SIGN_KEY {
+        day : string!
+        region : string!
+        service : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_SIGN_KEYED {
+        kDate : string!
+        signing : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      STORAGE_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      STORAGE_CLEAR
+      StorageGate.STORAGE_READY -> STORAGE_CALL_READY per @payload.key
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_PUT_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "put:")
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_DOWNLOAD_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: ?key } when (str/startsWith ?key "download:")
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_LIST_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "list:")
+      StorageHttp.STORAGE_NET_REPLIED -> STORAGE_DELETE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "delete:")
+      StorageHttp.STORAGE_NET_FAILED -> STORAGE_HTTP_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      StorageTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_HTTP_FAILED per @payload.key with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
+      StorageRetry.STORAGE_RUN_ATTEMPT -> STORAGE_ATTEMPT per @payload.key
+      StorageRetry.STORAGE_RUN_GAVE_UP -> STORAGE_GAVE_UP per @payload.key
     }
 
     config {
-      endpoint : string = ""
-        @label "S3 endpoint"
-        @description "Empty selects AWS S3 (virtual-hosted https://<bucket>.s3.<region>.amazonaws.com, path-style https://s3.<region>.amazonaws.com for buckets that are not DNS-compatible). Set scheme://host[:port][/prefix] for an S3-compatible service; local development uses an emulator, for example http://127.0.0.1:9000. Every origin the atom can reach must be in the app egress list."
-        @synonyms "s3 endpoint, storage url, emulator url"
-        @tier "infra"
-      region : string = "us-east-1"
-        @label "Signing region"
-        @description "The AWS region requests and presigned urls are signed for."
-        @synonyms "aws region, s3 region"
-        @tier "infra"
-      bucket : string = ""
-        @label "Default bucket"
-        @description "The bucket used when an action names none."
-        @synonyms "default bucket, bucket name"
+      pathPrefix : string = ""
+        @label "Path prefix"
+        @description "A path every request and url sits under, for an S3-compatible service served below a path (for example /s3); empty for AWS."
+        @synonyms "base path"
         @tier "infra"
       publicUrlBase : string = ""
         @label "Public url base"
-        @description "When set, public uploads answer <base>/<key>; otherwise <origin>/<bucket>/<key>."
+        @description "When set, public uploads answer <base>/<key>; otherwise <origin><prefix>/<bucket>/<key> (or <origin><prefix>/<key> when the bucket is in the host)."
         @synonyms "cdn url, public base"
-        @tier "infra"
-      accessKeyId : secret = "STORAGE_ACCESS_KEY_ID"
-        @label "Access key id credential"
-        @description "Name of the credential holding the S3 access key id; resolved by the host on every call."
-        @synonyms "s3 access key, aws key id"
         @tier "infra"
       secretAccessKey : secret = "STORAGE_SECRET_ACCESS_KEY"
         @label "Secret access key credential"
-        @description "Name of the credential holding the S3 secret access key; resolved by the host on every call."
+        @description "Name of the credential holding the S3 secret access key; resolved by the kernel inside hmac/sha256 on every signature, never held by the program."
         @synonyms "s3 secret, aws secret"
         @tier "infra"
-      timeoutMs : number = 300000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each S3 request may take before it fails."
-        @synonyms "timeout, request deadline, wait limit"
+      pathStyle : boolean = true
+        @label "Bucket in the path"
+        @description "True addresses the bucket in the path (/<bucket>/<key>); false addresses it in the host (/<key>), for a virtual-hosted STORAGE_S3_HOST such as <bucket>.s3.<region>.amazonaws.com."
+        @synonyms "path style, virtual hosted, bucket in host"
         @tier "infra"
     }
   }
 
-  page boot as StoragePage -> StorageClient
+  page boot as StoragePage -> StorageClient, StorageGate, StorageCall, StorageKeyed, StorageHttp, StorageTimeout, StorageRetry
 }

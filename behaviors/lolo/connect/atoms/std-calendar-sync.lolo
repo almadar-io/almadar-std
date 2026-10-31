@@ -32,26 +32,90 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
     syncedAt : instant? @description "When this row last synced with the remote calendar; null = never." @synonyms "last sync, synced"
   }
 
-  trait CalendarClient = CalendarApi.traits.CalendarClient {
+  trait CalendarSyncApi = CalendarApi.traits.CalendarClient {
     listens {
       CalendarSync.CALENDAR_LIST_EVENTS -> CALENDAR_LIST_EVENTS
       CalendarSync.CALENDAR_CREATE_EVENT -> CALENDAR_CREATE_EVENT
     }
   }
 
-  trait CalendarCall = CalendarApi.traits.CalendarCall {
+  trait CalendarSyncCall = CalendarApi.traits.CalendarCall {
+        listens {
+        CALL_READY {
+          key : string!
+          method : string!
+          target : string!
+          body : string!
+          retry : boolean!
+        }
+        CALENDAR_REPLIED {
+          status : number!
+          headers : Map string string
+          body : string!
+          key : string!
+        }
+        CALENDAR_REQUEST_FAILED {
+          error : string!
+          kind : string!
+          key : string!
+        }
+        CALENDAR_CONNECTED {
+          connected : boolean!
+          label : string
+        }
+        CALENDAR_CONNECT_FAILED {
+          error : string!
+          kind : string!
+        }
+        CALENDAR_ATTEMPT {
+          key : string!
+          attempt : number!
+        }
+        CALENDAR_GAVE_UP {
+          key : string!
+          attempts : number!
+          error : string
+        }
+        CALENDAR_DISPATCH
+        CALENDAR_CLEAR
+        CalendarSyncApi.CALENDAR_READY -> CALL_READY per @payload.key
+        CalendarSyncHttp.HTTP_REPLIED -> CALENDAR_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+        CalendarSyncHttp.HTTP_FAILED -> CALENDAR_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+        CalendarSyncRetry.ATTEMPT -> CALENDAR_ATTEMPT per @payload.key
+        CalendarSyncRetry.GAVE_UP -> CALENDAR_GAVE_UP per @payload.key
+      }
   }
 
-  trait CalendarKeyed = CalendarApi.traits.CalendarKeyed {
+  trait CalendarSyncKeyed = CalendarApi.traits.CalendarKeyed {
+        listens {
+        CalendarSyncCall.CALENDAR_HTTP_SEND -> HTTP_SEND
+        CalendarSyncTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+        CalendarSyncKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+      }
   }
 
-  trait CalendarHttp = CalendarApi.traits.CalendarHttp {
+  trait CalendarSyncHttp = CalendarApi.traits.CalendarHttp {
+        listens {
+        CalendarSyncKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+        CalendarSyncKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+      }
   }
 
-  trait CalendarTimeout = CalendarApi.traits.CalendarTimeout {
+  trait CalendarSyncTimeout = CalendarApi.traits.CalendarTimeout {
+        listens {
+        CalendarSyncCall.CALENDAR_HTTP_SEND -> START per @payload.key with { key: (as ?key CallKey) }
+        CalendarSyncHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+        CalendarSyncHttp.HTTP_FAILED -> FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+      }
   }
 
-  trait CalendarRetry = CalendarApi.traits.CalendarRetry {
+  trait CalendarSyncRetry = CalendarApi.traits.CalendarRetry {
+        listens {
+        CalendarSyncCall.CALENDAR_RETRY_START -> START per @payload.key
+        CalendarSyncCall.CALENDAR_RETRY_FAILED -> FAILED per @payload.key
+        CalendarSyncCall.CALENDAR_RETRY_CANCEL -> CANCEL per @payload.key
+        CalendarSyncHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (or (= ?key "list") (str/startsWith ?key "delete:")) (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+      }
   }
 
   trait CalendarSyncInbound = CalendarApi.traits.CalendarPushInbound {
@@ -271,10 +335,10 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
     }
 
     listens {
-      CalendarCall.CALENDAR_EVENTS_LISTED -> CAL_REMOTE_LISTED
-      CalendarCall.CALENDAR_EVENT_CREATED -> CAL_EVENT_CREATED
-      CalendarCall.CALENDAR_LIST_EVENTS_FAILED -> CAL_CALENDAR_FAILED
-      CalendarCall.CALENDAR_CREATE_EVENT_FAILED -> CAL_CALENDAR_FAILED
+      CalendarSyncCall.CALENDAR_EVENTS_LISTED -> CAL_REMOTE_LISTED
+      CalendarSyncCall.CALENDAR_EVENT_CREATED -> CAL_EVENT_CREATED
+      CalendarSyncCall.CALENDAR_LIST_EVENTS_FAILED -> CAL_CALENDAR_FAILED
+      CalendarSyncCall.CALENDAR_CREATE_EVENT_FAILED -> CAL_CALENDAR_FAILED
       CalendarSyncInbound.CAL_REMOTE_CHANGED -> CAL_REMOTE_CHANGED
       CAL_CALENDAR_FAILED {
         code : string
@@ -383,6 +447,6 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
     }
   }
 
-  page "/calendar-sync" as CalendarSyncPage -> CalendarSync, CalendarClient, CalendarSyncInbound
-  page boot as CalendarSyncOrbitalCalendarCallBoot -> CalendarCall, CalendarKeyed, CalendarHttp, CalendarTimeout, CalendarRetry
+  page "/calendar-sync" as CalendarSyncPage -> CalendarSync, CalendarSyncApi, CalendarSyncInbound
+  page boot as CalendarSyncOrbitalCalendarCallBoot -> CalendarSyncCall, CalendarSyncKeyed, CalendarSyncHttp, CalendarSyncTimeout, CalendarSyncRetry
 }

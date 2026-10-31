@@ -27,8 +27,13 @@ orbital GzipOrbital {
       GZIP -> idle
         (set @entity.result (gzip/compress @payload.data { result: true, level: @config.level }))
         (set @entity.size (bytes/length @payload.data))
-        (set @entity.crc @entity.result.crc)
-        (emit GZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @entity.crc })
+        ;; GzipResult.crc is optional in the type; the op fills it on every compress result, so a missing one is refused as a checksum failure.
+        (let ((crc @entity.result.crc))
+          (if (= @crc null)
+            (emit GZIP_REFUSED { reason: "crc" })
+            (do
+              (set @entity.crc @crc)
+              (emit GZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @crc }))))
       GUNZIP -> idle
         (set @entity.result (gzip/decompress @payload.data (if (= @payload.maxBytes null) @config.maxBytes @payload.maxBytes) { result: true }))
         (emit GUNZIP_CHECKED {})
@@ -36,8 +41,12 @@ orbital GzipOrbital {
         (when (!= @entity.result.data null)
           (do
             (set @entity.size (bytes/length @entity.result.data))
-            (set @entity.crc @entity.result.crc)
-            (emit GUNZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @entity.crc })))
+            (let ((crc @entity.result.crc))
+              (if (= @crc null)
+                (emit GZIP_REFUSED { reason: "crc" })
+                (do
+                  (set @entity.crc @crc)
+                  (emit GUNZIP_ANSWERED { data: (default @entity.result.data (bytes/from-string "")), size: @entity.size, crc: @crc }))))))
       GUNZIP_CHECKED -> idle when (not (default @entity.result.ok false))
         (emit GZIP_REFUSED { reason: (default @entity.result.code "") })
     }

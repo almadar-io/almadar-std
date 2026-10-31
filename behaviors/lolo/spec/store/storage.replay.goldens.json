@@ -1,60 +1,5212 @@
 {
  "atom": "store/atoms/std-storage.lolo",
- "trait": "StorageClient",
- "note": "a data url whose percent-encoding does not decode, and an error response body that is not base64, answer STORAGE_FAILED; the decodable twins go on",
+ "trait": "StorageCall",
+ "note": "StorageCall: one row per call, addressed by its key (verb:number). Cases start a row with STORAGE_CALL_READY (what the gate hands over); the retry run starts and the first attempt signs and sends in that dispatch. StorageCall knobs (accessKeyId, pathStyle, pathPrefix, publicUrlBase) are set by the case config of the default trait. The keyed client and timeout are not default traits here, so a send stops at STORAGE_HTTP_SEND (no connect; the replay net grant knows no env host); replies are stepped on StorageHttp. Self-handled internal events (declared -> internal) are consumed by the trait and not listed. Known answers: the AWS iam example (secret wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY, 20150830, us-east-1, iam: kDate hex 0138c7a6cbd60aa727b2f653a522567439dfb9f3e72b21f9b25941a42f04a7cd, kSigning hex c4afb1cc5771d871763a393e44b703571b55cc28424d1a5e86da6ed3c154a4b9, signature 5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7), the S3 header-auth GET with Range (f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41) and the S3 presigned GET (aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404). Every other expected value is computed with an independent HMAC implementation over the same canonical forms.",
  "cases": [
   {
-   "id": "bad-percent-encoding-fails",
+   "id": "known-answer-aws-iam-kdate-and-ksigning-20150830",
    "steps": [
     {
-     "event": "STORAGE_UPLOAD",
+     "event": "STORAGE_SIGN_KEY",
      "payload": {
+      "day": "20150830",
+      "region": "us-east-1",
+      "service": "iam",
+      "tag": "download:1",
+      "mode": "header",
+      "method": "GET",
+      "target": "/?Action=ListUsers&Version=2010-05-08",
+      "origin": "https://iam.amazonaws.com",
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "application/x-www-form-urlencoded; charset=utf-8"
+       },
+       {
+        "name": "x-amz-date",
+        "value": "20150830T123600Z"
+       }
+      ],
+      "b64": "",
+      "sts": "AWS4-HMAC-SHA256\n20150830T123600Z\n20150830/us-east-1/iam/aws4_request\nf536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59",
+      "signedNames": "content-type;host;x-amz-date",
+      "scope": "20150830/us-east-1/iam/aws4_request"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/?Action=ListUsers&Version=2010-05-08",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/x-www-form-urlencoded; charset=utf-8"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20150830T123600Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20150830/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "iam.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "hostText": "iam.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "known-answer-aws-docs-s3-get-object-with-range-header-auth",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "download:1",
+      "mode": "header",
+      "method": "GET",
+      "bucket": "examplebucket",
+      "key": "test.txt",
+      "query": [],
+      "headers": [
+       {
+        "name": "range",
+        "value": "bytes=0-9"
+       }
+      ],
+      "b64": "",
+      "expires": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/test.txt",
+         "headers": [
+          {
+           "name": "range",
+           "value": "bytes=0-9"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20130524T000000Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "examplebucket.s3.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "examplebucket.s3.amazonaws.com",
+      "authority": "examplebucket.s3.amazonaws.com",
+      "origin": "https://examplebucket.s3.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": false
+   },
+   "now": 1369353600000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "known-answer-aws-docs-s3-presigned-get-url",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "signed:1",
+      "mode": "signed",
+      "method": "GET",
+      "bucket": "examplebucket",
+      "key": "test.txt",
+      "query": [],
+      "headers": [],
+      "b64": "",
+      "expires": 86400
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_SIGNED_URL",
+        "payload": {
+         "url": "https://examplebucket.s3.amazonaws.com/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "signed:1",
+      "verb": "signed",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "examplebucket.s3.amazonaws.com",
+      "authority": "examplebucket.s3.amazonaws.com",
+      "origin": "https://examplebucket.s3.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": false
+   },
+   "now": 1369353600000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-download-runs-on-its-own-keyed-row-and-the-first-attempt-signs-and-sends-it",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
       "bucket": "my-bucket",
-      "file": {
-       "name": "a.txt",
-       "size": 5,
-       "type": "text/plain",
-       "content": "data:text/plain,%E0%A4%A"
+      "objKey": "dir/a b!.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/dir/a%20b%21.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=a8070b9fc863f5a45c3411edad6f90afc19fe9a6517f28c7c9c24dabe7039780"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-download-names-its-own-bucket",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "other",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/other/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=319739ccd88210544af05c1078f9412be39266ae5eca7e09ee3e6073779fbbc8"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-list-signs-the-sorted-query-and-leaves-out-empty-parameters",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "list:1",
+      "verb": "list",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "",
+      "query": [
+       {
+        "name": "continuation-token",
+        "value": "tok+1"
+       },
+       {
+        "name": "list-type",
+        "value": "2"
+       },
+       {
+        "name": "max-keys",
+        "value": "50"
+       },
+       {
+        "name": "prefix",
+        "value": "a/b"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "list:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "list:1",
+         "method": "GET",
+         "target": "/my-bucket/?continuation-token=tok%2B1&list-type=2&max-keys=50&prefix=a%2Fb",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=35ed9cc49381fbd31592a5444645d73fd287265eaca5027b97064ddf39ef0393"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-delete-signs-a-delete",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "old.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/old.txt?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=ab570b4f5142154c1d9fbf07a40ac60e7ddcbc9141df9e1b05c2fe7c57be06a1"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-private-put-runs-on-its-own-keyed-row-and-the-first-attempt-signs-and-sends-it",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=6ab61df8a3c1cd4f1f28f91f2b00131c7865011d249b0942dd5b7aeef25d6b5d"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-public-put-runs-on-its-own-keyed-row-and-the-first-attempt-signs-and-sends-it",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       },
+       {
+        "name": "x-amz-acl",
+        "value": "public-read"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-acl",
+           "value": "public-read"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date, Signature=1f37a705747bd52ec3b700bd703836c17219167df10568d0babf27d97603a400"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "virtual-hosted-host-from-the-environment-is-the-signed-host-header-and-the-host-sent",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/eu-west-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=9c0cf40120386c4e6443603b0db48e549b10d4f91433a8ec5501269c9e208076"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "my-bucket.s3.eu-west-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "my-bucket.s3.eu-west-1.amazonaws.com",
+      "authority": "my-bucket.s3.eu-west-1.amazonaws.com",
+      "origin": "https://my-bucket.s3.eu-west-1.amazonaws.com",
+      "regionName": "eu-west-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": false,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-different-region-signs-that-region-on-a-regional-host",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.ap-southeast-2.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.ap-southeast-2.amazonaws.com",
+      "origin": "https://s3.ap-southeast-2.amazonaws.com",
+      "region": "ap-southeast-2",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/ap-southeast-2/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=6e00d4b6fd106a4bf5598c9bcdbab07ca01c1c870fe3e90dda8307914528afa3"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.ap-southeast-2.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": ""
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "an-emulator-host-with-a-port-prefix-and-http-signs-host-colon-port",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "delete:1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/s3/my-bucket/old.txt?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=ba7e7f315d140d58d44c7c20f9ea78326ff5f111072f0bfca0c970304966d498"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "127.0.0.1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "DELETE",
+      "reqBucket": "my-bucket",
+      "reqKey": "old.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "127.0.0.1",
+      "authority": "127.0.0.1:9000",
+      "origin": "http://127.0.0.1:9000",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "pathPrefix": "/s3"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-row-with-no-host-fails-the-call-and-sends-nothing",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "",
+      "origin": "https://",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage host not configured: set STORAGE_S3_HOST"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_HTTP_SEND"
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-attempt-1-re-signs-the-held-request-at-its-own-now-1700000000000",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=25c802c4b9fa7a01c4b9ac5c6f0c968d5943ebae7477dd791a658da528358489"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-attempt-2-re-signs-the-held-request-at-its-own-now-1700000001000",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221321Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=3829f9803fc4164d3ebb738966ac6fa340f3ffe4301aea1c00ba39e5614d9bef"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000001000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-attempt-3-re-signs-the-held-request-at-its-own-now-1700000002000",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221322Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=0a6b08c4deff244623f11dfe00ddc7d0d2dc6fc7475d5e4e01413c567667b8cf"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000002000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "three-attempts-in-one-case-sign-with-three-different-dates",
+   "steps": [
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=25c802c4b9fa7a01c4b9ac5c6f0c968d5943ebae7477dd791a658da528358489"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     },
+     "now": 1700000000000
+    },
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221321Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=3829f9803fc4164d3ebb738966ac6fa340f3ffe4301aea1c00ba39e5614d9bef"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     },
+     "now": 1700000001000
+    },
+    {
+     "event": "STORAGE_ATTEMPT",
+     "payload": {
+      "key": "download:1",
+      "attempt": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221322Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=0a6b08c4deff244623f11dfe00ddc7d0d2dc6fc7475d5e4e01413c567667b8cf"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "download:1",
+      "verb": "download",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "reqMethod": "GET",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "reqQuery": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "reqHeaders": [],
+      "reqB64": "",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     },
+     "now": 1700000002000
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "private-put-state-lives-in-the-row-and-the-2xx-reply-presigns-the-get-url-and-completes",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=6ab61df8a3c1cd4f1f28f91f2b00131c7865011d249b0942dd5b7aeef25d6b5d"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "k.txt",
+         "bucket": "my-bucket",
+         "size": 2,
+         "etag": "\"e\"",
+         "id": "k.txt",
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/k.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject&X-Amz-Signature=75392c76da27e562f365a352e24554d348d5799c8be97446fc4b9038fc4cbef4"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_HTTP_ERROR"
+      ]
+     },
+     "entity": {
+      "id": "put:1",
+      "verb": "put",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "public-put-state-lives-in-the-row-and-the-2xx-reply-completes-with-the-bucket-url",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       },
+       {
+        "name": "x-amz-acl",
+        "value": "public-read"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": true,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-acl",
+           "value": "public-read"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date, Signature=1f37a705747bd52ec3b700bd703836c17219167df10568d0babf27d97603a400"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "k.txt",
+         "bucket": "my-bucket",
+         "size": 2,
+         "etag": "\"e\"",
+         "id": "k.txt",
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/k.txt"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_HTTP_ERROR"
+      ]
+     },
+     "entity": {
+      "id": "put:1",
+      "verb": "put",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": true,
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-public-url-base-replaces-the-origin-in-a-public-put-url",
+   "steps": [
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "k.txt",
+         "bucket": "my-bucket",
+         "size": 2,
+         "etag": "\"e\"",
+         "id": "k.txt",
+         "url": "https://cdn.example/k.txt"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "put:1",
+      "verb": "put",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": true,
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "k.txt",
+      "origin": "https://s3.us-east-1.amazonaws.com"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true,
+    "publicUrlBase": "https://cdn.example/"
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-batch-put-carries-the-typed-batch-and-hands-the-advanced-record-back",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "2023-11-14T22:13:20.000Z-a.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       },
+       {
+        "name": "x-amz-acl",
+        "value": "public-read"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "batch",
+      "putSize": 2,
+      "putPublic": true,
+      "putFileName": "a.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\"",
+      "batch": {
+       "files": [
+        {
+         "name": "a.txt",
+         "size": 2,
+         "type": "text/plain",
+         "content": "data:text/plain;base64,aGk="
+        }
+       ],
+       "idx": 0,
+       "acl": "public",
+       "maxSize": 0,
+       "bucket": "my-bucket",
+       "items": []
       }
      },
      "expect": {
-      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/2023-11-14T22%3A13%3A20.000Z-a.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-acl",
+           "value": "public-read"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date, Signature=0455ee260930eacf88cf0e2b8f45a132c996a107cf6ad72eecc9c306aae90171"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_BATCH_DONE",
+        "payload": {
+         "batch": {
+          "files": [
+           {
+            "name": "a.txt",
+            "size": 2,
+            "type": "text/plain",
+            "content": "data:text/plain;base64,aGk="
+           }
+          ],
+          "idx": 1,
+          "acl": "public",
+          "maxSize": 0,
+          "bucket": "my-bucket",
+          "items": [
+           {
+            "id": "2023-11-14T22:13:20.000Z-a.txt",
+            "key": "2023-11-14T22:13:20.000Z-a.txt",
+            "url": "https://s3.us-east-1.amazonaws.com/my-bucket/2023-11-14T22:13:20.000Z-a.txt",
+            "name": "a.txt",
+            "sizeBytes": 2,
+            "mimeType": "text/plain"
+           }
+          ]
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "put:1",
+      "verb": "put",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1",
+      "putMode": "batch",
+      "putSize": 2,
+      "putPublic": true,
+      "putFileName": "a.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "2023-11-14T22:13:20.000Z-a.txt",
+      "batch": {
+       "files": [
+        {
+         "name": "a.txt",
+         "size": 2,
+         "type": "text/plain",
+         "content": "data:text/plain;base64,aGk="
+        }
+       ],
+       "idx": 0,
+       "acl": "public",
+       "maxSize": 0,
+       "bucket": "my-bucket",
+       "items": []
+      }
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "two-calls-in-flight-run-on-two-rows-under-two-keys-and-each-reply-reaches-its-own-row",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "a.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/a.txt?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=09b6cff1b43753c2ac8587b29bc2cf6bd5c3491153423fc411778be8e7e85c9b"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:2",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "b.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:2"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:2",
+         "method": "DELETE",
+         "target": "/my-bucket/b.txt?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=0a264054d5d7a2f1b75ca458c8cc124bd509b62901db570bfbf4ab4b7c3bcf5f"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "delete:2",
+      "status": 204,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_DELETED",
+        "payload": {
+         "deleted": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_DOWNLOADED",
+       "STORAGE_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 200,
+      "headers": {
+       "content-type": "text/plain"
+      },
+      "body": "aGk="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_DOWNLOADED",
+        "payload": {
+         "content": "aGk=",
+         "contentType": "text/plain",
+         "size": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_DELETED",
+       "STORAGE_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-retry-of-one-call-does-not-disturb-the-put-of-another",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:2",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "b.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:2"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:2",
+         "method": "DELETE",
+         "target": "/my-bucket/b.txt?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=0a264054d5d7a2f1b75ca458c8cc124bd509b62901db570bfbf4ab4b7c3bcf5f"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:3",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "p.txt",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:3"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:3",
+         "method": "PUT",
+         "target": "/my-bucket/p.txt?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=005efaad1bd374cca2c9ce8ef548486b736b2f21d9ffc57b679c9c95177373f4"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "delete:2",
+      "status": 503,
+      "headers": {},
+      "body": "slow"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:2",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    },
+    {
+     "event": "STORAGE_PUT_REPLIED",
+     "payload": {
+      "key": "put:3",
+      "status": 200,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED",
+        "payload": {
+         "key": "p.txt",
+         "bucket": "my-bucket",
+         "size": 2,
+         "etag": "\"e\"",
+         "id": "p.txt",
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/p.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject&X-Amz-Signature=c6c7991534373a9ae6dfd33f320ff6cc57fa2a39253eefee33b717c785721da3"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "put:3",
+      "verb": "put",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putEtag": "\"e\"",
+      "reqBucket": "my-bucket",
+      "reqKey": "p.txt"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-429-download-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 429,
+      "headers": {},
+      "body": "PEVycm9yPjxNZXNzYWdlPnNsb3c8L01lc3NhZ2U+PC9FcnJvcj4="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 429"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-500-download-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 500,
+      "headers": {},
+      "body": "PEVycm9yPjxNZXNzYWdlPnNsb3c8L01lc3NhZ2U+PC9FcnJvcj4="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 500"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-502-download-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 502,
+      "headers": {},
+      "body": "PEVycm9yPjxNZXNzYWdlPnNsb3c8L01lc3NhZ2U+PC9FcnJvcj4="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 502"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-503-download-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 503,
+      "headers": {},
+      "body": "PEVycm9yPjxNZXNzYWdlPnNsb3c8L01lc3NhZ2U+PC9FcnJvcj4="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-504-download-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 504,
+      "headers": {},
+      "body": "PEVycm9yPjxNZXNzYWdlPnNsb3c8L01lc3NhZ2U+PC9FcnJvcj4="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 504"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-503-list-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "list:1",
+      "verb": "list",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "list-type",
+        "value": "2"
+       },
+       {
+        "name": "max-keys",
+        "value": "1000"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "list:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "list:1",
+         "method": "GET",
+         "target": "/my-bucket/k?list-type=2&max-keys=1000",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e6af7bff808575db0801c9cb2eccc5b6f80b102786d40ce5d14b0c8684ff9733"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "list:1",
+      "status": 503,
+      "headers": {},
+      "body": "slow"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "list:1",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-503-delete-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "delete:1",
+      "status": 503,
+      "headers": {},
+      "body": "slow"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:1",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-503-put-reply-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [
+       {
+        "name": "content-type",
+        "value": "text/plain"
+       }
+      ],
+      "b64": "aGk=",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "put:1",
+         "method": "PUT",
+         "target": "/my-bucket/k?x-id=PutObject",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-content-sha256",
+           "value": "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=89c426289d158fea1da7532eee007f6e58b5f480456b676135d8325301a13944"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "put:1",
+      "status": 503,
+      "headers": {},
+      "body": "slow"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "put:1",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-400-download-reply-is-not-retried-and-fails-with-the-s3-message",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 400,
+      "headers": {},
+      "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+"
+     },
+     "expect": {
       "emits": [
        {
         "event": "STORAGE_FAILED",
         "payload": {
-         "message": "URI malformed"
+         "message": "gone"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-403-download-reply-is-not-retried-and-fails-with-the-s3-message",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 403,
+      "headers": {},
+      "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "gone"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-404-download-reply-is-not-retried-and-fails-with-the-s3-message",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 404,
+      "headers": {},
+      "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "gone"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-501-download-reply-is-not-retried-and-fails-with-the-s3-message",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 501,
+      "headers": {},
+      "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "gone"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-run-schedules-100-ms-after-failed-attempt-1",
+   "steps": [
+    {
+     "event": "STORAGE_RUN_FAILED",
+     "payload": {
+      "key": "download:1",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RUN_SCHEDULED",
+        "payload": {
+         "key": "download:1",
+         "attempt": 1,
+         "delayMs": 100
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RUN_GAVE_UP"
+      ]
+     },
+     "trait": "StorageRetry",
+     "entity": {
+      "id": "download:1",
+      "key": "download:1",
+      "attempt": 1
+     },
+     "from": "running"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-run-schedules-200-ms-after-failed-attempt-2",
+   "steps": [
+    {
+     "event": "STORAGE_RUN_FAILED",
+     "payload": {
+      "key": "download:1",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RUN_SCHEDULED",
+        "payload": {
+         "key": "download:1",
+         "attempt": 2,
+         "delayMs": 200
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RUN_GAVE_UP"
+      ]
+     },
+     "trait": "StorageRetry",
+     "entity": {
+      "id": "download:1",
+      "key": "download:1",
+      "attempt": 2
+     },
+     "from": "running"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "retry-run-gives-up-after-the-third-attempt",
+   "steps": [
+    {
+     "event": "STORAGE_RUN_FAILED",
+     "payload": {
+      "key": "download:1",
+      "error": "e"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RUN_GAVE_UP",
+        "payload": {
+         "key": "download:1",
+         "attempts": 3
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RUN_SCHEDULED"
+      ]
+     },
+     "trait": "StorageRetry",
+     "entity": {
+      "id": "download:1",
+      "key": "download:1",
+      "attempt": 3
+     },
+     "from": "running"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "std-retry-giving-up-after-a-503-fails-with-the-last-reply-s-s3-message",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "download:1",
+         "method": "GET",
+         "target": "/my-bucket/k?x-id=GetObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=184020aa48c0ad6598916e77ca5a423a4f393e111db38c4341624c59eab6c86d"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "download:1",
+      "status": 503,
+      "headers": {},
+      "body": "PEVycm9yPjxDb2RlPlNsb3dEb3duPC9Db2RlPjxNZXNzYWdlPlBsZWFzZSByZWR1Y2UgeW91ciByZXF1ZXN0IHJhdGUuPC9NZXNzYWdlPjwvRXJyb3I+"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "download:1",
+         "error": "status 503"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    },
+    {
+     "trait": "StorageRetry",
+     "from": "running",
+     "event": "STORAGE_RUN_FAILED",
+     "payload": {
+      "key": "download:1",
+      "error": "e"
+     },
+     "entity": {
+      "id": "download:1",
+      "key": "download:1",
+      "attempt": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RUN_GAVE_UP",
+        "payload": {
+         "key": "download:1",
+         "attempts": 3
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Please reduce your request rate."
         }
        }
       ]
      }
     }
-   ]
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
   },
   {
-   "id": "good-percent-encoding-is-stored",
+   "id": "std-retry-giving-up-after-a-transport-failure-fails-with-its-text",
    "steps": [
     {
-     "event": "STORAGE_UPLOAD",
+     "event": "STORAGE_GAVE_UP",
      "payload": {
-      "bucket": "my-bucket",
-      "file": {
-       "name": "a.txt",
-       "size": 5,
-       "type": "text/plain",
-       "content": "data:text/plain,hello%20world"
-      }
+      "key": "list:1",
+      "attempts": 3,
+      "error": "reset by peer"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
-        "event": "STORAGE_PUT"
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "reset by peer"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:1",
+      "verb": "list"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-timeout-failure-in-flight-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:1",
+      "kind": "timeout",
+      "error": "t"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:1",
+         "error": "Connection timed out"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-io-failure-in-flight-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:1",
+      "kind": "io",
+      "error": "the peer closed"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:1",
+         "error": "the peer closed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-tls-failure-in-flight-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:1",
+      "kind": "tls",
+      "error": "handshake failed"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:1",
+         "error": "handshake failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-refused-failure-in-flight-is-not-retried-and-ends-the-run",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:1",
+      "kind": "refused",
+      "error": "no"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "no"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "control-a-denied-failure-in-flight-is-not-retried-and-ends-the-run",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:1",
+      "kind": "denied",
+      "error": "no"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "no"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "delete:1",
+      "verb": "delete",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-failure-on-a-key-with-no-call-in-flight-still-fails",
+   "steps": [
+    {
+     "event": "STORAGE_HTTP_FAILED",
+     "payload": {
+      "key": "delete:9",
+      "kind": "io",
+      "error": "late"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "late"
+        }
        }
       ]
      }
     }
-   ]
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-secret-access-key-that-is-not-held-cancels-the-run-and-fails-without-sending",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage credential not configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_HTTP_SEND"
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {}
+  },
+  {
+   "id": "a-sign-without-an-access-key-id-cancels-the-run-and-fails",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "download:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage access key id not configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_HTTP_SEND"
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-put-with-base64-content-that-cannot-be-hashed-cancels-the-run-and-fails",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "put:1",
+      "verb": "put",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [],
+      "b64": "!!not base64!!",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "single",
+      "putSize": 2,
+      "putPublic": false,
+      "putFileName": "k.txt",
+      "putFileSize": 2,
+      "putFileKind": "text/plain",
+      "putEtag": "\"e\""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_END",
+        "payload": {
+         "key": "put:1"
+        }
+       },
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The upload content could not be hashed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_HTTP_SEND"
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-call-that-fails-is-cleared-so-its-key-can-run-again",
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage credential not configured"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "download:1",
+      "verb": "download",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Storage credential not configured"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {}
+  },
+  {
+   "id": "a-signed-get-url-is-signed-on-its-row-with-no-http-call",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "signed:1",
+      "mode": "signed",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "query": [
+       {
+        "name": "x-amz-checksum-mode",
+        "value": "ENABLED"
+       },
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 3600
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_SIGNED_URL",
+        "payload": {
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/k.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject&X-Amz-Signature=75392c76da27e562f365a352e24554d348d5799c8be97446fc4b9038fc4cbef4"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "signed:1",
+      "verb": "signed",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-put-url-signs-the-put-query",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "signed:1",
+      "mode": "signed",
+      "method": "PUT",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "query": [
+       {
+        "name": "x-amz-checksum-crc32",
+        "value": "AAAAAA=="
+       },
+       {
+        "name": "x-amz-sdk-checksum-algorithm",
+        "value": "CRC32"
+       },
+       {
+        "name": "x-id",
+        "value": "PutObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 600
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_SIGNED_URL",
+        "payload": {
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/k.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&x-amz-checksum-crc32=AAAAAA%3D%3D&x-amz-sdk-checksum-algorithm=CRC32&x-id=PutObject&X-Amz-Signature=d8e051ccd45105378bfcd6d229a28dde246a9cec02671f6f03b8644b6165eecf"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "signed:1",
+      "verb": "signed",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-may-live-the-full-604800-seconds",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "signed:1",
+      "mode": "signed",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "query": [
+       {
+        "name": "x-amz-checksum-mode",
+        "value": "ENABLED"
+       },
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 604800
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_SIGNED_URL",
+        "payload": {
+         "url": "https://s3.us-east-1.amazonaws.com/my-bucket/k.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject&X-Amz-Signature=ef07e8ae2f5c6fb60167dc78d44844b57963b9d3386ddcd609af26f532f995fb"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "signed:1",
+      "verb": "signed",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "regionName": "us-east-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": true
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-on-a-virtual-hosted-env-host-signs-that-host-and-region",
+   "steps": [
+    {
+     "event": "STORAGE_SIGN",
+     "payload": {
+      "tag": "signed:1",
+      "mode": "signed",
+      "method": "GET",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "query": [
+       {
+        "name": "x-amz-checksum-mode",
+        "value": "ENABLED"
+       },
+       {
+        "name": "x-id",
+        "value": "GetObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 3600
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_SIGNED_URL",
+        "payload": {
+         "url": "https://my-bucket.s3.eu-west-1.amazonaws.com/k.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20231114%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20231114T221320Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject&X-Amz-Signature=bd86f8ad9a384296d215fcba48cae44e9641076d0e949a770bcdcdb83e24d8f7"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "signed:1",
+      "verb": "signed",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "hostText": "my-bucket.s3.eu-west-1.amazonaws.com",
+      "authority": "my-bucket.s3.eu-west-1.amazonaws.com",
+      "origin": "https://my-bucket.s3.eu-west-1.amazonaws.com",
+      "regionName": "eu-west-1"
+     }
+    }
+   ],
+   "config": {
+    "pathStyle": false
+   },
+   "now": 1700000000000,
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
   },
   {
    "id": "undecodable-error-body-fails",
@@ -65,10 +5217,9 @@
       "status": 404,
       "body": "!!not base64!!",
       "headers": {},
-      "key": "k"
+      "key": "download:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -79,6 +5230,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -90,20 +5246,24 @@
       "status": 404,
       "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+",
       "headers": {},
-      "key": "k"
+      "key": "download:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
-        "event": "STORAGE_HTTP_ERROR",
+        "event": "STORAGE_FAILED",
         "payload": {
-         "text": "<Error><Code>NoSuchKey</Code><Message>gone</Message></Error>"
+         "message": "gone"
         }
        }
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -115,10 +5275,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_LISTED",
@@ -136,6 +5295,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -147,10 +5311,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>tok</NextContinuationToken><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_LISTED",
@@ -169,6 +5332,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -180,10 +5348,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>yesterday</LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -194,6 +5361,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -205,10 +5377,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>tok</NextContinuationToken><Contents><Key>a.txt</Key><Size>5</Size><LastModified></LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -219,444 +5390,16 @@
       ]
      }
     }
-   ]
-  },
-  {
-   "id": "pin-storage_put-with-no-bucket-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": ""
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT",
-     "payload": {
-      "mode": "single",
-      "bucket": "",
-      "key": "k",
-      "contentType": "text/plain",
-      "b64": "aGk=",
-      "size": 2,
-      "isPublic": false,
-      "fileName": "k",
-      "fileSize": 2,
-      "fileKind": "text/plain",
-      "etag": "\"e\"",
-      "batch": ""
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "No value provided for input HTTP label: Bucket."
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-storage_download-with-no-bucket-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": ""
-   },
-   "steps": [
-    {
-     "event": "STORAGE_DOWNLOAD",
-     "payload": {
-      "key": "k"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "No value provided for input HTTP label: Bucket."
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-storage_list-with-no-bucket-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": ""
-   },
-   "steps": [
-    {
-     "event": "STORAGE_LIST",
-     "payload": {},
-     "expect": {
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "No value provided for input HTTP label: Bucket."
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-storage_delete-with-no-bucket-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": ""
-   },
-   "steps": [
-    {
-     "event": "STORAGE_DELETE",
-     "payload": {
-      "key": "k"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "No value provided for input HTTP label: Bucket."
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-storage_get_signed_url-with-no-bucket-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": ""
-   },
-   "steps": [
-    {
-     "event": "STORAGE_GET_SIGNED_URL",
-     "payload": {
-      "key": "k"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "No value provided for input HTTP label: Bucket."
-        }
-       }
-      ],
-      "state": "idle"
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-upload-of-a-key-and-content-pair-asks-to-resolve",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_UPLOAD",
-     "payload": {
-      "bucket": "my-bucket",
-      "key": "k.txt",
-      "content": "hello",
-      "contentType": "text/plain"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_RESOLVE",
-        "payload": {
-         "mode": "single",
-         "bucket": "my-bucket",
-         "key": "k.txt",
-         "hasFile": false,
-         "hasContent": true,
-         "raw": "hello"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-resolve-with-neither-a-file-nor-a-pair-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_RESOLVE",
-     "payload": {
-      "mode": "single",
-      "bucket": "my-bucket",
-      "hasFile": false,
-      "hasContent": false,
-      "raw": "",
-      "key": "",
-      "fileName": "",
-      "fileSize": 0,
-      "fileType": "",
-      "contentType": "",
-      "acl": "",
-      "maxSize": 0,
-      "batch": ""
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "upload requires either `file` (with content) or the `key` + `content` pair"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-resolve-over-the-size-limit-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_RESOLVE",
-     "payload": {
-      "mode": "single",
-      "bucket": "my-bucket",
-      "hasFile": true,
-      "hasContent": false,
-      "raw": "data:text/plain,hi",
-      "key": "",
-      "fileName": "a.txt",
-      "fileSize": 10,
-      "fileType": "text/plain",
-      "contentType": "",
-      "acl": "",
-      "maxSize": 5,
-      "batch": ""
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "Upload rejected: a.txt is 10 bytes (max 5)"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-resolve-of-a-file-with-no-content-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_RESOLVE",
-     "payload": {
-      "mode": "single",
-      "bucket": "my-bucket",
-      "hasFile": true,
-      "hasContent": false,
-      "raw": "",
-      "key": "",
-      "fileName": "a.txt",
-      "fileSize": 2,
-      "fileType": "text/plain",
-      "contentType": "",
-      "acl": "",
-      "maxSize": 0,
-      "batch": ""
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "Upload rejected: file payload for 'a.txt' carries no content — the uploader must include the base64 data URL"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-a-2xx-put-reply-for-a-public-object-completes-with-the-bucket-url",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT_REPLIED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "",
-      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":true,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_PUT_DONE",
-        "payload": {
-         "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-a-2xx-put-reply-for-a-private-object-does-not-finish-until-its-url-is-presigned",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT_REPLIED",
-     "payload": {
-      "status": 200,
-      "headers": {},
-      "body": "",
-      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
-     },
-     "expect": {
-      "state": "idle",
-      "neverEmits": [
-       "STORAGE_PUT_DONE",
-       "STORAGE_FAILED",
-       "STORAGE_HTTP_ERROR"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-a-non-2xx-put-reply-is-a-storage-error-with-the-body",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT_REPLIED",
-     "payload": {
-      "status": 403,
-      "headers": {},
-      "body": "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
-      "key": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_HTTP_ERROR",
-        "payload": {
-         "text": "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-put-done-in-single-mode-answers-the-upload",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT_DONE",
-     "payload": {
-      "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt",
-      "state": "{\"mode\":\"single\",\"bucket\":\"my-bucket\",\"key\":\"k.txt\",\"size\":5,\"isPublic\":false,\"fileName\":\"\",\"fileSize\":0,\"fileKind\":\"\",\"etag\":\"\\\"e\\\"\",\"batch\":\"\"}"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_UPLOADED",
-        "payload": {
-         "key": "k.txt",
-         "bucket": "my-bucket",
-         "size": 5,
-         "etag": "\"e\"",
-         "id": "k.txt",
-         "url": "https://my-bucket.s3.us-east-1.amazonaws.com/k.txt"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pin-put-done-with-unreadable-state-fails",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_PUT_DONE",
-     "payload": {
-      "url": "u",
-      "state": "not json"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "The upload state could not be read back"
-        }
-       }
-      ]
-     }
-    }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-2xx-download-reply-answers-the-base64-content-and-type",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_DOWNLOAD_REPLIED",
@@ -665,10 +5408,10 @@
       "headers": {
        "content-type": "text/plain"
       },
-      "body": "aGVsbG8="
+      "body": "aGVsbG8=",
+      "key": "download:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_DOWNLOADED",
@@ -681,24 +5424,25 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-download-reply-without-a-content-type-is-octet-stream",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_DOWNLOAD_REPLIED",
      "payload": {
       "status": 200,
       "headers": {},
-      "body": "aGk="
+      "body": "aGk=",
+      "key": "download:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_DOWNLOADED",
@@ -711,24 +5455,25 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-2xx-delete-reply-answers-deleted",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_DELETE_REPLIED",
      "payload": {
       "status": 204,
       "headers": {},
-      "body": ""
+      "body": "",
+      "key": "delete:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_DELETED",
@@ -739,70 +5484,73 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-failing-delete-reply-is-a-storage-error",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_DELETE_REPLIED",
      "payload": {
-      "status": 500,
+      "status": 400,
       "headers": {},
-      "body": "boom"
+      "body": "boom",
+      "key": "delete:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
-        "event": "STORAGE_HTTP_ERROR",
+        "event": "STORAGE_FAILED",
         "payload": {
-         "text": "boom"
+         "message": "@aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object."
         }
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-failing-list-reply-is-a-storage-error",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_LIST_REPLIED",
      "payload": {
       "status": 403,
       "headers": {},
-      "body": "denied"
+      "body": "denied",
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
-        "event": "STORAGE_HTTP_ERROR",
+        "event": "STORAGE_FAILED",
         "payload": {
-         "text": "denied"
+         "message": "@aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object."
         }
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-storage-error-reads-the-s3-message",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_HTTP_ERROR",
@@ -810,7 +5558,6 @@
       "text": "<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -821,14 +5568,15 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-an-empty-storage-error-is-unknown",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_HTTP_ERROR",
@@ -836,7 +5584,6 @@
       "text": "  "
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -847,23 +5594,24 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-a-timeout-is-connection-timed-out",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_HTTP_FAILED",
      "payload": {
       "error": "x",
-      "kind": "timeout"
+      "kind": "timeout",
+      "key": "delete:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -874,51 +5622,24 @@
       ]
      }
     }
-   ]
-  },
-  {
-   "id": "pin-an-unconfigured-credential-names-the-credential",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
-   "steps": [
-    {
-     "event": "STORAGE_HTTP_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "unconfigured",
-      "credential": "AWS_SECRET"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "STORAGE_FAILED",
-        "payload": {
-         "message": "Storage credential not configured: AWS_SECRET"
-        }
-       }
-      ]
-     }
-    }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
    "id": "pin-any-other-transport-failure-carries-its-text",
-   "config": {
-    "region": "us-east-1",
-    "bucket": "my-bucket"
-   },
+   "config": {},
    "steps": [
     {
      "event": "STORAGE_HTTP_FAILED",
      "payload": {
       "error": "connection refused",
-      "kind": "failed"
+      "kind": "failed",
+      "key": "delete:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -929,6 +5650,10 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -940,10 +5665,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>many</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -954,6 +5678,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -965,10 +5694,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><Contents><Key>a.txt</Key><Size>many</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents><NextContinuationToken>t1</NextContinuationToken></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_FAILED",
@@ -979,6 +5707,11 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
   },
   {
@@ -990,10 +5723,9 @@
       "status": 200,
       "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
       "headers": {},
-      "key": "k"
+      "key": "list:1"
      },
      "expect": {
-      "state": "idle",
       "emits": [
        {
         "event": "STORAGE_LISTED",
@@ -1011,7 +5743,123 @@
       ]
      }
     }
+   ],
+   "config": {},
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
    ]
+  },
+  {
+   "id": "pin-a-500-delete-reply-is-retried-not-failed",
+   "config": {
+    "pathStyle": true
+   },
+   "defaults": [
+    "StorageHttp",
+    "StorageRetry"
+   ],
+   "steps": [
+    {
+     "event": "STORAGE_READY",
+     "payload": {
+      "key": "delete:1",
+      "verb": "delete",
+      "method": "DELETE",
+      "bucket": "my-bucket",
+      "objKey": "k",
+      "query": [
+       {
+        "name": "x-id",
+        "value": "DeleteObject"
+       }
+      ],
+      "headers": [],
+      "b64": "",
+      "expires": 0,
+      "hostText": "s3.us-east-1.amazonaws.com",
+      "keyId": "AKIAIOSFODNN7EXAMPLE",
+      "authority": "s3.us-east-1.amazonaws.com",
+      "origin": "https://s3.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "putMode": "",
+      "putSize": 0,
+      "putPublic": false,
+      "putFileName": "",
+      "putFileSize": 0,
+      "putFileKind": "",
+      "putEtag": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_START",
+        "payload": {
+         "key": "delete:1"
+        }
+       },
+       {
+        "event": "STORAGE_HTTP_SEND",
+        "payload": {
+         "key": "delete:1",
+         "method": "DELETE",
+         "target": "/my-bucket/k?x-id=DeleteObject",
+         "headers": [
+          {
+           "name": "x-amz-content-sha256",
+           "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+           "name": "x-amz-date",
+           "value": "20231114T221320Z"
+          },
+          {
+           "name": "authorization",
+           "value": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20231114/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=1d8e28d8cc2cc6a660adc0c4c25df71cd7ba43894ca3488c6cd53435010aaf02"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "s3.us-east-1.amazonaws.com"
+        }
+       }
+      ]
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_NET_REPLIED",
+     "payload": {
+      "key": "delete:1",
+      "status": 500,
+      "headers": {},
+      "body": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RETRY_FAILED",
+        "payload": {
+         "key": "delete:1",
+         "error": "status 500"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED",
+       "STORAGE_DOWNLOADED",
+       "STORAGE_LISTED",
+       "STORAGE_DELETED",
+       "STORAGE_UPLOADED"
+      ]
+     },
+     "trait": "StorageHttp"
+    }
+   ],
+   "now": 1700000000000,
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
   }
  ]
 }

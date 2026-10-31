@@ -1753,6 +1753,326 @@
           }
         }
       ]
+    },
+    {
+      "id": "runtime-entity-not-seeded",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "KeptNote",
+                    "persistence": "persistent",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "k1",
+                        "label": "Kept"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "KernelFlight",
+                    "persistence": "runtime",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "total",
+                        "type": "number",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "f1",
+                        "total": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_FAILED",
+              "DS_OWNS_ENV",
+              "DS_OWNS_ENV_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "KeptNote",
+                {
+                  "id": "k1",
+                  "label": "Kept",
+                  "createdAt": "2026-06-01T00:00:00.000Z",
+                  "updatedAt": "2026-06-01T00:00:00.000Z"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "ok": true,
+              "emitted": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "keptnote": [
+                      {
+                        "id": "k1",
+                        "label": "Kept",
+                        "createdAt": "2026-06-01T00:00:00.000Z",
+                        "updatedAt": "2026-06-01T00:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_DONE": 1
+            },
+            "neverEmits": [
+              "DS_OWNS_ENV",
+              "DS_OWNS_ENV_FAILED",
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "persistent-entities-both-seeded-control",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "KeptNote",
+                    "persistence": "persistent",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "k1",
+                        "label": "Kept"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "KernelFlight",
+                    "persistence": "persistent",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "total",
+                        "type": "number",
+                        "required": true
+                      }
+                    ],
+                    "instances": [
+                      {
+                        "id": "f1",
+                        "total": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_FAILED",
+              "DS_OWNS_ENV",
+              "DS_OWNS_ENV_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "KeptNote",
+                {
+                  "id": "k1",
+                  "label": "Kept",
+                  "createdAt": "2026-06-01T00:00:00.000Z",
+                  "updatedAt": "2026-06-01T00:00:00.000Z"
+                }
+              ],
+              [
+                "create",
+                "KernelFlight",
+                {
+                  "id": "f1",
+                  "total": 0,
+                  "createdAt": "2026-06-01T00:00:00.000Z",
+                  "updatedAt": "2026-06-01T00:00:00.000Z"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "ok": true,
+              "emitted": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "keptnote": [
+                      {
+                        "id": "k1",
+                        "label": "Kept",
+                        "createdAt": "2026-06-01T00:00:00.000Z",
+                        "updatedAt": "2026-06-01T00:00:00.000Z"
+                      }
+                    ],
+                    "kernelflight": [
+                      {
+                        "id": "f1",
+                        "total": 0,
+                        "createdAt": "2026-06-01T00:00:00.000Z",
+                        "updatedAt": "2026-06-01T00:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_DONE": 1
+            },
+            "neverEmits": [
+              "DS_OWNS_ENV",
+              "DS_OWNS_ENV_FAILED",
+              "DATASET_FAILED"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

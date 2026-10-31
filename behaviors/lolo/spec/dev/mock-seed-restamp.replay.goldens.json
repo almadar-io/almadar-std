@@ -1,10 +1,10 @@
 {
  "atom": "spec/dev/mock-seed-access-fixture.lolo",
  "trait": "MockSeed",
- "note": "Restamp changes carry an explicit row target: singleton for a [runtime] registration (its storage key survives a rekey), else the changed row key (the old id for a rekey). The stamp right after seeding is firstOwner; a persona switch restamps only under config restampOnPersona (default false) and otherwise answers no changes.",
+ "note": "Restamp changes carry an explicit row target: the changed row key (the old id for a rekey); a [runtime] store is not a seeder registration, so its cells are never restamped. The stamp right after seeding is firstOwner; a persona switch restamps only under config restampOnPersona (default false) and otherwise answers no changes.",
  "cases": [
   {
-   "id": "restamp-target-runtime-entity-set-is-singleton",
+   "id": "restamp-runtime-store-owner-cell-is-not-restamped",
    "steps": [
     {
      "event": "INIT",
@@ -139,18 +139,7 @@
           ],
           "deferred": []
          },
-         "changes": [
-          {
-           "kind": "set",
-           "store": "tasks",
-           "id": "t1",
-           "column": "ownerRef",
-           "ownerId": "new",
-           "target": {
-            "kind": "singleton"
-           }
-          }
-         ]
+         "changes": []
         }
        }
       ],
@@ -326,7 +315,7 @@
    ]
   },
   {
-   "id": "restamp-target-runtime-rekey-keeps-the-singleton-storage-key",
+   "id": "restamp-runtime-store-rekey-is-not-applied",
    "steps": [
     {
      "event": "INIT",
@@ -455,24 +444,13 @@
           "stamped": [
            {
             "store": "tasks",
-            "id": "new",
+            "id": "t1",
             "column": "id"
            }
           ],
           "deferred": []
          },
-         "changes": [
-          {
-           "kind": "rekey",
-           "store": "tasks",
-           "id": "t1",
-           "column": "id",
-           "ownerId": "new",
-           "target": {
-            "kind": "singleton"
-           }
-          }
-         ]
+         "changes": []
         }
        }
       ],
@@ -648,7 +626,7 @@
    ]
   },
   {
-   "id": "restamp-target-runtime-rekey-then-set-both-stay-singleton",
+   "id": "restamp-runtime-store-rekey-then-set-applies-neither",
    "steps": [
     {
      "event": "INIT",
@@ -782,39 +760,18 @@
           "stamped": [
            {
             "store": "tasks",
-            "id": "new",
+            "id": "t1",
             "column": "id"
            },
            {
             "store": "tasks",
-            "id": "new",
+            "id": "t1",
             "column": "ownerRef"
            }
           ],
           "deferred": []
          },
-         "changes": [
-          {
-           "kind": "rekey",
-           "store": "tasks",
-           "id": "t1",
-           "column": "id",
-           "ownerId": "new",
-           "target": {
-            "kind": "singleton"
-           }
-          },
-          {
-           "kind": "set",
-           "store": "tasks",
-           "id": "new",
-           "column": "ownerRef",
-           "ownerId": "new",
-           "target": {
-            "kind": "singleton"
-           }
-          }
-         ]
+         "changes": []
         }
        }
       ],
@@ -1011,7 +968,7 @@
    ]
   },
   {
-   "id": "restamp-target-per-store-a-runtime-store-and-a-keyed-store-in-one-run",
+   "id": "restamp-a-runtime-store-is-skipped-and-a-keyed-store-still-restamps",
    "steps": [
     {
      "event": "INIT",
@@ -1196,16 +1153,6 @@
           "deferred": []
          },
          "changes": [
-          {
-           "kind": "set",
-           "store": "tasks",
-           "id": "t1",
-           "column": "ownerRef",
-           "ownerId": "reader",
-           "target": {
-            "kind": "singleton"
-           }
-          },
           {
            "kind": "set",
            "store": "docs",

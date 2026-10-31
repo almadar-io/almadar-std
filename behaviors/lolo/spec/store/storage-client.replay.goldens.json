@@ -1,0 +1,1241 @@
+{
+ "atom": "store/atoms/std-storage.lolo",
+ "trait": "StorageClient",
+ "note": "StorageClient: the stateless request builder (rebindable). Each entry validates its input and emits STORAGE_REQUEST to the gate; the gate is not a default trait here, so each entry stops there. Knob: bucket.",
+ "cases": [
+  {
+   "id": "bad-percent-encoding-fails",
+   "steps": [
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "file": {
+       "name": "a.txt",
+       "size": 5,
+       "type": "text/plain",
+       "content": "data:text/plain,%E0%A4%A"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "URI malformed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "good-percent-encoding-is-stored",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "file": {
+       "name": "a.txt",
+       "size": 5,
+       "type": "text/plain",
+       "content": "data:text/plain,hello%20world"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "put",
+         "bucket": "my-bucket"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-storage_put-with-no-bucket-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_PUT",
+     "payload": {
+      "mode": "single",
+      "bucket": "",
+      "key": "k",
+      "contentType": "text/plain",
+      "b64": "aGk=",
+      "size": 2,
+      "isPublic": false,
+      "fileName": "k",
+      "fileSize": 2,
+      "fileKind": "text/plain",
+      "etag": "\"e\"",
+      "batch": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-storage_download-with-no-bucket-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-storage_list-with-no-bucket-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_LIST",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-storage_delete-with-no-bucket-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_DELETE",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-storage_get_signed_url-with-no-bucket-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-upload-of-a-key-and-content-pair-asks-to-resolve",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "content": "hello",
+      "contentType": "text/plain"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_RESOLVE",
+        "payload": {
+         "mode": "single",
+         "bucket": "my-bucket",
+         "key": "k.txt",
+         "hasFile": false,
+         "hasContent": true,
+         "raw": "hello"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-resolve-with-neither-a-file-nor-a-pair-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": false,
+      "hasContent": false,
+      "raw": "",
+      "key": "",
+      "fileName": "",
+      "fileSize": 0,
+      "fileType": "",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "upload requires either `file` (with content) or the `key` + `content` pair"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-resolve-over-the-size-limit-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": true,
+      "hasContent": false,
+      "raw": "data:text/plain,hi",
+      "key": "",
+      "fileName": "a.txt",
+      "fileSize": 10,
+      "fileType": "text/plain",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 5,
+      "batch": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Upload rejected: a.txt is 10 bytes (max 5)"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "pin-resolve-of-a-file-with-no-content-fails",
+   "config": {},
+   "steps": [
+    {
+     "event": "STORAGE_RESOLVE",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "hasFile": true,
+      "hasContent": false,
+      "raw": "",
+      "key": "",
+      "fileName": "a.txt",
+      "fileSize": 2,
+      "fileType": "text/plain",
+      "contentType": "",
+      "acl": "",
+      "maxSize": 0,
+      "batch": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "Upload rejected: file payload for 'a.txt' carries no content \u2014 the uploader must include the base64 data URL"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-download-hands-its-request-to-the-gate",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_DOWNLOAD",
+     "payload": {
+      "key": "a.txt",
+      "bucket": "my-bucket"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "download",
+         "method": "GET",
+         "bucket": "my-bucket",
+         "objKey": "a.txt",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "GetObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 0,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-bucket-knob-names-the-bucket-when-an-action-names-none",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_DELETE",
+     "payload": {
+      "key": "o"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "delete",
+         "method": "DELETE",
+         "bucket": "knob-bucket",
+         "objKey": "o",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "DeleteObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 0,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "bucket": "knob-bucket"
+   },
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-list-names-its-sorted-query-without-empty-parameters",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_LIST",
+     "payload": {
+      "bucket": "my-bucket",
+      "prefix": "a/b",
+      "maxKeys": 50
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "list",
+         "method": "GET",
+         "bucket": "my-bucket",
+         "objKey": "",
+         "query": [
+          {
+           "name": "list-type",
+           "value": "2"
+          },
+          {
+           "name": "max-keys",
+           "value": "50"
+          },
+          {
+           "name": "prefix",
+           "value": "a/b"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 0,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-private-put-hands-its-put-fields-to-the-gate",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "b64": "aGk=",
+      "contentType": "text/plain",
+      "size": 2,
+      "etag": "\"e\"",
+      "fileName": "k.txt",
+      "fileSize": 2,
+      "fileKind": "text/plain",
+      "batch": null,
+      "isPublic": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "put",
+         "method": "PUT",
+         "bucket": "my-bucket",
+         "objKey": "k.txt",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "PutObject"
+          }
+         ],
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          }
+         ],
+         "b64": "aGk=",
+         "expires": 0,
+         "putMode": "single",
+         "putSize": 2,
+         "putPublic": false,
+         "putFileName": "k.txt",
+         "putFileSize": 2,
+         "putFileKind": "text/plain",
+         "putEtag": "\"e\""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-public-put-hands-its-put-fields-to-the-gate",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_PUT",
+     "payload": {
+      "mode": "single",
+      "bucket": "my-bucket",
+      "key": "k.txt",
+      "b64": "aGk=",
+      "contentType": "text/plain",
+      "size": 2,
+      "etag": "\"e\"",
+      "fileName": "k.txt",
+      "fileSize": 2,
+      "fileKind": "text/plain",
+      "batch": null,
+      "isPublic": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "put",
+         "method": "PUT",
+         "bucket": "my-bucket",
+         "objKey": "k.txt",
+         "query": [
+          {
+           "name": "x-id",
+           "value": "PutObject"
+          }
+         ],
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain"
+          },
+          {
+           "name": "x-amz-acl",
+           "value": "public-read"
+          }
+         ],
+         "b64": "aGk=",
+         "expires": 0,
+         "putMode": "single",
+         "putSize": 2,
+         "putPublic": true,
+         "putFileName": "k.txt",
+         "putFileSize": 2,
+         "putFileKind": "text/plain",
+         "putEtag": "\"e\""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-put-with-no-bucket-fails",
+   "steps": [
+    {
+     "event": "STORAGE_PUT",
+     "payload": {
+      "mode": "single",
+      "bucket": "",
+      "key": "k.txt",
+      "b64": "aGk=",
+      "contentType": "text/plain",
+      "size": 2,
+      "etag": "\"e\"",
+      "fileName": "k.txt",
+      "fileSize": 2,
+      "fileKind": "text/plain",
+      "batch": null,
+      "isPublic": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "No value provided for input HTTP label: Bucket."
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-get-url-hands-a-signed-call-to-the-gate",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "operation": "get"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "signed",
+         "method": "GET",
+         "bucket": "my-bucket",
+         "objKey": "k.txt",
+         "query": [
+          {
+           "name": "x-amz-checksum-mode",
+           "value": "ENABLED"
+          },
+          {
+           "name": "x-id",
+           "value": "GetObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 3600,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-put-url-hands-a-signed-call-to-the-gate",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "operation": "put"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "signed",
+         "method": "PUT",
+         "bucket": "my-bucket",
+         "objKey": "k.txt",
+         "query": [
+          {
+           "name": "x-amz-checksum-crc32",
+           "value": "AAAAAA=="
+          },
+          {
+           "name": "x-amz-sdk-checksum-algorithm",
+           "value": "CRC32"
+          },
+          {
+           "name": "x-id",
+           "value": "PutObject"
+          }
+         ],
+         "headers": [],
+         "b64": "",
+         "expires": 3600,
+         "putMode": "",
+         "putSize": 0,
+         "putPublic": false,
+         "putFileName": "",
+         "putFileSize": 0,
+         "putFileKind": "",
+         "putEtag": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-expiry-of-zero-seconds-fails",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "expiresIn": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "A presigned url expires in a whole number of seconds from 1 to 604800"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-expiry-of-604801-seconds-fails",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "expiresIn": 604801
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "A presigned url expires in a whole number of seconds from 1 to 604800"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-expiry-of-one-and-a-half-seconds-fails",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "expiresIn": 1.5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "A presigned url expires in a whole number of seconds from 1 to 604800"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-signed-url-expiry-of-negative-seconds-fails",
+   "steps": [
+    {
+     "event": "STORAGE_GET_SIGNED_URL",
+     "payload": {
+      "key": "k.txt",
+      "bucket": "my-bucket",
+      "expiresIn": -3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "A presigned url expires in a whole number of seconds from 1 to 604800"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-batch-starts-as-a-typed-record-and-each-file-becomes-a-put",
+   "steps": [
+    {
+     "event": "STORAGE_ENV_HOST",
+     "payload": {
+      "value": "s3.us-east-1.amazonaws.com"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_ENV_KEY_ID",
+     "payload": {
+      "value": "AKIAIOSFODNN7EXAMPLE"
+     },
+     "expect": {
+      "emits": []
+     },
+     "trait": "StorageGate"
+    },
+    {
+     "event": "STORAGE_UPLOAD_MANY",
+     "payload": {
+      "files": [
+       {
+        "name": "a.txt",
+        "size": 2,
+        "type": "text/plain",
+        "content": "data:text/plain;base64,aGk="
+       }
+      ],
+      "acl": "public",
+      "bucket": "my-bucket"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_BATCH_NEXT",
+        "payload": {
+         "batch": {
+          "files": [
+           {
+            "name": "a.txt",
+            "size": 2,
+            "type": "text/plain",
+            "content": "data:text/plain;base64,aGk="
+           }
+          ],
+          "idx": 0,
+          "acl": "public",
+          "maxSize": 0,
+          "bucket": "my-bucket",
+          "items": []
+         }
+        }
+       },
+       {
+        "event": "STORAGE_REQUEST",
+        "payload": {
+         "verb": "put",
+         "bucket": "my-bucket",
+         "objKey": "2023-11-14T22:13:20.000Z-a.txt",
+         "putMode": "batch",
+         "putFileName": "a.txt",
+         "putPublic": true,
+         "batch": {
+          "files": [
+           {
+            "name": "a.txt",
+            "size": 2,
+            "type": "text/plain",
+            "content": "data:text/plain;base64,aGk="
+           }
+          ],
+          "idx": 0,
+          "acl": "public",
+          "maxSize": 0,
+          "bucket": "my-bucket",
+          "items": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "a-finished-batch-answers-the-uploaded-items",
+   "steps": [
+    {
+     "event": "STORAGE_BATCH_NEXT",
+     "payload": {
+      "batch": {
+       "files": [
+        {
+         "name": "a.txt",
+         "size": 2,
+         "type": "text/plain",
+         "content": "data:text/plain;base64,aGk="
+        }
+       ],
+       "idx": 1,
+       "acl": "",
+       "maxSize": 0,
+       "bucket": "my-bucket",
+       "items": [
+        {
+         "id": "k",
+         "key": "k",
+         "url": "u",
+         "name": "a",
+         "sizeBytes": 1,
+         "mimeType": "text/plain"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_UPLOADED_MANY",
+        "payload": {
+         "count": 1,
+         "items": [
+          {
+           "id": "k",
+           "key": "k",
+           "url": "u",
+           "name": "a",
+           "sizeBytes": 1,
+           "mimeType": "text/plain"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORAGE_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  },
+  {
+   "id": "an-empty-batch-fails",
+   "steps": [
+    {
+     "event": "STORAGE_UPLOAD_MANY",
+     "payload": {
+      "files": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "uploadMany requires a non-empty `files` array (UploadDropZone batch shape)"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "now": 1700000000000,
+   "defaults": [],
+   "credentials": {
+    "STORAGE_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+   }
+  }
+ ]
+}

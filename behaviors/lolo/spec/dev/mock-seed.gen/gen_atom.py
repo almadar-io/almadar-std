@@ -86,7 +86,7 @@ orbs=f'(object/get {RES_} "orbitals" [])'
 prim=f'(array/filter (array/map {orbs} (fn o (object/get @o "entity"))) (fn e (validate/object @e)))'
 aux=f'(array/filter (array/flatten (array/map {orbs} (fn o (object/get @o "auxiliaryEntities" [])))) (fn e (validate/object @e)))'
 # order: per orbital: entity then its auxiliaries
-defs=f'(array/flatten (array/map {orbs} (fn o (array/concat (array/filter [(object/get @o "entity")] (fn e (validate/object @e))) (array/filter (object/get @o "auxiliaryEntities" []) (fn e (validate/object @e)))))))'
+defs=f'(array/filter (array/flatten (array/map {orbs} (fn o (array/concat (array/filter [(object/get @o "entity")] (fn e (validate/object @e))) (array/filter (object/get @o "auxiliaryEntities" []) (fn e (validate/object @e))))))) (fn e (!= (object/get @e "persistence" "") "runtime")))'
 idprim=f'(array/filter {prim} (fn e (object/get @e "identity" false)))'
 idaux=f'(array/filter {aux} (fn e (object/get @e "identity" false)))'
 iddef=f'(let ((ip (array/first {idprim}))) (if (= @ip null) (array/first {idaux}) @ip))'

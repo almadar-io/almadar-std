@@ -3,6 +3,7 @@ app std-agent-session [
   description: "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 ]
 uses Lifecycle from "std/behaviors/std-lifecycle"
+uses Browse from "std/behaviors/std-browse"
 
 type AgentChatMessage = {
   role : "user" | "assistant"!
@@ -111,36 +112,7 @@ type AgentLlmResponseActivity = {
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentFeedEntry = AgentMessageEntry | AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity | AgentErrorEntry
 
-orbital AgentSessionOrbital {
-  type AgentMessagesLoaded = Event { data : [AgentMessage]! } "Fired when the conversation finishes loading"
-  type AgentMessagesLoadFailed = Event { error : string, code : string } "Fired when the conversation fails to load"
-  type AgentMessageSaved = Event AgentMessage "Fired after a message persists"
-  type AgentMessageSaveFailed = Event { error : string, code : string } "Fired when a message fails to persist"
-
-  config {
-    keepDays : number = 0
-      @label "Days to keep conversation messages"
-      @description "Stored conversation messages older than this many days are deleted. 0 turns the clean-up off and keeps them all."
-      @synonyms "retention, retention days, ttl, expire, delete old, keep for"
-      @tier "policy"
-  }
-
-  entity AgentMessage [persistent: agentMessages] {
-    id : string!
-    ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
-    role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
-    content : string! @description "What was said." @synonyms "text, message, body"
-    createdAt : instant! @description "When it was said." @synonyms "time, timestamp"
-    chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
-  }
-  entity AgentMessageRetentionLog [runtime] {
-    id : string!
-    headId : string = ""
-    headStatus : string = ""
-    status : string = ""
-    createdAt : instant
-  }
-
+orbital AgentConversationOrbital {
   entity AgentConversationView [runtime] {
     id : string!
     entries : [AgentFeedEntry] @description "The conversation as shown: messages with the assistant's steps between them." = []
@@ -152,145 +124,6 @@ orbital AgentSessionOrbital {
     chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""
   }
 
-  trait AgentThread -> @rebindable AgentMessage {
-    initial: ready
-
-    state ready {
-      INIT -> ready
-      OPEN_CHAT -> ready when (= (default ?chatId "") "")
-        (emit AgentMessagesLoaded { data: [] })
-      OPEN_CHAT -> ready when (not (= (default ?chatId "") ""))
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentThreadOpened }
-          filter: (= (object/get @entity chatId) ?chatId)
-          limit: @config.maxRows
-        })
-      AgentThreadOpened -> ready when (> ?totalCount (array/len (default ?data [])))
-        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
-      AgentThreadOpened -> ready
-        (emit AgentMessagesLoaded { data: ?data })
-      SEND_IN_CHAT -> ready when (not (= (default ?message "") ""))
-        (persist create AgentMessage {
-          ownerId: @user.id
-          chatId: ?chatId
-          role: user
-          content: ?message
-          createdAt: @now
-        } {
-          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
-        })
-      AgentMessageSaved -> ready
-        (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
-          filter: (= (object/get @entity chatId) ?chatId)
-          limit: @config.maxRows
-        })
-      AgentConversationLoaded -> ready when (> ?totalCount (array/len (default ?data [])))
-        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
-      AgentConversationLoaded -> ready
-        (emit CONVERSE {
-          messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
-        })
-      REPLY_IN_CHAT -> ready
-        (persist create AgentMessage {
-          ownerId: @user.id
-          chatId: ?chatId
-          role: assistant
-          content: ?reply
-          createdAt: @now
-        })
-      AgentMessagesLoadFailed -> ready
-        (emit ASSISTANT_THREAD_FAILED { error: ?error })
-        (render-ui toast {
-          message: ?error
-          type: alert
-          variant: error
-        })
-      AgentMessageSaveFailed -> ready
-        (emit ASSISTANT_THREAD_FAILED { error: ?error })
-        (render-ui toast {
-          message: ?error
-          type: alert
-          variant: error
-        })
-    }
-
-    emits {
-      ASSISTANT_THREAD_FAILED -> external {
-        error : string!
-      }
-        @description "The conversation could not be loaded or a message could not be stored."
-        @synonyms "failed, error"
-        @tier "domain"
-      CONVERSE -> external {
-        messages : [AgentChatMessage]!
-      }
-        @description "The current conversation to answer, oldest first; the last turn is the request."
-        @synonyms "ask, converse, request"
-        @tier "domain"
-      AgentMessagesLoaded -> external {
-        data : [AgentMessage]!
-      }
-        @description "The current conversation's messages finished loading (empty for a new conversation)."
-        @tier "internal"
-      AgentMessagesLoadFailed -> external {
-        error : string
-        code : string
-      }
-        @description "The conversation could not be loaded."
-        @tier "internal"
-      AgentConversationLoaded -> internal {
-        data : [AgentMessage]!
-        totalCount : number!
-      }
-        @tier "internal"
-      AgentThreadOpened -> internal {
-        data : [AgentMessage]!
-        totalCount : number!
-      }
-        @description "Internal: the opened conversation's messages, checked against the cap before AgentMessagesLoaded announces them."
-        @tier "internal"
-      AgentMessageSaved
-        @description "A message persisted — payload is the created AgentMessage row itself."
-        @tier "internal"
-      AgentMessageSaveFailed -> external {
-        error : string
-        code : string
-      }
-        @description "The message could not be stored."
-        @tier "internal"
-    }
-
-    config {
-      maxRows : number = 500
-        @label "Messages per conversation"
-        @description "Most messages one conversation read may return. The assistant answers from the whole conversation and the view shows it whole, so a partial read would answer from a cut history; a longer conversation is refused through ASSISTANT_THREAD_FAILED instead."
-        @synonyms "conversation length cap, history limit, message cap"
-        @tier "policy"
-    }
-
-    listens {
-      *.ASSISTANT_CHAT_OPENED -> OPEN_CHAT
-      *.ASSISTANT_SEND_IN_CHAT -> SEND_IN_CHAT
-      *.ASSISTANT_REPLY_IN_CHAT -> REPLY_IN_CHAT
-      OPEN_CHAT {
-        chatId : string
-      }
-        @description "Load a conversation's messages (none for a new one)."
-      SEND_IN_CHAT {
-        chatId : string!
-        message : string!
-      }
-        @description "Store the user's message in this conversation and ask the assistant."
-        @synonyms "ask, message, chat"
-      REPLY_IN_CHAT {
-        chatId : string
-        reply : string!
-      }
-        @description "Store the assistant's answer in this conversation."
-    }
-  }
-
   trait AgentConversation -> @rebindable AgentConversationView [client] {
     config {
       placeholder : string = "Ask the assistant…"
@@ -299,7 +132,7 @@ orbital AgentSessionOrbital {
       emptyTitle : string = "Ask me to do something in this app"
         @label "Empty conversation title"
         @tier "presentation"
-      links : [AgentLink] = [{ label: "All conversations", href: "/agent-session/chats" }]
+      links : [AgentLink] = [{ label: "All conversations", href: "/agent-session/chats" }, { label: "Stored messages", href: "/agent-session/messages" }]
         @label "Links above the conversation"
         @description "Related pages (e.g. the run history)."
         @tier "presentation"
@@ -1419,6 +1252,178 @@ orbital AgentSessionOrbital {
     }
   }
 
+  page "/agent-session" as AgentSessionPage -> AgentConversation
+}
+
+orbital AgentSessionOrbital {
+  type AgentMessagesLoaded = Event { data : [AgentMessage]! } "Fired when the conversation finishes loading"
+  type AgentMessagesLoadFailed = Event { error : string, code : string } "Fired when the conversation fails to load"
+  type AgentMessageSaved = Event AgentMessage "Fired after a message persists"
+  type AgentMessageSaveFailed = Event { error : string, code : string } "Fired when a message fails to persist"
+
+  config {
+    keepDays : number = 0
+      @label "Days to keep conversation messages"
+      @description "Stored conversation messages older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire, delete old, keep for"
+      @tier "policy"
+  }
+
+  entity AgentMessage [persistent: agentMessages] {
+    id : string!
+    ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
+    role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
+    content : string! @description "What was said." @synonyms "text, message, body"
+    createdAt : instant! @description "When it was said." @synonyms "time, timestamp"
+    chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
+  }
+  entity AgentMessageRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    createdAt : instant
+  }
+
+  trait AgentThread -> @rebindable AgentMessage {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      OPEN_CHAT -> ready when (= (default ?chatId "") "")
+        (emit AgentMessagesLoaded { data: [] })
+      OPEN_CHAT -> ready when (not (= (default ?chatId "") ""))
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentThreadOpened }
+          filter: (= (object/get @entity chatId) ?chatId)
+          limit: @config.maxRows
+        })
+      AgentThreadOpened -> ready when (> ?totalCount (array/len (default ?data [])))
+        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
+      AgentThreadOpened -> ready
+        (emit AgentMessagesLoaded { data: ?data })
+      SEND_IN_CHAT -> ready when (not (= (default ?message "") ""))
+        (persist create AgentMessage {
+          ownerId: @user.id
+          chatId: ?chatId
+          role: user
+          content: ?message
+          createdAt: @now
+        } {
+          emit: { failure: AgentMessageSaveFailed, success: AgentMessageSaved }
+        })
+      AgentMessageSaved -> ready
+        (fetch AgentMessage {
+          emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
+          filter: (= (object/get @entity chatId) ?chatId)
+          limit: @config.maxRows
+        })
+      AgentConversationLoaded -> ready when (> ?totalCount (array/len (default ?data [])))
+        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
+      AgentConversationLoaded -> ready
+        (emit CONVERSE {
+          messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
+        })
+      REPLY_IN_CHAT -> ready
+        (persist create AgentMessage {
+          ownerId: @user.id
+          chatId: ?chatId
+          role: assistant
+          content: ?reply
+          createdAt: @now
+        })
+      AgentMessagesLoadFailed -> ready
+        (emit ASSISTANT_THREAD_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      AgentMessageSaveFailed -> ready
+        (emit ASSISTANT_THREAD_FAILED { error: ?error })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      ASSISTANT_THREAD_FAILED -> external {
+        error : string!
+      }
+        @description "The conversation could not be loaded or a message could not be stored."
+        @synonyms "failed, error"
+        @tier "domain"
+      CONVERSE -> external {
+        messages : [AgentChatMessage]!
+      }
+        @description "The current conversation to answer, oldest first; the last turn is the request."
+        @synonyms "ask, converse, request"
+        @tier "domain"
+      AgentMessagesLoaded -> external {
+        data : [AgentMessage]!
+      }
+        @description "The current conversation's messages finished loading (empty for a new conversation)."
+        @tier "internal"
+      AgentMessagesLoadFailed -> external {
+        error : string
+        code : string
+      }
+        @description "The conversation could not be loaded."
+        @tier "internal"
+      AgentConversationLoaded -> internal {
+        data : [AgentMessage]!
+        totalCount : number!
+      }
+        @tier "internal"
+      AgentThreadOpened -> internal {
+        data : [AgentMessage]!
+        totalCount : number!
+      }
+        @description "Internal: the opened conversation's messages, checked against the cap before AgentMessagesLoaded announces them."
+        @tier "internal"
+      AgentMessageSaved
+        @description "A message persisted — payload is the created AgentMessage row itself."
+        @tier "internal"
+      AgentMessageSaveFailed -> external {
+        error : string
+        code : string
+      }
+        @description "The message could not be stored."
+        @tier "internal"
+    }
+
+    config {
+      maxRows : number = 500
+        @label "Messages per conversation"
+        @description "Most messages one conversation read may return. The assistant answers from the whole conversation and the view shows it whole, so a partial read would answer from a cut history; a longer conversation is refused through ASSISTANT_THREAD_FAILED instead."
+        @synonyms "conversation length cap, history limit, message cap"
+        @tier "policy"
+    }
+
+    listens {
+      *.ASSISTANT_CHAT_OPENED -> OPEN_CHAT
+      *.ASSISTANT_SEND_IN_CHAT -> SEND_IN_CHAT
+      *.ASSISTANT_REPLY_IN_CHAT -> REPLY_IN_CHAT
+      OPEN_CHAT {
+        chatId : string
+      }
+        @description "Load a conversation's messages (none for a new one)."
+      SEND_IN_CHAT {
+        chatId : string!
+        message : string!
+      }
+        @description "Store the user's message in this conversation and ask the assistant."
+        @synonyms "ask, message, chat"
+      REPLY_IN_CHAT {
+        chatId : string
+        reply : string!
+      }
+        @description "Store the assistant's answer in this conversation."
+    }
+  }
+
   trait AgentMessageRetention = Lifecycle.traits.LifecycleRetention -> AgentMessageRetentionLog {
     config {
       enabled: true
@@ -1428,7 +1433,39 @@ orbital AgentSessionOrbital {
     }
   }
 
-  page "/agent-session" as AgentSessionPage -> AgentConversation, AgentThread, AgentMessageRetention
+
+  trait AgentMessageList = Browse.traits.BrowseItemBrowse -> AgentMessage {
+    config {
+      browseLook: feed
+      scopeField: ownerId
+      searchField: content
+      bodySearch: false
+      itemClickEvent: ""
+      orderBy: "createdAt:desc"
+      emptyTitle: "No stored messages yet"
+      emptyDescription: "Messages you send to the assistant are kept here."
+      emptyIcon: message-square
+      fields: [{
+        name: role
+        label: From
+        variant: badge
+        colorMap: { user: info, assistant: success }
+        labels: { user: You, assistant: Assistant }
+      }, {
+        name: content
+        label: Message
+        variant: body
+      }, {
+        name: createdAt
+        label: When
+        format: datetime
+        icon: clock
+        variant: small
+      }]
+    }
+  }
+
+  page "/agent-session/messages" as AgentMessagesPage -> AgentMessageList, AgentThread, AgentMessageRetention
 }
 
 ;; Conversations: each person's kept chats, the current one (most recently

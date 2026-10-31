@@ -69,10 +69,7 @@ runtime_program = copy.deepcopy(program)
 runtime_program['orbitals'][1]['entity']['persistence'] = 'runtime'
 runtime_rows = {'people': people, 'tasks': [{'id': 'old-row', 'ownerRef': 'old', 'title': 'keep title'}]}
 runtime_journal = {'viewerId': 'old', 'stamped': [cell('tasks', 'old-row', 'id'), cell('tasks', 'old-row', 'ownerRef')], 'deferred': []}
-runtime_after = copy.deepcopy(runtime_rows); runtime_after['tasks'][0].update(id='new', ownerRef='new')
-case('runtime-store-changes-address-the-singleton-and-rekey-keeps-it', runtime_rows, runtime_journal, new,
-     [change('tasks', 'old-row', 'id', 'new', 'rekey', True), change('tasks', 'new', 'ownerRef', 'new', runtime=True)], runtime_after,
-     stamped=[cell('tasks', 'new', 'id'), cell('tasks', 'new', 'ownerRef')], program=runtime_program)
+case('runtime-store-is-not-a-registration-so-nothing-is-restamped', runtime_rows, runtime_journal, new, [], runtime_rows, program=runtime_program)
 rekey_rows = {'tasks': [{'id': 'old-row', 'ownerRef': 'old', 'otherOwner': 'old', 'title': 'keep title'}, {'id': 'other', 'title': 'keep other'}]}
 rekey_journal = {'viewerId': 'old', 'stamped': [cell('tasks', 'old-row', 'id'), cell('tasks', 'old-row', 'ownerRef')], 'deferred': [cell('tasks', 'old-row', 'otherOwner')]}
 rekey_after = copy.deepcopy(rekey_rows); rekey_after['tasks'][0].update(id='new', ownerRef='new', otherOwner='new')

@@ -1,8 +1,13 @@
 app std-image-upload-multi [
   version: "1.0.0",
   description: "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress.",
-  egress: ["http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"]
+  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"],
+  net: { env STORAGE_S3_HOST, 443: [tcp] }
 ]
+type HttpHeader = { name : string!, value : string! }
+type StorageFile = { name : string, size : number, type : string, content : string }
+type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
+type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
 orbital UploadedImageOrbital {
   uses Storage from "std/behaviors/std-storage"
     type UploadBatchFile = { name : string!, size : number, type : string, content : string }
@@ -328,6 +333,7 @@ orbital UploadedImageOrbital {
         code : string
       }
       UploadedImageStorage.STORAGE_FAILED -> UploadedImageStorageFailed
+      UploadedImageCall.STORAGE_FAILED -> UploadedImageStorageFailed
       UPLOAD {
         files : [UploadBatchFile]!
       }
@@ -432,7 +438,7 @@ orbital UploadedImageOrbital {
         contentType : string!
         acl : string!
         maxSize : number!
-        batch : string!
+        batch : StorageBatch?
       }
       STORAGE_PUT {
         mode : string!
@@ -441,11 +447,94 @@ orbital UploadedImageOrbital {
         b64 : string!
         contentType : string!
         size : number!
+        etag : string!
         isPublic : boolean!
         fileName : string!
         fileSize : number!
         fileKind : string!
-        batch : string!
+        batch : StorageBatch?
+      }
+      STORAGE_BATCH_NEXT {
+        batch : StorageBatch!
+      }
+      UploadedImageCall.STORAGE_BATCH_DONE -> STORAGE_BATCH_NEXT
+    }
+  }
+
+  trait UploadedImageGate = Storage.traits.StorageGate {
+    listens {
+      STORAGE_REQUEST {
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+      }
+      STORAGE_ENV_HOST {
+        value : string
+      }
+      STORAGE_ENV_REGION {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_HOST_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_REGION_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      UploadedImageStorage.STORAGE_REQUEST -> STORAGE_REQUEST
+    }
+
+  }
+
+  trait UploadedImageCall = Storage.traits.StorageCall {
+    listens {
+      STORAGE_CALL_READY {
+        key : string!
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+        hostText : string!
+        keyId : string!
+        authority : string!
+        origin : string!
+        region : string!
       }
       STORAGE_PUT_REPLIED {
         status : number!
@@ -453,35 +542,32 @@ orbital UploadedImageOrbital {
         body : string!
         key : string!
       }
-      STORAGE_PUT_PRESIGNED {
-        url : string!
-        key : string!
-      }
-      STORAGE_PUT_DONE {
-        url : string!
-        state : string!
-      }
-      STORAGE_BATCH_NEXT {
-        batch : string!
-      }
       STORAGE_DOWNLOAD_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_LIST_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_DELETE_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
       }
       STORAGE_SIGNED_REPLIED {
         url : string!
-        key : string
       }
       STORAGE_HTTP_ERROR {
         text : string!
@@ -489,11 +575,112 @@ orbital UploadedImageOrbital {
       STORAGE_HTTP_FAILED {
         error : string!
         kind : string!
-        credential : string
-        key : string
+        key : string!
       }
+      STORAGE_SIGN_FAILED {
+        mode : string!
+        message : string!
+      }
+      STORAGE_SIGN {
+        tag : string!
+        mode : string!
+        method : string!
+        bucket : string!
+        key : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+      }
+      STORAGE_SIGN_KEY {
+        day : string!
+        region : string!
+        service : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_SIGN_KEYED {
+        kDate : string!
+        signing : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      STORAGE_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      STORAGE_CLEAR
+      UploadedImageGate.STORAGE_READY -> STORAGE_CALL_READY per @payload.key
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_PUT_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "put:")
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_DOWNLOAD_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: ?key } when (str/startsWith ?key "download:")
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_LIST_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "list:")
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_DELETE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "delete:")
+      UploadedImageHttp.STORAGE_NET_FAILED -> STORAGE_HTTP_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      UploadedImageTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_HTTP_FAILED per @payload.key with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
+      UploadedImageRetry.STORAGE_RUN_ATTEMPT -> STORAGE_ATTEMPT per @payload.key
+      UploadedImageRetry.STORAGE_RUN_GAVE_UP -> STORAGE_GAVE_UP per @payload.key
     }
+
+  }
+
+  trait UploadedImageKeyed = Storage.traits.StorageKeyed {
+    listens {
+      UploadedImageCall.STORAGE_HTTP_SEND -> STORAGE_NET_SEND
+      UploadedImageTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_NET_CANCEL with { key: ?key }
+      UploadedImageKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+
+  }
+
+  trait UploadedImageHttp = Storage.traits.StorageHttp {
+    listens {
+      UploadedImageKeyed.KEYED_SEND -> STORAGE_NET_ROW_SEND per @payload.key
+      UploadedImageKeyed.KEYED_CANCEL -> STORAGE_NET_ROW_CANCEL per @payload.key
+    }
+
+  }
+
+  trait UploadedImageTimeout = Storage.traits.StorageTimeout {
+    listens {
+      UploadedImageCall.STORAGE_HTTP_SEND -> STORAGE_CLOCK_START per @payload.key with { key: (as ?key CallKey) }
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_CLOCK_SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+      UploadedImageHttp.STORAGE_NET_FAILED -> STORAGE_CLOCK_FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+    }
+
+  }
+
+  trait UploadedImageRetry = Storage.traits.StorageRetry {
+    listens {
+      UploadedImageCall.STORAGE_RETRY_START -> STORAGE_RUN_START per @payload.key
+      UploadedImageCall.STORAGE_RETRY_FAILED -> STORAGE_RUN_FAILED per @payload.key
+      UploadedImageCall.STORAGE_RETRY_END -> STORAGE_RUN_CANCEL per @payload.key
+      UploadedImageHttp.STORAGE_NET_REPLIED -> STORAGE_RUN_SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (= ?status 429) (= ?status 500) (= ?status 502) (= ?status 503) (= ?status 504)))
+    }
+
   }
 
   page "/uploadedimages/upload" as UploadedImageUploadPage -> UploadedImageUpload, UploadedImageStorage
+
+  page boot as UploadedImageStorageBoot -> UploadedImageGate, UploadedImageCall, UploadedImageKeyed, UploadedImageHttp, UploadedImageTimeout, UploadedImageRetry
 }

@@ -5011,6 +5011,274 @@
           }
         }
       ]
+    },
+    {
+      "id": "intrinsic-field-written-by-two-traits-is-not-a-conflict",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "a",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Row",
+                    "persistence": "runtime",
+                    "shared": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0,
+                        "intrinsic": true
+                      },
+                      {
+                        "name": "m",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Row",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E0"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E0",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Row",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E1"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E1",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-mutation",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-non-intrinsic-field-beside-intrinsic-still-conflicts",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "a",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Row",
+                    "persistence": "runtime",
+                    "shared": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      },
+                      {
+                        "name": "m",
+                        "type": "number",
+                        "default": 0,
+                        "intrinsic": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Row",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E0"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E0",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ],
+                              [
+                                "set",
+                                "@entity.m",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Row",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "E1"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E1",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ],
+                              [
+                                "set",
+                                "@entity.m",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-mutation",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SHARED_ENTITY_FIELD_CONFLICT",
+                      "path": "orbitals[0].entity[Row]",
+                      "message": "Shared entity 'Row' field 'n' is written by 2 traits: [\"A\", \"B\"] \u2014 coupled mechanics writing one field must be one ordered pipeline, not parallel writers",
+                      "suggestion": "Route the write through a single ordered pipeline instead of writing the same field from multiple traits",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

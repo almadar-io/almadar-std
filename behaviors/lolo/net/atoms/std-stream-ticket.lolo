@@ -86,7 +86,11 @@ orbital StreamTicketOrbital {
         (emit TICKET_REFUSED { code: "busy", message: "the stream ticket queue is full", ticket: @payload.ticket })
 
       TICKET_SAVED -> idle
-        (emit TICKET_MINTED { ticket: @entity.ticket, expiresAt: @entity.expiresAt, requestId: @entity.mintRequest })
+        ;; expiresAt is set by SEED_DRAWN before the save that answers TICKET_SAVED; an absent one is refused, never defaulted.
+        (let ((expiry @entity.expiresAt))
+          (if (= @expiry null)
+            (emit TICKET_REFUSED { code: "store", message: "the minted ticket has no expiry", requestId: @entity.mintRequest })
+            (emit TICKET_MINTED { ticket: @entity.ticket, expiresAt: @expiry, requestId: @entity.mintRequest })))
         (emit TICKET_PUMP {})
       TICKET_NOT_SAVED -> idle
         (emit TICKET_REFUSED { code: "store", message: @payload.error, requestId: @entity.mintRequest })
@@ -133,7 +137,11 @@ orbital StreamTicketOrbital {
         (emit TICKET_REFUSED { code: "expired", message: "the stream ticket has expired", ticket: @entity.ticket })
         (emit TICKET_PUMP {})
       TICKET_SPENT -> idle when (not @entity.expired)
-        (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @entity.holder })
+        ;; holder is read off the stored ticket by TICKET_LOADED before the delete that answers TICKET_SPENT; an absent one is refused, never defaulted.
+        (let ((owner @entity.holder))
+          (if (= @owner null)
+            (emit TICKET_REFUSED { code: "unknown", message: "the stream ticket names no viewer", ticket: @entity.ticket })
+            (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @owner })))
         (emit TICKET_PUMP {})
       TICKET_NOT_SPENT -> idle
         (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent", ticket: @entity.ticket })

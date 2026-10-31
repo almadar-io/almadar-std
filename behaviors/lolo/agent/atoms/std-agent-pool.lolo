@@ -1,8 +1,8 @@
 app std-agent-pool [
   version: "1.0.0",
   description: "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, fields, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors.",
-  egress: ["http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"],
-  net: { "openrouter.ai:443": [tcp] },
+  net: { "openrouter.ai:443": [tcp], env STORAGE_S3_HOST, 443: [tcp] },
+  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"]
 ]
 ;; @capabilities "behavior pool, shared generated content, retrieve by meaning, reuse generated behaviors, quality signals, retire bad content"
 
@@ -39,6 +39,10 @@ uses Http from "std/behaviors/std-http-client"
 uses Delay from "std/behaviors/std-delay"
 uses Storage from "std/behaviors/std-storage"
 
+type HttpHeader = { name : string!, value : string! }
+type StorageFile = { name : string, size : number, type : string, content : string }
+type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
+type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
 orbital AgentPoolOrbital {
   config {
     pool : string = "default"
@@ -161,7 +165,7 @@ orbital AgentPoolOrbital {
         contentType : string!
         acl : string!
         maxSize : number!
-        batch : string!
+        batch : StorageBatch?
       }
       STORAGE_PUT {
         mode : string!
@@ -170,11 +174,94 @@ orbital AgentPoolOrbital {
         b64 : string!
         contentType : string!
         size : number!
+        etag : string!
         isPublic : boolean!
         fileName : string!
         fileSize : number!
         fileKind : string!
-        batch : string!
+        batch : StorageBatch?
+      }
+      STORAGE_BATCH_NEXT {
+        batch : StorageBatch!
+      }
+      AgentPoolCall.STORAGE_BATCH_DONE -> STORAGE_BATCH_NEXT
+    }
+  }
+
+  trait AgentPoolGate = Storage.traits.StorageGate {
+    listens {
+      STORAGE_REQUEST {
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+      }
+      STORAGE_ENV_HOST {
+        value : string
+      }
+      STORAGE_ENV_REGION {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_HOST_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_REGION_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      AgentPoolStorage.STORAGE_REQUEST -> STORAGE_REQUEST
+    }
+
+  }
+
+  trait AgentPoolCall = Storage.traits.StorageCall {
+    listens {
+      STORAGE_CALL_READY {
+        key : string!
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+        hostText : string!
+        keyId : string!
+        authority : string!
+        origin : string!
+        region : string!
       }
       STORAGE_PUT_REPLIED {
         status : number!
@@ -182,35 +269,32 @@ orbital AgentPoolOrbital {
         body : string!
         key : string!
       }
-      STORAGE_PUT_PRESIGNED {
-        url : string!
-        key : string!
-      }
-      STORAGE_PUT_DONE {
-        url : string!
-        state : string!
-      }
-      STORAGE_BATCH_NEXT {
-        batch : string!
-      }
       STORAGE_DOWNLOAD_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_LIST_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
       }
       STORAGE_DELETE_REPLIED {
         status : number!
         headers : Map string string
         body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
       }
       STORAGE_SIGNED_REPLIED {
         url : string!
-        key : string
       }
       STORAGE_HTTP_ERROR {
         text : string!
@@ -218,10 +302,109 @@ orbital AgentPoolOrbital {
       STORAGE_HTTP_FAILED {
         error : string!
         kind : string!
-        credential : string
-        key : string
+        key : string!
       }
+      STORAGE_SIGN_FAILED {
+        mode : string!
+        message : string!
+      }
+      STORAGE_SIGN {
+        tag : string!
+        mode : string!
+        method : string!
+        bucket : string!
+        key : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+      }
+      STORAGE_SIGN_KEY {
+        day : string!
+        region : string!
+        service : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_SIGN_KEYED {
+        kDate : string!
+        signing : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      STORAGE_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      STORAGE_CLEAR
+      AgentPoolGate.STORAGE_READY -> STORAGE_CALL_READY per @payload.key
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_PUT_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "put:")
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_DOWNLOAD_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: ?key } when (str/startsWith ?key "download:")
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_LIST_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "list:")
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_DELETE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "delete:")
+      AgentPoolHttp.STORAGE_NET_FAILED -> STORAGE_HTTP_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      AgentPoolTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_HTTP_FAILED per @payload.key with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
+      AgentPoolRetry.STORAGE_RUN_ATTEMPT -> STORAGE_ATTEMPT per @payload.key
+      AgentPoolRetry.STORAGE_RUN_GAVE_UP -> STORAGE_GAVE_UP per @payload.key
     }
+
+  }
+
+  trait AgentPoolKeyed = Storage.traits.StorageKeyed {
+    listens {
+      AgentPoolCall.STORAGE_HTTP_SEND -> STORAGE_NET_SEND
+      AgentPoolTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_NET_CANCEL with { key: ?key }
+      AgentPoolKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+
+  }
+
+  trait AgentPoolHttp = Storage.traits.StorageHttp {
+    listens {
+      AgentPoolKeyed.KEYED_SEND -> STORAGE_NET_ROW_SEND per @payload.key
+      AgentPoolKeyed.KEYED_CANCEL -> STORAGE_NET_ROW_CANCEL per @payload.key
+    }
+
+  }
+
+  trait AgentPoolTimeout = Storage.traits.StorageTimeout {
+    listens {
+      AgentPoolCall.STORAGE_HTTP_SEND -> STORAGE_CLOCK_START per @payload.key with { key: (as ?key CallKey) }
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_CLOCK_SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+      AgentPoolHttp.STORAGE_NET_FAILED -> STORAGE_CLOCK_FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+    }
+
+  }
+
+  trait AgentPoolRetry = Storage.traits.StorageRetry {
+    listens {
+      AgentPoolCall.STORAGE_RETRY_START -> STORAGE_RUN_START per @payload.key
+      AgentPoolCall.STORAGE_RETRY_FAILED -> STORAGE_RUN_FAILED per @payload.key
+      AgentPoolCall.STORAGE_RETRY_END -> STORAGE_RUN_CANCEL per @payload.key
+      AgentPoolHttp.STORAGE_NET_REPLIED -> STORAGE_RUN_SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (= ?status 429) (= ?status 500) (= ?status 502) (= ?status 503) (= ?status 504)))
+    }
+
   }
 
   trait AgentPoolWriter -> AgentPoolHost [optimistic] {
@@ -358,8 +541,9 @@ orbital AgentPoolOrbital {
         @synonyms "pool, save generated, keep behavior"
       AgentPoolLlm.LLM_EMBED_RESULT -> EMBEDDED
       AgentPoolLlm.LLM_FAILED -> EMBED_FAILED
-      AgentPoolStorage.STORAGE_UPLOADED -> UPLOADED
+      AgentPoolCall.STORAGE_UPLOADED -> UPLOADED
       AgentPoolStorage.STORAGE_FAILED -> STORAGE_REJECTED
+      AgentPoolCall.STORAGE_FAILED -> STORAGE_REJECTED
       UPLOADED {
         key : string!
       }
@@ -520,4 +704,6 @@ orbital AgentPoolOrbital {
   }
 
   page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, PoolEmbedWait, PoolEmbedRequest, PoolEmbedHttp, AgentPoolStorage
+
+  page boot as AgentPoolStorageBoot -> AgentPoolGate, AgentPoolCall, AgentPoolKeyed, AgentPoolHttp, AgentPoolTimeout, AgentPoolRetry
 }

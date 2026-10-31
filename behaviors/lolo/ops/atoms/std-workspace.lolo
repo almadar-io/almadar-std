@@ -3,7 +3,9 @@ app std-workspace [
   description: "std-workspace — a viewer's project workspace as a git repository, run entirely by the kernel's os/ effects (no host provider). Requests are queued and run one at a time: tree, read, write and remove a file, snapshot (a commit), history with undo/redo flags, the file changes of one snapshot, and restore, undo and redo (each a new commit carrying its own trailer). A workspace lives at <root>/<owner>/<workspace>, where owner and workspace are reversible one-segment encodings, and is found again by the appId in its .almadar/app-marker.json. Which workspaces a viewer may open is declared: scope own opens any id inside the viewer's own owner directory, scope listed also requires the viewer and workspace in the access knob. Every git call is os/spawn git with -C naming the workspace directory. Store disk keeps the workspaces only under root. Store bucket treats root as a cache: a cold workspace is restored from workspaces/<owner>/<workspace>/files/ and its git history from the base and incremental bundles under .../history/, and every write, remove, snapshot, restore, undo and redo is mirrored back through the WorkspaceStore trait (std-storage over SigV4: Google Cloud Storage's S3 interoperability endpoint with HMAC keys, or any S3-compatible service). A file that is not valid UTF-8 text answers WORKSPACE_READ_FAILED with code not-text. Needs fs read and create on the root, the exec grant for git and, in bucket mode, the storage origin in egress. Residual authority: the exec grant is for the git executable, and the grant checks only git's working directory, so git itself can reach any path through its arguments; the atom's own owner/workspace/path/oid checks, not a grant, confine them to the workspace.",
   fs: { "/var/lib/almadar/workspaces/**": [read, write, create, remove] },
   egress: ["https://storage.googleapis.com"],
-  exec: ["git"]
+  exec: ["git"],
+  env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"],
+  net: { env STORAGE_S3_HOST, 443: [tcp] }
 ]
 type WorkspaceStep = { scope : "root" | "repo", args : [string], stdin : string, feed : boolean, tolerate : boolean, raw : boolean }
 type WorkspaceRequest = { action : string, workspace : string, user : string, path : string, content : string, reason : string, oid : string, limit : number }
@@ -17,6 +19,10 @@ type WalkItem = { path : string, kind : string }
 type WalkEntry = { name : string, kind : string }
 type WorkspaceFileData = { path : string }
 type WorkspaceAccess = { user : string!, workspaces : [string]! }
+type HttpHeader = { name : string!, value : string! }
+type StorageFile = { name : string, size : number, type : string, content : string }
+type StorageItem = { id : string, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
+type StorageBatch = { files : [StorageFile]!, idx : number!, acl : string!, maxSize : number!, bucket : string!, items : [StorageItem]! }
 orbital WorkspaceOrbital {
   uses Storage from "std/behaviors/std-storage"
   uses Cli from "std/behaviors/std-cli"
@@ -1089,7 +1095,7 @@ orbital WorkspaceOrbital {
       }
         @description "Redo the newest live undo."
         @synonyms "step forward"
-      WorkspaceStore.STORAGE_UPLOADED -> WS_B_UPLOADED
+      WorkspaceCall.STORAGE_UPLOADED -> WS_B_UPLOADED
       WS_B_UPLOADED {
         key : string
         size : number
@@ -1097,25 +1103,26 @@ orbital WorkspaceOrbital {
         url : string
       }
         @description "Bucket mode: the store accepted an object."
-      WorkspaceStore.STORAGE_DOWNLOADED -> WS_B_DOWNLOADED
+      WorkspaceCall.STORAGE_DOWNLOADED -> WS_B_DOWNLOADED
       WS_B_DOWNLOADED {
         content : bytes!
         size : number
       }
         @description "Bucket mode: an object's bytes as base64."
-      WorkspaceStore.STORAGE_LISTED -> WS_B_LISTED
+      WorkspaceCall.STORAGE_LISTED -> WS_B_LISTED
       WS_B_LISTED {
         keys : [WorkspaceKey]!
         truncated : boolean!
         nextToken : string
       }
         @description "Bucket mode: one page of keys."
-      WorkspaceStore.STORAGE_DELETED -> WS_B_DELETED
+      WorkspaceCall.STORAGE_DELETED -> WS_B_DELETED
       WS_B_DELETED {
         deleted : boolean
       }
         @description "Bucket mode: the object is deleted."
       WorkspaceStore.STORAGE_FAILED -> WS_B_FAILED
+      WorkspaceCall.STORAGE_FAILED -> WS_B_FAILED
       WS_B_FAILED {
         code : string
         message : string!
@@ -1197,8 +1204,262 @@ orbital WorkspaceOrbital {
         continuationToken : string
         requestId : string
       }
+      STORAGE_RESOLVE {
+        mode : string!
+        bucket : string!
+        hasFile : boolean!
+        fileName : string!
+        fileSize : number!
+        fileType : string!
+        hasContent : boolean!
+        raw : string!
+        key : string!
+        contentType : string!
+        acl : string!
+        maxSize : number!
+        batch : StorageBatch?
+      }
+      STORAGE_PUT {
+        mode : string!
+        bucket : string!
+        key : string!
+        b64 : string!
+        contentType : string!
+        size : number!
+        etag : string!
+        isPublic : boolean!
+        fileName : string!
+        fileSize : number!
+        fileKind : string!
+        batch : StorageBatch?
+      }
+      STORAGE_BATCH_NEXT {
+        batch : StorageBatch!
+      }
+      WorkspaceCall.STORAGE_BATCH_DONE -> STORAGE_BATCH_NEXT
     }
   }
 
+  trait WorkspaceGate = Storage.traits.StorageGate {
+    listens {
+      STORAGE_REQUEST {
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+      }
+      STORAGE_ENV_HOST {
+        value : string
+      }
+      STORAGE_ENV_REGION {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID {
+        value : string
+      }
+      STORAGE_ENV_KEY_ID_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_HOST_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      STORAGE_ENV_REGION_UNREAD {
+        error : string
+        kind : string
+        key : string
+      }
+      WorkspaceStore.STORAGE_REQUEST -> STORAGE_REQUEST
+    }
+
+  }
+
+  trait WorkspaceCall = Storage.traits.StorageCall {
+    listens {
+      STORAGE_CALL_READY {
+        key : string!
+        verb : string!
+        method : string!
+        bucket : string!
+        objKey : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+        putMode : string!
+        putSize : number!
+        putPublic : boolean!
+        putFileName : string!
+        putFileSize : number!
+        putFileKind : string!
+        putEtag : string!
+        batch : StorageBatch?
+        hostText : string!
+        keyId : string!
+        authority : string!
+        origin : string!
+        region : string!
+      }
+      STORAGE_PUT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_DOWNLOAD_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_LIST_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_DELETE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
+      }
+      STORAGE_SIGNED_REPLIED {
+        url : string!
+      }
+      STORAGE_HTTP_ERROR {
+        text : string!
+      }
+      STORAGE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      STORAGE_SIGN_FAILED {
+        mode : string!
+        message : string!
+      }
+      STORAGE_SIGN {
+        tag : string!
+        mode : string!
+        method : string!
+        bucket : string!
+        key : string!
+        query : [HttpHeader]!
+        headers : [HttpHeader]!
+        b64 : string!
+        expires : number!
+      }
+      STORAGE_SIGN_KEY {
+        day : string!
+        region : string!
+        service : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_SIGN_KEYED {
+        kDate : string!
+        signing : string!
+        tag : string!
+        mode : string!
+        method : string!
+        target : string!
+        origin : string!
+        headers : [HttpHeader]!
+        b64 : string!
+        sts : string!
+        signedNames : string!
+        scope : string!
+      }
+      STORAGE_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+      STORAGE_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+      STORAGE_CLEAR
+      WorkspaceGate.STORAGE_READY -> STORAGE_CALL_READY per @payload.key
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_PUT_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "put:")
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_DOWNLOAD_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: ?key } when (str/startsWith ?key "download:")
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_LIST_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "list:")
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_DELETE_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key } when (str/startsWith ?key "delete:")
+      WorkspaceHttp.STORAGE_NET_FAILED -> STORAGE_HTTP_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      WorkspaceTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_HTTP_FAILED per @payload.key with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
+      WorkspaceRetry.STORAGE_RUN_ATTEMPT -> STORAGE_ATTEMPT per @payload.key
+      WorkspaceRetry.STORAGE_RUN_GAVE_UP -> STORAGE_GAVE_UP per @payload.key
+    }
+
+  }
+
+  trait WorkspaceKeyed = Storage.traits.StorageKeyed {
+    listens {
+      WorkspaceCall.STORAGE_HTTP_SEND -> STORAGE_NET_SEND
+      WorkspaceTimeout.STORAGE_CLOCK_TIMED_OUT -> STORAGE_NET_CANCEL with { key: ?key }
+      WorkspaceKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+
+  }
+
+  trait WorkspaceHttp = Storage.traits.StorageHttp {
+    listens {
+      WorkspaceKeyed.KEYED_SEND -> STORAGE_NET_ROW_SEND per @payload.key
+      WorkspaceKeyed.KEYED_CANCEL -> STORAGE_NET_ROW_CANCEL per @payload.key
+    }
+
+  }
+
+  trait WorkspaceTimeout = Storage.traits.StorageTimeout {
+    listens {
+      WorkspaceCall.STORAGE_HTTP_SEND -> STORAGE_CLOCK_START per @payload.key with { key: (as ?key CallKey) }
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_CLOCK_SUCCEEDED per @payload.key with { key: (as ?key CallKey) }
+      WorkspaceHttp.STORAGE_NET_FAILED -> STORAGE_CLOCK_FAILED per @payload.key with { key: (as ?key CallKey), error: ?error }
+    }
+
+  }
+
+  trait WorkspaceRetry = Storage.traits.StorageRetry {
+    listens {
+      WorkspaceCall.STORAGE_RETRY_START -> STORAGE_RUN_START per @payload.key
+      WorkspaceCall.STORAGE_RETRY_FAILED -> STORAGE_RUN_FAILED per @payload.key
+      WorkspaceCall.STORAGE_RETRY_END -> STORAGE_RUN_CANCEL per @payload.key
+      WorkspaceHttp.STORAGE_NET_REPLIED -> STORAGE_RUN_SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (= ?status 429) (= ?status 500) (= ?status 502) (= ?status 503) (= ?status 504)))
+    }
+
+  }
+
   page boot as WorkspacePage -> WorkspaceClient, WorkspaceStore, WorkspaceGit, WorkspaceSteps
+
+  page boot as WorkspaceStorageBoot -> WorkspaceGate, WorkspaceCall, WorkspaceKeyed, WorkspaceHttp, WorkspaceTimeout, WorkspaceRetry
 }

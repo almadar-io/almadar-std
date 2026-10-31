@@ -465,6 +465,58 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-saved-ticket-with-no-expiry-is-refused-not-minted",
+   "note": "TICKET_SAVED arrives with no mint in flight, so expiresAt was never set: the mint is refused as a store failure",
+   "steps": [
+    {
+     "event": "TICKET_SAVED",
+     "payload": {
+      "id": "tk9"
+     },
+     "from": "saving",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "store"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TICKET_MINTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-spent-ticket-with-no-holder-is-refused-not-taken",
+   "note": "TICKET_SPENT arrives with no stored ticket read, so holder was never set: the take is refused",
+   "steps": [
+    {
+     "event": "TICKET_SPENT",
+     "payload": {
+      "id": "tk9"
+     },
+     "from": "spending",
+     "expect": {
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "unknown"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TICKET_TAKEN"
+      ]
+     }
+    }
+   ]
   }
  ]
 }
