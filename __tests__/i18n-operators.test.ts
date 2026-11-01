@@ -6,8 +6,10 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { pathToFileURL } from 'node:url';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   checkI18nCoverage,
   getVocabulary,
@@ -19,6 +21,7 @@ import {
   type LanguageCode,
   type OperatorTables,
 } from '@almadar/core/i18n';
+import { installKernelEvaluator, type KernelEvaluatorExports } from '@almadar/core';
 import { readVocabularyPacks } from '@almadar/core/language-data';
 
 const PKG_ROOT = join(import.meta.dirname, '..');
@@ -30,7 +33,18 @@ function canonicalOperatorNames(): string[] {
   return Object.keys(canonical.operators);
 }
 
+interface WasmGlue extends KernelEvaluatorExports {
+  initSync(input: { module: Buffer }): void;
+}
+
 describe('i18n operator tables', () => {
+  beforeAll(async () => {
+    const resolveInstalled = createRequire(import.meta.url).resolve;
+    const glue: WasmGlue = await import(/* @vite-ignore */ pathToFileURL(resolveInstalled('@almadar/kernel')).href);
+    glue.initSync({ module: readFileSync(resolveInstalled('@almadar/kernel/kernel.wasm')) });
+    installKernelEvaluator(glue);
+  });
+
   it('English + every first-party pack pass the coverage gate against canonical-operators.json', () => {
     for (const pack of readVocabularyPacks(PKG_ROOT, join(PKG_ROOT, '.no-user-store'))) registerVocabulary(pack.vocabulary);
     const langs = installedLanguages();
