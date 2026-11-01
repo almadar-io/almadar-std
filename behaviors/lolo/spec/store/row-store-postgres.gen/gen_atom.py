@@ -160,6 +160,8 @@ def IF(c, a, b):
 SET = lambda f, v: '(set @entity.' + f + ' ' + v + ')'
 EMIT = lambda ev, payload=None: '(emit ' + ev + (' ' + payload if payload else '') + ')'
 EMPTY_BYTES = '(bytes/from-string "")'
+REPLY_WAIT = '(emit REPLY_WAIT { key: "recv", delayMs: @config.replyTimeoutMs })'
+REPLY_DONE = '(emit REPLY_WAIT_DONE { key: "recv" })'
 RECV = '(os/recv @entity.sock @config.recvBytes { key: "recv" emit: { success: PG_RECEIVED, failure: PG_IO_FAILED } })'
 
 
@@ -175,6 +177,8 @@ def flat(effects):
     for e in effects:
         if isinstance(e, (list, tuple)):
             out.extend(flat(e))
+        elif e == RECV:
+            out.extend([e, REPLY_WAIT])
         else:
             out.append(e)
     return out
@@ -201,7 +205,8 @@ PROOF_UNSET = 'the SCRAM exchange produced no proof'
 
 def tr(event, target, when=None, effects=()):
     head = '      ' + event + ' -> ' + target + ((' when ' + when) if when else '')
-    return '\n'.join([head] + ['        ' + e for e in guarded(effects)])
+    lead = {'PG_RECEIVED': [REPLY_DONE, SET('timedOut', '(and @entity.timedOut @payload.eof)')], 'PG_IO_FAILED': [REPLY_DONE]}.get(event, [])
+    return '\n'.join([head] + ['        ' + e for e in lead + guarded(effects)])
 
 
 def stg(*names):
@@ -502,8 +507,10 @@ WRITE_KINDS = '(array/includes ["created", "updated", "deleted"] (object/get @pa
 NOSOCK = '(< @entity.sock 0)'
 HASSOCK = '(>= @entity.sock 0)'
 
+TIMEOUT_MSG = '(str/concat "the server did not reply within " @config.replyTimeoutMs " ms")'
 FAIL_CLOSE = lambda m: ['(os/close @entity.sock { key: "close" emit: { success: PG_CLOSED, failure: PG_CLOSED } })', SET('sock', '-1'), SET('inbox', EMPTY_BYTES),
-                        EMIT('STORE_FAILED', '{ key: @entity.key, message: ' + m + ' }')]
+                        '(if @entity.timedOut (if (= @entity.op "sql") (emit SQL_FAILED { key: @entity.key, kind: "timeout", code: "", message: ' + TIMEOUT_MSG + ' }) (emit STORE_FAILED { key: @entity.key, message: ' + TIMEOUT_MSG + ' })) (emit STORE_FAILED { key: @entity.key, message: ' + m + ' }))',
+                        SET('timedOut', 'false')]
 FAIL_KEEP = lambda m: [EMIT('STORE_FAILED', '{ key: @entity.key, message: ' + m + ' }')]
 DECLINE = lambda r: [EMIT('STORE_UNSUPPORTED', '{ key: @entity.key, reason: ' + r + ' }')]
 SENT = lambda: [EMIT('PG_WIRE_SENT', '{ stage: @entity.stage, sql: @entity.sql, params: @entity.params, frame: @entity.frame }'),
@@ -1203,6 +1210,7 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     pwLen : number @description "The byte length of the login password, read by the kernel from the password credential; -1 when it is not held" = -1
     dbName : string @description "The database read from the connection URL" = ""
     sock : number @description "The held session's socket; below zero while no session is open" = -1
+    timedOut : boolean @description "Whether the pending reply read passed replyTimeoutMs, so the failure that follows answers as a timeout" = false
     inbox : bytes @description "Bytes received and not yet consumed as whole messages" = ""
     nonce : string @description "The SCRAM client nonce" = ""
     scram : string @description "The server signature the SCRAM server-final must carry" = ""
@@ -1270,6 +1278,11 @@ CONFIG = '''    config {
       recvBytes : number = 16384
         @label "Read size"
         @description "The most bytes one os/recv takes."
+        @tier "infra"
+      replyTimeoutMs : number = 5000
+        @label "Reply wait (ms)"
+        @description "How long a pending reply read may wait for the server before the connection is shut down and the ask in flight fails as a timeout (kind timeout on SQL_FAILED, stated in the message of STORE_FAILED, which carries no kind). Not the server-side statement timeout."
+        @synonyms "reply timeout, read timeout, socket timeout, command timeout"
         @tier "infra"
       queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, indexes: "runtime" }
         @description "What query the store pushes down: every leaf and combinator, any orderable field, a window, an exact total and an ids-only projection; nearest is not pushed down."
@@ -1359,28 +1372,69 @@ for name in sorted(_used):
     fields = INTERNAL.get(name, '')
     body = ('\n        ' + fields + '\n      ') if fields else ' '
     EMITS += '      ' + name + ' -> internal {' + body + '}\n        @tier "internal"\n'
+EMITS += '''      REPLY_WAIT -> external {
+        key : string!
+        delayMs : number!
+      }
+        @description "A reply read is pending: arm its deadline (std-delay START) for replyTimeoutMs."
+        @tier "secondary"
+      REPLY_WAIT_DONE -> external {
+        key : string!
+      }
+        @description "The reply read completed or failed: disarm its deadline (std-delay CANCEL)."
+        @tier "secondary"
+      REPLY_SHUT {
+      }
+        @description "Internal: the connection whose reply passed its deadline was shut down; its pending read now fails."
+        @tier "internal"
+'''
 EMITS += '    }\n'
 
+TIMER_LISTENS = '''      REPLY_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+        @description "A reply read's deadline passed."
+      REPLY_SHUT {
+      }
+'''
+PENDING = ['negotiating', 'startup', 'discovering', 'beginning', 'committing', 'rolling-back', 'running']
+ELAPSED_NOW = '(= (default @payload.key "") "recv")'
+def timer_arms(name):
+    if name in PENDING:
+        arms = [tr('REPLY_TIMER_ELAPSED', name, ELAPSED_NOW, [SET('timedOut', 'true'), '(os/shutdown @entity.sock { key: "shut", emit: { success: REPLY_SHUT, failure: REPLY_SHUT } })']),
+                tr('REPLY_TIMER_ELAPSED', name, '(!= (default @payload.key "") "recv")', [])]
+    else:
+        arms = [tr('REPLY_TIMER_ELAPSED', name, None, [])]
+    return '\n'.join(arms + [tr('REPLY_SHUT', name, None, [])])
+def with_timer(b):
+    if not b.lstrip().startswith('state '):
+        return b
+    name = b.lstrip().split()[1]
+    return b.replace('\n\n', '\n' + timer_arms(name) + '\n\n', 1)
+blocks = [with_timer(b) for b in blocks]
+
 LISTENS = '''    listens {
+      ReplyTimer.ELAPSED -> REPLY_TIMER_ELAPSED
       ROW_READ -> input {
         key : string!
         entityType : string!
         id : string!
-        collection : string
+        collection : string?
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
       ROW_LIST -> input {
         key : string!
         entityType : string!
-        collection : string
+        collection : string?
       }
         @description "List every row of an entity type."
         @tier "internal"
       ROWS_SQL -> input {
         key : string!
         sql : string!
-        params : [RowCell?]
+        params : [RowCell?]?
       }
         @description "Run one statement as given on the held session, binds $1, $2, ... sent as text: the answer is SQL_ROWS with the rows as maps of column name to value, the command's row count and the result columns with their type OIDs. The statement is not checked here: the caller owns the read-only guard."
         @tier "internal"
@@ -1389,14 +1443,14 @@ LISTENS = '''    listens {
         entityType : string!
         query : RowQuery!
         project : "rows" | "ids"
-        collection : string
+        collection : string?
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
-        collections : Map string string
+        collections : (Map string string)?
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"
@@ -1410,10 +1464,12 @@ LISTENS = '''    listens {
     }
 '''
 
-header = 'app std-row-store-postgres [\n  version: "1.0.0",\n  net: { "postgres.example.test:5432": [tcp] },\n  description: ' + S(DESCRIPTION) + '\n]\nuses Spec from "almadar-std/row-store-postgres"\n\n'
-body = ('orbital RowStorePostgresOrbital {\n' + types_block + LOCAL_TYPES + '\n' + ENTITY + '\n'
+LISTENS = LISTENS[:-len('    }\n')] + TIMER_LISTENS + '    }\n'
+TIMER_TRAIT = '  trait ReplyTimer = Delay.traits.Delay {\n    listens {\n      RowStoreDriver.REPLY_WAIT -> START\n      RowStoreDriver.REPLY_WAIT_DONE -> CANCEL\n    }\n  }\n\n'
+header = 'app std-row-store-postgres [\n  version: "1.0.0",\n  net: { "postgres.example.test:5432": [tcp] },\n  description: ' + S(DESCRIPTION) + '\n]\nuses Spec from "almadar-std/row-store-postgres"\nuses Delay from "std/behaviors/std-delay"\n\n'
+body = ('orbital RowStorePostgresOrbital {\n' + types_block + LOCAL_TYPES + '\n' + ENTITY + '\n' + TIMER_TRAIT +
         '  trait RowStoreDriver -> RowStoreFlight [optimistic] {\n    initial: ready\n\n' + CONFIG + '\n'
-        + '\n\n'.join(blocks) + '\n\n' + EMITS + '\n' + LISTENS + '  }\n\n  page boot as RowStorePostgresStart -> RowStoreDriver\n}\n')
+        + '\n\n'.join(blocks) + '\n\n' + EMITS + '\n' + LISTENS + '  }\n\n  page boot as RowStorePostgresStart -> RowStoreDriver, ReplyTimer\n}\n')
 text = header + body
 bad = []
 for i, l in enumerate(text.split('\n'), 1):
@@ -1435,8 +1491,8 @@ fixture = ('app row-store-postgres-fixture [\n  version: "1.0.0",\n  net: { "pos
            '  description: "Replay fixture for std-row-store-postgres: composes the driver with sslmode prefer, the mode the twin goldens were recorded under. sslmode is a required knob, so the atom alone has no value for it."\n]\n'
            ';; Generated by spec/store/row-store-postgres.gen/gen_atom.py; regenerate, never hand-edit.\n\n'
            'orbital RowStorePostgresFixtureOrbital {\n  uses Pg from "std/behaviors/std-row-store-postgres"\n\n' + types_block + LOCAL_TYPES + '\n' + ENTITY + '\n'
-           '  trait RowStoreDriver = Pg.traits.RowStoreDriver -> RowStoreFlight {\n    config {\n      sslmode: "prefer"\n      statementTimeoutMs: 10000\n    }\n  }\n\n'
-           '  page boot as RowStorePostgresFixtureStart -> RowStoreDriver\n}\n')
+           '  trait ReplyTimer = Pg.traits.ReplyTimer {\n  }\n\n  trait RowStoreDriver = Pg.traits.RowStoreDriver -> RowStoreFlight {\n    config {\n      sslmode: "prefer"\n      statementTimeoutMs: 10000\n    }\n  }\n\n'
+           '  page boot as RowStorePostgresFixtureStart -> RowStoreDriver, ReplyTimer\n}\n')
 open(FIX_OUT, 'w').write(fixture)
 print(len(fixture), 'fixture bytes written')
 
@@ -1457,12 +1513,26 @@ PG_CLIENT = '''  trait PostgresSession = Pg.traits.RowStoreDriver -> RowStoreFli
       statementTimeoutMs: 10000
     }
     listens {
+      PostgresReplyTimer.ELAPSED -> REPLY_TIMER_ELAPSED
+      REPLY_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+      REPLY_SHUT {
+      }
       PostgresClient.ROWS_SQL -> ROWS_SQL
       ROWS_SQL {
         key : string!
         sql : string!
         params : [RowCell?]
       }
+    }
+  }
+
+  trait PostgresReplyTimer = Pg.traits.ReplyTimer {
+    listens {
+      PostgresSession.REPLY_WAIT -> START
+      PostgresSession.REPLY_WAIT_DONE -> CANCEL
     }
   }
 
@@ -1541,7 +1611,7 @@ PG_CLIENT = '''  trait PostgresSession = Pg.traits.RowStoreDriver -> RowStoreFli
     listens {
       PG_QUERY -> input {
         sql : string!
-        params : [RowCell?]
+        params : [RowCell?]?
       }
         @description "Run one read-only SELECT; params bind $1, $2, ... in order."
         @synonyms "run query, select rows, read from database"
@@ -1577,6 +1647,6 @@ pg_text = ('app std-postgres [\n  version: "1.0.0",\n  net: { "postgres.example.
            'uses Pg from "std/behaviors/std-row-store-postgres"\nuses Guard from "std/behaviors/std-sql-select-guard"\n\n'
            'orbital PostgresOrbital {\n' + types_block + LOCAL_TYPES + '  type SqlGuardVerdict = { ok : boolean!, reason : string! }\n\n' + ENTITY + '\n'
            '  entity PostgresCall [runtime] {\n    id : string!\n    pendingSql : string = ""\n    pendingParams : [RowCell?] = []\n  }\n\n'
-           + PG_CLIENT + '\n  page boot as PostgresPage -> PostgresClient, PostgresSession, PostgresGuard\n}\n')
+           + PG_CLIENT + '\n  page boot as PostgresPage -> PostgresClient, PostgresSession, PostgresReplyTimer, PostgresGuard\n}\n')
 open(PG_OUT, 'w').write(pg_text)
 print(len(pg_text), 'std-postgres bytes written')

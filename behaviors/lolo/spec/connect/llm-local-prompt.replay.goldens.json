@@ -1,0 +1,174 @@
+{
+  "atom": "connect/atoms/std-llm-local.lolo",
+  "trait": "LlmLocalClient",
+  "cases": [
+    {
+      "id": "raw-prompt-preserves-schema-and-call-key",
+      "steps": [
+        {
+          "trait": "LlmLocalClient",
+          "from": "idle",
+          "entity": {
+            "id": "local"
+          },
+          "event": "LLM_PROMPT",
+          "payload": {
+            "text": "Extract",
+            "schema": "{}",
+            "key": "request-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "emit",
+                "arg0": "LLM_LOCAL_ASK"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "prompt-reply-stays-text-for-caller-validation",
+      "steps": [
+        {
+          "trait": "LlmLocalClient",
+          "from": "idle",
+          "entity": {
+            "id": "local"
+          },
+          "event": "LLM_LOCAL_REPLIED",
+          "payload": {
+            "job": "{\"action\": \"prompt\", \"categories\": [], \"itemIds\": [], \"count\": 0, \"callKey\": \"request-1\"}",
+            "reply": "not valid json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "emit",
+                "arg0": "LLM_PROMPT_RESULT"
+              }
+            ],
+            "emits": [
+              {
+                "event": "LLM_PROMPT_RESULT",
+                "payload": {
+                  "key": "request-1",
+                  "reply": "not valid json"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-prompt-key-is-refused-before-model-call",
+      "steps": [
+        {
+          "event": "LLM_PROMPT",
+          "payload": {
+            "key": "",
+            "text": "x",
+            "schema": "{}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "key": "",
+                  "action": "prompt",
+                  "code": "VALIDATION_ERROR"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_LOCAL_ASK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "prompt-failure-keeps-caller-key",
+      "steps": [
+        {
+          "entity": {
+            "id": "local",
+            "pending": [
+              {
+                "key": "request-1",
+                "job": "{\"action\": \"prompt\", \"callKey\": \"request-1\"}"
+              }
+            ]
+          },
+          "event": "LLM_LOCAL_FAILED",
+          "payload": {
+            "key": "request-1",
+            "error": "Model unavailable",
+            "kind": "unavailable"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "key": "request-1",
+                  "action": "prompt",
+                  "message": "Model unavailable",
+                  "code": "MODEL_UNAVAILABLE"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_PROMPT_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "prompt-cancel-completion-keeps-caller-key",
+      "steps": [
+        {
+          "entity": {
+            "id": "local",
+            "pending": [
+              {
+                "key": "request-1",
+                "job": "{\"action\": \"prompt\", \"callKey\": \"request-1\"}"
+              }
+            ]
+          },
+          "event": "LLM_LOCAL_CANCELLED",
+          "payload": {
+            "key": "request-1"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_CANCELLED",
+                "payload": {
+                  "key": "request-1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_PROMPT_RESULT",
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

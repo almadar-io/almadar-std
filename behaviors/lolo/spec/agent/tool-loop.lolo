@@ -12,7 +12,7 @@ orbital AgentToolLoopSpec {
   }
   expects trait AgentToolLoop {
     state idle
-    state preparing
+    state preparing @holds (array/every @config.tools (fn t (if (object/has @t "read") (validate/pattern (str/concat "read__" (object/get @t "read")) "^[a-zA-Z0-9_-]{1,64}$") (if (object/has @t "event") (validate/pattern (str/replaceAll (object/get @t "event") "." "__") "^[a-zA-Z0-9_-]{1,64}$") true))))
     state thinking
     state running
     state awaitingResult {

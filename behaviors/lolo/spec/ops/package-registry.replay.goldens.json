@@ -739,6 +739,669 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-key-the-verifier-cannot-check-fails-closed-503-and-publishes-nothing",
+   "steps": [
+    {
+     "event": "PACKAGE_PUBLISH",
+     "payload": {
+      "requestId": 7,
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "token": "sk_live_abc",
+      "tarball": "YWJj"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 0,
+       "op": "",
+       "name": "",
+       "version": "",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_KEY",
+        "payload": {
+         "requestId": 7,
+         "token": "sk_live_abc"
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 503
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH",
+       "PACKAGE_PUBLISHED"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ApiKeys"
+   ]
+  },
+  {
+   "id": "publish-without-a-bearer-is-401",
+   "steps": [
+    {
+     "event": "PACKAGE_PUBLISH",
+     "payload": {
+      "requestId": 7,
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "tarball": "YWJj"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 0,
+       "op": "",
+       "name": "",
+       "version": "",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_KEY",
+        "payload": {
+         "requestId": 7,
+         "token": ""
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH",
+       "PACKAGE_PUBLISHED"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ApiKeys"
+   ]
+  },
+  {
+   "id": "a-yank-key-the-verifier-cannot-check-fails-closed-503",
+   "steps": [
+    {
+     "event": "PACKAGE_YANK",
+     "payload": {
+      "requestId": 7,
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "token": "sk_live_abc"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 0,
+       "op": "",
+       "name": "",
+       "version": "",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_KEY",
+        "payload": {
+         "requestId": 7,
+         "token": "sk_live_abc"
+        }
+       },
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 503
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ApiKeys"
+   ]
+  },
+  {
+   "id": "a-live-key-on-publish-is-hashed-stored-and-published",
+   "steps": [
+    {
+     "event": "REG_KEY_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "owner": "ci",
+      "claims": []
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REG_HASH",
+        "payload": {
+         "requestId": "7",
+         "data": "YWJj",
+         "encoding": "hex"
+        }
+       },
+       {
+        "event": "PACKAGE_PUBLISHED",
+        "payload": {
+         "requestId": 7,
+         "name": "pkg-a",
+         "version": "1.0.0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PACKAGE_REFUSED"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "Digest"
+   ]
+  },
+  {
+   "id": "a-live-key-on-yank-reaches-the-version-lookup-so-an-absent-version-is-404-not-401",
+   "steps": [
+    {
+     "event": "REG_KEY_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "owner": "ci",
+      "claims": []
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 7,
+       "op": "yank",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 404,
+         "code": "NOT_FOUND"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-live-key-with-an-empty-publish-body-is-400",
+   "steps": [
+    {
+     "event": "REG_KEY_VERIFIED",
+     "payload": {
+      "requestId": 7,
+      "owner": "ci",
+      "claims": []
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 400,
+         "code": "EMPTY_TARBALL"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-not-a-key-key-on-publish-is-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "not-a-key",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-unknown-key-on-publish-is-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "unknown",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revoked-key-on-publish-is-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "revoked",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-expired-key-on-publish-is-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "expired",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REG_HASH"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-revoked-key-on-yank-is-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "revoked",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "",
+      "current": {
+       "requestId": 7,
+       "op": "yank",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 401,
+         "code": "UNAUTHORIZED"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-verifier-that-cannot-decide-(lookup)-is-503-not-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "lookup",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-verifier-that-cannot-decide-(salt)-is-503-not-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "salt",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-verifier-that-cannot-decide-(busy)-is-503-not-401",
+   "steps": [
+    {
+     "event": "REG_KEY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "busy",
+      "message": "x"
+     },
+     "from": "serving",
+     "entity": {
+      "id": "r",
+      "busy": true,
+      "queue": [],
+      "tarball": "YWJj",
+      "current": {
+       "requestId": 7,
+       "op": "publish",
+       "name": "pkg-a",
+       "version": "1.0.0",
+       "integrity": ""
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "status": 503,
+         "code": "STORE_UNAVAILABLE"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

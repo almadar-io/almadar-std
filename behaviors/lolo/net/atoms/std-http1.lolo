@@ -5,6 +5,7 @@ app std-http1 [
   description: "std-http1 — HTTP/1.1 over a raw TCP listener, in .lolo over os/tcp-listen, os/recv, os/send, os/close, bytes/* and str/*. LISTEN binds the host and port knobs as one keyed stream; each accepted connection is read until its head ends in CRLF CRLF (the end found by bytes/index-of), then until content-length body bytes have arrived (a transfer-encoding: chunked body is decoded per RFC 7230 section 4.1: hex size lines, chunk extensions ignored, CRLF framing, the 0 last chunk, trailer fields read and discarded), and is delivered once as REQUEST_RECEIVED { requestId (the connection's socket id), method, path, query, headers (names lower-cased, repeats joined with a comma and a space), body (bytes, delivered intact), peer }. The atom never routes. It answers a connection it cannot deliver: 400 for a head with any byte of 0x80 or above (checked on the bytes, never decoded) and for a head that is not an HTTP/1.0 or 1.1 request line followed by name: value lines and for a content-length that is not a number or repeats with another value, 400 for a request with both content-length and transfer-encoding and for malformed chunk framing, 501 for a transfer-encoding other than chunked, 431 for a head with no end after maxHead bytes or more than maxHeaders headers, 413 for a content-length or a decoded chunked body over maxBody. SEND_RESPONSE { requestId, status, headers, body (bytes) } answers a delivered request once: the status line with the standard reason phrase, the given headers, content-length (not for 204 and 304) and a connection header, then the body; RESPONDED { requestId, bytes } follows. Connections are kept alive by HTTP/1.1 rules: the connection stays open for the next request unless the request said connection: close, was HTTP/1.0 without keep-alive, or maxRequestsPerConn requests have been served on it, in which case it is closed after the response. A response can also be streamed: RESPOND_HEAD { requestId, status, headers } sends the head (chunked transfer-encoding on HTTP/1.1) and HEAD_SENT follows, each RESPOND_CHUNK { requestId, body } sends a piece and CHUNK_SENT follows, and RESPOND_END { requestId } finishes it. Every send carries its own key, so concurrent sends on one connection never collide. A client that disconnects mid-stream, or stays silent past a read timeout, surfaces as STREAM_IDLE and STREAM_CLOSED { requestId, reason }. RESPOND_REFUSED { requestId, kind, error } refuses a response and leaves the request pending: invalid for a status outside 200-599, a header name that is not a token, a value with a control character, a content-length, transfer-encoding or connection header (the atom writes the framing), or a body on 204 and 304; closed when no pending request has the id. Parity with the native listener is gated by http1_listen_parity."
 ]
 uses Spec from "almadar-std/http1"
+uses Delay from "std/behaviors/std-delay"
 type Http1Header = { name : string!, value : string! }
 type Http1Reason = { status : number!, text : string! }
 type Http1Conn = { sock : number!, key : string!, peer : string!, buf : bytes!, headLen : number!, need : number!, refuse : number!, method : string!, path : string!, query : string!, headers : [Http1Header]!, te : boolean!, dec : bytes!, dstate : string!, phase : string!, keepAlive : boolean!, http10 : boolean!, chunked : boolean!, served : number!, idle : number!, sends : number! }
@@ -23,6 +24,13 @@ orbital Http1Orbital {
     port : number @description "The port the stream is bound to." = 0
     conns : [Http1Conn] @description "Connections accepted and not yet answered, each with the bytes read so far and what the head said." = []
     @invariant (>= @entity.port 0)
+  }
+
+  trait ConnTimer = Delay.traits.Delay {
+    listens {
+      Http1.CONN_WAIT -> START
+      Http1.CONN_WAIT_DONE -> CANCEL
+    }
   }
 
   trait Http1 -> Http1Server [optimistic] {
@@ -110,6 +118,16 @@ orbital Http1Orbital {
         @label "Reason phrases"
         @description "The standard reason phrase per status; a status not listed has an empty one."
         @tier "domain"
+      idleTimeoutMs : number = 5000
+        @label "Idle read wait (ms)"
+        @description "How long a connection's pending read may wait for the client while no stream is open (a new connection, a keep-alive between requests, a request still arriving) before the connection is shut down. The wait runs only while a read is pending, so a slow handler is never cut off."
+        @synonyms "keep-alive timeout, idle timeout, read timeout"
+        @tier "infra"
+      streamHeartbeatMs : number = 5000
+        @label "Stream heartbeat (ms)"
+        @description "How often an open stream whose client sends nothing raises STREAM_IDLE, which a streaming writer answers with a heartbeat."
+        @synonyms "heartbeat interval, keep-alive ping"
+        @tier "infra"
       maxRequestsPerConn : number = 100
         @label "Most requests per connection"
         @description "After this many answered requests on one connection the reply says connection: close."
@@ -153,31 +171,43 @@ orbital Http1Orbital {
       CONN_ACCEPTED -> serving
         (set @entity.conns (array/append @entity.conns { sock: @payload.sock, key: (str/concat "conn-" @payload.sock), peer: @payload.peer, buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "reading", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }))
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
+        (emit CONN_WAIT { key: (str/concat "conn-" @payload.sock), delayMs: (if (= (object/get (default (array/find @entity.conns (fn c (= @c.key (str/concat "conn-" @payload.sock)))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @config.streamHeartbeatMs @config.idleTimeoutMs) })
 
       CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @payload.eof)
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (os/close (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"))
         (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
       CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") (not @payload.eof))
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.key @payload.key) (object/merge @c { buf: (bytes/concat [@c.buf, @payload.data]) }) @c))))
         (emit CONN_ADVANCE { sock: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock") })
 
       CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @payload.eof)
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (emit STREAM_CLOSED { requestId: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"), reason: "client" })
         (os/close (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"))
         (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
       CHUNK_READ -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") (not @payload.eof))
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (os/recv (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock") @config.recvBytes { key: @payload.key emit: { success: CHUNK_READ failure: CONN_FAILED } })
+        (emit CONN_WAIT { key: @payload.key, delayMs: (if (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @config.streamHeartbeatMs @config.idleTimeoutMs) })
 
-      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") (= @payload.kind "timeout"))
+      CONN_TIMER_ELAPSED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming"))
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.key @payload.key) (object/merge @c { idle: (+ @c.idle 1) }) @c))))
-        (emit STREAM_IDLE { requestId: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"), idle: (+ (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "idle") 1) })
-        (os/recv (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock") @config.recvBytes { key: @payload.key emit: { success: CHUNK_READ failure: CONN_FAILED } })
-      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") (!= @payload.kind "timeout"))
+        (emit STREAM_IDLE { requestId: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"), idle: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "idle") })
+        (emit CONN_WAIT { key: @payload.key, delayMs: @config.streamHeartbeatMs })
+      CONN_TIMER_ELAPSED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming"))
+        (os/shutdown (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock") { key: (str/concat "shut-" (default @payload.key "")) emit: { success: CONN_SHUT failure: CONN_SHUT } })
+      CONN_TIMER_ELAPSED -> serving when (= (array/find @entity.conns (fn c (= @c.key @payload.key))) null)
+      CONN_SHUT -> serving
+      CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming"))
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (emit STREAM_CLOSED { requestId: (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"), reason: "client" })
         (os/close (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"))
         (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
 
       CONN_FAILED -> serving when (and (!= (array/find @entity.conns (fn c (= @c.key @payload.key))) null) (!= (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming"))
+        (emit CONN_WAIT_DONE { key: @payload.key })
         (os/close (object/get (default (array/find @entity.conns (fn c (= @c.key @payload.key))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sock"))
         (set @entity.conns (array/filter @entity.conns (fn c (not (= @c.key @payload.key)))))
 
@@ -278,6 +308,7 @@ orbital Http1Orbital {
 
       WANT_MORE -> serving when (!= (array/find @entity.conns (fn c (= @c.sock @payload.sock))) null)
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
+        (emit CONN_WAIT { key: (str/concat "conn-" @payload.sock), delayMs: (if (= (object/get (default (array/find @entity.conns (fn c (= @c.key (str/concat "conn-" @payload.sock)))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @config.streamHeartbeatMs @config.idleTimeoutMs) })
 
       DELIVER -> serving
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending" }) @c))))
@@ -341,6 +372,7 @@ orbital Http1Orbital {
           { key: (str/concat "send-" @payload.requestId "-" (default (object/get (default (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "sends") 0)) emit: { success: HEAD_SENT failure: SEND_FAILED } })
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
         (os/recv @payload.requestId @config.recvBytes { key: (str/concat "conn-" @payload.requestId) emit: { success: CHUNK_READ failure: CONN_FAILED } })
+        (emit CONN_WAIT { key: (str/concat "conn-" @payload.requestId), delayMs: (if (= (object/get (default (array/find @entity.conns (fn c (= @c.key (str/concat "conn-" @payload.requestId)))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming") @config.streamHeartbeatMs @config.idleTimeoutMs) })
 
       RESPOND_CHUNK -> serving when (not (= (object/get (default (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) { sock: -1, key: "", peer: "", buf: (bytes/from-string ""), headLen: 0, need: 0, refuse: 0, method: "", path: "", query: "", headers: [], te: false, dec: (bytes/from-string ""), dstate: "", phase: "", keepAlive: false, http10: false, chunked: false, served: 0, idle: 0, sends: 0 }) "phase") "streaming"))
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no open stream has this id" })
@@ -481,7 +513,7 @@ orbital Http1Orbital {
         requestId : number!
         idle : number!
       }
-        @description "The open stream's client sent nothing for another read timeout; idle counts them."
+        @description "The open stream's client sent nothing for another streamHeartbeatMs; idle counts them."
         @tier "secondary"
       HEAD_SENT {
         bytes : number!
@@ -498,6 +530,21 @@ orbital Http1Orbital {
         kind : string
       }
         @description "Internal: a stream write failed."
+        @tier "internal"
+      CONN_WAIT -> external {
+        key : string!
+        delayMs : number!
+      }
+        @description "A connection's read is pending: arm its keyed timer (std-delay START) for idleTimeoutMs, or streamHeartbeatMs on an open stream."
+        @tier "secondary"
+      CONN_WAIT_DONE -> external {
+        key : string!
+      }
+        @description "A connection's read completed: disarm its keyed timer (std-delay CANCEL)."
+        @tier "secondary"
+      CONN_SHUT {
+      }
+        @description "Internal: an idle connection was shut down; its pending read now fails and closes it."
         @tier "internal"
       LISTEN_FAILED {
         error : string
@@ -556,6 +603,12 @@ orbital Http1Orbital {
     }
 
     listens {
+      ConnTimer.ELAPSED -> CONN_TIMER_ELAPSED
+      CONN_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+        @description "A connection's keyed timer passed: beat an open stream, or shut an idle connection down."
       LISTEN {
       }
       SEND_RESPONSE {
@@ -618,5 +671,5 @@ orbital Http1Orbital {
     }
   }
 
-  page http { host: @config.listenHost, port: @config.listenPort, path: "/" } as Http1Endpoint -> Http1
+  page http { host: @config.listenHost, port: @config.listenPort, path: "/" } as Http1Endpoint -> Http1, ConnTimer
 }

@@ -117,17 +117,17 @@ orbital DriveOrbital {
         (emit DRIVE_READY { key: (str/concat "get:" @payload.fileId "#" @entity.seq), op: "meta", method: "GET", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "?fields=id%2C%20name%2C%20mimeType%2C%20size"), contentType: "", body: (bytes/from-string ""), retry: true, auth: "sa", name: "", fileId: @payload.fileId })
       DRIVE_SHARE_FILE -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (emit DRIVE_READY { key: (str/concat "share:" @payload.fileId ":" @payload.email "#" @entity.seq), op: "share", method: "POST", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions?fields=id"), contentType: "application/json", body: (bytes/from-string (json/stringify { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email })), retry: false, auth: "sa", name: "", fileId: "" })
+        (emit DRIVE_READY { key: (str/concat "share:" @payload.fileId ":" @payload.email "#" @entity.seq), op: "share", method: "POST", target: (str/concat "/drive/v3/files/" (str/encode-uri-component @payload.fileId) "/permissions?fields=id"), contentType: "application/json", body: (bytes/from-string (json/stringify { type: "user", role: (if (!= (default @payload.role "") "") (default @payload.role "") "reader"), emailAddress: @payload.email })), retry: false, auth: "sa", name: "", fileId: "" })
       DRIVE_CREATE_FOLDER -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (let ((parent (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)))
+        (let ((parent (if (!= (default @payload.parentId "") "") (default @payload.parentId "") @config.defaultFolderId)))
           (emit DRIVE_READY { key: (str/concat "folder:" @parent "/" @payload.name "#" @entity.seq), op: "folder", method: "POST", target: "/drive/v3/files?fields=id%2C%20name", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= @parent "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [@parent] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }))), retry: false, auth: "user", name: @payload.name, fileId: "" }))
       DRIVE_UPLOAD_FILE -> idle
         (set @entity.seq (+ @entity.seq 1))
-        (let ((folder (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)) (tail (if (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",")) (str/slice @payload.content 5) "")))
+        (let ((folder (if (!= (default @payload.folderId "") "") (default @payload.folderId "") @config.defaultFolderId)) (tail (if (and (str/startsWith @payload.content "data:") (str/includes @payload.content ",")) (str/slice @payload.content 5) "")))
           (let ((head (default (array/first (str/split @tail ",")) "")))
             (let ((kind (if (= @tail "") "text" (let ((parts (str/split @head ";"))) (if (and (= (array/len @parts) 2) (= (array/nth @parts 1) "base64")) "base64" (if (= (array/len @parts) 1) "uri" "text"))))))
-              (emit DRIVE_UPLOAD_SOURCE { kind: @kind, mime: (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (and (!= @kind "text") (!= (default (array/first (str/split @head ";")) "") "")) (default (array/first (str/split @head ";")) "") "application/octet-stream")), text: (if (= @kind "text") @payload.content (str/join (array/drop (str/split @tail ",") 1) ",")), name: @payload.name, folder: @folder, seq: @entity.seq }))))
+              (emit DRIVE_UPLOAD_SOURCE { kind: @kind, mime: (if (!= (default @payload.mimeType "") "") (default @payload.mimeType "") (if (and (!= @kind "text") (!= (default (array/first (str/split @head ";")) "") "")) (default (array/first (str/split @head ";")) "") "application/octet-stream")), text: (if (= @kind "text") @payload.content (str/join (array/drop (str/split @tail ",") 1) ",")), name: @payload.name, folder: @folder, seq: @entity.seq }))))
       DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "text")
         (emit DRIVE_UPLOAD_PART { mime: @payload.mime, data: (bytes/from-string @payload.text), name: @payload.name, folder: @payload.folder, seq: @payload.seq })
       DRIVE_UPLOAD_SOURCE -> idle when (= @payload.kind "uri")

@@ -289,6 +289,281 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-accepted-connection-arms-its-idle-timer-while-its-read-waits",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONN_WAIT",
+        "payload": {
+         "key": "conn-7",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-read-that-completes-disarms-its-timer",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "R0VUIC8gSFRUUC8xLjENCg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONN_WAIT_DONE",
+        "payload": {
+         "key": "conn-7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-idle-connection-whose-timer-elapses-is-shut-down",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CONN_TIMER_ELAPSED",
+     "payload": {
+      "key": "conn-7",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/shutdown"
+       }
+      ],
+      "neverEmits": [
+       "STREAM_IDLE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-open-stream-whose-timer-elapses-beats-and-rearms",
+   "entity": {
+    "conns": [
+     {
+      "sock": 7,
+      "key": "conn-7",
+      "peer": "1.2.3.4:5",
+      "buf": "",
+      "headLen": 0,
+      "need": 0,
+      "refuse": 0,
+      "method": "GET",
+      "path": "/api/events",
+      "query": "",
+      "headers": [],
+      "te": false,
+      "dec": "",
+      "dstate": "",
+      "phase": "streaming",
+      "keepAlive": true,
+      "http10": false,
+      "chunked": false,
+      "served": 1,
+      "idle": 2,
+      "sends": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_TIMER_ELAPSED",
+     "payload": {
+      "key": "conn-7",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STREAM_IDLE",
+        "payload": {
+         "requestId": 7,
+         "idle": 3
+        }
+       },
+       {
+        "event": "CONN_WAIT",
+        "payload": {
+         "key": "conn-7",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-timer-for-a-closed-connection-does-nothing",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_TIMER_ELAPSED",
+     "payload": {
+      "key": "conn-9",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "neverEmits": [
+       "STREAM_IDLE",
+       "CONN_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-waits-are-the-declared-knobs",
+   "config": {
+    "idleTimeoutMs": 30000,
+    "streamHeartbeatMs": 15000
+   },
+   "entity": {
+    "conns": [
+     {
+      "sock": 7,
+      "key": "conn-7",
+      "peer": "1.2.3.4:5",
+      "buf": "",
+      "headLen": 0,
+      "need": 0,
+      "refuse": 0,
+      "method": "GET",
+      "path": "/api/events",
+      "query": "",
+      "headers": [],
+      "te": false,
+      "dec": "",
+      "dstate": "",
+      "phase": "streaming",
+      "keepAlive": true,
+      "http10": false,
+      "chunked": false,
+      "served": 1,
+      "idle": 0,
+      "sends": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 8,
+      "peer": "1.2.3.4:6",
+      "key": "listener"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONN_WAIT",
+        "payload": {
+         "key": "conn-8",
+         "delayMs": 30000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "CONN_TIMER_ELAPSED",
+     "payload": {
+      "key": "conn-7",
+      "waitedMs": 15000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONN_WAIT",
+        "payload": {
+         "key": "conn-7",
+         "delayMs": 15000
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

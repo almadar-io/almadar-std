@@ -10,7 +10,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 
 
-Next code: `G-STD-234`
+Next code: `G-STD-235`
 
 - **G-STD-228** — `spec/ops/workspace.replay.goldens.json`: 46 of its cases fail against `std-workspace` since the 2026-10-31 identity change (re-baselined with orb 67729d4e9957). Each failing step reports `trait WorkspaceSteps ran on unseeded defaults` / `trait WorkspaceGit ran on unseeded defaults`, and the first step's expected `WS_STEPS_RUN` no longer matches the emitted one (the atom now asks `git grep --no-index ... :(glob)/*/.almadar/app-marker.json` under `scope: root`, with a signed-in viewer's scoped root). The goldens predate the atom: re-record them against the current atom (seed WorkspaceSteps and WorkspaceGit in `defaults` or in an earlier step, add the viewer). `spec/ops/workspace.replay.goldens.json` + `ops/atoms/std-workspace.lolo` [mechanical] — rung: (3) goldens (already red; the T4 goldens gate ratchets them). Root cause: S3.
 - **G-STD-229** — `spec/agent/memory-correlation.replay.goldens.json` case "a recall and a remember in flight together, the store result delivered first: each trait takes only its own" fails: the recall trait's `RECALLED` carries `context:"Asked:  | Answered: blue"` (the remember trait's row) where the case expects `context:""`, so the correlation key does not keep the two in-flight store results apart. Either the case predates the memory atom's owner-scoped query (rows now carry `ownerId`) or the atom takes a result that is not its own. std-agent-memory [architectural] — rung: (3) goldens (already red). Root cause: one-off.

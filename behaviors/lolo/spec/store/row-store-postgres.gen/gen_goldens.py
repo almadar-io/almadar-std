@@ -636,6 +636,48 @@ case("good-real-postgres-16-rows-sql-answers-rows-count-columns-and-the-server-e
      sql_steps,
      credentials=PG_CRED,
      note="ROWS_SQL on one held session against a real Postgres 16: a parameterised read (jsonb stays text, timestamptz is UTC ISO), the scalar types (null, bool, float, int8 past 2^53 as text, jsonb as text, int[], bytea as base64, numeric as text), an empty result with its column, a text[] bind sent as an array literal, and a server error with its SQLSTATE")
+# ---- reply deadline (replyTimeoutMs): the pending read is armed on std-delay, disarmed by its reply, and a deadline that passes shuts the socket
+READ_ASK = {"key": "k", "entityType": "Ticket", "id": "t1"}
+SQL_ASK = {"key": "k", "sql": "SELECT 1", "params": []}
+DEADLINE = {"event": "REPLY_TIMER_ELAPSED", "payload": {"key": "recv", "waitedMs": 5000}}
+def sql_start(): return {"event": "ROWS_SQL", "payload": SQL_ASK, "from": "ready", "entity": warm(), "expect": {"state": "running"}}
+case("a-sent-statement-arms-its-reply-timer",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"]), emit("REPLY_WAIT", key="recv", delayMs=5000)])],
+     note="the os/recv that waits for the statement's reply is paired with REPLY_WAIT, which std-delay arms for replyTimeoutMs")
+case("a-reply-disarms-its-reply-timer",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      recv(result(TICKET_COLS, [r1], "SELECT 1"), expect={"state": "ready", "emits": [emit("REPLY_WAIT_DONE", key="recv")]})],
+     note="a read that completes disarms its deadline before anything else")
+case("a-split-reply-rearms-the-reply-timer",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      {"event": "PG_RECEIVED", "payload": {"data": b64(result(TICKET_COLS, [r1], "SELECT 1")[:30]), "eof": False}, "expect": {"state": "running", "emits": [emit("REPLY_WAIT_DONE", key="recv"), emit("REPLY_WAIT", key="recv", delayMs=5000)]}}],
+     note="the next read of a reply split across reads waits under a fresh deadline")
+case("a-reply-timer-that-elapses-shuts-the-socket",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      dict(DEADLINE, expect={"state": "running", "effects": [{"type": "os/shutdown"}]})])
+case("the-read-that-fails-after-the-deadline-answers-a-timeout-message",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      DEADLINE,
+      {"event": "PG_IO_FAILED", "payload": {"key": "recv", "error": "the socket was shut down"}, "expect": {"state": "ready", "emits": [emit("REPLY_WAIT_DONE", key="recv"), emit("STORE_FAILED", key="k", message="the server did not reply within 5000 ms")], "effects": [{"type": "os/close"}]}}],
+     note="STORE_FAILED carries no kind, so the timeout is stated in its message")
+case("the-sql-ask-that-passes-the-deadline-answers-kind-timeout",
+     [sql_start(), DEADLINE,
+      {"event": "PG_IO_FAILED", "payload": {"key": "recv", "error": "the socket was shut down"}, "expect": {"state": "ready", "emits": [emit("SQL_FAILED", key="k", kind="timeout", code="", message="the server did not reply within 5000 ms")], "neverEmits": ["STORE_FAILED"]}}],
+     note="SQL_FAILED carries a kind, so a statement whose reply passed the deadline answers timeout")
+case("the-eof-after-the-deadline-answers-a-timeout-too",
+     [sql_start(), DEADLINE,
+      {"event": "PG_RECEIVED", "payload": {"data": "", "eof": True}, "expect": {"state": "ready", "emits": [emit("SQL_FAILED", key="k", kind="timeout", code="", message="the server did not reply within 5000 ms")]}}])
+case("control-a-closed-read-without-a-deadline-answers-its-usual-message",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      {"event": "PG_IO_FAILED", "payload": {"key": "recv", "error": "reset"}, "expect": {"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="reset")]}}])
+case("control-a-sql-ask-whose-read-fails-without-a-deadline-answers-store-failed",
+     [sql_start(),
+      {"event": "PG_IO_FAILED", "payload": {"key": "recv", "error": "reset"}, "expect": {"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="reset")], "neverEmits": ["SQL_FAILED"]}}])
+case("control-a-reply-timer-for-another-key-does-nothing",
+     [ask("ROW_READ", READ_ASK, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      {"event": "REPLY_TIMER_ELAPSED", "payload": {"key": "other", "waitedMs": 5000}, "expect": {"state": "running", "effects": []}}])
+case("control-a-reply-timer-after-the-session-closed-does-nothing",
+     [{"event": "REPLY_TIMER_ELAPSED", "payload": {"key": "recv", "waitedMs": 5000}, "from": "ready", "entity": {"id": "f"}, "expect": {"state": "ready", "effects": []}}])
 doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",

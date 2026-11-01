@@ -53,13 +53,13 @@ orbital MetaAdsOrbital {
     state idle {
       INIT -> idle
 
-      META_ADS_GET_SPEND -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_GET_SPEND -> idle when (= (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "")
         (emit META_ADS_FAILED { message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
-      META_ADS_GET_SPEND -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_GET_SPEND -> idle when (!= (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "")
         (emit META_ADS_HTTP_SEND {
           key: "spend",
           method: "GET",
-          target: (str/concat (str/concat "/" @config.apiVersion "/" (if (str/startsWith (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_") (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "/insights") "?fields=" (str/encode-uri-component "spend,impressions,clicks,account_currency") "&time_range=" (str/encode-uri-component (str/concat "{\"since\":" (json/stringify @payload.since) ",\"until\":" (json/stringify @payload.until) "}")) "&level=account"),
+          target: (str/concat (str/concat "/" @config.apiVersion "/" (if (str/startsWith (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "act_") "" "act_") (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "/insights") "?fields=" (str/encode-uri-component "spend,impressions,clicks,account_currency") "&time_range=" (str/encode-uri-component (str/concat "{\"since\":" (json/stringify @payload.since) ",\"until\":" (json/stringify @payload.until) "}")) "&level=account"),
           headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none"
         })
       META_ADS_SPEND_REPLIED -> idle when (>= @payload.status 500)
@@ -84,13 +84,13 @@ orbital MetaAdsOrbital {
       META_ADS_SPEND_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { message: "fetch failed" })
 
-      META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "")
         (emit META_ADS_FAILED { message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
-      META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "")
         (emit META_ADS_HTTP_SEND {
           key: "campaigns",
           method: "GET",
-          target: (str/concat (str/concat "/" @config.apiVersion "/" (if (str/startsWith (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_") (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "/campaigns") "?fields=" (str/encode-uri-component "id,name,status,daily_budget") (if (!= (default @payload.status "") "") (str/concat "&effective_status=" (str/encode-uri-component (json/stringify [@payload.status]))) "")),
+          target: (str/concat (str/concat "/" @config.apiVersion "/" (if (str/startsWith (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "act_") "" "act_") (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "/campaigns") "?fields=" (str/encode-uri-component "id,name,status,daily_budget") (if (!= (default @payload.status "") "") (str/concat "&effective_status=" (str/encode-uri-component (json/stringify [@payload.status]))) "")),
           headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none"
         })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (>= @payload.status 500)

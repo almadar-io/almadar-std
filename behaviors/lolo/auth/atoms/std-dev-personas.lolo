@@ -48,14 +48,29 @@ orbital DevPersonasOrbital {
       AUTO_FAILED -> ready
       TOKEN_MINT -> ready
         (emit TOKEN_MINTED { key: @payload.key, purpose: @payload.purpose, token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
+      ANSWER_TOKEN_MINT -> ready
+        (emit TOKEN_MINTED { key: @payload.key, purpose: "answer", token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
       TOKEN_MINTED -> ready when (= @payload.purpose "answer")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 200, body: (json/stringify { success: true, customToken: @payload.token, authEmulatorHost: @config.authEmulatorHost, projectId: @config.projectId }) })
       TOKEN_MINTED -> ready when (= @payload.purpose "sign-in")
         (identity/sign-in (jws/verify @payload.token [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
+      ;; allowUnsigned accepts an alg:none token, so both entries read the emulator host first and sign in only when it names the emulator
       PERSONA_ACT_AS -> ready
-        (emit TOKEN_MINT { key: @payload.persona, purpose: "sign-in" })
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: @payload.persona emit: { success: ACT_AS_HOST failure: ACT_AS_FAILED } })
+      ACT_AS_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
+        (emit TOKEN_MINT { key: @payload.key, purpose: "sign-in" })
+      ACT_AS_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
+        (emit PERSONA_SIGN_IN_REFUSED { error: "persona sign-in refused: the Auth emulator is not configured", kind: "no-emulator" })
+      ACT_AS_FAILED -> ready
+        (emit PERSONA_SIGN_IN_REFUSED { error: (str/concat "persona sign-in refused: the environment could not be read: " (default @payload.error "")), kind: "no-emulator" })
       TOKEN_SIGN_IN_REQUESTED -> ready
-        (identity/sign-in (jws/verify @payload.token [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: @payload.token emit: { success: TOKEN_HOST failure: TOKEN_HOST_FAILED } })
+      TOKEN_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
+        (identity/sign-in (jws/verify @payload.key [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
+      TOKEN_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
+        (emit PERSONA_SIGN_IN_REFUSED { error: "persona sign-in refused: the Auth emulator is not configured", kind: "no-emulator" })
+      TOKEN_HOST_FAILED -> ready
+        (emit PERSONA_SIGN_IN_REFUSED { error: (str/concat "persona sign-in refused: the environment could not be read: " (default @payload.error "")), kind: "no-emulator" })
       PERSONA_SIGNED_IN -> ready
       PERSONA_SIGN_IN_REFUSED -> ready
       PERSONAS_REQUESTED -> ready
@@ -101,7 +116,7 @@ orbital DevPersonasOrbital {
       SIGN_IN_UPDATED -> ready when (or (< @payload.status 200) (>= @payload.status 300))
         (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "the Auth emulator refused to update " @payload.key ": " (str/concat @payload.status) " " @payload.body) }) })
       SIGN_IN_UPDATED -> ready when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit TOKEN_MINT { key: @payload.key, purpose: "answer" })
+        (emit ANSWER_TOKEN_MINT { key: @payload.key })
       SIGN_IN_ROW_MISSED -> ready when (= @payload.code "not-found")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no persona with that id" }) })
       SIGN_IN_ROW_MISSED -> ready when (!= @payload.code "not-found")
@@ -207,11 +222,40 @@ orbital DevPersonasOrbital {
       }
         @description "Internal: the environment could not be read at a session's start; the session stays as it is."
         @tier "internal"
+      ACT_AS_HOST -> internal {
+        value : string
+        key : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST on a PERSONA_ACT_AS, keyed by the persona id."
+        @tier "internal"
+      ACT_AS_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the environment could not be read for a PERSONA_ACT_AS; the sign-in is refused."
+        @tier "internal"
+      TOKEN_HOST -> internal {
+        value : string
+        key : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST on a TOKEN_SIGN_IN_REQUESTED, keyed by the token."
+        @tier "internal"
+      TOKEN_HOST_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the environment could not be read for a TOKEN_SIGN_IN_REQUESTED; the sign-in is refused."
+        @tier "internal"
       TOKEN_MINT -> internal {
         key : string!
         purpose : string!
       }
-        @description "Internal: build the emulator's unsigned custom token for the persona key; purpose answer returns it to the caller, purpose sign-in signs the session in with it."
+        @description "Internal: build the emulator's unsigned custom token for the persona key; it is emitted only from the arms that read the emulator host first, and the token signs the session in."
+        @tier "internal"
+      ANSWER_TOKEN_MINT -> internal {
+        key : string!
+      }
+        @description "Internal: build the emulator's unsigned custom token for the persona key a sign-in update answered; the answer carries it back to the caller and never signs a session in."
         @tier "internal"
       TOKEN_MINTED -> internal {
         key : string!
@@ -230,7 +274,7 @@ orbital DevPersonasOrbital {
         error : string
         kind : string
       }
-        @description "The emulator token was not accepted (kind unsealed: jws/verify refused it) or the persona has no identity row (no-identity, store)."
+        @description "The sign-in was refused: no-emulator when FIREBASE_AUTH_EMULATOR_HOST does not name the Auth emulator (or cannot be read), unsealed when jws/verify refused the emulator token, no-identity when the persona has no identity row (store)."
         @synonyms "persona sign-in refused"
         @tier "primary"
       SIGN_IN_FAILED -> internal {

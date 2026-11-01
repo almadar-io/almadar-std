@@ -36,6 +36,13 @@ orbital RedisOrbital {
       }
       RESP_CLOSED {
       }
+      RedisReplyTimer.ELAPSED -> REPLY_TIMER_ELAPSED
+      REPLY_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+      REPLY_SHUT {
+      }
     }
     config {
       host: "redis.example.test"
@@ -44,6 +51,13 @@ orbital RedisOrbital {
       user: ""
       password: "REDIS_PASSWORD"
       db: 0
+    }
+  }
+
+  trait RedisReplyTimer = Resp.traits.ReplyTimer {
+    listens {
+      RedisWire.REPLY_WAIT -> START
+      RedisWire.REPLY_WAIT_DONE -> CANCEL
     }
   }
 
@@ -286,5 +300,5 @@ orbital RedisOrbital {
     }
   }
 
-  page boot as RedisPage -> RedisClient, RedisWire
+  page boot as RedisPage -> RedisClient, RedisWire, RedisReplyTimer
 }

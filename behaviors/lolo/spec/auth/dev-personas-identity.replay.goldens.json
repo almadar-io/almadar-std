@@ -15,6 +15,21 @@
      },
      "expect": {
       "fired": true,
+      "neverEmits": [
+       "PERSONA_SIGNED_IN",
+       "PERSONA_SIGN_IN_REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Acting",
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "127.0.0.1:9099",
+      "key": "ada"
+     },
+     "expect": {
       "emits": [
        {
         "event": "TOKEN_MINT",
@@ -32,7 +47,8 @@
       ],
       "neverEmits": [
        "PERSONA_SIGN_IN_REFUSED"
-      ]
+      ],
+      "fired": true
      }
     },
     {
@@ -101,6 +117,21 @@
      },
      "expect": {
       "fired": true,
+      "neverEmits": [
+       "PERSONA_SIGNED_IN",
+       "PERSONA_SIGN_IN_REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Acting",
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "127.0.0.1:9099",
+      "key": "bob"
+     },
+     "expect": {
       "emits": [
        {
         "event": "PERSONA_SIGNED_IN",
@@ -108,7 +139,8 @@
          "subject": "bob"
         }
        }
-      ]
+      ],
+      "fired": true
      }
     },
     {
@@ -123,6 +155,65 @@
         "event": "WHOAMI",
         "payload": {
          "id": "bob"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-act-as-without-the-emulator-host-leaves-the-session-anonymous",
+   "note": "Production: the host is unset, so the dev persona sign-in is refused and the session keeps the anonymous viewer.",
+   "steps": [
+    {
+     "trait": "Acting",
+     "from": "ready",
+     "event": "PERSONA_ACT_AS",
+     "payload": {
+      "persona": "ada"
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "Acting",
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "",
+      "key": "ada"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PERSONA_SIGNED_IN",
+       "TOKEN_MINT"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "from": "idle",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
         }
        }
       ]

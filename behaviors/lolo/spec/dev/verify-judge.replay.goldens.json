@@ -976,6 +976,150 @@
           }
         }
       ]
+    },
+    {
+      "id": "null-clear-effect-arguments-are-valid-json",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "set",
+                  "args": [
+                    "@entity.lastResult",
+                    null
+                  ],
+                  "status": "executed"
+                },
+                {
+                  "type": "render-ui",
+                  "args": [
+                    "main",
+                    {
+                      "children": [
+                        null,
+                        {
+                          "value": null
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "executed"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "null-render-probe-remains-unported-not-passed",
+      "steps": [
+        {
+          "event": "JUDGE_REQUEST",
+          "payload": {
+            "step": {
+              "trait": "T",
+              "from": "a",
+              "event": "GO",
+              "to": "b",
+              "toStates": [
+                "b"
+              ],
+              "variant": "success",
+              "payload": {},
+              "guarded": false,
+              "solved": true,
+              "payloadCase": "success"
+            },
+            "played": {
+              "trait": "T",
+              "event": "GO",
+              "transitionFired": true,
+              "guard": "none",
+              "effects": [
+                {
+                  "type": "persist",
+                  "args": [
+                    "create",
+                    "Item"
+                  ],
+                  "status": "ok"
+                }
+              ],
+              "emitted": [],
+              "guards": [],
+              "state": {}
+            },
+            "rendered": null
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "JUDGE_ANSWERED",
+                "payload": {
+                  "verdicts": [
+                    {
+                      "name": "effects_fired",
+                      "passed": true,
+                      "detail": ""
+                    }
+                  ],
+                  "unported": [
+                    {
+                      "name": "proposition_held",
+                      "reason": "the played result carries no ensures: the installed orb predates the kernel-judged @ensures"
+                    },
+                    {
+                      "name": "entity_data_bound",
+                      "reason": "no rendered input: the Layer 2 render_probe nodes were not supplied"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

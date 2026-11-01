@@ -1,15 +1,17 @@
 app std-package-registry [
   version: "1.0.0",
-  description: "std-package-registry — the package registry server as one atom, following spec/ops/package-registry.lolo (not bound with uses: its PackageRegistry @ensures obligations are stated on PackageVersion as the trait's own entity, which this atom keeps separate from its request state). It listens to REQUEST_RECEIVED from std-http1 for paths under apiPrefix/packages/ and answers RESPOND { requestId, status, headers, body }, one request at a time with later ones queued: PUT /packages/:name/:version publishes (bearer token compared to publishToken, else 401 UNAUTHORIZED; empty body 400 EMPTY_TARBALL; a stored name+version 409 VERSION_EXISTS), GET /packages/:name/:version answers the version row (404 NOT_FOUND), GET /packages/:name/:version/tarball streams the stored bytes as application/gzip (410 YANKED when yanked), GET /packages/:name lists versions newest publish first, POST /packages/:name/:version/yank (bearer token) marks the version yanked and is idempotent; every error answers { error, code }, and an unmatched path under the prefix answers 404 NOT_FOUND. PackageVersion rows live in the row store seam (persistent: package_versions); a deployment binds the store. A publish that passes auth, the empty check and the duplicate check is hashed by std-sha256 (sha256 over the tarball bytes, hex), stored as a PackageVersion with that integrity, and answered 201 { name, version, url, integrity } with PACKAGE_PUBLISHED; a tarball std-sha256 cannot hash answers 501 INTEGRITY_UNAVAILABLE and stores nothing. Answers carry no CORS headers (the router owns the policy headers). A server composing it sets std-http-router's `externalPrefix` to apiPrefix/packages/ so the router leaves those paths to this atom (composition pending G-STD-086)."
+  description: "std-package-registry — the package registry server as one atom, following spec/ops/package-registry.lolo (not bound with uses: its PackageRegistry @ensures obligations are stated on PackageVersion as the trait's own entity, which this atom keeps separate from its request state). It listens to REQUEST_RECEIVED from std-http1 for paths under apiPrefix/packages/ and answers RESPOND { requestId, status, headers, body }, one request at a time with later ones queued: PUT /packages/:name/:version publishes (the bearer must be a live std-api-keys key, verified by std-api-key-verifier: a missing, unknown, revoked or expired key answers 401 UNAUTHORIZED, a verifier that cannot decide 503 STORE_UNAVAILABLE; empty body 400 EMPTY_TARBALL; a stored name+version 409 VERSION_EXISTS), GET /packages/:name/:version answers the version row (404 NOT_FOUND), GET /packages/:name/:version/tarball streams the stored bytes as application/gzip (410 YANKED when yanked), GET /packages/:name lists versions newest publish first, POST /packages/:name/:version/yank (bearer key, verified as for publish) marks the version yanked and is idempotent; every error answers { error, code }, and an unmatched path under the prefix answers 404 NOT_FOUND. PackageVersion rows live in the row store seam (persistent: package_versions); a deployment binds the store. A publish that passes auth, the empty check and the duplicate check is hashed by std-sha256 (sha256 over the tarball bytes, hex), stored as a PackageVersion with that integrity, and answered 201 { name, version, url, integrity } with PACKAGE_PUBLISHED; a tarball std-sha256 cannot hash answers 501 INTEGRITY_UNAVAILABLE and stores nothing. Answers carry no CORS headers (the router owns the policy headers). A server composing it sets std-http-router's `externalPrefix` to apiPrefix/packages/ so the router leaves those paths to this atom (composition pending G-STD-086)."
 ]
 type RegistryHeader = { name : string!, value : string! }
 type RegistryRequest = { requestId : number!, method : string!, path : string!, authorization : string!, body : bytes! }
+type RegistryClaim = { name : string!, value : string! }
 type RegistryOrb = { compiler : string? }
 type RegistryManifest = { orb : RegistryOrb? }
 type RegistryGunzip = { ok : boolean!, data : bytes, crc : number, code : string }
 type RegistryCall = { requestId : number!, op : string!, name : string!, version : string!, integrity : string! }
 orbital PackageRegistryOrbital {
   uses Sha from "std/behaviors/std-sha256"
+  uses Keys from "std/behaviors/std-api-key-verifier"
 
   entity RegistryState [runtime] {
     id : string!
@@ -39,14 +41,16 @@ orbital PackageRegistryOrbital {
     }
   }
 
+  trait ApiKeys = Keys.traits.ApiKeyVerifier {
+    listens {
+      PackageRegistry.VERIFY_KEY -> VERIFY_KEY
+    }
+  }
+
   trait PackageRegistry -> RegistryState [optimistic] {
     initial: serving
 
     config {
-      publishToken : string = ""
-        @label "Publish token"
-        @description "The bearer token that authorises publish and yank; empty refuses both."
-        @tier "infra"
       apiPrefix : string = "/api"
         @label "API prefix"
         @description "The routes live under this prefix followed by /packages."
@@ -116,25 +120,31 @@ orbital PackageRegistryOrbital {
         (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit REGISTRY_DONE {})
-      PACKAGE_PUBLISH -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
-        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
-        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
-        (emit REGISTRY_DONE {})
-      PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (= (bytes/length @payload.tarball) 0))
-        (emit RESPOND { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Empty tarball", code: "EMPTY_TARBALL" })) })
-        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 400, code: "EMPTY_TARBALL", error: "Empty tarball" })
-        (emit REGISTRY_DONE {})
-      PACKAGE_PUBLISH -> serving when (and (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken))) (> (bytes/length @payload.tarball) 0))
+      PACKAGE_PUBLISH -> serving
         (set @entity.tarball @payload.tarball)
         (set @entity.current { requestId: @payload.requestId, op: "publish", name: @payload.name, version: @payload.version, integrity: "" })
-        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
-      PACKAGE_YANK -> serving when (or (= @config.publishToken "") (!= @payload.token @config.publishToken))
-        (emit RESPOND { requestId: @payload.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
-        (emit PACKAGE_REFUSED { requestId: @payload.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
-        (emit REGISTRY_DONE {})
-      PACKAGE_YANK -> serving when (not (or (= @config.publishToken "") (!= @payload.token @config.publishToken)))
+        (emit VERIFY_KEY { requestId: @payload.requestId, token: (default @payload.token "") })
+      PACKAGE_YANK -> serving
         (set @entity.current { requestId: @payload.requestId, op: "yank", name: @payload.name, version: @payload.version, integrity: "" })
-        (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+        (emit VERIFY_KEY { requestId: @payload.requestId, token: (default @payload.token "") })
+      REG_KEY_VERIFIED -> serving when (and (= @entity.current.op "publish") (= (bytes/length (default @entity.tarball (bytes/from-string ""))) 0))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Empty tarball", code: "EMPTY_TARBALL" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 400, code: "EMPTY_TARBALL", error: "Empty tarball" })
+        (emit REGISTRY_DONE {})
+      REG_KEY_VERIFIED -> serving when (and (= @entity.current.op "publish") (> (bytes/length (default @entity.tarball (bytes/from-string ""))) 0))
+        (fetch PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      REG_KEY_VERIFIED -> serving when (= @entity.current.op "yank")
+        (fetch PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
+      REG_KEY_REFUSED -> serving when (or (= @payload.reason "not-a-key") (= @payload.reason "unknown") (= @payload.reason "revoked") (= @payload.reason "expired"))
+        (set @entity.tarball (bytes/from-string ""))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 401, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 401, code: "UNAUTHORIZED", error: "Unauthorized" })
+        (emit REGISTRY_DONE {})
+      REG_KEY_REFUSED -> serving when (not (or (= @payload.reason "not-a-key") (= @payload.reason "unknown") (= @payload.reason "revoked") (= @payload.reason "expired")))
+        (set @entity.tarball (bytes/from-string ""))
+        (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
+        (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
+        (emit REGISTRY_DONE {})
       PACKAGE_FETCH -> serving
         (set @entity.current { requestId: @payload.requestId, op: "fetch", name: @payload.name, version: @payload.version, integrity: "" })
         (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
@@ -233,6 +243,12 @@ orbital PackageRegistryOrbital {
       }
         @description "A registry request was refused with this status and code."
         @tier "primary"
+      VERIFY_KEY {
+        requestId : number!
+        token : string!
+      }
+        @description "Internal: ask std-api-key-verifier whether the request's bearer is a live key."
+        @tier "secondary"
       REG_HASH {
         requestId : string!
         data : bytes!
@@ -350,6 +366,12 @@ orbital PackageRegistryOrbital {
         @description "Internal: the tarball's SHA-256."
       REG_HASH_REFUSED { requestId : string  reason : string! }
         @description "Internal: the tarball could not be hashed."
+      REG_KEY_VERIFIED { requestId : number  owner : string!  claims : [RegistryClaim]! }
+        @description "Internal: std-api-key-verifier accepted the bearer."
+      REG_KEY_REFUSED { requestId : number  reason : "not-a-key" | "salt" | "lookup" | "unknown" | "revoked" | "expired" | "busy"  message : string! }
+        @description "Internal: std-api-key-verifier refused the bearer, and why."
+      ApiKeys.API_KEY_VERIFIED -> REG_KEY_VERIFIED
+      ApiKeys.API_KEY_REFUSED -> REG_KEY_REFUSED
       Digest.SHA256_DIGESTED -> REG_DIGESTED
       Digest.SHA256_REFUSED -> REG_HASH_REFUSED
       REQUEST_RECEIVED {
@@ -364,5 +386,5 @@ orbital PackageRegistryOrbital {
     }
   }
 
-  page boot as PackageRegistryPage -> PackageRegistry, Digest
+  page boot as PackageRegistryPage -> PackageRegistry, Digest, ApiKeys
 }

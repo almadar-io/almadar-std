@@ -1,0 +1,239 @@
+{
+  "atom": "connect/atoms/std-page-read.lolo",
+  "trait": "PageRead",
+  "cases": [
+    {
+      "id": "mount-does-not-capture-any-tab",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "fired": false,
+            "state": "idle",
+            "exactEmits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-key-never-queries-browser",
+      "steps": [
+        {
+          "event": "READ",
+          "payload": {
+            "requestId": "",
+            "tab": 7
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "READ_FAILED",
+                "payload": {
+                  "kind": "invalid"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-tab-never-queries-browser",
+      "steps": [
+        {
+          "event": "READ",
+          "payload": {
+            "requestId": "r",
+            "tab": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "READ_FAILED",
+                "payload": {
+                  "kind": "invalid"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "read-result-preserves-every-element-and-text",
+      "steps": [
+        {
+          "from": "reading",
+          "entity": {
+            "id": "r",
+            "requestId": "read-1",
+            "tab": 7
+          },
+          "event": "PAGE_READ",
+          "payload": {
+            "key": "read-1",
+            "tab": 7,
+            "elements": [
+              {
+                "elementId": "e1",
+                "fields": {
+                  "text": "One"
+                }
+              },
+              {
+                "elementId": "e2",
+                "fields": {
+                  "text": "Two"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "READ_DONE",
+                "payload": {
+                  "requestId": "read-1",
+                  "tab": 7,
+                  "elements": [
+                    {
+                      "elementId": "e1",
+                      "fields": {
+                        "text": "One"
+                      }
+                    },
+                    {
+                      "elementId": "e2",
+                      "fields": {
+                        "text": "Two"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stale-result-cannot-complete-current-read",
+      "steps": [
+        {
+          "from": "reading",
+          "entity": {
+            "id": "r",
+            "requestId": "read-1",
+            "tab": 7
+          },
+          "event": "PAGE_READ",
+          "payload": {
+            "key": "old",
+            "tab": 7,
+            "elements": []
+          },
+          "expect": {
+            "fired": false,
+            "state": "reading",
+            "neverEmits": [
+              "READ_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "browser-refusal-retains-request-and-error-kind",
+      "steps": [
+        {
+          "from": "reading",
+          "entity": {
+            "id": "r",
+            "requestId": "read-1",
+            "tab": 7
+          },
+          "event": "PAGE_READ_FAILED",
+          "payload": {
+            "key": "read-1",
+            "error": "Permission missing",
+            "kind": "not-ready"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "READ_FAILED",
+                "payload": {
+                  "requestId": "read-1",
+                  "error": "Permission missing",
+                  "kind": "not-ready"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "matching-cancel-completion-ends-read",
+      "steps": [
+        {
+          "from": "reading",
+          "entity": {
+            "id": "r",
+            "requestId": "read-1",
+            "tab": 7
+          },
+          "event": "PAGE_READ_CANCELLED",
+          "payload": {
+            "key": "read-1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "READ_CANCELLED",
+                "payload": {
+                  "requestId": "read-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-cancel-does-not-end-read",
+      "steps": [
+        {
+          "from": "reading",
+          "entity": {
+            "id": "r",
+            "requestId": "read-1",
+            "tab": 7
+          },
+          "event": "READ_CANCEL",
+          "payload": {
+            "requestId": "old"
+          },
+          "expect": {
+            "fired": false,
+            "state": "reading",
+            "neverEmits": [
+              "READ_CANCELLED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

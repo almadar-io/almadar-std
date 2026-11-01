@@ -122,6 +122,14 @@ orbital HttpServerOrbital {
       ServerSse.RESPOND_HEAD -> RESPOND_HEAD
       ServerSse.RESPOND_CHUNK -> RESPOND_CHUNK
       ServerSse.RESPOND_END -> RESPOND_END
+      Http1Timer.ELAPSED -> CONN_TIMER_ELAPSED
+    }
+  }
+
+  trait Http1Timer = H1.traits.ConnTimer {
+    listens {
+      Http1.CONN_WAIT -> START
+      Http1.CONN_WAIT_DONE -> CANCEL
     }
   }
 
@@ -339,5 +347,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp
 }

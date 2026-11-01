@@ -88,7 +88,7 @@ orbital AgentPoolOrbital {
     id : string!
     pool : string @description "The pool the entry belongs to." = ""
     behavior : string @description "The pooled behavior's specifier, as `program/eval` wrote it." @synonyms "specifier, program" = ""
-    value : behavior @description "The pooled behavior as a value, ready to embed." = none
+    value : behavior! @description "The pooled behavior as a value, ready to embed." = none
     name : string @description "The pooled program's name." = ""
     storageKey : string @description "Where its source is kept in the storage bucket." = ""
     kind : string @description "The app's own kind of content (a game, a simulation…)." @synonyms "type, category" = ""
@@ -566,6 +566,10 @@ orbital AgentPoolOrbital {
 
     state ready {
       INIT -> ready
+      ;; the over-cap ENTRIES_LOADED arm lands here and emits SEARCH_FAILED, so ready answers it like searching does
+      SEARCH_FAILED -> ready
+        (emit POOL_FOUND { hits: [] })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
       SEARCH -> searching
         (fetch PoolEntry {
           filter: (and (= (object/get @entity pool) @config.poolName) (= (object/get @entity retired) false))

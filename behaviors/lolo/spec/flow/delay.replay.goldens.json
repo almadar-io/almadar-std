@@ -1,0 +1,284 @@
+{
+ "atom": "flow/atoms/std-delay.lolo",
+ "trait": "Delay",
+ "note": "Unkeyed START/CANCEL/ELAPSED are the single timer (idle/waiting); keyed ones arm independent deadlines in either state. The deadline ticks are played as their internal events (TIMER_DUE, KEYED_DUE).",
+ "cases": [
+  {
+   "id": "control-an-unkeyed-start-arms-the-single-timer",
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "delayMs": 50
+     },
+     "expect": {
+      "state": "waiting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-single-timer-fires-unkeyed",
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "delayMs": 0
+     },
+     "expect": {
+      "state": "waiting"
+     }
+    },
+    {
+     "event": "TIMER_DUE",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "waitedMs": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-start-leaves-the-single-timer-idle",
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "conn-7",
+      "delayMs": 15000
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-start-fires-its-key-once-due",
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "conn-7",
+      "delayMs": 0
+     }
+    },
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "key": "conn-7",
+         "waitedMs": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-due-keyed-deadline-fires-elapsed-with-its-key-and-only-it",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     },
+     {
+      "key": "conn-8",
+      "deadline": "2999-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "key": "conn-7",
+         "waitedMs": 15000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-cancel-disarms-that-key-only",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     },
+     {
+      "key": "conn-8",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "CANCEL",
+     "payload": {
+      "key": "conn-7"
+     },
+     "expect": {
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    },
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "key": "conn-8",
+         "waitedMs": 15000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyed-start-again-rearms-that-key",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 15000
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "conn-7",
+      "delayMs": 600000
+     }
+    },
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-keyed-cancel-leaves-the-single-timer-armed",
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "delayMs": 0
+     }
+    },
+    {
+     "event": "CANCEL",
+     "payload": {
+      "key": "conn-7"
+     },
+     "expect": {
+      "state": "waiting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-keyed-deadlines-due-together-each-fire-once",
+   "entity": {
+    "deadline": null,
+    "waitedMs": 0,
+    "keyed": [
+     {
+      "key": "conn-7",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 5
+     },
+     {
+      "key": "conn-8",
+      "deadline": "2000-01-01T00:00:00.000Z",
+      "waitedMs": 6
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "ELAPSED",
+        "payload": {
+         "key": "conn-7",
+         "waitedMs": 5
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "KEYED_DUE",
+     "payload": {},
+     "expect": {
+      "neverEmits": [
+       "ELAPSED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

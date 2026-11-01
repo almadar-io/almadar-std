@@ -2474,6 +2474,308 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-sent-command-arms-its-reply-timer",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY_WAIT",
+        "payload": {
+         "key": "read3",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply-disarms-its-reply-timer",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JC0xDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY_WAIT_DONE",
+        "payload": {
+         "key": "read3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply-timer-that-elapses-shuts-the-socket",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "read3",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/shutdown"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-read-that-fails-after-the-deadline-answers-timeout",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "read3",
+      "waitedMs": 5000
+     }
+    },
+    {
+     "event": "RESP_IO_FAILED",
+     "payload": {
+      "key": "read3",
+      "error": "the socket was shut down",
+      "kind": "closed"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "slow",
+         "kind": "timeout"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-closed-read-without-a-deadline-answers-failed",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     }
+    },
+    {
+     "event": "RESP_IO_FAILED",
+     "payload": {
+      "key": "read3",
+      "error": "reset",
+      "kind": "closed"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "slow",
+         "kind": "failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-timer-for-another-socket-does-nothing",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "read9",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "open",
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-reply-wait-is-the-declared-knob",
+   "config": {
+    "replyTimeoutMs": 250
+   },
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "slow",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REPLY_WAIT",
+        "payload": {
+         "key": "read3",
+         "delayMs": 250
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

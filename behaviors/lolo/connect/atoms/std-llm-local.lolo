@@ -1,6 +1,6 @@
 app std-llm-local [
   version: "1.0.0",
-  description: "std-llm-local — classification and embeddings on the device's own model and embedder (browser/prompt, browser/embed), with std-llm's request, result and failure events for classify, classifyMany and embed. The host plugs its model in; a host with none ends a request in LLM_FAILED with code NOT_CONFIGURED, one whose model cannot answer now with MODEL_UNAVAILABLE. A request that carries a key can be cancelled by LLM_CANCEL or by (cancel-call key) and ends in LLM_CANCELLED; a reply that arrives after the cancel is dropped."
+  description: "std-llm-local — structured prompts, classification and embeddings on the device's own model and embedder (browser/prompt, browser/embed), with std-llm's request, result and failure events for classify, classifyMany and embed. The host plugs its model in; a host with none ends a request in LLM_FAILED with code NOT_CONFIGURED, one whose model cannot answer now with MODEL_UNAVAILABLE. A request that carries a key can be cancelled by LLM_CANCEL or by (cancel-call key) and ends in LLM_CANCELLED; a reply that arrives after the cancel is dropped."
 ]
 type LocalJob = { action : string!, categories : [string], itemIds : [string], count : number, callKey : string }
 type LocalPending = { key : string!, job : string! }
@@ -18,6 +18,15 @@ orbital LlmLocalOrbital {
 
     state idle {
       INIT -> idle
+
+      LLM_PROMPT -> idle when (= ?key "")
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "A prompt requires a nonempty request key", key: ?key, action: "prompt" })
+      LLM_PROMPT -> idle when (!= ?key "")
+        (emit LLM_LOCAL_ASK {
+          job: (json/stringify { action: "prompt", categories: [], itemIds: [], count: 0, callKey: ?key }),
+          text: ?text,
+          schema: ?schema
+        })
 
       LLM_CLASSIFY -> idle when (= (array/len @payload.categories) 0)
         (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (default @payload.key ""), action: "classify" })
@@ -122,6 +131,9 @@ orbital LlmLocalOrbital {
         })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
 
+      LLM_LOCAL_REPLIED -> idle when (= (object/get (default (json/parse ?job LocalJob) { action: "" }) action "") "prompt")
+        (emit LLM_PROMPT_RESULT { key: (object/get (default (json/parse ?job LocalJob) { action: "" }) callKey ""), reply: ?reply })
+
       LLM_LOCAL_REPLIED -> idle when (= (object/get (default (json/parse @payload.job LocalJob) { action: "" }) action "") "classify")
         (emit LLM_LOCAL_CHECKED {
           job: @payload.job, reply: @payload.reply,
@@ -178,6 +190,9 @@ orbital LlmLocalOrbital {
     }
 
     emits {
+      LLM_PROMPT_RESULT -> external { reply : string!, key : string! }
+        @description "Raw on-device reply text under the request key. The caller validates its declared response shape and semantics."
+        @tier "primary"
       LLM_CLASSIFY_RESULT -> external {
         category : string!
         confidence : number!
@@ -266,6 +281,9 @@ orbital LlmLocalOrbital {
     }
 
     listens {
+      LLM_PROMPT -> input { text : string!, schema : string!, key : string! }
+        @description "Ask the on-device model with a JSON Schema response constraint. Returns raw reply text; no claim of factual correctness."
+
       LLM_CLASSIFY -> input {
         text : string!
         categories : [string]!

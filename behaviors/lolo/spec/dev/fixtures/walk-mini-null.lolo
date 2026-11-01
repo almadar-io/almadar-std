@@ -1,0 +1,20 @@
+app mini-null [
+  version: "1.0.0",
+  description: "Walk fixture: legitimate nulls in set and render-clearing effect arguments."
+]
+orbital MiniNull {
+  entity Item [runtime] {
+    id : string!
+    lastResult : string?
+  }
+  trait Flow -> Item [client] {
+    state idle {
+      INIT -> idle
+        (render-ui main <Typography content={"Ready"} />)
+      RESET -> idle
+        (set @entity.lastResult null)
+        (render-ui modal null)
+    }
+  }
+  page "/" as MiniNullStart -> Flow
+}

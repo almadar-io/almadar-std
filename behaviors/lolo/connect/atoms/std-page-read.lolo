@@ -1,0 +1,74 @@
+app std-page-read [
+  version: "1.0.0",
+  description: "Reads declared fields from every matching element of one explicitly selected browser tab, only on READ. It never watches, changes, opens or closes a page, and never truncates results."
+]
+
+type PageReadField = { selector : string, attr : string, resolve : boolean, template : string, required : boolean }
+type PageReadElement = { elementId : string!, fields : Map string string! }
+
+orbital PageReadOrbital {
+  entity PageReadRecord [runtime] {
+    id : string!
+    requestId : string = ""
+    tab : number = 0
+  }
+
+  trait PageRead -> PageReadRecord [optimistic] {
+    state idle {
+      READ_CANCEL -> idle
+        (emit READ_CANCELLED { requestId: ?requestId })
+      READ -> idle when (or (= ?requestId "") (<= ?tab 0))
+        (emit READ_FAILED { requestId: ?requestId, error: "A nonempty request id and positive tab id are required.", kind: invalid })
+      READ -> reading when (and (!= ?requestId "") (> ?tab 0))
+        (set @entity.requestId ?requestId)
+        (set @entity.tab ?tab)
+        (browser/tab-query { tab: ?tab, selector: @config.selector, fields: @config.fields }
+          { key: ?requestId, emit: { success: PAGE_READ, failure: PAGE_READ_FAILED, cancelled: PAGE_READ_CANCELLED } })
+    }
+    state reading {
+      READ -> reading
+        (emit READ_FAILED { requestId: ?requestId, error: "Another read is running. Cancel it before starting a new request.", kind: busy })
+      PAGE_READ -> idle when (= ?key @entity.requestId)
+        (emit READ_DONE { requestId: @entity.requestId, tab: ?tab, elements: ?elements })
+        (set @entity.requestId "")
+        (set @entity.tab 0)
+      PAGE_READ_FAILED -> idle when (= ?key @entity.requestId)
+        (emit READ_FAILED { requestId: @entity.requestId, error: ?error, kind: ?kind })
+        (set @entity.requestId "")
+        (set @entity.tab 0)
+      READ_CANCEL -> idle when (= ?requestId @entity.requestId)
+        (cancel-call @entity.requestId)
+        (emit READ_CANCELLED { requestId: @entity.requestId })
+        (set @entity.requestId "")
+        (set @entity.tab 0)
+      PAGE_READ_CANCELLED -> idle when (= ?key @entity.requestId)
+        (emit READ_CANCELLED { requestId: @entity.requestId })
+        (set @entity.requestId "")
+        (set @entity.tab 0)
+    }
+    emits {
+      READ_DONE -> external { requestId : string!, tab : number!, elements : [PageReadElement]! }
+        @description "All matching elements, retaining each page element identity and declared fields."
+      READ_FAILED -> external { requestId : string!, error : string!, kind : string! }
+        @description "The selected tab could not be read."
+      READ_CANCELLED -> external { requestId : string! }
+        @description "The selected read was cancelled."
+      PAGE_READ { tab : number!, elements : [PageReadElement]!, key : string! }
+      PAGE_READ_FAILED { error : string!, kind : string!, key : string! }
+      PAGE_READ_CANCELLED { key : string! }
+    }
+    listens {
+      READ -> input { requestId : string!, tab : number! }
+        @description "Read the explicitly selected tab once. The caller owns the user consent and selected-tab policy."
+      READ_CANCEL -> input { requestId : string! }
+        @description "Cancel the matching read."
+    }
+    config {
+      selector : string = "article p"
+        @label "Elements to read" @description "Exact CSS selector owned by the caller." @tier "domain"
+      fields : Map string PageReadField = { text: { required: true } }
+        @label "Fields to read" @description "Declared fields to read from each selected element." @tier "domain"
+    }
+  }
+  page boot as PageReadPage -> PageRead
+}

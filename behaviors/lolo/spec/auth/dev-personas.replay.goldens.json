@@ -364,6 +364,19 @@
         }
        },
        {
+        "event": "ANSWER_TOKEN_MINT",
+        "payload": {
+         "key": "p1"
+        }
+       },
+       {
+        "event": "TOKEN_MINTED",
+        "payload": {
+         "key": "p1",
+         "purpose": "answer"
+        }
+       },
+       {
         "event": "PERSONA_SIGN_IN_ANSWERED",
         "payload": {
          "status": 200
@@ -371,7 +384,8 @@
        }
       ],
       "neverEmits": [
-       "SIGN_IN_CREATED"
+       "SIGN_IN_CREATED",
+       "TOKEN_MINT"
       ]
      }
     }
@@ -619,9 +633,10 @@
    "steps": [
     {
      "from": "ready",
-     "event": "TOKEN_SIGN_IN_REQUESTED",
+     "event": "TOKEN_HOST",
      "payload": {
-      "token": "a.b.c"
+      "value": "127.0.0.1:9099",
+      "key": "a.b.c"
      },
      "expect": {
       "emits": [
@@ -657,9 +672,10 @@
    "steps": [
     {
      "from": "ready",
-     "event": "TOKEN_SIGN_IN_REQUESTED",
+     "event": "TOKEN_HOST",
      "payload": {
-      "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJzdWIiOiJhZGEiLCJ1aWQiOiJhZGEiLCJleHAiOjQxMDI0NDQ4MDB9."
+      "value": "127.0.0.1:9099",
+      "key": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJzdWIiOiJhZGEiLCJ1aWQiOiJhZGEiLCJleHAiOjQxMDI0NDQ4MDB9."
      },
      "expect": {
       "emits": [
@@ -694,9 +710,10 @@
    "steps": [
     {
      "from": "ready",
-     "event": "TOKEN_SIGN_IN_REQUESTED",
+     "event": "TOKEN_HOST",
      "payload": {
-      "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL290aGVyLmV4YW1wbGUiLCJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsInN1YiI6ImFkYSIsImV4cCI6NDEwMjQ0NDgwMH0."
+      "value": "127.0.0.1:9099",
+      "key": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL290aGVyLmV4YW1wbGUiLCJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsInN1YiI6ImFkYSIsImV4cCI6NDEwMjQ0NDgwMH0."
      },
      "expect": {
       "emits": [
@@ -742,6 +759,361 @@
        {
         "event": "SIGN_IN_CALLED"
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "act-as-asks-for-the-emulator-host-before-anything",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "PERSONA_ACT_AS",
+     "payload": {
+      "persona": "ada"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "neverEmits": [
+       "TOKEN_MINT",
+       "TOKEN_MINTED",
+       "PERSONA_SIGNED_IN",
+       "PERSONA_SIGN_IN_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "act-as-is-refused-without-the-emulator-host",
+   "note": "Production: FIREBASE_AUTH_EMULATOR_HOST is unset, so an alg:none token must never reach identity/sign-in.",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "",
+      "key": "ada"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_MINT",
+       "TOKEN_MINTED",
+       "PERSONA_SIGNED_IN",
+       "ANSWER_TOKEN_MINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "act-as-is-refused-when-the-host-is-not-the-emulator",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "auth.example.com:443",
+      "key": "ada"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_MINT",
+       "TOKEN_MINTED",
+       "PERSONA_SIGNED_IN",
+       "ANSWER_TOKEN_MINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "act-as-is-refused-when-the-environment-cannot-be-read",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ACT_AS_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "os"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_MINT",
+       "TOKEN_MINTED",
+       "PERSONA_SIGNED_IN",
+       "ANSWER_TOKEN_MINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-act-as-mints-the-persona-token-when-the-host-is-the-emulator",
+   "note": "With no [identity] entity in the atom the sign-in answers no-identity; the program's identity entity decides it for real.",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ACT_AS_HOST",
+     "payload": {
+      "value": "127.0.0.1:9099",
+      "key": "ada"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOKEN_MINT",
+        "payload": {
+         "key": "ada",
+         "purpose": "sign-in"
+        }
+       },
+       {
+        "event": "TOKEN_MINTED",
+        "payload": {
+         "key": "ada",
+         "purpose": "sign-in"
+        }
+       },
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-identity"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-sign-in-asks-for-the-emulator-host-before-anything",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "TOKEN_SIGN_IN_REQUESTED",
+     "payload": {
+      "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJzdWIiOiJhZGEiLCJ1aWQiOiJhZGEiLCJleHAiOjQxMDI0NDQ4MDB9."
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "neverEmits": [
+       "PERSONA_SIGNED_IN",
+       "PERSONA_SIGN_IN_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-sign-in-is-refused-without-the-emulator-host",
+   "note": "Production: a valid-looking alg:none token is refused before jws/verify and identity/sign-in run.",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "TOKEN_HOST",
+     "payload": {
+      "value": "",
+      "key": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJzdWIiOiJhZGEiLCJ1aWQiOiJhZGEiLCJleHAiOjQxMDI0NDQ4MDB9."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PERSONA_SIGNED_IN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-sign-in-is-refused-when-the-host-is-not-the-emulator",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "TOKEN_HOST",
+     "payload": {
+      "value": "auth.example.com:443",
+      "key": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJzdWIiOiJhZGEiLCJ1aWQiOiJhZGEiLCJleHAiOjQxMDI0NDQ4MDB9."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PERSONA_SIGNED_IN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-sign-in-is-refused-when-the-environment-cannot-be-read",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "TOKEN_HOST_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "os"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-emulator"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PERSONA_SIGNED_IN"
       ]
      }
     }

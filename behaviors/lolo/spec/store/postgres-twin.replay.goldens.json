@@ -9334,6 +9334,732 @@
     "POSTGRES_PASSWORD": "secret"
    },
    "note": "ROWS_SQL on one held session against a real Postgres 16: a parameterised read (jsonb stays text, timestamptz is UTC ISO), the scalar types (null, bool, float, int8 past 2^53 as text, jsonb as text, int[], bytea as base64, numeric as text), an empty result with its column, a text[] bind sent as an array literal, and a server error with its SQLSTATE"
+  },
+  {
+   "id": "a-sent-statement-arms-its-reply-timer",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       },
+       {
+        "event": "REPLY_WAIT",
+        "payload": {
+         "key": "recv",
+         "delayMs": 5000
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "the os/recv that waits for the statement's reply is paired with REPLY_WAIT, which std-delay arms for replyTimeoutMs"
+  },
+  {
+   "id": "a-reply-disarms-its-reply-timer",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAC4AAdpZAAAAAAAAAAAAAAZ////////AABjcmVhdGVkX2F0AAAAAAAAAAAABKD///////8AAHVwZGF0ZWRfYXQAAAAAAAAAAAAEoP///////wAAdGl0bGUAAAAAAAAAAAAAGf///////wAAc3RhdHVzAAAAAAAAAAAAABn///////8AAHByaW9yaXR5AAAAAAAAAAAAABf///////8AAHRhZ3MAAAAAAAAAAAAO2v///////wAARAAAAG4ABwAAAAJ0MQAAAB0yMDI2LTAzLTA1IDEwOjAwOjAwLjEyMzQ1NiswMAAAABYyMDI2LTAzLTA2IDExOjAwOjAwKzAwAAAACUZpeCBsb2dpbgAAAARvcGVuAAAAATMAAAAJWyJhIiwiYiJdQwAAAA1TRUxFQ1QgMQBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "REPLY_WAIT_DONE",
+        "payload": {
+         "key": "recv"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "a read that completes disarms its deadline before anything else"
+  },
+  {
+   "id": "a-split-reply-rearms-the-reply-timer",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAC4AAdpZAAAAAAAAAAAAAAZ",
+      "eof": false
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REPLY_WAIT_DONE",
+        "payload": {
+         "key": "recv"
+        }
+       },
+       {
+        "event": "REPLY_WAIT",
+        "payload": {
+         "key": "recv",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the next read of a reply split across reads waits under a fresh deadline"
+  },
+  {
+   "id": "a-reply-timer-that-elapses-shuts-the-socket",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "recv",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/shutdown"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-read-that-fails-after-the-deadline-answers-a-timeout-message",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "recv",
+      "waitedMs": 5000
+     }
+    },
+    {
+     "event": "PG_IO_FAILED",
+     "payload": {
+      "key": "recv",
+      "error": "the socket was shut down"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "REPLY_WAIT_DONE",
+        "payload": {
+         "key": "recv"
+        }
+       },
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server did not reply within 5000 ms"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "os/close"
+       }
+      ]
+     }
+    }
+   ],
+   "note": "STORE_FAILED carries no kind, so the timeout is stated in its message"
+  },
+  {
+   "id": "the-sql-ask-that-passes-the-deadline-answers-kind-timeout",
+   "steps": [
+    {
+     "event": "ROWS_SQL",
+     "payload": {
+      "key": "k",
+      "sql": "SELECT 1",
+      "params": []
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "recv",
+      "waitedMs": 5000
+     }
+    },
+    {
+     "event": "PG_IO_FAILED",
+     "payload": {
+      "key": "recv",
+      "error": "the socket was shut down"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "timeout",
+         "code": "",
+         "message": "the server did not reply within 5000 ms"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "SQL_FAILED carries a kind, so a statement whose reply passed the deadline answers timeout"
+  },
+  {
+   "id": "the-eof-after-the-deadline-answers-a-timeout-too",
+   "steps": [
+    {
+     "event": "ROWS_SQL",
+     "payload": {
+      "key": "k",
+      "sql": "SELECT 1",
+      "params": []
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "recv",
+      "waitedMs": 5000
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "",
+      "eof": true
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "timeout",
+         "code": "",
+         "message": "the server did not reply within 5000 ms"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-closed-read-without-a-deadline-answers-its-usual-message",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_IO_FAILED",
+     "payload": {
+      "key": "recv",
+      "error": "reset"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "reset"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-sql-ask-whose-read-fails-without-a-deadline-answers-store-failed",
+   "steps": [
+    {
+     "event": "ROWS_SQL",
+     "payload": {
+      "key": "k",
+      "sql": "SELECT 1",
+      "params": []
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "event": "PG_IO_FAILED",
+     "payload": {
+      "key": "recv",
+      "error": "reset"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "reset"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SQL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-timer-for-another-key-does-nothing",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "other",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "state": "running",
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-timer-after-the-session-closed-does-nothing",
+   "steps": [
+    {
+     "event": "REPLY_TIMER_ELAPSED",
+     "payload": {
+      "key": "recv",
+      "waitedMs": 5000
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     },
+     "expect": {
+      "state": "ready",
+      "effects": []
+     }
+    }
+   ]
   }
  ]
 }

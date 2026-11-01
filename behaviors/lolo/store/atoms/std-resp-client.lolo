@@ -4,6 +4,8 @@ app std-resp-client [
   description: "std-resp-client — RESP2 over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: the wire of the retired runtime drivers/redis. RESP_RUN { key, argv } is one command; calls with different keys run concurrently over ONE connection: the first call connects, later calls are written at once (or after the handshake when one is configured), the keys in flight are an ordered table because RESP replies come back in the order the commands were written, and each reply frame answers the oldest key. The connection closes when the table empties. A configured AUTH and SELECT db (db above 0) are one pipelined write whose reply is checked to be +OK before any command goes out. A command is a RESP array of bulk strings (the length counts UTF-8 bytes); a reply split across reads asks for more until the frame is whole. Replies map: +OK is text, an integer is a number, $-1 and *-1 are null, a bulk is UTF-8 text (invalid UTF-8 answers kind unsupported), -ERR word ... answers that key with kind redis and the first word as code while the other keys go on; a frame with an unknown type byte, a non-integer or too small length or a bulk not CRLF-terminated, a close inside a reply, a read timeout, a refused or failed transport or a reply past the largest reply fails EVERY key in flight with the same kind (protocol, failed, timeout, refused) and closes. A read or failure that belongs to an earlier socket (its ask key names the socket) is ignored. When authenticated, AUTH [user] password is the first command of the handshake pipeline: the password is the password credential, a secret knob the host fills into the os/send at the boundary as a credential segment, so the program, the journal and RESP_WIRE_SENT never hold it (the wire diagnostic shows the frame without the password bytes); a credential that is not held fails every key in flight with kind unconfigured before any connect. Not carried yet: array replies (kind unsupported), integers beyond 2^53 and TLS (rediss)."
 ]
 
+uses Delay from "std/behaviors/std-delay"
+
 type RespScalar = string | number
 
 orbital RespClientOrbital {
@@ -21,9 +23,17 @@ orbital RespClientOrbital {
     armed : boolean @description "A read is outstanding or its reply chain is running; one read per connection at a time." = false
     buf : bytes @description "Bytes read and not yet consumed." = ""
     failKind : string @description "The failure every in-flight call is answered with while the connection is torn down." = ""
+    timedOut : boolean @description "Whether the pending reply read passed replyTimeoutMs, so the failure that follows answers timeout." = false
     failCode : string @description "The server's error word of that failure, empty when none." = ""
     failMessage : string @description "The message of that failure." = ""
     @invariant (>= @entity.pending 0)
+  }
+
+  trait ReplyTimer = Delay.traits.Delay {
+    listens {
+      RespClient.REPLY_WAIT -> START
+      RespClient.REPLY_WAIT_DONE -> CANCEL
+    }
   }
 
   trait RespClient -> RespCall [optimistic] {
@@ -58,6 +68,11 @@ orbital RespClientOrbital {
         @label "Read size"
         @description "The most bytes one os/recv takes."
         @tier "infra"
+      replyTimeoutMs : number = 5000
+        @label "Reply wait (ms)"
+        @description "How long a pending reply read may wait for the server before the connection is shut down and every call in flight fails with kind timeout."
+        @synonyms "command timeout, read timeout, reply timeout"
+        @tier "infra"
       maxReply : number = 67108864
         @label "Largest reply"
         @description "A reply with more bytes than this fails as protocol."
@@ -66,6 +81,8 @@ orbital RespClientOrbital {
 
     state idle {
       INIT -> idle
+      REPLY_TIMER_ELAPSED -> idle
+      REPLY_SHUT -> idle
       RESP_CLOSED -> idle
       RESP_SENT -> idle
       RESP_READ -> idle
@@ -100,6 +117,8 @@ orbital RespClientOrbital {
 
     state authorizing {
       INIT -> authorizing
+      REPLY_TIMER_ELAPSED -> authorizing
+      REPLY_SHUT -> authorizing
       RESP_CLOSED -> authorizing
       RESP_SENT -> authorizing
       RESP_READ -> authorizing
@@ -121,6 +140,8 @@ orbital RespClientOrbital {
 
     state connecting {
       INIT -> connecting
+      REPLY_TIMER_ELAPSED -> connecting
+      REPLY_SHUT -> connecting
       RESP_CLOSED -> connecting
       RESP_SENT -> connecting
       RESP_READ -> connecting
@@ -170,12 +191,21 @@ orbital RespClientOrbital {
       RESP_SENT -> open when (not @entity.armed)
         (set @entity.armed true)
         (os/recv @entity.sock @config.recvBytes { key: (str/concat "read" @entity.sock), emit: { success: RESP_READ, failure: RESP_IO_FAILED } })
+        (emit REPLY_WAIT { key: (str/concat "read" @entity.sock), delayMs: @config.replyTimeoutMs })
       RESP_SENT -> open when @entity.armed
 
+      REPLY_TIMER_ELAPSED -> open when (= (default @payload.key "") (str/concat "read" @entity.sock))
+        (set @entity.timedOut true)
+        (os/shutdown @entity.sock { key: (str/concat "shut" @entity.sock), emit: { success: REPLY_SHUT, failure: REPLY_SHUT } })
+      REPLY_TIMER_ELAPSED -> open when (!= (default @payload.key "") (str/concat "read" @entity.sock))
+      REPLY_SHUT -> open
+
       RESP_IO_FAILED -> aborting when (array/includes [(str/concat "send" @entity.sock), (str/concat "read" @entity.sock)] @payload.key)
+        (emit REPLY_WAIT_DONE { key: @payload.key })
         (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
         (set @entity.sock -1)
-        (set @entity.failKind (if (= @payload.kind "denied") "refused" (if (= @payload.kind "timeout") "timeout" "failed")))
+        (set @entity.failKind (if @entity.timedOut "timeout" (if (= @payload.kind "denied") "refused" (if (= @payload.kind "timeout") "timeout" "failed"))))
+        (set @entity.timedOut false)
         (set @entity.failCode "")
         (set @entity.failMessage @payload.error)
         (emit RESP_ABORT { left: (array/len @entity.flight) })
@@ -183,6 +213,7 @@ orbital RespClientOrbital {
 
       RESP_READ -> open when (not (= @payload.key (str/concat "read" @entity.sock)))
       RESP_READ -> aborting when (and (= @payload.key (str/concat "read" @entity.sock)) @payload.eof (= (bytes/length @payload.data) 0) (= (bytes/length @entity.buf) 0))
+        (emit REPLY_WAIT_DONE { key: @payload.key })
         (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
         (set @entity.sock -1)
         (set @entity.failKind "failed")
@@ -190,11 +221,13 @@ orbital RespClientOrbital {
         (set @entity.failMessage "the server closed the connection before it replied")
         (emit RESP_ABORT { left: (array/len @entity.flight) })
       RESP_READ -> open when (and (= @payload.key (str/concat "read" @entity.sock)) (not (and @payload.eof (= (bytes/length @payload.data) 0) (= (bytes/length @entity.buf) 0))))
+        (emit REPLY_WAIT_DONE { key: @payload.key })
         (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
         (emit RESP_STEP { eof: @payload.eof, n: (bytes/length @entity.buf) })
 
       RESP_WANT -> open when (not @payload.eof)
         (os/recv @entity.sock @config.recvBytes { key: (str/concat "read" @entity.sock), emit: { success: RESP_READ, failure: RESP_IO_FAILED } })
+        (emit REPLY_WAIT { key: (str/concat "read" @entity.sock), delayMs: @config.replyTimeoutMs })
       RESP_WANT -> aborting when @payload.eof
         (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
         (set @entity.sock -1)
@@ -319,6 +352,8 @@ orbital RespClientOrbital {
 
     state aborting {
       INIT -> aborting
+      REPLY_TIMER_ELAPSED -> aborting
+      REPLY_SHUT -> aborting
       RESP_CLOSED -> aborting
       RESP_SENT -> aborting
       RESP_READ -> aborting
@@ -336,6 +371,21 @@ orbital RespClientOrbital {
     }
 
     emits {
+      REPLY_WAIT -> external {
+        key : string!
+        delayMs : number!
+      }
+        @description "A reply read is pending: arm its deadline (std-delay START) for replyTimeoutMs."
+        @tier "secondary"
+      REPLY_WAIT_DONE -> external {
+        key : string!
+      }
+        @description "The reply read completed or failed: disarm its deadline (std-delay CANCEL)."
+        @tier "secondary"
+      REPLY_SHUT {
+      }
+        @description "Internal: the connection whose reply passed its deadline was shut down; its pending read now fails."
+        @tier "internal"
       RESP_REPLIED -> external {
         key : string!
         kind : string!
@@ -423,6 +473,12 @@ orbital RespClientOrbital {
     }
 
     listens {
+      ReplyTimer.ELAPSED -> REPLY_TIMER_ELAPSED
+      REPLY_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+        @description "A reply read's deadline passed."
       RESP_RUN {
         key : string!
         argv : [string]!
@@ -448,5 +504,5 @@ orbital RespClientOrbital {
     }
   }
 
-  page boot as RespClientPage -> RespClient
+  page boot as RespClientPage -> RespClient, ReplyTimer
 }

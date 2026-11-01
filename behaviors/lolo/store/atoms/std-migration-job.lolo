@@ -176,10 +176,11 @@ orbital MigrationJobOrbital {
           }
           { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
       MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (!= (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (validate/string (object/get (object/get @entity.profile "shaping") "title")))
+        ;; a profile that shapes no title or content key reads "" here: no record has text under it, so each record is skipped with a reason, never dropped
         (set @entity.documents (array/concat @entity.documents
           (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
-                (titleKey (object/get (object/get @entity.profile "shaping") "title"))
-                (contentKey (object/get (object/get @entity.profile "shaping") "content"))
+                (titleKey (default (object/get (object/get @entity.profile "shaping") "title") ""))
+                (contentKey (default (object/get (object/get @entity.profile "shaping") "content") ""))
                 (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
             (if
               (validate/array @records)
@@ -203,9 +204,10 @@ orbital MigrationJobOrbital {
                         }]
                         [])))))
               []))))
+        ;; a profile that shapes no title key reads "" here: no record has text under it, so each record is skipped with a reason, never dropped
         (set @entity.sourceSkipped (array/concat @entity.sourceSkipped
           (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
-                (titleKey (object/get (object/get @entity.profile "shaping") "title"))
+                (titleKey (default (object/get (object/get @entity.profile "shaping") "title") ""))
                 (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
             (if
               (validate/array @records)

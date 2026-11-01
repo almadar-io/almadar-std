@@ -110,6 +110,7 @@ orbital PostgresOrbital {
     pwLen : number @description "The byte length of the login password, read by the kernel from the password credential; -1 when it is not held" = -1
     dbName : string @description "The database read from the connection URL" = ""
     sock : number @description "The held session's socket; below zero while no session is open" = -1
+    timedOut : boolean @description "Whether the pending reply read passed replyTimeoutMs, so the failure that follows answers as a timeout" = false
     inbox : bytes @description "Bytes received and not yet consumed as whole messages" = ""
     nonce : string @description "The SCRAM client nonce" = ""
     scram : string @description "The server signature the SCRAM server-final must carry" = ""
@@ -163,12 +164,26 @@ orbital PostgresOrbital {
       statementTimeoutMs: 10000
     }
     listens {
+      PostgresReplyTimer.ELAPSED -> REPLY_TIMER_ELAPSED
+      REPLY_TIMER_ELAPSED {
+        key : string
+        waitedMs : number!
+      }
+      REPLY_SHUT {
+      }
       PostgresClient.ROWS_SQL -> ROWS_SQL
       ROWS_SQL {
         key : string!
         sql : string!
         params : [RowCell?]
       }
+    }
+  }
+
+  trait PostgresReplyTimer = Pg.traits.ReplyTimer {
+    listens {
+      PostgresSession.REPLY_WAIT -> START
+      PostgresSession.REPLY_WAIT_DONE -> CANCEL
     }
   }
 
@@ -278,5 +293,5 @@ orbital PostgresOrbital {
     }
   }
 
-  page boot as PostgresPage -> PostgresClient, PostgresSession, PostgresGuard
+  page boot as PostgresPage -> PostgresClient, PostgresSession, PostgresReplyTimer, PostgresGuard
 }

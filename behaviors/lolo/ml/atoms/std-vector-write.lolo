@@ -163,12 +163,10 @@ orbital VectorWriteOrbital {
         (emit LOCK_RETRY { })
       LOCK_PID_READ -> probing when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (str/to-int (str/join (array/take (str/split @text " ") 1) "")) null)))
         (let ((text (bytes/to-string @payload.data)))
-          (if (== @text null)
-            (emit LOCK_RETRY { })
-            (let ((pid (str/to-int (str/join (array/take (str/split @text " ") 1) ""))))
+          (let ((pid (str/to-int (str/join (array/take (str/split @text " ") 1) ""))))
               (do
                 (set @entity.lockPid @pid)
-                (os/spawn "kill" ["-0" (str/concat @pid)] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } })))))
+                (os/spawn "kill" ["-0" (str/concat @pid)] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } }))))
       LOCK_BUSY -> backoff
         (emit LOCK_RETRY { })
     }
@@ -237,10 +235,6 @@ orbital VectorWriteOrbital {
     }
 
     state merging {
-      HEADER_REFUSED -> releasing
-        (set @entity.pendingCode @payload.code)
-        (set @entity.pendingDetail @payload.detail)
-        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       CHECKED -> releasing when @entity.unreadable
         (set @entity.pendingCode "ORB_VECTOR_CORRUPT")
         (set @entity.pendingDetail (str/concat @entity.path ": a record key could not be read"))
@@ -267,6 +261,10 @@ orbital VectorWriteOrbital {
     }
 
     state writing {
+      HEADER_REFUSED -> releasing
+        (set @entity.pendingCode @payload.code)
+        (set @entity.pendingDetail @payload.detail)
+        (if @entity.viaEnv (os/remove { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }) (os/remove (str/concat "~/.almadar/vectors/" @entity.rel ".lock") { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } }))
       MERGED -> renaming
         (if @entity.viaEnv (os/write-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat @entity.rel ".tmp") } @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } }) (os/write-file (str/concat "~/.almadar/vectors/" @entity.rel ".tmp") @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } }))
     }

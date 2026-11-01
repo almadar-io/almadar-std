@@ -1,12 +1,15 @@
 app std-delay [
   version: "1.0.0",
-  description: "std-delay — wait a declared number of milliseconds, then emit one event. START arms the deadline, CANCEL disarms it, ELAPSED fires once when the deadline passes. Replaces the retired async/delay operator."
+  description: "std-delay — wait a declared number of milliseconds, then emit one event. START arms the deadline, CANCEL disarms it, ELAPSED fires once when the deadline passes. Replaces the retired async/delay operator. A START or CANCEL carrying a key arms or disarms that key's own deadline instead, in either state, so one timer serves many waits at once (a server's open connections); each fires ELAPSED { key, waitedMs } once it passes. A keyless START, CANCEL and ELAPSED are the single timer, unchanged."
 ]
+type DelayKeyed = { key : string!, deadline : instant!, waitedMs : number! }
+
 orbital DelayOrbital {
   entity DelayTimer [runtime] {
     id : string!
     deadline : instant? @description "The instant at which ELAPSED fires; null while idle." = null
     waitedMs : number @description "Milliseconds the armed wait was set to." = 0
+    keyed : [DelayKeyed] @description "The keyed deadlines armed, each firing ELAPSED with its key." = []
   }
 
   trait Delay -> @rebindable DelayTimer [client] {
@@ -15,43 +18,80 @@ orbital DelayOrbital {
     state idle {
       INIT -> idle
         (set @entity.deadline null)
-      START -> waiting
+        (set @entity.keyed [])
+      START -> waiting when (= (default ?key "") "")
         (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
         (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
+      START -> idle when (!= (default ?key "") "")
+        (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
+      CANCEL -> idle when (!= (default ?key "") "")
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
+      KEYED_DUE -> idle when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
+        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
+          (when (!= @due null)
+            (do
+              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
+              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
+              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
+                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
+      KEYED_DUE -> idle when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
     }
 
     state waiting {
       INIT -> idle
         (set @entity.deadline null)
-      START -> waiting
+        (set @entity.keyed [])
+      START -> waiting when (= (default ?key "") "")
         (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
         (set @entity.deadline (time/add @now @entity.waitedMs "ms"))
-      CANCEL -> idle
+      START -> waiting when (!= (default ?key "") "")
+        (set @entity.keyed (array/append (array/filter @entity.keyed (fn d (!= @d.key ?key))) { key: (default ?key ""), deadline: (time/add @now (if (== ?delayMs null) @config.delayMs ?delayMs) "ms"), waitedMs: (if (== ?delayMs null) @config.delayMs ?delayMs) }))
+      CANCEL -> idle when (= (default ?key "") "")
         (set @entity.deadline null)
+      CANCEL -> waiting when (!= (default ?key "") "")
+        (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key ?key))))
       TIMER_DUE -> idle
         (set @entity.deadline null)
         (emit ELAPSED { waitedMs: @entity.waitedMs })
+      KEYED_DUE -> waiting when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
+        (let ((due (array/find @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))))
+          (when (!= @due null)
+            (do
+              (set @entity.keyed (array/filter @entity.keyed (fn d (!= @d.key @due.key))))
+              (emit ELAPSED { key: @due.key, waitedMs: @due.waitedMs })
+              (when (array/some @entity.keyed (fn d (and (!= @d.key @due.key) (not (time/isBefore @now @d.deadline)))))
+                (emit KEYED_DUE { left: (- (array/len @entity.keyed) 1) })))))
+      KEYED_DUE -> waiting when (not (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline)))))
     }
 
     emits {
       ELAPSED -> external {
         waitedMs : number!
+        key : string
       }
-        @description "The wait ended."
+        @description "The wait ended; key names the keyed deadline that passed, absent for the single timer."
         @synonyms "done, elapsed, time up, fired"
         @tier "domain"
       TIMER_DUE -> internal { }
+        @tier "internal"
+      KEYED_DUE -> internal {
+        left : number
+      }
+        @description "A keyed deadline may have passed; each one due fires ELAPSED in turn."
         @tier "internal"
     }
 
     listens {
       START {
         delayMs : number
+        key : string
       }
-        @description "Arm the wait; delayMs overrides the configured delay. Re-arming restarts it."
+        @description "Arm the wait; delayMs overrides the configured delay. Re-arming restarts it. With a key, arm (or restart) that key's own deadline and leave the single timer as it is."
         @synonyms "begin, wait, schedule"
-      CANCEL { }
-        @description "Disarm the wait; ELAPSED does not fire."
+      CANCEL {
+        key : string
+      }
+        @description "Disarm the wait; ELAPSED does not fire. With a key, disarm only that key's deadline."
         @synonyms "stop, abort"
     }
 
@@ -59,6 +99,9 @@ orbital DelayOrbital {
       deadlineCheck every 100ms
         when (and (!= @entity.deadline null) (not (time/isBefore @now (default @entity.deadline @now))))
         (emit TIMER_DUE { })
+      keyedCheck every 100ms
+        when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
+        (emit KEYED_DUE { left: (array/len @entity.keyed) })
     }
 
     config {
