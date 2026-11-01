@@ -4,7 +4,7 @@ app std-version-history [
 ]
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 orbital RevisionOrbital {
-    type RevisionLoaded = Event { data : [Revision]!, totalCount : number } "Fired when the revision collection finishes loading"
+    type RevisionLoaded = Event { data : [Revision]!, totalCount : number! } "Fired when the revision collection finishes loading"
 
     type RevisionLoadFailed = Event { error : string, code : string } "Fired when the revision collection fails to load"
 
@@ -204,7 +204,8 @@ orbital RevisionOrbital {
                 type: typography
                 variant: caption
               }, {
-                content: (time/format (time/parse @entity.createdAt) "MMM D, YYYY")
+                ;; a createdAt that does not parse shows as stored
+                content: (let ((at (time/parse @entity.createdAt))) (if (= @at null) @entity.createdAt (time/format @at "MMM D, YYYY")))
                 type: typography
                 variant: body
               }]
@@ -372,9 +373,10 @@ orbital RevisionOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            afterId: (object/get (array/first @entity.revisions) "id" "")
+            ;; no revisions leaves no anchor id
+            afterId: (let ((newest (array/first @entity.revisions))) (if (= @newest null) "" (object/get @newest "id" "")))
             beforeId: @entity.id
-            revisions: (array/map @entity.revisions (fn r { id: @r.id, label: (str/concat "v" (default @r.versionNumber "")), author: @r.authorName, timestamp: @r.createdAt, content: @r.content }))
+            revisions: (array/map @entity.revisions (fn r { id: @r.id, label: (str/concat "v" @r.versionNumber), author: @r.authorName, timestamp: @r.createdAt, content: @r.content }))
             type: version-diff
             view: side-by-side
           }, {
@@ -571,7 +573,7 @@ orbital RevisionOrbital {
         @tier "domain"
       RevisionLoaded {
         data : [Revision]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals a revision has been successfully retrieved and is ready."
         @synonyms "loaded, fetched, retrieved, available"
@@ -623,7 +625,7 @@ orbital RevisionOrbital {
         @tier "domain"
       RevisionLoaded {
         data : [Revision]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates a revision has been successfully retrieved and is ready."
         @synonyms "loaded, fetched, retrieved, available"

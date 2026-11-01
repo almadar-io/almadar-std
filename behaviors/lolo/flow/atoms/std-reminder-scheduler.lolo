@@ -42,7 +42,7 @@ orbital ReminderSchedulerOrbital {
       ;; the dedup write fires only for a record that actually matched.
       ScanRecordsLoaded -> idle when (= @config.enabled false)
       ScanFailed -> idle
-        (notify error (str/concat "Couldn't scan for reminders — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders"))
     }
 
     state scanning {
@@ -65,7 +65,7 @@ orbital ReminderSchedulerOrbital {
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ScanFailed -> idle
-        (notify error (str/concat "Couldn't scan for reminders — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders"))
     }
 
     emits {

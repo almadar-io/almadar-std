@@ -61,86 +61,6 @@ const OAUTH_CONNECTION: OperatorTypeRef = shape({
   connectedAt: STRING,
 });
 
-const HTTP_METHOD: OperatorTypeRef = union(lit('GET'), lit('POST'), lit('PUT'), lit('PATCH'), lit('DELETE'));
-const HTTP_CREDENTIAL_SLOT: OperatorTypeRef = union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) }));
-
-const HTTP_RETRY: OperatorTypeRef = shape({
-  max: NUMBER,
-  on: list(union(lit('1xx'), lit('408'), lit('5xx'), lit('429'), lit('timeout'), lit('failed'), NUMBER)),
-  backoffMs: NUMBER,
-  scheduleMs: list(NUMBER),
-  noResponseMax: NUMBER,
-});
-
-const HTTP_GRANT_REQUEST: OperatorTypeRef = shape({
-  method: union(lit('GET'), lit('POST')),
-  headers: mapOf(STRING, STRING),
-  timeoutMs: nullable(NUMBER),
-  retry: HTTP_RETRY,
-});
-
-const HTTP_AUTH: OperatorTypeRef = openShape({
-  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256'), lit('token-exchange'), lit('jwt-bearer'), lit('oauth-client')),
-  credential: HTTP_CREDENTIAL_SLOT,
-  name: STRING,
-  in: union(lit('header'), lit('query')),
-  user: HTTP_CREDENTIAL_SLOT,
-  tokenUrl: STRING,
-  grantRequest: HTTP_GRANT_REQUEST,
-  clientId: HTTP_CREDENTIAL_SLOT,
-  clientSecret: HTTP_CREDENTIAL_SLOT,
-  scope: STRING,
-  signs: STRING,
-  prefix: STRING,
-  encoding: union(lit('hex'), lit('base64')),
-  grant: STRING,
-  body: openShape({ json: rec('A'), form: rec('A') }),
-  clientAuth: union(lit('basic'), lit('post')),
-  op: union(lit('discovery'), lit('code'), lit('connect'), lit('refresh'), lit('revoke'), lit('userinfo')),
-  client: OAUTH_CLIENT,
-  code: STRING,
-  state: STRING,
-  provider: OAUTH_PROVIDER,
-  refreshToken: STRING,
-  token: STRING,
-  accessToken: STRING,
-  accessField: STRING,
-  expiresField: STRING,
-  expiresMarginMs: NUMBER,
-  storeAs: openShape({ name: STRING, scope: union(lit('app'), lit('user')) }),
-  key: HTTP_CREDENTIAL_SLOT,
-  alg: union(lit('RS256'), lit('ES256')),
-  claims: rec('A'),
-  subject: STRING,
-});
-
-const HTTP_PAGINATE: OperatorTypeRef = openShape({
-  style: union(lit('cursor'), lit('offset'), lit('page'), lit('link-header')),
-  param: STRING,
-  next: SEXPR,
-  collect: SEXPR,
-  max: NUMBER,
-});
-
-const HTTP_REQUEST: OperatorTypeRef = openShape({
-  query: rec('P'),
-  headers: mapOf(STRING, STRING),
-  json: tv('J'),
-  form: rec('S'),
-  text: STRING,
-  bytes: STRING,
-  multipart: openShape({ kind: union(lit('related'), lit('form-data')), parts: list(openShape({ headers: mapOf(STRING, STRING), text: STRING, bytes: STRING })) }),
-  retry: HTTP_RETRY,
-  presign: openShape({ expiresSec: NUMBER }),
-  formEncoding: union(lit('html'), lit('rfc3986')),
-  auth: HTTP_AUTH,
-  timeoutMs: nullable(NUMBER),
-  delayMs: nullable(NUMBER),
-  responseAs: union(lit('text'), lit('bytes')),
-  paginate: HTTP_PAGINATE,
-  stream: union(lit('sse'), lit('json-lines')),
-});
-
 const PERSIST_ACTION: OperatorTypeRef = {
   kind: 'union',
   of: [
@@ -941,80 +861,13 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       produces: rec('R'),
     },
   },
-  http: {
-    module: 'core',
-    // emit key order: effect/keyed_call.rs:15
-    emitKeys: ['success', 'failure', 'onMessage', 'cancelled'],
-    // effect/http.rs:22 REQUEST_KEYS, :42 BODY_KEYS, :49 AUTH_SCHEMES, :62-90 auth_keys, :234 onUnauthorized, :398 queryEncoding; orbital-core wire/http_wire.rs:287 default ports
-    httpWire: {
-      requestKeys: ['query', 'headers', 'json', 'form', 'text', 'bytes', 'multipart', 'auth', 'timeoutMs', 'delayMs', 'responseAs', 'paginate', 'stream', 'retry', 'formEncoding', 'queryEncoding', 'presign'],
-      bodyKeys: ['json', 'form', 'text', 'bytes', 'multipart'],
-      queryEncodings: ['uri', 'rfc3986'],
-      defaultPorts: { http: 80, https: 443 },
-      authSchemes: [
-        { name: 'oauth-client', keys: ['scheme', 'op', 'client', 'clients', 'code', 'state', 'subject', 'provider', 'refreshToken', 'token', 'accessToken'] },
-        { name: 'bearer', keys: ['scheme', 'credential'] },
-        { name: 'api-key', keys: ['scheme', 'credential', 'name', 'in'] },
-        { name: 'basic', keys: ['scheme', 'user', 'credential'] },
-        { name: 'oauth2-client', keys: ['scheme', 'tokenUrl', 'clientId', 'clientSecret', 'scope', 'grantRequest', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
-        { name: 'token-exchange', keys: ['scheme', 'tokenUrl', 'grant', 'body', 'clientAuth', 'clientId', 'clientSecret', 'accessField', 'expiresField', 'expiresMarginMs', 'storeAs', 'grantRequest', 'rotate', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
-        { name: 'jwt-bearer', keys: ['scheme', 'key', 'alg', 'claims', 'tokenUrl', 'grant', 'scope', 'expiresMarginMs', 'storeAs', 'grantRequest', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
-        { name: 'hmac-sha256', keys: ['scheme', 'credential', 'name', 'signs', 'encoding', 'prefix'] },
-      ],
-    },
-    category: 'effect',
-    minArity: 3,
-    maxArity: 5,
-    description:
-      'Send HTTP through the shared kernel: (http METHOD origin path request? options?). The origin, optionally including a path prefix, must be declared in egress; credentials are host-resolved named secret knobs. Keyless calls can run on client/extension; auth requires server execution. Replies carry { status, headers, body, key } (non-2xx is a success reply); failures carry { error, kind, credential, key }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service. An oauth-client auth runs one OAuth op end to end: discovery against a literal origin, and code, connect, refresh, revoke and userinfo against (http METHOD oauth-endpoint token|revocation|userinfo …), whose URL comes from the client metadata; failures carry { error, kind: oauth, code, reason }.',
-    hasSideEffects: true,
-    runsOn: 'server',
-    oauth: {
-      endpointTarget: 'oauth-endpoint',
-      endpointKinds: ['token', 'revocation', 'userinfo'],
-      ops: [
-        { name: 'discovery', required: [], optional: [] },
-        { name: 'code', required: ['code', 'state'], optional: ['subject'], endpoint: 'token' },
-        { name: 'connect', required: ['code', 'state', 'provider'], optional: [], endpoint: 'token' },
-        { name: 'refresh', required: ['refreshToken'], optional: [], endpoint: 'token' },
-        { name: 'revoke', required: ['token'], optional: [], endpoint: 'revocation' },
-        { name: 'userinfo', required: ['accessToken'], optional: [], endpoint: 'userinfo' },
-      ],
-    },
-    returnType: 'void',
-    params: [
-      { name: 'method', type: HTTP_METHOD, description: 'HTTP method word: GET, POST, PUT, PATCH or DELETE' },
-      { name: 'origin', type: STRING, description: 'Origin with optional path prefix: a string literal or a url-typed @config knob' },
-      { name: 'path', type: STRING, description: 'Request path, starting with "/"' },
-      {
-        name: 'request',
-        type: HTTP_REQUEST,
-        description: 'Request parts: query, headers, at most one body (json | form | text | bytes | multipart), auth, formEncoding, retry, presign, timeoutMs, delayMs (the host waits that many milliseconds before it sends; cancel-call aborts the wait), responseAs, paginate, stream',
-        optional: true,
-      },
-      {
-        name: 'options',
-        type: KEYED_CALL_ENVELOPE,
-        description: 'Optional trailing options: { key } names the call for cancel-call; { emit: { success, failure, cancelled, onMessage } } wires closed-circuit result routing',
-        optional: true,
-      },
-    ],
-    example: '["http", "GET", "https://api.example.com", "/items", { "query": { "limit": 10 } }, { "emit": { "success": "ITEMS_LOADED", "failure": "ITEMS_FAILED" } }]',
-    effect: {
-      kind: 'http',
-      produces: union(
-        shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING, key: union(STRING, lit(null)) }),
-        shape({ url: STRING, key: union(STRING, lit(null)) }),
-      ),
-    },
-  },
   'cancel-call': {
     module: 'core',
     category: 'effect',
     minArity: 1,
     maxArity: 1,
     description:
-      'Abort the in-flight keyed call started with this key in the same running app: a call-service, an http, a browser/prompt or a browser/embed; a no-op when none is in flight. A list of keys aborts each in turn. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure, and a reply that arrives later is dropped.',
+      'Abort the in-flight keyed call started with this key in the same running app: a call-service, a browser/prompt or a browser/embed; a no-op when none is in flight. A list of keys aborts each in turn. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure, and a reply that arrives later is dropped.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -1145,7 +998,18 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) or json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
     hasSideEffects: true,
     runsOn: 'server',
-    closedCall: { request: true },
+    closedCall: {
+      request: true,
+      requestKeysByLiteral: {
+        key: 'grant',
+        required: {
+          authorization_code: ['code', 'redirectUri', 'clientAuth'],
+          refresh_token: ['clientAuth'],
+          'jwt-bearer': ['signingKey', 'audience', 'ttlSeconds'],
+          'json-token': ['clientId', 'clientSecret', 'clientIdField', 'clientSecretField', 'accessField'],
+        },
+      },
+    },
     returnType: 'void',
     params: [
       {
@@ -1155,7 +1019,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
             credential: STRING,
             scope: union(lit('app'), lit('user')),
             tokenEndpoint: STRING,
-            grant: STRING,
+            grant: union(lit('authorization_code'), lit('refresh_token'), lit('jwt-bearer'), lit('json-token')),
             code: STRING,
             redirectUri: STRING,
             verifier: STRING,

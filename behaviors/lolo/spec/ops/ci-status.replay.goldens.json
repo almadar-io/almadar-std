@@ -1,7 +1,7 @@
 {
  "atom": "ops/atoms/std-ci-status.lolo",
  "trait": "CiStatus",
- "note": "from std-ci-status-program.test.ts; GraphQL pages and the retry ticks are host answers",
+ "note": "from std-ci-status-program.test.ts; the one aliased GraphQL read, the retry ticks and the GitHub client are host answers; the board is driven by CI_BOARD_* emits",
  "cases": [
   {
    "id": "load-starts-the-retry-keyed-ci-status",
@@ -62,13 +62,27 @@
      "expect": {
       "emits": [
        {
-        "event": "CI_GQL"
+        "event": "CI_GQL",
+        "payload": {
+         "variables": "{\"appId\":15368}"
+        }
        }
       ]
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "config": {
+    "repos": [
+     {
+      "owner": "almadar-io",
+      "name": "kflow"
+     }
+    ]
+   },
+   "defaults": [
+    "CiRetry"
+   ]
   },
   {
    "id": "control-attempt-for-another-key-asks-nothing",
@@ -91,7 +105,18 @@
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "config": {
+    "repos": [
+     {
+      "owner": "almadar-io",
+      "name": "kflow"
+     }
+    ]
+   },
+   "defaults": [
+    "CiRetry"
+   ]
   },
   {
    "id": "transient-failure-502-reports-retry-failed",
@@ -124,7 +149,7 @@
    "now": 1760531445678
   },
   {
-   "id": "permanent-failure-401-goes-idle-with-empty-stale-board",
+   "id": "permanent-failure-401-cancels-the-retry-and-fails-the-board",
    "steps": [
     {
      "event": "CI_STATUS_LOAD",
@@ -138,23 +163,38 @@
      },
      "from": "loading",
      "expect": {
-      "state": "idle",
+      "state": "loading",
       "emits": [
        {
-        "event": "CI_STATUS",
+        "event": "CI_RETRY_CANCEL",
+        "payload": {}
+       },
+       {
+        "event": "CI_READ_FAILED",
         "payload": {
-         "runs": [],
-         "stale": true
+         "error": "bad credentials"
+        }
+       },
+       {
+        "event": "CI_BOARD_FAILED",
+        "payload": {
+         "error": "bad credentials"
         }
        }
+      ],
+      "neverEmits": [
+       "CI_STATUS"
       ]
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "defaults": [
+    "CiRetry"
+   ]
   },
   {
-   "id": "retry-gave-up-goes-idle-with-stale-board",
+   "id": "retry-gave-up-fails-the-board",
    "steps": [
     {
      "event": "CI_STATUS_LOAD",
@@ -169,80 +209,31 @@
      },
      "from": "loading",
      "expect": {
-      "state": "idle",
+      "state": "loading",
       "emits": [
        {
-        "event": "CI_STATUS",
+        "event": "CI_READ_FAILED",
         "payload": {
-         "runs": [],
-         "stale": true
+         "error": "x"
         }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-failing-row-click-emits-its-run-for-the-log-reader",
-   "steps": [
-    {
-     "event": "CI_RUN_OPEN",
-     "payload": {
-      "id": "almadar-io/kflow",
-      "row": {
-       "id": "almadar-io/kflow",
-       "repo": "kflow",
-       "name": "CI",
-       "status": "completed",
-       "conclusion": "failure",
-       "createdAt": "2026-10-26T10:00:00Z",
-       "runId": 4242
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
+       },
        {
-        "event": "CI_RUN_SELECTED",
+        "event": "CI_BOARD_FAILED",
         "payload": {
-         "owner": "almadar-io",
-         "repo": "kflow",
-         "runId": "4242"
+         "error": "x"
         }
        }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-a-passing-row-click-emits-nothing",
-   "steps": [
-    {
-     "event": "CI_RUN_OPEN",
-     "payload": {
-      "id": "almadar-io/kflow",
-      "row": {
-       "id": "almadar-io/kflow",
-       "repo": "kflow",
-       "name": "CI",
-       "status": "completed",
-       "conclusion": "success",
-       "createdAt": "2026-10-26T10:00:00Z",
-       "runId": 4242
-      }
-     },
-     "expect": {
+      ],
       "neverEmits": [
-       "CI_RUN_SELECTED"
+       "CI_STATUS"
       ]
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "defaults": [
+    "CiRetry"
+   ]
   },
   {
    "id": "unreadable-graphql-answer-goes-to-the-retry-failure-route",
@@ -255,8 +246,7 @@
      "from": "loading",
      "entity": {
       "id": "b",
-      "key": "ci-status:2",
-      "page": 1
+      "key": "ci-status:2"
      },
      "expect": {
       "emits": [
@@ -277,13 +267,12 @@
     {
      "event": "CI_GQL_ANSWERED",
      "payload": {
-      "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}"
+      "body": "{\"data\":{\"r0\":{\"name\":\"kflow\",\"nameWithOwner\":\"almadar-io/kflow\",\"defaultBranchRef\":null},\"r1\":null}}"
      },
      "from": "loading",
      "entity": {
       "id": "b",
-      "key": "ci-status:2",
-      "page": 1
+      "key": "ci-status:2"
      },
      "expect": {
       "emits": [
@@ -294,6 +283,650 @@
       "neverEmits": [
        "CI_RETRY_FAILED"
       ]
+     }
+    }
+   ],
+   "config": {
+    "repos": [
+     {
+      "owner": "almadar-io",
+      "name": "kflow"
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-readable-graphql-answer-shows-failing-and-unavailable-rows-on-the-board",
+   "config": {
+    "repos": [
+     {
+      "owner": "almadar-io",
+      "name": "kflow"
+     },
+     {
+      "owner": "almadar-io",
+      "name": "gone"
+     }
+    ]
+   },
+   "defaults": [
+    "CiRetry"
+   ],
+   "steps": [
+    {
+     "event": "CI_GQL_ANSWERED",
+     "payload": {
+      "body": "{\"data\":{\"r0\":{\"name\":\"kflow\",\"nameWithOwner\":\"almadar-io/kflow\",\"defaultBranchRef\":{\"target\":{\"oid\":\"abc\",\"messageHeadline\":\"fix the thing\",\"committedDate\":\"2026-10-26T09:00:00Z\",\"checkSuites\":{\"nodes\":[{\"status\":\"COMPLETED\",\"conclusion\":\"SUCCESS\",\"workflowRun\":{\"databaseId\":4241,\"url\":\"https://github.com/almadar-io/kflow/actions/runs/4241\",\"createdAt\":\"2026-10-26T10:00:00Z\",\"workflow\":{\"name\":\"Lint\"}}},{\"status\":\"COMPLETED\",\"conclusion\":\"FAILURE\",\"workflowRun\":{\"databaseId\":4242,\"url\":\"https://github.com/almadar-io/kflow/actions/runs/4242\",\"createdAt\":\"2026-10-26T10:05:00Z\",\"workflow\":{\"name\":\"CI\"}}}]}}}},\"r1\":null}}"
+     },
+     "from": "loading",
+     "entity": {
+      "id": "b",
+      "key": "ci-status:2"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_RETRY_SUCCEEDED"
+       },
+       {
+        "event": "CI_DETAIL_ROWS",
+        "payload": {
+         "rows": [
+          {
+           "id": "almadar-io/kflow",
+           "owner": "almadar-io",
+           "repo": "kflow",
+           "section": "failing",
+           "headline": "fix the thing",
+           "tone": "danger",
+           "statusLabel": "Failing",
+           "meta": [
+            "CI"
+           ],
+           "at": "2026-10-26T10:05:00Z",
+           "url": "https://github.com/almadar-io/kflow/actions/runs/4242",
+           "runIds": [
+            4242,
+            4241
+           ]
+          },
+          {
+           "id": "almadar-io/gone",
+           "owner": "almadar-io",
+           "repo": "gone",
+           "section": "other",
+           "headline": "",
+           "tone": "neutral",
+           "statusLabel": "Unavailable",
+           "meta": [],
+           "at": null,
+           "url": "https://github.com/almadar-io/gone",
+           "runIds": []
+          }
+         ]
+        }
+       },
+       {
+        "event": "CI_BOARD_SHOW",
+        "payload": {
+         "note": "2 repositories",
+         "error": "",
+         "tiles": [
+          {
+           "label": "Failing",
+           "value": "1",
+           "tone": "danger",
+           "icon": "x-circle"
+          },
+          {
+           "label": "Running",
+           "value": "0",
+           "tone": "info",
+           "icon": "loader"
+          },
+          {
+           "label": "Passing",
+           "value": "0",
+           "tone": "success",
+           "icon": "check-circle"
+          },
+          {
+           "label": "Repositories",
+           "value": "2",
+           "tone": "neutral",
+           "icon": "git-branch"
+          }
+         ],
+         "sections": [
+          {
+           "key": "failing",
+           "label": "Failing"
+          },
+          {
+           "key": "running",
+           "label": "Running"
+          },
+          {
+           "key": "passing",
+           "label": "Passing"
+          },
+          {
+           "key": "other",
+           "label": "Other"
+          }
+         ],
+         "rows": [
+          {
+           "id": "almadar-io/kflow",
+           "section": "failing",
+           "title": "kflow",
+           "subtitle": "fix the thing",
+           "tone": "danger",
+           "statusLabel": "Failing",
+           "icon": "",
+           "meta": [
+            "CI"
+           ],
+           "at": "2026-10-26T10:05:00Z",
+           "url": "https://github.com/almadar-io/kflow/actions/runs/4242"
+          },
+          {
+           "id": "almadar-io/gone",
+           "section": "other",
+           "title": "gone",
+           "subtitle": "",
+           "tone": "neutral",
+           "statusLabel": "Unavailable",
+           "icon": "",
+           "meta": [],
+           "at": null,
+           "url": "https://github.com/almadar-io/gone"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "CI_RETRY_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-opening-a-row-with-runs-asks-the-github-client-for-its-first-run-jobs",
+   "entity": {
+    "id": "b",
+    "detailRows": [
+     {
+      "id": "almadar-io/kflow",
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "section": "failing",
+      "headline": "fix",
+      "tone": "danger",
+      "statusLabel": "Failing",
+      "meta": [
+       "CI"
+      ],
+      "at": "2026-10-26T10:05:00Z",
+      "url": "u",
+      "runIds": [
+       4242,
+       4241
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_DETAIL_OPEN",
+     "payload": {
+      "rowId": "almadar-io/kflow"
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_JOBS",
+        "payload": {
+         "owner": "almadar-io",
+         "repo": "kflow",
+         "runId": 4242
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-opening-a-row-with-no-runs-answers-an-empty-ready-detail",
+   "entity": {
+    "id": "b",
+    "detailRows": [
+     {
+      "id": "almadar-io/gone",
+      "owner": "almadar-io",
+      "repo": "gone",
+      "section": "other",
+      "headline": "fix",
+      "tone": "danger",
+      "statusLabel": "Failing",
+      "meta": [
+       "CI"
+      ],
+      "at": "2026-10-26T10:05:00Z",
+      "url": "u",
+      "runIds": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_DETAIL_OPEN",
+     "payload": {
+      "rowId": "almadar-io/gone"
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/gone",
+          "phase": "ready",
+          "items": [],
+          "code": "",
+          "codeTitle": "",
+          "errorLines": [],
+          "error": ""
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "CI_JOBS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-a-failed-job-answers-the-jobs-then-asks-the-run-log-reader",
+   "entity": {
+    "id": "b",
+    "detailRow": "almadar-io/kflow",
+    "detailRun": 4242
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_JOBS_READ",
+     "from": "jobs",
+     "payload": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": 4242,
+      "jobs": [
+       {
+        "id": 1,
+        "name": "build",
+        "status": "completed",
+        "conclusion": "failure",
+        "html_url": "u"
+       },
+       {
+        "id": 2,
+        "name": "lint",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "u"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "ready",
+          "items": [
+           {
+            "label": "build",
+            "tone": "danger",
+            "statusLabel": "Failed",
+            "meta": ""
+           },
+           {
+            "label": "lint",
+            "tone": "success",
+            "statusLabel": "Passed",
+            "meta": ""
+           }
+          ],
+          "code": "",
+          "codeTitle": "",
+          "errorLines": [],
+          "error": ""
+         }
+        }
+       },
+       {
+        "event": "CI_LOGS_LOAD",
+        "payload": {
+         "owner": "almadar-io",
+         "repo": "kflow",
+         "runId": "4242"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-all-jobs-passing-answers-the-jobs-without-asking-for-a-log",
+   "entity": {
+    "id": "b",
+    "detailRow": "almadar-io/kflow",
+    "detailRun": 4242
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_JOBS_READ",
+     "from": "jobs",
+     "payload": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": 4242,
+      "jobs": [
+       {
+        "id": 2,
+        "name": "lint",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "u"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "ready",
+          "items": [
+           {
+            "label": "lint",
+            "tone": "success",
+            "statusLabel": "Passed",
+            "meta": ""
+           }
+          ],
+          "code": "",
+          "codeTitle": "",
+          "errorLines": [],
+          "error": ""
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "CI_LOGS_LOAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-unreadable-jobs-answer-a-failed-detail",
+   "entity": {
+    "id": "b",
+    "detailRow": "almadar-io/kflow",
+    "detailRun": 4242
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_JOBS_FAILED",
+     "from": "jobs",
+     "payload": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": 4242,
+      "message": "not found"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "failed",
+          "items": [],
+          "code": "",
+          "codeTitle": "",
+          "errorLines": [],
+          "error": "not found"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-the-run-log-answers-the-code-block-with-the-failed-job-title",
+   "entity": {
+    "id": "b",
+    "detailRow": "almadar-io/kflow",
+    "detailRun": 4242,
+    "failedJob": "build"
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_LOGS",
+     "from": "logs",
+     "payload": {
+      "repo": "kflow",
+      "runId": "4242",
+      "lines": [
+       {
+        "job": "build",
+        "step": "test",
+        "msg": "compiling",
+        "level": "info"
+       },
+       {
+        "job": "build",
+        "step": "test",
+        "msg": "boom",
+        "level": "error"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "ready",
+          "items": [],
+          "code": "compiling\nboom",
+          "codeTitle": "build log",
+          "errorLines": [
+           2
+          ],
+          "error": ""
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-an-unread-run-log-answers-a-failed-detail",
+   "entity": {
+    "id": "b",
+    "detailRow": "almadar-io/kflow",
+    "detailRun": 4242
+   },
+   "steps": [
+    {
+     "trait": "CiDetail",
+     "event": "CI_LOGS_FAILED",
+     "from": "logs",
+     "payload": {
+      "runId": "4242",
+      "error": "no log",
+      "code": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "failed",
+          "items": [],
+          "code": "",
+          "codeTitle": "",
+          "errorLines": [],
+          "error": "no log"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "detail-the-run-log-reader-answer-reaches-the-detail-and-answers-the-ready-detail-with-error-lines",
+   "steps": [
+    {
+     "trait": "CiRunLogs",
+     "event": "CI_LOGS_NEXT",
+     "from": "reading",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CI_LOGS",
+        "payload": {
+         "repo": "kflow",
+         "runId": "4242",
+         "lines": [
+          {
+           "job": "build",
+           "step": "",
+           "msg": "compiling",
+           "level": "info"
+          },
+          {
+           "job": "build",
+           "step": "",
+           "msg": "boom",
+           "level": "error"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": "4242",
+      "failed": [
+       {
+        "id": 1,
+        "name": "build",
+        "conclusion": "failure"
+       }
+      ],
+      "cursor": 1,
+      "lines": [
+       {
+        "job": "build",
+        "step": "",
+        "msg": "compiling",
+        "level": "info"
+       },
+       {
+        "job": "build",
+        "step": "",
+        "msg": "boom",
+        "level": "error"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "CiDetail",
+     "event": "CI_LOGS",
+     "from": "logs",
+     "payload": {
+      "repo": "kflow",
+      "runId": "4242",
+      "lines": [
+       {
+        "job": "build",
+        "step": "",
+        "msg": "compiling",
+        "level": "info"
+       },
+       {
+        "job": "build",
+        "step": "",
+        "msg": "boom",
+        "level": "error"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CI_BOARD_DETAIL",
+        "payload": {
+         "detail": {
+          "rowId": "almadar-io/kflow",
+          "phase": "ready",
+          "items": [],
+          "code": "compiling\nboom",
+          "codeTitle": "build log",
+          "errorLines": [
+           2
+          ],
+          "error": ""
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "b",
+      "detailRow": "almadar-io/kflow",
+      "detailRun": 4242,
+      "failedJob": "build"
      }
     }
    ]

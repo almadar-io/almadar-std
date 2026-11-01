@@ -580,6 +580,1257 @@
           }
         }
       ]
+    },
+    {
+      "id": "http-create-pr-asks-the-http-client-for-one-post",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_PR",
+          "payload": {
+            "title": "t",
+            "body": "b",
+            "baseBranch": "main",
+            "headBranch": "feat"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "create-pr",
+                  "method": "POST",
+                  "target": "/repos/o/r/pulls"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-create-pr-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_PR",
+          "payload": {
+            "title": "t",
+            "body": "b",
+            "baseBranch": "main",
+            "headBranch": "feat"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "create-pr",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_CREATE_PR_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-pr-comments-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_PR_COMMENTS",
+          "payload": {
+            "prNumber": 7
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "pr-comments",
+                  "method": "GET",
+                  "target": "/repos/o/r/pulls/7/comments"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-pr-comments-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_PR_COMMENTS",
+          "payload": {
+            "prNumber": 7
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "pr-comments",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_GET_PR_COMMENTS_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issues-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_ISSUES",
+          "payload": {
+            "state": "closed"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "issues",
+                  "method": "GET"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issues-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_ISSUES",
+          "payload": {
+            "state": "closed"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "issues",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_LIST_ISSUES_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issue-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE",
+          "payload": {
+            "issueNumber": 12
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "issue:12",
+                  "method": "GET",
+                  "target": "/repos/o/r/issues/12"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issue-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE",
+          "payload": {
+            "issueNumber": 12
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "issue:12",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_GET_ISSUE_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-file-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_FILE",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "path": "x y/c.md",
+            "ref": "main"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "file",
+                  "method": "GET",
+                  "target": "/repos/a/b/contents/x%20y/c.md?ref=main"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-file-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_FILE",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "path": "x y/c.md",
+            "ref": "main"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "file",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_GET_FILE_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-commits-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_COMMITS",
+          "payload": {
+            "owner": "a",
+            "repo": "b"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "commits",
+                  "method": "GET",
+                  "target": "/repos/a/b/commits"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-commits-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_COMMITS",
+          "payload": {
+            "owner": "a",
+            "repo": "b"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "commits",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_LIST_COMMITS_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-create-issue-asks-the-http-client-for-one-post",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_ISSUE",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "title": "t"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "create-issue",
+                  "method": "POST",
+                  "target": "/repos/a/b/issues"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-create-issue-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_CREATE_ISSUE",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "title": "t"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "create-issue",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_CREATE_ISSUE_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-graphql-asks-the-http-client-for-one-post",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GRAPHQL",
+          "payload": {
+            "query": "{viewer{login}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "graphql",
+                  "method": "POST",
+                  "target": "/graphql"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-graphql-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GRAPHQL",
+          "payload": {
+            "query": "{viewer{login}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "graphql",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "status": 0,
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-runners-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNNERS",
+          "payload": {
+            "scope": "orgs/acme"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "runners:{\"scope\":\"orgs/acme\"}",
+                  "method": "GET",
+                  "target": "/orgs/acme/actions/runners"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-runners-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNNERS",
+          "payload": {
+            "scope": "orgs/acme"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "runners:{\"scope\":\"orgs/acme\"}",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_LIST_RUNNERS_FAILED",
+                "payload": {
+                  "scope": "orgs/acme",
+                  "status": 0,
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-runs-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNS",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "per_page": 5
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}",
+                  "method": "GET",
+                  "target": "/repos/a/b/actions/runs?per_page=5"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-runs-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUNS",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "per_page": 5
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_LIST_RUNS_FAILED",
+                "payload": {
+                  "owner": "a",
+                  "repo": "b",
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-jobs-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUN_JOBS",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "runId": 9
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "jobs:{\"owner\":\"a\",\"repo\":\"b\",\"runId\":9}",
+                  "method": "GET",
+                  "target": "/repos/a/b/actions/runs/9/jobs"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-jobs-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUN_JOBS",
+          "payload": {
+            "owner": "a",
+            "repo": "b",
+            "runId": 9
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "jobs:{\"owner\":\"a\",\"repo\":\"b\",\"runId\":9}",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_LIST_RUN_JOBS_FAILED",
+                "payload": {
+                  "owner": "a",
+                  "repo": "b",
+                  "runId": 9,
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-billing-asks-the-http-client-for-one-get",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_BILLING_USAGE",
+          "payload": {
+            "account": "acme",
+            "kind": "org",
+            "year": 2026,
+            "month": 10
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "billing:{\"account\":\"acme\",\"kind\":\"org\",\"year\":2026,\"month\":10}",
+                  "method": "GET",
+                  "target": "/organizations/acme/settings/billing/usage?year=2026&month=10"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-billing-client-that-cannot-open-answers-the-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_BILLING_USAGE",
+          "payload": {
+            "account": "acme",
+            "kind": "org",
+            "year": 2026,
+            "month": 10
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "billing:{\"account\":\"acme\",\"kind\":\"org\",\"year\":2026,\"month\":10}",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_BILLING_USAGE_FAILED",
+                "payload": {
+                  "account": "acme",
+                  "kind": "org",
+                  "status": 0,
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issue-comments-follow-up-keys-the-issue-body-and-targets-its-comments",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"number\":12}",
+            "key": "12"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "issue-comments:{\"number\":12}",
+                  "method": "GET",
+                  "target": "/repos/o/r/issues/12/comments"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-issue-comments-client-failure-answers-the-issue-failure",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout"
+      ],
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"number\":12}",
+            "key": "12"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "issue-comments:{\"number\":12}",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "GITHUB_GET_ISSUE_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: os/tcp-connect: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-clients-reply-for-the-graphql-key-reaches-the-graphql-route",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "graphql",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAxMQ0KDQp7ImRhdGEiOnt9fQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "graphql",
+                  "status": 200
+                }
+              },
+              {
+                "event": "GITHUB_GRAPHQL_ANSWERED",
+                "payload": {
+                  "body": "{\"data\":{}}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GRAPHQL_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-clients-reply-for-a-runs-key-reaches-the-runs-route-with-the-prefix-stripped",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAyMA0KDQp7IndvcmtmbG93X3J1bnMiOltdfQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}",
+                  "status": 200
+                }
+              },
+              {
+                "event": "GITHUB_RUNS",
+                "payload": {
+                  "owner": "a",
+                  "repo": "b"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_LIST_RUNS_FAILED",
+              "GITHUB_RUN_JOBS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-clients-reply-for-an-issue-key-reaches-the-issue-route-and-asks-its-comments",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "issue:12",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAxMw0KDQp7Im51bWJlciI6MTJ9",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "issue:12",
+                  "status": 200
+                }
+              },
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "issue-comments:{\"number\":12}"
+                }
+              }
+            ],
+            "neverEmits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-deadline-passing-times-the-graphql-call-out",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "graphql"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "graphql",
+                  "timeoutMs": 30000
+                }
+              },
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "status": 0,
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: timeout of 30000ms exceeded"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-deadline-passing-times-the-runs-call-out",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "runs:{\"owner\":\"a\",\"repo\":\"b\"}",
+                  "timeoutMs": 30000
+                }
+              },
+              {
+                "event": "GITHUB_LIST_RUNS_FAILED",
+                "payload": {
+                  "owner": "a",
+                  "repo": "b",
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: timeout of 30000ms exceeded"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-deadline-passing-times-the-create-pr-call-out",
+      "config": {
+        "owner": "o",
+        "repo": "r"
+      },
+      "defaults": [
+        "GithubHttp",
+        "GithubTimeout",
+        "GithubClient"
+      ],
+      "steps": [
+        {
+          "trait": "GithubTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "create-pr"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "create-pr",
+                  "timeoutMs": 30000
+                }
+              },
+              {
+                "event": "GITHUB_CREATE_PR_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR",
+                  "message": "GitHub API request failed: timeout of 30000ms exceeded"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "jobs-readable-body-maps-timestamps-through",
+      "steps": [
+        {
+          "event": "GITHUB_LIST_RUN_JOBS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"jobs\": [{\"id\": 7, \"name\": \"build\", \"status\": \"completed\", \"conclusion\": \"success\", \"html_url\": \"https://github.com/o/r/runs/7\", \"started_at\": \"2026-11-01T10:00:00Z\", \"completed_at\": \"2026-11-01T10:05:00Z\"}, {\"id\": 8, \"name\": \"test\", \"status\": \"in_progress\", \"html_url\": \"https://github.com/o/r/runs/8\", \"started_at\": \"2026-11-01T10:06:00Z\"}]}",
+            "key": "{\"owner\":\"o\",\"repo\":\"r\",\"runId\":5}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_RUN_JOBS",
+                "payload": {
+                  "owner": "o",
+                  "repo": "r",
+                  "runId": 5,
+                  "jobs": [
+                    {
+                      "id": 7,
+                      "name": "build",
+                      "status": "completed",
+                      "conclusion": "success",
+                      "html_url": "https://github.com/o/r/runs/7",
+                      "started_at": "2026-11-01T10:00:00Z",
+                      "completed_at": "2026-11-01T10:05:00Z"
+                    },
+                    {
+                      "id": 8,
+                      "name": "test",
+                      "status": "in_progress",
+                      "conclusion": null,
+                      "html_url": "https://github.com/o/r/runs/8",
+                      "started_at": "2026-11-01T10:06:00Z",
+                      "completed_at": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

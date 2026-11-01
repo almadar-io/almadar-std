@@ -78,28 +78,25 @@ orbital LaunchpadOrbOrbital {
         (render-ui main { type: stack, direction: vertical, gap: sm, children: [
           { type: stack, direction: horizontal, align: center, gap: sm, children: [
             { type: icon, name: orbit, size: md },
-            { type: typography, content: @config.title, variant: h4, weight: semibold },
-            { type: typography, content: (if (= @entity.machine null) "Reading the machine" @entity.machine.detail), variant: caption, color: muted }
+            { type: typography, content: @config.title, variant: h4, weight: semibold }
           ] },
-          { type: box, className: (if (= @entity.machine null) "hidden" ""), children: [{
-            type: graph-view
-            nodes: (array/map @entity.nodes (fn n { id: @n.id, label: @n.label, group: (if (= @n.id @entity.selected) "selected" @n.group), color: @n.color, size: @n.size }))
-            edges: @entity.edges
-            layout: radial
-            height: @config.graphHeight
-            showLabels: true
-            zoomToFit: true
-            onNodeClick: NODE_CLICK
-          }] },
-          { type: skeleton, variant: detail, rows: 4, className: (if (= @entity.machine null) "" hidden) },
-          { type: stack, direction: horizontal, align: center, justify: between, gap: sm, className: (if (= @entity.selected "") "hidden" "flex-wrap"), children: [
-            { type: typography, content: (if (= @entity.selected "") "" (str/concat (object/get (array/find @entity.stars (fn s (= @s.id @entity.selected))) "label" "") ": " (object/get (array/find @entity.stars (fn s (= @s.id @entity.selected))) "detail" ""))), variant: body, weight: medium },
-            { type: stack, direction: horizontal, align: center, gap: sm, children: [
-              { type: button, label: "Open", variant: secondary, size: sm, action: STAR_OPEN, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (!= @s.state "stopped")))) "" hidden) },
-              { type: button, label: "Close", variant: ghost, size: sm, action: STAR_STOP, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (!= @s.state "stopped")))) "" hidden) },
-              { type: button, label: "Reopen", variant: secondary, size: sm, action: STAR_RELAUNCH, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (= @s.state "stopped")))) "" hidden) }
-            ] }
-          ] },
+          (if (= @entity.machine null) { type: skeleton, variant: detail, rows: 4 } { type: stack, direction: vertical, gap: sm, children: [
+            { type: typography, content: @entity.machine.detail, variant: caption, color: muted },
+            {
+              type: graph-view
+              nodes: (array/map @entity.nodes (fn n { id: @n.id, label: @n.label, group: (if (= @n.id @entity.selected) "selected" @n.group), color: @n.color, size: @n.size }))
+              edges: @entity.edges
+              layout: radial
+              height: @config.graphHeight
+              showLabels: true
+              zoomToFit: true
+              onNodeClick: NODE_CLICK
+            }
+          ] }),
+          (let ((hit (array/find @entity.stars (fn s (= @s.id @entity.selected))))) (if (= @hit null) null { type: stack, direction: horizontal, align: center, justify: between, wrap: true, gap: sm, children: [
+            { type: typography, content: (str/concat (object/get @hit "label") ": " (object/get @hit "detail")), variant: body, weight: medium },
+            { type: stack, direction: horizontal, align: center, gap: sm, children: (if (= (object/get @hit "state") "stopped") [{ type: button, label: "Reopen", variant: secondary, size: sm, action: STAR_RELAUNCH, actionPayload: { id: @entity.selected } }] [{ type: button, label: "Open", variant: secondary, size: sm, action: STAR_OPEN, actionPayload: { id: @entity.selected } }, { type: button, label: "Close", variant: ghost, size: sm, action: STAR_STOP, actionPayload: { id: @entity.selected } }]) }
+          ] })),
           { type: typography, content: @config.hint, variant: caption, color: muted }
         ] })
       ORB_STATE -> ready

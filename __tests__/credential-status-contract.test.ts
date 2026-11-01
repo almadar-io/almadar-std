@@ -56,3 +56,32 @@ describe('credential administration effects', () => {
     expect(STD_OPERATORS['hash/scrypt'].runsOn).toBeUndefined();
   });
 });
+
+describe('credential-connect grant contract', () => {
+  const connect = STD_OPERATORS['credential-connect'];
+  const request = connect.params?.[0]?.type;
+
+  it('declares grant as a union of the four literal words and publishes it in the table', () => {
+    expect(request).toMatchObject({ kind: 'object', fields: { grant: { kind: 'union' } } });
+    const words = (request as { fields: { grant: { of: { value: string }[] } } }).fields.grant.of.map((member) => member.value);
+    expect(words).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token']);
+    expect(canonical.operators['credential-connect'].params[0]).toEqual(connect.params?.[0]);
+    expect(canonical.operators['credential-connect'].closedCall).toEqual(connect.closedCall);
+  });
+
+  it('lists required keys for exactly the declared grant words, each a declared request field the shape leaves optional or required', () => {
+    const by = connect.closedCall?.requestKeysByLiteral;
+    const fields = Object.keys((request as { fields: Record<string, unknown> }).fields);
+    expect(by?.key).toBe('grant');
+    expect(Object.keys(by?.required ?? {})).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token']);
+    for (const keys of Object.values(by?.required ?? {})) {
+      for (const key of keys) expect(fields).toContain(key);
+    }
+    expect(by?.required['authorization_code']).toEqual(['code', 'redirectUri', 'clientAuth']);
+  });
+
+  it('control: no other closed call declares per-literal request keys', () => {
+    const others = Object.entries(STD_OPERATORS).filter(([name, meta]) => name !== 'credential-connect' && meta.closedCall?.requestKeysByLiteral);
+    expect(others).toEqual([]);
+  });
+});

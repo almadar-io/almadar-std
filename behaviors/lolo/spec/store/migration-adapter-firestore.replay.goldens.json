@@ -51,7 +51,11 @@
      }
     }
    ],
-   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply"
+   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
   },
   {
    "id": "a-reply-that-is-not-json-is-unreadable",
@@ -102,7 +106,11 @@
      }
     }
    ],
-   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply"
+   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
   },
   {
    "id": "a-document-whose-name-is-not-under-documents-is-unreadable",
@@ -153,7 +161,11 @@
      }
     }
    ],
-   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply"
+   "note": "the reply path from reading, seeded: program/step has no HTTP host, so the live GET of MIGRATION_EXTRACT would fail before the reply",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
   },
   {
    "id": "a-non-numeric-integer-value-is-ledgered-with-its-field",
@@ -229,7 +241,49 @@
      }
     }
    ],
-   "note": "the build path from reading, seeded with one decoded document; the field with a non-numeric integerValue is ledgered, the numeric one is not"
+   "note": "the build path from reading, seeded with one decoded document; the field with a non-numeric integerValue is ledgered, the numeric one is not",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
+   "id": "a-pending-document-asks-the-http-client-for-one-get",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "FIRESTORE_NEXT",
+     "from": "reading",
+     "payload": {},
+     "entity": {
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/d/documents/c/x"
+       }
+      ],
+      "cursor": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FIRESTORE_HTTP_SEND",
+        "payload": {
+         "key": "doc",
+         "host": "firestore.googleapis.com",
+         "method": "GET",
+         "target": "/v1/projects/p/databases/d/documents/c/x",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
- ]
+ ],
+ "note": "std-migration-adapter-firestore over the composed std-http-client: each document read is one FIRESTORE_HTTP_SEND to the sourceOrigin host (the bearer token rides the client credential); the reply returns by call key."
 }

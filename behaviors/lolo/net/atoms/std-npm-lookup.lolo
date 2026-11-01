@@ -1,9 +1,12 @@
 app std-npm-lookup [
   version: "1.0.0",
   description: "std-npm-lookup — a read-only client of an npm-protocol registry (public npm or GitHub Packages; the origin is the registry knob and the bearer token is the token credential, both from config). GET only, never a write. One ask at a time; an ask during another answers NPM_LOOKUP_REFUSED npm_busy. NPM_LOOKUP { requestId, name, tag } reads the packument and answers NPM_LOOKED { requestId, name, versions (semver ascending), distTags, version } where version is the dist-tag tag points to (latest when tag is empty), empty when the package has no such tag, and tarballs maps each version to its tarball url, empty when the packument gives none or the url sits outside the registry origin; whether a version exists is its membership in versions. A reply is classified in NPM_LOOKUP_REFUSED.code: 401 and 403 are auth, 404 absent, 5xx unreachable, any other status unexpected; a transport failure is unreachable, an unset credential unconfigured.",
-  egress: ["https://registry.npmjs.org", "https://npm.pkg.github.com"]
+  net: { "registry.npmjs.org:443": [tcp], "npm.pkg.github.com:443": [tcp], "*.npmjs.org:443": [tcp], "*.pkg.github.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/npm-lookup"
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type LookupDist = { tarball : string? }
 type LookupVersionDoc = { dist : LookupDist? }
 type LookupPackument = { versions : Map string LookupVersionDoc?, dist-tags : Map string string }
@@ -14,6 +17,33 @@ orbital NpmLookupOrbital {
     requestId : string @description "The caller's name for the ask in flight." = ""
     name : string @description "The package the ask in flight is about." = ""
     tag : string @description "The dist-tag whose version the ask wants; latest when empty." = ""
+  }
+
+  trait LookupHttp = Http.traits.HttpClient {
+    config {
+      host: "registry.npmjs.org"
+      port: 443
+      tls: true
+      serverName: "registry.npmjs.org"
+      dynamicHost: true
+      credential: "NPM_REGISTRY_TOKEN"
+    }
+    listens {
+      NpmLookup.NPM_LOOKUP_HTTP_SEND -> HTTP_SEND
+      LookupTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait LookupTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 20000
+      cancelOnDeadline: false
+    }
+    listens {
+      NpmLookup.NPM_LOOKUP_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      LookupHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      LookupHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait NpmLookup -> NpmLookupAsk {
@@ -32,17 +62,18 @@ orbital NpmLookupOrbital {
       INIT -> idle
       NPM_LOOKUP -> looking
         (emit NPM_LOOKUP_REFUSED { requestId: @payload.requestId, name: @payload.name, code: "npm_busy", status: 0, error: (str/concat "the registry is being asked about " @entity.name) })
-      NPM_LOOKUP_GET -> looking when (not @config.authenticated)
-        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
-          headers: { Accept: "application/json" },
-          timeoutMs: @config.timeoutMs
-        } { key: "lookup", emit: { success: NPM_LOOKUP_PACKUMENT, failure: NPM_LOOKUP_UNREACHABLE } })
-      NPM_LOOKUP_GET -> looking when @config.authenticated
-        (http GET @config.registry (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))) {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: "lookup", emit: { success: NPM_LOOKUP_PACKUMENT, failure: NPM_LOOKUP_UNREACHABLE } })
+      NPM_LOOKUP_GET -> idle when (not (str/startsWith @config.registry "https://"))
+        (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: "unconfigured", status: 0, error: "the registry knob must be an https:// origin" })
+      NPM_LOOKUP_GET -> looking when (str/startsWith @config.registry "https://")
+        (emit NPM_LOOKUP_HTTP_SEND {
+          key: "lookup",
+          method: "GET",
+          target: (str/concat "/" (str/slice @entity.name 0 1) (str/encode-uri-component (str/slice @entity.name 1 (str/len @entity.name)))),
+          headers: [{ name: "accept", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.registry 8 (str/len @config.registry))
+        })
       NPM_LOOKUP_PACKUMENT -> idle when (= @payload.status 200)
         (let ((doc (json/parse @payload.body LookupPackument)))
           (if (= @doc null)
@@ -54,7 +85,7 @@ orbital NpmLookupOrbital {
       NPM_LOOKUP_PACKUMENT -> idle when (!= @payload.status 200)
         (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: (if (or (= @payload.status 401) (= @payload.status 403)) "auth" (if (= @payload.status 404) "absent" (if (>= @payload.status 500) "unreachable" "unexpected"))), status: @payload.status, error: (str/concat "the registry answered " @payload.status " for " @entity.name) })
       NPM_LOOKUP_UNREACHABLE -> idle
-        (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: (if (= @payload.kind "unconfigured") "unconfigured" "unreachable"), status: 0, error: @payload.error })
+        (emit NPM_LOOKUP_REFUSED { requestId: @entity.requestId, name: @entity.name, code: (if (= @payload.kind "denied") "unconfigured" "unreachable"), status: 0, error: @payload.error })
     }
 
     emits {
@@ -69,11 +100,8 @@ orbital NpmLookupOrbital {
       NPM_LOOKUP_GET { requestId : string! }
         @description "Internal: read the packument of the package in flight."
         @tier "internal"
-      NPM_LOOKUP_PACKUMENT { status : number!  headers : Map string string  body : string!  key : string }
-        @description "Internal: a packument reply."
-        @tier "internal"
-      NPM_LOOKUP_UNREACHABLE { error : string!  kind : string! }
-        @description "Internal: a packument call never produced a reply."
+      NPM_LOOKUP_HTTP_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string!  host : string }
+        @description "Internal: the registry read, for the HTTP client."
         @tier "internal"
     }
 
@@ -81,31 +109,21 @@ orbital NpmLookupOrbital {
       NPM_LOOKUP { requestId : string!  name : string!  tag : string }
         @description "Read the package's published versions and dist-tags."
         @synonyms "npm view, list versions, dist-tags, latest version, version exists"
+      NPM_LOOKUP_PACKUMENT { status : number!  headers : Map string string  body : string! }
+      NPM_LOOKUP_UNREACHABLE { error : string!  kind : string! }
+      LookupHttp.HTTP_REPLIED -> NPM_LOOKUP_PACKUMENT with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "lookup")
+      LookupHttp.HTTP_FAILED -> NPM_LOOKUP_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "lookup")
+      LookupTimeout.TIMED_OUT -> NPM_LOOKUP_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "lookup")
     }
 
     config {
       registry : url = "https://registry.npmjs.org"
         @label "Registry origin"
-        @description "The registry origin (scheme://host, no trailing slash); declared in egress. https://npm.pkg.github.com for GitHub Packages."
+        @description "The registry origin (https://host, no trailing slash); the host must be granted in net. https://npm.pkg.github.com for GitHub Packages, whose composer sets the LookupHttp credential."
         @synonyms "npm registry, github packages"
-        @tier "infra"
-      authenticated : boolean = false
-        @label "Send the token"
-        @description "Send the token credential as a bearer on every read; off for public npm."
-        @synonyms "private registry, auth"
-        @tier "infra"
-      token : secret = "NPM_REGISTRY_TOKEN"
-        @label "Registry token"
-        @description "Name of the credential holding the registry's bearer token (a GitHub token with read:packages for GitHub Packages)."
-        @synonyms "npm token, github token"
-        @tier "infra"
-      timeoutMs : number = 20000
-        @label "Request timeout (ms)"
-        @description "Milliseconds one registry read may take."
-        @synonyms "timeout"
         @tier "infra"
     }
   }
 
-  page boot as NpmLookupPage -> NpmLookup
+  page boot as NpmLookupPage -> NpmLookup, LookupHttp, LookupTimeout
 }

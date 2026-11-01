@@ -50,16 +50,13 @@ type PgEmitConfigItem = { id : string!, path : string!, emit : PgEmitObj!, allow
 type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
 type LnProgram = { orbitals : [HcOrbital], egress : [string]? }
 type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]!, config : Map string HcVal?, inGuard : boolean? }
-type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
 type EmitResult = { id : string!, findings : [OrbFinding]! }
 type HcParam = { name : string!, optional : boolean?, type : HcType }
-type HcClosed = { request : boolean?, intRange : HcIntRange? }
-type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
+type HcByLiteral = { key : string!, required : Map string [string]! }
+type HcClosed = { request : boolean?, intRange : HcIntRange?, requestKeysByLiteral : HcByLiteral? }
 type HcGrantNeed = Map string HcVal
-type HcHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HcAuthScheme]!, defaultPorts : Map string number! }
-type HcAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
 type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
-type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
 type HcIntRange = { arg : number!, min : number!, max : number! }
 type HcType = string | HcTypeNode
 type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
@@ -85,7 +82,7 @@ type EwTransition = { event : string, effects : [EwNode?] }
 type EwSource = { kind : string, trait : string, orbital : string }
 type LnProgramHE = { orbitals : [HcOrbital] }
 type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
-type HcExtras = { closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
+type HcExtras = { closedCall : HcClosed?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, family : string?, emitKeys : [string]? }
 type CiNode = string | number | boolean | [CiNode?] | Map string CiNode?
 
 type WalkSlot = { kind : string!, args : [number] }
@@ -189,7 +186,6 @@ orbital OrbLintEngineOrbital {
   uses ItemActionEvent from "std/behaviors/std-orb-lint-item-action-event"
   uses FieldPath from "std/behaviors/std-orb-lint-field-path"
   uses RenderUiPattern from "std/behaviors/std-orb-lint-render-ui-pattern"
-  uses HttpSite from "std/behaviors/std-orb-lint-http-site"
   uses KeyedCallKeys from "std/behaviors/std-orb-lint-keyed-call-keys"
   uses CrossEmitter from "std/behaviors/std-orb-lint-cross-emitter"
   uses CrossRegistry from "std/behaviors/std-orb-lint-cross-registry"
@@ -223,7 +219,6 @@ orbital OrbLintEngineOrbital {
   uses FindingCodes from "std/behaviors/std-orb-lint-finding-codes"
   uses GroupbyEnumColumnGap from "std/behaviors/std-orb-lint-groupby-enum-column-gap"
   uses HostEffects from "std/behaviors/std-orb-lint-host-effects"
-  uses HttpRequest from "std/behaviors/std-orb-lint-http-request"
   uses IconExists from "std/behaviors/std-orb-lint-icon-exists"
   uses MergedFields from "std/behaviors/std-orb-lint-merged-fields"
   uses Oauth from "std/behaviors/std-orb-lint-oauth"
@@ -314,7 +309,7 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      rules : [string] = ["asset-inline-url", "async-result-deaf-target", "binding-fields", "binding-roots", "binding-setters", "binding-traits", "browser-effects", "call-service", "circuit-client-bound", "circuit-emits", "circuit-graph", "circuit-item-actions", "circular-dependencies", "client-tick-locality", "collection-policy", "composed-wiring", "config-dangling-ref", "config-knob", "config-role-lists", "control-unhandled", "control-value-discarded", "control-value-discarded-final", "cross-duplicate-entity", "cross-emitter", "cross-registry", "derived-field-write", "dispatch-contract", "duplicate-transition", "duplicate-use-alias", "effect-forms", "egress-scheme-unused", "embed-bridge", "embed-config-forward", "emit", "emit-config-ref", "emit-declaration", "empty-event-name", "engine-rule-count", "entity-access", "entity-browser-storage", "entity-duplicate-field", "entity-empty-enum", "entity-field-type", "entity-locale-instances", "entity-mock-member", "entity-mutation", "entity-name-shadows-trait-union", "entity-persistence", "entity-semantic-default", "entity-shape", "event-id-uniqueness", "event-wiring", "expectation-config-knob", "expectation-event-unfired", "expectation-field-undeclared", "expectation-final", "expectation-persistent-unwritten", "expectation-provider-mismatch", "expectation-unsatisfied", "expected-field-not-provided", "external-emit-payload", "fetch-by-id-payload", "fetch-deliver", "field-path", "filter-field-never-written", "finding-codes", "generic-types", "groupby-enum-column-gap", "host-effects", "http-egress-entry", "http-request", "http-site", "icon-exists", "icon-format", "id-ledger", "id-refs", "identity-unique", "inbound", "inbound-answer-foreign", "init-coverage", "invariants", "item-action-event", "keyed-call", "keyed-call-keys", "listen-per", "listen-redundant-embed-route", "listen-route-starves-required-field", "listen-source-never-produces", "listen-source-unresolved", "listen-trigger", "listen-wildcard-unkeyed", "literal-default", "llm-wire-unrouted", "loop-invariant-parse", "merged-fields", "missing-orbital-name", "navigate", "nav-target-final", "not-found", "oauth", "orbital-config-dead-knob", "orbital-duplicate-name", "orbital-ref-closure", "orbital-ref-config", "orbital-ref-extend", "os-grants", "os-grants-final", "page-content-owner", "page-empty-traits", "page-modifiers", "page-path", "page-path-uniqueness", "page-unreachable", "pattern-props", "payload-field-name", "placement", "program-eval", "query-index", "relation-targets", "render-ui-pattern", "reserved-component-name", "retired-effect-forms", "rui-binding", "rui-effects", "schema-header", "service-def", "set-column", "sexpr-binding", "sigil-context", "sign-in-route", "slot", "slot-tick", "state-shape", "state-unreachable", "store-binding", "theme-pin-contradicts-app", "theme-ref", "theme-undeclared", "theme-values", "tick-requires-runtime", "time-unit", "trait-embeds", "trait-id-uniqueness", "trait-mounts", "trait-ref-config", "trait-refs", "transition-refs", "type-param-sweep", "unsigned-guard", "untyped-array", "user-field-exists", "user-identity", "viewer-stranded"]
+      rules : [string] = ["asset-inline-url", "async-result-deaf-target", "binding-fields", "binding-roots", "binding-setters", "binding-traits", "browser-effects", "call-service", "circuit-client-bound", "circuit-emits", "circuit-graph", "circuit-item-actions", "circular-dependencies", "client-tick-locality", "collection-policy", "composed-wiring", "config-dangling-ref", "config-knob", "config-role-lists", "control-unhandled", "control-value-discarded", "control-value-discarded-final", "cross-duplicate-entity", "cross-emitter", "cross-registry", "derived-field-write", "dispatch-contract", "duplicate-transition", "duplicate-use-alias", "effect-forms", "egress-scheme-unused", "embed-bridge", "embed-config-forward", "emit", "emit-config-ref", "emit-declaration", "empty-event-name", "engine-rule-count", "entity-access", "entity-browser-storage", "entity-duplicate-field", "entity-empty-enum", "entity-field-type", "entity-locale-instances", "entity-mock-member", "entity-mutation", "entity-name-shadows-trait-union", "entity-persistence", "entity-semantic-default", "entity-shape", "event-id-uniqueness", "event-wiring", "expectation-config-knob", "expectation-event-unfired", "expectation-field-undeclared", "expectation-final", "expectation-persistent-unwritten", "expectation-provider-mismatch", "expectation-unsatisfied", "expected-field-not-provided", "external-emit-payload", "fetch-by-id-payload", "fetch-deliver", "field-path", "filter-field-never-written", "finding-codes", "generic-types", "groupby-enum-column-gap", "host-effects", "http-egress-entry", "icon-exists", "icon-format", "id-ledger", "id-refs", "identity-unique", "inbound", "inbound-answer-foreign", "init-coverage", "invariants", "item-action-event", "keyed-call", "keyed-call-keys", "listen-per", "listen-redundant-embed-route", "listen-route-starves-required-field", "listen-source-never-produces", "listen-source-unresolved", "listen-trigger", "listen-wildcard-unkeyed", "literal-default", "llm-wire-unrouted", "loop-invariant-parse", "merged-fields", "missing-orbital-name", "navigate", "nav-target-final", "not-found", "oauth", "orbital-config-dead-knob", "orbital-duplicate-name", "orbital-ref-closure", "orbital-ref-config", "orbital-ref-extend", "os-grants", "os-grants-final", "page-content-owner", "page-empty-traits", "page-modifiers", "page-path", "page-path-uniqueness", "page-unreachable", "pattern-props", "payload-field-name", "placement", "program-eval", "query-index", "relation-targets", "render-ui-pattern", "reserved-component-name", "retired-effect-forms", "rui-binding", "rui-effects", "schema-header", "service-def", "set-column", "sexpr-binding", "sigil-context", "sign-in-route", "slot", "slot-tick", "state-shape", "state-unreachable", "store-binding", "theme-pin-contradicts-app", "theme-ref", "theme-undeclared", "theme-values", "tick-requires-runtime", "time-unit", "trait-embeds", "trait-id-uniqueness", "trait-mounts", "trait-ref-config", "trait-refs", "transition-refs", "type-param-sweep", "unsigned-guard", "untyped-array", "user-field-exists", "user-identity", "viewer-stranded"]
         @label "Rules"
         @description "Every rule name the composed rule traits answer LINT_FOUND with (a trait that answers twice, such as std-orb-lint-os-grants with os-grants and os-grants-final, lists both). A pass settles when each rule it expects has answered. std-orb-lint-engine-rule-count refuses a list that differs from the names the LINT_FOUND routes below answer with."
       finalRules : [string] = ["expectation-final", "not-found", "control-unhandled", "os-grants-final", "control-value-discarded-final", "nav-target-final"]
@@ -430,7 +425,6 @@ orbital OrbLintEngineOrbital {
       OrbLintItemActionEvent.LINT_FOUND -> LINT_FOUND
       OrbLintFieldPath.LINT_FOUND -> LINT_FOUND
       OrbLintRenderUiPattern.LINT_FOUND -> LINT_FOUND
-      OrbLintHttpSite.LINT_FOUND -> LINT_FOUND
       OrbLintKeyedCallKeys.LINT_FOUND -> LINT_FOUND
       OrbLintCrossEmitter.LINT_FOUND -> LINT_FOUND
       OrbLintCrossRegistry.LINT_FOUND -> LINT_FOUND
@@ -464,7 +458,6 @@ orbital OrbLintEngineOrbital {
       OrbLintFindingCodes.LINT_FOUND -> LINT_FOUND
       OrbLintGroupbyEnumColumnGap.LINT_FOUND -> LINT_FOUND
       OrbLintHostEffects.LINT_FOUND -> LINT_FOUND
-      OrbLintHttpRequest.LINT_FOUND -> LINT_FOUND
       OrbLintIconExists.LINT_FOUND -> LINT_FOUND
       OrbLintMergedFields.LINT_FOUND -> LINT_FOUND
       OrbLintOauth.LINT_FOUND -> LINT_FOUND
@@ -728,8 +721,6 @@ orbital OrbLintEngineOrbital {
   }
   trait OrbLintRenderUiPattern = RenderUiPattern.traits.OrbLintRenderUiPattern {
   }
-  trait OrbLintHttpSite = HttpSite.traits.OrbLintHttpSite {
-  }
   trait OrbLintKeyedCallKeys = KeyedCallKeys.traits.OrbLintKeyedCallKeys {
   }
   trait OrbLintCrossEmitter = CrossEmitter.traits.OrbLintCrossEmitter {
@@ -892,16 +883,6 @@ orbital OrbLintEngineOrbital {
       OrbEmitConfigHostEffects.EMIT_CONFIG_CHECKED -> EMIT_HEARD
     }
   }
-  trait OrbLintHttpRequest = HttpRequest.traits.OrbLintHttpRequest {
-    listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
-      OrbLintInput.LINT_INPUT -> LINT_INPUT
-      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
-      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
-      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
-      OrbEmitConfigHttpRequest.EMIT_CONFIG_CHECKED -> EMIT_HEARD
-    }
-  }
   trait OrbLintIconExists = IconExists.traits.OrbLintIconExists {
   }
   trait OrbLintMergedFields = MergedFields.traits.OrbLintMergedFields {
@@ -974,12 +955,6 @@ orbital OrbLintEngineOrbital {
       OrbLintHostEffects.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
     }
   }
-  trait OrbEmitConfigHttpRequest = Ec.traits.OrbEmitConfig {
-    listens {
-      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
-      OrbLintHttpRequest.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
-    }
-  }
   trait OrbEmitConfigOauth = Ec.traits.OrbEmitConfig {
     listens {
       EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
@@ -991,7 +966,6 @@ orbital OrbLintEngineOrbital {
       HOST_CALLS_COLLECT { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
       OrbLintBrowserEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
       OrbLintHostEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
-      OrbLintHttpRequest.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
       OrbLintOauth.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
       LINT_OPERATOR_SHAPES_HEARD { operators : Map string HcShape! }
       LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
@@ -1048,5 +1022,5 @@ orbital OrbLintEngineOrbital {
     }
   }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, OrbLintExprNodes, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefClosure, OrbLintInvariants, OrbLintOsGrants, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintRetiredEffectForms, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintLlmWireUnrouted, OrbLintEgressSchemeUnused, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintListenPer, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintNavTarget, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintUnsignedGuard, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite, OrbLintBindingFields, OrbLintBindingRoots, OrbLintBindingSetters, OrbLintBindingTraits, OrbLintBrowserEffects, OrbLintCallService, OrbLintCircuitClientBound, OrbLintCircuitEmits, OrbLintCircuitGraph, OrbLintCircuitItemActions, OrbLintComposedWiring, OrbLintConfigDanglingRef, OrbLintConfigKnob, OrbLintDispatchContract, OrbLintEffectForms, OrbLintEmbedConfigForward, OrbLintEmitDeclaration, OrbLintEntityMutation, OrbLintEventWiring, OrbLintFetchDeliver, OrbLintGroupbyEnumColumnGap, OrbLintHostEffects, OrbLintHttpRequest, OrbLintIconExists, OrbLintMergedFields, OrbLintOauth, OrbLintOrbitalRefConfig, OrbLintPageContentOwner, OrbLintViewerStranded, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiBinding, OrbLintRuiEffects, OrbLintServiceDef, OrbLintSetColumn, OrbLintSexprBinding, OrbLintSlotTick, OrbLintThemeRef, OrbLintThemeValues, OrbLintTraitEmbeds, OrbLintTraitMounts, OrbLintTraitRefs, OrbEmitConfigBrowserEffects, OrbEmitConfigCallService, OrbEmitConfigHostEffects, OrbEmitConfigHttpRequest, OrbEmitConfigOauth, HostCalls, ServiceRegistry, OrbValueLeaves, OrbLintExpectationFinal, OrbLintNotFound, OrbLintControlUnhandled, OrbLintFindingCodes, OrbLintControlValueDiscarded, OrbLintEngineRuleCount
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, OrbLintExprNodes, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefClosure, OrbLintInvariants, OrbLintOsGrants, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintRetiredEffectForms, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintLlmWireUnrouted, OrbLintEgressSchemeUnused, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintListenPer, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintNavTarget, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintUnsignedGuard, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintKeyedCallKeys, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite, OrbLintBindingFields, OrbLintBindingRoots, OrbLintBindingSetters, OrbLintBindingTraits, OrbLintBrowserEffects, OrbLintCallService, OrbLintCircuitClientBound, OrbLintCircuitEmits, OrbLintCircuitGraph, OrbLintCircuitItemActions, OrbLintComposedWiring, OrbLintConfigDanglingRef, OrbLintConfigKnob, OrbLintDispatchContract, OrbLintEffectForms, OrbLintEmbedConfigForward, OrbLintEmitDeclaration, OrbLintEntityMutation, OrbLintEventWiring, OrbLintFetchDeliver, OrbLintGroupbyEnumColumnGap, OrbLintHostEffects, OrbLintIconExists, OrbLintMergedFields, OrbLintOauth, OrbLintOrbitalRefConfig, OrbLintPageContentOwner, OrbLintViewerStranded, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiBinding, OrbLintRuiEffects, OrbLintServiceDef, OrbLintSetColumn, OrbLintSexprBinding, OrbLintSlotTick, OrbLintThemeRef, OrbLintThemeValues, OrbLintTraitEmbeds, OrbLintTraitMounts, OrbLintTraitRefs, OrbEmitConfigBrowserEffects, OrbEmitConfigCallService, OrbEmitConfigHostEffects, OrbEmitConfigOauth, HostCalls, ServiceRegistry, OrbValueLeaves, OrbLintExpectationFinal, OrbLintNotFound, OrbLintControlUnhandled, OrbLintFindingCodes, OrbLintControlValueDiscarded, OrbLintEngineRuleCount
 }

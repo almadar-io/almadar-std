@@ -45,19 +45,8 @@ describe('effectSiteFor', () => {
     expect(effectSiteFor('call-service', ['@config.service', 'pageview', {}], resident)).toBe('server');
   });
 
-  it('an http call whose literal request has no auth key runs where it is placed', () => {
-    const get = (request?: unknown) => ['GET', 'https://api.example.com', '/x', ...(request === undefined ? [] : [request])];
-    expect(effectSiteFor('http', get(), resident)).toBe('client');
-    expect(effectSiteFor('http', get({ query: { q: 'a' }, timeoutMs: 5 }), resident)).toBe('client');
-    expect(effectSiteFor('http', get(null), resident)).toBe('client');
-  });
-
-  it('control: any auth key, or a request that is not a literal object, keeps http on the server', () => {
-    const get = (request: unknown) => ['GET', 'https://api.example.com', '/x', request];
-    expect(effectSiteFor('http', get({ auth: { scheme: 'bearer', credential: '@config.k' } }), resident)).toBe('server');
-    expect(effectSiteFor('http', get({ auth: null }), resident)).toBe('server');
-    expect(effectSiteFor('http', get('@payload.request'), resident)).toBe('server');
-    expect(effectSiteFor('http', get(['merge', {}]), resident)).toBe('server');
+  it('http is not an operator, so it has no site', () => {
+    expect(effectSiteFor('http', ['GET', 'https://api.example.com', '/x'], resident)).toBeUndefined();
   });
 
   it('control: client and any effects keep their declared site', () => {

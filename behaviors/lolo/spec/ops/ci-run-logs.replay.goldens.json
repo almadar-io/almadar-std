@@ -635,15 +635,32 @@
           "expect": {
             "fired": true,
             "state": "reading",
-            "effects": [
+            "emits": [
               {
-                "type": "render-ui"
+                "event": "CI_LOGS_READING",
+                "payload": {
+                  "repo": "kflow",
+                  "runId": "4242"
+                }
+              },
+              {
+                "event": "CI_LOGS_GH",
+                "payload": {
+                  "stage": "jobs",
+                  "argv": [
+                    "api",
+                    "repos/almadar-io/kflow/actions/runs/4242/jobs"
+                  ]
+                }
               }
             ]
           }
         }
       ],
-      "now": 1760531445678
+      "now": 1760531445678,
+      "defaults": [
+        "CiLogsGh"
+      ]
     },
     {
       "id": "next-reads-second-failed-job-log",
@@ -1129,6 +1146,196 @@
               "CI_LOGS"
             ],
             "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "view-reading-paints-the-skeleton",
+      "steps": [
+        {
+          "trait": "CiRunLogsView",
+          "event": "CI_LOGS_READING",
+          "from": "idle",
+          "payload": {
+            "repo": "kflow",
+            "runId": "4242"
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "view-failed-jobs-log-paints-the-code-block",
+      "steps": [
+        {
+          "trait": "CiRunLogsView",
+          "event": "CI_LOGS_SHOWN",
+          "from": "idle",
+          "payload": {
+            "repo": "kflow",
+            "runId": "4242",
+            "summary": false,
+            "lines": [
+              {
+                "job": "build",
+                "step": "",
+                "msg": "compiling",
+                "level": "info"
+              },
+              {
+                "job": "build",
+                "step": "",
+                "msg": "boom",
+                "level": "error"
+              }
+            ],
+            "errorLines": {
+              "2": "error"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "view-run-summary-paints-the-code-block",
+      "steps": [
+        {
+          "trait": "CiRunLogsView",
+          "event": "CI_LOGS_SHOWN",
+          "from": "idle",
+          "payload": {
+            "repo": "kflow",
+            "runId": "4242",
+            "summary": true,
+            "lines": [
+              {
+                "job": "build",
+                "step": "",
+                "msg": "compiling",
+                "level": "info"
+              },
+              {
+                "job": "build",
+                "step": "",
+                "msg": "boom",
+                "level": "error"
+              }
+            ],
+            "errorLines": {
+              "2": "error"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "view-failure-paints-the-error-state",
+      "steps": [
+        {
+          "trait": "CiRunLogsView",
+          "event": "CI_LOGS_VIEW_FAILED",
+          "from": "idle",
+          "payload": {
+            "message": "The job list of the run could not be read."
+          },
+          "expect": {
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-reader-answers-the-view-with-shown-lines-and-error-line-numbers",
+      "entity": {
+        "owner": "almadar-io",
+        "repo": "kflow",
+        "runId": "4242",
+        "failed": [
+          {
+            "id": 1,
+            "name": "build",
+            "conclusion": "failure"
+          }
+        ],
+        "cursor": 1,
+        "lines": [
+          {
+            "job": "build",
+            "step": "",
+            "msg": "compiling",
+            "level": "info"
+          },
+          {
+            "job": "build",
+            "step": "",
+            "msg": "boom",
+            "level": "error"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "CI_LOGS_NEXT",
+          "from": "reading",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "CI_LOGS_SHOWN",
+                "payload": {
+                  "repo": "kflow",
+                  "runId": "4242",
+                  "summary": false,
+                  "lines": [
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "compiling",
+                      "level": "info"
+                    },
+                    {
+                      "job": "build",
+                      "step": "",
+                      "msg": "boom",
+                      "level": "error"
+                    }
+                  ],
+                  "errorLines": {
+                    "2": "error"
+                  }
+                }
+              }
+            ]
           }
         }
       ]

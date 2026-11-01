@@ -40,7 +40,7 @@ orbital TagStripOrbital {
       ;; Pre-scope paint: the store is warm but no record is open yet.
       TagStripOptions -> idle
       TagStripLoadFailed -> idle
-        (notify error (str/concat "Couldn't load tags — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load tags — " ?error) "Couldn't load tags"))
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))

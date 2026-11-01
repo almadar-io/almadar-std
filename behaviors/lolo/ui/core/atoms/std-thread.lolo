@@ -18,7 +18,7 @@ orbital ThreadPostOrbital {
   ;; Master-detail focus: SELECT sets this to the clicked row so split-pane
   ;; variants (email-threaded) can bind @entity.focusedRow.<field> in their
   ;; detail pane. Unused by list/bubble variants.
-    type ThreadPostLoaded = Event { data : [ThreadPost]!, totalCount : number } "Fired when the thread-post collection finishes loading"
+    type ThreadPostLoaded = Event { data : [ThreadPost]!, totalCount : number! } "Fired when the thread-post collection finishes loading"
 
     type ThreadPostLoadFailed = Event { error : string, code : string } "Fired when the thread-post collection fails to load"
 
@@ -205,7 +205,7 @@ orbital ThreadPostOrbital {
           emit: { failure: ThreadPostCreateFailed, success: ReplyParentUpdated }
         })
       ReplyParentLoadFailed -> browsing
-        (notify error (str/concat "Couldn't attach the reply to its post — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't attach the reply to its post — " ?error) "Couldn't attach the reply to its post"))
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
@@ -407,7 +407,7 @@ orbital ThreadPostOrbital {
         @tier "presentation"
       ThreadPostLoaded {
         data : [ThreadPost]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals a thread post has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"
@@ -480,7 +480,7 @@ orbital ThreadPostOrbital {
         @tier "domain"
       ThreadPostLoaded {
         data : [ThreadPost]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates a thread post has been successfully retrieved."
         @synonyms "loaded, fetched, received, retrieved"

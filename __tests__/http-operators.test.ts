@@ -1,49 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { STD_OPERATORS, getOperatorRunsOn } from '../registry.js';
 import { getModuleFromOperator } from '../types.js';
+import canonical from '../canonical-operators.json';
 
 describe('http effect', () => {
-  const http = STD_OPERATORS['http'];
-  const params = http.params ?? [];
-
-  it('is a server effect of arity 3-5 producing the reply payload or the redirect url', () => {
-    expect(http.category).toBe('effect');
-    expect(http.hasSideEffects).toBe(true);
-    expect(getOperatorRunsOn('http')).toBe('server');
-    expect([http.minArity, http.maxArity]).toEqual([3, 5]);
-    expect(params.map((p) => p.name)).toEqual(['method', 'origin', 'path', 'request', 'options']);
-    expect(http.effect?.kind).toBe('http');
-    const nullableKey = { kind: 'union', of: ['string', { kind: 'literal', value: null }] };
-    expect(http.effect?.produces).toEqual({
-      kind: 'union',
-      of: [
-        {
-          kind: 'object',
-          fields: { status: 'number', headers: { kind: 'map', key: 'string', value: 'string' }, body: 'string', key: nullableKey },
-        },
-        { kind: 'object', fields: { url: 'string', key: nullableKey } },
-      ],
-    });
+  it('is retired: HTTP is std-http-client over os/*, so no operator, module or effect kind carries it', () => {
+    expect(STD_OPERATORS['http']).toBeUndefined();
+    expect(getOperatorRunsOn('http')).toBeUndefined();
+    expect(canonical.operators).not.toHaveProperty('http');
+    expect(Object.values(canonical.operators).some((op) => 'effect' in op && op.effect?.kind === 'http')).toBe(false);
   });
 
-  it('types the method as the five-word literal union', () => {
-    const method = params[0].type;
-    expect(method).toEqual({
-      kind: 'union',
-      of: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((value) => ({ kind: 'literal', value })),
-    });
-  });
-
-  it('declares key and all four emit routes in the options', () => {
-    const options = params[4];
-    expect(options.optional).toBe(true);
-    expect(JSON.stringify(options.type)).toContain('onMessage');
-    expect(JSON.stringify(options.type)).toContain('cancelled');
-    expect(JSON.stringify(options.type)).toContain('"key"');
-  });
-
-  it('call-service options also route onMessage', () => {
+  it('control: the retired operator left the neighbours it shared a table with', () => {
+    expect(STD_OPERATORS['call-service']).toBeDefined();
+    expect(STD_OPERATORS['cancel-call']).toBeDefined();
     expect(JSON.stringify(STD_OPERATORS['call-service'].params?.[3]?.type)).toContain('onMessage');
+  });
+
+  it('the default ports of the URL schemes live on browser/beacon, the one operator that reads them', () => {
+    expect(STD_OPERATORS['browser/beacon'].defaultPorts).toEqual({ http: 80, https: 443 });
+    expect(canonical.operators['browser/beacon']).toMatchObject({ defaultPorts: { http: 80, https: 443 } });
   });
 });
 

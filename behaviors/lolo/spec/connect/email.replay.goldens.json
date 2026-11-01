@@ -1,0 +1,362 @@
+{
+ "atom": "connect/atoms/std-email.lolo",
+ "trait": "EmailSender",
+ "note": "std-email over the composed std-http-client: each vendor is one EMAIL_HTTP_SEND to its own host (the bearer API key rides the client credential, never the event); replies and failures return by vendor and every failure answers EMAIL_SEND_FAILED.",
+ "cases": [
+  {
+   "id": "sendgrid-send-asks-the-http-client-for-one-json-post",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "sendgrid",
+         "host": "api.sendgrid.com",
+         "method": "POST",
+         "target": "/v3/mail/send",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resend-send-asks-the-http-client-for-one-json-post",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "resend",
+         "host": "api.resend.com",
+         "method": "POST",
+         "target": "/emails",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "resend-refuses-a-template-id-without-asking-the-client",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "templateId": "d-1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SEND_FAILED",
+        "payload": {
+         "message": "templateId is not supported by the resend provider — use sendgrid or drop templateId"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMAIL_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "sendgrid-accepts-and-reports-the-message-id-header",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SENDGRID_REPLIED",
+     "payload": {
+      "status": 202,
+      "headers": {
+       "x-message-id": "m1"
+      },
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SENT",
+        "payload": {
+         "id": "m1",
+         "status": "sent"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-sendgrid-accepts-without-a-message-id",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SENDGRID_REPLIED",
+     "payload": {
+      "status": 202,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SENT",
+        "payload": {
+         "status": "sent"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMAIL_SEND_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sendgrid-non-2xx-answers-its-reason-phrase",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SENDGRID_REPLIED",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SEND_FAILED",
+        "payload": {
+         "message": "Unauthorized"
+        }
+       }
+      ],
+      "neverEmits": [
+       "EMAIL_SENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-sendgrid-call-that-never-answered-fails-the-send",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SENDGRID_FAILED",
+     "payload": {
+      "error": "connect timeout",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SEND_FAILED",
+        "payload": {
+         "message": "connect timeout"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "resend-accepts-and-reports-its-id",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_RESEND_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"r1\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SENT",
+        "payload": {
+         "id": "r1",
+         "status": "sent"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "resend-error-body-answers-its-message",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_RESEND_REPLIED",
+     "payload": {
+      "status": 422,
+      "headers": {},
+      "body": "{\"message\":\"Invalid from\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SEND_FAILED",
+        "payload": {
+         "message": "Resend rejected the email: Invalid from"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "a-resend-call-that-never-answered-fails-the-send",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_RESEND_FAILED",
+     "payload": {
+      "error": "connect timeout",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_SEND_FAILED",
+        "payload": {
+         "message": "Resend rejected the email: Unable to fetch data. The request could not be resolved."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  }
+ ]
+}

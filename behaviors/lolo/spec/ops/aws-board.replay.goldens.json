@@ -239,16 +239,27 @@
         "type": "set"
        },
        {
-        "type": "render-ui"
+        "type": "emit"
        }
       ],
       "neverEmits": [
        "AWS_RUN"
+      ],
+      "emits": [
+       {
+        "event": "AWS_BOARD_FAILED",
+        "payload": {
+         "error": "aws is not installed or could not run: No such file or directory (os error 2)"
+        }
+       }
       ]
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "defaults": [
+    "AwsCli"
+   ]
   },
   {
    "id": "aws-exits-nonzero-at-instances-names-its-stderr-and-reads-on",
@@ -366,7 +377,7 @@
    ]
   },
   {
-   "id": "load-paints-the-reading-view",
+   "id": "load-tells-the-board-it-is-loading",
    "steps": [
     {
      "from": "idle",
@@ -375,17 +386,21 @@
      "expect": {
       "fired": true,
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "render-ui"
+        "event": "AWS_BOARD_LOADING",
+        "payload": {}
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "AwsCli"
    ]
   },
   {
-   "id": "refresh-paints-the-reading-view",
+   "id": "refresh-tells-the-board-it-is-loading",
    "steps": [
     {
      "from": "idle",
@@ -394,13 +409,17 @@
      "expect": {
       "fired": true,
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "render-ui"
+        "event": "AWS_BOARD_LOADING",
+        "payload": {}
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "AwsCli"
    ]
   }
  ]

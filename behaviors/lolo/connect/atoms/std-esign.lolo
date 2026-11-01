@@ -1,12 +1,44 @@
 app std-esign [
   version: "1.0.0",
   description: "std-esign — e-signature through the DocuSign eSignature REST API. ESIGN_SEND_ENVELOPE sends a document to one signer, ESIGN_GET_ENVELOPE_STATUS polls an envelope, ESIGN_DOWNLOAD_DOCUMENT fetches the combined signed PDF as base64. Each action answers with its result event, or its failure event ({code, message}) when DocuSign refuses (non-2xx), is unavailable (5xx) or cannot be reached.",
-  egress: ["https://demo.docusign.net", "https://na1.docusign.net", "https://na2.docusign.net", "https://na3.docusign.net", "https://na4.docusign.net", "https://eu.docusign.net", "https://au.docusign.net", "https://ca.docusign.net"]
+  net: { "demo.docusign.net:443": [tcp], "na1.docusign.net:443": [tcp], "na2.docusign.net:443": [tcp], "na3.docusign.net:443": [tcp], "na4.docusign.net:443": [tcp], "eu.docusign.net:443": [tcp], "au.docusign.net:443": [tcp], "ca.docusign.net:443": [tcp], "*.docusign.net:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type DocusignEnvelopeReply = { envelopeId : string, status : string, completedDateTime : string }
 orbital EsignOrbital {
   entity EsignEnvelope [runtime] {
     id : string!
+  }
+
+  trait EsignHttp = Http.traits.HttpClient {
+    config {
+      host: "demo.docusign.net"
+      port: 443
+      tls: true
+      serverName: "demo.docusign.net"
+      dynamicHost: true
+      credential: "DOCUSIGN_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      EsignClient.ESIGN_HTTP_SEND -> HTTP_SEND
+      EsignTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait EsignTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      EsignClient.ESIGN_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      EsignHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      EsignHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait EsignClient -> EsignEnvelope [optimistic] {
@@ -15,12 +47,13 @@ orbital EsignOrbital {
     state idle {
       INIT -> idle
 
-      ESIGN_SEND_ENVELOPE -> idle
-        (http POST @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes") {
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: { scheme: bearer, credential: @config.accessToken },
-          timeoutMs: @config.timeoutMs,
-          json: {
+      ESIGN_SEND_ENVELOPE -> idle when (str/startsWith @config.origin "https://")
+        (emit ESIGN_HTTP_SEND {
+          key: "send",
+          method: "POST",
+          target: (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes"),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (json/stringify {
             emailSubject: (default @payload.emailSubject (str/concat "Please sign: " @payload.documentName)),
             status: "sent",
             documents: [{
@@ -30,8 +63,12 @@ orbital EsignOrbital {
               documentId: "1"
             }],
             recipients: { signers: [{ email: @payload.recipientEmail, name: @payload.recipientName, recipientId: "1", routingOrder: "1" }] }
-          }
-        } { emit: { success: ESIGN_SEND_ENVELOPE_REPLIED, failure: ESIGN_SEND_ENVELOPE_UNREACHED } })
+          })),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      ESIGN_SEND_ENVELOPE -> idle when (not (str/startsWith @config.origin "https://"))
+        (emit ESIGN_SEND_ENVELOPE_FAILED { message: "the origin knob must be an https:// origin" })
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((reply (json/parse @payload.body DocusignEnvelopeReply)))
           (if (= @reply null)
@@ -44,12 +81,18 @@ orbital EsignOrbital {
       ESIGN_SEND_ENVELOPE_UNREACHED -> idle
         (emit ESIGN_SEND_ENVELOPE_FAILED { message: @payload.error })
 
-      ESIGN_GET_ENVELOPE_STATUS -> idle
-        (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId) {
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          auth: { scheme: bearer, credential: @config.accessToken },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: ESIGN_GET_ENVELOPE_STATUS_REPLIED, failure: ESIGN_GET_ENVELOPE_STATUS_UNREACHED } })
+      ESIGN_GET_ENVELOPE_STATUS -> idle when (str/startsWith @config.origin "https://")
+        (emit ESIGN_HTTP_SEND {
+          key: "status",
+          method: "GET",
+          target: (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId),
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      ESIGN_GET_ENVELOPE_STATUS -> idle when (not (str/startsWith @config.origin "https://"))
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: "the origin knob must be an https:// origin" })
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((reply (json/parse @payload.body DocusignEnvelopeReply)))
           (if (= @reply null)
@@ -62,13 +105,18 @@ orbital EsignOrbital {
       ESIGN_GET_ENVELOPE_STATUS_UNREACHED -> idle
         (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: @payload.error })
 
-      ESIGN_DOWNLOAD_DOCUMENT -> idle
-        (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId "/documents/combined") {
-          headers: { Accept: "application/pdf", "Content-Type": "application/json" },
-          auth: { scheme: bearer, credential: @config.accessToken },
-          timeoutMs: @config.timeoutMs,
-          responseAs: bytes
-        } { key: @payload.envelopeId, emit: { success: ESIGN_DOWNLOAD_DOCUMENT_REPLIED, failure: ESIGN_DOWNLOAD_DOCUMENT_UNREACHED } })
+      ESIGN_DOWNLOAD_DOCUMENT -> idle when (str/startsWith @config.origin "https://")
+        (emit ESIGN_HTTP_SEND {
+          key: (str/concat "download:" @payload.envelopeId),
+          method: "GET",
+          target: (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId "/documents/combined"),
+          headers: [{ name: "accept", value: "application/pdf" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      ESIGN_DOWNLOAD_DOCUMENT -> idle when (not (str/startsWith @config.origin "https://"))
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: "the origin knob must be an https:// origin" })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit ESIGN_DOCUMENT_DOWNLOADED { content: @payload.body, documentName: (str/concat "envelope-" (default @payload.key "") ".pdf") })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (>= @payload.status 500)
@@ -80,6 +128,17 @@ orbital EsignOrbital {
     }
 
     emits {
+      ESIGN_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+        host : string
+      }
+        @description "Internal: the DocuSign request, for the HTTP client."
+        @tier "secondary"
       ESIGN_ENVELOPE_SENT -> external {
         envelopeId : string!
         status : string!
@@ -122,47 +181,6 @@ orbital EsignOrbital {
         @description "Downloading the signed document failed: DocuSign answered non-2xx or 5xx, or could not be reached."
         @synonyms "download failed, signed document error"
         @tier "primary"
-      ESIGN_SEND_ENVELOPE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the esign_send_envelope call's HTTP reply."
-        @tier "secondary"
-      ESIGN_SEND_ENVELOPE_UNREACHED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the esign_send_envelope call never produced a reply."
-        @tier "secondary"
-      ESIGN_GET_ENVELOPE_STATUS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the esign_get_envelope_status call's HTTP reply."
-        @tier "secondary"
-      ESIGN_GET_ENVELOPE_STATUS_UNREACHED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the esign_get_envelope_status call never produced a reply."
-        @tier "secondary"
-      ESIGN_DOWNLOAD_DOCUMENT_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string
-      }
-        @description "Internal: the document download's HTTP reply (body is base64)."
-        @tier "secondary"
-      ESIGN_DOWNLOAD_DOCUMENT_UNREACHED {
-        error : string!
-        kind : string!
-        key : string
-      }
-        @description "Internal: the document download never produced a reply."
-        @tier "secondary"
     }
 
     listens {
@@ -214,12 +232,21 @@ orbital EsignOrbital {
         kind : string!
         key : string
       }
+      EsignHttp.HTTP_REPLIED -> ESIGN_SEND_ENVELOPE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "send")
+      EsignHttp.HTTP_FAILED -> ESIGN_SEND_ENVELOPE_UNREACHED with { error: ?error, kind: ?kind } when (= ?key "send")
+      EsignTimeout.TIMED_OUT -> ESIGN_SEND_ENVELOPE_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "send")
+      EsignHttp.HTTP_REPLIED -> ESIGN_GET_ENVELOPE_STATUS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "status")
+      EsignHttp.HTTP_FAILED -> ESIGN_GET_ENVELOPE_STATUS_UNREACHED with { error: ?error, kind: ?kind } when (= ?key "status")
+      EsignTimeout.TIMED_OUT -> ESIGN_GET_ENVELOPE_STATUS_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "status")
+      EsignHttp.HTTP_REPLIED -> ESIGN_DOWNLOAD_DOCUMENT_REPLIED with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
+      EsignHttp.HTTP_FAILED -> ESIGN_DOWNLOAD_DOCUMENT_UNREACHED with { error: ?error, kind: ?kind, key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
+      EsignTimeout.TIMED_OUT -> ESIGN_DOWNLOAD_DOCUMENT_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
     }
 
     config {
       origin : url = "https://demo.docusign.net"
         @label "DocuSign API origin"
-        @description "The DocuSign base URI origin (scheme://host, no path) of the account; must be declared in the app egress list."
+        @description "The DocuSign base URI origin (scheme://host, no path) of the account (https only); its host must be granted in net. The access token is the EsignHttp credential."
         @synonyms "docusign host, base uri origin, esign api host"
         @tier "infra"
       basePath : string = "/restapi/v2.1/accounts"
@@ -227,18 +254,8 @@ orbital EsignOrbital {
         @description "The account-scoped REST path after the origin, ending with the account id (for example /restapi/v2.1/accounts/<accountId>); a trailing slash is ignored."
         @synonyms "account path, base path, account id path"
         @tier "infra"
-      accessToken : secret = "DOCUSIGN_ACCESS_TOKEN"
-        @label "Access token credential"
-        @description "Name of the credential holding the DocuSign OAuth access token; resolved by the host on every call so a rotated value applies without restart."
-        @synonyms "docusign token, oauth token, api credential"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each DocuSign request may take before it fails."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
     }
   }
 
-  page boot as EsignPage -> EsignClient
+  page boot as EsignPage -> EsignClient, EsignHttp, EsignTimeout
 }

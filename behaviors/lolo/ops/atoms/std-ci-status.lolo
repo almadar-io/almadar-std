@@ -1,51 +1,104 @@
 app std-ci-status [
-  version: "1.0.0",
-  description: "std-ci-status — the latest GitHub Actions run of every repository of an organization, plus listed repositories elsewhere, as one board. CI_STATUS_LOAD answers CI_STATUS with the board: within the cacheTtlMs window the cached board, without asking GitHub; otherwise a fresh read. CI_STATUS_REFRESH always reads afresh. A load or refresh asked for while a read is in flight is answered by that read. A read pages through the org knob's repositories with one GraphQL query per pageSize repositories (at most maxPages), looks at each repository's last historyDepth default-branch commits and their checkSuiteDepth GitHub Actions check suites (the appId knob), and keeps the newest suite that has a workflow run: its status and conclusion lower-cased, the workflow name, url, run id and creation time; a repository with none is status unknown. Repositories the skipRepos knob names are left out. A page GitHub answers with a gateway error (502, 503, 504) or not at all is retried by std-retry (maxAttempts, from baseDelayMs doubling); any other failure, or the attempts spent, ends the read and answers the last board again (stale), or an empty one when there was none. After the org's pages, each extraRepos entry's newest run is read, one after another, through the REST run list, and a repository whose list fails or is empty is status unknown. GraphQL errors beside data do not stop the read. fetchedAt is the ISO time of the read the board came from.",
-  egress: ["https://api.github.com"]
+  version: "2.0.0",
+  description: "std-ci-status — the latest GitHub Actions state of the repositories the repos knob lists, as one status board (std-status-board). All repositories are read in ONE GraphQL request built from the list with one alias per repository, each asking for the default branch's head commit and its checkSuiteDepth GitHub Actions check suites (the appId knob). A repository's status is the worst of the head commit's suites that have a workflow run: a failure, timed_out, startup_failure or action_required conclusion is Failing (danger); else any suite not completed is Running (info); else a cancelled one is Cancelled (warning); else Passing (success); a repository with no such suite is No runs (neutral), and one GitHub did not answer (no access, renamed) is Unavailable (neutral). Rows are grouped Failing, Running, Passing, Other, with tiles for the three counts and the total. CI_STATUS_LOAD answers within the cacheTtlMs window from the cached board without asking GitHub, otherwise reads afresh; CI_STATUS_REFRESH always reads afresh; a load or refresh asked for while a read is in flight is answered by that read. A request that meets a gateway error (502, 503, 504) or no answer is retried by std-retry (maxAttempts, from baseDelayMs doubling); a read that still fails answers the last board again with the error (stale), or BOARD_FAILED when there was none. Opening a row asks GitHub for the jobs of its worst run (newest attempt) and shows them; when a job failed, the failing log is read through std-ci-run-logs (CI_LOGS_LOAD answers CI_LOGS) and shown with its error lines. Detail requests are served one after another, never dropped. fetchedAt is the ISO time of the read the board came from.",
+  net: { "api.github.com:443": [tcp] },
+  exec: ["gh"],
+  env: ["PATH", "HOME"]
 ]
 uses Spec from "almadar-std/ci-status"
+type CiRepoRef = { owner : string!, name : string! }
 type CiWorkflow = { name : string }
-type CiWorkflowRun = { databaseId : number!, url : string!, createdAt : string!, workflow : CiWorkflow }
+type CiWorkflowRun = { databaseId : number!, url : string!, createdAt : instant!, workflow : CiWorkflow }
 type CiCheckSuite = { status : string!, conclusion : string?, workflowRun : CiWorkflowRun? }
 type CiSuiteConnection = { nodes : [CiCheckSuite] }
-type CiCommit = { checkSuites : CiSuiteConnection }
-type CiHistory = { nodes : [CiCommit] }
-type CiTarget = { history : CiHistory }
-type CiBranchRef = { target : CiTarget }
-type CiRepository = { name : string!, defaultBranchRef : CiBranchRef }
-type CiPageInfo = { hasNextPage : boolean, endCursor : string }
-type CiRepositoryConnection = { pageInfo : CiPageInfo, nodes : [CiRepository] }
-type CiOrganization = { repositories : CiRepositoryConnection }
-type CiData = { organization : CiOrganization }
-type CiReply = { data : CiData }
-type CiRun = { repo : string, fullName : string, status : string, conclusion : string?, name : string, url : string, databaseId : number, createdAt : string }
-type CiRunRow = { id : string!, repo : string!, name : string!, status : string!, conclusion : string?, createdAt : string!, runId : number! }
-type CiExtraRepo = { owner : string!, name : string!, displayName : string! }
-type CiGithubRun = { id : number!, name : string!, status : string!, conclusion : string?, created_at : string!, html_url : string! }
+type CiCommit = { oid : string, messageHeadline : string, committedDate : instant, checkSuites : CiSuiteConnection }
+type CiBranchRef = { target : CiCommit }
+type CiRepository = { name : string!, nameWithOwner : string!, defaultBranchRef : CiBranchRef? }
+type CiReply = { data : Map string CiRepository? }
+type CiSuiteRow = { rank : number!, id : number!, name : string!, url : string!, at : instant? }
+type CiTone = { tone : "neutral" | "success" | "warning" | "danger" | "info"!, label : string!, section : string! }
+type CiRun = { id : string!, owner : string!, repo : string!, section : string!, headline : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : [string]!, at : instant?, url : string!, runIds : [number]! }
+type CiBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type CiBoardSection = { key : string!, label : string! }
+type CiBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type CiBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type CiBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [CiBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
+type CiGhJob = { id : number!, name : string!, status : string!, conclusion : string?, html_url : string!, started_at : string?, completed_at : string? }
+type CiLogLine = { job : string, step : string, msg : string, level : "error" | "warning" | "info" }
 orbital CiStatusOrbital {
   uses Github from "std/behaviors/std-github"
   uses Retry from "std/behaviors/std-retry"
+  uses Board from "std/behaviors/std-status-board"
+  uses Logs from "std/behaviors/std-ci-run-logs"
 
   entity CiStatusBoard [runtime] {
     id : string!
-    runs : [CiRun] @description "The board last answered." = []
+    rows : [CiRun] @description "The board last answered." = []
     fetchedAt : instant @description "When the read the board came from began; the epoch before the first." = "1970-01-01T00:00:00.000Z"
     cachedAt : instant @description "ISO-8601 instant at which the board was cached." = "1970-01-01T00:00:00.000Z"
     hasCache : boolean @description "Whether a board has been cached." = false
     loading : boolean @description "Whether a read is in flight." = false
-    collected : [CiRun] @description "The runs the read in flight has collected so far." = []
-    more : boolean @description "Whether the page just read has another after it." = false
-    cursor : string @description "The cursor of the next page." = ""
-    page : number @description "The page in flight, from 1." = 0
-    extra : number @description "Index of the extra repository being read." = 0
-    key : CallKey @description "The retry key of the page in flight."
-    seq : number @description "Pages asked so far; makes each retry key unique." = 0
+    error : string @description "Why the last read failed; empty when the board is current." = ""
+    key : CallKey @description "The retry key of the request in flight."
+    seq : number @description "Requests asked so far; makes each retry key unique." = 0
+    detailRows : [CiRun] @description "The rows last answered, for finding a row's runs." = []
+    queue : [string] @description "Row ids whose detail is waiting, oldest first." = []
+    detailRow : string @description "The row whose detail is being read." = ""
+    detailRun : number @description "The run whose jobs and log are being read." = 0
+    detailItems : [CiBoardDetailItem] @description "The jobs of the run being read." = []
+    failedJob : string @description "The name of the first failed job of the run being read; empty when none failed." = ""
   }
 
   trait CiGithub = Github.traits.GithubClient {
     listens {
       CiStatus.CI_GQL -> GITHUB_GRAPHQL
-      CiStatus.CI_EXTRA -> GITHUB_LIST_RUNS
+      CiDetail.CI_JOBS -> GITHUB_LIST_RUN_JOBS
+      GITHUB_GRAPHQL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_GRAPHQL_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      CiGhHttp.CI_GH_HTTP_REPLIED -> GITHUB_GRAPHQL_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "graphql")
+      CiGhHttp.CI_GH_HTTP_FAILED -> GITHUB_GRAPHQL_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "graphql")
+      CiGhTimeout.TIMED_OUT -> GITHUB_GRAPHQL_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "graphql")
+      GITHUB_LIST_RUN_JOBS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_LIST_RUN_JOBS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      CiGhHttp.CI_GH_HTTP_REPLIED -> GITHUB_LIST_RUN_JOBS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+      CiGhHttp.CI_GH_HTTP_FAILED -> GITHUB_LIST_RUN_JOBS_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+      CiGhTimeout.TIMED_OUT -> GITHUB_LIST_RUN_JOBS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+    }
+  }
+
+  trait CiGhHttp = Github.traits.GithubHttp {
+    events {
+      HTTP_REPLIED: CI_GH_HTTP_REPLIED
+      HTTP_FAILED: CI_GH_HTTP_FAILED
+      HTTP_CANCEL: CI_GH_HTTP_CANCEL
+    }
+    listens {
+      CiGithub.GITHUB_HTTP_SEND -> HTTP_SEND
+      CiGhTimeout.TIMED_OUT -> CI_GH_HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait CiGhTimeout = Github.traits.GithubTimeout {
+    listens {
+      CiGithub.GITHUB_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      CiGhHttp.CI_GH_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      CiGhHttp.CI_GH_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
     }
   }
 
@@ -64,141 +117,132 @@ orbital CiStatusOrbital {
     }
   }
 
+  trait CiBoard = Board.traits.StatusBoard {
+    listens {
+      CiStatus.CI_BOARD_LOADING -> BOARD_LOADING
+      CiStatus.CI_BOARD_SHOW -> BOARD_SHOW
+      CiStatus.CI_BOARD_FAILED -> BOARD_FAILED
+      CiDetail.CI_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "CI status"
+      icon: "git-branch"
+      idleTitle: "CI status not read yet"
+      idleDescription: "Load the board to read the latest GitHub Actions run of each repository."
+      emptyTitle: "No repositories"
+      emptyDescription: "The repos knob lists no repository."
+      searchPlaceholder: "Search repositories"
+      linkLabel: "Open on GitHub"
+    }
+  }
+
+  trait CiRunLogs = Logs.traits.CiRunLogs {
+    listens {
+      INIT {
+        owner : string
+        repo : string
+        runId : string
+      }
+      CiDetail.CI_LOGS_LOAD -> CI_LOGS_LOAD
+      CI_LOGS_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      CI_LOGS_GH_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+      CiLogsGh.CLI_DONE -> CI_LOGS_RAN
+      CiLogsGh.CLI_FAILED -> CI_LOGS_GH_FAILED
+    }
+  }
+
+  trait CiLogsGh = Logs.traits.CiLogsGh {}
+
   trait CiStatus -> CiStatusBoard [client] {
     initial: idle
 
     state idle {
-      INIT -> idle when (not @config.loadOnInit)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CI_STATUS_LOAD }] })
-      INIT -> idle when @config.loadOnInit
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
-        (emit CI_STATUS_LOAD { })
-      ;; the nth defaults never fire: the row id is owner/repo, built from fullName
-      CI_RUN_OPEN -> idle when (= @payload.row.conclusion "failure")
-        (emit CI_RUN_SELECTED { owner: (default (array/nth (str/split @payload.id "/") 0) ""), repo: (default (array/nth (str/split @payload.id "/") 1) ""), runId: (str/concat @payload.row.runId) })
-        (when (!= @config.logsPage "") (navigate (str/concat "/" @config.logsPage "/" (default (array/nth (str/split @payload.id "/") 0) "") "/" (default (array/nth (str/split @payload.id "/") 1) "") "/" @payload.row.runId)))
-      CI_RUN_OPEN -> idle when (!= @payload.row.conclusion "failure")
       CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs))
-        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
-          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if false " (GitHub could not be read; this is the last board)" "")) },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
-        ] })
+        (emit CI_ANSWER { })
       CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (set @entity.loading true)
-        (set @entity.collected [])
-        (set @entity.cursor "")
-        (set @entity.page 1)
         (set @entity.seq (+ @entity.seq 1))
         (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
+        (emit CI_BOARD_LOADING { })
         (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
       CI_STATUS_REFRESH -> loading
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (set @entity.loading true)
-        (set @entity.collected [])
-        (set @entity.cursor "")
-        (set @entity.page 1)
         (set @entity.seq (+ @entity.seq 1))
         (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
+        (emit CI_BOARD_LOADING { })
         (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
+      CI_ANSWER -> idle
+        (emit CI_DETAIL_ROWS { rows: @entity.rows })
+        (emit CI_STATUS { runs: @entity.rows, fetchedAt: @entity.fetchedAt, stale: (!= @entity.error "") })
+        (emit CI_BOARD_SHOW { note: (str/concat (array/len @entity.rows) " repositories"), tiles: [{ label: "Failing", value: (str/concat (array/count @entity.rows (fn r (= @r.section "failing")))), tone: "danger", icon: "x-circle" }, { label: "Running", value: (str/concat (array/count @entity.rows (fn r (= @r.section "running")))), tone: "info", icon: "loader" }, { label: "Passing", value: (str/concat (array/count @entity.rows (fn r (= @r.section "passing")))), tone: "success", icon: "check-circle" }, { label: "Repositories", value: (str/concat (array/len @entity.rows)), tone: "neutral", icon: "git-branch" }], sections: [{ key: "failing", label: "Failing" }, { key: "running", label: "Running" }, { key: "passing", label: "Passing" }, { key: "other", label: "Other" }], rows: (array/map @entity.rows (fn r { id: @r.id, section: @r.section, title: @r.repo, subtitle: @r.headline, tone: @r.tone, statusLabel: @r.statusLabel, icon: "", meta: @r.meta, at: @r.at, url: @r.url })), fetchedAt: @entity.fetchedAt, error: @entity.error })
     }
 
     state loading {
-      INIT -> loading
       CI_STATUS_LOAD -> loading
       CI_STATUS_REFRESH -> loading
 
-      CI_ATTEMPT -> loading when (== @payload.key @entity.key)
-        (emit CI_GQL { query: (str/concat "\nquery OrgRuns($org: String!, $appId: Int!, $cursor: String) {\n  organization(login: $org) {\n    repositories(first: " @config.pageSize ", after: $cursor, orderBy: {field: PUSHED_AT, direction: DESC}) {\n      pageInfo { hasNextPage endCursor }\n      nodes {\n        name\n        defaultBranchRef {\n          target {\n            ... on Commit {\n              history(first: " @config.historyDepth ") {\n                nodes {\n                  checkSuites(first: " @config.checkSuiteDepth ", filterBy: {appId: $appId}) {\n                    nodes {\n                      status\n                      conclusion\n                      workflowRun {\n                        databaseId\n                        url\n                        createdAt\n                        workflow { name }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"), variables: (json/stringify { org: @config.org, appId: @config.appId, cursor: (if (= @entity.page 1) null @entity.cursor) }) })
-
-      CI_GQL_ANSWERED -> loading when (and (!= @entity.key null) (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))
+      CI_ATTEMPT -> loading when (and (== @payload.key @entity.key) (> (array/len @config.repos) 0))
+        (emit CI_GQL { query: (str/concat "query CiRuns($appId: Int!) {\n" (str/join (array/map (array/range (array/len @config.repos)) (fn i (let ((x (array/nth @config.repos @i))) (str/concat "r" @i ": repository(owner: " (json/stringify @x.owner) ", name: " (json/stringify @x.name) ") { name nameWithOwner defaultBranchRef { target { ... on Commit { oid messageHeadline committedDate checkSuites(first: " @config.checkSuiteDepth ", filterBy: {appId: $appId}) { nodes { status conclusion workflowRun { databaseId url createdAt workflow { name } } } } } } } }")))) "\n") "\n}"), variables: (json/stringify { appId: @config.appId }) })
+      CI_ATTEMPT -> idle when (and (!= @entity.key null) (== @payload.key @entity.key) (= (array/len @config.repos) 0))
         (emit CI_RETRY_SUCCEEDED { key: @entity.key })
-          (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: (object/get @s "workflowRun.createdAt" ""), suite: @s })) "at" "desc"))) (let ((top (array/nth @ss 0))) (if (== @top null) (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @r.name, fullName: (str/concat @config.org "/" @r.name) })) (let ((s @top.suite)) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: (object/get @s "workflowRun.url" ""), databaseId: (object/get @s "workflowRun.databaseId" 0), createdAt: (object/get @s "workflowRun.createdAt" "") }))))))))
-        (set @entity.more (and (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.hasNextPage" false) (!= (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" "") "") (< @entity.page @config.maxPages)))
-        (set @entity.cursor (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" ""))
-        (emit CI_PAGE_READ { })
-      CI_GQL_ANSWERED -> loading when (and (!= @entity.key null) (not (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))))
-        (emit CI_RETRY_FAILED { key: @entity.key, error: "GitHub answered something that is not an organization repository list" })
-      ;; no key means no page read is in flight, so a reply has no run to join and the board goes idle
-      CI_GQL_ANSWERED -> idle when (= @entity.key null)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CI_STATUS_LOAD }] })
-      CI_PAGE_READ -> loading when @entity.more
-        (set @entity.page (+ @entity.page 1))
-        (set @entity.seq (+ @entity.seq 1))
-        (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
-        (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
-      CI_PAGE_READ -> loading when (not @entity.more)
-        (set @entity.extra 0)
-        (emit CI_EXTRA_NEXT { })
-
-      CI_GQL_FAILED -> loading when (and (!= @entity.key null) (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
-        (emit CI_RETRY_FAILED { key: @entity.key, error: @payload.message })
-      CI_GQL_FAILED -> idle when (and (!= @entity.key null) (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
-        (emit CI_RETRY_CANCEL { })
-        (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
-        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
-        (set @entity.hasCache true)
-        (set @entity.loading false)
-        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
-(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
-          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
-        ] })
-      CI_GQL_FAILED -> idle when (= @entity.key null)
-        (emit CI_RETRY_CANCEL { })
-        (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
-        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
-        (set @entity.hasCache true)
-        (set @entity.loading false)
-        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
-(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
-          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
-        ] })
-      CI_GAVE_UP -> idle when (== @payload.key @entity.key)
-        (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
-        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
-        (set @entity.hasCache true)
-        (set @entity.loading false)
-        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
-(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
-          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
-        ] })
-
-      CI_EXTRA_NEXT -> loading when (< @entity.extra (array/len @config.extraRepos))
-        (let ((x (array/nth @config.extraRepos @entity.extra)))
-          (emit CI_EXTRA { owner: @x.owner, repo: @x.name, per_page: 1 }))
-      CI_EXTRA_NEXT -> idle when (>= @entity.extra (array/len @config.extraRepos))
-        (set @entity.runs @entity.collected)
+        (set @entity.rows [])
         (set @entity.fetchedAt @now)
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)
-        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
-(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
-          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if false " (GitHub could not be read; this is the last board)" "")) },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
-        ] })
-      CI_EXTRA_RUNS -> loading
-        (let ((x (array/nth @config.extraRepos @entity.extra)))
-          (set @entity.collected (array/append @entity.collected (if (= (array/len @payload.runs) 0) (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) })) (let ((run (array/nth @payload.runs 0))) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name), status: (str/lower @run.status), conclusion: (if (== @run.conclusion null) null (str/lower @run.conclusion)), name: @run.name, url: @run.html_url, databaseId: @run.id, createdAt: @run.created_at })))))
-        (set @entity.extra (+ @entity.extra 1))
-        (emit CI_EXTRA_NEXT { })
-      CI_EXTRA_FAILED -> loading
-        (let ((x (array/nth @config.extraRepos @entity.extra)))
-          (set @entity.collected (array/append @entity.collected (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) })))))
-        (set @entity.extra (+ @entity.extra 1))
-        (emit CI_EXTRA_NEXT { })
+        (set @entity.error "")
+        (emit CI_ANSWER { })
+
+      CI_GQL_ANSWERED -> idle when (and (!= @entity.key null) (!= (json/parse @payload.body CiReply) null))
+        (emit CI_RETRY_SUCCEEDED { key: @entity.key })
+        (set @entity.rows (let ((data (object/get (json/parse @payload.body CiReply) "data" null)) (blank : CiRun { id: "", owner: "", repo: "", section: "other", headline: "", tone: "neutral", statusLabel: "", meta: [], at: null, url: "", runIds: [] }) (tbl : [CiTone] [{ tone: "danger", label: "Failing", section: "failing" }, { tone: "info", label: "Running", section: "running" }, { tone: "warning", label: "Cancelled", section: "other" }, { tone: "success", label: "Passing", section: "passing" }, { tone: "neutral", label: "No runs", section: "other" }])) (array/map (array/range (array/len @config.repos)) (fn i (let ((x (array/nth @config.repos @i)) (rp : CiRepository? (if (== @data null) null (object/get @data (str/concat "r" @i) null)))) (let ((base (object/merge @blank { id: (str/concat @x.owner "/" @x.name), owner: @x.owner, repo: @x.name, url: (str/concat "https://github.com/" @x.owner "/" @x.name) }))) (if (== @rp null) (object/merge @base { statusLabel: "Unavailable" }) (let ((sx : [CiSuiteRow] (array/map (array/filter (object/get @rp "defaultBranchRef.target.checkSuites.nodes" []) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s (let ((c (if (== @s.conclusion null) "" (str/lower @s.conclusion)))) { rank: (if (array/includes ["failure", "timed_out", "startup_failure", "action_required"] @c) 0 (if (!= (str/lower @s.status) "completed") 1 (if (= @c "cancelled") 2 3))), id: (object/get @s "workflowRun.databaseId" 0), name: (object/get @s "workflowRun.workflow.name" ""), url: (object/get @s "workflowRun.url" ""), at: (object/get @s "workflowRun.createdAt" null) })))) (headline (object/get @rp "defaultBranchRef.target.messageHeadline" "")) (committed (object/get @rp "defaultBranchRef.target.committedDate" null))) (let ((worst (array/reduce @sx 9 (fn acc s (if (< @s.rank @acc) @s.rank @acc))))) (let ((ws (array/sort (array/filter @sx (fn s (= @s.rank @worst))) "at" "desc")) (lk (array/nth @tbl (if (= (array/len @sx) 0) 4 @worst)))) (if (= (array/len @sx) 0) (object/merge @base { section: @lk.section, headline: @headline, tone: @lk.tone, statusLabel: @lk.label, at: @committed }) (let ((top (array/nth @ws 0))) (object/merge @base { section: @lk.section, headline: @headline, tone: @lk.tone, statusLabel: @lk.label, meta: [(str/join (array/unique (array/map @ws (fn s @s.name))) ", ")], at: @top.at, url: @top.url, runIds: (array/flatten (array/map [0, 1, 2, 3] (fn k (array/map (array/filter @sx (fn s (= @s.rank @k))) (fn s @s.id))))) })))))))))))))
+        (set @entity.fetchedAt @now)
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (set @entity.error "")
+        (emit CI_ANSWER { })
+      CI_GQL_ANSWERED -> loading when (and (!= @entity.key null) (= (json/parse @payload.body CiReply) null))
+        (emit CI_RETRY_FAILED { key: @entity.key, error: "GitHub answered something that is not a repository map" })
+
+      CI_GQL_FAILED -> loading when (and (!= @entity.key null) (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
+        (emit CI_RETRY_FAILED { key: @entity.key, error: @payload.message })
+      CI_GQL_FAILED -> loading when (and (!= @entity.key null) (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (emit CI_RETRY_CANCEL { })
+        (emit CI_READ_FAILED { error: @payload.message })
+      CI_GAVE_UP -> loading when (== @payload.key @entity.key)
+        (emit CI_READ_FAILED { error: (default @payload.error "GitHub could not be read") })
+
+      CI_READ_FAILED -> idle when @entity.hasCache
+        (set @entity.error @payload.error)
+        (set @entity.loading false)
+        (emit CI_ANSWER { })
+      CI_READ_FAILED -> idle when (not @entity.hasCache)
+        (set @entity.loading false)
+        (emit CI_BOARD_FAILED { error: @payload.error })
     }
 
     emits {
@@ -207,57 +251,64 @@ orbital CiStatusOrbital {
         fetchedAt : instant!
         stale : boolean!
       }
-        @description "The board: per repository its latest run's status, conclusion (absent while running), workflow name, url, run id and creation time, or status unknown; fetchedAt is when it was read, and stale says GitHub could not be read this time."
+        @description "The board: per repository its id (owner/name), section (failing, running, passing, other), head commit headline, tone and status label, workflow names of its worst run, the worst run's creation time (the head commit's date when it has no run), the run's or repository's url, and the run ids of its suites, worst first; fetchedAt is when it was read, and stale says GitHub could not be read this time."
         @synonyms "ci board, build status, workflow runs"
-        @tier "primary"
-      CI_RUN_SELECTED -> external {
-        owner : string!
-        repo : string!
-        runId : string!
-      }
-        @description "A failing row was clicked: the run to read the log of, for whatever shows run logs."
-        @synonyms "failed run picked, open run log"
         @tier "primary"
       CI_GQL {
         query : string!
         variables : string!
       }
-        @description "Internal: one page's GraphQL query, to the GitHub client."
-        @tier "internal"
-      CI_EXTRA {
-        owner : string!
-        repo : string!
-        per_page : number!
-      }
-        @description "Internal: one extra repository's run list, to the GitHub client."
+        @description "Internal: the one GraphQL query, to the GitHub client."
         @tier "internal"
       CI_RETRY_START {
         key : CallKey!
       }
-        @description "Internal: begin retrying one page."
+        @description "Internal: begin retrying the request."
         @tier "internal"
       CI_RETRY_SUCCEEDED {
         key : CallKey!
       }
-        @description "Internal: the page was answered."
+        @description "Internal: the request was answered."
         @tier "internal"
       CI_RETRY_FAILED {
         key : CallKey!
         error : string!
       }
-        @description "Internal: the page met a gateway error or no answer."
+        @description "Internal: the request met a gateway error or no answer."
         @tier "internal"
       CI_RETRY_CANCEL { }
-        @description "Internal: stop retrying the page."
+        @description "Internal: stop retrying the request."
         @tier "internal"
-      CI_STATUS_LOAD -> internal { }
-        @description "Internal: the load a page opening with loadOnInit asks for."
+      CI_BOARD_LOADING { }
+        @description "Internal: a read began, to the board."
         @tier "internal"
-      CI_PAGE_READ -> internal { }
-        @description "Internal: a page's repositories are collected."
+      CI_BOARD_SHOW {
+        note : string!
+        tiles : [CiBoardTile]!
+        sections : [CiBoardSection]!
+        rows : [CiBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the board's tiles, sections and rows, to the board."
         @tier "internal"
-      CI_EXTRA_NEXT -> internal { }
-        @description "Internal: read the next extra repository, or finish."
+      CI_BOARD_FAILED {
+        error : string!
+      }
+        @description "Internal: the read failed with no previous board, to the board."
+        @tier "internal"
+      CI_DETAIL_ROWS {
+        rows : [CiRun]!
+      }
+        @description "Internal: the rows last answered, to the detail reader."
+        @tier "internal"
+      CI_ANSWER -> internal { }
+        @description "Internal: answer CI_STATUS and the board from the entity's rows."
+        @tier "internal"
+      CI_READ_FAILED -> internal {
+        error : string!
+      }
+        @description "Internal: the read ended without a board."
         @tier "internal"
     }
 
@@ -267,86 +318,41 @@ orbital CiStatusOrbital {
         @synonyms "load ci status, show build status"
       CI_STATUS_REFRESH -> input { }
         @description "Read the board afresh."
-      CI_RUN_OPEN {
-        id : string!
-        row : CiRunRow!
-      }
-        @description "A board row was clicked: a failed run is announced as CI_RUN_SELECTED, and opens its log page when logsPage is set."
         @synonyms "refresh ci status, reload runs"
       CI_ATTEMPT {
         key : CallKey!
         attempt : number!
       }
-        @description "A std-retry ATTEMPT: ask for the page."
+        @description "A std-retry ATTEMPT: ask for the board."
       CI_GAVE_UP {
         key : CallKey!
         attempts : number!
         error : string
       }
-        @description "A std-retry GAVE_UP: the page's attempts are spent."
+        @description "A std-retry GAVE_UP: the attempts are spent."
       CI_GQL_ANSWERED {
         body : string!
       }
-        @description "A std-github GITHUB_GRAPHQL_ANSWERED: the page's reply."
+        @description "A std-github GITHUB_GRAPHQL_ANSWERED: the reply."
       CI_GQL_FAILED {
         status : number!
         code : string
         message : string!
       }
-        @description "A std-github GITHUB_GRAPHQL_FAILED: the page was not served."
-      CI_EXTRA_RUNS {
-        owner : string!
-        repo : string!
-        runs : [CiGithubRun]!
-      }
-        @description "A std-github GITHUB_RUNS: an extra repository's runs."
-      CI_EXTRA_FAILED {
-        owner : string!
-        repo : string!
-        code : string
-        message : string!
-      }
-        @description "A std-github GITHUB_LIST_RUNS_FAILED: an extra repository's runs could not be read."
+        @description "A std-github GITHUB_GRAPHQL_FAILED: the request was not served."
       CiRetry.ATTEMPT -> CI_ATTEMPT
       CiRetry.GAVE_UP -> CI_GAVE_UP
       CiGithub.GITHUB_GRAPHQL_ANSWERED -> CI_GQL_ANSWERED
       CiGithub.GITHUB_GRAPHQL_FAILED -> CI_GQL_FAILED
-      CiGithub.GITHUB_RUNS -> CI_EXTRA_RUNS
-      CiGithub.GITHUB_LIST_RUNS_FAILED -> CI_EXTRA_FAILED
+      CiBoard.BOARD_LOAD -> CI_STATUS_LOAD
+      CiBoard.BOARD_REFRESH -> CI_STATUS_REFRESH
     }
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @synonyms "status area, slot"
-        @tier "presentation"
-      title : string = "CI status"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
-      loadOnInit : boolean = false
-        @label "Load when opened"
-        @description "Read the board as soon as its page opens."
-        @tier "presentation"
-      logsPage : string = ""
-        @label "Run log page"
-        @description "The page a failed run opens, without its leading slash, as /<logsPage>/<owner>/<repo>/<runId>; empty keeps rows unclickable."
-        @tier "presentation"
-      org : string = ""
-        @label "Organization"
-        @description "The GitHub organization whose repositories the board reads."
-        @synonyms "github org, owner"
-        @tier "domain"
-      skipRepos : [string] = []
-        @label "Repositories left out"
-        @description "Repository names of the organization the board does not show."
-        @synonyms "ignored repos, hidden repositories"
-        @tier "domain"
-      extraRepos : [CiExtraRepo] = []
-        @label "Other repositories"
-        @description "Repositories outside the organization to show too: owner, name and the name to show."
-        @synonyms "extra repos, external repositories"
+      repos : [CiRepoRef] = []
+        @label "Repositories"
+        @description "The repositories the board shows, each as owner and name; all are read in one request."
+        @synonyms "github repositories, watched repos"
         @tier "domain"
       cacheTtlMs : number = 300000
         @label "Cache window"
@@ -358,28 +364,140 @@ orbital CiStatusOrbital {
         @description "The GitHub App whose check suites count; 15368 is GitHub Actions."
         @synonyms "github actions app"
         @tier "domain"
-      pageSize : number = 25
-        @label "Repositories per query"
-        @description "Repositories asked for per GraphQL query; larger pages time out on GitHub's side."
-        @synonyms "page size"
-        @tier "infra"
-      maxPages : number = 8
-        @label "Most pages"
-        @description "The most pages one read asks for."
-        @synonyms "page cap"
-        @tier "infra"
-      historyDepth : number = 5
-        @label "Commits looked at"
-        @description "Default-branch commits looked at per repository."
-        @synonyms "history depth"
-        @tier "infra"
-      checkSuiteDepth : number = 3
-        @label "Check suites per commit"
-        @description "Check suites looked at per commit."
+      checkSuiteDepth : number = 20
+        @label "Check suites per repository"
+        @description "Check suites of the head commit looked at per repository."
         @synonyms "suite depth"
         @tier "infra"
     }
   }
 
-  page "/ci-status" as CiStatusPage -> CiStatus, CiGithub, CiRetry
+  trait CiDetail -> CiStatusBoard [client] {
+    initial: idle
+
+    state idle {
+      CI_DETAIL_ROWS -> idle
+        (set @entity.detailRows @payload.rows)
+      CI_DETAIL_OPEN -> idle
+        (set @entity.queue (array/append @entity.queue @payload.rowId))
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+      CI_DETAIL_NEXT -> idle when (= (array/len @entity.queue) 0)
+      CI_DETAIL_NEXT -> jobs when (and (> (array/len @entity.queue) 0) (let ((row (array/find @entity.detailRows (fn r (= @r.id (default (array/nth @entity.queue 0) "")))))) (and (!= @row null) (> (array/len @row.runIds) 0))))
+        (let ((row (array/find @entity.detailRows (fn r (= @r.id (default (array/nth @entity.queue 0) ""))))))
+          (do
+          (set @entity.detailRow @row.id)
+          (set @entity.detailRun (default (array/nth @row.runIds 0) 0))
+          (set @entity.queue (array/slice @entity.queue 1 (array/len @entity.queue)))
+          (emit CI_JOBS { owner: @row.owner, repo: @row.repo, runId: (default (array/nth @row.runIds 0) 0) })))
+      CI_DETAIL_NEXT -> idle when (and (> (array/len @entity.queue) 0) (not (let ((row (array/find @entity.detailRows (fn r (= @r.id (default (array/nth @entity.queue 0) "")))))) (and (!= @row null) (> (array/len @row.runIds) 0)))))
+        (emit CI_BOARD_DETAIL { detail: { rowId: (default (array/nth @entity.queue 0) ""), phase: "ready", items: [], code: "", codeTitle: "", errorLines: [], error: "" } })
+        (set @entity.queue (array/slice @entity.queue 1 (array/len @entity.queue)))
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+    }
+
+    state jobs {
+      CI_DETAIL_ROWS -> jobs
+        (set @entity.detailRows @payload.rows)
+      CI_DETAIL_OPEN -> jobs when (!= @payload.rowId @entity.detailRow)
+        (set @entity.queue (array/append @entity.queue @payload.rowId))
+      CI_JOBS_READ -> logs when (and (= @payload.runId @entity.detailRun) (array/some @payload.jobs (fn j (= (default @j.conclusion "") "failure"))))
+        (set @entity.detailItems (array/map @payload.jobs (fn j (let ((c (if (== @j.conclusion null) "" (str/lower @j.conclusion)))) { label: @j.name, tone: (if (array/includes ["failure", "timed_out", "startup_failure", "action_required"] @c) "danger" (if (= @c "success") "success" (if (= @c "cancelled") "warning" (if (= @c "") "info" "neutral")))), statusLabel: (if (array/includes ["failure", "timed_out", "startup_failure", "action_required"] @c) "Failed" (if (= @c "success") "Passed" (if (= @c "cancelled") "Cancelled" (if (= @c "") (if (= @j.status "in_progress") "Running" "Queued") @c)))), meta: (let ((s (time/parse (default @j.started_at ""))) (e (time/parse (default @j.completed_at "")))) (if (or (== @s null) (== @e null)) "" (time/duration (time/diff @e @s)))) }))))
+        (set @entity.failedJob (let ((fj (array/find @payload.jobs (fn j (= (default @j.conclusion "") "failure"))))) (if (== @fj null) "" @fj.name)))
+        (emit CI_BOARD_DETAIL { detail: { rowId: @entity.detailRow, phase: "ready", items: @entity.detailItems, code: "", codeTitle: "", errorLines: [], error: "" } })
+        (emit CI_LOGS_LOAD { owner: @payload.owner, repo: @payload.repo, runId: (str/concat @entity.detailRun) })
+      CI_JOBS_READ -> idle when (and (= @payload.runId @entity.detailRun) (not (array/some @payload.jobs (fn j (= (default @j.conclusion "") "failure")))))
+        (emit CI_BOARD_DETAIL { detail: { rowId: @entity.detailRow, phase: "ready", items: (array/map @payload.jobs (fn j (let ((c (if (== @j.conclusion null) "" (str/lower @j.conclusion)))) { label: @j.name, tone: (if (array/includes ["failure", "timed_out", "startup_failure", "action_required"] @c) "danger" (if (= @c "success") "success" (if (= @c "cancelled") "warning" (if (= @c "") "info" "neutral")))), statusLabel: (if (array/includes ["failure", "timed_out", "startup_failure", "action_required"] @c) "Failed" (if (= @c "success") "Passed" (if (= @c "cancelled") "Cancelled" (if (= @c "") (if (= @j.status "in_progress") "Running" "Queued") @c)))), meta: (let ((s (time/parse (default @j.started_at ""))) (e (time/parse (default @j.completed_at "")))) (if (or (== @s null) (== @e null)) "" (time/duration (time/diff @e @s)))) }))), code: "", codeTitle: "", errorLines: [], error: "" } })
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+      CI_JOBS_FAILED -> idle when (= @payload.runId @entity.detailRun)
+        (emit CI_BOARD_DETAIL { detail: { rowId: @entity.detailRow, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: @payload.message } })
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+    }
+
+    state logs {
+      CI_DETAIL_ROWS -> logs
+        (set @entity.detailRows @payload.rows)
+      CI_DETAIL_OPEN -> logs when (!= @payload.rowId @entity.detailRow)
+        (set @entity.queue (array/append @entity.queue @payload.rowId))
+      CI_LOGS -> idle when (= @payload.runId (str/concat @entity.detailRun))
+        (emit CI_BOARD_DETAIL { detail: { rowId: @entity.detailRow, phase: "ready", items: @entity.detailItems, code: (str/join (array/map @payload.lines (fn l (default @l.msg ""))) "\n"), codeTitle: (str/concat @entity.failedJob " log"), errorLines: (array/filter (array/map (array/range (array/len @payload.lines)) (fn i (if (= (object/get (array/nth @payload.lines @i) "level" "") "error") (+ @i 1) 0))) (fn n (> @n 0))), error: "" } })
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+      CI_LOGS_FAILED -> idle when (= @payload.runId (str/concat @entity.detailRun))
+        (emit CI_BOARD_DETAIL { detail: { rowId: @entity.detailRow, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: @payload.error } })
+        (emit CI_DETAIL_NEXT { left: (array/len @entity.queue) })
+    }
+
+    emits {
+      CI_JOBS {
+        owner : string!
+        repo : string!
+        runId : number!
+      }
+        @description "Internal: one run's job list, to the GitHub client."
+        @tier "internal"
+      CI_BOARD_DETAIL {
+        detail : CiBoardDetail!
+      }
+        @description "Internal: one row's detail, to the board."
+        @tier "internal"
+      CI_LOGS_LOAD -> external {
+        owner : string!
+        repo : string!
+        runId : string!
+      }
+        @description "Ask the run log reader (std-ci-run-logs) for a failed run's log; it answers CI_LOGS."
+        @synonyms "read run log, failed run log"
+        @tier "primary"
+      CI_DETAIL_NEXT -> internal {
+        left : number!
+      }
+        @description "Internal: serve the next waiting row detail, or rest."
+        @tier "internal"
+    }
+
+    listens {
+      CI_DETAIL_ROWS {
+        rows : [CiRun]!
+      }
+        @description "The rows the board last answered."
+      CI_DETAIL_OPEN {
+        rowId : string!
+      }
+        @description "A board row opened: queue its detail."
+      CI_JOBS_READ {
+        owner : string!
+        repo : string!
+        runId : number!
+        jobs : [CiGhJob]!
+      }
+        @description "A std-github GITHUB_RUN_JOBS: the run's jobs."
+      CI_JOBS_FAILED {
+        owner : string!
+        repo : string!
+        runId : number!
+        code : string
+        message : string!
+      }
+        @description "A std-github GITHUB_LIST_RUN_JOBS_FAILED: the jobs could not be read."
+      CI_LOGS {
+        repo : string!
+        runId : string!
+        lines : [CiLogLine]!
+      }
+        @description "A std-ci-run-logs CI_LOGS: the run's log lines."
+      CI_LOGS_FAILED {
+        runId : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-ci-run-logs CI_LOGS_FAILED: the log was not read."
+      CiStatus.CI_DETAIL_ROWS -> CI_DETAIL_ROWS
+      CiBoard.BOARD_ROW_OPENED -> CI_DETAIL_OPEN
+      CiRunLogs.CI_LOGS -> CI_LOGS
+      CiRunLogs.CI_LOGS_FAILED -> CI_LOGS_FAILED
+      CiGithub.GITHUB_RUN_JOBS -> CI_JOBS_READ
+      CiGithub.GITHUB_LIST_RUN_JOBS_FAILED -> CI_JOBS_FAILED
+    }
+  }
+
+  page "/ci-status" as CiStatusPage -> CiStatus, CiDetail, CiBoard, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, CiRunLogs, CiLogsGh
 }

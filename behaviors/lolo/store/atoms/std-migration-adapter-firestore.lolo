@@ -1,9 +1,15 @@
 app std-migration-adapter-firestore [
   version: "1.0.0",
   description: "std-migration-adapter-firestore — the Firestore REST source adapter of a migration run. Each fetched document of the job carries a Firestore document resource name (projects/p/databases/(default)/documents/users/u/knowledgeGraphs/g); the adapter reads every document with a bearer-authenticated GET on sourceOrigin and decodes the typed values. A recipe, chosen by the profile's adapter id, names what the documents yield: the document itself as one unit (documentUnit, kind documentKind), each entry of a nodes map as one unit of the kind its node type names (nodeKinds), and each entry of a relationships list as one unit of edgeKind. A scalar field becomes a metadata slot of the same name; a map or list field becomes the slot of the same name holding the Firestore value as JSON text, and the slot composite lists those names as JSON text. A node adds nodeId, nodeType and its own scalar fields as node_<field>; every unit carries documentId and documentPath. A relationship whose source or target is not an emitted node of its document is ledgered in skipped. A document that cannot be read is ledgered in skipped, or fails the run with MIGRATION_SOURCE_UNREADABLE when it is the only one. Answers std-migration-job's MIGRATION_EXTRACT when a recipe carries the profile's adapter.",
-  egress: ["https://firestore.googleapis.com"]
+  net: { "firestore.googleapis.com:443": [tcp], "*.googleapis.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 orbital MigrationAdapterFirestoreOrbital {
+  entity FirestoreSourceCall [runtime] {
+    id : string!
+  }
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
@@ -58,16 +64,18 @@ orbital MigrationAdapterFirestoreOrbital {
 
     state reading {
       INIT -> idle
-      FIRESTORE_NEXT -> reading when (< @entity.cursor (array/len @entity.refs))
-        (http
-          GET
-          @config.sourceOrigin
-          (str/concat "/v1/" (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw"))
-          {
-            auth: { scheme: bearer, credential: @config.connectionRef },
-            timeoutMs: @config.timeoutMs
-          }
-          { emit: { success: FIRESTORE_REPLIED, failure: FIRESTORE_UNREACHABLE } })
+      FIRESTORE_NEXT -> reading when (and (< @entity.cursor (array/len @entity.refs)) (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
+        (emit FIRESTORE_HTTP_SEND {
+          key: "doc",
+          host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
+          method: "GET",
+          target: (str/concat "/v1/" (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw")),
+          headers: [{ name: "accept", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none"
+        })
+      FIRESTORE_NEXT -> reading when (and (< @entity.cursor (array/len @entity.refs)) (not (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://"))))
+        (emit FIRESTORE_UNREACHABLE { error: "the source origin must start with https:// or http://", kind: "refused" })
       FIRESTORE_REPLIED -> reading when (and (>= ?status 200) (< ?status 300) (json/valid ?body))
         (let ((doc (json/parse ?body FirestoreDocument)))
           (if (or (== @doc null) (<= (array/len (str/split (object/get (default @doc { name: "" }) "name") "/documents/")) 1))
@@ -90,7 +98,7 @@ orbital MigrationAdapterFirestoreOrbital {
           (array/append
             @entity.unreadable
             { ref: (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw"), reason: ?error }))
-        (notify error (str/concat "Couldn't read a Firestore document — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't read a Firestore document — " ?error) "Couldn't read a Firestore document"))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit FIRESTORE_NEXT {})
       FIRESTORE_NEXT -> idle when (and (>= @entity.cursor (array/len @entity.refs)) (= (array/len @entity.refs) 1) (= (array/len @entity.docs) 0))
@@ -278,12 +286,16 @@ orbital MigrationAdapterFirestoreOrbital {
       FIRESTORE_NEXT
         @description "Internal: read the next fetched document, or move on to building the units when none is left."
         @tier "secondary"
-      FIRESTORE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      FIRESTORE_HTTP_SEND {
+        key : string!
+        host : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: a Firestore document reply."
+        @description "Internal: a Firestore document read, for the HTTP client."
         @tier "secondary"
       FIRESTORE_UNREACHABLE {
         error : string!
@@ -310,6 +322,14 @@ orbital MigrationAdapterFirestoreOrbital {
     }
 
     listens {
+      FIRESTORE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      MigrationAdapterFirestoreHttp.HTTP_REPLIED -> FIRESTORE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      MigrationAdapterFirestoreHttp.HTTP_FAILED -> FIRESTORE_UNREACHABLE with { error: ?error, kind: ?kind }
+      MigrationAdapterFirestoreTimeout.TIMED_OUT -> FIRESTORE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
       MIGRATION_EXTRACT -> input {
         adapter : string!
         documents : [ImportRawDocument]!
@@ -327,21 +347,40 @@ orbital MigrationAdapterFirestoreOrbital {
         @tier "domain"
       sourceOrigin : url = "https://firestore.googleapis.com"
         @label "Source origin"
-        @description "The origin (scheme://host[:port], no path) the Firestore REST API answers on; it must also be declared in the app egress list."
+        @description "The origin (scheme://host[:port], no path) the Firestore REST API answers on; it must also be declared in the app net grants."
         @synonyms "firestore host, api origin"
-        @tier "infra"
-      connectionRef : secret = "MIGRATION_SOURCE_TOKEN"
-        @label "Connection reference"
-        @description "Name of the credential holding the bearer token sent on every read. The name is stored; the secret itself never enters config, traces, or snapshots."
-        @synonyms "credential key, source token"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds a read may take before the document is ledgered as unreadable."
-        @synonyms "timeout, request deadline"
         @tier "infra"
     }
   }
 
-  page "/migration-adapter-firestore" as MigrationAdapterFirestorePage -> MigrationAdapterFirestore
+  trait MigrationAdapterFirestoreHttp = Http.traits.HttpClient {
+    config {
+      host: "firestore.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "firestore.googleapis.com"
+      dynamicHost: true
+      credential: "MIGRATION_SOURCE_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      MigrationAdapterFirestore.FIRESTORE_HTTP_SEND -> HTTP_SEND
+      MigrationAdapterFirestoreTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait MigrationAdapterFirestoreTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      MigrationAdapterFirestore.FIRESTORE_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      MigrationAdapterFirestoreHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      MigrationAdapterFirestoreHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page "/migration-adapter-firestore" as MigrationAdapterFirestorePage -> MigrationAdapterFirestore, MigrationAdapterFirestoreHttp, MigrationAdapterFirestoreTimeout
 }

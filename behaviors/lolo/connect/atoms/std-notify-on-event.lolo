@@ -1,8 +1,8 @@
 app std-notify-on-event [
   version: "2.0.0",
   description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push through std-push (PUSH_SEND) (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
-  egress: ["https://api.sendgrid.com", "https://api.resend.com", "https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
-  net: { "api.twilio.com:443": [tcp], "hooks.example.test:443": [tcp], "fcm.googleapis.com:443": [tcp], "android.googleapis.com:443": [tcp], "updates.push.services.mozilla.com:443": [tcp], "web.push.apple.com:443": [tcp], "*.notify.windows.com:443": [tcp] }
+  egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
+  net: { "api.sendgrid.com:443": [tcp], "api.resend.com:443": [tcp], "api.twilio.com:443": [tcp], "hooks.example.test:443": [tcp], "fcm.googleapis.com:443": [tcp], "android.googleapis.com:443": [tcp], "updates.push.services.mozilla.com:443": [tcp], "web.push.apple.com:443": [tcp], "*.notify.windows.com:443": [tcp] }
 ]
 type PrefRow = { personId : string, eventKey : string, mode : string, channel : string, quietHours : string }
 type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : instant }
@@ -60,6 +60,36 @@ orbital NotifyOnEventOrbital {
   trait NotifyEmailApi = Email.traits.EmailSender {
     listens {
       NotifyOnEventListener.EMAIL_SEND -> EMAIL_SEND
+      NotifyEmailApiSendgridHttp.HTTP_REPLIED -> EMAIL_SENDGRID_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      NotifyEmailApiSendgridHttp.HTTP_FAILED -> EMAIL_SENDGRID_FAILED with { error: ?error, kind: ?kind }
+      NotifyEmailApiResendHttp.HTTP_REPLIED -> EMAIL_RESEND_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      NotifyEmailApiResendHttp.HTTP_FAILED -> EMAIL_RESEND_FAILED with { error: ?error, kind: ?kind }
+      NotifyEmailApiTimeout.TIMED_OUT -> EMAIL_SENDGRID_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "sendgrid")
+      NotifyEmailApiTimeout.TIMED_OUT -> EMAIL_RESEND_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "resend")
+    }
+  }
+
+  trait NotifyEmailApiSendgridHttp = Email.traits.EmailSendgridHttp {
+    listens {
+      NotifyEmailApi.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.sendgrid.com")
+      NotifyEmailApiTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "sendgrid")
+    }
+  }
+
+  trait NotifyEmailApiResendHttp = Email.traits.EmailResendHttp {
+    listens {
+      NotifyEmailApi.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.resend.com")
+      NotifyEmailApiTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "resend")
+    }
+  }
+
+  trait NotifyEmailApiTimeout = Email.traits.EmailTimeout {
+    listens {
+      NotifyEmailApi.EMAIL_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      NotifyEmailApiSendgridHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      NotifyEmailApiSendgridHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      NotifyEmailApiResendHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      NotifyEmailApiResendHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
     }
   }
 
@@ -403,7 +433,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-        (notify error (str/concat "Couldn't look up notification preferences — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't look up notification preferences — " ?error) "Couldn't look up notification preferences"))
     }
 
     emits {
@@ -658,5 +688,5 @@ orbital NotifyOnEventOrbital {
     }
   }
 
-  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
+  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifyEmailApiSendgridHttp, NotifyEmailApiResendHttp, NotifyEmailApiTimeout, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
 }

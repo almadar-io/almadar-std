@@ -1,7 +1,7 @@
 app std-notification-center [
   version: "1.0.0",
   description: "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
-  egress: ["https://api.sendgrid.com", "https://api.resend.com"]
+  net: { "api.sendgrid.com:443": [tcp], "api.resend.com:443": [tcp] }
 ]
 type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : instant }
 type PushCreds = { endpoint : string, p256dh : string, auth : string }
@@ -215,6 +215,36 @@ orbital NotificationCenterOrbital {
         error : string!
         kind : string!
       }
+      DigestMailerSendgridHttp.HTTP_REPLIED -> EMAIL_SENDGRID_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      DigestMailerSendgridHttp.HTTP_FAILED -> EMAIL_SENDGRID_FAILED with { error: ?error, kind: ?kind }
+      DigestMailerResendHttp.HTTP_REPLIED -> EMAIL_RESEND_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      DigestMailerResendHttp.HTTP_FAILED -> EMAIL_RESEND_FAILED with { error: ?error, kind: ?kind }
+      DigestMailerTimeout.TIMED_OUT -> EMAIL_SENDGRID_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "sendgrid")
+      DigestMailerTimeout.TIMED_OUT -> EMAIL_RESEND_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "resend")
+    }
+  }
+
+  trait DigestMailerSendgridHttp = Email.traits.EmailSendgridHttp {
+    listens {
+      DigestMailer.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.sendgrid.com")
+      DigestMailerTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "sendgrid")
+    }
+  }
+
+  trait DigestMailerResendHttp = Email.traits.EmailResendHttp {
+    listens {
+      DigestMailer.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.resend.com")
+      DigestMailerTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "resend")
+    }
+  }
+
+  trait DigestMailerTimeout = Email.traits.EmailTimeout {
+    listens {
+      DigestMailer.EMAIL_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      DigestMailerSendgridHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      DigestMailerSendgridHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      DigestMailerResendHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      DigestMailerResendHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
     }
   }
 
@@ -230,7 +260,7 @@ orbital NotificationCenterOrbital {
       DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
-        (notify error (str/concat "Couldn't send the notification digest — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't send the notification digest — " ?error) "Couldn't send the notification digest"))
     }
 
     state draining {
@@ -253,7 +283,7 @@ orbital NotificationCenterOrbital {
       DIGEST_ROWS_LOADED -> idle when (= (array/len ?data) 0)
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
-        (notify error (str/concat "Couldn't send the notification digest — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't send the notification digest — " ?error) "Couldn't send the notification digest"))
       DIGEST_MAIL_FAILED -> idle
         (set @entity.lastError ?message)
         (notify error (str/concat "Couldn't send the notification digest — " ?message))
@@ -343,5 +373,5 @@ orbital NotificationCenterOrbital {
 
   page "/notifications/preferences" as NotificationPreferencesPage -> PreferenceEditor, PreferenceEditorButtonSubscribe, PreferenceEditorButtonDigest
   page "/notifications/subscribe" as PushSubscribePage -> PushSubscriber
-  page "/notifications/digest" as NotificationDigestPage -> DigestDrain, DigestMailer
+  page "/notifications/digest" as NotificationDigestPage -> DigestDrain, DigestMailer, DigestMailerSendgridHttp, DigestMailerResendHttp, DigestMailerTimeout
 }

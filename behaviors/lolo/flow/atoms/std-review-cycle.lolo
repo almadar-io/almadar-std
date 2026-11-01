@@ -52,7 +52,7 @@ orbital ReviewCycleOrbital {
       ReviewLogged -> in_review
         (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> in_review
-        (notify error (str/concat "Couldn't record the review history — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't record the review history — " ?error) "Couldn't record the review history"))
       ReviewChangesRequested -> changes_requested
         (set @entity.lastNote (default ?note ""))
         (emit ReviewDecided { itemId: (default ?id ""), decision: @toState, round: @entity.round })
@@ -68,7 +68,7 @@ orbital ReviewCycleOrbital {
       ReviewLogged -> changes_requested
         (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> changes_requested
-        (notify error (str/concat "Couldn't record the review history — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't record the review history — " ?error) "Couldn't record the review history"))
       ReviewSubmitted -> in_review
         (set @entity.round (+ @entity.round 1))
         (set @entity.lastNote (default ?note ""))
@@ -81,7 +81,7 @@ orbital ReviewCycleOrbital {
       ReviewLogged -> approved
         (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> approved
-        (notify error (str/concat "Couldn't record the review history — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't record the review history — " ?error) "Couldn't record the review history"))
     }
 
     emits {

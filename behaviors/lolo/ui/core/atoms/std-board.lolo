@@ -317,10 +317,10 @@ orbital BoardOrbital {
         })))
       BoardItemsSaveFailed -> viewing_board
         (set @entity.errorMessage ?error)
-        (notify error (str/concat "Couldn't save the board — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't save the board — " ?error) "Couldn't save the board"))
       BoardItemsLoadFailed -> viewing_board
         (set @entity.errorMessage ?error)
-        (notify error (str/concat "Couldn't refresh the board — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't refresh the board — " ?error) "Couldn't refresh the board"))
     }
 
     state viewing_card {

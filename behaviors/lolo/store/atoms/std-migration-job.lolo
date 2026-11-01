@@ -1,9 +1,16 @@
 app std-migration-job [
   version: "2.0.0",
   description: "std-migration-job — one import run of external data into the app, modeled as a persistent MigrationJob row with a lifecycle state machine: idle → fetching → mapping → reviewing → committing → done | failed. The source is a stored MigrationSourceProfile row, looked up by the picked source id: its http endpoints are read from the sourceOrigin knob with bearer auth named by the connectionRef secret knob (the secret itself never enters the run), each record the endpoints return becomes a document through the profile's shaping, and the profile's adapter parses the documents into target-neutral units — an adapter atom (std-migration-adapter-asana, -clockify, -slack, -markdown, -paste) answers MIGRATION_EXTRACT with MIGRATION_EXTRACTED. The profile's unitTargets and fieldMappings then map every unit onto a target entity deterministically: a slot with no mapping is ledgered in skipped, never dropped, and the staged rows are checked against the profile's captured target entities. Reviewing renders an ImportPreviewTree of the staged rows; once the user approves (MIGRATION_APPROVED) the job emits MIGRATION_COMMIT_REQUESTED with the typed staged units, and the importing app persists them with one explicit arm per target entity and answers MIGRATION_COMMIT_DONE. A host that stages itself may send MIGRATION_STAGED. Terminal runs persist the job row for provenance. A database source is a named seam awaiting the postgres effect. Rebind the entity to a host-owned job entity via linkedEntity; target, supportedAdapters, sourceOrigin, connectionRef and reviewSlot are config knobs.",
-  egress: ["https://api.example.com"]
+  net: { "api.example.com:443": [tcp], "*.example.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 orbital MigrationJobOrbital {
+
+  entity MigrationSourceCall [runtime] {
+    id : string!
+  }
 
   type MigrationFile = { name : string, size : number, type : string, lastModified : number }
   type ImportSourceOption = { id : string!, kind : string!, label : string!, event : string }
@@ -151,30 +158,31 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET"))
-        (http
-          GET
-          @config.sourceOrigin
-          (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "path")
-          {
-            query: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "params"),
-            headers: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "headers" {}),
-            auth: { scheme: bearer, credential: @config.connectionRef },
-            timeoutMs: @config.timeoutMs
-          }
-          { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "POST"))
-        (http
-          POST
-          @config.sourceOrigin
-          (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "path")
-          {
-            query: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "params"),
-            headers: (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "headers" {}),
-            auth: { scheme: bearer, credential: @config.connectionRef },
-            timeoutMs: @config.timeoutMs
-          }
-          { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
+        ;; an endpoint without params sends no query string
+        (let ((ep (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
+          (emit MIGRATION_HTTP_SEND {
+            key: "source",
+            host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
+            method: "GET",
+            target: (str/concat (object/get @ep "path") (if (= (array/len (object/entries (object/get @ep "params" {}))) 0) "" (str/concat "?" (str/join (array/map (object/entries (object/get @ep "params" {})) (fn e (str/concat (str/encode-uri-component (default (array/nth @e 0) "")) "=" (str/encode-uri-component (default (array/nth @e 1) ""))))) "&")))),
+            headers: (array/concat [{ name: "accept", value: "application/json" }] (array/map (object/entries (object/get @ep "headers" {})) (fn e { name: (str/lower (default (array/nth @e 0) "")), value: (default (array/nth @e 1) "") }))),
+            body: (bytes/from-string ""),
+            stream: "none"
+          }))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "POST") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
+        (let ((ep (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
+          (emit MIGRATION_HTTP_SEND {
+            key: "source",
+            host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
+            method: "POST",
+            target: (str/concat (object/get @ep "path") (if (= (array/len (object/entries (object/get @ep "params" {}))) 0) "" (str/concat "?" (str/join (array/map (object/entries (object/get @ep "params" {})) (fn e (str/concat (str/encode-uri-component (default (array/nth @e 0) "")) "=" (str/encode-uri-component (default (array/nth @e 1) ""))))) "&")))),
+            headers: (array/concat [{ name: "accept", value: "application/json" }] (array/map (object/entries (object/get @ep "headers" {})) (fn e { name: (str/lower (default (array/nth @e 0) "")), value: (default (array/nth @e 1) "") }))),
+            body: (bytes/from-string ""),
+            stream: "none"
+          }))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (not (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://"))))
+        (emit MIGRATION_SOURCE_UNREACHABLE { error: "the source origin must start with https:// or http://", kind: "refused" })
       MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (!= (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (validate/string (object/get (object/get @entity.profile "shaping") "title")))
         ;; a profile that shapes no title or content key reads "" here: no record has text under it, so each record is skipped with a reason, never dropped
         (set @entity.documents (array/concat @entity.documents
@@ -271,7 +279,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't list the source documents — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't list the source documents — " ?error) "Couldn't list the source documents"))
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
@@ -284,7 +292,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't list the source documents — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't list the source documents — " ?error) "Couldn't list the source documents"))
     }
 
     state mapping {
@@ -771,7 +779,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't stage the documents — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't stage the documents — " ?error) "Couldn't stage the documents"))
       MIGRATION_SOURCE_UNREADABLE -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
@@ -784,7 +792,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't read the source documents — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't read the source documents — " ?error) "Couldn't read the source documents"))
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
@@ -797,7 +805,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't stage the documents — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't stage the documents — " ?error) "Couldn't stage the documents"))
     }
 
     state reviewing {
@@ -880,7 +888,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't commit the import — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't commit the import — " ?error) "Couldn't commit the import"))
     }
 
     state done {
@@ -954,12 +962,16 @@ orbital MigrationJobOrbital {
       }
         @description "Internal: read the profile endpoint at this position, or move on to staging when none is left."
         @tier "secondary"
-      MIGRATION_SOURCE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      MIGRATION_HTTP_SEND {
+        key : string!
+        host : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: a source endpoint's HTTP reply."
+        @description "Internal: a source endpoint request, for the HTTP client."
         @tier "secondary"
       MIGRATION_SOURCE_UNREACHABLE {
         error : string!
@@ -1022,6 +1034,14 @@ orbital MigrationJobOrbital {
     }
 
     listens {
+      MIGRATION_SOURCE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      MigrationJobHttp.HTTP_REPLIED -> MIGRATION_SOURCE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      MigrationJobHttp.HTTP_FAILED -> MIGRATION_SOURCE_UNREACHABLE with { error: ?error, kind: ?kind }
+      MigrationJobTimeout.TIMED_OUT -> MIGRATION_SOURCE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
       MIGRATION_START {
         source : ImportSourceOption!
         files : [MigrationFile]
@@ -1098,18 +1118,8 @@ orbital MigrationJobOrbital {
         @tier "domain"
       sourceOrigin : url = "https://api.example.com"
         @label "Source origin"
-        @description "The origin (scheme://host[:port], no path) the profile endpoint paths are read from; the default is a placeholder, and the real origin must also be declared in the app egress list."
+        @description "The origin (scheme://host[:port], no path) the profile endpoint paths are read from; the default is a placeholder, and the real origin must also be declared in the app net grants."
         @synonyms "source url, api origin, base url"
-        @tier "infra"
-      connectionRef : secret = "MIGRATION_SOURCE_TOKEN"
-        @label "Connection reference"
-        @description "Name of the credential holding the bearer token sent on every source request. The name is stored; the secret itself never enters config, traces, or snapshots."
-        @synonyms "credential key, source token, secret name"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds a source request may take before the run fails."
-        @synonyms "timeout, request deadline, wait limit"
         @tier "infra"
       reviewSlot : slot = modal
         @label "Review slot"
@@ -1119,5 +1129,34 @@ orbital MigrationJobOrbital {
     }
   }
 
-  page "/migration-job" as MigrationJobPage -> MigrationJobLifecycle
+  trait MigrationJobHttp = Http.traits.HttpClient {
+    config {
+      host: "api.example.com"
+      port: 443
+      tls: true
+      serverName: "api.example.com"
+      dynamicHost: true
+      credential: "MIGRATION_SOURCE_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      MigrationJobLifecycle.MIGRATION_HTTP_SEND -> HTTP_SEND
+      MigrationJobTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait MigrationJobTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      MigrationJobLifecycle.MIGRATION_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      MigrationJobHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      MigrationJobHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page "/migration-job" as MigrationJobPage -> MigrationJobLifecycle, MigrationJobHttp, MigrationJobTimeout
 }

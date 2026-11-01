@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-host-calls.lolo",
  "trait": "HostCalls",
- "note": "Cases for the shared host-call collector. It reads no file: the operator shapes (LINT_OPERATOR_SHAPES) and the host facts (LINT_HOST_FACTS) of std-orb-lint-input are kept, and a request is answered once both are heard (or either is unread). The collected calls and the facts are what the same program and the operator table give when walked in the Rust each_call_of order (parent before children, guard before effects, transitions before ticks); the facts cases also check the keys and words indexes of the params by path, the table-ordered emit keys (emitOrder), family and httpWire.",
+ "note": "Cases for the shared host-call collector. It reads no file: the operator shapes (LINT_OPERATOR_SHAPES) and the host facts (LINT_HOST_FACTS) of std-orb-lint-input are kept, and a request is answered once both are heard (or either is unread). The collected calls and the facts are what the same program and the operator table give when walked in the Rust each_call_of order (parent before children, guard before effects, transitions before ticks); the facts cases also check the keys and words indexes of the params by path, the table-ordered emit keys (emitOrder), family and defaultPorts. The `os/tcp-connect` head in the fixtures is a stand-in for any server operator; the collector does not read the call's shape.",
  "cases": [
   {
    "id": "closed-call-heads-and-facts",
@@ -434,7 +434,7 @@
       "maxArity": 2,
       "runsOn": "server"
      },
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -1426,243 +1426,7 @@
        "request": true
       }
      },
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -3614,7 +3378,7 @@
       "maxArity": 2,
       "runsOn": "server"
      },
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -4906,243 +4670,7 @@
        "request": true
       }
      },
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -5225,7 +4753,7 @@
             "kind": "browser/beacon"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
@@ -5304,7 +4832,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -5354,11 +4882,11 @@
        }
       ],
       "heads": [
-       "http",
+       "os/tcp-connect",
        "browser/beacon"
       ],
       "operators": [
-       "http",
+       "os/tcp-connect",
        "oauth-authorize",
        "browser/beacon",
        "credential-mode",
@@ -5415,7 +4943,7 @@
                "kind": "browser/beacon"
               },
               {
-               "kind": "http",
+               "kind": "os/tcp-connect",
                "resource": "https://api.example.com"
               },
               {
@@ -5494,7 +5022,7 @@
                {
                 "effects": [
                  [
-                  "http",
+                  "os/tcp-connect",
                   "GET",
                   "https://api.example.com",
                   "/x",
@@ -5544,11 +5072,11 @@
           }
          ],
          "heads": [
-          "http",
+          "os/tcp-connect",
           "browser/beacon"
          ],
          "operators": [
-          "http",
+          "os/tcp-connect",
           "oauth-authorize",
           "browser/beacon",
           "credential-mode",
@@ -5607,7 +5135,7 @@
             "kind": "browser/beacon"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
@@ -5686,7 +5214,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -5736,11 +5264,11 @@
        }
       ],
       "heads": [
-       "http",
+       "os/tcp-connect",
        "browser/beacon"
       ],
       "operators": [
-       "http",
+       "os/tcp-connect",
        "oauth-authorize",
        "browser/beacon",
        "credential-mode",
@@ -5761,10 +5289,10 @@
          "unread": false,
          "calls": [
           {
-           "head": "http",
+           "head": "os/tcp-connect",
            "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
            "call": [
-            "http",
+            "os/tcp-connect",
             "GET",
             "https://api.example.com",
             "/x",
@@ -6598,7 +6126,7 @@
             ]
            }
           },
-          "http": {
+          "os/tcp-connect": {
            "minArity": 3,
            "params": [
             {
@@ -7508,242 +7036,6 @@
            ],
            "maxArity": 5,
            "runsOn": "server",
-           "oauth": {
-            "endpointTarget": "oauth-endpoint",
-            "endpointKinds": [
-             "token",
-             "revocation",
-             "userinfo"
-            ],
-            "ops": [
-             {
-              "name": "discovery",
-              "required": [],
-              "optional": []
-             },
-             {
-              "name": "code",
-              "required": [
-               "code",
-               "state"
-              ],
-              "optional": [
-               "subject"
-              ],
-              "endpoint": "token"
-             },
-             {
-              "name": "connect",
-              "required": [
-               "code",
-               "state",
-               "provider"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "refresh",
-              "required": [
-               "refreshToken"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "revoke",
-              "required": [
-               "token"
-              ],
-              "optional": [],
-              "endpoint": "revocation"
-             },
-             {
-              "name": "userinfo",
-              "required": [
-               "accessToken"
-              ],
-              "optional": [],
-              "endpoint": "userinfo"
-             }
-            ]
-           },
-           "httpWire": {
-            "requestKeys": [
-             "query",
-             "headers",
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "auth",
-             "timeoutMs",
-             "delayMs",
-             "responseAs",
-             "paginate",
-             "stream",
-             "retry",
-             "formEncoding",
-             "queryEncoding",
-             "presign",
-             "webpush"
-            ],
-            "bodyKeys": [
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "webpush"
-            ],
-            "queryEncodings": [
-             "uri",
-             "rfc3986"
-            ],
-            "defaultPorts": {
-             "http": 80,
-             "https": 443
-            },
-            "authSchemes": [
-             {
-              "name": "oauth-client",
-              "keys": [
-               "scheme",
-               "op",
-               "client",
-               "clients",
-               "code",
-               "state",
-               "subject",
-               "provider",
-               "refreshToken",
-               "token",
-               "accessToken"
-              ]
-             },
-             {
-              "name": "bearer",
-              "keys": [
-               "scheme",
-               "credential"
-              ]
-             },
-             {
-              "name": "api-key",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "in"
-              ]
-             },
-             {
-              "name": "basic",
-              "keys": [
-               "scheme",
-               "user",
-               "credential"
-              ]
-             },
-             {
-              "name": "oauth2-client",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "clientId",
-               "clientSecret",
-               "scope",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "token-exchange",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "grant",
-               "body",
-               "clientAuth",
-               "clientId",
-               "clientSecret",
-               "accessField",
-               "expiresField",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "rotate",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "jwt-bearer",
-              "keys": [
-               "scheme",
-               "key",
-               "alg",
-               "claims",
-               "tokenUrl",
-               "grant",
-               "scope",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "hmac-sha256",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "signs",
-               "encoding",
-               "prefix"
-              ]
-             },
-             {
-              "name": "aws-sigv4",
-              "keys": [
-               "scheme",
-               "accessKeyId",
-               "secretAccessKey",
-               "sessionToken",
-               "region",
-               "service"
-              ],
-              "required": [
-               "accessKeyId",
-               "secretAccessKey",
-               "region",
-               "service"
-              ]
-             },
-             {
-              "name": "vapid",
-              "keys": [
-               "scheme",
-               "privateKey",
-               "publicKey",
-               "subject"
-              ]
-             }
-            ]
-           },
            "hasOptions": true,
            "optionKeys": [
             "emit",
@@ -9334,7 +8626,7 @@
       "maxArity": 2,
       "runsOn": "client"
      },
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -10356,243 +9648,7 @@
        "cancelled"
       ]
      },
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -12469,7 +11525,7 @@
    "id": "calls-carry-the-trait-config",
    "entity": {
     "shapes": {
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -13387,243 +12443,7 @@
      }
     },
     "extras": {
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -13695,11 +12515,11 @@
           "dispatch": "optimistic",
           "effectRow": [
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://evil.example.com"
            }
           ],
@@ -13775,7 +12595,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://evil.example.com",
                "/x",
@@ -13788,7 +12608,7 @@
                }
               ],
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -13801,7 +12621,7 @@
                }
               ],
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -13838,10 +12658,10 @@
        }
       ],
       "heads": [
-       "http"
+       "os/tcp-connect"
       ],
       "operators": [
-       "http"
+       "os/tcp-connect"
       ],
       "fields": []
      },
@@ -13906,11 +12726,11 @@
              "dispatch": "optimistic",
              "effectRow": [
               {
-               "kind": "http",
+               "kind": "os/tcp-connect",
                "resource": "https://api.example.com"
               },
               {
-               "kind": "http",
+               "kind": "os/tcp-connect",
                "resource": "https://evil.example.com"
               }
              ],
@@ -13986,7 +12806,7 @@
                {
                 "effects": [
                  [
-                  "http",
+                  "os/tcp-connect",
                   "GET",
                   "https://evil.example.com",
                   "/x",
@@ -13999,7 +12819,7 @@
                   }
                  ],
                  [
-                  "http",
+                  "os/tcp-connect",
                   "GET",
                   "https://api.example.com",
                   "/x",
@@ -14012,7 +12832,7 @@
                   }
                  ],
                  [
-                  "http",
+                  "os/tcp-connect",
                   "GET",
                   "https://api.example.com",
                   "/x",
@@ -14049,10 +12869,10 @@
           }
          ],
          "heads": [
-          "http"
+          "os/tcp-connect"
          ],
          "operators": [
-          "http"
+          "os/tcp-connect"
          ],
          "fields": []
         }
@@ -14119,11 +12939,11 @@
           "dispatch": "optimistic",
           "effectRow": [
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://evil.example.com"
            }
           ],
@@ -14199,7 +13019,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://evil.example.com",
                "/x",
@@ -14212,7 +13032,7 @@
                }
               ],
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -14225,7 +13045,7 @@
                }
               ],
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -14262,10 +13082,10 @@
        }
       ],
       "heads": [
-       "http"
+       "os/tcp-connect"
       ],
       "operators": [
-       "http"
+       "os/tcp-connect"
       ],
       "fields": []
      },
@@ -14280,10 +13100,10 @@
          "unread": false,
          "calls": [
           {
-           "head": "http",
+           "head": "os/tcp-connect",
            "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
            "call": [
-            "http",
+            "os/tcp-connect",
             "GET",
             "https://evil.example.com",
             "/x",
@@ -14322,10 +13142,10 @@
            "inGuard": false
           },
           {
-           "head": "http",
+           "head": "os/tcp-connect",
            "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[1]",
            "call": [
-            "http",
+            "os/tcp-connect",
             "GET",
             "https://api.example.com",
             "/x",
@@ -14364,10 +13184,10 @@
            "inGuard": false
           },
           {
-           "head": "http",
+           "head": "os/tcp-connect",
            "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[2]",
            "call": [
-            "http",
+            "os/tcp-connect",
             "GET",
             "https://api.example.com",
             "/x",
@@ -14407,7 +13227,7 @@
           }
          ],
          "facts": {
-          "http": {
+          "os/tcp-connect": {
            "minArity": 3,
            "params": [
             {
@@ -15317,242 +14137,6 @@
            ],
            "maxArity": 5,
            "runsOn": "server",
-           "oauth": {
-            "endpointTarget": "oauth-endpoint",
-            "endpointKinds": [
-             "token",
-             "revocation",
-             "userinfo"
-            ],
-            "ops": [
-             {
-              "name": "discovery",
-              "required": [],
-              "optional": []
-             },
-             {
-              "name": "code",
-              "required": [
-               "code",
-               "state"
-              ],
-              "optional": [
-               "subject"
-              ],
-              "endpoint": "token"
-             },
-             {
-              "name": "connect",
-              "required": [
-               "code",
-               "state",
-               "provider"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "refresh",
-              "required": [
-               "refreshToken"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "revoke",
-              "required": [
-               "token"
-              ],
-              "optional": [],
-              "endpoint": "revocation"
-             },
-             {
-              "name": "userinfo",
-              "required": [
-               "accessToken"
-              ],
-              "optional": [],
-              "endpoint": "userinfo"
-             }
-            ]
-           },
-           "httpWire": {
-            "requestKeys": [
-             "query",
-             "headers",
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "auth",
-             "timeoutMs",
-             "delayMs",
-             "responseAs",
-             "paginate",
-             "stream",
-             "retry",
-             "formEncoding",
-             "queryEncoding",
-             "presign",
-             "webpush"
-            ],
-            "bodyKeys": [
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "webpush"
-            ],
-            "queryEncodings": [
-             "uri",
-             "rfc3986"
-            ],
-            "defaultPorts": {
-             "http": 80,
-             "https": 443
-            },
-            "authSchemes": [
-             {
-              "name": "oauth-client",
-              "keys": [
-               "scheme",
-               "op",
-               "client",
-               "clients",
-               "code",
-               "state",
-               "subject",
-               "provider",
-               "refreshToken",
-               "token",
-               "accessToken"
-              ]
-             },
-             {
-              "name": "bearer",
-              "keys": [
-               "scheme",
-               "credential"
-              ]
-             },
-             {
-              "name": "api-key",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "in"
-              ]
-             },
-             {
-              "name": "basic",
-              "keys": [
-               "scheme",
-               "user",
-               "credential"
-              ]
-             },
-             {
-              "name": "oauth2-client",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "clientId",
-               "clientSecret",
-               "scope",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "token-exchange",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "grant",
-               "body",
-               "clientAuth",
-               "clientId",
-               "clientSecret",
-               "accessField",
-               "expiresField",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "rotate",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "jwt-bearer",
-              "keys": [
-               "scheme",
-               "key",
-               "alg",
-               "claims",
-               "tokenUrl",
-               "grant",
-               "scope",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "hmac-sha256",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "signs",
-               "encoding",
-               "prefix"
-              ]
-             },
-             {
-              "name": "aws-sigv4",
-              "keys": [
-               "scheme",
-               "accessKeyId",
-               "secretAccessKey",
-               "sessionToken",
-               "region",
-               "service"
-              ],
-              "required": [
-               "accessKeyId",
-               "secretAccessKey",
-               "region",
-               "service"
-              ]
-             },
-             {
-              "name": "vapid",
-              "keys": [
-               "scheme",
-               "privateKey",
-               "publicKey",
-               "subject"
-              ]
-             }
-            ]
-           },
            "hasOptions": true,
            "optionKeys": [
             "emit",
@@ -16656,7 +15240,7 @@
       "maxArity": 2,
       "runsOn": "client"
      },
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -17678,243 +16262,7 @@
        "cancelled"
       ]
      },
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -20112,10 +18460,10 @@
    ]
   },
   {
-   "id": "the-http-wire-and-default-ports-come-with-the-facts",
+   "id": "default-ports-come-with-the-facts",
    "entity": {
     "shapes": {
-     "http": {
+     "os/tcp-connect": {
       "hasSideEffects": true,
       "params": [
        {
@@ -21321,243 +19669,7 @@
      }
     },
     "extras": {
-     "http": {
-      "oauth": {
-       "endpointTarget": "oauth-endpoint",
-       "endpointKinds": [
-        "token",
-        "revocation",
-        "userinfo"
-       ],
-       "ops": [
-        {
-         "name": "discovery",
-         "required": [],
-         "optional": []
-        },
-        {
-         "name": "code",
-         "required": [
-          "code",
-          "state"
-         ],
-         "optional": [
-          "subject"
-         ],
-         "endpoint": "token"
-        },
-        {
-         "name": "connect",
-         "required": [
-          "code",
-          "state",
-          "provider"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "refresh",
-         "required": [
-          "refreshToken"
-         ],
-         "optional": [],
-         "endpoint": "token"
-        },
-        {
-         "name": "revoke",
-         "required": [
-          "token"
-         ],
-         "optional": [],
-         "endpoint": "revocation"
-        },
-        {
-         "name": "userinfo",
-         "required": [
-          "accessToken"
-         ],
-         "optional": [],
-         "endpoint": "userinfo"
-        }
-       ]
-      },
-      "httpWire": {
-       "requestKeys": [
-        "query",
-        "headers",
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "auth",
-        "timeoutMs",
-        "delayMs",
-        "responseAs",
-        "paginate",
-        "stream",
-        "retry",
-        "formEncoding",
-        "queryEncoding",
-        "presign",
-        "webpush"
-       ],
-       "bodyKeys": [
-        "json",
-        "form",
-        "text",
-        "bytes",
-        "multipart",
-        "webpush"
-       ],
-       "queryEncodings": [
-        "uri",
-        "rfc3986"
-       ],
-       "defaultPorts": {
-        "http": 80,
-        "https": 443
-       },
-       "authSchemes": [
-        {
-         "name": "oauth-client",
-         "keys": [
-          "scheme",
-          "op",
-          "client",
-          "clients",
-          "code",
-          "state",
-          "subject",
-          "provider",
-          "refreshToken",
-          "token",
-          "accessToken"
-         ]
-        },
-        {
-         "name": "bearer",
-         "keys": [
-          "scheme",
-          "credential"
-         ]
-        },
-        {
-         "name": "api-key",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "in"
-         ]
-        },
-        {
-         "name": "basic",
-         "keys": [
-          "scheme",
-          "user",
-          "credential"
-         ]
-        },
-        {
-         "name": "oauth2-client",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "clientId",
-          "clientSecret",
-          "scope",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "token-exchange",
-         "keys": [
-          "scheme",
-          "tokenUrl",
-          "grant",
-          "body",
-          "clientAuth",
-          "clientId",
-          "clientSecret",
-          "accessField",
-          "expiresField",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "rotate",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "jwt-bearer",
-         "keys": [
-          "scheme",
-          "key",
-          "alg",
-          "claims",
-          "tokenUrl",
-          "grant",
-          "scope",
-          "expiresMarginMs",
-          "storeAs",
-          "grantRequest",
-          "onUnauthorized"
-         ],
-         "onUnauthorized": [
-          "reply",
-          "refresh"
-         ]
-        },
-        {
-         "name": "hmac-sha256",
-         "keys": [
-          "scheme",
-          "credential",
-          "name",
-          "signs",
-          "encoding",
-          "prefix"
-         ]
-        },
-        {
-         "name": "aws-sigv4",
-         "keys": [
-          "scheme",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "region",
-          "service"
-         ],
-         "required": [
-          "accessKeyId",
-          "secretAccessKey",
-          "region",
-          "service"
-         ]
-        },
-        {
-         "name": "vapid",
-         "keys": [
-          "scheme",
-          "privateKey",
-          "publicKey",
-          "subject"
-         ]
-        }
-       ]
-      },
+     "os/tcp-connect": {
       "emitKeys": [
        "success",
        "failure",
@@ -21635,7 +19747,7 @@
             "kind": "browser/beacon"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
@@ -21714,7 +19826,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -21764,10 +19876,10 @@
        }
       ],
       "heads": [
-       "http"
+       "os/tcp-connect"
       ],
       "operators": [
-       "http",
+       "os/tcp-connect",
        "postgres",
        "redis"
       ],
@@ -21820,7 +19932,7 @@
                "kind": "browser/beacon"
               },
               {
-               "kind": "http",
+               "kind": "os/tcp-connect",
                "resource": "https://api.example.com"
               },
               {
@@ -21899,7 +20011,7 @@
                {
                 "effects": [
                  [
-                  "http",
+                  "os/tcp-connect",
                   "GET",
                   "https://api.example.com",
                   "/x",
@@ -21949,10 +20061,10 @@
           }
          ],
          "heads": [
-          "http"
+          "os/tcp-connect"
          ],
          "operators": [
-          "http",
+          "os/tcp-connect",
           "postgres",
           "redis"
          ],
@@ -22007,7 +20119,7 @@
             "kind": "browser/beacon"
            },
            {
-            "kind": "http",
+            "kind": "os/tcp-connect",
             "resource": "https://api.example.com"
            },
            {
@@ -22086,7 +20198,7 @@
             {
              "effects": [
               [
-               "http",
+               "os/tcp-connect",
                "GET",
                "https://api.example.com",
                "/x",
@@ -22136,10 +20248,10 @@
        }
       ],
       "heads": [
-       "http"
+       "os/tcp-connect"
       ],
       "operators": [
-       "http",
+       "os/tcp-connect",
        "postgres",
        "redis"
       ],
@@ -22156,10 +20268,10 @@
          "unread": false,
          "calls": [
           {
-           "head": "http",
+           "head": "os/tcp-connect",
            "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
            "call": [
-            "http",
+            "os/tcp-connect",
             "GET",
             "https://api.example.com",
             "/x",
@@ -22182,7 +20294,7 @@
           }
          ],
          "facts": {
-          "http": {
+          "os/tcp-connect": {
            "minArity": 3,
            "params": [
             {
@@ -23092,242 +21204,6 @@
            ],
            "maxArity": 5,
            "runsOn": "server",
-           "oauth": {
-            "endpointTarget": "oauth-endpoint",
-            "endpointKinds": [
-             "token",
-             "revocation",
-             "userinfo"
-            ],
-            "ops": [
-             {
-              "name": "discovery",
-              "required": [],
-              "optional": []
-             },
-             {
-              "name": "code",
-              "required": [
-               "code",
-               "state"
-              ],
-              "optional": [
-               "subject"
-              ],
-              "endpoint": "token"
-             },
-             {
-              "name": "connect",
-              "required": [
-               "code",
-               "state",
-               "provider"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "refresh",
-              "required": [
-               "refreshToken"
-              ],
-              "optional": [],
-              "endpoint": "token"
-             },
-             {
-              "name": "revoke",
-              "required": [
-               "token"
-              ],
-              "optional": [],
-              "endpoint": "revocation"
-             },
-             {
-              "name": "userinfo",
-              "required": [
-               "accessToken"
-              ],
-              "optional": [],
-              "endpoint": "userinfo"
-             }
-            ]
-           },
-           "httpWire": {
-            "requestKeys": [
-             "query",
-             "headers",
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "auth",
-             "timeoutMs",
-             "delayMs",
-             "responseAs",
-             "paginate",
-             "stream",
-             "retry",
-             "formEncoding",
-             "queryEncoding",
-             "presign",
-             "webpush"
-            ],
-            "bodyKeys": [
-             "json",
-             "form",
-             "text",
-             "bytes",
-             "multipart",
-             "webpush"
-            ],
-            "queryEncodings": [
-             "uri",
-             "rfc3986"
-            ],
-            "defaultPorts": {
-             "http": 80,
-             "https": 443
-            },
-            "authSchemes": [
-             {
-              "name": "oauth-client",
-              "keys": [
-               "scheme",
-               "op",
-               "client",
-               "clients",
-               "code",
-               "state",
-               "subject",
-               "provider",
-               "refreshToken",
-               "token",
-               "accessToken"
-              ]
-             },
-             {
-              "name": "bearer",
-              "keys": [
-               "scheme",
-               "credential"
-              ]
-             },
-             {
-              "name": "api-key",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "in"
-              ]
-             },
-             {
-              "name": "basic",
-              "keys": [
-               "scheme",
-               "user",
-               "credential"
-              ]
-             },
-             {
-              "name": "oauth2-client",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "clientId",
-               "clientSecret",
-               "scope",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "token-exchange",
-              "keys": [
-               "scheme",
-               "tokenUrl",
-               "grant",
-               "body",
-               "clientAuth",
-               "clientId",
-               "clientSecret",
-               "accessField",
-               "expiresField",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "rotate",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "jwt-bearer",
-              "keys": [
-               "scheme",
-               "key",
-               "alg",
-               "claims",
-               "tokenUrl",
-               "grant",
-               "scope",
-               "expiresMarginMs",
-               "storeAs",
-               "grantRequest",
-               "onUnauthorized"
-              ],
-              "onUnauthorized": [
-               "reply",
-               "refresh"
-              ]
-             },
-             {
-              "name": "hmac-sha256",
-              "keys": [
-               "scheme",
-               "credential",
-               "name",
-               "signs",
-               "encoding",
-               "prefix"
-              ]
-             },
-             {
-              "name": "aws-sigv4",
-              "keys": [
-               "scheme",
-               "accessKeyId",
-               "secretAccessKey",
-               "sessionToken",
-               "region",
-               "service"
-              ],
-              "required": [
-               "accessKeyId",
-               "secretAccessKey",
-               "region",
-               "service"
-              ]
-             },
-             {
-              "name": "vapid",
-              "keys": [
-               "scheme",
-               "privateKey",
-               "publicKey",
-               "subject"
-              ]
-             }
-            ]
-           },
            "hasOptions": true,
            "optionKeys": [
             "emit",
@@ -25003,7 +22879,7 @@
         "maxArity": 2,
         "runsOn": "server"
        },
-       "http": {
+       "os/tcp-connect": {
         "hasSideEffects": true,
         "params": [
          {
@@ -25956,243 +23832,7 @@
          }
         }
        },
-       "http": {
-        "oauth": {
-         "endpointTarget": "oauth-endpoint",
-         "endpointKinds": [
-          "token",
-          "revocation",
-          "userinfo"
-         ],
-         "ops": [
-          {
-           "name": "discovery",
-           "required": [],
-           "optional": []
-          },
-          {
-           "name": "code",
-           "required": [
-            "code",
-            "state"
-           ],
-           "optional": [
-            "subject"
-           ],
-           "endpoint": "token"
-          },
-          {
-           "name": "connect",
-           "required": [
-            "code",
-            "state",
-            "provider"
-           ],
-           "optional": [],
-           "endpoint": "token"
-          },
-          {
-           "name": "refresh",
-           "required": [
-            "refreshToken"
-           ],
-           "optional": [],
-           "endpoint": "token"
-          },
-          {
-           "name": "revoke",
-           "required": [
-            "token"
-           ],
-           "optional": [],
-           "endpoint": "revocation"
-          },
-          {
-           "name": "userinfo",
-           "required": [
-            "accessToken"
-           ],
-           "optional": [],
-           "endpoint": "userinfo"
-          }
-         ]
-        },
-        "httpWire": {
-         "requestKeys": [
-          "query",
-          "headers",
-          "json",
-          "form",
-          "text",
-          "bytes",
-          "multipart",
-          "auth",
-          "timeoutMs",
-          "delayMs",
-          "responseAs",
-          "paginate",
-          "stream",
-          "retry",
-          "formEncoding",
-          "queryEncoding",
-          "presign",
-          "webpush"
-         ],
-         "bodyKeys": [
-          "json",
-          "form",
-          "text",
-          "bytes",
-          "multipart",
-          "webpush"
-         ],
-         "queryEncodings": [
-          "uri",
-          "rfc3986"
-         ],
-         "defaultPorts": {
-          "http": 80,
-          "https": 443
-         },
-         "authSchemes": [
-          {
-           "name": "oauth-client",
-           "keys": [
-            "scheme",
-            "op",
-            "client",
-            "clients",
-            "code",
-            "state",
-            "subject",
-            "provider",
-            "refreshToken",
-            "token",
-            "accessToken"
-           ]
-          },
-          {
-           "name": "bearer",
-           "keys": [
-            "scheme",
-            "credential"
-           ]
-          },
-          {
-           "name": "api-key",
-           "keys": [
-            "scheme",
-            "credential",
-            "name",
-            "in"
-           ]
-          },
-          {
-           "name": "basic",
-           "keys": [
-            "scheme",
-            "user",
-            "credential"
-           ]
-          },
-          {
-           "name": "oauth2-client",
-           "keys": [
-            "scheme",
-            "tokenUrl",
-            "clientId",
-            "clientSecret",
-            "scope",
-            "grantRequest",
-            "onUnauthorized"
-           ],
-           "onUnauthorized": [
-            "reply",
-            "refresh"
-           ]
-          },
-          {
-           "name": "token-exchange",
-           "keys": [
-            "scheme",
-            "tokenUrl",
-            "grant",
-            "body",
-            "clientAuth",
-            "clientId",
-            "clientSecret",
-            "accessField",
-            "expiresField",
-            "expiresMarginMs",
-            "storeAs",
-            "grantRequest",
-            "rotate",
-            "onUnauthorized"
-           ],
-           "onUnauthorized": [
-            "reply",
-            "refresh"
-           ]
-          },
-          {
-           "name": "jwt-bearer",
-           "keys": [
-            "scheme",
-            "key",
-            "alg",
-            "claims",
-            "tokenUrl",
-            "grant",
-            "scope",
-            "expiresMarginMs",
-            "storeAs",
-            "grantRequest",
-            "onUnauthorized"
-           ],
-           "onUnauthorized": [
-            "reply",
-            "refresh"
-           ]
-          },
-          {
-           "name": "hmac-sha256",
-           "keys": [
-            "scheme",
-            "credential",
-            "name",
-            "signs",
-            "encoding",
-            "prefix"
-           ]
-          },
-          {
-           "name": "aws-sigv4",
-           "keys": [
-            "scheme",
-            "accessKeyId",
-            "secretAccessKey",
-            "sessionToken",
-            "region",
-            "service"
-           ],
-           "required": [
-            "accessKeyId",
-            "secretAccessKey",
-            "region",
-            "service"
-           ]
-          },
-          {
-           "name": "vapid",
-           "keys": [
-            "scheme",
-            "privateKey",
-            "publicKey",
-            "subject"
-           ]
-          }
-         ]
-        },
+       "os/tcp-connect": {
         "emitKeys": [
          "success",
          "failure",

@@ -4257,6 +4257,1158 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-a-reference-sibling-literal-key-object-get-reads-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "evt_GNZW0RJDN76TKWYVXDT1NK2HF1": {
+                    "bakedName": "OPEN",
+                    "curName": "OPEN",
+                    "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                    "kind": "event",
+                    "owner": "workspace",
+                    "parent": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "renames": []
+                  },
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  },
+                  "trt_04BPN3FWVFYDQTAXX2JV2MP38K": {
+                    "bakedName": "Stamper",
+                    "curName": "Stamper",
+                    "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "kind": "trait",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [
+                    {
+                      "ref": "Sched.traits.Scheduler",
+                      "id": "trt_SCHEDULERSIBLING000000000A",
+                      "name": "Scheduler",
+                      "linkedEntity": "Note",
+                      "config": {
+                        "targetEntity": {
+                          "type": "unknown",
+                          "default": "Note",
+                          "wired": true
+                        }
+                      }
+                    }
+                  ],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    },
+                    {
+                      "as": "Sched",
+                      "from": "./scheduler.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "Sched",
+                "name": "Scheduler",
+                "path": "orbitals[name=Account].traits[3]",
+                "callSite": {
+                  "ref": "Sched.traits.Scheduler",
+                  "id": "trt_SCHEDULERSIBLING000000000A",
+                  "name": "Scheduler",
+                  "linkedEntity": "Note",
+                  "config": {
+                    "targetEntity": {
+                      "type": "unknown",
+                      "default": "Note",
+                      "wired": true
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "Scheduler",
+                  "id": "trt_SCHEDULERUPSTREAM0000000A",
+                  "linkedEntity": "Sched",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "TICK"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "TICK",
+                        "effects": []
+                      }
+                    ]
+                  },
+                  "ticks": [
+                    {
+                      "name": "scan",
+                      "interval": "*/15 * * * *",
+                      "effects": [
+                        [
+                          "fetch",
+                          "@config.targetEntity",
+                          {
+                            "emit": {
+                              "failure": "Failed",
+                              "success": "Loaded"
+                            },
+                            "filter": [
+                              "and",
+                              [
+                                "validate/required",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "@config.dateField"
+                                ]
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "workspaceId"
+                                ],
+                                null
+                              ]
+                            ],
+                            "limit": 1
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  "config": {
+                    "targetEntity": {
+                      "nullable": false,
+                      "type": "entity",
+                      "default": "Sched"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-reference-sibling-persist-through-a-config-knob-writes-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "evt_GNZW0RJDN76TKWYVXDT1NK2HF1": {
+                    "bakedName": "OPEN",
+                    "curName": "OPEN",
+                    "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                    "kind": "event",
+                    "owner": "workspace",
+                    "parent": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "renames": []
+                  },
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  },
+                  "trt_04BPN3FWVFYDQTAXX2JV2MP38K": {
+                    "bakedName": "Stamper",
+                    "curName": "Stamper",
+                    "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "kind": "trait",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "orphan",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [
+                    {
+                      "ref": "Sched.traits.Scheduler",
+                      "id": "trt_SCHEDULERSIBLING000000000A",
+                      "name": "Scheduler",
+                      "linkedEntity": "Note",
+                      "config": {
+                        "targetEntity": {
+                          "type": "unknown",
+                          "default": "Note",
+                          "wired": true
+                        }
+                      }
+                    }
+                  ],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    },
+                    {
+                      "as": "Sched",
+                      "from": "./scheduler.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "orphan",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "Sched",
+                "name": "Scheduler",
+                "path": "orbitals[name=Account].traits[3]",
+                "callSite": {
+                  "ref": "Sched.traits.Scheduler",
+                  "id": "trt_SCHEDULERSIBLING000000000A",
+                  "name": "Scheduler",
+                  "linkedEntity": "Note",
+                  "config": {
+                    "targetEntity": {
+                      "type": "unknown",
+                      "default": "Note",
+                      "wired": true
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "Scheduler",
+                  "id": "trt_SCHEDULERUPSTREAM0000000A",
+                  "linkedEntity": "Sched",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "TICK"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "TICK",
+                        "effects": [
+                          [
+                            "persist",
+                            "update",
+                            "@config.targetEntity",
+                            {
+                              "id": "@entity.id",
+                              "workspaceId": "@now"
+                            },
+                            {
+                              "emit": {
+                                "failure": "Failed",
+                                "success": "Done"
+                              }
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": [],
+                  "config": {
+                    "targetEntity": {
+                      "nullable": false,
+                      "type": "entity",
+                      "default": "Sched"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(orphan)",
+                      "message": "`extend {}` field 'orphan' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'orphan' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reference-sibling-persist-aimed-at-another-entity-does-not-write-the-field",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "evt_GNZW0RJDN76TKWYVXDT1NK2HF1": {
+                    "bakedName": "OPEN",
+                    "curName": "OPEN",
+                    "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                    "kind": "event",
+                    "owner": "workspace",
+                    "parent": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "renames": []
+                  },
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  },
+                  "trt_04BPN3FWVFYDQTAXX2JV2MP38K": {
+                    "bakedName": "Stamper",
+                    "curName": "Stamper",
+                    "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "kind": "trait",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [
+                    {
+                      "ref": "Sched.traits.Scheduler",
+                      "id": "trt_SCHEDULERSIBLING000000000A",
+                      "name": "Scheduler",
+                      "linkedEntity": "Note",
+                      "config": {
+                        "targetEntity": {
+                          "type": "unknown",
+                          "default": "Other",
+                          "wired": true
+                        }
+                      }
+                    }
+                  ],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    },
+                    {
+                      "as": "Sched",
+                      "from": "./scheduler.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "Sched",
+                "name": "Scheduler",
+                "path": "orbitals[name=Account].traits[3]",
+                "callSite": {
+                  "ref": "Sched.traits.Scheduler",
+                  "id": "trt_SCHEDULERSIBLING000000000A",
+                  "name": "Scheduler",
+                  "linkedEntity": "Note",
+                  "config": {
+                    "targetEntity": {
+                      "type": "unknown",
+                      "default": "Other",
+                      "wired": true
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "Scheduler",
+                  "id": "trt_SCHEDULERUPSTREAM0000000A",
+                  "linkedEntity": "Sched",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "TICK"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "TICK",
+                        "effects": [
+                          [
+                            "persist",
+                            "update",
+                            "@config.targetEntity",
+                            {
+                              "id": "@entity.id",
+                              "workspaceId": "@now"
+                            },
+                            {
+                              "emit": {
+                                "failure": "Failed",
+                                "success": "Done"
+                              }
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  },
+                  "ticks": [],
+                  "config": {
+                    "targetEntity": {
+                      "nullable": false,
+                      "type": "entity",
+                      "default": "Sched"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(workspaceId)",
+                      "message": "`extend {}` field 'workspaceId' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'workspaceId' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unread-field-beside-a-reference-sibling-is-still-unread",
+      "steps": [
+        {
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "ledger": {
+                "entries": {
+                  "evt_GNZW0RJDN76TKWYVXDT1NK2HF1": {
+                    "bakedName": "OPEN",
+                    "curName": "OPEN",
+                    "id": "evt_GNZW0RJDN76TKWYVXDT1NK2HF1",
+                    "kind": "event",
+                    "owner": "workspace",
+                    "parent": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "renames": []
+                  },
+                  "orb_1F8TGDBMC9T64X0PZ1EE4KXASE": {
+                    "bakedName": "Account",
+                    "curName": "Account",
+                    "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                    "kind": "orbital",
+                    "owner": "workspace",
+                    "renames": []
+                  },
+                  "trt_04BPN3FWVFYDQTAXX2JV2MP38K": {
+                    "bakedName": "Stamper",
+                    "curName": "Stamper",
+                    "id": "trt_04BPN3FWVFYDQTAXX2JV2MP38K",
+                    "kind": "trait",
+                    "owner": "workspace",
+                    "renames": []
+                  }
+                },
+                "schemaVersion": 1
+              },
+              "name": "c",
+              "orbitals": [
+                {
+                  "entity": "Up.orbitals.NoteOrbital.entity",
+                  "id": "orb_1F8TGDBMC9T64X0PZ1EE4KXASE",
+                  "name": "Account",
+                  "reference": {
+                    "extend": [
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "orphan",
+                        "type": "string"
+                      }
+                    ],
+                    "ref": "Up.orbitals.NoteOrbital"
+                  },
+                  "traits": [
+                    {
+                      "ref": "Sched.traits.Scheduler",
+                      "id": "trt_SCHEDULERSIBLING000000000A",
+                      "name": "Scheduler",
+                      "linkedEntity": "Note",
+                      "config": {
+                        "targetEntity": {
+                          "type": "unknown",
+                          "default": "Note",
+                          "wired": true
+                        }
+                      }
+                    }
+                  ],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    },
+                    {
+                      "as": "Sched",
+                      "from": "./scheduler.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "version": "1.0.0"
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "NoteList"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "NoteOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.NoteOrbital",
+                  "extend": [
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "orphan",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "declaration": {
+                  "name": "NoteOrbital",
+                  "traits": [
+                    {
+                      "name": "NoteList",
+                      "id": "trt_T60ZVNVVZGXZR31EYB50NC1A5P",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "event": "OPEN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "entity": {
+                    "name": "Note",
+                    "id": "ent_HXRASC0DT86X40PEGX52DSE07B",
+                    "collection": "upstream_notes",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "count",
+                        "type": "number",
+                        "default": 1
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "trait",
+                "alias": "Sched",
+                "name": "Scheduler",
+                "path": "orbitals[name=Account].traits[3]",
+                "callSite": {
+                  "ref": "Sched.traits.Scheduler",
+                  "id": "trt_SCHEDULERSIBLING000000000A",
+                  "name": "Scheduler",
+                  "linkedEntity": "Note",
+                  "config": {
+                    "targetEntity": {
+                      "type": "unknown",
+                      "default": "Note",
+                      "wired": true
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "Scheduler",
+                  "id": "trt_SCHEDULERUPSTREAM0000000A",
+                  "linkedEntity": "Sched",
+                  "stateMachine": {
+                    "events": [
+                      {
+                        "key": "TICK"
+                      }
+                    ],
+                    "transitions": [
+                      {
+                        "event": "TICK",
+                        "effects": []
+                      }
+                    ]
+                  },
+                  "ticks": [
+                    {
+                      "name": "scan",
+                      "interval": "*/15 * * * *",
+                      "effects": [
+                        [
+                          "fetch",
+                          "@config.targetEntity",
+                          {
+                            "emit": {
+                              "failure": "Failed",
+                              "success": "Loaded"
+                            },
+                            "filter": [
+                              "and",
+                              [
+                                "validate/required",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "@config.dateField"
+                                ]
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "workspaceId"
+                                ],
+                                null
+                              ]
+                            ],
+                            "limit": 1
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  "config": {
+                    "targetEntity": {
+                      "nullable": false,
+                      "type": "entity",
+                      "default": "Sched"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_SITES_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_SITES_READY",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-extend",
+                  "findings": [
+                    {
+                      "code": "ORB_O_EXTEND_FIELD_UNREAD",
+                      "path": "orbitals[0].extend(orphan)",
+                      "message": "`extend {}` field 'orphan' on 'Up.orbitals.NoteOrbital' is never read, set, rendered, or forwarded by a config knob value \u2014 a live wire terminating in nothing.",
+                      "suggestion": "Wire 'orphan' into a trait (guard/effect/render) or an orbital-level config knob (e.g. a `browseColumns`/`formFields` list entry), or remove it from `extend {}`.",
+                      "severity": "warning"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

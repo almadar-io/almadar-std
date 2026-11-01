@@ -15,7 +15,7 @@ orbital SignatureSessionOrbital {
 
   uses Confirmation from "std/behaviors/std-confirmation"
 
-    type SignatureSessionLoaded = Event { data : [SignatureSession], totalCount : number } "Fired when the SignatureSession collection finishes loading"
+    type SignatureSessionLoaded = Event { data : [SignatureSession], totalCount : number! } "Fired when the SignatureSession collection finishes loading"
 
     type SignatureSessionLoadFailed = Event { error : string, code : string } "Fired when the SignatureSession collection fails to load"
 
@@ -217,7 +217,7 @@ orbital SignatureSessionOrbital {
         @tier "domain"
       SEND_FOR_SIGNATURE {
         id : string!
-        row : SignatureSession
+        row : SignatureSession!
       }
         @description "Open the send step for this request: attach the document and dispatch it for signature."
         @synonyms "send for signature, dispatch, send envelope"
@@ -231,7 +231,7 @@ orbital SignatureSessionOrbital {
         @tier "presentation"
       SignatureSessionLoaded {
         data : [SignatureSession]
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals that a signature session has been successfully loaded."
         @synonyms "loaded, initialized, ready"
@@ -473,7 +473,7 @@ orbital SignatureSessionOrbital {
       SignatureSessionBrowse.SEND_FOR_SIGNATURE -> REQUEST_SEND
       REQUEST_SEND {
         id : string!
-        row : SignatureSession
+        row : SignatureSession!
       }
         @description "A request's send step was opened."
         @synonyms "open send, start send"
@@ -689,8 +689,37 @@ orbital SignatureSessionOrbital {
         kind : string!
         key : string
       }
+      EsignGatewayHttp.ESGW_HTTP_REPLIED -> ESIGN_SEND_ENVELOPE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "send")
+      EsignGatewayHttp.ESGW_HTTP_FAILED -> ESIGN_SEND_ENVELOPE_UNREACHED with { error: ?error, kind: ?kind } when (= ?key "send")
+      EsignGatewayTimeout.TIMED_OUT -> ESIGN_SEND_ENVELOPE_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "send")
+      EsignGatewayHttp.ESGW_HTTP_REPLIED -> ESIGN_GET_ENVELOPE_STATUS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "status")
+      EsignGatewayHttp.ESGW_HTTP_FAILED -> ESIGN_GET_ENVELOPE_STATUS_UNREACHED with { error: ?error, kind: ?kind } when (= ?key "status")
+      EsignGatewayTimeout.TIMED_OUT -> ESIGN_GET_ENVELOPE_STATUS_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "status")
+      EsignGatewayHttp.ESGW_HTTP_REPLIED -> ESIGN_DOWNLOAD_DOCUMENT_REPLIED with { status: ?status, headers: ?headers, body: (bytes/to-base64 ?body), key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
+      EsignGatewayHttp.ESGW_HTTP_FAILED -> ESIGN_DOWNLOAD_DOCUMENT_UNREACHED with { error: ?error, kind: ?kind, key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
+      EsignGatewayTimeout.TIMED_OUT -> ESIGN_DOWNLOAD_DOCUMENT_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 9 (str/len ?key)) } when (str/startsWith ?key "download:")
     }
   }
 
-  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeSendDialog, EnvelopeDispatcher, EsignGateway
+  trait EsignGatewayHttp = Esign.traits.EsignHttp {
+    events {
+      HTTP_REPLIED: ESGW_HTTP_REPLIED
+      HTTP_FAILED: ESGW_HTTP_FAILED
+      HTTP_CANCEL: ESGW_HTTP_CANCEL
+    }
+    listens {
+      EsignGateway.ESIGN_HTTP_SEND -> HTTP_SEND
+      EsignGatewayTimeout.TIMED_OUT -> ESGW_HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait EsignGatewayTimeout = Esign.traits.EsignTimeout {
+    listens {
+      EsignGateway.ESIGN_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      EsignGatewayHttp.ESGW_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      EsignGatewayHttp.ESGW_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeSendDialog, EnvelopeDispatcher, EsignGatewayHttp, EsignGatewayTimeout, EsignGateway
 }

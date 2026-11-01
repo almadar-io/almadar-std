@@ -7256,6 +7256,277 @@
     }
    ],
    "config": {}
+  },
+  {
+   "id": "http-emulator-read-asks-the-emulator-client-for-one-batch-get-post",
+   "defaults": [
+    "FirestoreEmulatorHttp",
+    "FirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_EMU_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_HTTP_SEND",
+       "FS_TOKEN_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-emulator-read-sends-the-owner-bearer-the-emulator-accepts",
+   "defaults": [
+    "FirestoreEmulatorHttp",
+    "FirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_EMU_SEND",
+        "payload": {
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          },
+          {
+           "name": "authorization",
+           "value": "Bearer owner"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-token-read-asks-the-token-client-for-one-batch-get-post",
+   "config": {
+    "auth": "token"
+   },
+   "defaults": [
+    "FirestoreTokenHttp",
+    "FirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_TOKEN_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_HTTP_SEND",
+       "FS_EMU_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-token-client-that-cannot-open-fails-the-read-with-the-client-error",
+   "config": {
+    "auth": "token"
+   },
+   "defaults": [
+    "FirestoreTokenHttp",
+    "FirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_TOKEN_HTTP_FAILED",
+        "payload": {
+         "key": "fs",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-the-deadline-passing-times-the-call-out",
+   "config": {
+    "auth": "token"
+   },
+   "defaults": [
+    "FirestoreTokenHttp",
+    "FirestoreTimeout",
+    "RowStoreDriver"
+   ],
+   "steps": [
+    {
+     "trait": "FirestoreTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "fs"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "fs",
+         "timeoutMs": 30000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-the-token-clients-reply-reaches-the-reply-route",
+   "config": {
+    "auth": "token"
+   },
+   "defaults": [
+    "FirestoreTokenHttp",
+    "FirestoreTimeout",
+    "RowStoreDriver"
+   ],
+   "steps": [
+    {
+     "trait": "FirestoreTokenHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "fs",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAyDQoNCltd",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_TOKEN_HTTP_REPLIED",
+        "payload": {
+         "key": "fs",
+         "status": 200
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-metadata-mode-fails-loudly-instead-of-sending-nothing",
+   "config": {
+    "auth": "metadata"
+   },
+   "defaults": [
+    "FirestoreTokenHttp",
+    "FirestoreTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_HTTP_SEND",
+       "FS_EMU_SEND",
+       "FS_TOKEN_SEND"
+      ]
+     }
+    }
+   ]
   }
  ],
  "note": " The service-account mode runs over the composed std-http-client with a jwt-bearer credential-connect; emulator, token and metadata modes are unchanged."

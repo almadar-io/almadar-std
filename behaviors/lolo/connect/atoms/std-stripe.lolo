@@ -1,8 +1,11 @@
 app std-stripe [
   version: "1.0.0",
   description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message.",
-  egress: ["https://api.stripe.com"]
+  net: { "api.stripe.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type StripeField = { k : string!, v : string! }
 type StripeJob = { action : string!, path : string!, fields : [StripeField]!, customerId : string, subscriptionId : string, quantity : number, cancelAtPeriodEnd : boolean }
 type StripePending = { key : string!, job : StripeJob! }
@@ -83,11 +86,7 @@ orbital StripeOrbital {
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "getSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [] } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-              auth: { scheme: bearer, credential: @config.secretKey },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
+            (emit STRIPE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/x-www-form-urlencoded" }, { name: "stripe-version", value: @config.apiVersion }], body: (bytes/from-string ""), stream: "none" })))
       STRIPE_CREATE_SUBSCRIPTION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
         (emit STRIPE_FAILED { message: "tier must be \"solo\" or \"teams\"" })
       STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
@@ -103,11 +102,7 @@ orbital StripeOrbital {
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "updateSubscription.fetch", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [], subscriptionId: @payload.subscriptionId, quantity: @payload.quantity, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-              auth: { scheme: bearer, credential: @config.secretKey },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
+            (emit STRIPE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/x-www-form-urlencoded" }, { name: "stripe-version", value: @config.apiVersion }], body: (bytes/from-string ""), stream: "none" })))
       STRIPE_UPDATE_SUBSCRIPTION -> idle when (not (validate/number @payload.quantity))
         (emit STRIPE_UPDATE_READY { subscriptionId: @payload.subscriptionId, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd })
       STRIPE_UPDATE_READY -> idle
@@ -127,11 +122,7 @@ orbital StripeOrbital {
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { action: "cancelSubscription", path: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), fields: [] } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http DELETE @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-              headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
-              auth: { scheme: bearer, credential: @config.secretKey },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })))
+            (emit STRIPE_HTTP_SEND { key: @k, method: "DELETE", target: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/x-www-form-urlencoded" }, { name: "stripe-version", value: @config.apiVersion }], body: (bytes/from-string ""), stream: "none" })))
       STRIPE_KEY_DRAWN -> idle
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (h (hash/sha256 @payload.value "hex")))
           (if (= @e null)
@@ -140,12 +131,7 @@ orbital StripeOrbital {
               (do
                 (emit STRIPE_FAILED { message: "The idempotency key could not be derived" })
                 (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key)))))
-              (http POST @config.origin @e.job.path {
-                headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (str/slice "89ab" (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) (+ (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) 1)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) },
-                text: (str/join (array/map @e.job.fields (fn f (str/concat @f.k "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @f.v) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-                auth: { scheme: bearer, credential: @config.secretKey },
-                timeoutMs: @config.timeoutMs
-              } { key: @e.key, emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } }))))
+              (emit STRIPE_HTTP_SEND { key: @e.key, method: "POST", target: @e.job.path, headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/x-www-form-urlencoded" }, { name: "stripe-version", value: @config.apiVersion }, { name: "idempotency-key", value: (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (str/slice "89ab" (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) (+ (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4) 1)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) }], body: (bytes/from-string (str/join (array/map @e.job.fields (fn f (str/concat @f.k "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @f.v) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")), stream: "none" }))))
       STRIPE_RANDOM_FAILED -> idle
         (emit STRIPE_FAILED { message: @payload.error })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
@@ -394,6 +380,16 @@ orbital StripeOrbital {
       }
         @description "Internal: the host could not supply random bytes for an idempotency key."
         @tier "secondary"
+      STRIPE_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: a Stripe request, for the HTTP client."
+        @tier "secondary"
       STRIPE_REPLIED {
         status : number!
         headers : Map string string
@@ -540,23 +536,16 @@ orbital StripeOrbital {
         cancelAtPeriodEnd : boolean?
         itemId : string
       }
+      StripeHttp.HTTP_REPLIED -> STRIPE_REPLIED with { key: ?key, status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      StripeHttp.HTTP_FAILED -> STRIPE_HTTP_FAILED with { key: ?key, error: ?error, kind: ?kind }
+      StripeTimeout.TIMED_OUT -> STRIPE_HTTP_FAILED with { key: ?key, error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
     }
 
     config {
-      origin : url = "https://api.stripe.com"
-        @label "Stripe API origin"
-        @description "The Stripe API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "stripe url, api host"
-        @tier "infra"
       apiVersion : string = "2025-02-24.acacia"
         @label "Stripe API version"
         @description "The Stripe-Version header pinned on every request."
         @synonyms "api version, version pin"
-        @tier "infra"
-      secretKey : secret = "STRIPE_SECRET_KEY"
-        @label "Stripe secret key"
-        @description "Name of the credential holding the Stripe secret API key; sent only as the bearer token."
-        @synonyms "api key, secret key, stripe credential"
         @tier "infra"
       priceSolo : string = ""
         @label "Solo price id"
@@ -568,13 +557,36 @@ orbital StripeOrbital {
         @description "The Stripe price id of the teams tier (STRIPE_PRICE_TEAMS); empty means checkout and subscriptions for teams report it as not configured."
         @synonyms "teams price, teams plan price"
         @tier "domain"
-      timeoutMs : number = 80000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each Stripe request may take before it fails."
-        @synonyms "timeout, request deadline"
-        @tier "infra"
     }
   }
 
-  page boot as StripePage -> StripeClient
+  trait StripeHttp = Http.traits.HttpClient {
+    config {
+      host: "api.stripe.com"
+      port: 443
+      tls: true
+      serverName: "api.stripe.com"
+      credential: "STRIPE_SECRET_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      StripeClient.STRIPE_HTTP_SEND -> HTTP_SEND
+      StripeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait StripeTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 80000
+      cancelOnDeadline: false
+    }
+    listens {
+      StripeClient.STRIPE_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      StripeHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      StripeHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page boot as StripePage -> StripeClient, StripeHttp, StripeTimeout
 }

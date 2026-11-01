@@ -8,6 +8,11 @@ app std-cloud-run-board [
 uses Http from "std/behaviors/std-http-client"
 type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/cloud-run-board"
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
 type CrCondition = { type : string, status : string }
 type CrStatus = { url : string, conditions : [CrCondition], latestReadyRevisionName : string, latestCreatedRevisionName : string }
 type CrMeta = { name : string, creationTimestamp : string, annotations : Map string string, labels : Map string string }
@@ -35,8 +40,8 @@ type CrApiConfig = { name : string, title : string }
 type CrApi = { config : CrApiConfig }
 type CrEntry = { service : string!, cost : number!, currency : string! }
 type CrServiceRow = { name : string, region : string, url : string, lastDeployed : string, latestRevision : string, status : string, creator : string, hasResourceData : boolean?, cpu : number?, memoryGb : number?, minInstances : number?, maxInstances : number?, concurrency : number?, gpu : string?, gpuCount : number?, hourlyIfUp : number, activeInstanceHours : number, avgInstances : number, requestCount : number, hasUsageData : boolean, grossCostMtd : number, netCostMtd : number, projectedMonthlyUsd : number, hasCostData : boolean }
-type CrBilling = { entries : [CrEntry], totalCost : number, currency : string, billingPeriod : string }
-type CrCloudRun = { services : [CrServiceRow], actualBilledUsd : number?, periodHoursElapsed : number }
+type CrBilling = { entries : [CrEntry]!, totalCost : number!, currency : string!, billingPeriod : string! }
+type CrCloudRun = { services : [CrServiceRow]!, actualBilledUsd : number?, periodHoursElapsed : number }
 type CrBillRows = [CrBillRow]
 type CrServices = [CrService]
 type CrCostRows = [CrCostRow]
@@ -44,6 +49,7 @@ type CrApis = [CrApi]
 type CrGpuRate = { zonal : number!, noZonal : number! }
 orbital CloudRunBoardOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Board from "std/behaviors/std-status-board"
 
   entity CloudRunBoard [runtime] {
     id : string!
@@ -103,22 +109,67 @@ orbital CloudRunBoardOrbital {
     }
   }
 
+  trait CloudRunView = Board.traits.StatusBoard {
+    listens {
+      CloudRunStatus.CR_BOARD_LOADING -> BOARD_LOADING
+      CloudRunStatus.CR_BOARD_SHOW -> BOARD_SHOW
+      CloudRunStatus.CR_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "Google Cloud"
+      icon: "cloud"
+      idleDescription: "Load the board to read the Cloud Run services and this month's cost."
+      emptyTitle: "No Cloud Run services"
+      emptyDescription: "The project has no Cloud Run services and no billed cost."
+    }
+  }
+
   trait CloudRunStatus -> CloudRunBoard [client] {
     initial: idle
 
     state idle {
-      INIT -> idle when (not @config.loadOnInit)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CLOUD_RUN_LOAD }] })
-      INIT -> idle when @config.loadOnInit
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
-        (emit CLOUD_RUN_LOAD { })
-        (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
+      CR_SHOW -> idle
+        (let ((cur (default @entity.billing.currency "USD")) (svcs @entity.cloudRun.services) (unhealthy (array/count @entity.cloudRun.services (fn v (= @v.status "Inactive")))))
+          (emit CR_BOARD_SHOW { note: (default @config.project ""), fetchedAt: @entity.cachedAt, error: "",
+            tiles: [{ label: "Cloud Run services", value: (str/concat (array/len @svcs)), tone: "neutral", icon: "server" },
+              (if (> @unhealthy 0) { label: "Not ready", value: (str/concat @unhealthy), tone: "danger", icon: "alert-triangle" } { label: "Not ready", value: "0", tone: "success", icon: "check-circle" }),
+              { label: "Month to date", value: (str/concat @cur " " @entity.billing.totalCost), tone: "neutral", icon: "dollar-sign" }],
+            sections: [{ key: "services", label: "Services" }, { key: "billing", label: "Billing" }],
+            rows: (array/concat
+              (array/map @svcs (fn v (let ((name (default @v.name "")) (rev (default @v.latestRevision "")) (deployed (let ((t (time/parse (default @v.lastDeployed "")))) (if (== @t null) null (as @t instant)))))
+                (let ((sub (if (= (default @v.url "") "") (default @v.region "") (str/concat (default @v.region "") " · " (default @v.url ""))))
+                      (meta (array/concat (if (= @rev "") (array/take [""] 0) [(str/concat "rev " @rev)]) (if (== @v.hasResourceData true) [(str/concat (default @v.cpu 0) " vCPU, " (default @v.memoryGb 0) " GiB")] (array/take [""] 0)) (if (default @v.hasCostData false) [(str/concat @cur " " (default @v.netCostMtd 0))] (array/take [""] 0)))))
+                  (if (= @v.status "Active") (let ((r : StatusBoardRow { id: @name, section: "services", title: @name, subtitle: @sub, tone: "success", statusLabel: "Ready", icon: "", meta: @meta, at: @deployed, url: (default @v.url "") })) @r) (if (= @v.status "Inactive") (let ((r : StatusBoardRow { id: @name, section: "services", title: @name, subtitle: @sub, tone: "danger", statusLabel: "Not ready", icon: "", meta: @meta, at: @deployed, url: (default @v.url "") })) @r) (let ((r : StatusBoardRow { id: @name, section: "services", title: @name, subtitle: @sub, tone: "neutral", statusLabel: "Unknown", icon: "", meta: @meta, at: @deployed, url: (default @v.url "") })) @r)))))))
+              (array/map @entity.billing.entries (fn e (let ((r : StatusBoardRow { id: (str/concat "billing:" @e.service), section: "billing", title: @e.service, subtitle: @entity.billing.billingPeriod, tone: "neutral", statusLabel: (str/concat @e.cost), icon: "", meta: [], at: null, url: "" })) @r)))) }))
+      CR_ROW_OPENED -> idle
+        (let ((v (array/find @entity.cloudRun.services (fn x (= (default @x.name "") @payload.rowId)))) (e (array/find @entity.billing.entries (fn x (= (str/concat "billing:" @x.service) @payload.rowId)))) (cur (default @entity.billing.currency "USD")))
+          (emit CR_BOARD_DETAIL { detail: (if (!= @v null)
+            { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "",
+              items: (array/concat [{ label: "Status", tone: "neutral", statusLabel: (default @v.status ""), meta: "" }, { label: "Region", tone: "neutral", statusLabel: (default @v.region ""), meta: "" }, { label: "Latest revision", tone: "neutral", statusLabel: (default @v.latestRevision ""), meta: "" }, { label: "Last deployed", tone: "neutral", statusLabel: (default @v.lastDeployed ""), meta: "" }, { label: "Created by", tone: "neutral", statusLabel: (default @v.creator ""), meta: "" }]
+                (if (== @v.hasResourceData true) [{ label: "Size", tone: "neutral", statusLabel: (str/concat (default @v.cpu 0) " vCPU, " (default @v.memoryGb 0) " GiB"), meta: (if (> (default @v.gpuCount 0) 0) (str/concat (default @v.gpuCount 0) " " (default @v.gpu "")) "") }, { label: "Instances", tone: "neutral", statusLabel: (str/concat (default @v.minInstances 0) "–" (default @v.maxInstances 0)), meta: (str/concat "concurrency " (default @v.concurrency 0)) }, { label: "List price per instance hour", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.hourlyIfUp 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))
+                (if (default @v.hasUsageData false) [{ label: "Active instance hours", tone: "neutral", statusLabel: (str/concat (default @v.activeInstanceHours 0)), meta: (str/concat "average " (default @v.avgInstances 0) " instances") }, { label: "Requests", tone: "neutral", statusLabel: (str/concat (default @v.requestCount 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))
+                (if (default @v.hasCostData false) [{ label: "Net cost to date", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.netCostMtd 0)), meta: (str/concat "gross " (default @v.grossCostMtd 0)) }, { label: "Projected month", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.projectedMonthlyUsd 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))) }
+            (if (!= @e null)
+              { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "", items: [{ label: "Month to date", tone: "neutral", statusLabel: (str/concat @cur " " @e.cost), meta: @entity.billing.billingPeriod }] }
+              { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The row is no longer on the board" })) }))
       CLOUD_RUN_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs))
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if (== @v.hasResourceData true) (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (if (== @v.hasResourceData true) (str/concat @v.minInstances "–" @v.maxInstances) "unknown"), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
+        (emit CR_SHOW { })
       CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
+        (emit CR_BOARD_LOADING { })
         (set @entity.startedAt (time/now))
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])
@@ -132,8 +183,8 @@ orbital CloudRunBoardOrbital {
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
         (emit CR_MONITOR { })
       CLOUD_RUN_REFRESH -> reading
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
+        (emit CR_BOARD_LOADING { })
         (set @entity.startedAt (time/now))
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])
@@ -149,6 +200,17 @@ orbital CloudRunBoardOrbital {
     }
 
     state reading {
+      CR_ROW_OPENED -> reading
+        (let ((v (array/find @entity.cloudRun.services (fn x (= (default @x.name "") @payload.rowId)))) (e (array/find @entity.billing.entries (fn x (= (str/concat "billing:" @x.service) @payload.rowId)))) (cur (default @entity.billing.currency "USD")))
+          (emit CR_BOARD_DETAIL { detail: (if (!= @v null)
+            { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "",
+              items: (array/concat [{ label: "Status", tone: "neutral", statusLabel: (default @v.status ""), meta: "" }, { label: "Region", tone: "neutral", statusLabel: (default @v.region ""), meta: "" }, { label: "Latest revision", tone: "neutral", statusLabel: (default @v.latestRevision ""), meta: "" }, { label: "Last deployed", tone: "neutral", statusLabel: (default @v.lastDeployed ""), meta: "" }, { label: "Created by", tone: "neutral", statusLabel: (default @v.creator ""), meta: "" }]
+                (if (== @v.hasResourceData true) [{ label: "Size", tone: "neutral", statusLabel: (str/concat (default @v.cpu 0) " vCPU, " (default @v.memoryGb 0) " GiB"), meta: (if (> (default @v.gpuCount 0) 0) (str/concat (default @v.gpuCount 0) " " (default @v.gpu "")) "") }, { label: "Instances", tone: "neutral", statusLabel: (str/concat (default @v.minInstances 0) "–" (default @v.maxInstances 0)), meta: (str/concat "concurrency " (default @v.concurrency 0)) }, { label: "List price per instance hour", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.hourlyIfUp 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))
+                (if (default @v.hasUsageData false) [{ label: "Active instance hours", tone: "neutral", statusLabel: (str/concat (default @v.activeInstanceHours 0)), meta: (str/concat "average " (default @v.avgInstances 0) " instances") }, { label: "Requests", tone: "neutral", statusLabel: (str/concat (default @v.requestCount 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))
+                (if (default @v.hasCostData false) [{ label: "Net cost to date", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.netCostMtd 0)), meta: (str/concat "gross " (default @v.grossCostMtd 0)) }, { label: "Projected month", tone: "neutral", statusLabel: (str/concat @cur " " (default @v.projectedMonthlyUsd 0)), meta: "" }] (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0))) }
+            (if (!= @e null)
+              { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "", items: [{ label: "Month to date", tone: "neutral", statusLabel: (str/concat @cur " " @e.cost), meta: @entity.billing.billingPeriod }] }
+              { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The row is no longer on the board" })) }))
       INIT -> reading
       CLOUD_RUN_LOAD -> reading
       CLOUD_RUN_REFRESH -> reading
@@ -286,7 +348,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if (== @v.hasResourceData true) (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (if (== @v.hasResourceData true) (str/concat @v.minInstances "–" @v.maxInstances) "unknown"), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
+        (emit CR_SHOW { })
 
       CR_CLI_FAILED -> reading when (= @payload.stage "cost")
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
@@ -313,8 +375,26 @@ orbital CloudRunBoardOrbital {
         @description "The board: the month's cost per Google Cloud service, the Cloud Run services with resources, usage and cost, and when it was read."
         @synonyms "cloud run status, gcp cost, cloud board"
         @tier "primary"
-      CLOUD_RUN_LOAD -> internal { }
-        @description "Internal: the load a page opening with loadOnInit asks for."
+      CR_BOARD_LOADING { }
+        @description "Internal: a read began, to the board."
+        @tier "internal"
+      CR_BOARD_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the figures, sections and rows, to the board."
+        @tier "internal"
+      CR_BOARD_DETAIL {
+        detail : StatusBoardDetail!
+      }
+        @description "Internal: one row's detail, to the board."
+        @tier "internal"
+      CR_SHOW -> internal { }
+        @description "Internal: show the held board."
         @tier "internal"
       CR_GCLOUD {
         stage : string!
@@ -377,6 +457,13 @@ orbital CloudRunBoardOrbital {
         code : string!
       }
         @description "A std-cli CLI_FAILED: gcloud or bq could not run."
+      CR_ROW_OPENED {
+        rowId : string!
+      }
+        @description "The board opened a row: its detail is answered from the held board."
+      CloudRunView.BOARD_LOAD -> CLOUD_RUN_LOAD
+      CloudRunView.BOARD_REFRESH -> CLOUD_RUN_REFRESH
+      CloudRunView.BOARD_ROW_OPENED -> CR_ROW_OPENED
       CrGcloud.CLI_DONE -> CR_RAN
       CrGcloud.CLI_FAILED -> CR_CLI_FAILED
       CrBq.CLI_DONE -> CR_RAN
@@ -397,19 +484,6 @@ orbital CloudRunBoardOrbital {
     }
 
     config {
-      title : string = "Google Cloud"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
-      loadOnInit : boolean = false
-        @label "Load when opened"
-        @description "Read the board as soon as its page opens."
-        @tier "presentation"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @synonyms "status area"
-        @tier "presentation"
       project : string = ""
         @label "Project"
         @description "The Google Cloud project id."
@@ -468,5 +542,5 @@ orbital CloudRunBoardOrbital {
     }
   }
 
-  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CrMonitoring, CrGcloud, CrBq
+  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CloudRunView, CrMonitoring, CrGcloud, CrBq
 }

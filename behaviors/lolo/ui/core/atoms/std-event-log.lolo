@@ -12,7 +12,7 @@ orbital EventLogOrbital {
 
     type FilterChip = { id : string!, label : string!, icon : string }
 
-    type EventLogLoaded = Event { data : [ObjectSpec]!, totalCount : number } "Fired when one page of event entries finishes loading"
+    type EventLogLoaded = Event { data : [ObjectSpec]!, totalCount : number! } "Fired when one page of event entries finishes loading"
 
     type EventLogLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
 
@@ -313,7 +313,7 @@ orbital EventLogOrbital {
           limit: @config.relatedMaxRows
         })
       EventLogLoadFailed -> viewing
-        (notify error (str/concat "Couldn't refresh the event log — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't refresh the event log — " ?error) "Couldn't refresh the event log"))
       EventLogLoaded -> viewing
         (set @entity.eventLogTotalCount ?totalCount)
         (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
@@ -598,7 +598,7 @@ orbital EventLogOrbital {
         @tier "presentation"
       EventLogLoaded {
         data : [ObjectSpec]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
@@ -646,7 +646,7 @@ orbital EventLogOrbital {
         @tier "presentation"
       EventLogLoaded {
         data : [ObjectSpec]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"

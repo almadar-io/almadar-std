@@ -1,9 +1,12 @@
 app std-github [
   version: "1.0.0",
   description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref, list commits, list a repository's workflow runs and a run's jobs, read an organization's or user's monthly billing usage, and run a GraphQL query (answered as the reply text; its failure carries the HTTP status, 0 when unreachable). Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
-  egress: ["https://api.github.com"]
+  net: { "api.github.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/github"
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type GithubError = { message : string }
 type GithubRef = { ref : string }
 type GithubPull = { number : number!, url : string!, html_url : string!, title : string!, state : string!, draft : boolean!, head : GithubRef!, base : GithubRef! }
@@ -22,7 +25,7 @@ type GithubIssues = [GithubIssue]
 type GithubCommitItems = [GithubCommitItem]
 type GithubRun = { id : number!, name : string!, status : string!, conclusion : string?, created_at : string!, html_url : string! }
 type GithubRunList = { workflow_runs : [GithubRun]! }
-type GithubJob = { id : number!, name : string!, status : string!, conclusion : string?, html_url : string! }
+type GithubJob = { id : number!, name : string!, status : string!, conclusion : string?, html_url : string!, started_at : string?, completed_at : string? }
 type GithubJobList = { jobs : [GithubJob]! }
 type GithubRunner = { id : number!, name : string!, status : string!, busy : boolean! }
 type GithubRunnerList = { runners : [GithubRunner]! }
@@ -37,6 +40,34 @@ orbital GithubOrbital {
     id : string!
   }
 
+  trait GithubHttp = Http.traits.HttpClient {
+    config {
+      host: "api.github.com"
+      port: 443
+      tls: true
+      serverName: "api.github.com"
+      credential: "GITHUB_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      GithubClient.GITHUB_HTTP_SEND -> HTTP_SEND
+      GithubTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait GithubTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      GithubClient.GITHUB_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      GithubHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      GithubHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
   trait GithubClient -> GithubCall [optimistic] {
     initial: idle
 
@@ -44,12 +75,14 @@ orbital GithubOrbital {
       INIT -> idle
 
       GITHUB_CREATE_PR -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http POST @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/pulls") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "text/plain;charset=UTF-8" },
-          text: (json/stringify { title: @payload.title, body: @payload.body, base: @payload.baseBranch, head: @payload.headBranch, draft: (or @payload.draft false) }),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_CREATE_PR_REPLIED, failure: GITHUB_CREATE_PR_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "create-pr",
+            method: "POST",
+            target: (str/concat "/repos/" (str/encode-uri-component @config.owner) "/" (str/encode-uri-component @config.repo) "/pulls"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }, { name: "content-type", value: "text/plain;charset=UTF-8" }],
+            body: (bytes/from-string (json/stringify { title: @payload.title, body: @payload.body, base: @payload.baseBranch, head: @payload.headBranch, draft: (default @payload.draft false) })),
+            stream: "none"
+          })
       GITHUB_CREATE_PR -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_CREATE_PR_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_CREATE_PR_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
@@ -66,11 +99,14 @@ orbital GithubOrbital {
         (emit GITHUB_CREATE_PR_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_GET_PR_COMMENTS -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/pulls/" @payload.prNumber "/comments") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_GET_PR_COMMENTS_REPLIED, failure: GITHUB_GET_PR_COMMENTS_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "pr-comments",
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @config.owner) "/" (str/encode-uri-component @config.repo) "/pulls/" @payload.prNumber "/comments"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_GET_PR_COMMENTS -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_GET_PR_COMMENTS_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body GithubComments) null))
@@ -86,11 +122,14 @@ orbital GithubOrbital {
         (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_LIST_ISSUES -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (default @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (default @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_LIST_ISSUES_REPLIED, failure: GITHUB_LIST_ISSUES_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "issues",
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @config.owner) "/" (str/encode-uri-component @config.repo) "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (default @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (default @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_LIST_ISSUES -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_LIST_ISSUES_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body GithubIssues) null))
@@ -106,19 +145,25 @@ orbital GithubOrbital {
         (emit GITHUB_LIST_ISSUES_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_GET_ISSUE -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.issueNumber) {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: (str/concat @payload.issueNumber), emit: { success: GITHUB_GET_ISSUE_REPLIED, failure: GITHUB_GET_ISSUE_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "issue:" @payload.issueNumber),
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @config.owner) "/" (str/encode-uri-component @config.repo) "/issues/" @payload.issueNumber),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_GET_ISSUE -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_GET_ISSUE_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.key "/comments") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.body, emit: { success: GITHUB_GET_ISSUE_COMMENTS_REPLIED, failure: GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "issue-comments:" @payload.body),
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @config.owner) "/" (str/encode-uri-component @config.repo) "/issues/" @payload.key "/comments"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_GET_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_ISSUE_FAILED {
           code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
@@ -141,12 +186,14 @@ orbital GithubOrbital {
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_GET_FILE -> idle
-        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/contents/" @payload.path) {
-          query: { ref: (if (= (default @payload.ref "") "") null @payload.ref) },
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_GET_FILE_REPLIED, failure: GITHUB_GET_FILE_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "file",
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @payload.owner) "/" (str/encode-uri-component @payload.repo) "/contents/" (str/join (array/map (str/split @payload.path "/") (fn s (str/encode-uri-component @s))) "/") (if (= (default @payload.ref "") "") "" (str/concat "?ref=" (str/encode-uri-component (default @payload.ref ""))))),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_GET_FILE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((file (json/parse @payload.body GithubFileData)))
           (if (= @file null)
@@ -165,11 +212,14 @@ orbital GithubOrbital {
 
       GITHUB_LIST_COMMITS -> idle
         (let ((query (str/join (array/filter [(if (!= (default @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.per_page 0) 0) (str/concat "per_page=" (default @payload.per_page 0)) "")] (fn p (!= @p ""))) "&")))
-          (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/commits" (if (= @query "") "" (str/concat "?" @query))) {
-            headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-            auth: { scheme: bearer, credential: @config.token },
-            timeoutMs: @config.timeoutMs
-          } { emit: { success: GITHUB_LIST_COMMITS_REPLIED, failure: GITHUB_LIST_COMMITS_UNREACHABLE } }))
+          (emit GITHUB_HTTP_SEND {
+              key: "commits",
+              method: "GET",
+              target: (str/concat "/repos/" (str/encode-uri-component @payload.owner) "/" (str/encode-uri-component @payload.repo) "/commits" (if (= @query "") "" (str/concat "?" @query))),
+              headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+              body: (bytes/from-string ""),
+              stream: "none"
+            }))
       GITHUB_LIST_COMMITS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((items (json/parse @payload.body GithubCommitItems)))
           (if (= @items null)
@@ -184,12 +234,14 @@ orbital GithubOrbital {
         (emit GITHUB_LIST_COMMITS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_CREATE_ISSUE -> idle
-        (http POST @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/issues") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "text/plain;charset=UTF-8" },
-          text: (json/stringify (object/merge { title: @payload.title } (if (not (validate/required @payload.body)) {} { body: @payload.body }) (if (= @payload.labels null) {} { labels: @payload.labels }))),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_CREATE_ISSUE_REPLIED, failure: GITHUB_CREATE_ISSUE_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "create-issue",
+            method: "POST",
+            target: (str/concat "/repos/" (str/encode-uri-component @payload.owner) "/" (str/encode-uri-component @payload.repo) "/issues"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }, { name: "content-type", value: "text/plain;charset=UTF-8" }],
+            body: (bytes/from-string (json/stringify (object/merge { title: @payload.title } (if (not (validate/required @payload.body)) {} { body: @payload.body }) (if (= @payload.labels null) {} { labels: @payload.labels })))),
+            stream: "none"
+          })
       GITHUB_CREATE_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((issue (json/parse @payload.body GithubCreatedIssue)))
           (if (= @issue null)
@@ -203,12 +255,14 @@ orbital GithubOrbital {
       GITHUB_CREATE_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_CREATE_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
       GITHUB_GRAPHQL -> idle
-        (http POST @config.origin "/graphql" {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "application/json" },
-          text: (str/concat "{\"query\":" (json/stringify @payload.query) ",\"variables\":" (if (= (default @payload.variables "") "") "{}" @payload.variables) "}"),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: GITHUB_GRAPHQL_REPLIED, failure: GITHUB_GRAPHQL_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: "graphql",
+            method: "POST",
+            target: "/graphql",
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }, { name: "content-type", value: "application/json" }],
+            body: (bytes/from-string (str/concat "{\"query\":" (json/stringify @payload.query) ",\"variables\":" (if (= (default @payload.variables "") "") "{}" @payload.variables) "}")),
+            stream: "none"
+          })
       GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (emit GITHUB_GRAPHQL_ANSWERED { body: @payload.body })
       GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
@@ -219,11 +273,14 @@ orbital GithubOrbital {
         (emit GITHUB_GRAPHQL_FAILED { status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_LIST_RUNNERS -> idle
-        (http GET @config.origin (str/concat "/" @payload.scope "/actions/runners") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { scope: @payload.scope }), emit: { success: GITHUB_LIST_RUNNERS_REPLIED, failure: GITHUB_LIST_RUNNERS_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "runners:" (json/stringify { scope: @payload.scope })),
+            method: "GET",
+            target: (str/concat "/" @payload.scope "/actions/runners"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_LIST_RUNNERS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((at (json/parse @payload.key GithubRunnersKey)) (list (json/parse @payload.body GithubRunnerList)))
           (if (= @list null)
@@ -240,12 +297,14 @@ orbital GithubOrbital {
           (emit GITHUB_LIST_RUNNERS_FAILED { scope: @at.scope, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
 
       GITHUB_LIST_RUNS -> idle
-        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs") {
-          query: { per_page: (if (== @payload.per_page null) null (str/concat @payload.per_page)) },
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo }), emit: { success: GITHUB_LIST_RUNS_REPLIED, failure: GITHUB_LIST_RUNS_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "runs:" (json/stringify { owner: @payload.owner, repo: @payload.repo })),
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @payload.owner) "/" (str/encode-uri-component @payload.repo) "/actions/runs" (if (== @payload.per_page null) "" (str/concat "?per_page=" @payload.per_page))),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_LIST_RUNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((at (json/parse @payload.key GithubRunsKey)) (list (json/parse @payload.body GithubRunList)))
           (if (= @list null)
@@ -259,16 +318,19 @@ orbital GithubOrbital {
           (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
 
       GITHUB_LIST_RUN_JOBS -> idle
-        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs/" @payload.runId "/jobs") {
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId }), emit: { success: GITHUB_LIST_RUN_JOBS_REPLIED, failure: GITHUB_LIST_RUN_JOBS_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "jobs:" (json/stringify { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId })),
+            method: "GET",
+            target: (str/concat "/repos/" (str/encode-uri-component @payload.owner) "/" (str/encode-uri-component @payload.repo) "/actions/runs/" @payload.runId "/jobs"),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((at (json/parse @payload.key GithubJobsKey)) (list (json/parse @payload.body GithubJobList)))
           (if (= @list null)
             (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "PARSE_ERROR", message: "GitHub answered a job list that could not be read" })
-            (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get @list jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url })) })))
+            (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get @list jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url, started_at: @j.started_at, completed_at: @j.completed_at })) })))
       GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (let ((at (json/parse @payload.key GithubJobsKey)))
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (!= (json/parse @payload.body GithubError) null) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
@@ -277,12 +339,14 @@ orbital GithubOrbital {
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
 
       GITHUB_BILLING_USAGE -> idle
-        (http GET @config.origin (str/concat (if (= @payload.kind "org") "/organizations/" "/users/") @payload.account "/settings/billing/usage") {
-          query: { year: (str/concat @payload.year), month: (str/concat @payload.month) },
-          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { account: @payload.account, kind: @payload.kind, year: @payload.year, month: @payload.month }), emit: { success: GITHUB_BILLING_USAGE_REPLIED, failure: GITHUB_BILLING_USAGE_UNREACHABLE } })
+        (emit GITHUB_HTTP_SEND {
+            key: (str/concat "billing:" (json/stringify { account: @payload.account, kind: @payload.kind, year: @payload.year, month: @payload.month })),
+            method: "GET",
+            target: (str/concat (if (= @payload.kind "org") "/organizations/" "/users/") @payload.account "/settings/billing/usage" "?year=" @payload.year "&month=" @payload.month),
+            headers: [{ name: "accept", value: "application/vnd.github+json" }, { name: "x-github-api-version", value: @config.apiVersion }, { name: "user-agent", value: "almadar-std-github" }],
+            body: (bytes/from-string ""),
+            stream: "none"
+          })
       GITHUB_BILLING_USAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((at (json/parse @payload.key GithubBillingKey)) (report (json/parse @payload.body GithubUsageReport)))
           (if (= @report null)
@@ -301,6 +365,16 @@ orbital GithubOrbital {
     }
 
     emits {
+      GITHUB_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the GitHub request, for the HTTP client."
+        @tier "secondary"
       GITHUB_BILLING_USAGE_ANSWERED -> external {
         account : string!
         kind : string!
@@ -321,21 +395,6 @@ orbital GithubOrbital {
         @description "The account's billing usage could not be read: the HTTP status (0 when unreachable), GitHub's code (PARSE_ERROR for a body that is not JSON) and message."
         @synonyms "billing unavailable"
         @tier "primary"
-      GITHUB_BILLING_USAGE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the billing usage call's HTTP reply; key carries the account and month."
-        @tier "secondary"
-      GITHUB_BILLING_USAGE_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the billing usage call never produced a reply."
-        @tier "secondary"
       GITHUB_GRAPHQL_ANSWERED -> external {
         body : string!
       }
@@ -350,19 +409,6 @@ orbital GithubOrbital {
         @description "The GraphQL query failed: the HTTP status (0 when GitHub was unreachable), GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message."
         @synonyms "graphql error, query failed"
         @tier "primary"
-      GITHUB_GRAPHQL_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the GraphQL call's HTTP reply."
-        @tier "secondary"
-      GITHUB_GRAPHQL_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the GraphQL call never produced a reply."
-        @tier "secondary"
       GITHUB_RUNNERS -> external {
         scope : string!
         runners : [GithubRunner]!
@@ -379,21 +425,6 @@ orbital GithubOrbital {
         @description "Listing the scope's self-hosted runners failed: the HTTP status (0 when unreachable), GitHub's code and message."
         @synonyms "listing runners failed, github error"
         @tier "primary"
-      GITHUB_LIST_RUNNERS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the runner list's HTTP reply; key carries the scope."
-        @tier "secondary"
-      GITHUB_LIST_RUNNERS_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the runner list never produced a reply."
-        @tier "secondary"
       GITHUB_RUNS -> external {
         owner : string!
         repo : string!
@@ -411,28 +442,13 @@ orbital GithubOrbital {
         @description "Listing a repository's workflow runs failed: the repository, GitHub's code and message."
         @synonyms "listing runs failed, github error"
         @tier "primary"
-      GITHUB_LIST_RUNS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the run list's HTTP reply; key carries the repository."
-        @tier "secondary"
-      GITHUB_LIST_RUNS_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the run list never produced a reply."
-        @tier "secondary"
       GITHUB_RUN_JOBS -> external {
         owner : string!
         repo : string!
         runId : number!
         jobs : [GithubJob]!
       }
-        @description "A workflow run's jobs: id, name, status, conclusion and page url."
+        @description "A workflow run's jobs: id, name, status, conclusion (absent while running), page url, and when each started and completed (absent until it has)."
         @synonyms "run jobs, workflow jobs"
         @tier "primary"
       GITHUB_LIST_RUN_JOBS_FAILED -> external {
@@ -445,21 +461,6 @@ orbital GithubOrbital {
         @description "Listing a run's jobs failed: the repository and run, GitHub's code and message."
         @synonyms "listing jobs failed, github error"
         @tier "primary"
-      GITHUB_LIST_RUN_JOBS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the job list's HTTP reply; key carries the repository and run."
-        @tier "secondary"
-      GITHUB_LIST_RUN_JOBS_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the job list never produced a reply."
-        @tier "secondary"
       GITHUB_PR_CREATED -> external {
         number : number!
         url : string!
@@ -480,19 +481,6 @@ orbital GithubOrbital {
         @description "Opening the pull request failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "opening the pull request failed, github error"
         @tier "primary"
-      GITHUB_CREATE_PR_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the createPR call's HTTP reply."
-        @tier "secondary"
-      GITHUB_CREATE_PR_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the createPR call never produced a reply."
-        @tier "secondary"
       GITHUB_PR_COMMENTS -> external {
         comments : [GithubComment]!
       }
@@ -506,19 +494,6 @@ orbital GithubOrbital {
         @description "Listing the pull request comments failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "listing the pull request comments failed, github error"
         @tier "primary"
-      GITHUB_GET_PR_COMMENTS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the getPRComments call's HTTP reply."
-        @tier "secondary"
-      GITHUB_GET_PR_COMMENTS_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the getPRComments call never produced a reply."
-        @tier "secondary"
       GITHUB_ISSUES -> external {
         issues : [GithubIssue]!
       }
@@ -532,19 +507,6 @@ orbital GithubOrbital {
         @description "Listing the issues failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "listing the issues failed, github error"
         @tier "primary"
-      GITHUB_LIST_ISSUES_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the listIssues call's HTTP reply."
-        @tier "secondary"
-      GITHUB_LIST_ISSUES_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the listIssues call never produced a reply."
-        @tier "secondary"
       GITHUB_ISSUE -> external {
         issue : GithubIssue!
         comments : [GithubComment]!
@@ -559,36 +521,6 @@ orbital GithubOrbital {
         @description "Fetching the issue failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "fetching the issue failed, github error"
         @tier "primary"
-      GITHUB_GET_ISSUE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the issue call's HTTP reply; key carries the issue number."
-        @tier "secondary"
-      GITHUB_GET_ISSUE_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the issue call never produced a reply."
-        @tier "secondary"
-      GITHUB_GET_ISSUE_COMMENTS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-        key : string!
-      }
-        @description "Internal: the issue comments call's HTTP reply; key carries the issue text."
-        @tier "secondary"
-      GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE {
-        error : string!
-        kind : string!
-        key : string!
-      }
-        @description "Internal: the issue comments call never produced a reply."
-        @tier "secondary"
       GITHUB_FILE -> external {
         path : string!
         content : string!
@@ -605,19 +537,6 @@ orbital GithubOrbital {
         @description "Reading the file failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "reading the file failed, github error"
         @tier "primary"
-      GITHUB_GET_FILE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the getFile call's HTTP reply."
-        @tier "secondary"
-      GITHUB_GET_FILE_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the getFile call never produced a reply."
-        @tier "secondary"
       GITHUB_COMMITS -> external {
         commits : [GithubCommit]!
       }
@@ -631,19 +550,6 @@ orbital GithubOrbital {
         @description "Listing the commits failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "listing the commits failed, github error"
         @tier "primary"
-      GITHUB_LIST_COMMITS_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the listCommits call's HTTP reply."
-        @tier "secondary"
-      GITHUB_LIST_COMMITS_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the listCommits call never produced a reply."
-        @tier "secondary"
       GITHUB_ISSUE_CREATED -> external {
         number : number!
         title : string!
@@ -659,19 +565,6 @@ orbital GithubOrbital {
         @description "Opening the issue failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
         @synonyms "opening the issue failed, github error"
         @tier "primary"
-      GITHUB_CREATE_ISSUE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the createIssue call's HTTP reply."
-        @tier "secondary"
-      GITHUB_CREATE_ISSUE_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the createIssue call never produced a reply."
-        @tier "secondary"
     }
 
     listens {
@@ -889,19 +782,48 @@ orbital GithubOrbital {
         error : string!
         kind : string!
       }
+      GithubHttp.HTTP_REPLIED -> GITHUB_CREATE_PR_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "create-pr")
+      GithubHttp.HTTP_FAILED -> GITHUB_CREATE_PR_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "create-pr")
+      GithubTimeout.TIMED_OUT -> GITHUB_CREATE_PR_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "create-pr")
+      GithubHttp.HTTP_REPLIED -> GITHUB_GET_PR_COMMENTS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "pr-comments")
+      GithubHttp.HTTP_FAILED -> GITHUB_GET_PR_COMMENTS_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "pr-comments")
+      GithubTimeout.TIMED_OUT -> GITHUB_GET_PR_COMMENTS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "pr-comments")
+      GithubHttp.HTTP_REPLIED -> GITHUB_LIST_ISSUES_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "issues")
+      GithubHttp.HTTP_FAILED -> GITHUB_LIST_ISSUES_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "issues")
+      GithubTimeout.TIMED_OUT -> GITHUB_LIST_ISSUES_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "issues")
+      GithubHttp.HTTP_REPLIED -> GITHUB_GET_ISSUE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 6 (str/len ?key)) } when (str/startsWith ?key "issue:")
+      GithubHttp.HTTP_FAILED -> GITHUB_GET_ISSUE_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 6 (str/len ?key)) } when (str/startsWith ?key "issue:")
+      GithubTimeout.TIMED_OUT -> GITHUB_GET_ISSUE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 6 (str/len ?key)) } when (str/startsWith ?key "issue:")
+      GithubHttp.HTTP_REPLIED -> GITHUB_GET_ISSUE_COMMENTS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 15 (str/len ?key)) } when (str/startsWith ?key "issue-comments:")
+      GithubHttp.HTTP_FAILED -> GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 15 (str/len ?key)) } when (str/startsWith ?key "issue-comments:")
+      GithubTimeout.TIMED_OUT -> GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 15 (str/len ?key)) } when (str/startsWith ?key "issue-comments:")
+      GithubHttp.HTTP_REPLIED -> GITHUB_GET_FILE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "file")
+      GithubHttp.HTTP_FAILED -> GITHUB_GET_FILE_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "file")
+      GithubTimeout.TIMED_OUT -> GITHUB_GET_FILE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "file")
+      GithubHttp.HTTP_REPLIED -> GITHUB_LIST_COMMITS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "commits")
+      GithubHttp.HTTP_FAILED -> GITHUB_LIST_COMMITS_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "commits")
+      GithubTimeout.TIMED_OUT -> GITHUB_LIST_COMMITS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "commits")
+      GithubHttp.HTTP_REPLIED -> GITHUB_CREATE_ISSUE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "create-issue")
+      GithubHttp.HTTP_FAILED -> GITHUB_CREATE_ISSUE_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "create-issue")
+      GithubTimeout.TIMED_OUT -> GITHUB_CREATE_ISSUE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "create-issue")
+      GithubHttp.HTTP_REPLIED -> GITHUB_GRAPHQL_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "graphql")
+      GithubHttp.HTTP_FAILED -> GITHUB_GRAPHQL_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "graphql")
+      GithubTimeout.TIMED_OUT -> GITHUB_GRAPHQL_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "graphql")
+      GithubHttp.HTTP_REPLIED -> GITHUB_LIST_RUNNERS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "runners:")
+      GithubHttp.HTTP_FAILED -> GITHUB_LIST_RUNNERS_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "runners:")
+      GithubTimeout.TIMED_OUT -> GITHUB_LIST_RUNNERS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "runners:")
+      GithubHttp.HTTP_REPLIED -> GITHUB_LIST_RUNS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "runs:")
+      GithubHttp.HTTP_FAILED -> GITHUB_LIST_RUNS_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "runs:")
+      GithubTimeout.TIMED_OUT -> GITHUB_LIST_RUNS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "runs:")
+      GithubHttp.HTTP_REPLIED -> GITHUB_LIST_RUN_JOBS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+      GithubHttp.HTTP_FAILED -> GITHUB_LIST_RUN_JOBS_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+      GithubTimeout.TIMED_OUT -> GITHUB_LIST_RUN_JOBS_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 5 (str/len ?key)) } when (str/startsWith ?key "jobs:")
+      GithubHttp.HTTP_REPLIED -> GITHUB_BILLING_USAGE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
+      GithubHttp.HTTP_FAILED -> GITHUB_BILLING_USAGE_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
+      GithubTimeout.TIMED_OUT -> GITHUB_BILLING_USAGE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
     }
 
     config {
-      origin : url = "https://api.github.com"
-        @label "GitHub API origin"
-        @description "The GitHub API origin (scheme://host, no path); a GitHub Enterprise host must also be declared in the app egress list."
-        @synonyms "github url, api host, enterprise host"
-        @tier "infra"
-      token : secret = "GITHUB_TOKEN"
-        @label "GitHub token"
-        @description "Name of the credential holding the GitHub personal access token."
-        @synonyms "github token, access token, pat"
-        @tier "infra"
       owner : string = ""
         @label "Default repository owner"
         @description "Owner (user or org) of the repository the pull request and issue actions without an owner parameter act on; set from GITHUB_OWNER."
@@ -917,11 +839,6 @@ orbital GithubOrbital {
         @description "Value of the X-GitHub-Api-Version header sent with every request."
         @synonyms "api version, github version header"
         @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each GitHub request may take before it fails as unreachable."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
       statusText : Map string string = { "400": "Bad Request", "401": "Unauthorized", "402": "Payment Required", "403": "Forbidden", "404": "Not Found", "405": "Method Not Allowed", "408": "Request Timeout", "409": "Conflict", "410": "Gone", "413": "Payload Too Large", "422": "Unprocessable Entity", "500": "Internal Server Error", "501": "Not Implemented", "502": "Bad Gateway", "503": "Service Unavailable", "504": "Gateway Timeout" }
         @label "Status texts"
         @description "Reason phrase by HTTP status, used in the failure message when GitHub's error body carries no message."
@@ -930,5 +847,5 @@ orbital GithubOrbital {
     }
   }
 
-  page boot as GithubPage -> GithubClient
+  page boot as GithubPage -> GithubClient, GithubHttp, GithubTimeout
 }

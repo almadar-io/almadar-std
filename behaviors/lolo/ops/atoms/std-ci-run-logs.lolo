@@ -19,6 +19,8 @@ orbital CiRunLogsOrbital {
     failed : [CiGhJob] @description "The run's failed jobs, in order." = []
     cursor : number @description "Index of the failed job whose log is being read." = 0
     lines : [CiLogLine] @description "The lines read so far." = []
+    errorLines : Map string string @description "Severity (error) by 1-based line number for the error lines among lines." = {}
+    error : string @description "Why the view's last read ended without lines." = ""
   }
 
   trait CiLogsGh = Cli.traits.CliRunner {
@@ -34,9 +36,7 @@ orbital CiRunLogsOrbital {
 
     state idle {
       INIT -> idle when (not (and @config.loadOnInit (!= (default @payload.runId "") "")))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No run log read yet." })
       INIT -> idle when (and @config.loadOnInit (!= (default @payload.runId "") ""))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the log of run " @payload.runId "…") })
         (emit CI_LOGS_LOAD { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId })
       CI_LOGS_LOAD -> reading
         (set @entity.owner @payload.owner)
@@ -45,7 +45,8 @@ orbital CiRunLogsOrbital {
         (set @entity.failed [])
         (set @entity.cursor 0)
         (set @entity.lines [])
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the log of " @payload.repo " run " @payload.runId "…") })
+        (set @entity.errorLines {})
+        (emit CI_LOGS_READING { repo: @payload.repo, runId: @payload.runId })
         (emit CI_LOGS_GH { stage: "jobs", argv: ["api", (str/concat "repos/" @payload.owner "/" @payload.repo "/actions/runs/" @payload.runId "/jobs")] })
     }
 
@@ -56,7 +57,7 @@ orbital CiRunLogsOrbital {
 
       CI_LOGS_RAN -> idle when (and (= @payload.stage "jobs") (= @payload.exitCode 0) (json/valid @payload.stdout) (= (json/parse @payload.stdout CiGhJobList) null))
         (emit CI_LOGS_FAILED { runId: @entity.runId, error: "the job list could not be read", code: "ci_logs_unreadable" })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "The job list of the run could not be read." })
+        (emit CI_LOGS_VIEW_FAILED { message: "The job list of the run could not be read." })
       CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (and (= @payload.exitCode 0) (json/valid @payload.stdout) (let ((jl (json/parse @payload.stdout CiGhJobList))) (if (= @jl null) false (> (array/len (array/filter (object/get @jl "jobs" []) (fn j (= @j.conclusion "failure")))) 0)))))
         (let ((jl (json/parse @payload.stdout CiGhJobList)))
           (if (= @jl null)
@@ -82,19 +83,14 @@ orbital CiRunLogsOrbital {
         (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (default (array/nth @entity.failed @entity.cursor) { id: 0, name: "", conclusion: "" }) "id") "/logs")] })
       CI_LOGS_NEXT -> idle when (>= @entity.cursor (array/len @entity.failed))
         (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
-(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: typography, variant: h3, content: (str/concat @entity.repo " · run " @entity.runId) },
-          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len @entity.lines)) (fn i (let ((l (array/nth @entity.lines @i))) { id: (str/concat @i), job: @l.job, level: @l.level, msg: @l.msg }))), fields: [{ label: Job, name: job, variant: caption }, { label: Level, name: level, variant: badge }, { label: Line, name: msg, variant: body }] }
-        ] })
+        (set @entity.errorLines (object/fromEntries (array/map (array/filter (array/range (array/len @entity.lines)) (fn i (= (object/get (array/nth @entity.lines @i) "level" "") "error"))) (fn i [(str/concat (+ @i 1)), "error"]))))
+        (emit CI_LOGS_SHOWN { repo: @entity.repo, runId: @entity.runId, summary: false, lines: @entity.lines, errorLines: @entity.errorLines })
 
       CI_LOGS_RAN -> idle when (= @payload.stage "view")
         (set @entity.lines (array/map (array/filter (array/map (str/split (if (!= (str/trim @payload.stdout) "") @payload.stdout @payload.stderr) "\n") (fn l (str/trim @l))) (fn l (!= @l ""))) (fn m { job: "", step: "", msg: @m, level: "info" })))
         (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: typography, variant: h3, content: (str/concat @entity.repo " · run " @entity.runId) },
-          { type: typography, variant: caption, content: "No failed job log; the run summary:" },
-          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len @entity.lines)) (fn i (let ((l (array/nth @entity.lines @i))) { id: (str/concat @i), msg: @l.msg }))), fields: [{ label: Line, name: msg, variant: body }] }
-        ] })
+        (set @entity.errorLines (object/fromEntries (array/map (array/filter (array/range (array/len @entity.lines)) (fn i (= (object/get (array/nth @entity.lines @i) "level" "") "error"))) (fn i [(str/concat (+ @i 1)), "error"]))))
+        (emit CI_LOGS_SHOWN { repo: @entity.repo, runId: @entity.runId, summary: true, lines: @entity.lines, errorLines: @entity.errorLines })
 
       CI_LOGS_GH_FAILED -> reading when (= @payload.stage "jobs")
         (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
@@ -103,7 +99,7 @@ orbital CiRunLogsOrbital {
         (emit CI_LOGS_NEXT { })
       CI_LOGS_GH_FAILED -> idle when (= @payload.stage "view")
         (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "gh could not run: " @payload.error) })
+        (emit CI_LOGS_VIEW_FAILED { message: (str/concat "gh could not run: " @payload.error) })
     }
 
     emits {
@@ -134,6 +130,26 @@ orbital CiRunLogsOrbital {
         runId : string!
       }
         @description "Internal: the read a page opening with loadOnInit asks for."
+        @tier "internal"
+      CI_LOGS_READING -> internal {
+        repo : string!
+        runId : string!
+      }
+        @description "Internal: a read began, to the log view."
+        @tier "internal"
+      CI_LOGS_SHOWN -> internal {
+        repo : string!
+        runId : string!
+        summary : boolean!
+        lines : [CiLogLine]!
+        errorLines : Map string string!
+      }
+        @description "Internal: the answered lines (summary when no job failed), to the log view."
+        @tier "internal"
+      CI_LOGS_VIEW_FAILED -> internal {
+        message : string!
+      }
+        @description "Internal: the read ended without lines, to the log view."
         @tier "internal"
       CI_LOGS_NEXT -> internal { }
         @description "Internal: read the next failed job's log, or answer."
@@ -174,11 +190,6 @@ orbital CiRunLogsOrbital {
     }
 
     config {
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the reader shows the log."
-        @synonyms "status area, slot"
-        @tier "presentation"
       loadOnInit : boolean = false
         @label "Load from the page route"
         @description "Read the run its page route names (owner, repo and runId params) as soon as the page opens."
@@ -186,5 +197,59 @@ orbital CiRunLogsOrbital {
     }
   }
 
-  page "/ci-run-logs" as CiRunLogsPage -> CiRunLogs, CiLogsGh
+  trait CiRunLogsView -> CiRunLogsRead [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: empty-state, icon: "file-text", title: "No run log read yet", description: "Ask for a run to read its log." })
+      CI_LOGS_READING -> idle
+        (set @entity.repo @payload.repo)
+        (set @entity.runId @payload.runId)
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: page-header, title: (str/concat @entity.repo " · run " @entity.runId), subtitle: "Reading the log", icon: "file-text" }, { type: skeleton, variant: list, rows: 8 }] })
+      CI_LOGS_SHOWN -> idle
+        (set @entity.repo @payload.repo)
+        (set @entity.runId @payload.runId)
+        (set @entity.lines @payload.lines)
+        (set @entity.errorLines @payload.errorLines)
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: page-header, title: (str/concat @entity.repo " · run " @entity.runId), subtitle: (if @payload.summary "No failed job log; the run summary" "Log of the failed jobs"), icon: "file-text" }, { type: code-block, title: (if @payload.summary "Run summary" "Failed job log"), code: (str/join (array/map @entity.lines (fn l (default @l.msg ""))) "\n"), language: "log", showLineNumbers: true, errorLines: @entity.errorLines, maxHeight: "70vh" }] })
+      CI_LOGS_VIEW_FAILED -> idle
+        (set @entity.error @payload.message)
+        (render-ui @config.statusSlot { type: error-state, title: "Couldn't read the run log", message: @entity.error })
+    }
+
+    listens {
+      INIT { }
+      CI_LOGS_READING {
+        repo : string!
+        runId : string!
+      }
+        @description "A read began."
+      CI_LOGS_SHOWN {
+        repo : string!
+        runId : string!
+        summary : boolean!
+        lines : [CiLogLine]!
+        errorLines : Map string string!
+      }
+        @description "The run's lines were answered."
+      CI_LOGS_VIEW_FAILED {
+        message : string!
+      }
+        @description "The read ended without lines."
+      CiRunLogs.CI_LOGS_READING -> CI_LOGS_READING
+      CiRunLogs.CI_LOGS_SHOWN -> CI_LOGS_SHOWN
+      CiRunLogs.CI_LOGS_VIEW_FAILED -> CI_LOGS_VIEW_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the view shows the log."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/ci-run-logs" as CiRunLogsPage -> CiRunLogs, CiRunLogsView, CiLogsGh
 }

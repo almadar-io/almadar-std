@@ -4,9 +4,12 @@
   "note": "Complete the actual composed GitHub client and observe its routed board result, rather than injecting CI_GQL_ANSWERED or CI_GQL_FAILED directly. CiStatus is a client trait on a route page, so a server-role step does not deliver the composed traits' emits to it (EXEC-DIST-1, EXEC-DIST-4): each hop into CiStatus is its own step, fed with exactly the payload the previous step emitted.",
   "cases": [
     {
-      "id": "malformed-github-success-makes-the-board-stale",
+      "id": "malformed-github-success-fails-the-board",
       "defaults": [
-        "CiRetry"
+        "CiRetry",
+        "CiGithub",
+        "CiGhHttp",
+        "CiGhTimeout"
       ],
       "steps": [
         {
@@ -24,11 +27,24 @@
             "emits": [
               {
                 "event": "CI_GQL"
+              },
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "graphql",
+                  "method": "POST",
+                  "target": "/graphql"
+                }
+              },
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR"
+                }
               }
             ],
             "neverEmits": [
-              "GITHUB_GRAPHQL_ANSWERED",
-              "GITHUB_GRAPHQL_FAILED"
+              "GITHUB_GRAPHQL_ANSWERED"
             ]
           }
         },
@@ -65,21 +81,48 @@
           "expect": {
             "emits": [
               {
-                "event": "CI_STATUS",
+                "event": "CI_RETRY_CANCEL",
+                "payload": {}
+              },
+              {
+                "event": "CI_READ_FAILED",
                 "payload": {
-                  "runs": [],
-                  "stale": true
+                  "error": "GitHub answered a GraphQL body that is not JSON"
+                }
+              },
+              {
+                "event": "CI_BOARD_FAILED",
+                "payload": {
+                  "error": "GitHub answered a GraphQL body that is not JSON"
                 }
               }
+            ],
+            "neverEmits": [
+              "CI_STATUS"
             ]
           }
         }
-      ]
+      ],
+      "config": {
+        "repos": [
+          {
+            "owner": "almadar-io",
+            "name": "kflow"
+          },
+          {
+            "owner": "almadar-io",
+            "name": "gone"
+          }
+        ]
+      }
     },
     {
-      "id": "valid-empty-github-success-makes-the-board-fresh",
+      "id": "valid-github-success-makes-the-board-fresh",
       "defaults": [
-        "CiRetry"
+        "CiRetry",
+        "CiGithub",
+        "CiGhHttp",
+        "CiGhTimeout"
       ],
       "steps": [
         {
@@ -97,11 +140,24 @@
             "emits": [
               {
                 "event": "CI_GQL"
+              },
+              {
+                "event": "GITHUB_HTTP_SEND",
+                "payload": {
+                  "key": "graphql",
+                  "method": "POST",
+                  "target": "/graphql"
+                }
+              },
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "code": "NETWORK_ERROR"
+                }
               }
             ],
             "neverEmits": [
-              "GITHUB_GRAPHQL_ANSWERED",
-              "GITHUB_GRAPHQL_FAILED"
+              "GITHUB_GRAPHQL_ANSWERED"
             ]
           }
         },
@@ -110,14 +166,14 @@
           "event": "GITHUB_GRAPHQL_REPLIED",
           "payload": {
             "status": 200,
-            "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}"
+            "body": "{\"data\":{\"r0\":{\"name\":\"kflow\",\"nameWithOwner\":\"almadar-io/kflow\",\"defaultBranchRef\":null},\"r1\":null}}"
           },
           "expect": {
             "emits": [
               {
                 "event": "GITHUB_GRAPHQL_ANSWERED",
                 "payload": {
-                  "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}"
+                  "body": "{\"data\":{\"r0\":{\"name\":\"kflow\",\"nameWithOwner\":\"almadar-io/kflow\",\"defaultBranchRef\":null},\"r1\":null}}"
                 }
               }
             ],
@@ -129,7 +185,7 @@
         {
           "event": "CI_GQL_ANSWERED",
           "payload": {
-            "body": "{\"data\":{\"organization\":{\"repositories\":{\"nodes\":[],\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":\"\"}}}}}"
+            "body": "{\"data\":{\"r0\":{\"name\":\"kflow\",\"nameWithOwner\":\"almadar-io/kflow\",\"defaultBranchRef\":null},\"r1\":null}}"
           },
           "from": "loading",
           "expect": {
@@ -137,14 +193,28 @@
               {
                 "event": "CI_STATUS",
                 "payload": {
-                  "runs": [],
                   "stale": false
                 }
               }
+            ],
+            "neverEmits": [
+              "CI_BOARD_FAILED"
             ]
           }
         }
-      ]
+      ],
+      "config": {
+        "repos": [
+          {
+            "owner": "almadar-io",
+            "name": "kflow"
+          },
+          {
+            "owner": "almadar-io",
+            "name": "gone"
+          }
+        ]
+      }
     }
   ]
 }

@@ -11,7 +11,7 @@ orbital PermissionMatrixOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type PermissionGrantLoaded = Event { data : [PermissionGrant], totalCount : number } "Fired when the permission-grant collection finishes loading"
+    type PermissionGrantLoaded = Event { data : [PermissionGrant], totalCount : number! } "Fired when the permission-grant collection finishes loading"
 
     type PermissionGrantLoadFailed = Event { error : string, code : string } "Fired when the permission-grant collection fails to load"
 
@@ -246,7 +246,7 @@ orbital PermissionMatrixOrbital {
         @tier "domain"
       PermissionGrantLoaded {
         data : [PermissionGrant]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates the permission-grant collection has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -415,9 +415,9 @@ orbital PermissionMatrixOrbital {
           emit: { failure: PermissionGrantDeleteFailed, success: PermissionGrantDeleted }
         })
       PermissionGrantSaveFailed -> idle
-        (notify error (str/concat "Couldn't save the permission grant — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't save the permission grant — " ?error) "Couldn't save the permission grant"))
       PermissionGrantDeleteFailed -> idle
-        (notify error (str/concat "Couldn't delete the permission grant — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't delete the permission grant — " ?error) "Couldn't delete the permission grant"))
     }
 
     emits {
@@ -513,7 +513,7 @@ orbital PermissionMatrixOrbital {
           found: (> (array/len ?data) 0)
         })
       GrantCheckFailed -> idle
-        (notify error (str/concat "Couldn't resolve the permission grant — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't resolve the permission grant — " ?error) "Couldn't resolve the permission grant"))
     }
 
     emits {

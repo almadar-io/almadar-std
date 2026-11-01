@@ -11,9 +11,9 @@ orbital ModQueueItemOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type ModQueueItemLoaded = Event { data : [ModQueueItem]!, totalCount : number } "Fired when a page of the moderation queue finishes loading"
+    type ModQueueItemLoaded = Event { data : [ModQueueItem]!, totalCount : number! } "Fired when a page of the moderation queue finishes loading"
 
-    type ModQueueEscalationScanned = Event { data : [ModQueueItem]!, totalCount : number } "Fired when the scan for pending items over the auto-escalate threshold finishes"
+    type ModQueueEscalationScanned = Event { data : [ModQueueItem]!, totalCount : number! } "Fired when the scan for pending items over the auto-escalate threshold finishes"
 
     type ModQueueItemLoadFailed = Event { error : string, code : string } "Fired when the moderation queue collection fails to load"
 
@@ -99,7 +99,7 @@ orbital ModQueueItemOrbital {
         })
       ModQueueItemLoaded -> idle
       ModQueueItemLoadFailed -> idle
-        (notify error (str/concat "Couldn't load the moderation queue — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the moderation queue — " ?error) "Couldn't load the moderation queue"))
       OPEN -> loading when @config.enabled
         (fetch ModQueueItem {
           filter: (and (= (object/get @entity status) pending) (>= (object/get @entity flagCount) @config.autoEscalateThreshold))
@@ -319,14 +319,14 @@ orbital ModQueueItemOrbital {
         @tier "domain"
       ModQueueItemLoaded {
         data : [ModQueueItem]!
-        totalCount : number
+        totalCount : number!
       }
         @description "A page of moderation items is ready for review."
         @synonyms "loaded, fetched, available, ready"
         @tier "internal"
       ModQueueEscalationScanned {
         data : [ModQueueItem]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Internal: the pending items at or over the auto-escalate threshold."
         @tier "internal"
@@ -388,14 +388,14 @@ orbital ModQueueItemOrbital {
         @tier "presentation"
       ModQueueItemLoaded {
         data : [ModQueueItem]!
-        totalCount : number
+        totalCount : number!
       }
         @description "A page of moderation items is ready for review."
         @synonyms "loaded, fetched, available, ready"
         @tier "internal"
       ModQueueEscalationScanned {
         data : [ModQueueItem]!
-        totalCount : number
+        totalCount : number!
       }
         @description "Internal: the pending items at or over the auto-escalate threshold."
         @tier "internal"

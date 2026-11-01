@@ -3,7 +3,7 @@ app std-orb-update-notice [
   inbound: ["cli-notice"],
   env: ["ORB_NO_UPDATE_CHECK", "CI"],
   fs: { "~/.orb/**": [read, write, create], "~/.orb": [create] },
-  egress: ["https://registry.npmjs.org"],
+  net: { "registry.npmjs.org:443": [tcp], "*.npmjs.org:443": [tcp] },
   description: "std-orb-update-notice — the daily updates-available notice (spec/cli/orb-update-notice.lolo; golden: orbital-cli update_notice.rs). The call's first argv word `record` (after orb update) stamps ~/.orb/.update-check.json as checked now with nothing available and prints nothing. Any other call stays silent when ORB_NO_UPDATE_CHECK or CI is set or stderr is not a terminal; otherwise it reads the cache { checkedAt (seconds), available [[name, installed, newest]] }: a cache under a day old answers its list, an older, absent or garbled one rescans. The scan reads each @almadar/ dependency of ~/.orb/package.json with its range and its installed version (~/.orb/node_modules/<name>/package.json), asks std-npm-lookup for the versions, walks the stable ones (no prerelease) from the newest down until std-semver says one satisfies the range, and keeps the package when that version compares above the installed one. A package that is not installed, whose lookup is refused, whose range std-semver refuses, or that no stable version satisfies is skipped. The cache is written (a failed write is ignored) and the answer carries the one stderr line `orb: updates available (<name> <from> → <to>, …); run `orb update --global`` or nothing."
 ]
 uses Spec from "almadar-std/orb-update-notice"
@@ -34,6 +34,31 @@ orbital OrbUpdateNoticeOrbital {
   trait Registry = Npm.traits.NpmLookup {
     listens {
       OrbUpdateNotice.UN_ASK -> NPM_LOOKUP
+      NPM_LOOKUP_PACKUMENT { status : number!  headers : Map string string  body : string! }
+      NPM_LOOKUP_UNREACHABLE { error : string!  kind : string! }
+      RegistryHttp.REGISTRY_HTTP_REPLIED -> NPM_LOOKUP_PACKUMENT with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "lookup")
+      RegistryHttp.REGISTRY_HTTP_FAILED -> NPM_LOOKUP_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "lookup")
+      RegistryTimeout.TIMED_OUT -> NPM_LOOKUP_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "lookup")
+    }
+  }
+
+  trait RegistryHttp = Npm.traits.LookupHttp {
+    events {
+      HTTP_REPLIED: REGISTRY_HTTP_REPLIED
+      HTTP_FAILED: REGISTRY_HTTP_FAILED
+      HTTP_CANCEL: REGISTRY_HTTP_CANCEL
+    }
+    listens {
+      Registry.NPM_LOOKUP_HTTP_SEND -> HTTP_SEND
+      RegistryTimeout.TIMED_OUT -> REGISTRY_HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait RegistryTimeout = Npm.traits.LookupTimeout {
+    listens {
+      Registry.NPM_LOOKUP_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      RegistryHttp.REGISTRY_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      RegistryHttp.REGISTRY_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
     }
   }
 
@@ -85,11 +110,11 @@ orbital OrbUpdateNoticeOrbital {
 
     state reading {
       INIT -> reading
-      UN_CACHE_READ -> reading when (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null)
+      UN_CACHE_READ -> reading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0))
         (set @entity.checkedAt (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt"))
         (set @entity.cached (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "available"))
         (emit UN_DUE { })
-      UN_CACHE_READ -> reading when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null)
+      UN_CACHE_READ -> reading when (not (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0)))
         (set @entity.checkedAt 0)
         (set @entity.cached [])
         (emit UN_DUE { })
@@ -282,5 +307,5 @@ orbital OrbUpdateNoticeOrbital {
     }
   }
 
-  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, Versions
+  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, RegistryHttp, RegistryTimeout, Versions
 }

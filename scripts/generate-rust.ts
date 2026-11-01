@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE, operatorVisualForm } from '../registry.js';
-import type { OperatorVisualForm, ClosedCallMeta, EffectHost, FailableMeta, OAuthMeta, HttpWireMeta, EffectFamily, OsGrantNeed, ResultByOptionMeta, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { OperatorVisualForm, ClosedCallMeta, EffectHost, FailableMeta, EffectFamily, OsGrantNeed, ResultByOptionMeta, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -109,8 +109,6 @@ interface CanonicalOperatorEntry {
     closedCall?: ClosedCallMeta;
     defaultPorts?: Record<string, number>;
     grant?: OsGrantNeed[];
-    oauth?: OAuthMeta;
-    httpWire?: HttpWireMeta;
     emitKeys?: string[];
     family?: EffectFamily;
     runsOn?: RunsOn;
@@ -189,8 +187,7 @@ function toCanonicalEntry(
     if (meta.resultByOption) entry.resultByOption = meta.resultByOption;
     if (meta.closedCall) entry.closedCall = meta.closedCall;
     if (meta.grant) entry.grant = meta.grant;
-    if (meta.oauth) entry.oauth = meta.oauth;
-    if (meta.httpWire) entry.httpWire = meta.httpWire;
+    if (meta.defaultPorts) entry.defaultPorts = meta.defaultPorts;
     if (meta.emitKeys) entry.emitKeys = meta.emitKeys;
     if (meta.family) entry.family = meta.family;
     if (meta.runsOn) entry.runsOn = meta.runsOn;

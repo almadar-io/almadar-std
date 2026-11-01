@@ -1,14 +1,14 @@
 app std-github-billing [
   version: "1.0.0",
   description: "std-github-billing — this month's GitHub enhanced billing usage for the organizations and users the accounts knob lists, read one after another through std-github (GITHUB_TOKEN; the token needs the user scope for a user and admin:org for an organization). Per account it sums every usage item's gross, net and discount amounts (rounded to cents), and groups them per product (net to 4 places, quantity whole), per SKU (with the SKU's first product and unit, quantity to one place) and per repository, each list sorted by gross, highest first, ties in the order GitHub listed them; netByCategory sums net per cost category, which the unitCategories knob reads from GitHub's declared unit (Minutes compute, GigabyteHours storage, Gigabytes transfer, any other unit other). A missing product, SKU or unit counts as other, (unknown) and empty. An account whose usage cannot be read is available false with GitHub's message as its error. BILLING_LOAD answers BILLING from the cache within cacheTtlMs; BILLING_REFRESH reads afresh; a load asked for during a read is answered by that read. BILLING carries the accounts, the period (YYYY-MM, UTC), the totals and fetchedAt (when the read began).",
-  egress: ["https://api.github.com"]
+  net: { "api.github.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/github-billing"
-type GhBillingProduct = { product : string, gross : number, net : number, quantity : number, unit : string }
-type GhBillingSku = { product : string, sku : string, unit : string, category : string, quantity : number, gross : number, net : number }
-type GhBillingRepo = { repo : string, gross : number, net : number }
-type GhBillingCategories = { compute : number, storage : number, transfer : number, other : number }
-type GhBillingAccount = { name : string, kind : string, available : boolean, error : string, grossUsd : number!, netUsd : number!, discountUsd : number!, byProduct : [GhBillingProduct], bySku : [GhBillingSku], netByCategory : GhBillingCategories, repos : [GhBillingRepo] }
+type GhBillingProduct = { product : string!, gross : number!, net : number!, quantity : number!, unit : string! }
+type GhBillingSku = { product : string!, sku : string!, unit : string!, category : string!, quantity : number!, gross : number!, net : number! }
+type GhBillingRepo = { repo : string!, gross : number!, net : number! }
+type GhBillingCategories = { compute : number!, storage : number!, transfer : number!, other : number! }
+type GhBillingAccount = { name : string!, kind : string!, available : boolean!, error : string, grossUsd : number!, netUsd : number!, discountUsd : number!, byProduct : [GhBillingProduct]!, bySku : [GhBillingSku]!, netByCategory : GhBillingCategories!, repos : [GhBillingRepo]! }
 type GhBillingAccountRef = { name : string, kind : "org" | "user" }
 type GhUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
 orbital GithubBillingOrbital {
@@ -30,7 +30,43 @@ orbital GithubBillingOrbital {
   }
 
   trait BillingGithub = Github.traits.GithubClient {
-    listens { GithubBilling.BILLING_USAGE -> GITHUB_BILLING_USAGE }
+    listens {
+      GithubBilling.BILLING_USAGE -> GITHUB_BILLING_USAGE
+      GITHUB_BILLING_USAGE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_BILLING_USAGE_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      BillingHttp.BILLING_GH_HTTP_REPLIED -> GITHUB_BILLING_USAGE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
+      BillingHttp.BILLING_GH_HTTP_FAILED -> GITHUB_BILLING_USAGE_UNREACHABLE with { error: ?error, kind: ?kind, key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
+      BillingTimeout.TIMED_OUT -> GITHUB_BILLING_USAGE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: (str/slice ?key 8 (str/len ?key)) } when (str/startsWith ?key "billing:")
+    }
+  }
+
+  trait BillingHttp = Github.traits.GithubHttp {
+    events {
+      HTTP_REPLIED: BILLING_GH_HTTP_REPLIED
+      HTTP_FAILED: BILLING_GH_HTTP_FAILED
+      HTTP_CANCEL: BILLING_GH_HTTP_CANCEL
+    }
+    listens {
+      BillingGithub.GITHUB_HTTP_SEND -> HTTP_SEND
+      BillingTimeout.TIMED_OUT -> BILLING_GH_HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait BillingTimeout = Github.traits.GithubTimeout {
+    listens {
+      BillingGithub.GITHUB_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      BillingHttp.BILLING_GH_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      BillingHttp.BILLING_GH_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait GithubBilling -> GithubBillingBoard [client] {
@@ -196,5 +232,5 @@ orbital GithubBillingOrbital {
     }
   }
 
-  page "/github-billing" as GithubBillingPage -> GithubBilling, BillingGithub
+  page "/github-billing" as GithubBillingPage -> GithubBilling, BillingGithub, BillingHttp, BillingTimeout
 }

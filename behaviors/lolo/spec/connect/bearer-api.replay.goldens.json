@@ -1,0 +1,417 @@
+{
+ "atom": "connect/atoms/std-bearer-api.lolo",
+ "trait": "BearerApiClient",
+ "cases": [
+  {
+   "id": "get-asks-the-http-client-for-one-get-of-the-endpoint",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "GET",
+      "endpoint": "/v1/things"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "key": "request",
+         "method": "GET",
+         "target": "/v1/things",
+         "host": "api.example.com",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delete-asks-the-http-client-for-one-delete-of-the-endpoint",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "DELETE",
+      "endpoint": "/v1/things"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "key": "request",
+         "method": "DELETE",
+         "target": "/v1/things",
+         "host": "api.example.com",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "post-asks-the-http-client-for-one-post-of-the-endpoint",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "POST",
+      "endpoint": "/v1/things",
+      "body": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "key": "request",
+         "method": "POST",
+         "target": "/v1/things",
+         "host": "api.example.com",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "put-asks-the-http-client-for-one-put-of-the-endpoint",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "PUT",
+      "endpoint": "/v1/things",
+      "body": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "key": "request",
+         "method": "PUT",
+         "target": "/v1/things",
+         "host": "api.example.com",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "patch-asks-the-http-client-for-one-patch-of-the-endpoint",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "PATCH",
+      "endpoint": "/v1/things",
+      "body": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "key": "request",
+         "method": "PATCH",
+         "target": "/v1/things",
+         "host": "api.example.com",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-method-outside-the-five-is-a-validation-error",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "TRACE",
+      "endpoint": "/x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_FAILED",
+        "payload": {
+         "code": "VALIDATION_ERROR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_API_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-endpoint-without-a-leading-slash-is-a-validation-error",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "GET",
+      "endpoint": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_FAILED",
+        "payload": {
+         "code": "VALIDATION_ERROR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_API_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-origin-that-is-not-https-is-a-validation-error",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "config": {
+    "origin": "http://api.local"
+   },
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "GET",
+      "endpoint": "/x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_FAILED",
+        "payload": {
+         "code": "VALIDATION_ERROR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_API_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-configured-origin-host-reaches-the-request",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "config": {
+    "origin": "https://api.acme.test"
+   },
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "GET",
+      "endpoint": "/x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_HTTP_SEND",
+        "payload": {
+         "host": "api.acme.test"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply-answers-its-status-ok-and-body",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REPLIED",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "nope"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_API_RESPONSE",
+        "payload": {
+         "status": 404,
+         "ok": false,
+         "body": "nope"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-client-that-cannot-open-fails-with-the-client-error",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout"
+   ],
+   "steps": [
+    {
+     "event": "BEARER_API_REQUEST",
+     "payload": {
+      "method": "GET",
+      "endpoint": "/x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "request",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "BEARER_API_FAILED",
+        "payload": {
+         "message": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "BEARER_API_RESPONSE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-deadline-passing-fails-the-request-as-a-timeout",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout",
+    "BearerApiClient"
+   ],
+   "steps": [
+    {
+     "trait": "BearerApiTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "request"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "request",
+         "timeoutMs": 30000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-reply-is-answered-as-the-response",
+   "defaults": [
+    "BearerApiHttp",
+    "BearerApiTimeout",
+    "BearerApiClient"
+   ],
+   "steps": [
+    {
+     "trait": "BearerApiHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "request",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAxIFgNCmNvbnRlbnQtbGVuZ3RoOiAyDQoNCm9r",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "request",
+         "status": 201
+        }
+       },
+       {
+        "event": "BEARER_API_RESPONSE",
+        "payload": {
+         "status": 201,
+         "ok": true,
+         "body": "ok"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

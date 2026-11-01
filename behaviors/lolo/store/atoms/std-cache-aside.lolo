@@ -172,7 +172,7 @@ orbital CacheEntryOrbital {
           type: stack
         })
       CacheEntryUpdateFailed -> loading
-        (notify error (str/concat "Couldn't update the cache entry — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't update the cache entry — " ?error) "Couldn't update the cache entry"))
       CacheEntryUpdated -> loading
         (fetch CacheEntry {
           emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }

@@ -47,7 +47,7 @@ uses Http from "std/behaviors/std-http-client"
 uses Delay from "std/behaviors/std-delay"
 
 orbital AgentMemoryOrbital {
-  type AgentMemoriesLoaded = Event { data : [AgentMemory]!, totalCount : number } "Fired when the stored memories finish loading"
+  type AgentMemoriesLoaded = Event { data : [AgentMemory]!, totalCount : number! } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
   type MemoryEmbedded = Event { embeddings : [[number]]!, key : string } "Fired when a memory or query has been embedded"
   type MemoryEmbedFailed = Event { code : string, message : string!, key : string } "Fired when embedding fails"
@@ -142,7 +142,7 @@ orbital AgentMemoryOrbital {
       MemoriesForList -> ready
         (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort (default ?data []) createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })), totalCount: ?totalCount })
       MemoryListFailed -> ready
-        (emit ASSISTANT_MEMORIES_LOADED { data: [] })
+        (emit ASSISTANT_MEMORIES_LOADED { data: [], totalCount: 0 })
         (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "error" })
       RECALL -> ready when (default ?ephemeral false)
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
@@ -192,14 +192,14 @@ orbital AgentMemoryOrbital {
         @tier "domain"
       ASSISTANT_MEMORIES_LOADED -> external {
         data : [AgentMemoryRow]!
-        totalCount : number
+        totalCount : number!
       }
         @description "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load)."
         @synonyms "memories, what I remember"
         @tier "domain"
       MemoriesForList -> internal {
         data : [AgentMemory]
-        totalCount : number
+        totalCount : number!
       }
         @tier "internal"
       MemoryListFailed -> internal {
@@ -431,7 +431,7 @@ orbital AgentMemoryOrbital {
     emits {
       AgentMemoriesLoaded {
         data : [AgentMemory]!
-        totalCount : number
+        totalCount : number!
       }
         @description "The stored memories finished loading."
         @tier "internal"

@@ -3,7 +3,7 @@ app std-esign-request [
   description: "std-esign-request — specialized e-signature request tracker: send a document out for signing and track its status (draft/sent/viewed/signed/declined/expired). Just the request list + send/revoke; signature capture is std-signature-capture's job."
 ]
 orbital ESignRequestOrbital {
-    type ESignRequestLoaded = Event { data : [ESignRequest], totalCount : number }
+    type ESignRequestLoaded = Event { data : [ESignRequest], totalCount : number! }
 
     type ESignRequestLoadFailed = Event { error : string, code : string }
 
@@ -82,7 +82,7 @@ orbital ESignRequestOrbital {
               name: sentAt
               variant: caption
             }]
-            itemActions: (array/filter [{
+            itemActions: (let ((noRoles : [string] [])) (array/filter [{
               event: SEND_REQUEST
               label: Send
               variant: primary
@@ -90,7 +90,7 @@ orbital ESignRequestOrbital {
               event: REVOKE_REQUEST
               label: Revoke
               variant: danger
-            }] (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            }] (fn action (or (= (array/len (object/get @action roles @noRoles)) 0) (array/includes (object/get @action roles @noRoles) @config.viewerRole)))))
             look: @config.tableLook
             pageSize: 0
           }, {
@@ -171,7 +171,7 @@ orbital ESignRequestOrbital {
         @tier "presentation"
       ESignRequestLoaded {
         data : [ESignRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Signals that the request list has been successfully populated."
         @synonyms "loaded, refreshed, populated, initialized"
@@ -206,7 +206,7 @@ orbital ESignRequestOrbital {
         @tier "presentation"
       ESignRequestLoaded {
         data : [ESignRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates the request list has been populated."
         @synonyms "loaded, refreshed, initialized"

@@ -173,7 +173,7 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
         (emit CAL_SYNCED { syncedAt: @now })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
-        (notify error (str/concat "Couldn't sync the calendar — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't sync the calendar — " ?error) "Couldn't sync the calendar"))
       CAL_CALENDAR_FAILED -> idle
         (set @entity.lastError ?message)
         (notify error (str/concat "Couldn't sync the calendar — " ?message))
@@ -215,7 +215,7 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
         })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
-        (notify error (str/concat "Couldn't sync the calendar — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't sync the calendar — " ?error) "Couldn't sync the calendar"))
       CAL_CALENDAR_FAILED -> idle
         (set @entity.lastError ?message)
         (notify error (str/concat "Couldn't sync the calendar — " ?message))
@@ -273,7 +273,7 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
         (emit CAL_SYNCED { syncedAt: @now })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
-        (notify error (str/concat "Couldn't sync the calendar — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't sync the calendar — " ?error) "Couldn't sync the calendar"))
       CAL_CALENDAR_FAILED -> idle
         (set @entity.lastError ?message)
         (notify error (str/concat "Couldn't sync the calendar — " ?message))

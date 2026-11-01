@@ -16,15 +16,12 @@ type HcType = string | HcTypeNode
 type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
 type HcParam = { name : string!, optional : boolean?, type : HcType }
 type HcIntRange = { arg : number!, min : number!, max : number! }
-type HcClosed = { request : boolean?, intRange : HcIntRange? }
-type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
-type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
+type HcByLiteral = { key : string!, required : Map string [string]! }
+type HcClosed = { request : boolean?, intRange : HcIntRange?, requestKeysByLiteral : HcByLiteral? }
 type HcGrantNeed = Map string HcVal
-type HcAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
-type HcHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HcAuthScheme]!, defaultPorts : Map string number! }
 type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
-type HcExtras = { closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
-type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcExtras = { closedCall : HcClosed?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, family : string?, emitKeys : [string]? }
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
 type HcValMap = Map string HcVal?
 type LnVal = string | number | boolean | [LnVal?] | Map string LnVal?
 type LnProgramHE = { orbitals : [HcOrbital] }
@@ -90,7 +87,17 @@ orbital OrbLintHostEffectsOrbital {
                                 (array/concat
                                   (let ((bad (array/find (object/keys @req) (fn k (not (array/includes @declared @k))))))
                                     (if (= @bad null) [] [{ code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` takes only " (str/join @declared ", ") ", got `" @bad "`"), suggestion: "", severity: "error" }]))
-                                  (array/map (array/filter @required (fn k (not (object/has @req @k)))) (fn k { code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` needs `" @k "` in its request"), suggestion: "", severity: "error" })))
+                                  (array/map (array/filter @required (fn k (not (object/has @req @k)))) (fn k { code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` needs `" @k "` in its request"), suggestion: "", severity: "error" }))
+                                  (let ((bl (object/get @cc "requestKeysByLiteral" null)))
+                                    (if (= @bl null) []
+                                      (let ((word (default (as (object/get @req (object/get @bl "key") null) string) "")) (need (object/get @bl "required")))
+                                        (array/map (array/filter (default (object/get @need @word) []) (fn k (not (object/has @req @k)))) (fn k { code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` with " (object/get @bl "key") " `" @word "` needs `" @k "` in its request"), suggestion: "", severity: "error" })))))
+                                  (let ((ws (object/get @f "words" {})))
+                                    (array/flatten (array/map (object/keys @req) (fn k
+                                      (let ((v (object/get @req @k null)) (allowed (object/get @ws (str/concat "request/" @k) null)))
+                                        (if (and (validate/string @v) (!= @allowed null) (not (str/startsWith @v (quote "@"))) (not (array/includes @allowed @v)))
+                                          [{ code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` request `" @k "` is one of " (str/join @allowed ", ") ", got `" @v "`"), suggestion: "", severity: "error" }]
+                                          [])))))))
                                 (if (validate/string @req)
                                   (if (str/startsWith @req (quote "@")) [] [{ code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` takes a request object, not text"), suggestion: "", severity: "error" }])
                                   [{ code: @config.codes.credentialRequestInvalid.code, path: @p, message: (str/concat "`" @h "` takes a request object"), suggestion: "", severity: "error" }])))
@@ -234,7 +241,7 @@ orbital OrbLintHostEffectsOrbital {
       LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator shapes could not be read."
       LINT_HOST_FACTS_HEARD { operators : Map string HcExtras! }
-        @description "std-orb-lint-input's LINT_HOST_FACTS: the closedCall, oauth, grant, defaultPorts, httpWire, family and emitKeys of the operators that state any."
+        @description "std-orb-lint-input's LINT_HOST_FACTS: the closedCall, grant, defaultPorts, family and emitKeys of the operators that state any."
       LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
         @description "std-orb-lint-input's LINT_HOST_FACTS_UNREAD: the host-effect facts could not be read."
       OrbLintInput.LINT_OPERATOR_SHAPES -> LINT_OPERATOR_SHAPES_HEARD

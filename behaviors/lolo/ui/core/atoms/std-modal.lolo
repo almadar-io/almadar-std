@@ -39,7 +39,7 @@ orbital ModalRecordOrbital {
           emit: { failure: ModalRecordLoadFailed, success: ModalRecordLoaded }
         })
       ModalRecordLoadFailed -> closed
-        (notify error (str/concat "Couldn't load the record — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the record — " ?error) "Couldn't load the record"))
       ;; stash only — a SEED never opens anything; OPEN reads it on demand
       SEED -> closed
         (set @entity.seedRow (object/merge (default ?row {}) {}))
@@ -63,7 +63,8 @@ orbital ModalRecordOrbital {
             type: stack
           }, { type: divider }, {
             cancelEvent: CLOSE
-            entity: (object/merge @entity.seedRow (object/merge (default ?row {}) {}))
+            ;; no stashed seed row pre-fills nothing
+            entity: (object/merge (default @entity.seedRow {}) (object/merge (default ?row {}) {}))
             fieldOverrides: @config.fieldOverrides
             fields: @config.fields
             mode: @config.mode

@@ -1,16 +1,17 @@
 app std-npm-registry [
   version: "1.0.0",
   description: "std-npm-registry — a client of an npm-protocol registry (public npm or GitHub Packages; the origin is the registry knob and the bearer token is the token credential, both from config). One ask at a time; an ask during another answers NPM_FAILED npm_busy. NPM_VERSIONS { name } answers NPM_VERSIONS_LISTED { name, versions (semver ascending), tags (dist-tags) } from the packument. NPM_NEXT_VERSION { name, current, bump, major } answers NPM_NEXT { name, current, next, skipped }: current bumped by patch, minor or major (a minor on a 0.x version is demoted to patch unless major is true, which cuts a major), then incremented by patch past every version already published; a package the registry does not know has none published. NPM_WAIT { name, version } polls the packument under std-retry backoff (every pollIntervalMs, up to 80 attempts) until the version is listed and its tarball downloads (one ranged byte, 200 or 206), then answers NPM_VISIBLE { name, version, attempts }; the attempts spent answer NPM_WAIT_TIMEOUT. NPM_AUTH_PROBE { name } reads one package and answers NPM_AUTH_OK. A reply is classified in NPM_FAILED.code: 401 and 403 are auth (never retried, the poll is cancelled), 404 absent, 5xx unreachable, any other status unexpected; a transport failure is unreachable, an unset credential unconfigured. The tarball url must sit under the registry origin. The poll cadence is std-retry's constant schedule: a changed pollIntervalMs needs the composing realization to restate WaitRetry's config.",
-  egress: ["https://registry.npmjs.org", "https://npm.pkg.github.com"]
+  net: { "registry.npmjs.org:443": [tcp], "npm.pkg.github.com:443": [tcp], "*.npmjs.org:443": [tcp], "*.pkg.github.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/npm-registry"
 type NpmStrMap = Map string string
+type HttpHeader = { name : string!, value : string! }
 
 orbital NpmRegistryOrbital {
   config {
     registry : url = "https://registry.npmjs.org"
       @label "Registry origin"
-      @description "The registry origin (scheme://host, no trailing slash); declared in egress. https://npm.pkg.github.com for GitHub Packages."
+      @description "The registry origin (scheme://host, no trailing slash); https://npm.pkg.github.com for GitHub Packages; the host must be granted in net."
       @synonyms "npm registry, github packages"
       @tier "infra"
     authenticated : boolean = false
@@ -61,11 +62,38 @@ orbital NpmRegistryOrbital {
   trait PackumentLookup = Lookup.traits.NpmLookup {
     listens {
       NpmRegistry.NPM_LOOKUP_ASK -> NPM_LOOKUP
+      NPM_LOOKUP_PACKUMENT { status : number!  headers : Map string string  body : string! }
+      NPM_LOOKUP_UNREACHABLE { error : string!  kind : string! }
+      RegHttp.HTTP_REPLIED -> NPM_LOOKUP_PACKUMENT with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "lookup")
+      RegHttp.HTTP_FAILED -> NPM_LOOKUP_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "lookup")
+      RegTimeout.TIMED_OUT -> NPM_LOOKUP_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "lookup")
     }
     config {
       registry: @config.registry
-      authenticated: @config.authenticated
-      token: @config.token
+    }
+  }
+
+  trait RegHttp = Lookup.traits.LookupHttp {
+    listens {
+      PackumentLookup.NPM_LOOKUP_HTTP_SEND -> HTTP_SEND
+      NpmRegistry.NPM_WAIT_HTTP_SEND -> HTTP_SEND
+      RegTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+    config {
+      credential: @config.token
+      credentialHeader: (if @config.authenticated "authorization" "")
+      credentialPrefix: "Bearer "
+    }
+  }
+
+  trait RegTimeout = Lookup.traits.LookupTimeout {
+    listens {
+      PackumentLookup.NPM_LOOKUP_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      NpmRegistry.NPM_WAIT_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      RegHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      RegHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+    config {
       timeoutMs: @config.timeoutMs
     }
   }
@@ -161,19 +189,16 @@ orbital NpmRegistryOrbital {
       NPM_PACKUMENT_REFUSED -> waiting when (and (!= @payload.code "auth") (!= @payload.code "unconfigured") (!= @payload.status 0))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "not yet visible: " @entity.name (quote "@") @entity.version " (" @payload.status ")") })
 
-      NPM_WAIT_TARBALL -> waiting when (not @config.bearer)
-        (http GET @config.origin (str/slice @payload.url (str/len @config.origin) (str/len @payload.url)) {
-          headers: { Range: "bytes=0-0" },
-          responseAs: "bytes",
-          timeoutMs: @config.timeout
-        } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
-      NPM_WAIT_TARBALL -> waiting when @config.bearer
-        (http GET @config.origin (str/slice @payload.url (str/len @config.origin) (str/len @payload.url)) {
-          headers: { Range: "bytes=0-0" },
-          auth: { scheme: bearer, credential: @config.credential },
-          responseAs: "bytes",
-          timeoutMs: @config.timeout
-        } { emit: { success: NPM_WAIT_TARBALL_REPLIED, failure: NPM_WAIT_UNREACHABLE } })
+      NPM_WAIT_TARBALL -> waiting
+        (emit NPM_WAIT_HTTP_SEND {
+          key: "tarball",
+          method: "GET",
+          target: (str/slice @payload.url (str/len @config.origin) (str/len @payload.url)),
+          headers: [{ name: "range", value: "bytes=0-0" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
       NPM_WAIT_TARBALL_REPLIED -> waiting when (or (= @payload.status 200) (= @payload.status 206))
         (emit NPM_WAIT_RETRY_SUCCEEDED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey) })
       NPM_WAIT_TARBALL_REPLIED -> idle when (or (= @payload.status 401) (= @payload.status 403))
@@ -181,10 +206,10 @@ orbital NpmRegistryOrbital {
         (emit NPM_FAILED { name: @entity.name, code: "auth", status: @payload.status, error: (str/concat "the registry refused the token (" @payload.status ") for the tarball of " @entity.name (quote "@") @entity.version) })
       NPM_WAIT_TARBALL_REPLIED -> waiting when (not (or (= @payload.status 200) (= @payload.status 206) (= @payload.status 401) (= @payload.status 403)))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "version listed but its tarball is not downloadable yet (" @payload.status ")") })
-      NPM_WAIT_UNREACHABLE -> idle when (= @payload.kind "unconfigured")
+      NPM_WAIT_UNREACHABLE -> idle when (= @payload.kind "denied")
         (emit NPM_WAIT_RETRY_CANCEL { })
         (emit NPM_FAILED { name: @entity.name, code: "unconfigured", status: 0, error: @payload.error })
-      NPM_WAIT_UNREACHABLE -> waiting when (!= @payload.kind "unconfigured")
+      NPM_WAIT_UNREACHABLE -> waiting when (!= @payload.kind "denied")
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: @payload.error })
 
       NPM_WAIT_DONE -> idle
@@ -224,8 +249,8 @@ orbital NpmRegistryOrbital {
       NPM_PACKUMENT_READ { requestId : string!  name : string!  versions : [string]!  distTags : Map string string  version : string!  tarballs : Map string string! }
         @description "Internal: the lookup's answer."
         @tier "internal"
-      NPM_WAIT_UNREACHABLE { error : string!  kind : string! }
-        @description "Internal: a wait attempt's tarball call never produced a reply."
+      NPM_WAIT_HTTP_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string!  host : string }
+        @description "Internal: the tarball probe, for the HTTP client."
         @tier "internal"
       NPM_GET { kind : string! }
         @description "Internal: read the packument of the package in flight."
@@ -244,9 +269,6 @@ orbital NpmRegistryOrbital {
         @tier "internal"
       NPM_WAIT_RETRY_CANCEL -> external { }
         @description "Internal: stop std-retry."
-        @tier "internal"
-      NPM_WAIT_TARBALL_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
-        @description "Internal: a wait attempt's tarball reply."
         @tier "internal"
     }
 
@@ -271,6 +293,11 @@ orbital NpmRegistryOrbital {
         @description "Internal: std-retry's COMPLETED."
       NPM_WAIT_GAVE_UP { key : CallKey!  attempts : number!  error : string }
         @description "Internal: std-retry's GAVE_UP."
+      NPM_WAIT_TARBALL_REPLIED { status : number!  headers : Map string string  body : string! }
+      NPM_WAIT_UNREACHABLE { error : string!  kind : string! }
+      RegHttp.HTTP_REPLIED -> NPM_WAIT_TARBALL_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") } when (= ?key "tarball")
+      RegHttp.HTTP_FAILED -> NPM_WAIT_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "tarball")
+      RegTimeout.TIMED_OUT -> NPM_WAIT_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "tarball")
       PackumentLookup.NPM_LOOKED -> NPM_PACKUMENT_READ
       PackumentLookup.NPM_LOOKUP_REFUSED -> NPM_PACKUMENT_REFUSED
       WaitRetry.ATTEMPT -> NPM_WAIT_ATTEMPT
@@ -279,11 +306,8 @@ orbital NpmRegistryOrbital {
     }
     config {
       origin : url = @config.registry
-      bearer : boolean = @config.authenticated
-      credential : secret = @config.token
-      timeout : number = @config.timeoutMs
     }
   }
 
-  page boot as NpmRegistryPage -> NpmRegistry, WaitRetry, PackumentLookup
+  page boot as NpmRegistryPage -> NpmRegistry, WaitRetry, PackumentLookup, RegHttp, RegTimeout
 }

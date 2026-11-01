@@ -327,21 +327,12 @@ export function getOperatorRunsOn(operator: string): RunsOn | undefined {
   return STD_OPERATORS[operator]?.runsOn;
 }
 
-/** The request argument of `(http METHOD origin path request? options?)`. */
-const HTTP_REQUEST_ARG = 3;
-
-/** A literal request without an `auth` key (even a null one), or none at all: the call carries no credential. Twin of Rust `effects::http_auth`. */
-function isHttpKeyless(request: unknown): boolean {
-  if (request === undefined || request === null) return true;
-  return typeof request === 'object' && !Array.isArray(request) && !('auth' in request);
-}
-
 /**
  * Where one effect call runs: its declared `runsOn`, except a data effect
  * (`entityArgPosition`) whose target entity stores its rows in the browser
  * (core's `storesRowsInBrowser` over the program's entities), or a
  * `call-service` to a browser-only service (core's `isBrowserOnlyService`),
- * or an `http` whose literal request has no `auth` key, which runs on the client. Undefined for a pure op. Twin of Rust
+ * Undefined for a pure op. Twin of Rust
  * `effects::effect_site`.
  */
 export function effectSiteFor(
@@ -355,7 +346,6 @@ export function effectSiteFor(
     const service = args[0];
     return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
   }
-  if (operator === 'http' && site === 'server') return isHttpKeyless(args[HTTP_REQUEST_ARG]) ? 'client' : 'server';
   if (site !== 'server' || meta.entityArgPosition === undefined) return site;
   const entity = args[meta.entityArgPosition];
   return typeof entity === 'string' && !entity.startsWith('@') && storesRowsInBrowser(entity) ? 'client' : 'server';

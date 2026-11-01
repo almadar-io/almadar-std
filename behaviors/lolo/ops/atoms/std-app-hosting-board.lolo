@@ -22,12 +22,17 @@ type AhLogLabels = { revision_name : string }
 type AhLogResource = { labels : AhLogLabels }
 type AhLogEntry = { timestamp : string, severity : string, textPayload : string, jsonPayload : Map string SExpr, resource : AhLogResource }
 type AhLogEntries = [AhLogEntry]
-type AhBoardRow = { id : string, backend : string, state : string, when : string, commit : string, error : string }
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
 type AhStatusCached = { backendId : string!, status : AhStatus!, cachedAt : instant! }
 type AhLinesCached = { key : string!, lines : [AhLogLine]!, cachedAt : instant! }
 type AhBuildCached = { key : string!, lines : [string]!, cachedAt : instant! }
 orbital AppHostingBoardOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Board from "std/behaviors/std-status-board"
 
   entity AppHostingBoard [runtime] {
     id : string!
@@ -42,6 +47,7 @@ orbital AppHostingBoardOrbital {
     noPayload : Map string SExpr @description "An empty payload, read when a log entry has none." = {}
     selected : string @description "The backend whose log lines the board shows." = ""
     noLines : [AhLogLine] @description "No lines." = []
+    shown : [StatusBoardRow] @description "The rows last answered to the board." = []
   }
 
   trait AhGcloud = Cli.traits.CliRunner {
@@ -71,6 +77,36 @@ orbital AppHostingBoardOrbital {
     }
   }
 
+  trait AhView = Board.traits.StatusBoard {
+    listens {
+      AppHostingStatus.AH_BOARD_LOADING -> BOARD_LOADING
+      AppHostingStatus.AH_BOARD_SHOW -> BOARD_SHOW
+      AppHostingStatus.AH_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "App Hosting"
+      icon: "rocket"
+      linkLabel: "Open build log"
+      idleTitle: "App Hosting not read yet"
+      idleDescription: "Load the backends to read their latest rollouts."
+      emptyTitle: "No backends"
+      emptyDescription: "No App Hosting backends are configured."
+      searchPlaceholder: "Search backends"
+    }
+  }
+
   trait AppHostingStatus -> AppHostingBoard [client] {
     initial: idle
 
@@ -79,28 +115,31 @@ orbital AppHostingBoardOrbital {
         (set @entity.noPayload (object/fromEntries (array/take [["", ""]] 0)))
         (set @entity.selected "")
         (set @entity.noLines [])
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: AH_REFRESH_ALL }] })
       INIT -> idle when @config.loadOnInit
         (set @entity.noPayload (object/fromEntries (array/take [["", ""]] 0)))
         (set @entity.selected "")
         (set @entity.noLines [])
         (set @entity.queue (array/concat @entity.queue (array/map @config.backends (fn b { kind: "status", backendId: @b, force: false, cloudBuildId: "", region: "" }))))
+        (emit AH_BOARD_LOADING { })
         (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_REFRESH_ALL -> idle
         (set @entity.queue (array/concat @entity.queue (array/map @config.backends (fn b { kind: "status", backendId: @b, force: true, cloudBuildId: "", region: "" }))))
+        (emit AH_BOARD_LOADING { })
+        (when (= (array/len @config.backends) 0) (emit AH_RENDER { }))
         (emit AH_PUMP { })
       AH_BACKEND_OPEN -> idle
         (set @entity.selected @payload.id)
         (set @entity.queue (array/append @entity.queue { kind: "logs", backendId: @payload.id, force: false, cloudBuildId: "", region: "" }))
         (emit AH_PUMP { })
       AH_RENDER -> idle
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AH_REFRESH_ALL }] },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: AH_BACKEND_OPEN, entity: (array/map @config.backends (fn b (let ((c (array/find @entity.statusCache (fn x (= @x.backendId @b))))) (if (== @c null) { id: @b, backend: @b, state: "reading…", when: "", commit: "", error: "" } { id: @b, backend: @b, state: @c.status.rolloutState, when: @c.status.rolloutTime, commit: (str/concat @c.status.commitHash " " @c.status.commitMessage), error: @c.status.errorSource })))), fields: [{ label: Backend, name: backend, variant: body }, { label: Rollout, name: state, variant: badge }, { label: When, name: when, variant: caption }, { label: Commit, name: commit, variant: caption }, { label: Error, name: error, variant: caption }] },
-          { type: typography, variant: caption, content: (if (= @entity.selected "") "Pick a backend to read its recent log lines." (str/concat @entity.selected " · recent log lines")) },
-          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines))) (fn i (let ((l (array/nth (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines) @i))) { id: (str/concat @i), ts: @l.ts, severity: @l.severity, msg: @l.msg }))), fields: [{ label: Time, name: ts, variant: caption }, { label: Severity, name: severity, variant: badge }, { label: Message, name: msg, variant: body }] }
-        ] })
+        (let ((rows (array/map @config.backends (fn b (let ((c (array/find @entity.statusCache (fn x (= @x.backendId @b))))) (if (== @c null) (let ((pending : StatusBoardRow { id: @b, section: "progress", title: @b, subtitle: "", tone: "info", statusLabel: "Reading", icon: "", meta: [@config.region], at: null, url: "" })) @pending) (let ((s @c.status.rolloutState)) (let ((shaped : StatusBoardRow { id: @b, section: (if (= @s "SUCCEEDED") "healthy" (if (or (= @s "FAILED") (= @s "CANCELLED") (= @s "UNKNOWN")) "attention" "progress")), title: @b, subtitle: (if (= @c.status.commitMessage "") @config.region (str/concat @c.status.commitHash " " @c.status.commitMessage)), tone: (if (= @s "SUCCEEDED") "success" (if (= @s "FAILED") "danger" (if (or (= @s "CANCELLED") (= @s "UNKNOWN")) "warning" "info"))), statusLabel: (if (= @s "SUCCEEDED") "Live" (if (= @s "FAILED") "Failed" (if (= @s "CANCELLED") "Cancelled" (if (= @s "UNKNOWN") "Unknown" (if (= @s "BUILDING") "Building" (if (= @s "QUEUED") "Queued" (if (= @s "ROLLING_OUT") "Rolling out" "In progress"))))))), icon: "", meta: (array/filter [@config.region, @c.status.rolloutId] (fn m (!= @m ""))), at: (let ((t (time/parse @c.status.rolloutTime))) (if (== @t null) null (as @t instant))), url: @c.status.buildLogsUrl })) @shaped))))))))
+          (do
+            (set @entity.shown @rows)
+            (emit AH_BOARD_SHOW { note: (str/concat @config.project " · " @config.region), tiles: [{ label: "Backends", value: (str/concat (array/len @rows)), tone: "neutral", icon: "server" }, { label: "Healthy", value: (str/concat (array/count @rows (fn r (= @r.section "healthy")))), tone: "success", icon: "check-circle" }, { label: "Needs attention", value: (str/concat (array/count @rows (fn r (= @r.section "attention")))), tone: (if (> (array/count @rows (fn r (= @r.section "attention"))) 0) "danger" "neutral"), icon: "alert-triangle" }, { label: "Last rollout", value: (let ((top (array/nth (array/sort (array/filter @rows (fn r (!= @r.at null))) "at" "desc") 0))) (if (or (== @top null) (== @top.at null)) "none" (time/relative @top.at))), tone: "neutral", icon: "clock" }], sections: [{ key: "attention", label: "Needs attention" }, { key: "progress", label: "In progress" }, { key: "healthy", label: "Healthy" }], rows: @rows, fetchedAt: @now, error: "" })))
+      AH_DETAIL -> idle
+        (let ((row (array/find @entity.shown (fn r (= @r.id @payload.backendId)))) (c (array/find @entity.statusCache (fn x (= @x.backendId @payload.backendId)))) (ls (let ((hit (array/find @entity.logsCache (fn x (= @x.key @payload.backendId))))) (if (== @hit null) @entity.noLines (object/get @hit "lines")))))
+          (emit AH_BOARD_DETAIL { detail: { rowId: @payload.backendId, phase: (if (= @payload.error "") "ready" "failed"), items: (if (or (== @row null) (== @c null)) [] (array/concat (array/concat [{ label: (if (= @c.status.rolloutId "") "Latest rollout" (str/concat "Rollout " @c.status.rolloutId)), tone: @row.tone, statusLabel: @row.statusLabel, meta: @c.status.rolloutTime }] (if (= @c.status.commitMessage "") [] [{ label: @c.status.commitMessage, tone: "neutral", statusLabel: "Commit", meta: @c.status.commitHash }])) (if (= @c.status.errorSource "") [] [{ label: @c.status.errorSource, tone: "danger", statusLabel: "Build error", meta: "" }]))), code: (str/join (array/map @ls (fn l (str/concat @l.ts " " @l.severity " " @l.revision " " @l.msg))) "\n"), codeTitle: "Logs", errorLines: (array/map (array/filter (array/range (array/len @ls)) (fn i (array/includes ["ERROR", "CRITICAL", "ALERT", "EMERGENCY"] (let ((l (array/nth @ls @i))) @l.severity)))) (fn i (+ @i 1))), error: @payload.error } }))
       AH_STATUS_LOAD -> idle
         (set @entity.queue (array/append @entity.queue { kind: "status", backendId: @payload.backendId, force: (if (== @payload.force null) false @payload.force), cloudBuildId: "", region: "" }))
         (emit AH_PUMP { })
@@ -111,7 +150,6 @@ orbital AppHostingBoardOrbital {
         (set @entity.queue (array/append @entity.queue { kind: "build-logs", backendId: "", force: false, cloudBuildId: @payload.cloudBuildId, region: (if (= (default @payload.region "") "") @config.region @payload.region) }))
         (emit AH_PUMP { })
       AH_PUMP -> reading when (> (array/len @entity.queue) 0)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.current (array/nth @entity.queue 0))
         (set @entity.queue (array/slice @entity.queue 1))
         (set @entity.loading true)
@@ -134,13 +172,6 @@ orbital AppHostingBoardOrbital {
       AH_BACKEND_OPEN -> reading
         (set @entity.selected @payload.id)
         (set @entity.queue (array/append @entity.queue { kind: "logs", backendId: @payload.id, force: false, cloudBuildId: "", region: "" }))
-      AH_RENDER -> reading
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
-          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AH_REFRESH_ALL }] },
-          { type: data-grid, cols: 1, gap: sm, itemClickEvent: AH_BACKEND_OPEN, entity: (array/map @config.backends (fn b (let ((c (array/find @entity.statusCache (fn x (= @x.backendId @b))))) (if (== @c null) { id: @b, backend: @b, state: "reading…", when: "", commit: "", error: "" } { id: @b, backend: @b, state: @c.status.rolloutState, when: @c.status.rolloutTime, commit: (str/concat @c.status.commitHash " " @c.status.commitMessage), error: @c.status.errorSource })))), fields: [{ label: Backend, name: backend, variant: body }, { label: Rollout, name: state, variant: badge }, { label: When, name: when, variant: caption }, { label: Commit, name: commit, variant: caption }, { label: Error, name: error, variant: caption }] },
-          { type: typography, variant: caption, content: (if (= @entity.selected "") "Pick a backend to read its recent log lines." (str/concat @entity.selected " · recent log lines")) },
-          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines))) (fn i (let ((l (array/nth (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines) @i))) { id: (str/concat @i), ts: @l.ts, severity: @l.severity, msg: @l.msg }))), fields: [{ label: Time, name: ts, variant: caption }, { label: Severity, name: severity, variant: badge }, { label: Message, name: msg, variant: body }] }
-        ] })
 
       AH_START -> idle when (and (= @entity.current.kind "status") (not @entity.current.force) (!= (array/find @entity.statusCache (fn c (and (= @c.backendId @entity.current.backendId) (< (time/diff @now @c.cachedAt) @config.statusTtlMs)))) null))
         (let ((hit (array/find @entity.statusCache (fn c (= @c.backendId @entity.current.backendId)))))
@@ -152,7 +183,7 @@ orbital AppHostingBoardOrbital {
       AH_START -> idle when (and (= @entity.current.kind "logs") (!= (array/find @entity.logsCache (fn c (and (= @c.key @entity.current.backendId) (< (time/diff @now @c.cachedAt) @config.logsTtlMs)))) null))
         (let ((hit (array/find @entity.logsCache (fn c (= @c.key @entity.current.backendId)))))
           (when (!= @hit null) (emit AH_LOGS { backendId: @entity.current.backendId, lines: @hit.lines })))
-        (emit AH_RENDER { })
+        (emit AH_DETAIL { backendId: @entity.current.backendId, error: "" })
         (emit AH_PUMP { })
       AH_START -> reading when (and (= @entity.current.kind "logs") (== (array/find @entity.logsCache (fn c (and (= @c.key @entity.current.backendId) (< (time/diff @now @c.cachedAt) @config.logsTtlMs)))) null))
         (emit AH_GCLOUD { stage: "logs", argv: ["logging", "read", (str/concat "resource.type=\"cloud_run_revision\" resource.labels.service_name=\"" @entity.current.backendId "\""), (str/concat "--project=" @config.project), (str/concat "--limit=" @config.logLimit), "--format=json"] })
@@ -244,11 +275,11 @@ orbital AppHostingBoardOrbital {
           (do
             (set @entity.logsCache (array/append (array/filter @entity.logsCache (fn c (!= @c.key @entity.current.backendId))) { key: @entity.current.backendId, lines: @lines, cachedAt: @now }))
             (emit AH_LOGS { backendId: @entity.current.backendId, lines: @lines })))
-        (emit AH_RENDER { })
+        (emit AH_DETAIL { backendId: @entity.current.backendId, error: "" })
         (emit AH_PUMP { })
       AH_RAN -> idle when (and (= @payload.stage "logs") (not (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout AhLogEntries) null))))
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: [] })
-        (emit AH_RENDER { })
+        (emit AH_DETAIL { backendId: @entity.current.backendId, error: (str/concat "gcloud could not read the logs: " @payload.stderr) })
         (notify warning (str/concat "gcloud could not read the logs: " @payload.stderr))
         (emit AH_PUMP { })
       AH_RAN -> idle when (= @payload.stage "build-logs")
@@ -260,7 +291,7 @@ orbital AppHostingBoardOrbital {
 
       AH_CLI_FAILED -> idle when (= @payload.stage "logs")
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: [] })
-        (emit AH_RENDER { })
+        (emit AH_DETAIL { backendId: @entity.current.backendId, error: (str/concat "gcloud could not run: " @payload.error) })
         (notify warning (str/concat "gcloud could not run: " @payload.error))
         (emit AH_PUMP { })
       AH_CLI_FAILED -> idle when (= @payload.stage "build-logs")
@@ -299,7 +330,31 @@ orbital AppHostingBoardOrbital {
         @description "Internal: one gcloud run."
         @tier "internal"
       AH_RENDER -> internal { }
-        @description "Internal: repaint the board from what is known."
+        @description "Internal: answer the board's figures and rows from what is known."
+        @tier "internal"
+      AH_DETAIL {
+        backendId : string!
+        error : string!
+      }
+        @description "Internal: answer one backend's detail from its status and logs."
+        @tier "internal"
+      AH_BOARD_LOADING { }
+        @description "Internal: a read began."
+        @tier "internal"
+      AH_BOARD_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the board's figures, sections and rows."
+        @tier "internal"
+      AH_BOARD_DETAIL {
+        detail : StatusBoardDetail!
+      }
+        @description "Internal: one row's detail."
         @tier "internal"
       AH_PUMP -> internal { }
         @description "Internal: read the oldest waiting request, if the board is free."
@@ -351,9 +406,11 @@ orbital AppHostingBoardOrbital {
         @synonyms "refresh app hosting"
       AH_BACKEND_OPEN {
         id : string!
-        row : AhBoardRow
       }
-        @description "A board row was clicked: read that backend's recent log lines."
+        @description "A board row was opened: read that backend's recent log lines."
+      AhView.BOARD_LOAD -> AH_REFRESH_ALL
+      AhView.BOARD_REFRESH -> AH_REFRESH_ALL
+      AhView.BOARD_ROW_OPENED -> AH_BACKEND_OPEN with { id: ?rowId }
       AH_RAN {
         stage : string!
         exitCode : number!
@@ -387,10 +444,6 @@ orbital AppHostingBoardOrbital {
     }
 
     config {
-      title : string = "App Hosting"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
       loadOnInit : boolean = false
         @label "Load when opened"
         @description "Read every listed backend's status as soon as the page opens."
@@ -399,11 +452,6 @@ orbital AppHostingBoardOrbital {
         @label "Backends"
         @description "The App Hosting backends the board lists."
         @tier "domain"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @synonyms "status area"
-        @tier "presentation"
       project : string = ""
         @label "Project"
         @description "The Firebase / Google Cloud project id."
@@ -429,5 +477,5 @@ orbital AppHostingBoardOrbital {
     }
   }
 
-  page "/app-hosting-board" as AppHostingBoardPage -> AppHostingStatus, AhApi, AhGcloud
+  page "/app-hosting-board" as AppHostingBoardPage -> AppHostingStatus, AhApi, AhGcloud, AhView
 }

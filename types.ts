@@ -121,7 +121,7 @@ export interface FailableMeta {
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */
 export type ResultSign = 'nonNegative' | 'sum' | 'product' | 'max' | 'min';
 
-/** A result chosen by the literal value of one key of the call's `options` parameter, as `http`'s `presign` request key chooses the signed url over the reply. */
+/** A result chosen by the literal value of one key of the call's `options` parameter. */
 export interface ResultByOptionMeta {
   option: string;
   results: Record<string, OperatorTypeRef>;
@@ -133,6 +133,8 @@ export interface ClosedCallMeta {
   request?: boolean;
   /** An integer literal at `arg` lies in min..max. */
   intRange?: { arg: number; min: number; max: number };
+  /** The request key `key` is a literal word, and each word lists the request keys that call must carry on top of the shape's required ones. */
+  requestKeysByLiteral?: { key: string; required: Record<string, string[]> };
 }
 
 /** One thing an `os/` or `kv/` call needs from the program's grants; the numbers are 0-indexed argument positions. */
@@ -155,45 +157,6 @@ export type OsGrantNeed =
   | { kind: 'kv'; access: 'read' | 'write'; store: number }
   | { kind: 'mmio'; access: 'read' | 'write'; base: number; offset: number; width: number }
   | { kind: 'irq'; access: 'wait' | 'ack'; line: number };
-
-/** One `oauth-client` auth op: the input keys it requires and may carry, and the `oauth-endpoint` word it is sent to (absent: a literal origin and path). */
-export interface OAuthOpMeta {
-  name: string;
-  required: string[];
-  optional: string[];
-  endpoint?: string;
-}
-
-/** The `oauth-client` auth vocabulary of `http`. */
-export interface OAuthMeta {
-  /** The word that stands where an origin goes: the URL comes from the client's metadata. */
-  endpointTarget: string;
-  /** The words that may follow {@link OAuthMeta.endpointTarget}. */
-  endpointKinds: string[];
-  ops: OAuthOpMeta[];
-}
-
-/** One `http` auth scheme: the keys its `auth` object may carry (in the checker's order), the keys that must be present and non-empty, and the words `onUnauthorized` takes. */
-export interface HttpAuthSchemeMeta {
-  name: string;
-  keys: string[];
-  required?: string[];
-  onUnauthorized?: string[];
-}
-
-/** The wire contract of the `http` request: the closed key sets the validator holds the call to. */
-export interface HttpWireMeta {
-  /** Every key a request object may carry. */
-  requestKeys: string[];
-  /** The request keys that are bodies: at most one per request, none on GET. */
-  bodyKeys: string[];
-  /** The words `queryEncoding` takes. */
-  queryEncodings: string[];
-  /** The default port of each scheme the operator requests under. */
-  defaultPorts: Record<string, number>;
-  /** The auth schemes, in the order the validator lists them. */
-  authSchemes: HttpAuthSchemeMeta[];
-}
 
 /** A family of effects only one kind of host holds: `on-device` = the browser's on-device model, `tab` = the browser's tabs. */
 export type EffectFamily = 'on-device' | 'tab';
@@ -241,10 +204,8 @@ export interface OperatorMeta {
   grant?: OsGrantNeed[];
   /** Set on the host effects (`random-bytes`, `access-check`, `credential-*`): the call's shape is closed. */
   closedCall?: ClosedCallMeta;
-  /** The `oauth-client` auth ops and endpoint words (on `http`). */
-  oauth?: OAuthMeta;
-  /** The request and auth key sets of `http`. */
-  httpWire?: HttpWireMeta;
+  /** The default port of each URL scheme the operator requests under (on `browser/beacon`). */
+  defaultPorts?: Record<string, number>;
   /** The `emit: { … }` keys the operator accepts, in the order the validator reports them. */
   emitKeys?: string[];
   /** Set on the effects only one kind of host holds; one of those in a `[background]` tick runs on the server. */
@@ -439,7 +400,6 @@ export interface OperatorEffectMeta {
     | 'despawn'
     | 'set'
     | 'call-service'
-    | 'http'
     | 'cancel-call'
     | 'random-bytes'
     | 'credential-status'

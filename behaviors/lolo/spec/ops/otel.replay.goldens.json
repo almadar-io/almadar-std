@@ -1,0 +1,225 @@
+{
+ "atom": "ops/atoms/std-otel.lolo",
+ "trait": "OtelExporter",
+ "cases": [
+  {
+   "id": "a-send-asks-the-http-client-for-one-post-of-the-body-to-the-signal-path",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OTEL_SEND",
+     "payload": {
+      "signal": "traces",
+      "path": "/v1/traces",
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+      "body": "{\"resourceSpans\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OTEL_HTTP_SEND",
+        "payload": {
+         "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+         "method": "POST",
+         "target": "/v1/traces",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-rejected-reply-fails-the-export-with-the-collector-text",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OTEL_REPLIED",
+     "payload": {
+      "status": 503,
+      "headers": {},
+      "body": "busy",
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OTEL_EXPORT_FAILED",
+        "payload": {
+         "signal": "traces",
+         "kind": "rejected",
+         "status": 503,
+         "error": "busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OTEL_EXPORTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-call-that-never-answered-fails-the-export-with-the-client-error",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout"
+   ],
+   "steps": [
+    {
+     "event": "OTEL_SEND_FAILED",
+     "payload": {
+      "error": "connection refused",
+      "kind": "io",
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "OTEL_EXPORT_FAILED",
+        "payload": {
+         "signal": "traces",
+         "kind": "io",
+         "error": "connection refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OTEL_EXPORTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-connect-the-client-cannot-make-fails-the-export-with-the-client-error",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout",
+    "OtelExporter"
+   ],
+   "steps": [
+    {
+     "trait": "OtelHttp",
+     "event": "HC_IO_FAILED",
+     "from": "connecting",
+     "entity": {
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}"
+     },
+     "payload": {
+      "error": "connection refused",
+      "kind": "io",
+      "key": "connect"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+         "kind": "io"
+        }
+       },
+       {
+        "event": "OTEL_EXPORT_FAILED",
+        "payload": {
+         "signal": "traces",
+         "kind": "io",
+         "error": "connection refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OTEL_EXPORTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-deadline-passing-fails-the-export-as-a-timeout",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout",
+    "OtelExporter"
+   ],
+   "steps": [
+    {
+     "trait": "OtelTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+         "timeoutMs": 6000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-reply-is-answered-under-the-send-key",
+   "defaults": [
+    "OtelHttp",
+    "OtelTimeout",
+    "OtelExporter"
+   ],
+   "steps": [
+    {
+     "trait": "OtelHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgNTAzIFgNCmNvbnRlbnQtbGVuZ3RoOiA0DQoNCmJ1c3k=",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "{\"signal\":\"traces\",\"spanIds\":[\"s1\"],\"eventIds\":[]}",
+         "status": 503
+        }
+       },
+       {
+        "event": "OTEL_EXPORT_FAILED",
+        "payload": {
+         "signal": "traces",
+         "kind": "rejected",
+         "status": 503
+        }
+       }
+      ],
+      "neverEmits": [
+       "OTEL_EXPORTED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

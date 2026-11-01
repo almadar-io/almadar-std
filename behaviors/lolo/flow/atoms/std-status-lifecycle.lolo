@@ -33,7 +33,7 @@ orbital StatusLifecycleOrbital {
       StatusPersisted -> idle when (!= (default ?id "") "")
         (emit StatusChanged { entityId: ?id, status: (default (object/get @payload @config.statusField) "") })
       StatusChangeFailed -> idle
-        (notify error (str/concat "Couldn't change the status — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't change the status — " ?error) "Couldn't change the status"))
     }
 
     emits {

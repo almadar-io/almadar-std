@@ -1,11 +1,43 @@
 app std-bearer-api [
   version: "1.0.0",
   description: "std-bearer-api — a bearer-token HTTP API as one atom: BEARER_API_REQUEST carries a method (GET, POST, PUT, PATCH or DELETE), an endpoint path starting with / and an optional text body; the atom sends it to the origin knob authenticated with the bearer credential knob and answers BEARER_API_RESPONSE with the status, whether it was 2xx, and the reply body, whatever the status. POST, PUT and PATCH send the body as application/json text; GET and DELETE send none. A method outside the five or an endpoint without a leading / answers BEARER_API_FAILED with code VALIDATION_ERROR; an unreachable API answers BEARER_API_FAILED with the network error message and no code. Set the origin knob to the API and declare that origin in the app egress list.",
-  egress: ["https://api.example.com"]
+  net: { "api.example.com:443": [tcp], "*.example.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 orbital BearerApiOrbital {
   entity BearerApiCall [runtime] {
     id : string!
+  }
+
+  trait BearerApiHttp = Http.traits.HttpClient {
+    config {
+      host: "api.example.com"
+      port: 443
+      tls: true
+      serverName: "api.example.com"
+      dynamicHost: true
+      credential: "CUSTOM_BEARER_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      BearerApiClient.BEARER_API_HTTP_SEND -> HTTP_SEND
+      BearerApiTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait BearerApiTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      BearerApiClient.BEARER_API_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      BearerApiHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      BearerApiHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait BearerApiClient -> BearerApiCall [optimistic] {
@@ -14,39 +46,58 @@ orbital BearerApiOrbital {
     state idle {
       INIT -> idle
 
-      BEARER_API_REQUEST -> idle when (and (= @payload.method "GET") (str/startsWith @payload.endpoint "/"))
-        (http GET @config.origin @payload.endpoint {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
-      BEARER_API_REQUEST -> idle when (and (= @payload.method "DELETE") (str/startsWith @payload.endpoint "/"))
-        (http DELETE @config.origin @payload.endpoint {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
-      BEARER_API_REQUEST -> idle when (and (= @payload.method "POST") (str/startsWith @payload.endpoint "/"))
-        (http POST @config.origin @payload.endpoint {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (default @payload.body ""),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
-      BEARER_API_REQUEST -> idle when (and (= @payload.method "PUT") (str/startsWith @payload.endpoint "/"))
-        (http PUT @config.origin @payload.endpoint {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (default @payload.body ""),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
-      BEARER_API_REQUEST -> idle when (and (= @payload.method "PATCH") (str/startsWith @payload.endpoint "/"))
-        (http PATCH @config.origin @payload.endpoint {
-          headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (default @payload.body ""),
-          auth: { scheme: bearer, credential: @config.token },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "GET") (str/startsWith @payload.endpoint "/") (str/startsWith @config.origin "https://"))
+        (emit BEARER_API_HTTP_SEND {
+          key: "request",
+          method: "GET",
+          target: @payload.endpoint,
+          headers: [{ name: "accept", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "DELETE") (str/startsWith @payload.endpoint "/") (str/startsWith @config.origin "https://"))
+        (emit BEARER_API_HTTP_SEND {
+          key: "request",
+          method: "DELETE",
+          target: @payload.endpoint,
+          headers: [{ name: "accept", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "POST") (str/startsWith @payload.endpoint "/") (str/startsWith @config.origin "https://"))
+        (emit BEARER_API_HTTP_SEND {
+          key: "request",
+          method: "POST",
+          target: @payload.endpoint,
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (default @payload.body "")),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "PUT") (str/startsWith @payload.endpoint "/") (str/startsWith @config.origin "https://"))
+        (emit BEARER_API_HTTP_SEND {
+          key: "request",
+          method: "PUT",
+          target: @payload.endpoint,
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (default @payload.body "")),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "PATCH") (str/startsWith @payload.endpoint "/") (str/startsWith @config.origin "https://"))
+        (emit BEARER_API_HTTP_SEND {
+          key: "request",
+          method: "PATCH",
+          target: @payload.endpoint,
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (default @payload.body "")),
+          stream: "none",
+          host: (str/slice @config.origin 8 (str/len @config.origin))
+        })
+      BEARER_API_REQUEST -> idle when (and (array/includes ["GET", "POST", "PUT", "PATCH", "DELETE"] @payload.method) (str/startsWith @payload.endpoint "/") (not (str/startsWith @config.origin "https://")))
+        (emit BEARER_API_FAILED { code: "VALIDATION_ERROR", message: "the origin knob must be an https:// origin" })
       BEARER_API_REQUEST -> idle when (not (array/includes ["GET", "POST", "PUT", "PATCH", "DELETE"] @payload.method))
         (emit BEARER_API_FAILED { code: "VALIDATION_ERROR", message: "method must be one of GET, POST, PUT, PATCH, DELETE" })
       BEARER_API_REQUEST -> idle when (and (array/includes ["GET", "POST", "PUT", "PATCH", "DELETE"] @payload.method) (not (str/startsWith @payload.endpoint "/")))
@@ -73,18 +124,16 @@ orbital BearerApiOrbital {
         @description "The request was not sent or got no reply: VALIDATION_ERROR for a method outside GET, POST, PUT, PATCH, DELETE or an endpoint without a leading /, otherwise the network error message and no code."
         @synonyms "api failed, bearer request failed, request error"
         @tier "primary"
-      BEARER_API_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      BEARER_API_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+        host : string
       }
-        @description "Internal: the request's HTTP reply."
-        @tier "secondary"
-      BEARER_API_UNREACHABLE {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the request never produced a reply."
+        @description "Internal: the request, for the HTTP client."
         @tier "secondary"
     }
 
@@ -96,26 +145,28 @@ orbital BearerApiOrbital {
       }
         @description "Send an authenticated request: the HTTP method, the endpoint path starting with /, and for POST, PUT and PATCH the JSON body text."
         @synonyms "call api, bearer request, send authenticated request"
+      BEARER_API_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      BEARER_API_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      BearerApiHttp.HTTP_REPLIED -> BEARER_API_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      BearerApiHttp.HTTP_FAILED -> BEARER_API_UNREACHABLE with { error: ?error, kind: ?kind }
+      BearerApiTimeout.TIMED_OUT -> BEARER_API_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
     }
 
     config {
       origin : url = "https://api.example.com"
         @label "API origin"
-        @description "The API origin (scheme://host[:port], no path) every endpoint is appended to; the default is a placeholder, and the real origin must also be declared in the app egress list."
+        @description "The API origin (scheme://host[:port], no path) every endpoint is appended to; the default is a placeholder, and the real origin must be an https:// origin whose host the app grants in net (the bearer token is the BearerApiHttp credential)."
         @synonyms "api url, base url, api host"
-        @tier "infra"
-      token : secret = "CUSTOM_BEARER_TOKEN"
-        @label "Bearer token"
-        @description "Name of the credential holding the bearer token sent as Authorization: Bearer on every request."
-        @synonyms "bearer token, api token, access token"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds a request may take before it fails as unreachable."
-        @synonyms "timeout, request deadline, wait limit"
         @tier "infra"
     }
   }
 
-  page boot as BearerApiPage -> BearerApiClient
+  page boot as BearerApiPage -> BearerApiClient, BearerApiHttp, BearerApiTimeout
 }

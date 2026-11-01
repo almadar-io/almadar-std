@@ -1,9 +1,10 @@
 app std-otel [
   version: "1.0.0",
   description: "std-otel — OpenTelemetry export over OTLP/HTTP JSON. START_SPAN mints W3C trace and span ids from journaled random bytes and keeps the span in flight in the OtelSpan store; ADD_EVENT attaches a timed event; END_SPAN stamps the end and POSTs every ended, unexported span with its events to <endpoint>/v1/traces; RECORD_METRIC stores one sample and POSTs it to <endpoint>/v1/metrics as a sum, gauge or histogram data point. GET_SPAN and GET_METRICS read the local store. A rejected or unreachable collector answers OTEL_EXPORT_FAILED and leaves the data unexported.",
-  egress: ["http://localhost:4318"]
+  net: { "localhost:4318": [tcp] }
 ]
 type OtelAttrValue = string | number | boolean
+type HttpHeader = { name : string!, value : string! }
 type OtelSpanDraw = { name : string!, traceId : string, parentSpanId : string, kind : number, attributes : Map string OtelAttrValue }
 type OtelMetricDraw = { name : string!, metricType : string, value : number, unit : string, labels : Map string OtelAttrValue }
 type OtelSpanRow = { id : string!, traceId : string, parentSpanId : string, name : string, kind : number, startTime : instant, endTime : instant?, status : string, statusMessage : string, attributes : Map string OtelAttrValue }
@@ -12,6 +13,8 @@ type OtelSpanView = { spanId : string!, traceId : string!, name : string!, start
 type OtelMetricView = { name : string!, metricType : string!, value : number!, values : [number], labels : Map string OtelAttrValue }
 type OtelSendKey = { signal : string, spanIds : [string], eventIds : [string], metricId : string }
 uses Lifecycle from "std/behaviors/std-lifecycle"
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
 orbital OtelOrbital {
   config {
     keepDays : number = 30
@@ -79,6 +82,31 @@ orbital OtelOrbital {
     spans : [OtelSpan] = []
     moreSpans : boolean = false
     batchLimit : number = 0
+  }
+
+  trait OtelHttp = Http.traits.HttpClient {
+    config {
+      host: "localhost"
+      port: 4318
+      tls: false
+      serverName: "localhost"
+    }
+    listens {
+      OtelExporter.OTEL_HTTP_SEND -> HTTP_SEND
+      OtelTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait OtelTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 6000
+      cancelOnDeadline: false
+    }
+    listens {
+      OtelExporter.OTEL_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      OtelHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      OtelHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
 
   trait OtelExporter -> OtelExport [optimistic] {
@@ -221,19 +249,15 @@ orbital OtelOrbital {
       OTEL_METRIC_NOT_STORED -> idle
         (emit RECORD_METRIC_RESULT { recorded: false, error: @payload.error })
 
-      OTEL_SEND -> idle when (not @config.authenticated)
-        (http POST @config.endpoint @payload.path {
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          text: @payload.body,
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
-      OTEL_SEND -> idle when @config.authenticated
-        (http POST @config.endpoint @payload.path {
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          text: @payload.body,
-          auth: { scheme: api-key, credential: @config.headerCredential, name: @config.headerName, in: header },
-          timeoutMs: @config.timeoutMs
-        } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
+      OTEL_SEND -> idle
+        (emit OTEL_HTTP_SEND {
+          key: @payload.key,
+          method: "POST",
+          target: @payload.path,
+          headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string @payload.body),
+          stream: "none"
+        })
       OTEL_SEND_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal ""), kind: @payload.kind, error: @payload.error })
       OTEL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
@@ -433,20 +457,15 @@ orbital OtelOrbital {
       }
         @description "Internal: one OTLP/HTTP JSON request."
         @tier "secondary"
-      OTEL_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      OTEL_HTTP_SEND {
         key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the collector's HTTP reply."
-        @tier "secondary"
-      OTEL_SEND_FAILED {
-        error : string!
-        kind : string!
-        key : string
-      }
-        @description "Internal: the collector call never produced a reply."
+        @description "Internal: the OTLP/HTTP request, for the HTTP client."
         @tier "secondary"
       OTEL_TRACES_MARKED {
         operations : [OtelSpan]
@@ -605,6 +624,9 @@ orbital OtelOrbital {
         kind : string!
         key : string
       }
+      OtelHttp.HTTP_REPLIED -> OTEL_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      OtelHttp.HTTP_FAILED -> OTEL_SEND_FAILED with { error: ?error, kind: ?kind, key: ?key }
+      OtelTimeout.TIMED_OUT -> OTEL_SEND_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
       OTEL_TRACES_MARKED {
         operations : [OtelSpan]
         completedCount : number
@@ -639,26 +661,6 @@ orbital OtelOrbital {
     }
 
     config {
-      endpoint : url = "http://localhost:4318"
-        @label "OTLP/HTTP endpoint"
-        @description "The collector's OTLP/HTTP origin (scheme://host[:port]); requests go to <endpoint>/v1/traces and <endpoint>/v1/metrics. 4318 is the OTLP/HTTP port OTEL_EXPORTER_OTLP_ENDPOINT conventionally names. Must be declared in the app egress list."
-        @synonyms "collector url, otlp endpoint, otel exporter endpoint"
-        @tier "infra"
-      headerCredential : secret = ""
-        @label "Collector auth credential"
-        @description "Name of the credential whose value is sent in the header named by headerName; empty sends no auth header."
-        @synonyms "otlp headers, collector token, api key"
-        @tier "infra"
-      authenticated : boolean = false
-        @label "Send auth header"
-        @description "When true every request carries the header headerName with the value of the credential named by headerCredential."
-        @synonyms "use auth, authenticate collector"
-        @tier "infra"
-      headerName : string = "Authorization"
-        @label "Auth header name"
-        @description "The request header that carries the credential's value verbatim (for example Authorization with a Bearer or Basic value, or a vendor key header)."
-        @synonyms "auth header, token header"
-        @tier "infra"
       serviceName : string = "almadar"
         @label "Service name"
         @description "The service.name resource attribute stamped on every exported span and metric."
@@ -693,11 +695,6 @@ orbital OtelOrbital {
         @description "Most stored metric samples GET_METRICS may aggregate. Samples are small and accumulate with every RECORD_METRIC, so the cap is ten times maxRows; a store holding more is refused with OTEL_EXPORT_FAILED instead of returning partial totals."
         @synonyms "metrics read limit, sample cap"
         @tier "infra"
-      timeoutMs : number = 6000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each OTLP request may take before it counts as failed."
-        @synonyms "timeout, export deadline"
-        @tier "infra"
     }
   }
 
@@ -730,7 +727,7 @@ orbital OtelOrbital {
     }
   }
 
-  page boot as OtelPage -> OtelExporter
+  page boot as OtelPage -> OtelExporter, OtelHttp, OtelTimeout
 
   page "/otel/retention" as OtelRetentionPage -> OtelMetricRetention, OtelSpanRetention, OtelSpanEventRetention
 }

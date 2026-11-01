@@ -1,8 +1,11 @@
 app std-email [
   version: "1.0.0",
-  description: "std-email — transactional email through SendGrid or Resend over the http effect. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
-  egress: ["https://api.sendgrid.com", "https://api.resend.com"]
+  description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
+  net: { "api.sendgrid.com:443": [tcp], "api.resend.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type ResendReply = { id : string, message : string }
 orbital EmailOrbital {
   entity EmailDelivery [runtime] {
@@ -17,10 +20,13 @@ orbital EmailOrbital {
 
       EMAIL_SEND -> idle when (= @config.vendor sendgrid)
         (let ((from (if (validate/required @payload.from) @payload.from @config.fromEmail)))
-          (http POST @config.sendgridOrigin "/v3/mail/send" {
-            headers: { Accept: "application/json" },
-            auth: { scheme: bearer, credential: @config.sendgridApiKey },
-            json: (object/merge
+          (emit EMAIL_HTTP_SEND {
+            key: "sendgrid",
+            host: "api.sendgrid.com",
+            method: "POST",
+            target: "/v3/mail/send",
+            headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
+            body: (bytes/from-string (json/stringify (object/merge
               {
                 from: (if (str/includes @from "<")
                   (object/merge
@@ -44,16 +50,19 @@ orbital EmailOrbital {
                     (if (!= (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) "") { name: (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) } {}))
                   { email: @payload.replyTo }) }
                 {})
-              (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})),
-            timeoutMs: @config.timeoutMs
-          } { emit: { success: EMAIL_SENDGRID_REPLIED, failure: EMAIL_SENDGRID_FAILED } }))
+              (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})))),
+            stream: "none"
+          }))
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
         (emit EMAIL_SEND_FAILED { message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (not (validate/required @payload.templateId)))
-        (http POST @config.resendOrigin "/emails" {
-          headers: { Accept: "*/*" },
-          auth: { scheme: bearer, credential: @config.resendApiKey },
-          json: (object/merge
+        (emit EMAIL_HTTP_SEND {
+          key: "resend",
+          host: "api.resend.com",
+          method: "POST",
+          target: "/emails",
+          headers: [{ name: "accept", value: "*/*" }, { name: "content-type", value: "application/json" }],
+          body: (bytes/from-string (json/stringify (object/merge
             {
               from: (if (validate/required @payload.from) @payload.from @config.fromEmail),
               html: (if (validate/required @payload.htmlBody) @payload.htmlBody @payload.body)
@@ -61,9 +70,9 @@ orbital EmailOrbital {
             (if (validate/required @payload.replyTo) { reply_to: @payload.replyTo } {})
             { subject: @payload.subject }
             (if (validate/required @payload.htmlBody) { text: @payload.body } {})
-            { to: @payload.to }),
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: EMAIL_RESEND_REPLIED, failure: EMAIL_RESEND_FAILED } })
+            { to: @payload.to }))),
+          stream: "none"
+        })
 
       EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get (default @payload.headers {}) "x-message-id" "") ""))
         (emit EMAIL_SENT { id: (object/get (default @payload.headers {}) "x-message-id" ""), status: "sent" })
@@ -107,31 +116,16 @@ orbital EmailOrbital {
         @description "The message was not sent: the vendor rejected it, answered with a non-2xx status, or the call never completed."
         @synonyms "email failed, send error, delivery rejected"
         @tier "primary"
-      EMAIL_SENDGRID_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      EMAIL_HTTP_SEND {
+        key : string!
+        host : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: the SendGrid HTTP reply."
-        @tier "secondary"
-      EMAIL_SENDGRID_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the SendGrid call never produced a reply."
-        @tier "secondary"
-      EMAIL_RESEND_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
-      }
-        @description "Internal: the Resend HTTP reply."
-        @tier "secondary"
-      EMAIL_RESEND_FAILED {
-        error : string!
-        kind : string!
-      }
-        @description "Internal: the Resend call never produced a reply."
+        @description "Internal: a vendor request, for the HTTP client of its host."
         @tier "secondary"
     }
 
@@ -165,6 +159,12 @@ orbital EmailOrbital {
         error : string!
         kind : string!
       }
+      EmailSendgridHttp.HTTP_REPLIED -> EMAIL_SENDGRID_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      EmailSendgridHttp.HTTP_FAILED -> EMAIL_SENDGRID_FAILED with { error: ?error, kind: ?kind }
+      EmailResendHttp.HTTP_REPLIED -> EMAIL_RESEND_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      EmailResendHttp.HTTP_FAILED -> EMAIL_RESEND_FAILED with { error: ?error, kind: ?kind }
+      EmailTimeout.TIMED_OUT -> EMAIL_SENDGRID_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "sendgrid")
+      EmailTimeout.TIMED_OUT -> EMAIL_RESEND_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "resend")
     }
 
     config {
@@ -173,35 +173,10 @@ orbital EmailOrbital {
         @description "The vendor that delivers the mail."
         @synonyms "email provider, mail service, sendgrid or resend"
         @tier "infra"
-      sendgridOrigin : url = "https://api.sendgrid.com"
-        @label "SendGrid API origin"
-        @description "The SendGrid API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "sendgrid url, api host"
-        @tier "infra"
-      resendOrigin : url = "https://api.resend.com"
-        @label "Resend API origin"
-        @description "The Resend API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "resend url, api host"
-        @tier "infra"
-      sendgridApiKey : secret = "SENDGRID_API_KEY"
-        @label "SendGrid API key name"
-        @description "Name of the credential that holds the SendGrid API key."
-        @synonyms "sendgrid key, mail credential"
-        @tier "infra"
-      resendApiKey : secret = "RESEND_API_KEY"
-        @label "Resend API key name"
-        @description "Name of the credential that holds the Resend API key."
-        @synonyms "resend key, mail credential"
-        @tier "infra"
       fromEmail : string = "noreply@example.com"
         @label "Default sender"
         @description "The From address used when a message names none."
         @synonyms "from address, sender, noreply"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds the vendor request may take before the send fails."
-        @synonyms "timeout, request deadline, wait limit"
         @tier "infra"
       statusText : Map string string = { "200": "OK", "201": "Created", "202": "Accepted", "204": "No Content", "301": "Moved Permanently", "302": "Found", "304": "Not Modified", "400": "Bad Request", "401": "Unauthorized", "402": "Payment Required", "403": "Forbidden", "404": "Not Found", "405": "Method Not Allowed", "408": "Request Timeout", "409": "Conflict", "413": "Payload Too Large", "422": "Unprocessable Entity", "429": "Too Many Requests", "500": "Internal Server Error", "501": "Not Implemented", "502": "Bad Gateway", "503": "Service Unavailable", "504": "Gateway Timeout" }
         @label "Status reasons"
@@ -211,5 +186,51 @@ orbital EmailOrbital {
     }
   }
 
-  page boot as EmailPage -> EmailSender
+  trait EmailSendgridHttp = Http.traits.HttpClient {
+    config {
+      host: "api.sendgrid.com"
+      port: 443
+      tls: true
+      serverName: "api.sendgrid.com"
+      credential: "SENDGRID_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.sendgrid.com")
+      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "sendgrid")
+    }
+  }
+
+  trait EmailResendHttp = Http.traits.HttpClient {
+    config {
+      host: "api.resend.com"
+      port: 443
+      tls: true
+      serverName: "api.resend.com"
+      credential: "RESEND_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.resend.com")
+      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "resend")
+    }
+  }
+
+  trait EmailTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      EmailSender.EMAIL_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      EmailSendgridHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      EmailSendgridHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      EmailResendHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      EmailResendHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page boot as EmailPage -> EmailSender, EmailSendgridHttp, EmailResendHttp, EmailTimeout
 }

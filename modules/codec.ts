@@ -1,7 +1,7 @@
 /**
  * Codec Modules - byte codecs and digests
  *
- * Pure operators the `http` effect's programs use to build signed requests
+ * Pure operators the std-http-request program uses to build signed requests
  * (hmac-sha256 `signs` strings, basic-auth values, URL components). The Rust
  * implementation is `orbital_core::codec`; the TS twin is in `@almadar/evaluator`.
  *

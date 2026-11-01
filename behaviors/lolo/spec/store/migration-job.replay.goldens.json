@@ -1,0 +1,111 @@
+{
+ "atom": "store/atoms/std-migration-job.lolo",
+ "trait": "MigrationJobLifecycle",
+ "note": "std-migration-job over the composed std-http-client: each profile endpoint read is one MIGRATION_HTTP_SEND to the sourceOrigin host (the bearer token rides the client credential, never the event); the reply returns by call key.",
+ "cases": [
+  {
+   "id": "a-get-endpoint-asks-the-http-client-for-one-get-with-its-query",
+   "defaults": [
+    "MigrationJobHttp",
+    "MigrationJobTimeout"
+   ],
+   "steps": [
+    {
+     "event": "MIGRATION_SOURCE_NEXT",
+     "payload": {
+      "index": 0
+     },
+     "entity": {
+      "profile": {
+       "id": "p",
+       "adapter": "",
+       "endpoints": [
+        {
+         "name": "docs",
+         "method": "GET",
+         "path": "/v1/docs",
+         "params": {
+          "limit": "10",
+          "q": "a b"
+         },
+         "headers": {
+          "X-Trace": "t1"
+         },
+         "recordsPath": ""
+        }
+       ]
+      },
+      "status": "fetching"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_HTTP_SEND",
+        "payload": {
+         "key": "source",
+         "host": "api.example.com",
+         "method": "GET",
+         "target": "/v1/docs?limit=10&q=a%20b",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "from": "fetching"
+    }
+   ]
+  },
+  {
+   "id": "a-post-endpoint-asks-the-http-client-for-one-post-with-its-query",
+   "defaults": [
+    "MigrationJobHttp",
+    "MigrationJobTimeout"
+   ],
+   "steps": [
+    {
+     "event": "MIGRATION_SOURCE_NEXT",
+     "payload": {
+      "index": 0
+     },
+     "entity": {
+      "profile": {
+       "id": "p",
+       "adapter": "",
+       "endpoints": [
+        {
+         "name": "search",
+         "method": "POST",
+         "path": "/v1/docs",
+         "params": {
+          "limit": "10",
+          "q": "a b"
+         },
+         "headers": {
+          "X-Trace": "t1"
+         },
+         "recordsPath": ""
+        }
+       ]
+      },
+      "status": "fetching"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_HTTP_SEND",
+        "payload": {
+         "key": "source",
+         "host": "api.example.com",
+         "method": "POST",
+         "target": "/v1/docs?limit=10&q=a%20b",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "from": "fetching"
+    }
+   ]
+  }
+ ]
+}

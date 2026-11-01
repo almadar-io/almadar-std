@@ -11,7 +11,7 @@ orbital DataErasureOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type ErasureLoaded = Event { data : [ErasureRequest], totalCount : number } "Fired when the erasure queue finishes loading."
+    type ErasureLoaded = Event { data : [ErasureRequest], totalCount : number! } "Fired when the erasure queue finishes loading."
 
     type ErasureLoadFailed = Event { error : string, code : string } "Fired when the erasure queue fails to load."
 
@@ -104,7 +104,7 @@ orbital DataErasureOrbital {
         })
       ErasureLoaded -> idle
       ErasureLoadFailed -> idle
-        (notify error (str/concat "Couldn't load the erasure queue — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the erasure queue — " ?error) "Couldn't load the erasure queue"))
       OPEN -> loading when @config.enabled
         (set @entity.page 1)
         (fetch ErasureRequest {
@@ -138,7 +138,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> idle when (= (array/len ?data) 0)
       ExecScanFailed -> idle
-        (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for erasures to execute — " ?error) "Couldn't scan for erasures to execute"))
     }
 
     state execScanning {
@@ -167,7 +167,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> idle when (= (array/len ?data) 0)
       ExecScanFailed -> idle
-        (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for erasures to execute — " ?error) "Couldn't scan for erasures to execute"))
     }
 
     state loading {
@@ -284,7 +284,7 @@ orbital DataErasureOrbital {
         @tier "domain"
       ErasureLoaded {
         data : [ErasureRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates that erasure request data has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -373,7 +373,7 @@ orbital DataErasureOrbital {
         @tier "domain"
       ErasureLoaded {
         data : [ErasureRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Data erasure request successfully loaded."
         @synonyms "loaded, retrieved, fetched"

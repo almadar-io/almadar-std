@@ -550,7 +550,7 @@
           "event": "NPM_LOOKUP_UNREACHABLE",
           "payload": {
             "error": "credential NPM_REGISTRY_TOKEN is not set",
-            "kind": "unconfigured"
+            "kind": "denied"
           },
           "from": "looking",
           "expect": {
@@ -696,6 +696,192 @@
                   "code": "unexpected",
                   "status": 200,
                   "error": "the registry listed a version of @almadar/core that is not semver"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-lookup-asks-the-http-client-for-one-get-on-the-registry-host",
+      "defaults": [
+        "LookupHttp",
+        "LookupTimeout"
+      ],
+      "steps": [
+        {
+          "event": "NPM_LOOKUP",
+          "payload": {
+            "requestId": "r1",
+            "name": "@almadar/core"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "NPM_LOOKUP_GET",
+                "payload": {
+                  "requestId": "r1"
+                }
+              },
+              {
+                "event": "NPM_LOOKUP_HTTP_SEND",
+                "payload": {
+                  "key": "lookup",
+                  "method": "GET",
+                  "target": "/@almadar%2Fcore",
+                  "host": "registry.npmjs.org",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-lookup-of-a-registry-that-is-not-https-is-unconfigured",
+      "defaults": [
+        "LookupHttp",
+        "LookupTimeout"
+      ],
+      "config": {
+        "registry": "http://registry.local"
+      },
+      "steps": [
+        {
+          "event": "NPM_LOOKUP",
+          "payload": {
+            "requestId": "r1",
+            "name": "left-pad"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "NPM_LOOKUP_REFUSED",
+                "payload": {
+                  "code": "unconfigured",
+                  "status": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "NPM_LOOKUP_HTTP_SEND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-client-that-cannot-open-refuses-the-lookup-as-unconfigured",
+      "defaults": [
+        "LookupHttp",
+        "LookupTimeout"
+      ],
+      "steps": [
+        {
+          "event": "NPM_LOOKUP",
+          "payload": {
+            "requestId": "r1",
+            "name": "left-pad"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "lookup",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "NPM_LOOKUP_REFUSED",
+                "payload": {
+                  "code": "unconfigured",
+                  "error": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "NPM_LOOKED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-deadline-passing-times-the-lookup-call-out",
+      "defaults": [
+        "LookupHttp",
+        "LookupTimeout",
+        "NpmLookup"
+      ],
+      "steps": [
+        {
+          "event": "NPM_LOOKUP",
+          "payload": {
+            "requestId": "r1",
+            "name": "left-pad"
+          }
+        },
+        {
+          "trait": "LookupTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "lookup"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "lookup",
+                  "timeoutMs": 20000
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "http-the-clients-reply-for-the-lookup-key-is-answered-under-the-lookup-key",
+      "defaults": [
+        "LookupHttp",
+        "LookupTimeout",
+        "NpmLookup"
+      ],
+      "steps": [
+        {
+          "event": "NPM_LOOKUP",
+          "payload": {
+            "requestId": "r1",
+            "name": "left-pad"
+          }
+        },
+        {
+          "trait": "LookupHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "lookup",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgNDA0IFgNCmNvbnRlbnQtbGVuZ3RoOiAyDQoNCnt9",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "lookup",
+                  "status": 404
                 }
               }
             ]

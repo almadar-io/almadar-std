@@ -792,9 +792,16 @@
      },
      "from": "waiting",
      "expect": {
-      "effects": [
+      "emits": [
        {
-        "type": "http"
+        "event": "NPM_WAIT_HTTP_SEND",
+        "payload": {
+         "key": "tarball",
+         "method": "GET",
+         "target": "/@almadar/core/-/core-3.1.0.tgz",
+         "host": "registry.npmjs.org",
+         "stream": "none"
+        }
        }
       ]
      }
@@ -837,6 +844,12 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "WaitRetry",
+    "PackumentLookup",
+    "RegHttp",
+    "RegTimeout"
    ]
   },
   {
@@ -1161,6 +1174,167 @@
       ],
       "neverEmits": [
        "NPM_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-versions-asks-the-lookup-which-asks-the-http-client-for-the-packument",
+   "defaults": [
+    "WaitRetry",
+    "PackumentLookup",
+    "RegHttp",
+    "RegTimeout",
+    "NpmRegistry"
+   ],
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "left-pad"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_LOOKUP_HTTP_SEND",
+        "payload": {
+         "key": "lookup",
+         "method": "GET",
+         "target": "/left-pad",
+         "host": "registry.npmjs.org"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-versions-client-that-cannot-open-fails-the-ask-as-unconfigured",
+   "defaults": [
+    "WaitRetry",
+    "PackumentLookup",
+    "RegHttp",
+    "RegTimeout",
+    "NpmRegistry"
+   ],
+   "steps": [
+    {
+     "event": "NPM_VERSIONS",
+     "payload": {
+      "name": "left-pad"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "lookup",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unconfigured",
+         "error": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NPM_VERSIONS_LISTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-wait-tarball-probe-that-cannot-open-fails-the-ask-as-unconfigured",
+   "defaults": [
+    "WaitRetry",
+    "PackumentLookup",
+    "RegHttp",
+    "RegTimeout"
+   ],
+   "steps": [
+    {
+     "event": "NPM_WAIT",
+     "payload": {
+      "name": "@almadar/core",
+      "version": "3.1.0"
+     }
+    },
+    {
+     "event": "NPM_PACKUMENT_READ",
+     "payload": {
+      "requestId": "wait",
+      "name": "@almadar/core",
+      "versions": [
+       "3.1.0"
+      ],
+      "distTags": {},
+      "version": "",
+      "tarballs": {
+       "3.1.0": "https://registry.npmjs.org/@almadar/core/-/core-3.1.0.tgz"
+      }
+     },
+     "from": "waiting",
+     "expect": {
+      "emits": [
+       {
+        "event": "NPM_WAIT_TARBALL"
+       },
+       {
+        "event": "NPM_WAIT_HTTP_SEND",
+        "payload": {
+         "key": "tarball"
+        }
+       },
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "tarball",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "NPM_FAILED",
+        "payload": {
+         "code": "unconfigured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "http-the-deadline-passing-times-the-tarball-probe-out",
+   "defaults": [
+    "WaitRetry",
+    "PackumentLookup",
+    "RegHttp",
+    "RegTimeout"
+   ],
+   "steps": [
+    {
+     "trait": "RegTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "tarball"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "tarball",
+         "timeoutMs": 20000
+        }
+       }
       ]
      }
     }

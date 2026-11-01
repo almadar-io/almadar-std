@@ -1,0 +1,392 @@
+app std-status-board [
+  version: "1.0.0",
+  description: "std-status-board — the generic operations board: a page header with the board's title, when it was read and a Refresh action, an optional strip of summary figures, a filter bar (search plus one chip per section with its count), then the rows grouped into sections, each row an accordion item whose header shows the status (icon, color and text), title, subtitle, meta and relative time, and whose body is the row's detail, asked for when the row first opens. The owning behavior reads the data and drives the board: BOARD_LOADING paints skeleton rows (or keeps the rows while a refresh runs), BOARD_SHOW answers the figures, sections and rows, BOARD_FAILED shows the error (a warning above the last rows when there are rows, an error with Retry when there are none), BOARD_DETAIL answers one row's detail (loading, ready with status items, a log or code block with its error lines, and a link, or failed). A composer that shows the board on demand sends BOARD_OPEN when it brings the board into view, which asks for the first read once. The board asks with BOARD_LOAD (BOARD_OPEN's first read, the empty state's Load, loadOnInit), BOARD_REFRESH (Refresh, Retry) and BOARD_ROW_OPENED (a row opened with no ready detail). Tones are neutral, success, warning, danger and info."
+]
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
+orbital StatusBoardOrbital {
+
+  entity StatusBoardView [runtime] {
+    id : string!
+    phase : "idle" | "loading" | "ready" | "failed" @description "Where the board's read is." = idle
+    note : string @description "A short line the owner adds under the title." = ""
+    tiles : [StatusBoardTile] @description "The summary figures." = []
+    sections : [StatusBoardSection] @description "The row groups, in order." = []
+    rows : [StatusBoardRow] @description "The rows last answered." = []
+    hasRows : boolean @description "Whether rows have been answered at least once." = false
+    fetchedAt : instant? @description "When the rows were read."
+    error : string @description "Why the last read failed; empty when it did not." = ""
+    openIds : [string] @description "The rows whose detail is open." = []
+    details : [StatusBoardDetail] @description "The details answered so far, one per row." = []
+    query : string @description "The search text." = ""
+    section : string @description "The section chip picked; empty shows every section." = ""
+  }
+
+  trait StatusBoard -> @rebindable StatusBoardView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (not @config.loadOnInit)
+        (render-ui @config.slot @config.bodyContent)
+      INIT -> idle when @config.loadOnInit
+        (set @entity.phase loading)
+        (render-ui @config.slot @config.bodyContent)
+        (emit BOARD_LOAD { })
+      BOARD_OPEN -> idle when (= @entity.phase "idle")
+        (set @entity.phase loading)
+        (render-ui @config.slot @config.bodyContent)
+        (emit BOARD_LOAD { })
+      BOARD_OPEN -> idle when (!= @entity.phase "idle")
+        (render-ui @config.slot @config.bodyContent)
+      LOAD_CLICKED -> idle
+        (set @entity.phase loading)
+        (render-ui @config.slot @config.bodyContent)
+        (emit BOARD_LOAD { })
+      REFRESH_CLICKED -> idle
+        (set @entity.phase loading)
+        (render-ui @config.slot @config.bodyContent)
+        (emit BOARD_REFRESH { })
+      BOARD_LOADING -> idle
+        (set @entity.phase loading)
+        (render-ui @config.slot @config.bodyContent)
+      BOARD_SHOW -> idle
+        (set @entity.phase ready)
+        (set @entity.note @payload.note)
+        (set @entity.tiles @payload.tiles)
+        (set @entity.sections @payload.sections)
+        (set @entity.rows @payload.rows)
+        (set @entity.hasRows true)
+        (set @entity.fetchedAt @payload.fetchedAt)
+        (set @entity.error @payload.error)
+        (set @entity.details (array/filter @entity.details (fn d (array/some @payload.rows (fn r (= @r.id @d.rowId))))))
+        (set @entity.openIds (array/filter @entity.openIds (fn o (array/some @payload.rows (fn r (= @r.id @o))))))
+        (render-ui @config.slot @config.bodyContent)
+      BOARD_FAILED -> idle
+        (set @entity.phase failed)
+        (set @entity.error @payload.error)
+        (render-ui @config.slot @config.bodyContent)
+      BOARD_DETAIL -> idle
+        (set @entity.details (array/append (array/filter @entity.details (fn d (!= @d.rowId @payload.detail.rowId))) @payload.detail))
+        (render-ui @config.slot @config.bodyContent)
+      ROW_TOGGLED -> idle when (and @payload.isOpen (array/some @entity.details (fn d (and (= @d.rowId @payload.itemId) (= @d.phase "ready")))))
+        (set @entity.openIds (array/append (array/filter @entity.openIds (fn o (!= @o @payload.itemId))) @payload.itemId))
+        (render-ui @config.slot @config.bodyContent)
+      ROW_TOGGLED -> idle when (and @payload.isOpen (not (array/some @entity.details (fn d (and (= @d.rowId @payload.itemId) (= @d.phase "ready"))))))
+        (set @entity.openIds (array/append (array/filter @entity.openIds (fn o (!= @o @payload.itemId))) @payload.itemId))
+        (set @entity.details (array/append (array/filter @entity.details (fn d (!= @d.rowId @payload.itemId))) (let ((pending : StatusBoardDetail { rowId: @payload.itemId, phase: "loading", items: [], code: "", codeTitle: "", errorLines: [], error: "" })) @pending)))
+        (render-ui @config.slot @config.bodyContent)
+        (emit BOARD_ROW_OPENED { rowId: @payload.itemId })
+      ROW_TOGGLED -> idle when (not @payload.isOpen)
+        (set @entity.openIds (array/filter @entity.openIds (fn o (!= @o @payload.itemId))))
+        (render-ui @config.slot @config.bodyContent)
+      SEARCHED -> idle
+        (set @entity.query @payload.searchTerm)
+        (render-ui @config.slot @config.bodyContent)
+      SECTION_PICKED -> idle
+        (set @entity.section (if (= @entity.section @payload.key) "" @payload.key))
+        (render-ui @config.slot @config.bodyContent)
+    }
+
+    emits {
+      BOARD_LOAD -> external { }
+        @description "The board asks its owner for its first read."
+        @synonyms "load board"
+        @tier "primary"
+      BOARD_REFRESH -> external { }
+        @description "The board asks its owner to read afresh."
+        @synonyms "refresh board, reload"
+        @tier "primary"
+      BOARD_ROW_OPENED -> external {
+        rowId : string!
+      }
+        @description "A row opened with no ready detail: the owner answers BOARD_DETAIL for it."
+        @synonyms "row expanded, open details"
+        @tier "primary"
+      LOAD_CLICKED -> internal { }
+        @description "Internal: the empty state's Load."
+        @tier "internal"
+      REFRESH_CLICKED -> internal { }
+        @description "Internal: Refresh or Retry."
+        @tier "internal"
+      ROW_TOGGLED -> internal {
+        itemId : string!
+        isOpen : boolean!
+      }
+        @description "Internal: a row opened or closed."
+        @tier "internal"
+      SEARCHED -> internal {
+        searchTerm : string!
+      }
+        @description "Internal: the search text changed."
+        @tier "internal"
+      SECTION_PICKED -> internal {
+        key : string!
+      }
+        @description "Internal: a section chip was picked."
+        @tier "internal"
+    }
+
+    listens {
+      BOARD_OPEN -> input { }
+        @description "The board was brought into view: it asks for its first read when it has none yet, and only redraws otherwise."
+        @synonyms "board shown, open board"
+      BOARD_LOADING -> input { }
+        @description "A read began: skeleton rows, or the last rows with Refresh busy."
+        @synonyms "board loading"
+      BOARD_SHOW -> input {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "The board's figures, sections and rows; error, when not empty, says these are the last rows because the read failed."
+        @synonyms "board data, show board"
+      BOARD_FAILED -> input {
+        error : string!
+      }
+        @description "The read failed."
+        @synonyms "board error"
+      BOARD_DETAIL -> input {
+        detail : StatusBoardDetail!
+      }
+        @description "One row's detail."
+        @synonyms "row detail"
+      LOAD_CLICKED { }
+        @description "The empty state's Load."
+      REFRESH_CLICKED { }
+        @description "Refresh or Retry."
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+        @description "A row opened or closed."
+      SEARCHED {
+        searchTerm : string!
+      }
+        @description "The search text changed."
+      SECTION_PICKED {
+        key : string!
+      }
+        @description "A section chip was picked."
+    }
+
+    config {
+      slot : slot = main
+        @label "Slot"
+        @description "Where the board renders."
+        @tier "presentation"
+      title : string = "Status"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      icon : string = "activity"
+        @label "Icon"
+        @description "The icon beside the title and in the empty state."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Ask for the first read as soon as the board opens."
+        @tier "presentation"
+      idleTitle : string = "Nothing read yet"
+        @label "Idle title"
+        @description "The empty state's title before the first read."
+        @tier "presentation"
+      idleDescription : string = "Load the board to read the latest status."
+        @label "Idle description"
+        @tier "presentation"
+      emptyTitle : string = "Nothing to show"
+        @label "Empty title"
+        @description "The empty state's title when a read answers no rows."
+        @tier "presentation"
+      emptyDescription : string = "The read answered no rows."
+        @label "Empty description"
+        @tier "presentation"
+      searchPlaceholder : string = "Search"
+        @label "Search placeholder"
+        @tier "presentation"
+      linkLabel : string = "Open"
+        @label "Row link label"
+        @description "The label of the link to a row's url in its detail."
+        @tier "presentation"
+      bodyContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        children: [{
+          type: page-header
+          title: @config.title
+          icon: @config.icon
+          subtitle: (if (== @entity.fetchedAt null) @entity.note (str/concat (if (= @entity.note "") "" (str/concat @entity.note " · ")) "Updated " (time/relative @entity.fetchedAt)))
+          actions: (if (= @entity.phase "idle") [] [{ label: "Refresh", event: REFRESH_CLICKED, icon: "refresh-cw", variant: secondary, loading: (= @entity.phase "loading") }])
+        }, (if (and @entity.hasRows (!= @entity.error "")) {
+          type: alert
+          variant: warning
+          title: "Showing the last read"
+          message: @entity.error
+        } null), (if (> (array/len @entity.tiles) 0) {
+          type: simple-grid
+          minChildWidth: "12rem"
+          gap: md
+          children: (array/map @entity.tiles (fn t {
+            type: stat-display
+            label: @t.label
+            value: @t.value
+            icon: @t.icon
+            variant: (if (= @t.tone "neutral") default @t.tone)
+            look: flat
+          }))
+        } null), (if @entity.hasRows {
+          type: stack
+          direction: horizontal
+          gap: sm
+          align: center
+          wrap: true
+          children: (array/concat [{
+            type: search-input
+            placeholder: @config.searchPlaceholder
+            event: SEARCHED
+            value: @entity.query
+            debounceMs: 200
+            clearable: true
+          }] (array/map (array/filter @entity.sections (fn s (array/some @entity.rows (fn r (= @r.section @s.key))))) (fn s {
+            type: button
+            label: (str/concat @s.label " " (array/count @entity.rows (fn r (= @r.section @s.key))))
+            variant: (if (= @entity.section @s.key) primary ghost)
+            size: sm
+            action: SECTION_PICKED
+            actionPayload: { key: @s.key }
+          })))
+        } null), (if (and (= @entity.phase "loading") (not @entity.hasRows)) {
+          type: skeleton
+          variant: list
+          rows: 6
+        } (if (and (= @entity.phase "failed") (not @entity.hasRows)) {
+          type: error-state
+          title: (str/concat "Couldn't read " @config.title)
+          message: @entity.error
+          retryEvent: REFRESH_CLICKED
+        } (if (and (= @entity.phase "idle") (not @entity.hasRows)) {
+          type: empty-state
+          icon: @config.icon
+          title: @config.idleTitle
+          description: @config.idleDescription
+          actionLabel: "Load"
+          actionEvent: LOAD_CLICKED
+        } (if (= (array/len @entity.rows) 0) {
+          type: empty-state
+          icon: @config.icon
+          title: @config.emptyTitle
+          description: @config.emptyDescription
+        } (let ((shown (array/filter @entity.rows (fn r (and (or (= @entity.section "") (= @r.section @entity.section)) (or (= @entity.query "") (str/includes (str/lower (str/concat @r.title " " @r.subtitle)) (str/lower @entity.query)))))))) (if (= (array/len @shown) 0) {
+          type: empty-state
+          icon: "search"
+          title: "No matches"
+          description: "Clear the search or pick another section."
+        } {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: (array/map (array/filter @entity.sections (fn s (array/some @shown (fn r (= @r.section @s.key))))) (fn s {
+            type: section
+            title: (str/concat @s.label " · " (array/count @shown (fn r (= @r.section @s.key))))
+            children: [{
+              type: accordion
+              multiple: true
+              openItems: @entity.openIds
+              toggleEvent: ROW_TOGGLED
+              items: (array/map (array/filter @shown (fn r (= @r.section @s.key))) (fn r {
+                id: @r.id
+                header: {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  align: center
+                  justify: between
+                  wrap: true
+                  children: [{
+                    type: stack
+                    direction: horizontal
+                    gap: sm
+                    align: center
+                    children: [{
+                      type: badge
+                      label: @r.statusLabel
+                      icon: (if (!= @r.icon "") @r.icon (if (= @r.tone "danger") "x-circle" (if (= @r.tone "warning") "alert-triangle" (if (= @r.tone "success") "check-circle" (if (= @r.tone "info") "loader" "circle")))))
+                      variant: @r.tone
+                    }, {
+                      type: stack
+                      direction: vertical
+                      gap: none
+                      children: [{ type: typography, variant: body, weight: medium, content: @r.title }, (if (= @r.subtitle "") null { type: typography, variant: caption, color: muted, content: @r.subtitle, overflow: truncate })]
+                    }]
+                  }, {
+                    type: stack
+                    direction: horizontal
+                    gap: md
+                    align: center
+                    children: (array/concat (array/map @r.meta (fn m { type: typography, variant: caption, color: muted, content: @m })) [(if (== @r.at null) null { type: typography, variant: caption, color: muted, content: (time/relative @r.at) })])
+                  }]
+                }
+                content: (if (not (array/includes @entity.openIds @r.id)) null (let ((d (array/find @entity.details (fn x (= @x.rowId @r.id))))) (if (or (== @d null) (= @d.phase "loading")) {
+                  type: skeleton
+                  variant: list
+                  rows: 3
+                } (if (= @d.phase "failed") {
+                  type: alert
+                  variant: error
+                  title: "Couldn't read the details"
+                  message: @d.error
+                } {
+                  type: stack
+                  direction: vertical
+                  gap: md
+                  children: [(if (= (array/len @d.items) 0) null {
+                    type: stack
+                    direction: vertical
+                    gap: xs
+                    children: (array/map @d.items (fn i {
+                      type: stack
+                      direction: horizontal
+                      gap: sm
+                      align: center
+                      children: [{
+                        type: badge
+                        label: @i.statusLabel
+                        size: sm
+                        icon: (if (= @i.tone "danger") "x-circle" (if (= @i.tone "warning") "alert-triangle" (if (= @i.tone "success") "check-circle" (if (= @i.tone "info") "loader" "circle"))))
+                        variant: @i.tone
+                      }, { type: typography, variant: body, content: @i.label }, (if (= @i.meta "") null { type: typography, variant: caption, color: muted, content: @i.meta })]
+                    }))
+                  }), (if (= @d.code "") null {
+                    type: code-block
+                    title: @d.codeTitle
+                    code: @d.code
+                    language: "log"
+                    showLineNumbers: true
+                    errorLines: (object/fromEntries (array/map @d.errorLines (fn n [(str/concat @n) "error"])))
+                    maxHeight: "60vh"
+                  }), (if (= @r.url "") null {
+                    type: stack
+                    direction: horizontal
+                    justify: end
+                    children: [{ type: button, label: @config.linkLabel, href: @r.url, variant: ghost, size: sm, icon: "external-link" }]
+                  })]
+                }))))
+              }))
+            }]
+          }))
+        }))))))]
+      }
+        @label "Body content tree"
+        @description "The board's render tree, shared by every transition."
+        @tier "internal"
+    }
+  }
+
+  page "/status-board" as StatusBoardPage -> StatusBoard
+}

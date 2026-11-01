@@ -1,0 +1,470 @@
+{
+ "atom": "connect/atoms/std-image.lolo",
+ "trait": "ImageClient",
+ "cases": [
+  {
+   "id": "dispatch-on-openrouter-asks-its-client-for-one-post-of-the-images-resource",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_DISPATCH",
+     "payload": {
+      "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_OR_SEND",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "method": "POST",
+         "target": "/api/v1/images",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dispatch-on-openai-asks-its-client-for-the-generations-resource",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "config": {
+    "provider": "openai",
+    "basePath": "/v1"
+   },
+   "steps": [
+    {
+     "event": "IMAGE_DISPATCH",
+     "payload": {
+      "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_OA_SEND",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "method": "POST",
+         "target": "/v1/images/generations",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_OR_SEND",
+       "IMAGE_LOCAL_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dispatch-on-the-local-server-asks-its-client-for-the-generations-resource",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "config": {
+    "provider": "local",
+    "basePath": "/v1"
+   },
+   "steps": [
+    {
+     "event": "IMAGE_DISPATCH",
+     "payload": {
+      "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_LOCAL_SEND",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "method": "POST",
+         "target": "/v1/images/generations",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_OR_SEND",
+       "IMAGE_OA_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-checked-openrouter-request-reads-the-model-endpoints-first",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_PREPARE",
+     "payload": {
+      "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\",\"checked\":true},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_OR_SEND",
+        "payload": {
+         "key": "caps:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\",\"checked\":true},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "method": "GET",
+         "target": "/api/v1/images/models/m/endpoints"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-server-error-on-the-first-attempt-waits-then-retries",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_HTTP_OK",
+     "payload": {
+      "status": 503,
+      "headers": {},
+      "body": "busy",
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_DELAY_START",
+        "payload": {
+         "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":1,\"delayMs\":500,\"supported\":[],\"dropped\":[]}",
+         "delayMs": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-transport-failure-on-the-second-attempt-waits-longer",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_HTTP_FAILED",
+     "payload": {
+      "error": "reset",
+      "kind": "io",
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":1,\"delayMs\":500,\"supported\":[],\"dropped\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_DELAY_START",
+        "payload": {
+         "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":2,\"delayMs\":2000,\"supported\":[],\"dropped\":[]}",
+         "delayMs": 2000
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-server-error-on-the-last-attempt-fails",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_HTTP_OK",
+     "payload": {
+      "status": 503,
+      "headers": {},
+      "body": "busy",
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":2,\"delayMs\":2000,\"supported\":[],\"dropped\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_FAILED",
+        "payload": {
+         "code": "SERVICE_ERROR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_DELAY_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-local-server-is-not-retried",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "config": {
+    "provider": "local",
+    "basePath": "/v1"
+   },
+   "steps": [
+    {
+     "event": "IMAGE_HTTP_FAILED",
+     "payload": {
+      "error": "refused",
+      "kind": "io",
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_FAILED",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "ImageClient: local request failed: refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_DELAY_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-delay-passing-dispatches-the-kept-job-again",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_DELAY_ELAPSED",
+     "payload": {
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":1,\"delayMs\":500,\"supported\":[],\"dropped\":[]}",
+      "waitedMs": 500
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_DISPATCH",
+        "payload": {
+         "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":1,\"delayMs\":500,\"supported\":[],\"dropped\":[]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply-with-an-image-answers-the-generated-images",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_HTTP_OK",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"data\":[{\"b64_json\":\"AAA\"}],\"usage\":{\"cost\":0.5,\"total_tokens\":7}}",
+      "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMAGE_GENERATED",
+        "payload": {
+         "model": "m",
+         "cost": 0.5,
+         "totalTokens": 7
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-client-that-cannot-open-retries-through-the-delay",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay",
+    "ImageClient"
+   ],
+   "steps": [
+    {
+     "event": "IMAGE_DISPATCH",
+     "payload": {
+      "job": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMG_OR_HTTP_FAILED",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "IMAGE_DELAY_START",
+        "payload": {
+         "key": "{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":1,\"delayMs\":500,\"supported\":[],\"dropped\":[]}",
+         "delayMs": 500
+        }
+       }
+      ],
+      "neverEmits": [
+       "IMAGE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-deadline-passing-times-the-image-call-out",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay",
+    "ImageClient"
+   ],
+   "steps": [
+    {
+     "trait": "ImageTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "timeoutMs": 1800000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-reply-for-a-gen-key-is-answered-under-the-gen-key",
+   "defaults": [
+    "ImageOrHttp",
+    "ImageOaHttp",
+    "ImageLocalHttp",
+    "ImageTimeout",
+    "ImageDelay",
+    "ImageClient"
+   ],
+   "steps": [
+    {
+     "trait": "ImageOrHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgNDAxIFgNCmNvbnRlbnQtbGVuZ3RoOiA0DQoNCm5vcGU=",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IMG_OR_HTTP_REPLIED",
+        "payload": {
+         "key": "gen:{\"request\":{\"prompt\":\"a cat\",\"model\":\"m\"},\"attempt\":0,\"delayMs\":0,\"dropped\":[],\"supported\":[]}",
+         "status": 401
+        }
+       },
+       {
+        "event": "IMAGE_FAILED",
+        "payload": {
+         "code": "SERVICE_ERROR",
+         "message": "ImageClient: openrouter returned 401: nope"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -13,7 +13,7 @@ orbital ApprovalGateOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type ApprovalRequestLoaded = Event { data : [ApprovalRequest], totalCount : number } "Fired when the approval queue collection finishes loading"
+    type ApprovalRequestLoaded = Event { data : [ApprovalRequest], totalCount : number! } "Fired when the approval queue collection finishes loading"
 
     type ApprovalRequestLoadFailed = Event { error : string, code : string } "Fired when the approval queue fails to load"
 
@@ -136,7 +136,7 @@ orbital ApprovalGateOrbital {
         })
       ApprovalRequestLoaded -> idle
       ApprovalRequestLoadFailed -> idle
-        (notify error (str/concat "Couldn't load the approval request — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't load the approval request — " ?error) "Couldn't load the approval request"))
       ;; A replay failure can also arrive while the queue is closed.
       APPROVAL_REPLAY_FAILED -> idle
         (set @entity.id ?requestId)
@@ -148,7 +148,7 @@ orbital ApprovalGateOrbital {
         })
         (notify error "Approval could not be applied — the request was reopened.")
       ApprovalRequestReviewFailed -> idle
-        (notify error (str/concat "Couldn't reopen the approval request — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't reopen the approval request — " ?error) "Couldn't reopen the approval request"))
       OPEN -> loading when @config.enabled
         (set @entity.page 1)
         (fetch ApprovalRequest {
@@ -451,7 +451,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       ApprovalRequestLoaded {
         data : [ApprovalRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates an approval request has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -532,7 +532,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       ApprovalRequestLoaded {
         data : [ApprovalRequest]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates an approval request has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"

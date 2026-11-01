@@ -1,19 +1,45 @@
 app mini-reply [
   version: "1.0.0",
-  egress: ["https://example.test"],
+  net: { "example.test:443": [tcp] },
   description: "walk fixture with an http failure route"
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 orbital MiniReply {
   entity Item [runtime] {
     id : string!
     title : string!
+  }
+  trait MiniHttp = Http.traits.HttpClient {
+    config {
+      host: "example.test"
+      port: 443
+      tls: true
+      serverName: "example.test"
+    }
+    listens {
+      Caller.CALL_HTTP_SEND -> HTTP_SEND
+      MiniTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+  trait MiniTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      Caller.CALL_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      MiniHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      MiniHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
   }
   trait Caller -> Item [client] {
     initial: waiting
     state waiting {
       INIT -> waiting
       CALL -> waiting
-        (http GET "https://example.test/x" { key: "x" emit: { success: CALLED, failure: CALL_FAILED } })
+        (emit CALL_HTTP_SEND { key: "x", method: "GET", target: "/x", headers: [], body: (bytes/from-string ""), stream: "none" })
       CALLED -> waiting
       CALL_FAILED -> failed
         (render-ui main { type: "alert", variant: "error", message: "Call failed" })
@@ -21,6 +47,29 @@ orbital MiniReply {
     state failed {
       INIT -> failed
     }
+    emits {
+      CALL_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+    }
+    listens {
+      CALL { }
+      CALLED {
+        status : number!
+      }
+      CALL_FAILED {
+        error : string!
+        kind : string!
+      }
+      MiniHttp.HTTP_REPLIED -> CALLED with { status: ?status }
+      MiniHttp.HTTP_FAILED -> CALL_FAILED with { error: ?error, kind: ?kind }
+      MiniTimeout.TIMED_OUT -> CALL_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
+    }
   }
-  page "/mini-reply" as MiniReplyPage -> Caller
+  page "/mini-reply" as MiniReplyPage -> Caller, MiniHttp, MiniTimeout
 }

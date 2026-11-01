@@ -234,6 +234,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'browser',
     // emit key order: effect/http.rs:781
     emitKeys: ['success', 'failure', 'cancelled'],
+    defaultPorts: { http: 80, https: 443 },
     category: 'std-browser',
     minArity: 2,
     maxArity: 3,

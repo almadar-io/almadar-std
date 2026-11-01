@@ -29,9 +29,15 @@ type AwsQuota = { name : string!, value : number!, used : number!, usedComplete 
 type AwsServiceCost = { service : string!, cost : number!, unit : string! }
 type AwsTypeUsage = { instanceType : string!, hours : number!, rawCost : number!, cost : number!, vcpus : number?, memoryGb : number?, gpu : string?, gpuCount : number! }
 type AwsTypeRow = { instanceType : string!, hours : number!, cost : number!, vcpus : number?, memoryGb : number?, gpu : string?, gpuCount : number! }
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
 type AwsOverview = { instances : [AwsInstance]!, volumes : [AwsVolume]!, amis : [AwsImage]!, s3Buckets : [AwsBucket]!, securityGroups : [AwsSecurityGroup]!, keyPairs : [AwsKeyPair]!, iamRoles : [AwsIamRole]!, quotas : [AwsQuota]!, costExplorer : [AwsServiceCost]!, costExplorerTotal : number!, costExplorerPeriod : string!, estimatedMonthlyCost : number!, runningHourlyCost : number!, instanceTypeHistory : [AwsTypeRow]!, instanceTypeHistoryDays : number!, fetchedAt : string! }
 orbital AwsBoardOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Board from "std/behaviors/std-status-board"
 
   entity AwsBoard [runtime] {
     id : string!
@@ -52,6 +58,7 @@ orbital AwsBoardOrbital {
     costExplorer : [AwsServiceCost] = []
     history : [AwsTypeUsage] = []
     cursor : number @description "Index of the bucket or quota being read." = 0
+    details : [StatusBoardDetail] @description "The detail of every row last answered to the board." = []
   }
 
   trait AwsCli = Cli.traits.CliRunner {
@@ -62,20 +69,48 @@ orbital AwsBoardOrbital {
     }
   }
 
+  trait AwsView = Board.traits.StatusBoard {
+    listens {
+      AwsStatus.AWS_BOARD_LOADING -> BOARD_LOADING
+      AwsStatus.AWS_BOARD_SHOW -> BOARD_SHOW
+      AwsStatus.AWS_BOARD_FAILED -> BOARD_FAILED
+      AwsStatus.AWS_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "AWS"
+      icon: "cloud"
+      idleTitle: "AWS not read yet"
+      idleDescription: "Load the board to read the region's instances, cost and quotas."
+      emptyTitle: "Nothing in this region"
+      emptyDescription: "The read answered no instances, quotas or cost."
+      searchPlaceholder: "Search instances, quotas and services"
+    }
+  }
+
   trait AwsStatus -> AwsBoard [client] {
     initial: idle
 
     state idle {
       INIT -> idle when (not @config.loadOnInit)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: AWS_LOAD }] })
       INIT -> idle when @config.loadOnInit
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (emit AWS_LOAD { })
       AWS_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
+        (emit AWS_SHOW { })
       AWS_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit AWS_BOARD_LOADING { })
         (set @entity.loading true)
         (set @entity.startedAt @now)
         (set @entity.instances [])
@@ -92,7 +127,7 @@ orbital AwsBoardOrbital {
         (set @entity.cursor 0)
         (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_REFRESH -> reading
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit AWS_BOARD_LOADING { })
         (set @entity.loading true)
         (set @entity.startedAt @now)
         (set @entity.instances [])
@@ -108,9 +143,20 @@ orbital AwsBoardOrbital {
         (set @entity.history [])
         (set @entity.cursor 0)
         (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_SHOW -> idle
+        (let ((irows (array/map @entity.board.instances (fn i (let ((st @i.state)) (let ((r : StatusBoardRow { id: @i.instanceId, section: (if (= @st "running") "running" (if (or (= @st "stopped") (= @st "terminated")) "stopped" "changing")), title: (if (= @i.name "") @i.instanceId @i.name), subtitle: (str/concat @i.instanceType " · " @i.az), tone: (if (= @st "running") "success" (if (= @st "terminated") "danger" (if (= @st "stopped") "neutral" "info"))), statusLabel: (if (= @st "running") "Running" (if (= @st "pending") "Pending" (if (= @st "stopping") "Stopping" (if (= @st "shutting-down") "Shutting down" (if (= @st "stopped") "Stopped" (if (= @st "terminated") "Terminated" @st)))))), icon: "", meta: (array/concat (if (== @i.gpu null) [] [(str/concat @i.gpuCount " × " (default @i.gpu ""))]) [(if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd "/h"))]), at: (let ((t (time/parse @i.launchTime))) (if (== @t null) null (as @t instant))), url: "" })) @r))))) (qrows (array/map @entity.board.quotas (fn q (let ((r : StatusBoardRow { id: (str/concat "quota:" @q.name), section: "quotas", title: @q.name, subtitle: (str/concat @q.used " of " @q.value (if @q.usedComplete "" " · some instances are not in the catalog")), tone: (if (>= @q.used @q.value) "danger" (if (>= (* @q.used 100) (* @q.value @config.quotaWarnPercent)) "warning" "success")), statusLabel: (if (>= @q.used @q.value) "At limit" (if (>= (* @q.used 100) (* @q.value @config.quotaWarnPercent)) "Near limit" "OK")), icon: "", meta: [(if (>= @q.used @q.value) "0 left" (str/concat (- @q.value @q.used) " left"))], at: null, url: "" })) @r)))) (crows (array/map @entity.board.costExplorer (fn c (let ((r : StatusBoardRow { id: (str/concat "cost:" @c.service), section: "cost", title: @c.service, subtitle: (str/concat "Billed " @entity.board.costExplorerPeriod " to date"), tone: "neutral", statusLabel: (str/concat "$" @c.cost), icon: "dollar-sign", meta: [@c.unit], at: null, url: "" })) @r)))))
+          (do
+            (set @entity.details (array/concat (array/concat (array/map @entity.board.instances (fn i (let ((d : StatusBoardDetail { rowId: @i.instanceId, phase: "ready", items: (array/map (array/concat (array/concat (array/concat (array/concat (array/concat (array/concat [["ID", @i.instanceId], ["Type", @i.instanceType], ["State", @i.state], ["Zone", @i.az], ["Launched", @i.launchTime]] (if (== @i.publicIp null) [] [["Public IP", (default @i.publicIp "")]])) (if (== @i.vcpus null) [] [["vCPUs", (str/concat @i.vcpus)]])) (if (== @i.memoryGb null) [] [["Memory", (str/concat @i.memoryGb " GB")]])) (if (== @i.gpu null) [] [["GPU", (str/concat @i.gpuCount " × " (default @i.gpu ""))], ["GPU memory", (str/concat @i.gpuMemoryGb " GB")]])) (if (== @i.hourlyUsd null) [["Price", "unpriced"]] [["Hourly", (str/concat "$" @i.hourlyUsd)], ["Daily", (str/concat "$" (default @i.dailyUsd 0))], ["Monthly", (str/concat "$" (default @i.monthlyUsd 0))]])) []) (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d))) (array/map @entity.board.quotas (fn q (let ((d : StatusBoardDetail { rowId: (str/concat "quota:" @q.name), phase: "ready", items: (array/map [["Quota", @q.name], ["Used", (str/concat @q.used)], ["Limit", (str/concat @q.value)], ["Used counted from", (if @q.usedComplete "every running instance" "only instances in the catalog")]] (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d)))) (array/map @entity.board.costExplorer (fn c (let ((d : StatusBoardDetail { rowId: (str/concat "cost:" @c.service), phase: "ready", items: (array/map [["Service", @c.service], ["Cost", (str/concat "$" @c.cost)], ["Unit", @c.unit], ["Period", @entity.board.costExplorerPeriod]] (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d)))))
+            (emit AWS_BOARD_SHOW { note: @config.region, tiles: [{ label: "Running instances", value: (str/concat (array/count @entity.board.instances (fn i (= @i.state "running")))), tone: "neutral", icon: "server" }, { label: "Month to date", value: (str/concat "$" @entity.board.costExplorerTotal), tone: "neutral", icon: "dollar-sign" }, { label: "Running spend", value: (str/concat "$" @entity.board.runningHourlyCost "/h"), tone: "neutral", icon: "activity" }, { label: "Estimated monthly", value: (str/concat "$" @entity.board.estimatedMonthlyCost), tone: "neutral", icon: "trending-up" }, { label: "Quota headroom", value: (let ((tight (array/nth (array/sort (array/map @entity.board.quotas (fn q { left: (- @q.value @q.used) })) "left" "asc") 0))) (if (== @tight null) "none" (if (<= @tight.left 0) "0 left" (str/concat @tight.left " left")))), tone: (if (array/some @qrows (fn r (= @r.tone "danger"))) "danger" (if (array/some @qrows (fn r (= @r.tone "warning"))) "warning" "neutral")), icon: "gauge" }], sections: [{ key: "running", label: "Running" }, { key: "changing", label: "Changing" }, { key: "stopped", label: "Stopped" }, { key: "quotas", label: "Quotas" }, { key: "cost", label: "Cost" }], rows: (array/concat (array/concat @irows @qrows) @crows), fetchedAt: (let ((t (time/parse @entity.board.fetchedAt))) (if (== @t null) @now (default (as @t instant) @now))), error: "" })))
+      AWS_ROW_OPENED -> idle
+        (let ((gone : StatusBoardDetail { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "That row is no longer on the board." }))
+          (emit AWS_BOARD_DETAIL { detail: (default (array/find @entity.details (fn x (= @x.rowId @payload.rowId))) @gone) }))
     }
 
     state reading {
+      AWS_ROW_OPENED -> reading
+        (let ((gone : StatusBoardDetail { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "That row is no longer on the board." }))
+          (emit AWS_BOARD_DETAIL { detail: (default (array/find @entity.details (fn x (= @x.rowId @payload.rowId))) @gone) }))
       INIT -> reading
       AWS_LOAD -> reading
       AWS_REFRESH -> reading
@@ -121,7 +167,7 @@ orbital AwsBoardOrbital {
         (emit AWS_RUN { stage: "volumes", argv: ["ec2", "describe-volumes", "--query", "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> idle when (= @payload.stage "instances")
         (set @entity.loading false)
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: alert, variant: error, title: "The AWS board could not be read", message: (str/concat "aws is not installed or could not run: " @payload.error) }] })
+        (emit AWS_BOARD_FAILED { error: (str/concat "aws is not installed or could not run: " @payload.error) })
       AWS_RAN -> reading when (= @payload.stage "volumes")
         (set @entity.volumes (let ((rows (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout AwsCells) null))) (if (or (== @rows null) (not (array/every @rows (fn v (!= (str/to-number (str/concat (default (array/nth @v 1) 0))) null))))) [] (array/map @rows (fn v (let ((size (default (str/to-number (str/concat (default (array/nth @v 1) 0))) 0))) { volumeId: (str/concat (default (array/nth @v 0) "")), size: @size, state: (str/concat (default (array/nth @v 2) "")), volumeType: (str/concat (default (array/nth @v 3) "")), az: (str/concat (default (array/nth @v 4) "")), name: (str/concat (default (array/nth @v 5) "")), attachedTo: (let ((at (array/nth @v 6))) (if (validate/string @at) @at null)), iops: (let ((io (array/nth @v 7))) (if (validate/number @io) @io 0)), monthlyCost: (math/round (* @size @config.ebsPerGbMonth) 2) }))))))
         (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
@@ -217,7 +263,7 @@ orbital AwsBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
+        (emit AWS_SHOW { })
       AWS_CLI_FAILED -> idle when (= @payload.stage "history")
         (set @entity.history [])
         (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (default @i.hourlyUsd 0)))) 2)))
@@ -237,7 +283,7 @@ orbital AwsBoardOrbital {
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
         (notify error (str/concat "The aws CLI could not run: " @payload.error))
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
+        (emit AWS_SHOW { })
     }
 
     emits {
@@ -265,6 +311,32 @@ orbital AwsBoardOrbital {
       AWS_LOAD -> internal { }
         @description "Internal: the load a page opening with loadOnInit asks for."
         @tier "internal"
+      AWS_SHOW -> internal { }
+        @description "Internal: answer the board's figures, rows and details from the board last read."
+        @tier "internal"
+      AWS_BOARD_LOADING { }
+        @description "Internal: a read began."
+        @tier "internal"
+      AWS_BOARD_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the board's figures, sections and rows."
+        @tier "internal"
+      AWS_BOARD_FAILED {
+        error : string!
+      }
+        @description "Internal: the read failed."
+        @tier "internal"
+      AWS_BOARD_DETAIL {
+        detail : StatusBoardDetail!
+      }
+        @description "Internal: one row's detail."
+        @tier "internal"
       AWS_RUN {
         stage : string!
         argv : [string]!
@@ -286,6 +358,13 @@ orbital AwsBoardOrbital {
       AWS_REFRESH -> input { }
         @description "Read the AWS board afresh."
         @synonyms "refresh aws"
+      AWS_ROW_OPENED {
+        rowId : string!
+      }
+        @description "A board row opened: answer its detail."
+      AwsView.BOARD_LOAD -> AWS_LOAD
+      AwsView.BOARD_REFRESH -> AWS_REFRESH
+      AwsView.BOARD_ROW_OPENED -> AWS_ROW_OPENED with { rowId: ?rowId }
       AWS_RAN {
         stage : string!
         exitCode : number!
@@ -306,19 +385,14 @@ orbital AwsBoardOrbital {
     }
 
     config {
-      title : string = "AWS"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
       loadOnInit : boolean = false
         @label "Load when opened"
         @description "Read the board as soon as its page opens."
         @tier "presentation"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @synonyms "status area"
-        @tier "presentation"
+      quotaWarnPercent : number = 80
+        @label "Quota warning"
+        @description "A quota whose used share reaches this percent is shown as near its limit."
+        @tier "domain"
       region : string = "us-east-1"
         @label "Region"
         @description "The AWS region the board reads."
@@ -371,5 +445,5 @@ orbital AwsBoardOrbital {
     }
   }
 
-  page "/aws-board" as AwsBoardPage -> AwsStatus, AwsCli
+  page "/aws-board" as AwsBoardPage -> AwsStatus, AwsCli, AwsView
 }

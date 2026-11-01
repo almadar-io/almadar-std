@@ -1,0 +1,509 @@
+{
+ "atom": "connect/atoms/std-esign.lolo",
+ "trait": "EsignClient",
+ "cases": [
+  {
+   "id": "send-asks-the-http-client-for-one-post-to-the-envelopes-resource",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_SEND_ENVELOPE",
+     "payload": {
+      "recipientEmail": "a@b.c",
+      "recipientName": "A",
+      "documentName": "c.pdf",
+      "documentContent": "data:application/pdf;base64,QUJD"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_HTTP_SEND",
+        "payload": {
+         "key": "send",
+         "method": "POST",
+         "target": "/restapi/v2.1/accounts/envelopes",
+         "host": "demo.docusign.net",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trailing-slash-on-the-account-path-is-ignored",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "config": {
+    "basePath": "/restapi/v2.1/accounts/ACC/"
+   },
+   "steps": [
+    {
+     "event": "ESIGN_GET_ENVELOPE_STATUS",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_HTTP_SEND",
+        "payload": {
+         "target": "/restapi/v2.1/accounts/ACC/envelopes/E1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "status-asks-the-http-client-for-one-get-of-the-envelope",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_GET_ENVELOPE_STATUS",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_HTTP_SEND",
+        "payload": {
+         "key": "status",
+         "method": "GET",
+         "target": "/restapi/v2.1/accounts/envelopes/E1",
+         "host": "demo.docusign.net"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "download-keys-the-call-with-the-envelope-id",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_DOWNLOAD_DOCUMENT",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_HTTP_SEND",
+        "payload": {
+         "key": "download:E1",
+         "method": "GET",
+         "target": "/restapi/v2.1/accounts/envelopes/E1/documents/combined"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-configured-origin-host-reaches-the-request",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "config": {
+    "origin": "https://eu.docusign.net"
+   },
+   "steps": [
+    {
+     "event": "ESIGN_GET_ENVELOPE_STATUS",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_HTTP_SEND",
+        "payload": {
+         "host": "eu.docusign.net"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-origin-that-is-not-https-fails-each-action",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "config": {
+    "origin": "http://docusign.local"
+   },
+   "steps": [
+    {
+     "event": "ESIGN_SEND_ENVELOPE",
+     "payload": {
+      "recipientEmail": "a@b.c",
+      "recipientName": "A",
+      "documentName": "c.pdf",
+      "documentContent": "data:application/pdf;base64,QUJD"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_SEND_ENVELOPE_FAILED",
+        "payload": {
+         "message": "the origin knob must be an https:// origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ESIGN_HTTP_SEND"
+      ]
+     }
+    },
+    {
+     "event": "ESIGN_GET_ENVELOPE_STATUS",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_GET_ENVELOPE_STATUS_FAILED",
+        "payload": {
+         "message": "the origin knob must be an https:// origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ESIGN_HTTP_SEND"
+      ]
+     }
+    },
+    {
+     "event": "ESIGN_DOWNLOAD_DOCUMENT",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_DOWNLOAD_DOCUMENT_FAILED",
+        "payload": {
+         "message": "the origin knob must be an https:// origin"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ESIGN_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-send-client-that-cannot-open-fails-with-the-client-error",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_SEND_ENVELOPE",
+     "payload": {
+      "recipientEmail": "a@b.c",
+      "recipientName": "A",
+      "documentName": "c.pdf",
+      "documentContent": "data:application/pdf;base64,QUJD"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "send",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "ESIGN_SEND_ENVELOPE_FAILED",
+        "payload": {
+         "message": "os/tcp-connect: no os host configured"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ESIGN_ENVELOPE_SENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-status-client-that-cannot-open-fails-with-the-client-error",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_GET_ENVELOPE_STATUS",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "status",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "ESIGN_GET_ENVELOPE_STATUS_FAILED",
+        "payload": {
+         "message": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-download-client-that-cannot-open-fails-with-the-client-error",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_DOWNLOAD_DOCUMENT",
+     "payload": {
+      "envelopeId": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "download:E1",
+         "kind": "denied"
+        }
+       },
+       {
+        "event": "ESIGN_DOWNLOAD_DOCUMENT_FAILED",
+        "payload": {
+         "message": "os/tcp-connect: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-deadline-passing-times-the-send-out",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout",
+    "EsignClient"
+   ],
+   "steps": [
+    {
+     "trait": "EsignTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "send"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "send",
+         "timeoutMs": 30000
+        }
+       },
+       {
+        "event": "ESIGN_SEND_ENVELOPE_FAILED",
+        "payload": {
+         "message": "timeout of 30000ms exceeded"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-deadline-passing-times-a-download-out",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout",
+    "EsignClient"
+   ],
+   "steps": [
+    {
+     "trait": "EsignTimeout",
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "entity": {
+      "key": "download:E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "download:E1",
+         "timeoutMs": 30000
+        }
+       },
+       {
+        "event": "ESIGN_DOWNLOAD_DOCUMENT_FAILED",
+        "payload": {
+         "message": "timeout of 30000ms exceeded"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-reply-for-a-send-is-answered-as-the-envelope",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout",
+    "EsignClient"
+   ],
+   "steps": [
+    {
+     "trait": "EsignHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "send",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAxIFgNCmNvbnRlbnQtbGVuZ3RoOiAzNQ0KDQp7ImVudmVsb3BlSWQiOiJFOSIsInN0YXR1cyI6InNlbnQifQ==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "send",
+         "status": 201
+        }
+       },
+       {
+        "event": "ESIGN_ENVELOPE_SENT",
+        "payload": {
+         "envelopeId": "E9",
+         "status": "sent"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-clients-reply-for-a-download-carries-the-pdf-as-base64-under-its-envelope-name",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout",
+    "EsignClient"
+   ],
+   "steps": [
+    {
+     "trait": "EsignHttp",
+     "event": "HC_READ",
+     "from": "reading",
+     "entity": {
+      "key": "download:E1",
+      "stage": "head",
+      "stream": "none"
+     },
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiA0DQoNCiVQREY=",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "download:E1",
+         "status": 200
+        }
+       },
+       {
+        "event": "ESIGN_DOCUMENT_DOWNLOADED",
+        "payload": {
+         "content": "JVBERg==",
+         "documentName": "envelope-E1.pdf"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-download-reply-with-an-error-status-reads-the-error-text",
+   "defaults": [
+    "EsignHttp",
+    "EsignTimeout"
+   ],
+   "steps": [
+    {
+     "event": "ESIGN_DOWNLOAD_DOCUMENT_REPLIED",
+     "payload": {
+      "status": 404,
+      "headers": {},
+      "body": "Tm90IGZvdW5k",
+      "key": "E1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ESIGN_DOWNLOAD_DOCUMENT_FAILED",
+        "payload": {
+         "message": "DocuSign error 404: Not found"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

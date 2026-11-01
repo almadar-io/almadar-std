@@ -13,7 +13,7 @@ orbital GalleryItemOrbital {
 
     type GalleryItemLoaded = Event { data : [GalleryItem]!, totalCount : number! } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
 
-    type GalleryItemPageLoaded = Event { data : [GalleryItem], totalCount : number } "Fired when one page of GalleryItem finishes loading after a search, filter or REFETCH_PAGE"
+    type GalleryItemPageLoaded = Event { data : [GalleryItem], totalCount : number! } "Fired when one page of GalleryItem finishes loading after a search, filter or REFETCH_PAGE"
 
     type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
 
@@ -235,7 +235,7 @@ orbital GalleryItemOrbital {
           limit: @config.relatedMaxRows
         })
       GalleryItemLoadFailed -> browsing
-        (notify error (str/concat "Couldn't refresh the gallery — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't refresh the gallery — " ?error) "Couldn't refresh the gallery"))
       GalleryItemPageLoaded -> browsing
         (set @entity.galleryTotalCount ?totalCount)
         (render-ui main {
@@ -377,7 +377,7 @@ orbital GalleryItemOrbital {
         @tier "internal"
       GalleryItemPageLoaded {
         data : [GalleryItem]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates one page of GalleryItem finished loading after a search, filter or page change."
         @synonyms "page loaded, results loaded, filtered"
@@ -433,7 +433,7 @@ orbital GalleryItemOrbital {
         @tier "internal"
       GalleryItemPageLoaded {
         data : [GalleryItem]
-        totalCount : number
+        totalCount : number!
       }
         @description "Indicates one page of GalleryItem finished loading after a search, filter or page change."
         @synonyms "page loaded, results loaded, filtered"

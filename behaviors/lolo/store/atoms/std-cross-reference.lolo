@@ -54,7 +54,7 @@ orbital CrossReferenceOrbital {
         (set @entity.filteredLinks (array/filter ?data (fn row (= (object/get @row leftId) @entity.leftId))))
         (emit LinksLoaded { data: @entity.filteredLinks, leftId: @entity.leftId })
       LinkOpFailed -> idle
-        (notify error (str/concat "Couldn't update the link — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't update the link — " ?error) "Couldn't update the link"))
     }
 
     emits {

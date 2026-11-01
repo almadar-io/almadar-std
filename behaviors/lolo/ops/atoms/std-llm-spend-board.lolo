@@ -1,9 +1,17 @@
 app std-llm-spend-board [
   version: "1.0.0",
   description: "std-llm-spend-board — what LLM providers cost: the OpenRouter key's usage and limit, the DeepSeek and Moonshot (Kimi) account balances, the spend those balances show between the first and latest kept snapshot, and the token usage a kernel server's dispatch trace reports (its usageEvent emits, as std-llm reports them), priced from LlmPrice rows (listed by provider, then model). LLM_SPEND_LOAD answers LLM_SPEND from the cache within cacheTtlMs; LLM_SPEND_REFRESH reads afresh; a load during a read is answered by that read. A provider whose key credential is not configured is absent; one that refuses or cannot be reached is unavailable with the reason. Each DeepSeek and Moonshot balance read keeps a LlmBalanceSnapshot row (the newest snapshotsKept per provider). The usage read needs traceOrigin (a program lists it in its egress; a loopback origin must be an IP literal); without one the usage says so. LLM_PRICE_SET sets a model's price per 1K prompt and completion tokens.",
-  egress: ["https://openrouter.ai", "https://api.deepseek.com", "https://api.moonshot.ai", "http://127.0.0.1:3000"]
+  net: { "openrouter.ai:443": [tcp], "api.deepseek.com:443": [tcp], "api.moonshot.ai:443": [tcp], "127.0.0.1:3000": [tcp] }
 ]
 uses Spec from "almadar-std/llm-spend-board"
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type LsProvider = { available : boolean!, balance : number?, usage : number?, limit : number?, actualSpend : number?, currency : string!, error : string? }
 type LsOrData = { usage : number?, limit : number? }
 type LsOrReply = { data : LsOrData! }
@@ -23,6 +31,8 @@ type LsUsage = { totalCalls : number!, inputTokens : number?, outputTokens : num
 type LsPriceRow = { provider : string!, model : string!, promptPer1K : number!, completionPer1K : number! }
 type LsProviders = { openrouter : LsProvider?, deepseek : LsProvider?, kimi : LsProvider? }
 orbital LlmSpendBoardOrbital {
+  uses Board from "std/behaviors/std-status-board"
+
   entity LlmBalanceSnapshot [persistent: llm_balance_snapshots] {
     id : string!
     provider : string! @description "The provider whose balance this is."
@@ -55,42 +65,187 @@ orbital LlmSpendBoardOrbital {
     pendingSpendFor : string @description "The provider whose snapshots are being read." = ""
   }
 
+  trait LsOrHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LS_OR_HTTP_REPLIED
+      HTTP_FAILED: LS_OR_HTTP_FAILED
+      HTTP_CANCEL: LS_OR_HTTP_CANCEL
+    }
+    config {
+      host: "openrouter.ai"
+      port: 443
+      tls: true
+      serverName: "openrouter.ai"
+      credential: "OPEN_ROUTER_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LlmSpend.LS_OR_SEND -> HTTP_SEND
+      LsTimeout.TIMED_OUT -> LS_OR_HTTP_CANCEL with { key: ?key } when (= ?key "or")
+    }
+  }
+
+  trait LsDsHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LS_DS_HTTP_REPLIED
+      HTTP_FAILED: LS_DS_HTTP_FAILED
+      HTTP_CANCEL: LS_DS_HTTP_CANCEL
+    }
+    config {
+      host: "api.deepseek.com"
+      port: 443
+      tls: true
+      serverName: "api.deepseek.com"
+      credential: "DEEPSEEK_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LlmSpend.LS_DS_SEND -> HTTP_SEND
+      LsTimeout.TIMED_OUT -> LS_DS_HTTP_CANCEL with { key: ?key } when (= ?key "ds")
+    }
+  }
+
+  trait LsKmHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LS_KM_HTTP_REPLIED
+      HTTP_FAILED: LS_KM_HTTP_FAILED
+      HTTP_CANCEL: LS_KM_HTTP_CANCEL
+    }
+    config {
+      host: "api.moonshot.ai"
+      port: 443
+      tls: true
+      serverName: "api.moonshot.ai"
+      credential: "KIMI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LlmSpend.LS_KM_SEND -> HTTP_SEND
+      LsTimeout.TIMED_OUT -> LS_KM_HTTP_CANCEL with { key: ?key } when (= ?key "km")
+    }
+  }
+
+  trait LsTraceHttp = Http.traits.HttpClient {
+    events {
+      HTTP_REPLIED: LS_TRACE_HTTP_REPLIED
+      HTTP_FAILED: LS_TRACE_HTTP_FAILED
+      HTTP_CANCEL: LS_TRACE_HTTP_CANCEL
+    }
+    config {
+      host: "127.0.0.1"
+      port: 3000
+      tls: false
+    }
+    listens {
+      LlmSpend.LS_TRACE_SEND -> HTTP_SEND
+      LsTimeout.TIMED_OUT -> LS_TRACE_HTTP_CANCEL with { key: ?key } when (= ?key "trace")
+    }
+  }
+
+  trait LsTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      LlmSpend.LS_OR_SEND -> START with { key: (as ?key CallKey) }
+            LlmSpend.LS_DS_SEND -> START with { key: (as ?key CallKey) }
+            LlmSpend.LS_KM_SEND -> START with { key: (as ?key CallKey) }
+            LlmSpend.LS_TRACE_SEND -> START with { key: (as ?key CallKey) }
+            LsOrHttp.LS_OR_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      LsOrHttp.LS_OR_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      LsDsHttp.LS_DS_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      LsDsHttp.LS_DS_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      LsKmHttp.LS_KM_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      LsKmHttp.LS_KM_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      LsTraceHttp.LS_TRACE_HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      LsTraceHttp.LS_TRACE_HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  trait LlmSpendView = Board.traits.StatusBoard {
+    listens {
+      LlmSpend.LS_BOARD_LOADING -> BOARD_LOADING
+      LlmSpend.LS_BOARD_SHOW -> BOARD_SHOW
+      LlmSpend.LS_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "LLM spend"
+      icon: "coins"
+      idleDescription: "Load the board to read the providers' balances and the token usage."
+      emptyTitle: "No providers or usage"
+      emptyDescription: "No provider answered and the trace holds no calls."
+    }
+  }
+
   trait LlmSpend -> LlmSpendBoard [optimistic] {
     initial: idle
 
     state idle {
-      INIT -> idle when (not @config.loadOnInit)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: LLM_SPEND_LOAD }] })
-      INIT -> idle when @config.loadOnInit
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
-        (emit LLM_SPEND_LOAD { })
+      LS_SHOW -> idle
+        (let ((provs (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null)))) (u @entity.usage))
+          (let ((spenders (array/sort (array/map (array/filter @provs (fn e (and (!= @e.v null) (!= @e.v.actualSpend null)))) (fn e { name: @e.name, spend: (default @e.v.actualSpend 0), currency: (default (default @e.v.currency "") "") })) "spend" "desc"))
+                (failing (array/count @provs (fn e (and (not (default @e.v.available false)) (!= (default @e.v.error "") "")))))
+                (tokens (+ (default @u.inputTokens 0) (default @u.outputTokens 0))))
+            (emit LS_BOARD_SHOW { note: (default @u.error ""), fetchedAt: @entity.cachedAt, error: "",
+              tiles: [{ label: "Priced usage cost", value: (if (== @u.totalCost null) "unpriced" (str/concat @u.totalCost)), tone: "neutral", icon: "coins" },
+                { label: "Tokens", value: (str/concat @tokens), tone: "neutral", icon: "hash" },
+                { label: "Top provider", value: (let ((top (array/nth @spenders 0))) (if (== @top null) "no spend read" (str/concat (default @top.name "") " " (default @top.spend 0) " " (default @top.currency "")))), tone: "neutral", icon: "trophy" },
+                (if (> @failing 0) { label: "Providers with errors", value: (str/concat @failing), tone: "danger", icon: "alert-triangle" } { label: "Providers with errors", value: "0", tone: "success", icon: "check-circle" })],
+              sections: [{ key: "providers", label: "Providers" }, { key: "models", label: "Models" }],
+              rows: (array/concat
+                (array/map @provs (fn e (let ((sub (if (default @e.v.available false) "Balance and spend read" (if (!= (default @e.v.error "") "") (default @e.v.error "") "No balance or spend available")))
+                    (meta (array/concat (if (== @e.v.balance null) (array/take [""] 0) [(str/concat "balance " @e.v.balance " " (default @e.v.currency ""))]) (if (== @e.v.actualSpend null) (array/take [""] 0) [(str/concat "spend " @e.v.actualSpend " " (default @e.v.currency ""))]) (let ((t (array/sum (array/map (array/filter @u.byModel (fn m (= @m.provider @e.name))) (fn m (+ (default @m.inputTokens 0) (default @m.outputTokens 0))))))) (if (> @t 0) [(str/concat @t " tokens")] (array/take [""] 0))))))
+                  (if (default @e.v.available false) (let ((r : StatusBoardRow { id: (str/concat "provider:" @e.name), section: "providers", title: @e.name, subtitle: @sub, tone: "success", statusLabel: "Read", icon: "", meta: @meta, at: null, url: "" })) @r) (if (!= (default @e.v.error "") "") (let ((r : StatusBoardRow { id: (str/concat "provider:" @e.name), section: "providers", title: @e.name, subtitle: @sub, tone: "danger", statusLabel: "Error", icon: "", meta: @meta, at: null, url: "" })) @r) (let ((r : StatusBoardRow { id: (str/concat "provider:" @e.name), section: "providers", title: @e.name, subtitle: @sub, tone: "warning", statusLabel: "Unavailable", icon: "", meta: @meta, at: null, url: "" })) @r))))))
+                (array/map @u.byModel (fn m (let ((r : StatusBoardRow { id: (str/concat "model:" @m.provider "/" @m.model), section: "models", title: @m.model, subtitle: @m.provider, tone: (if (== @m.cost null) "warning" "neutral"), statusLabel: (if (== @m.cost null) "Unpriced" (str/concat @m.cost)), icon: "", meta: [(str/concat @m.calls " calls"), (str/concat (default @m.inputTokens 0) " in / " (default @m.outputTokens 0) " out tokens")], at: null, url: "" })) @r)))) })))
+      LS_ROW_OPENED -> idle
+        (let ((pe (array/find [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (and (!= @e.v null) (= (str/concat "provider:" @e.name) @payload.rowId)))))
+              (m (array/find @entity.usage.byModel (fn x (= (str/concat "model:" @x.provider "/" @x.model) @payload.rowId)))))
+          (emit LS_BOARD_DETAIL { detail: (if (!= @pe null)
+            { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "",
+              items: (array/concat [{ label: "State", tone: (if (default @pe.v.available false) "success" "warning"), statusLabel: (if (default @pe.v.available false) "Read" "Unavailable"), meta: (default @pe.v.error "") }]
+                (if (== @pe.v.balance null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Balance", tone: "neutral", statusLabel: (str/concat @pe.v.balance " " (default @pe.v.currency "")), meta: "" }])
+                (if (== @pe.v.actualSpend null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Spend since the first kept snapshot", tone: "neutral", statusLabel: (str/concat @pe.v.actualSpend " " (default @pe.v.currency "")), meta: "" }])
+                (if (== @pe.v.usage null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Key usage", tone: "neutral", statusLabel: (str/concat @pe.v.usage " " (default @pe.v.currency "")), meta: (if (== @pe.v.limit null) "no limit" (str/concat "limit " @pe.v.limit)) }])) }
+            (if (!= @m null)
+              { rowId: @payload.rowId, phase: "ready", codeTitle: "Recent calls", errorLines: [], error: "",
+                code: (str/join (array/map (array/filter @entity.usage.recentCalls (fn c (and (= (default @c.provider "") @m.provider) (= (default @c.model "") @m.model)))) (fn c (str/concat @c.at " " (default @c.action "") " " (default @c.inputTokens 0) " in " (default @c.outputTokens 0) " out " (if (== @c.cost null) "unpriced" (str/concat @c.cost))))) "\n"),
+                items: [{ label: "Calls", tone: "neutral", statusLabel: (str/concat @m.calls), meta: (str/concat @m.unreportedCalls " without token counts") }, { label: "Input tokens", tone: "neutral", statusLabel: (str/concat (default @m.inputTokens 0)), meta: "" }, { label: "Output tokens", tone: "neutral", statusLabel: (str/concat (default @m.outputTokens 0)), meta: "" }, { label: "Cost", tone: (if (== @m.cost null) "warning" "neutral"), statusLabel: (if (== @m.cost null) "unpriced" (str/concat @m.cost)), meta: "" }] }
+              { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The row is no longer on the board" })) }))
       LLM_SPEND_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
+        (emit LS_SHOW { })
       LLM_SPEND_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit LS_BOARD_LOADING { })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.openrouter null)
         (set @entity.deepseek null)
         (set @entity.kimi null)
-        (http GET @config.openRouterOrigin "/api/v1/auth/key" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.openRouterKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_OR_REPLIED, failure: LS_OR_FAILED } })
+        (emit LS_OR_SEND { key: "or", method: "GET", target: "/api/v1/auth/key", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LLM_SPEND_REFRESH -> reading
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit LS_BOARD_LOADING { })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.openrouter null)
         (set @entity.deepseek null)
         (set @entity.kimi null)
-        (http GET @config.openRouterOrigin "/api/v1/auth/key" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.openRouterKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_OR_REPLIED, failure: LS_OR_FAILED } })
+        (emit LS_OR_SEND { key: "or", method: "GET", target: "/api/v1/auth/key", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LLM_PRICE_SET -> idle
         (persist upsert LlmPrice { id: (str/concat @payload.provider "/" @payload.model), provider: @payload.provider, model: @payload.model, promptPer1K: @payload.promptPer1K, completionPer1K: @payload.completionPer1K } { emit: { success: LS_PRICE_SAVED, failure: LS_PRICE_NOT_SAVED } })
       LS_PRICE_SAVED -> idle
@@ -98,10 +253,24 @@ orbital LlmSpendBoardOrbital {
         (emit LLM_PRICE_SAVED { provider: @payload.provider, model: @payload.model })
       LS_PRICE_NOT_SAVED -> idle
         (emit LLM_PRICE_SAVE_FAILED { error: @payload.error })
-        (notify error (str/concat "The price could not be saved: " @payload.error))
+        (notify error (str/concat "The price could not be saved: " (default @payload.error "")))
     }
 
     state reading {
+      LS_ROW_OPENED -> reading
+        (let ((pe (array/find [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (and (!= @e.v null) (= (str/concat "provider:" @e.name) @payload.rowId)))))
+              (m (array/find @entity.usage.byModel (fn x (= (str/concat "model:" @x.provider "/" @x.model) @payload.rowId)))))
+          (emit LS_BOARD_DETAIL { detail: (if (!= @pe null)
+            { rowId: @payload.rowId, phase: "ready", code: "", codeTitle: "", errorLines: [], error: "",
+              items: (array/concat [{ label: "State", tone: (if (default @pe.v.available false) "success" "warning"), statusLabel: (if (default @pe.v.available false) "Read" "Unavailable"), meta: (default @pe.v.error "") }]
+                (if (== @pe.v.balance null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Balance", tone: "neutral", statusLabel: (str/concat @pe.v.balance " " (default @pe.v.currency "")), meta: "" }])
+                (if (== @pe.v.actualSpend null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Spend since the first kept snapshot", tone: "neutral", statusLabel: (str/concat @pe.v.actualSpend " " (default @pe.v.currency "")), meta: "" }])
+                (if (== @pe.v.usage null) (array/take [{ label: "", tone: "neutral", statusLabel: "", meta: "" }] 0) [{ label: "Key usage", tone: "neutral", statusLabel: (str/concat @pe.v.usage " " (default @pe.v.currency "")), meta: (if (== @pe.v.limit null) "no limit" (str/concat "limit " @pe.v.limit)) }])) }
+            (if (!= @m null)
+              { rowId: @payload.rowId, phase: "ready", codeTitle: "Recent calls", errorLines: [], error: "",
+                code: (str/join (array/map (array/filter @entity.usage.recentCalls (fn c (and (= (default @c.provider "") @m.provider) (= (default @c.model "") @m.model)))) (fn c (str/concat @c.at " " (default @c.action "") " " (default @c.inputTokens 0) " in " (default @c.outputTokens 0) " out " (if (== @c.cost null) "unpriced" (str/concat @c.cost))))) "\n"),
+                items: [{ label: "Calls", tone: "neutral", statusLabel: (str/concat @m.calls), meta: (str/concat @m.unreportedCalls " without token counts") }, { label: "Input tokens", tone: "neutral", statusLabel: (str/concat (default @m.inputTokens 0)), meta: "" }, { label: "Output tokens", tone: "neutral", statusLabel: (str/concat (default @m.outputTokens 0)), meta: "" }, { label: "Cost", tone: (if (== @m.cost null) "warning" "neutral"), statusLabel: (if (== @m.cost null) "unpriced" (str/concat @m.cost)), meta: "" }] }
+              { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The row is no longer on the board" })) }))
       INIT -> reading
       LLM_SPEND_LOAD -> reading
       LLM_SPEND_REFRESH -> reading
@@ -109,26 +278,14 @@ orbital LlmSpendBoardOrbital {
       LS_OR_REPLIED -> reading when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((rep (json/parse @payload.body LsOrReply)))
           (set @entity.openrouter (if (= @rep null) { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "USD", error: "the reply is not an OpenRouter key reply" } { available: true, balance: null, usage: @rep.data.usage, limit: @rep.data.limit, actualSpend: @rep.data.usage, currency: "USD", error: null })))
-        (http GET @config.deepseekOrigin "/user/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.deepseekKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_DS_REPLIED, failure: LS_DS_FAILED } })
+        (emit LS_DS_SEND { key: "ds", method: "GET", target: "/user/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LS_OR_REPLIED -> reading when (not (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)))
         (set @entity.openrouter { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "USD", error: (str/concat "HTTP " @payload.status) })
-        (http GET @config.deepseekOrigin "/user/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.deepseekKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_DS_REPLIED, failure: LS_DS_FAILED } })
+        (emit LS_DS_SEND { key: "ds", method: "GET", target: "/user/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LS_OR_FAILED -> reading
-        (notify warning (if (= @payload.kind "unconfigured") "OpenRouter has no key configured." (str/concat "OpenRouter could not be read: " @payload.error)))
-        (set @entity.openrouter (if (= @payload.kind "unconfigured") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "USD", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
-        (http GET @config.deepseekOrigin "/user/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.deepseekKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_DS_REPLIED, failure: LS_DS_FAILED } })
+        (notify warning (if (= @payload.kind "denied") (str/concat "OpenRouter was denied: " @payload.error) (str/concat "OpenRouter could not be read: " @payload.error)))
+        (set @entity.openrouter (if (= @payload.kind "denied") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "USD", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
+        (emit LS_DS_SEND { key: "ds", method: "GET", target: "/user/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
 
       LS_DS_REPLIED -> reading when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((rep (json/parse @payload.body LsDsReply)))
@@ -137,30 +294,18 @@ orbital LlmSpendBoardOrbital {
               (if (= @bal null)
                 (do
                   (set @entity.deepseek { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: "the reply carries no readable DeepSeek balance" })
-                  (http GET @config.deepseekOrigin "/user/balance" {
-                    headers: { Accept: "application/json" },
-                    auth: { scheme: bearer, credential: @config.deepseekKey },
-                    timeoutMs: @config.timeoutMs
-                  } { emit: { success: LS_DS_REPLIED, failure: LS_DS_FAILED } }))
+                  (emit LS_KM_SEND { key: "km", method: "GET", target: "/v1/users/me/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" }))
                 (do
                   (set @entity.deepseek { available: true, balance: @bal, usage: null, limit: null, actualSpend: null, currency: (default @info.currency "CNY"), error: null })
                   (set @entity.pendingSpendFor "deepseek")
                   (persist create LlmBalanceSnapshot { id: (str/concat "deepseek#" @now), provider: "deepseek", timestamp: @now, balance: @bal, currency: (default @info.currency "CNY") } { emit: { success: LS_SNAPSHOT_SAVED, failure: LS_SNAPSHOT_NOT_SAVED } }))))))
       LS_DS_REPLIED -> reading when (not (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)))
         (set @entity.deepseek { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (str/concat "HTTP " @payload.status) })
-        (http GET @config.kimiOrigin "/v1/users/me/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.kimiKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_KM_REPLIED, failure: LS_KM_FAILED } })
+        (emit LS_KM_SEND { key: "km", method: "GET", target: "/v1/users/me/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LS_DS_FAILED -> reading
-        (notify warning (if (= @payload.kind "unconfigured") "DeepSeek has no key configured." (str/concat "DeepSeek could not be read: " @payload.error)))
-        (set @entity.deepseek (if (= @payload.kind "unconfigured") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
-        (http GET @config.kimiOrigin "/v1/users/me/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.kimiKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_KM_REPLIED, failure: LS_KM_FAILED } })
+        (notify warning (if (= @payload.kind "denied") (str/concat "DeepSeek was denied: " @payload.error) (str/concat "DeepSeek could not be read: " @payload.error)))
+        (set @entity.deepseek (if (= @payload.kind "denied") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
+        (emit LS_KM_SEND { key: "km", method: "GET", target: "/v1/users/me/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
 
       LS_KM_REPLIED -> reading when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let ((rep (json/parse @payload.body LsKmReply)))
@@ -176,14 +321,14 @@ orbital LlmSpendBoardOrbital {
         (set @entity.kimi { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (str/concat "HTTP " @payload.status) })
         (emit LS_PRICES { })
       LS_KM_FAILED -> reading
-        (notify warning (if (= @payload.kind "unconfigured") "Moonshot has no key configured." (str/concat "Moonshot could not be read: " @payload.error)))
-        (set @entity.kimi (if (= @payload.kind "unconfigured") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
+        (notify warning (if (= @payload.kind "denied") (str/concat "Moonshot was denied: " @payload.error) (str/concat "Moonshot could not be read: " @payload.error)))
+        (set @entity.kimi (if (= @payload.kind "denied") null { available: false, balance: null, usage: null, limit: null, actualSpend: null, currency: "CNY", error: (if (= @payload.kind "timeout") "timed out" @payload.error) }))
         (emit LS_PRICES { })
 
       LS_SNAPSHOT_SAVED -> reading
         (fetch LlmBalanceSnapshot { filter: (= (object/get @entity provider) @entity.pendingSpendFor), limit: @config.maxSnapshotRows, emit: { success: LS_SNAPSHOTS_LOADED, failure: LS_SNAPSHOTS_UNREADABLE } })
       LS_SNAPSHOT_NOT_SAVED -> reading
-        (notify error (str/concat "A balance snapshot could not be kept: " @payload.error))
+        (notify error (str/concat "A balance snapshot could not be kept: " (default @payload.error "")))
         (emit LS_SPEND_DONE { })
       LS_SNAPSHOTS_LOADED -> reading when (> @payload.totalCount (array/len @payload.data))
         (emit LS_SNAPSHOTS_UNREADABLE { error: (str/concat "LlmBalanceSnapshot has " @payload.totalCount " rows for " @entity.pendingSpendFor ", over the maxSnapshotRows cap of " @config.maxSnapshotRows), code: "LS_OVER_CAP" })
@@ -194,18 +339,14 @@ orbital LlmSpendBoardOrbital {
         (set @entity.kimi (let ((cur @entity.kimi) (rows (array/sort (array/map @payload.data (fn r { at: @r.timestamp, balance: @r.balance, id: @r.id })) "at" "asc"))) (let ((newest (array/last @rows)) (oldest (array/first @rows))) (if (= @cur null) null (object/merge @cur { actualSpend: (if (or (< (array/len @rows) 2) (= @newest null) (= @oldest null)) null (let ((d (- @oldest.balance @newest.balance))) (if (> @d 0) (math/round @d 4) 0))) })))))
         (persist batch (let ((rows (array/sort (array/map @payload.data (fn r { at: @r.timestamp, id: @r.id })) "at" "asc"))) (array/map (array/take @rows (math/max 0 (- (array/len @rows) @config.snapshotsKept))) (fn r ["delete", "LlmBalanceSnapshot", @r.id]))) { emit: { success: LS_SPEND_DONE, failure: LS_TRIM_FAILED } })
       LS_SNAPSHOTS_UNREADABLE -> reading
-        (notify error (str/concat "The balance snapshots could not be read: " @payload.error))
+        (notify error (str/concat "The balance snapshots could not be read: " (default @payload.error "")))
         (emit LS_SPEND_DONE { })
       LS_TRIM_FAILED -> reading
-        (notify error (str/concat "Old balance snapshots could not be removed: " @payload.error))
+        (notify error (str/concat "Old balance snapshots could not be removed: " (default @payload.error "")))
         (emit LS_SPEND_DONE { })
       LS_SPEND_DONE -> reading when (= @entity.pendingSpendFor "deepseek")
         (set @entity.pendingSpendFor "")
-        (http GET @config.kimiOrigin "/v1/users/me/balance" {
-          headers: { Accept: "application/json" },
-          auth: { scheme: bearer, credential: @config.kimiKey },
-          timeoutMs: @config.timeoutMs
-        } { emit: { success: LS_KM_REPLIED, failure: LS_KM_FAILED } })
+        (emit LS_KM_SEND { key: "km", method: "GET", target: "/v1/users/me/balance", headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       LS_SPEND_DONE -> reading when (= @entity.pendingSpendFor "kimi")
         (set @entity.pendingSpendFor "")
         (emit LS_PRICES { })
@@ -219,11 +360,11 @@ orbital LlmSpendBoardOrbital {
         (emit LS_TRACE { })
       LS_PRICES_UNREADABLE -> reading
         (set @entity.prices [])
-        (notify error (str/concat "The price rows could not be read: " @payload.error))
+        (notify error (str/concat "The price rows could not be read: " (default @payload.error "")))
         (emit LS_TRACE { })
 
       LS_TRACE -> reading when (!= @config.traceOrigin "")
-        (http GET @config.traceOrigin "/api/trace" { timeoutMs: @config.timeoutMs } { emit: { success: LS_TRACE_REPLIED, failure: LS_TRACE_FAILED } })
+        (emit LS_TRACE_SEND { key: "trace", method: "GET", target: "/api/trace", headers: [], body: (bytes/from-string ""), stream: "none" })
       LS_TRACE -> idle when (= @config.traceOrigin "")
         (set @entity.usage { totalCalls: 0, inputTokens: null, outputTokens: null, unreportedCalls: 0, totalCost: null, byModel: [], byDay: [], recentCalls: [], source: null, error: "no traceOrigin is configured; point it at a kernel server that serves /api/trace" })
         (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
@@ -231,7 +372,7 @@ orbital LlmSpendBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
+        (emit LS_SHOW { })
       LS_TRACE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "["))
         (set @entity.usage (let ((trace (json/parse @payload.body LsTrace)))
           (if (= @trace null)
@@ -252,7 +393,7 @@ orbital LlmSpendBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
+        (emit LS_SHOW { })
       LS_TRACE_REPLIED -> idle when (not (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "[")))
         (set @entity.usage { totalCalls: 0, inputTokens: null, outputTokens: null, unreportedCalls: 0, totalCost: null, byModel: [], byDay: [], recentCalls: [], source: (str/concat @config.traceOrigin "/api/trace"), error: (if (and (>= @payload.status 200) (< @payload.status 300)) (str/concat (str/concat @config.traceOrigin "/api/trace") " did not answer a dispatch trace: the body is not a dispatch trace (an array of dispatches)") (str/concat (str/concat @config.traceOrigin "/api/trace") " answered " @payload.status "; the server exposes no trace")) })
         (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
@@ -260,7 +401,7 @@ orbital LlmSpendBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
+        (emit LS_SHOW { })
       LS_TRACE_FAILED -> idle
         (set @entity.usage { totalCalls: 0, inputTokens: null, outputTokens: null, unreportedCalls: 0, totalCost: null, byModel: [], byDay: [], recentCalls: [], source: (str/concat @config.traceOrigin "/api/trace"), error: (str/concat (str/concat @config.traceOrigin "/api/trace") " is unreachable: " @payload.error) })
         (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z"))
@@ -268,7 +409,7 @@ orbital LlmSpendBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
+        (emit LS_SHOW { })
     }
 
     emits {
@@ -292,8 +433,26 @@ orbital LlmSpendBoardOrbital {
       }
         @description "The price could not be saved."
         @tier "primary"
-      LLM_SPEND_LOAD -> internal { }
-        @description "Internal: the load a page opening with loadOnInit asks for."
+      LS_BOARD_LOADING { }
+        @description "Internal: a read began, to the board."
+        @tier "internal"
+      LS_BOARD_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the figures, sections and rows, to the board."
+        @tier "internal"
+      LS_BOARD_DETAIL {
+        detail : StatusBoardDetail!
+      }
+        @description "Internal: one row's detail, to the board."
+        @tier "internal"
+      LS_SHOW -> internal { }
+        @description "Internal: show the held board."
         @tier "internal"
       LS_PRICES -> internal { }
         @description "Internal: read the price rows."
@@ -304,21 +463,17 @@ orbital LlmSpendBoardOrbital {
       LS_SPEND_DONE -> internal { }
         @description "Internal: a provider's spend is known."
         @tier "internal"
-      LS_OR_REPLIED { status : number!  headers : Map string string  body : string! }
+      LS_OR_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the OpenRouter key read, for its HTTP client."
         @tier "internal"
-      LS_OR_FAILED { error : string!  kind : string! }
+      LS_DS_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the DeepSeek balance read, for its HTTP client."
         @tier "internal"
-      LS_DS_REPLIED { status : number!  headers : Map string string  body : string! }
+      LS_KM_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the Moonshot balance read, for its HTTP client."
         @tier "internal"
-      LS_DS_FAILED { error : string!  kind : string! }
-        @tier "internal"
-      LS_KM_REPLIED { status : number!  headers : Map string string  body : string! }
-        @tier "internal"
-      LS_KM_FAILED { error : string!  kind : string! }
-        @tier "internal"
-      LS_TRACE_REPLIED { status : number!  headers : Map string string  body : string! }
-        @tier "internal"
-      LS_TRACE_FAILED { error : string!  kind : string! }
+      LS_TRACE_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the trace read, for its HTTP client."
         @tier "internal"
       LS_SNAPSHOT_SAVED { id : string!  provider : string!  timestamp : instant!  balance : number!  currency : string }
         @tier "internal"
@@ -345,6 +500,13 @@ orbital LlmSpendBoardOrbital {
       LLM_SPEND_LOAD -> input { }
         @description "Answer the LLM spend board, from the cache while it is fresh."
         @synonyms "llm spend, provider balances"
+      LS_ROW_OPENED {
+        rowId : string!
+      }
+        @description "The board opened a row: its detail is answered from the held board."
+      LlmSpendView.BOARD_LOAD -> LLM_SPEND_LOAD
+      LlmSpendView.BOARD_REFRESH -> LLM_SPEND_REFRESH
+      LlmSpendView.BOARD_ROW_OPENED -> LS_ROW_OPENED
       LLM_SPEND_REFRESH -> input { }
         @description "Read the LLM spend board afresh."
       LLM_PRICE_SET -> input {
@@ -371,39 +533,24 @@ orbital LlmSpendBoardOrbital {
       LS_PRICES_UNREADABLE { error : string  code : string }
       LS_PRICE_SAVED { id : string!  provider : string!  model : string!  promptPer1K : number!  completionPer1K : number! }
       LS_PRICE_NOT_SAVED { error : string  code : string }
+      LsOrHttp.LS_OR_HTTP_REPLIED -> LS_OR_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      LsOrHttp.LS_OR_HTTP_FAILED -> LS_OR_FAILED with { error: ?error, kind: ?kind }
+      LsTimeout.TIMED_OUT -> LS_OR_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "or")
+      LsDsHttp.LS_DS_HTTP_REPLIED -> LS_DS_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      LsDsHttp.LS_DS_HTTP_FAILED -> LS_DS_FAILED with { error: ?error, kind: ?kind }
+      LsTimeout.TIMED_OUT -> LS_DS_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "ds")
+      LsKmHttp.LS_KM_HTTP_REPLIED -> LS_KM_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      LsKmHttp.LS_KM_HTTP_FAILED -> LS_KM_FAILED with { error: ?error, kind: ?kind }
+      LsTimeout.TIMED_OUT -> LS_KM_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "km")
+      LsTraceHttp.LS_TRACE_HTTP_REPLIED -> LS_TRACE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      LsTraceHttp.LS_TRACE_HTTP_FAILED -> LS_TRACE_FAILED with { error: ?error, kind: ?kind }
+      LsTimeout.TIMED_OUT -> LS_TRACE_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "trace")
     }
 
     config {
-      title : string = "LLM spend"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
-      loadOnInit : boolean = false
-        @label "Load when opened"
-        @description "Read the board as soon as its page opens."
-        @tier "presentation"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @tier "presentation"
-      openRouterOrigin : url = "https://openrouter.ai"
-        @tier "infra"
-      deepseekOrigin : url = "https://api.deepseek.com"
-        @tier "infra"
-      kimiOrigin : url = "https://api.moonshot.ai"
-        @tier "infra"
-      openRouterKey : secret = "OPEN_ROUTER_API_KEY"
-        @description "The credential holding the OpenRouter key."
-        @tier "infra"
-      deepseekKey : secret = "DEEPSEEK_API_KEY"
-        @description "The credential holding the DeepSeek key."
-        @tier "infra"
-      kimiKey : secret = "KIMI_API_KEY"
-        @description "The credential holding the Moonshot (Kimi) key."
-        @tier "infra"
       traceOrigin : url = "http://127.0.0.1:3000"
         @label "Trace server"
-        @description "The kernel server whose GET /api/trace the usage is read from; empty reads none."
+        @description "The kernel server whose GET /api/trace the usage is read from, named in the usage source text; empty reads none. It must be the host and port of the LsTraceHttp client."
         @tier "infra"
       usageEvent : string = "LLM_USAGE_REPORTED"
         @description "The event a usage report is."
@@ -421,12 +568,10 @@ orbital LlmSpendBoardOrbital {
         @description "Most LlmPrice rows one read may return to price the usage; a table holding more is refused through LS_PRICES_UNREADABLE instead of pricing from a partial list."
         @synonyms "price read limit, price cap"
         @tier "infra"
-      timeoutMs : number = 30000
-        @tier "infra"
       cacheTtlMs : number = 30000
         @tier "infra"
     }
   }
 
-  page "/llm-spend-board" as LlmSpendBoardPage -> LlmSpend
+  page "/llm-spend-board" as LlmSpendBoardPage -> LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout
 }

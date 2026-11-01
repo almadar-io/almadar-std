@@ -5,6 +5,11 @@ app std-training-board [
   env: ["PATH", "HOME"]
 ]
 uses Spec from "almadar-std/training-board"
+type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
+type StatusBoardSection = { key : string!, label : string! }
+type StatusBoardRow = { id : string!, section : string!, title : string!, subtitle : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, icon : string!, meta : [string]!, at : instant?, url : string! }
+type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
+type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
 type TrListed = { Id : string, Type : string, IP : string, Launch : string }
 type TrListing = [TrListed]
 type TrFound = { instanceId : string?, instanceType : string?, publicIp : string, launchTime : string? }
@@ -17,6 +22,7 @@ type TrEpoch = { epoch : number, metrics : Map string number, time : number, isB
 type TrInstance = { instanceId : string, instanceType : string, publicIp : string, launchTime : string, uptime : string, gpu : TrGpu, process : TrProcess, epochs : [TrEpoch], logTail : [string] }
 orbital TrainingBoardOrbital {
   uses Cli from "std/behaviors/std-cli"
+  uses Board from "std/behaviors/std-status-board"
 
   entity TrainingBoard [runtime] {
     id : string!
@@ -51,21 +57,67 @@ orbital TrainingBoardOrbital {
     }
   }
 
+  trait TrainingView = Board.traits.StatusBoard {
+    listens {
+      TrainingStatus.TR_BOARD_LOADING -> BOARD_LOADING
+      TrainingStatus.TR_BOARD_SHOW -> BOARD_SHOW
+      TrainingStatus.TR_BOARD_FAILED -> BOARD_FAILED
+      TrainingStatus.TR_BOARD_DETAIL -> BOARD_DETAIL
+      LOAD_CLICKED { }
+      REFRESH_CLICKED { }
+      ROW_TOGGLED {
+        itemId : string!
+        isOpen : boolean!
+      }
+      SEARCHED {
+        searchTerm : string!
+      }
+      SECTION_PICKED {
+        key : string!
+      }
+    }
+    config {
+      title: "Training"
+      icon: "cpu"
+      idleDescription: "Load the board to read the training instances."
+      emptyTitle: "No training instances"
+      emptyDescription: "No running instance matched the instance types."
+    }
+  }
+
   trait TrainingStatus -> TrainingBoard [client] {
     initial: idle
 
     state idle {
-      INIT -> idle when (not @config.loadOnInit)
-        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: TRAINING_LOAD }] })
-      INIT -> idle when @config.loadOnInit
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
-        (emit TRAINING_LOAD { })
+      TR_SHOW -> idle
+        (let ((withGpu (array/filter @entity.instances (fn i (!= @i.gpu null)))) (training (array/count @entity.instances (fn i (!= @i.process null)))))
+          (emit TR_BOARD_SHOW { note: (str/concat (array/len @config.instanceTypes) " instance families in " @config.region), fetchedAt: @entity.cachedAt, error: "",
+            tiles: [{ label: "Instances", value: (str/concat (array/len @entity.instances)), tone: "neutral", icon: "server" },
+              (if (> @training 0) { label: "Training", value: (str/concat @training), tone: "success", icon: "activity" } { label: "Training", value: "0", tone: "neutral", icon: "activity" }),
+              { label: "GPU utilization", value: (if (= (array/len @withGpu) 0) "no GPU data" (str/concat (math/round (/ (array/sum (array/map @withGpu (fn i (default @i.gpu.utilization 0)))) (array/len @withGpu)) 0) "%")), tone: "neutral", icon: "cpu" },
+              { label: "Hottest GPU", value: (if (= (array/len @withGpu) 0) "no GPU data" (str/concat (default (array/max (array/map @withGpu (fn i (default @i.gpu.temp 0)))) 0) "°C")), tone: "neutral", icon: "thermometer" }],
+            sections: [{ key: "training", label: "Training" }, { key: "idle", label: "Idle" }, { key: "unreachable", label: "Unreachable" }],
+            rows: (array/map @entity.instances (fn i (let ((id (default @i.instanceId "")) (ip (if (= (default @i.publicIp "") "") "no public address" (default @i.publicIp ""))))
+              (let ((sub (if (== @i.process null) (str/concat (default @i.instanceType "") " · " @ip) (default @i.process.command "")))
+                    (meta (if (== @i.gpu null) (array/take [""] 0) [(str/concat (default @i.gpu.utilization 0) "% GPU"), (str/concat (math/round (/ (default @i.gpu.memoryUsed 0) 1024) 1) "/" (math/round (/ (default @i.gpu.memoryTotal 0) 1024) 1) " GiB"), (str/concat (default @i.gpu.temp 0) "°C")])))
+                (if (== @i.gpu null) (let ((r : StatusBoardRow { id: @id, section: "unreachable", title: @id, subtitle: @sub, tone: "warning", statusLabel: "Unreachable", icon: "", meta: @meta, at: null, url: "" })) @r) (if (== @i.process null) (let ((r : StatusBoardRow { id: @id, section: "idle", title: @id, subtitle: @sub, tone: "neutral", statusLabel: "Idle", icon: "", meta: @meta, at: null, url: "" })) @r) (let ((r : StatusBoardRow { id: @id, section: "training", title: @id, subtitle: @sub, tone: "success", statusLabel: "Training", icon: "", meta: @meta, at: null, url: "" })) @r)))))))  }))
+      TR_ROW_OPENED -> idle
+        (let ((i (array/find @entity.instances (fn x (= @x.instanceId @payload.rowId)))))
+          (if (== @i null)
+            (emit TR_BOARD_DETAIL { detail: { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The instance is no longer listed" } })
+            (emit TR_BOARD_DETAIL { detail: { rowId: @payload.rowId, phase: "ready", code: (str/join (default @i.logTail []) "\n"), codeTitle: "Training log", errorLines: [], error: "",
+              items: (array/concat [{ label: "Instance type", tone: "neutral", statusLabel: (default @i.instanceType ""), meta: "" }, { label: "Address", tone: "neutral", statusLabel: (if (= (default @i.publicIp "") "") "no public address" (default @i.publicIp "")), meta: "" }, { label: "Uptime", tone: "neutral", statusLabel: (default @i.uptime "unreachable"), meta: (str/concat "launched " (default @i.launchTime "")) }]
+                (if (== @i.gpu null) [] [{ label: "GPU", tone: "neutral", statusLabel: (str/concat (default @i.gpu.utilization 0) "%"), meta: (str/concat (default @i.gpu.name "") " · " (default @i.gpu.memoryUsed 0) "/" (default @i.gpu.memoryTotal 0) " MiB · " (default @i.gpu.temp 0) "°C") }])
+                (if (== @i.process null) [{ label: "Process", tone: "neutral", statusLabel: "none", meta: "" }] [{ label: "Process", tone: "success", statusLabel: "running", meta: (str/concat "pid " (default @i.process.pid 0) " · cpu " (default @i.process.cpu 0) "% · " (default @i.process.elapsed "")) }])
+                [{ label: "Epochs", tone: "neutral", statusLabel: (str/concat (array/len (default @i.epochs []))), meta: "" }]
+                (let ((last (array/last (default @i.epochs [])))) (if (== @last null) [] [{ label: "Latest epoch", tone: "info", statusLabel: (str/concat (default @last.epoch 0)), meta: (str/join (array/map (object/entries (default @last.metrics @entity.noMetrics)) (fn e (str/concat (default (array/nth @e 0) "") "=" (default (array/nth @e 1) 0)))) " ") }]))
+                (let ((best (array/find (default @i.epochs []) (fn e (default @e.isBest false))))) (if (== @best null) [] [{ label: "Best epoch", tone: "success", statusLabel: (str/concat (default @best.epoch 0)), meta: (str/join (array/map (object/entries (default @best.metrics @entity.noMetrics)) (fn e (str/concat (default (array/nth @e 0) "") "=" (default (array/nth @e 1) 0)))) " ") }]))) } })))
       TRAINING_LOAD -> idle when (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs))
         (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.instances (fn i { id: @i.instanceId, instance: @i.instanceId, type: @i.instanceType, ip: (if (= @i.publicIp "") "no public address" @i.publicIp), uptime: (default @i.uptime "unreachable"), gpu: (if (== @i.gpu null) "" (str/concat @i.gpu.name " " @i.gpu.utilization "% · " @i.gpu.memoryUsed "/" @i.gpu.memoryTotal " MiB · " @i.gpu.temp "°C")), process: (if (== @i.process null) "none" (str/concat @i.process.command " (" @i.process.elapsed ")")), epochs: (array/len @i.epochs) })), fields: [{ label: Instance, name: instance, variant: body }, { label: Type, name: type, variant: caption }, { label: Address, name: ip, variant: caption }, { label: Uptime, name: uptime, variant: caption }, { label: GPU, name: gpu, variant: caption }, { label: Process, name: process, variant: caption }, { label: Epochs, name: epochs, variant: caption }] }] })
+        (emit TR_SHOW { })
       TRAINING_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
+        (emit TR_BOARD_LOADING { })
         (set @entity.startedAt @now)
         (set @entity.found [])
         (set @entity.collected [])
@@ -76,8 +128,8 @@ orbital TrainingBoardOrbital {
         (set @entity.noMetrics (object/fromEntries (array/take [["", 0]] 0)))
         (emit TR_AWS { stage: "list", argv: ["ec2", "describe-instances", "--region", @config.region, "--filters", "Name=instance-state-name,Values=running", (str/concat "Name=instance-type,Values=" (str/join @config.instanceTypes ",")), "--query", "Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,IP:PublicIpAddress,Launch:LaunchTime}", "--output", "json"] })
       TRAINING_REFRESH -> reading
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
+        (emit TR_BOARD_LOADING { })
         (set @entity.startedAt @now)
         (set @entity.found [])
         (set @entity.collected [])
@@ -90,6 +142,17 @@ orbital TrainingBoardOrbital {
     }
 
     state reading {
+      TR_ROW_OPENED -> reading
+        (let ((i (array/find @entity.instances (fn x (= @x.instanceId @payload.rowId)))))
+          (if (== @i null)
+            (emit TR_BOARD_DETAIL { detail: { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "The instance is no longer listed" } })
+            (emit TR_BOARD_DETAIL { detail: { rowId: @payload.rowId, phase: "ready", code: (str/join (default @i.logTail []) "\n"), codeTitle: "Training log", errorLines: [], error: "",
+              items: (array/concat [{ label: "Instance type", tone: "neutral", statusLabel: (default @i.instanceType ""), meta: "" }, { label: "Address", tone: "neutral", statusLabel: (if (= (default @i.publicIp "") "") "no public address" (default @i.publicIp "")), meta: "" }, { label: "Uptime", tone: "neutral", statusLabel: (default @i.uptime "unreachable"), meta: (str/concat "launched " (default @i.launchTime "")) }]
+                (if (== @i.gpu null) [] [{ label: "GPU", tone: "neutral", statusLabel: (str/concat (default @i.gpu.utilization 0) "%"), meta: (str/concat (default @i.gpu.name "") " · " (default @i.gpu.memoryUsed 0) "/" (default @i.gpu.memoryTotal 0) " MiB · " (default @i.gpu.temp 0) "°C") }])
+                (if (== @i.process null) [{ label: "Process", tone: "neutral", statusLabel: "none", meta: "" }] [{ label: "Process", tone: "success", statusLabel: "running", meta: (str/concat "pid " (default @i.process.pid 0) " · cpu " (default @i.process.cpu 0) "% · " (default @i.process.elapsed "")) }])
+                [{ label: "Epochs", tone: "neutral", statusLabel: (str/concat (array/len (default @i.epochs []))), meta: "" }]
+                (let ((last (array/last (default @i.epochs [])))) (if (== @last null) [] [{ label: "Latest epoch", tone: "info", statusLabel: (str/concat (default @last.epoch 0)), meta: (str/join (array/map (object/entries (default @last.metrics @entity.noMetrics)) (fn e (str/concat (default (array/nth @e 0) "") "=" (default (array/nth @e 1) 0)))) " ") }]))
+                (let ((best (array/find (default @i.epochs []) (fn e (default @e.isBest false))))) (if (== @best null) [] [{ label: "Best epoch", tone: "success", statusLabel: (str/concat (default @best.epoch 0)), meta: (str/join (array/map (object/entries (default @best.metrics @entity.noMetrics)) (fn e (str/concat (default (array/nth @e 0) "") "=" (default (array/nth @e 1) 0)))) " ") }]))) } })))
       INIT -> reading
       TRAINING_LOAD -> reading
       TRAINING_REFRESH -> reading
@@ -100,10 +163,10 @@ orbital TrainingBoardOrbital {
         (emit TR_NEXT { })
       TR_RAN -> idle when (and (= @payload.stage "list") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
         (set @entity.loading false)
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: alert, variant: error, title: "The training board could not be read", message: (if (= @payload.exitCode 0) "aws answered something that is not JSON" (str/concat "aws failed (exit " @payload.exitCode "): " (if (= (str/trim @payload.stderr) "") "no error text" (str/trim @payload.stderr)))) }] })
+        (emit TR_BOARD_FAILED { error: (if (= @payload.exitCode 0) "aws answered something that is not JSON" (str/concat "aws failed (exit " @payload.exitCode "): " (if (= (str/trim @payload.stderr) "") "no error text" (str/trim @payload.stderr)))) })
       TR_CLI_FAILED -> idle when (= @payload.stage "list")
         (set @entity.loading false)
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: alert, variant: error, title: "The training board could not be read", message: (str/concat "aws is not installed or could not run: " @payload.error) }] })
+        (emit TR_BOARD_FAILED { error: (str/concat "aws is not installed or could not run: " @payload.error) })
       TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (!= (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) "") ""))
         (emit TR_SSH { stage: "visit", argv: ["-i", @config.sshKey, "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "-l", @config.sshUser, (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) ""), (str/concat "echo \"===GPU===\"; nvidia-smi --query-gpu=name,temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null || echo \"N/A\"; echo \"===PROCESS===\"; ps aux | grep -E \"" @config.processPattern "\" | grep -v grep | head -1 || echo \"NONE\"; echo \"===UPTIME===\"; uptime -p 2>/dev/null || uptime; echo \"===LOG===\"; " (str/join (array/map @config.logPaths (fn p (str/concat "tail -" @config.logLines " " @p " 2>/dev/null"))) " || ") " || echo \"NO LOG\"")] })
       TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (= (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) "") ""))
@@ -124,7 +187,7 @@ orbital TrainingBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.instances (fn i { id: @i.instanceId, instance: @i.instanceId, type: @i.instanceType, ip: (if (= @i.publicIp "") "no public address" @i.publicIp), uptime: (default @i.uptime "unreachable"), gpu: (if (== @i.gpu null) "" (str/concat @i.gpu.name " " @i.gpu.utilization "% · " @i.gpu.memoryUsed "/" @i.gpu.memoryTotal " MiB · " @i.gpu.temp "°C")), process: (if (== @i.process null) "none" (str/concat @i.process.command " (" @i.process.elapsed ")")), epochs: (array/len @i.epochs) })), fields: [{ label: Instance, name: instance, variant: body }, { label: Type, name: type, variant: caption }, { label: Address, name: ip, variant: caption }, { label: Uptime, name: uptime, variant: caption }, { label: GPU, name: gpu, variant: caption }, { label: Process, name: process, variant: caption }, { label: Epochs, name: epochs, variant: caption }] }] })
+        (emit TR_SHOW { })
       ;; the nth defaults below never fire: gpu parts (>= 5), process columns (>= 11) and split heads are length-checked first
       TR_RAN -> reading when (= @payload.stage "visit")
         (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)) (out (if (= @payload.exitCode 0) (str/trim @payload.stdout) "")))
@@ -167,8 +230,31 @@ orbital TrainingBoardOrbital {
         @description "The training instances with their GPU, process, uptime, log tail and epochs, and when they were read."
         @synonyms "training status, gpu instances, training progress"
         @tier "primary"
-      TRAINING_LOAD -> internal { }
-        @description "Internal: the load a page opening with loadOnInit asks for."
+      TR_BOARD_LOADING { }
+        @description "Internal: a read began, to the board."
+        @tier "internal"
+      TR_BOARD_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+        @description "Internal: the figures, sections and rows, to the board."
+        @tier "internal"
+      TR_BOARD_FAILED {
+        error : string!
+      }
+        @description "Internal: the read failed, to the board."
+        @tier "internal"
+      TR_BOARD_DETAIL {
+        detail : StatusBoardDetail!
+      }
+        @description "Internal: one instance's detail, to the board."
+        @tier "internal"
+      TR_SHOW -> internal { }
+        @description "Internal: show the held instances on the board."
         @tier "internal"
       TR_AWS {
         stage : string!
@@ -211,6 +297,13 @@ orbital TrainingBoardOrbital {
         code : string!
       }
         @description "A std-cli CLI_FAILED: aws or ssh could not run."
+      TR_ROW_OPENED {
+        rowId : string!
+      }
+        @description "The board opened an instance's row: its detail is answered from the held instances."
+      TrainingView.BOARD_LOAD -> TRAINING_LOAD
+      TrainingView.BOARD_REFRESH -> TRAINING_REFRESH
+      TrainingView.BOARD_ROW_OPENED -> TR_ROW_OPENED
       TrAws.CLI_DONE -> TR_RAN
       TrAws.CLI_FAILED -> TR_CLI_FAILED
       TrSsh.CLI_DONE -> TR_RAN
@@ -218,18 +311,6 @@ orbital TrainingBoardOrbital {
     }
 
     config {
-      title : string = "Training"
-        @label "Title"
-        @description "The board's heading."
-        @tier "presentation"
-      loadOnInit : boolean = false
-        @label "Load when opened"
-        @description "Read the board as soon as its page opens."
-        @tier "presentation"
-      statusSlot : slot = main
-        @label "Status slot"
-        @description "Where the board shows its one-line status."
-        @tier "presentation"
       region : string = "us-east-1"
         @description "The AWS region the training instances run in."
         @tier "domain"
@@ -260,5 +341,5 @@ orbital TrainingBoardOrbital {
     }
   }
 
-  page "/training-board" as TrainingBoardPage -> TrainingStatus, TrAws, TrSsh
+  page "/training-board" as TrainingBoardPage -> TrainingStatus, TrainingView, TrAws, TrSsh
 }

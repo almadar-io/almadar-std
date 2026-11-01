@@ -6,7 +6,7 @@ type FilterSpec = { field : string!, label : string, options : [string] }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type SelectableItemRelatedRow = { id : string! }
 orbital SelectableItemOrbital {
-    type SelectableItemLoaded = Event { data : [SelectableItem], totalCount : number } "Fired when one page of SelectableItem finishes loading; payload.data holds the page"
+    type SelectableItemLoaded = Event { data : [SelectableItem], totalCount : number! } "Fired when one page of SelectableItem finishes loading; payload.data holds the page"
 
     type SelectableItemLoadFailed = Event { error : string, code : string } "Fired when SelectableItem fails to load"
 
@@ -211,7 +211,7 @@ orbital SelectableItemOrbital {
           offset: (* (- ?page 1) @config.pageSize)
         })
       SelectableItemLoadFailed -> idle
-        (notify error (str/concat "Couldn't refresh the list — " ?error))
+        (notify error (if (validate/required ?error) (str/concat "Couldn't refresh the list — " ?error) "Couldn't refresh the list"))
       SelectableItemLoaded -> idle
         (render-ui main {
           children: [{
