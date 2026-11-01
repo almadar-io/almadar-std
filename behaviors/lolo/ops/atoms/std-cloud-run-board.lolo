@@ -117,6 +117,7 @@ orbital CloudRunBoardOrbital {
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if (== @v.hasResourceData true) (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (if (== @v.hasResourceData true) (str/concat @v.minInstances "–" @v.maxInstances) "unknown"), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
       CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs)))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.usageAvailable false)
@@ -131,6 +132,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
         (emit CR_MONITOR { })
       CLOUD_RUN_REFRESH -> reading
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.usageAvailable false)

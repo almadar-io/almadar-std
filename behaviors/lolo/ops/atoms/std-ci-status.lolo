@@ -86,6 +86,7 @@ orbital CiStatusOrbital {
           { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
         ] })
       CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (time/diff @now @entity.cachedAt "ms") @config.cacheTtlMs)))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor "")
@@ -94,6 +95,7 @@ orbital CiStatusOrbital {
         (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
         (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
       CI_STATUS_REFRESH -> loading
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor "")
@@ -121,6 +123,7 @@ orbital CiStatusOrbital {
         (emit CI_RETRY_FAILED { key: @entity.key, error: "GitHub answered something that is not an organization repository list" })
       ;; no key means no page read is in flight, so a reply has no run to join and the board goes idle
       CI_GQL_ANSWERED -> idle when (= @entity.key null)
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CI_STATUS_LOAD }] })
       CI_PAGE_READ -> loading when @entity.more
         (set @entity.page (+ @entity.page 1))
         (set @entity.seq (+ @entity.seq 1))
@@ -133,6 +136,18 @@ orbital CiStatusOrbital {
       CI_GQL_FAILED -> loading when (and (!= @entity.key null) (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
         (emit CI_RETRY_FAILED { key: @entity.key, error: @payload.message })
       CI_GQL_FAILED -> idle when (and (!= @entity.key null) (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+        (emit CI_RETRY_CANCEL { })
+        (set @entity.runs (if @entity.hasCache @entity.runs []))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))
+        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
+(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
+          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
+        ] })
       CI_GQL_FAILED -> idle when (= @entity.key null)
         (emit CI_RETRY_CANCEL { })
         (set @entity.runs (if @entity.hasCache @entity.runs []))

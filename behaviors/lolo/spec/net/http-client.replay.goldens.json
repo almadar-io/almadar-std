@@ -6434,6 +6434,244 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-chunked-sse-stream-split-across-reads-delivers-every-event",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "sse"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LVR5cGU6IHRleHQvZXZlbnQtc3RyZWFtDQpUcmFuc2Zlci1FbmNvZGluZzogY2h1bmtlZA0KDQpiDQpkYXRhOiBvbmUKCg0K",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_STREAM_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "one"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "Yg0KZGF0YTogdHdvCgoNCg==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_STREAM_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "two"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "MA0KDQo=",
+      "eof": true,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-sse-chunks-in-one-read-both-arrive-and-the-client-reads-on",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "sse"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LVR5cGU6IHRleHQvZXZlbnQtc3RyZWFtDQpUcmFuc2Zlci1FbmNvZGluZzogY2h1bmtlZA0KDQpiDQpkYXRhOiBvbmUKCg0KYg0KZGF0YTogdHdvCgoNCg==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_STREAM_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "one"
+        }
+       },
+       {
+        "event": "HTTP_STREAM_EVENT",
+        "payload": {
+         "key": "k1",
+         "data": "two"
+        }
+       },
+       {
+        "event": "HC_WANT"
+       }
+      ],
+      "emitCounts": {
+       "HTTP_STREAM_EVENT": 2
+      },
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "MA0KDQo=",
+      "eof": true,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

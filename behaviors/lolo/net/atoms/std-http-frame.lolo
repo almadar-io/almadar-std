@@ -7,6 +7,8 @@ uses Spec from "almadar-std/http-frame"
 orbital HttpFrameOrbital {
   entity HttpFrameRun [runtime] {
     id : string!
+    ;; Each run moves the frame, so a run framing the same bytes again in one dispatch is progress, not a cycle.
+    runs : number = 0
   }
 
   trait HttpFrame -> HttpFrameRun [optimistic] {
@@ -16,6 +18,7 @@ orbital HttpFrameOrbital {
       INIT -> ready
 
       FRAME_RUN -> ready
+        (set @entity.runs (+ @entity.runs 1))
         (emit FRAME_STEP { key: @payload.key, stream: @payload.stream, data: (if (and @payload.final (> (bytes/length @payload.data) 0)) (bytes/concat [@payload.data, (bytes/from-string (if (= @payload.stream "sse") "\n\n" "\n"))]) @payload.data) })
 
       FRAME_STEP -> ready when (and (= @payload.stream "jsonl") (< (bytes/index-of @payload.data (bytes/from-string "\n") 0) 0))

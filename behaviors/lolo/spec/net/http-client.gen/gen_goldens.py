@@ -91,6 +91,17 @@ case("a-close-before-the-content-length-is-met-fails-io",
 sse="data: one\n\nevent: ping\nid: 7\ndata: two\ndata: lines\n\n: comment\n\ndata: tail"
 case("an-event-stream-delivers-each-frame-and-the-cut-tail-at-the-end",
  flow(send(stream="sse"),[(read(head(200,"OK",[("Content-Type","text/event-stream")])+sse[:sse.index("tail")-6]),{"state":"reading","emits":[{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":"one"}},{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":"two\nlines","event":"ping","id":"7"}}],"neverEmits":["HTTP_REPLIED"]}),({"data":b("data: tail"),"eof":True,"key":"read"},{"state":"ready","emits":[{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":"tail"}},replied("k1",200,{"content-type":"text/event-stream"},"")]})],None))
+# a chunked event stream (an LLM's): each chunk's frame arrives, and two chunks in one read both arrive and the client
+# reads on (the framer moves its frame per run, so the second run's same tail is progress, not a cycle)
+SSEH=[("Content-Type","text/event-stream"),("Transfer-Encoding","chunked")]
+sch=lambda s:"%x\r\n%s\r\n"%(len(s.encode()),s)
+sev=lambda d:{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":d}}
+sdone=(read("0\r\n\r\n",True),{"emits":[{"event":"HTTP_REPLIED","payload":{"key":"k1","status":200}}],"neverEmits":["HTTP_FAILED"]})
+case("a-chunked-sse-stream-split-across-reads-delivers-every-event",
+ flow(send(stream="sse"),[(read(head(200,"OK",SSEH)+sch("data: one\n\n")),{"emits":[sev("one")],"neverEmits":["HTTP_REPLIED","HTTP_FAILED"]}),
+  (read(sch("data: two\n\n")),{"emits":[sev("two")],"neverEmits":["HTTP_REPLIED","HTTP_FAILED"]}),sdone],None))
+case("two-sse-chunks-in-one-read-both-arrive-and-the-client-reads-on",
+ flow(send(stream="sse"),[(read(head(200,"OK",SSEH)+sch("data: one\n\n")+sch("data: two\n\n")),{"emits":[sev("one"),sev("two"),{"event":"HC_WANT"}],"emitCounts":{"HTTP_STREAM_EVENT":2},"neverEmits":["HTTP_REPLIED","HTTP_FAILED"]}),sdone],None))
 jl='{"a":1}\n{"b":2}\n{"c":'
 case("json-lines-deliver-each-complete-line",
  flow(send(stream="jsonl"),[(read(head(200,"OK",[])+jl),{"state":"reading","emits":[{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":'{"a":1}'}},{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":'{"b":2}'}}],"emitCounts":{"HTTP_STREAM_EVENT":2}}),({"data":b("3}"),"eof":True,"key":"read"},{"state":"ready","emits":[{"event":"HTTP_STREAM_EVENT","payload":{"key":"k1","data":'{"c":3}'}},replied("k1",200,{},"")]})],None))

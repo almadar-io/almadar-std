@@ -68,6 +68,7 @@ orbital LlmSpendBoardOrbital {
         (emit LLM_SPEND { providers: { openrouter: @entity.openrouter, deepseek: @entity.deepseek, kimi: @entity.kimi }, usage: @entity.usage, modelPricing: @entity.prices, fetchedAt: @entity.fetchedAt })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: LLM_SPEND_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/filter [{ name: "openrouter", v: @entity.openrouter }, { name: "deepseek", v: @entity.deepseek }, { name: "kimi", v: @entity.kimi }] (fn e (!= @e.v null))) (fn e (let ((v @e.v)) { id: @e.name, provider: @e.name, state: (if @v.available "read" (default @v.error "unavailable")), balance: (if (== @v.balance null) "" (str/concat @v.balance " " @v.currency)), spend: (if (== @v.actualSpend null) "" (str/concat @v.actualSpend " " @v.currency)) }))), fields: [{ label: Provider, name: provider, variant: body }, { label: State, name: state, variant: badge }, { label: Balance, name: balance, variant: caption }, { label: Spend, name: spend, variant: caption }] }, { type: typography, variant: caption, content: (if (!= @entity.usage.error null) @entity.usage.error (str/concat @entity.usage.totalCalls " calls, " (default @entity.usage.inputTokens 0) " in / " (default @entity.usage.outputTokens 0) " out tokens, cost " (if (== @entity.usage.totalCost null) "unpriced" @entity.usage.totalCost))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.usage.byModel (fn m { id: (str/concat @m.provider "/" @m.model), model: (str/concat @m.provider "/" @m.model), calls: @m.calls, tokens: (str/concat (default @m.inputTokens 0) " / " (default @m.outputTokens 0)), cost: (if (== @m.cost null) "unpriced" @m.cost) })), fields: [{ label: Model, name: model, variant: body }, { label: Calls, name: calls, variant: caption }, { label: "Tokens in / out", name: tokens, variant: caption }, { label: Cost, name: cost, variant: caption }] }] })
       LLM_SPEND_LOAD -> reading when (not (and @entity.hasCache (< (time/diff @now @entity.cachedAt) @config.cacheTtlMs)))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.openrouter null)
@@ -79,6 +80,7 @@ orbital LlmSpendBoardOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: LS_OR_REPLIED, failure: LS_OR_FAILED } })
       LLM_SPEND_REFRESH -> reading
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.loading true)
         (set @entity.startedAt (time/now))
         (set @entity.openrouter null)

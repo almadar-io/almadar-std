@@ -111,6 +111,7 @@ orbital AppHostingBoardOrbital {
         (set @entity.queue (array/append @entity.queue { kind: "build-logs", backendId: "", force: false, cloudBuildId: @payload.cloudBuildId, region: (if (= (default @payload.region "") "") @config.region @payload.region) }))
         (emit AH_PUMP { })
       AH_PUMP -> reading when (> (array/len @entity.queue) 0)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
         (set @entity.current (array/nth @entity.queue 0))
         (set @entity.queue (array/slice @entity.queue 1))
         (set @entity.loading true)
@@ -229,6 +230,7 @@ orbital AppHostingBoardOrbital {
             cloudBuildId: (let ((segs (str/split (default (array/nth (str/split @logsUrl "?") 0) "") "/"))) (let ((last (default (array/nth @segs (- (array/len @segs) 1)) ""))) (if (and (str/includes @logsUrl "?") (validate/pattern @last "^[0-9a-f-]{36}$")) @last ""))),
             cloudBuildRegion: (let ((tail (default (array/nth (str/split @logsUrl "region=") 1) ""))) (if (and (str/includes @logsUrl "region=") (str/includes @tail "/")) (default (array/nth (str/split @tail "/") 0) @config.region) @config.region)),
             errorSource: (if (!= (object/get @b "errorSource" "") "") (object/get @b "errorSource" "") (object/get @b "errors.0.errorSource" "")) }) })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_FAILED -> idle when (= @payload.key "rollouts")
         (notify warning (str/concat "App Hosting unreachable: " @payload.error))
@@ -242,6 +244,7 @@ orbital AppHostingBoardOrbital {
           (do
             (set @entity.logsCache (array/append (array/filter @entity.logsCache (fn c (!= @c.key @entity.current.backendId))) { key: @entity.current.backendId, lines: @lines, cachedAt: @now }))
             (emit AH_LOGS { backendId: @entity.current.backendId, lines: @lines })))
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_RAN -> idle when (and (= @payload.stage "logs") (not (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout AhLogEntries) null))))
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: [] })
