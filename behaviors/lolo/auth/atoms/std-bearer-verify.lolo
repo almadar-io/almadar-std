@@ -124,6 +124,15 @@ orbital BearerVerifyOrbital {
         (set @entity.queue (array/slice @entity.queue 1))
       BEARER_NEXT -> idle
         (emit BEARER_PUMP {})
+      TOKEN_VERIFIED -> idle
+        (let ((nowS (time/diff @now @config.epoch "s")) (skew @config.clockSkewSeconds) (iat (let ((f (array/find @payload.verified.claims (fn c (= @c.name "iat"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (authTime (let ((f (array/find @payload.verified.claims (fn c (= @c.name "auth_time"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (tenant (let ((f (array/find @payload.verified.claims (fn c (= @c.name "firebase"))))) (if (= @f null) "" (default (object/get (default (as @f.value BearerFirebase) { tenant: "" }) "tenant") "")))))
+          (let ((why (if (and (> @iat 0) (> @iat (+ @nowS @skew))) "issued-in-future"
+                       (if (and @config.requireAuthTime (or (<= @authTime 0) (> @authTime @nowS))) "auth-time"
+                         (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants @tenant))) "tenant" "")))))
+            (if (= @why "")
+              (emit BEARER_VERIFIED { requestId: @entity.requestId, verified: @payload.verified })
+              (emit BEARER_REFUSED { requestId: @entity.requestId, reason: @why }))))
+        (emit BEARER_PUMP {})
     }
 
     state fetching {
@@ -261,15 +270,6 @@ orbital BearerVerifyOrbital {
               (emit BEARER_REFUSED { requestId: @entity.requestId, reason: (object/get (default (as @r BearerFailure) { error: "", kind: "" }) "kind") })
               (emit BEARER_PUMP {}))
             (emit TOKEN_VERIFIED { requestId: @entity.requestId, verified: @r })))
-      TOKEN_VERIFIED -> idle
-        (let ((nowS (time/diff @now @config.epoch "s")) (skew @config.clockSkewSeconds) (iat (let ((f (array/find @payload.verified.claims (fn c (= @c.name "iat"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (authTime (let ((f (array/find @payload.verified.claims (fn c (= @c.name "auth_time"))))) (if (= @f null) 0 (default (as @f.value number) 0)))) (tenant (let ((f (array/find @payload.verified.claims (fn c (= @c.name "firebase"))))) (if (= @f null) "" (default (object/get (default (as @f.value BearerFirebase) { tenant: "" }) "tenant") "")))))
-          (let ((why (if (and (> @iat 0) (> @iat (+ @nowS @skew))) "issued-in-future"
-                       (if (and @config.requireAuthTime (or (<= @authTime 0) (> @authTime @nowS))) "auth-time"
-                         (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants @tenant))) "tenant" "")))))
-            (if (= @why "")
-              (emit BEARER_VERIFIED { requestId: @entity.requestId, verified: @payload.verified })
-              (emit BEARER_REFUSED { requestId: @entity.requestId, reason: @why }))))
-        (emit BEARER_PUMP {})
     }
 
     emits {

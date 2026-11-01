@@ -1,0 +1,48 @@
+app std-not-found [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-not-found — the page an app shows when a path matches no page: a headline, a line of explanation and one link back, in the viewer's language. Declared with the `[notFound]` modifier, so the app answers an unknown address with this page instead of nothing. It adds no navigation item."
+]
+;; @capabilities "page not found, 404 page, unknown address, fallback page, missing page"
+orbital NotFoundOrbital {
+  uses Hero from "std/behaviors/std-hero"
+
+  entity NotFoundView [runtime] {
+    id : string!
+  }
+
+  trait NotFoundHero = Hero.traits.HeroRender {
+    config {
+      look: header
+      headline: (if (= @config.headline "") (i18n/t "headline") @config.headline)
+      lede: (if (= @config.lede "") (i18n/t "lede") @config.lede)
+      primaryLabel: (if (= @config.primaryLabel "") (i18n/t "link") @config.primaryLabel)
+      primaryHref: @config.primaryHref
+    }
+  }
+
+  config {
+    headline : string = ""
+      @label "Headline"
+      @description "The heading shown for an address that matches no page; empty uses the translated default."
+      @synonyms "title, 404 title"
+      @tier "presentation"
+    lede : string = ""
+      @label "Explanation"
+      @description "The line under the heading; empty uses the translated default."
+      @synonyms "message, description"
+      @tier "presentation"
+    primaryLabel : string = ""
+      @label "Link label"
+      @description "The label of the one link back; empty uses the translated default."
+      @synonyms "button label, back link"
+      @tier "presentation"
+    primaryHref : string = "/"
+      @label "Link target"
+      @description "Where the link back goes."
+      @synonyms "home path, back path"
+      @tier "presentation"
+  }
+
+  page "/not-found" -> NotFoundHero [notFound]
+}

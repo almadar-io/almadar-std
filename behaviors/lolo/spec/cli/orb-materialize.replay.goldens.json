@@ -450,7 +450,7 @@
    }
   },
   {
-   "id": "control: a source that does not lower answers 500 naming it",
+   "id": "a source that does not lower is recorded and the next is taken",
    "steps": [
     {
      "trait": "MaterializeEngine",
@@ -460,14 +460,50 @@
       "error": "unexpected token"
      },
      "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "MAT_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "MATERIALIZE_ANSWERED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "rel": "bad.lolo",
+    "cursor": 0,
+    "items": [
+     "bad.lolo",
+     "good.lolo"
+    ]
+   }
+  },
+  {
+   "id": "a saved mirror with failed sources answers 500 with its directory and the failures",
+   "steps": [
+    {
+     "trait": "MaterializeEngine",
+     "from": "saving",
+     "event": "MAT_SAVED",
+     "payload": {},
+     "expect": {
       "state": "idle",
       "emits": [
        {
         "event": "MATERIALIZE_ANSWERED",
         "payload": {
          "status": 500,
-         "body": "",
-         "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token"
+         "body": "out\n",
+         "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token",
+         "failures": [
+          {
+           "rel": "bad.lolo",
+           "error": "unexpected token"
+          }
+         ]
         }
        }
       ]
@@ -475,7 +511,13 @@
     }
    ],
    "entity": {
-    "rel": "bad.lolo"
+    "out": "out",
+    "failures": [
+     {
+      "rel": "bad.lolo",
+      "error": "unexpected token"
+     }
+    ]
    }
   }
  ]

@@ -46,7 +46,7 @@ orbital IdentityBindingOrbital {
       BEARER_PRESENT -> idle when (and (= (default @payload.clientId "") "") (!= (default @payload.authorization "") ""))
         (emit IDENTITY_REFUSED { requestId: (default @payload.requestId 0), reason: "no-client-session" })
       BEARER_PRESENT -> idle when (!= (default @payload.clientId "") "")
-        (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".CREDENTIAL_PRESENTED") { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "CREDENTIAL_PRESENTED", clientId: @payload.clientId, input: true } { key: (str/concat (default @payload.requestId 0)), emit: { success: CREDENTIAL_ANSWERED, failure: CREDENTIAL_FAILED } })
+        (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".CREDENTIAL_PRESENTED") { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "CREDENTIAL_PRESENTED", clientId: @payload.clientId, input: true, wire: true } { key: (str/concat (default @payload.requestId 0)), emit: { success: CREDENTIAL_ANSWERED, failure: CREDENTIAL_FAILED } })
 
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_BOUND")))
         (emit IDENTITY_BOUND { requestId: (default (str/to-number (default @payload.key "0")) 0) })

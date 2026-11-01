@@ -2,7 +2,7 @@ app std-orb-gate [
   version: "1.0.0",
   inbound: ["cli-gate"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-gate — the `orb gate <known-failures.txt> <observed.txt>` command, the ratchet a release gate runs. Each file lists failure ids, one per line; surrounding whitespace is trimmed, blank lines and lines starting with # are ignored, and a repeated id counts once. An id in observed that is not in known is new; an id in known that is not in observed is fixed but still listed, so fixing a failure means deleting its line. The answer is each `new    <id>` line, then each `fixed  <id>  (remove it from <known>)` line, both sorted, then `N new, M fixed, K known`. Status 200 (exit 0) when nothing is new and nothing fixed is still listed, else 500 (exit 1); fewer or more than two arguments, or an absolute path, answers usage status 400 (exit 2); a read that fails or a file that is not text answers 500 with its error. Both paths are read relative to the working directory."
+  description: "std-orb-gate — the `orb gate <known-failures.txt> <observed.txt>` command, the ratchet a release gate runs. The observed file lists failure ids, one per line; the known-failures file lists `<id>  <GAP-CODE>` (two spaces, a gap code starting with `G-` naming the ledger entry that owns the failure), one per line; a known line with no gap code is refused (status 500, a `gate: <known>:<line>: no gap code` finding per line, then `N known-failures lines without a gap code`). Surrounding whitespace is trimmed, blank lines and lines starting with # are ignored, and a repeated id counts once. An id in observed that is not in known is new; an id in known that is not in observed is fixed but still listed, so fixing a failure means deleting its line. The answer is each `new    <id>` line, then each `fixed  <id>  (remove it from <known>)` line, both sorted, then `N new, M fixed, K known`. Status 200 (exit 0) when nothing is new and nothing fixed is still listed, else 500 (exit 1); fewer or more than two arguments, or an absolute path, answers usage status 400 (exit 2); a read that fails or a file that is not text answers 500 with its error. Both paths are read relative to the working directory."
 ]
 uses Spec from "almadar-std/orb-gate"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -46,16 +46,23 @@ orbital GateOrbital {
     state comparing {
       INIT -> comparing
       GATE_COMPARE -> ready
-        (let ((known (array/unique (array/filter (array/map (str/split @entity.knownText "\n") (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#")))))))
-              (observed (array/unique (array/filter (array/map (str/split @entity.observedText "\n") (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#"))))))))
-          (let ((fresh (array/sort (array/filter @observed (fn x (not (array/includes @known @x))))))
-                (fixed (array/sort (array/filter @known (fn x (not (array/includes @observed @x)))))))
-            (emit GATE_ANSWERED {
-              status: (if (and (= (array/len @fresh) 0) (= (array/len @fixed) 0)) 200 500),
-              body: (str/join (array/concat
-                (array/map @fresh (fn x (str/concat "new    " @x)))
-                (array/map @fixed (fn x (str/concat "fixed  " @x "  (remove it from " @entity.knownPath ")")))
-                [(str/concat (array/len @fresh) " new, " (array/len @fixed) " fixed, " (array/len @known) " known")]) "\n") })))
+        (let ((lines (str/split @entity.knownText "\n")))
+         (let ((rows (array/filter (array/map (array/range (array/len @lines)) (fn i (let ((t (str/trim (array/nth @lines @i)))) (let ((parts (str/split @t "  "))) { n: (+ @i 1), text: @t, entry: (str/join (array/slice @parts 0 (- (array/len @parts) 1)) "  "), code: (if (>= (array/len @parts) 2) (array/last @parts) "") })))) (fn r (and (!= (object/get @r "text") "") (not (str/startsWith (object/get @r "text") "#")))))))
+          (let ((bad (array/filter @rows (fn r (not (and (str/startsWith (object/get @r "code") "G-") (not (str/includes (object/get @r "code") " ")))))))
+                (observed (array/unique (array/filter (array/map (str/split @entity.observedText "\n") (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#"))))))))
+            (if (> (array/len @bad) 0)
+              (emit GATE_ANSWERED { status: 500, body: (str/join (array/concat
+                (array/map @bad (fn r (str/concat "gate: " @entity.knownPath ":" (object/get @r "n") ": no gap code (a line is `<entry>  <GAP-CODE>`): " (object/get @r "text"))))
+                [(str/concat (array/len @bad) " known-failures lines without a gap code")]) "\n") })
+              (let ((known (array/unique (array/map @rows (fn r (object/get @r "entry"))))))
+                (let ((fresh (array/sort (array/filter @observed (fn x (not (array/includes @known @x))))))
+                      (fixed (array/sort (array/filter @known (fn x (not (array/includes @observed @x)))))))
+                  (emit GATE_ANSWERED {
+                    status: (if (and (= (array/len @fresh) 0) (= (array/len @fixed) 0)) 200 500),
+                    body: (str/join (array/concat
+                      (array/map @fresh (fn x (str/concat "new    " @x)))
+                      (array/map @fixed (fn x (str/concat "fixed  " @x "  (remove it from " @entity.knownPath ")")))
+                      [(str/concat (array/len @fresh) " new, " (array/len @fixed) " fixed, " (array/len @known) " known")]) "\n") })))))))
     }
 
     emits {

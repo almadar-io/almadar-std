@@ -4,12 +4,11 @@ app std-orb-lint-user-identity [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-user-identity — the `orb lint user-identity <file>` command, the port of user_identity.rs (validate_user_identity and validate_user_into_required_slot). It lowers the file with program/read and reports a literal compared against a closed-vocabulary `@user.<field>` of the [identity] entity (or of the orbital's own `expects entity [identity] { shape }`) that is not a declared member, through =, ==, !=, !==, eq, neq and array/includes with a list, bare or field haystack, in every inline trait (ORB_S_ROLE_LITERAL_NOT_MEMBER, at the Rust trait path), a page nav role no role field of the [identity] entity declares (same code, at orbitals[i].pages[k].roles), and the whole `@user` filling a required emit payload field or required entity field with no presence guard (ORB_USER_INTO_REQUIRED_SLOT), with the Rust path, message and suggestion (status 500, exit 1). Not ported: the `@user.<field>` existence checks (ORB_S_UNKNOWN_IDENTITY_FIELD, ORB_S_EXPECTATION_FIELD_UNDECLARED), which need the installed language's Viewer members, and the role literals of config-held role lists (check_config_role_lists), which need the compiler's role_list_sites dataflow. Clean answers `lint user-identity: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-user-identity — the `orb lint user-identity <file>` command, the port of user_identity.rs (validate_user_identity). It lowers the file with program/read and reports a literal compared against a closed-vocabulary `@user.<field>` of the [identity] entity (or of the orbital's own `expects entity [identity] { shape }`) that is not a declared member, through =, ==, !=, !==, eq, neq and array/includes with a list, bare or field haystack, in every inline trait (ORB_S_ROLE_LITERAL_NOT_MEMBER, at the Rust trait path), a page nav role no role field of the [identity] entity declares (same code, at orbitals[i].pages[k].roles) (status 500, exit 1). Not ported: the `@user.<field>` existence checks (ORB_S_UNKNOWN_IDENTITY_FIELD, ORB_S_EXPECTATION_FIELD_UNDECLARED), which need the installed language's Viewer members, and the role literals of config-held role lists (check_config_role_lists), which need the compiler's role_list_sites dataflow. Clean answers `lint user-identity: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-user-identity"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type UidShape = string | number | boolean | [UidShape?] | Map string UidShape?
-type UidSlot = { a : string }
 type UidItems = { values : [string] }
 type UidField = { name : string, type : string, required : boolean, values : [string], items : UidItems }
 type UidEntity = { name : string, identity : boolean, fields : [UidField] }
@@ -26,7 +25,7 @@ type UidProgram = { orbitals : [UidOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintUserIdentityCodes = { sRoleLiteralNotMember : LintCodeDecl , userIntoRequiredSlot : LintCodeDecl }
+type LintUserIdentityCodes = { sRoleLiteralNotMember : LintCodeDecl }
 
 orbital OrbLintUserIdentityOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -47,13 +46,13 @@ orbital OrbLintUserIdentityOrbital {
         (set @entity.roots @payload.roots)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nov : [string] []) (nos : [UidSlot] []) (nof : [OrbFinding] []) (orbs (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((nov : [string] []) (nof : [OrbFinding] []) (orbs (object/get @payload.program "orbitals" [])))
  (let ((ents (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] []))))))))
        (primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))
        (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
   (let ((hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0))))
    (let ((declList (if (> (array/len @primIds) 0) (array/take @primIds 1) (array/take @auxIds 1))))
-    (array/concat (array/concat (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+    (array/concat (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
  (let ((orb (array/nth @orbs @oi)))
   (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s24 (object/get @e "kind" ""))) (if (validate/string @s24) @s24 "")) "identity"))))
         (trlist (object/get @orb "traits" [])))
@@ -116,67 +115,7 @@ orbital OrbLintUserIdentityOrbital {
          (if (validate/object @pg)
           (array/flatten (array/map (array/filter (object/get @pg "roles" []) (fn role (not (array/some @rf (fn r (array/includes (object/get @r "vocab") @role)))))) (fn role
            [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
-          @nof)))))))))))))))))) ) (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
- (let ((orb (array/nth @orbs @oi)))
-  (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
-   (let ((td (array/nth (object/get @orb "traits" []) @ti)))
-    (if (validate/object (object/get @td "stateMachine" null))
-     (let ((emits (object/get @td "emits" [])) (trs (let ((sm (object/get @td "stateMachine" null))) (if (validate/object @sm) (object/get @sm "transitions" []) []))))
-      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn xi
-       (let ((tr (array/nth @trs @xi)) (path (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]")))
-        (let ((g (object/get @tr "guard" null)))
-         (if (not (array/includes (object/get @entity.roots (str/concat @oi "-" @ti "-" @xi) []) (quote "@user"))) @nof (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
- (if (validate/array @m)
-  (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
-   (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
-    (if (and (= @o "not") (>= @ln 2))
-     (let ((inner (array/nth @m 1))) (and (validate/array @inner) (= (array/len @inner) 3) (= (if (validate/string (array/nth @inner 0)) (array/nth @inner 0) "") "=") (or (and (and (validate/string (array/nth @inner 1)) (= (array/nth @inner 1) (quote "@user"))) (= (array/nth @inner 2) null)) (and (and (validate/string (array/nth @inner 2)) (= (array/nth @inner 2) (quote "@user"))) (= (array/nth @inner 1) null)))))
-     (if (= @o "and") (array/some @j (fn r (if (validate/boolean @r) @r false))) false))))
-  false)) UidShape))) (if (validate/boolean @p) @p false))) @nof
-          (array/flatten (array/map (object/get @tr "effects" []) (fn e
-           (let ((hs (tree/fold @e (fn (n k)
- (if (validate/array @n)
-  (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
-   (let ((kids (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) @r @nos))))))
-    (if (and (= @op "if") (>= @len 3))
-     (array/concat (if (let ((p (tree/fold (array/nth @n 1) (fn (m j)
- (if (validate/array @m)
-  (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
-   (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
-    (if (and (= @o "not") (>= @ln 2))
-     (let ((inner (array/nth @m 1))) (and (validate/array @inner) (= (array/len @inner) 3) (= (if (validate/string (array/nth @inner 0)) (array/nth @inner 0) "") "=") (or (and (and (validate/string (array/nth @inner 1)) (= (array/nth @inner 1) (quote "@user"))) (= (array/nth @inner 2) null)) (and (and (validate/string (array/nth @inner 2)) (= (array/nth @inner 2) (quote "@user"))) (= (array/nth @inner 1) null)))))
-     (if (= @o "and") (array/some @j (fn r (if (validate/boolean @r) @r false))) false))))
-  false)) UidShape))) (if (validate/boolean @p) @p false)) @nos (array/nth @kids 2)) (array/flatten (array/slice @kids 3)))
-     (array/concat
-      (array/concat
-       (if (and (= @op "emit") (>= @len 3))
-        (let ((e1 (array/nth @n 1)) (e2 (array/nth @n 2)))
-         (if (and (validate/string @e1) (validate/object @e2))
-          (let ((decls (array/filter @emits (fn d (= (object/get @d "event" "") @e1)))))
-           (if (= (array/len @decls) 0) @nos
-            (array/flatten (array/map (array/flatten (array/map (array/take @decls 1) (fn d0 (object/get @d0 "payloadSchema" [])))) (fn f
-             (let ((fnm (object/get @f "name" "")) (v (object/get @e2 (object/get @f "name" "") null)))
-              (if (and (object/get @f "required" false) (and (validate/string @v) (= @v (quote "@user")))) [{ a: (str/concat "Emit '" @e1 "' payload field '" @fnm "'") }] @nos)))))))
-          @nos))
-        @nos)
-       (if (and (= @op "persist") (>= @len 4))
-        (let ((e1 (array/nth @n 1)) (e2 (array/nth @n 2)) (e3 (array/nth @n 3)))
-         (if (and (validate/string @e1) (or (= @e1 "create") (= @e1 "update") (= @e1 "upsert")) (validate/string @e2) (validate/object @e3))
-          (let ((defs (array/filter @ents (fn d (= (object/get @d "name" "") @e2)))))
-           (if (= (array/len @defs) 0) @nos
-            (array/flatten (array/map (array/filter (array/flatten (array/map (array/take @defs 1) (fn d0 (object/get @d0 "fields" [])))) (fn f (and (object/get @f "required" false) (object/has @f "name")))) (fn f
-             (let ((fnm (object/get @f "name" "")) (v (object/get @e3 (object/get @f "name" "") null)))
-              (if (and (validate/string @v) (= @v (quote "@user"))) [{ a: (str/concat "Entity '" @e2 "' field '" @fnm "'") }] @nos)))))))
-          @nos))
-        @nos))
-      (array/flatten @kids)))))
-  (if (validate/object @n)
-   (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) @r @nos)))))
-   @nos))) UidShape)))
-            (if (validate/array @hs)
-             (array/map @hs (fn h { code: @config.codes.userIntoRequiredSlot.code, path: @path, message: (str/concat (let ((s23 (object/get @h "a" ""))) (if (validate/string @s23) @s23 "")) " is required but is filled with the whole `@user`, which is null when no viewer is signed in"), suggestion: "Guard the transition on `(!= @user null)`, or build the viewer explicitly (e.g. `(or @user { id: \"anonymous\", role: \"anonymous\", permissions: [] })`)", severity: "error" }))
-             @nof)))))))))))))
-     @nof))))))))) ))))))
+          @nof)))))))))))))))))) ))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "user-identity", scope: @entity.scope, findings: @entity.findings })
@@ -200,7 +139,7 @@ orbital OrbLintUserIdentityOrbital {
       OrbLintInput.LINT_INDEX -> INDEX_HEARD
     }
     config {
-      codes : LintUserIdentityCodes = { sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" }, userIntoRequiredSlot: { code: "ORB_USER_INTO_REQUIRED_SLOT", category: "user", description: "A user-identity value is bound into a slot that requires a value the viewer may not have" } }
+      codes : LintUserIdentityCodes = { sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

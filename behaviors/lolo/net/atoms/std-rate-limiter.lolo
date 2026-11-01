@@ -262,11 +262,14 @@ orbital RateBucketOrbital {
       WINDOW_ELAPSED -> open
         (set @entity.count 0)
         (set @entity.resetIn @entity.window)
-      CONFIGURE -> open when (> ?limit @entity.count)
+      CONFIGURE -> open when (and (> ?limit 0) (> ?limit @entity.count))
         (set @entity.limit ?limit)
       CONFIGURE -> throttled when (and (> ?limit 0) (<= ?limit @entity.count))
         (set @entity.limit ?limit)
         (set @entity.limiterStatus throttled)
+      ;; a limit of zero or less would break the bucket invariant (limit > 0), so it is refused
+      CONFIGURE -> open when (<= ?limit 0)
+        (emit CONFIGURE_REFUSED { limit: ?limit })
     }
 
     state throttled {
@@ -274,9 +277,11 @@ orbital RateBucketOrbital {
         (emit THROTTLED { requestId: @payload.requestId, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
       CONFIGURE -> throttled when (and (> ?limit 0) (<= ?limit @entity.count))
         (set @entity.limit ?limit)
-      CONFIGURE -> open when (> ?limit @entity.count)
+      CONFIGURE -> open when (and (> ?limit 0) (> ?limit @entity.count))
         (set @entity.limit ?limit)
         (set @entity.limiterStatus open)
+      CONFIGURE -> throttled when (<= ?limit 0)
+        (emit CONFIGURE_REFUSED { limit: ?limit })
       WINDOW_ELAPSED -> open
         (set @entity.limiterStatus open)
         (set @entity.count 0)
@@ -391,6 +396,11 @@ orbital RateBucketOrbital {
         window : number!
       }
         @description "The request was admitted: requests left in this window and seconds until the window resets."
+        @tier "primary"
+      CONFIGURE_REFUSED -> external {
+        limit : number!
+      }
+        @description "A CONFIGURE limit of zero or less was refused; the bucket keeps its limit."
         @tier "primary"
       THROTTLED -> external {
         requestId : number!

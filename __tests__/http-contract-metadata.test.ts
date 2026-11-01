@@ -21,19 +21,16 @@ describe('HTTP contract metadata', () => {
     const auth = fields(request().auth);
     const scheme = auth.scheme;
     if (typeof scheme !== 'object' || scheme.kind !== 'union') throw new Error('expected auth union');
-    expect(scheme.of).toEqual(['bearer', 'api-key', 'basic', 'oauth2-client', 'hmac-sha256', 'token-exchange', 'jwt-bearer', 'aws-sigv4', 'vapid', 'oauth-client'].map(value => ({ kind: 'literal', value })));
+    expect(scheme.of).toEqual(['bearer', 'api-key', 'basic', 'oauth2-client', 'hmac-sha256', 'token-exchange', 'jwt-bearer', 'oauth-client'].map(value => ({ kind: 'literal', value })));
     expect(auth.credential).toMatchObject({ kind: 'union' });
     expect(auth.key).toEqual(auth.credential);
-    expect(auth.privateKey).toEqual(auth.credential);
-    expect(auth.accessKeyId).toEqual(auth.credential);
   });
 
   it('declares advanced request parts without exposing execution clock metadata', () => {
     const parts = request();
-    for (const key of ['multipart', 'webpush', 'retry', 'presign', 'formEncoding']) expect(parts[key]).toBeDefined();
+    for (const key of ['multipart', 'retry', 'presign', 'formEncoding']) expect(parts[key]).toBeDefined();
     expect(parts.nowMs).toBeUndefined();
     expect(fields(parts.presign).expiresSec).toBe('number');
-    expect(fields(parts.webpush).payload).toBe('string');
   });
 
   it('control: keeps ordinary bodies and header value types', () => {

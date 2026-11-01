@@ -86,13 +86,6 @@ orbital RecordItemOrbital {
       ;; render probe (trait_bindings_resolved).
       INIT -> idle when (= @config.openOn "event")
         (render-ui main null)
-      ;; self-loops on the external emits so the validator sees in-atom
-      ;; listeners — the real consumers are the composing organism's
-      ;; persistor (CONTENT_SAVED, TITLE_COMMITTED) and its refetch /
-      ;; revision path (CONTENT_COMMITTED).
-      CONTENT_SAVED -> idle
-      CONTENT_COMMITTED -> idle
-      TITLE_COMMITTED -> idle
       ;; ONE unguarded arm on purpose. This briefly carried a second,
       ;; `when @config.preloaded`-guarded arm that rendered the OPEN_VIEW row
       ;; directly to skip a round-trip. Both execution paths mishandled it:
@@ -840,8 +833,6 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
       OPEN_DETAILS -> showing
         (render-ui drawer @config.detailsContent)
-      ;; validator self-loop; the real consumer is the host's persistor.
-      META_SAVED -> idle
     }
 
     state showing {

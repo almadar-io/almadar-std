@@ -69,8 +69,14 @@ jobs:
       - name: Lint
         run: pnpm exec eslint --no-warn-ignored --max-warnings 0 .
 
-      - name: T4 gate (replay goldens, ratcheted against scripts/gates/known-failures)
+      - name: T4 gate (every goldens file, zero cases or no files fails, ratcheted against scripts/gates/known-failures)
         run: ORB="pnpm exec orb" bash scripts/gates/t4.sh
+
+      - name: T5 gate (lint rules name only declared finding codes, ratcheted)
+        run: ORB="pnpm exec orb" bash scripts/gates/t5.sh
+
+      - name: T6 gate (std lint suite over every std organism, ratcheted)
+        run: ORB="pnpm exec orb" bash scripts/gates/t6.sh
 
   # validate-service disabled (service .orb schemas need fixing)
   # validate-service:

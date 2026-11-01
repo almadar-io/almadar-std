@@ -33,17 +33,29 @@ const ValidationReport = shape({
 const PROVE_PROPOSITION = shape({ kind: STRING, entity: STRING, trait: STRING, state: STRING, from: STRING, event: STRING, to: STRING, expr: SEXPR }, ['entity', 'trait', 'state', 'from', 'event', 'to']);
 const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: mapOf(STRING, SEXPR), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
 
-const PLAYED_EFFECT_OR_EMIT = openShape({});
-const PLAYED_OUTCOME = openShape({ orbital: STRING, trait: STRING, event: STRING, from: STRING, to: STRING, fired: BOOLEAN, effects: list(PLAYED_EFFECT_OR_EMIT), emitted: list(PLAYED_EFFECT_OR_EMIT) });
+const EVAL_STEP = shape({ kind: union(lit('enter'), lit('exit'), lit('iter'), lit('skip')), path: list(union(NUMBER, STRING)), value: SEXPR, error: STRING }, ['value', 'error']);
+const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, routed: BOOLEAN }, ['error']);
+const PLAYED_EMIT = shape({ type: STRING, payload: mapOf(STRING, SEXPR), timestamp: NUMBER }, ['payload']);
+const PLAYED_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, trace: list(EVAL_STEP), error: STRING }, ['error']);
+const PROPOSITION_BINDINGS = shape({ entity: SEXPR, fromEntity: SEXPR, payload: SEXPR });
+const PLAYED_ENSURES = shape({ proposition: SEXPR, verdict: union(lit('held'), lit('broken'), lit('inconclusive')), reason: STRING, counterexample: PROPOSITION_BINDINGS }, ['reason', 'counterexample']);
+const PENDING_ASK = shape({ trait: STRING, operator: STRING, args: list(SEXPR), key: STRING });
+const PLAYED_OUTCOME = shape({ orbital: STRING, trait: STRING, event: STRING, from: STRING, to: STRING, arm: NUMBER, fired: BOOLEAN, effects: list(PLAYED_EFFECT), emitted: list(PLAYED_EMIT) }, ['arm']);
 const PLAYED_STEP = openShape({
-  orbital: STRING, trait: STRING, from: STRING, event: STRING, payload: openShape({}),
-  result: openShape({ trait: STRING, event: STRING, transitionFired: BOOLEAN, effects: list(PLAYED_EFFECT_OR_EMIT), emitted: list(PLAYED_EFFECT_OR_EMIT), guards: list(openShape({})), ensures: list(openShape({})), pendingAsks: list(openShape({})), outcomes: list(PLAYED_OUTCOME) }),
+  orbital: STRING, trait: STRING, from: STRING, event: STRING, payload: mapOf(STRING, SEXPR),
+  result: openShape({ trait: STRING, event: STRING, transitionFired: BOOLEAN, effects: list(PLAYED_EFFECT), emitted: list(PLAYED_EMIT), guards: list(PLAYED_GUARD), ensures: list(PLAYED_ENSURES), pendingAsks: list(PENDING_ASK), outcomes: list(PLAYED_OUTCOME) }),
+});
+const STEP_EMIT = shape({ event: STRING, payload: nullable(mapOf(STRING, SEXPR)) });
+const STEP_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, error: STRING }, ['error']);
+const STEP_OUTCOME = shape({
+  trait: STRING, executed: BOOLEAN, previousState: STRING, newState: STRING, emits: list(STEP_EMIT), firedArm: nullable(NUMBER),
+  guards: list(STEP_GUARD), effects: list(PLAYED_EFFECT), failure: nullable(STRING), orbital: STRING, event: STRING, ensures: list(PLAYED_ENSURES),
 });
 const RAW_STEP_REPORT = shape({
   success: BOOLEAN,
-  steps: list(openShape({ outcomes: list(openShape({})), states: mapOf(STRING, STRING), pendingAsks: list(openShape({})) })),
+  steps: list(openShape({ outcomes: list(STEP_OUTCOME), states: mapOf(STRING, STRING), pendingAsks: list(PENDING_ASK) })),
   dispatchModes: mapOf(STRING, STRING),
-  error: STRING, trait: STRING, outcomes: list(openShape({})),
+  error: STRING, trait: STRING, outcomes: list(STEP_OUTCOME),
 }, ['steps', 'dispatchModes', 'error', 'trait', 'outcomes']);
 
 const OS_GRANT_FINDING = shape({

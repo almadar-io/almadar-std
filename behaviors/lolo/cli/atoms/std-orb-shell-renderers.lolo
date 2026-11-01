@@ -2,7 +2,7 @@ app std-orb-shell-renderers [
   version: "1.0.0",
   inbound: ["cli-shell-renderers"],
   fs: { cwd: "**": [read, write, create, remove] },
-  description: "std-orb-shell-renderers — the `orb shell-renderers <target>` command, the generator of the native shells' renderer files. Target icon-map reads the icon table (packages/almadar-ui/lib/iconNativeMap.json, or --table) and writes IconMap.swift into the iOS SwiftUI pack and IconMap.kt into the Android Compose pack, or both into --out <dir>, and answers `icon-map: N icons, 2 files` (status 200, exit 0). A missing or unknown target, a word or flag it does not know answers the usage (status 400, exit 2); an unreadable or malformed table answers `error: cannot read <file>` (status 500, exit 1)."
+  description: "std-orb-shell-renderers — the `orb shell-renderers <target>` command, the generator of the native shells' renderer files. Target icon-map reads the icon table (orbital-rust/crates/orbital-shell-typescript/renderers/web/src/lib/iconNativeMap.json, or --table) and writes IconMap.swift into the iOS SwiftUI pack and IconMap.kt into the Android Compose pack, or both into --out <dir>, and answers `icon-map: N icons, 2 files` (status 200, exit 0). A missing or unknown target, a word or flag it does not know answers the usage (status 400, exit 2); an unreadable or malformed table answers `error: cannot read <file>` (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-shell-renderers"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -17,7 +17,7 @@ type PlatformStrings = { ios : [string]!, android : [string]! }
 type PlatformTokenRules = { ios : [TokenRule]!, android : [TokenRule]! }
 type PlatformAtomRules = { ios : [AtomRule]!, android : [AtomRule]! }
 type PropDef = { required : boolean, kind : string }
-type PatEntry = { tier : string!, propsSchema : Map string PropDef }
+type PatEntry = { tier : string!, sourceFile : string, propsSchema : Map string PropDef }
 type TokenRule = { re : string!, rule : string! }
 type AtomRule = { label : string!, re : string! }
 type ActionCall = { name : string!, opener : string!, boundary : boolean!, mode : string!, platform : string! }
@@ -124,7 +124,7 @@ orbital OrbShellRenderersOrbital {
         (set @entity.platform @entity.target)
         (set @entity.pack (if (= @entity.target "ios") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui" "orbital-rust/crates/orbital-shell-android/renderers/compose"))
         (set @entity.ext (if (= @entity.target "ios") "swift" "kt"))
-        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (default (array/first (object/get @payload.flags "registry")) "") "orbital-rust/crates/orbital-shell-typescript/core/dist/patterns/patterns-registry.json"))
+        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (default (array/first (object/get @payload.flags "registry")) "") "orbital-rust/crates/orbital-shell-typescript/core/src/patterns/patterns-registry.json"))
         (set @entity.listsPath (if (!= (object/get @payload.flags "lists") null) (default (array/first (object/get @payload.flags "lists")) "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/pattern-lists.json"))
         (set @entity.tokensPath (if (!= (object/get @payload.flags "tokens") null) (default (array/first (object/get @payload.flags "tokens")) "") "orbital-rust/crates/orbital-shell-typescript/renderers/web/src/core/tokens/native-tokens.json"))
         (set @entity.idsPath (if (!= (object/get @payload.flags "ids") null) (default (array/first (object/get @payload.flags "ids")) "") "orbital-rust/crates/orbital-shell-typescript/core/src/types/verification-ids.json"))
@@ -135,14 +135,14 @@ orbital OrbShellRenderersOrbital {
         (set @entity.platform @entity.target)
         (set @entity.pack (str/concat "orbital-rust/crates/orbital-shell-rust/renderers/" @entity.target))
         (set @entity.domains (if (= @entity.target "dioxus") (str/split "core|game" "|") (str/split "core" "|")))
-        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (default (array/first (object/get @payload.flags "registry")) "") "orbital-rust/crates/orbital-shell-typescript/core/dist/patterns/patterns-registry.json"))
-        (set @entity.mappingPath (if (!= (object/get @payload.flags "mapping") null) (default (array/first (object/get @payload.flags "mapping")) "") "orbital-rust/crates/orbital-shell-typescript/core/dist/patterns/component-mapping.json"))
+        (set @entity.registryPath (if (!= (object/get @payload.flags "registry") null) (default (array/first (object/get @payload.flags "registry")) "") "orbital-rust/crates/orbital-shell-typescript/core/src/patterns/patterns-registry.json"))
+        (set @entity.mappingPath (if (!= (object/get @payload.flags "mapping") null) (default (array/first (object/get @payload.flags "mapping")) "") "orbital-rust/crates/orbital-shell-typescript/core/src/patterns/component-mapping.json"))
         (set @entity.listsPath (if (!= (object/get @payload.flags "lists") null) (default (array/first (object/get @payload.flags "lists")) "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/pattern-lists.json"))
         (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (default (array/first (object/get @payload.flags "out")) "") ""))
         (set @entity.curPath @entity.listsPath)
         (os/read-file { anchor: "cwd" path: @entity.listsPath } { key: "lists", emit: { success: RS_LISTS_READ, failure: NS_READ_FAIL } })
       SHELL_ARGS_DONE -> reading when (and (= @entity.target "icon-map") (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
-        (set @entity.tablePath (if (!= (object/get @payload.flags "table") null) (default (array/first (object/get @payload.flags "table")) "") "packages/almadar-ui/lib/iconNativeMap.json"))
+        (set @entity.tablePath (if (!= (object/get @payload.flags "table") null) (default (array/first (object/get @payload.flags "table")) "") "orbital-rust/crates/orbital-shell-typescript/renderers/web/src/lib/iconNativeMap.json"))
         (set @entity.membersPath (if (!= (object/get @payload.flags "members") null) (default (array/first (object/get @payload.flags "members")) "") "orbital-rust/crates/orbital-shell-android/renderers/compose/material-icons-filled-members.json"))
         (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (default (array/first (object/get @payload.flags "out")) "") ""))
         (emit SHELL_READ { })
@@ -175,7 +175,7 @@ orbital OrbShellRenderersOrbital {
         (emit SHELL_CHECKED { })
       SHELL_CHECKED -> ready when (> (array/len @entity.badMembers) 0)
         (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: " (array/len @entity.badMembers) " materialSymbol value(s) have no Icons.Filled.* member: " (str/join @entity.badMembers ", ")) })
-      SHELL_CHECKED -> writing when (and (= (array/len @entity.badMembers) 0) (= (json/parse @entity.tableText IconTable) null))
+      SHELL_CHECKED -> reading when (and (= (array/len @entity.badMembers) 0) (= (json/parse @entity.tableText IconTable) null))
         (emit SHELL_TABLE_FAIL { })
       SHELL_CHECKED -> writing when (and (= (array/len @entity.badMembers) 0) (!= (json/parse @entity.tableText IconTable) null))
         (let ((tbl (json/parse @entity.tableText IconTable))
@@ -184,11 +184,11 @@ orbital OrbShellRenderersOrbital {
           (set @entity.summary (str/concat "icon-map: " (array/len @ents) " icons, 2 files"))
           (set @entity.outFiles (array/concat
             [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/renderers/IconMap.swift" (str/concat @entity.outDir "/IconMap.swift")),
-               text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\nimport Foundation\n\nenum IconMap {\n    static let table: [String: String] = [\n"
+               text: (str/concat "// generated by `orb shell-renderers icon-map` from " @entity.tablePath "\nimport Foundation\n\nenum IconMap {\n    static let table: [String: String] = [\n"
                  (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) ": " (json/stringify (object/get @g "sfSymbol")) ",")))) "\n")
                  "\n    ]\n\n    static let fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "sfSymbol")) "\n\n    static func resolve(_ name: String) -> String {\n        table[name] ?? fallback\n    }\n}\n") }]
             [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-android/renderers/compose/renderers/IconMap.kt" (str/concat @entity.outDir "/IconMap.kt")),
-               text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\npackage generated.patterns.core\n\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.*\nimport androidx.compose.ui.graphics.vector.ImageVector\n\n// `table`/`resolve` give the Material Symbols glyph NAME (e.g. " (json/stringify "add") ");\n// `vectors`/`resolveVector` give the real Compose ImageVector — every\n// `materialSymbol` deterministically converted to `Icons.Filled.<Member>`\n// (arrow_back -> ArrowBack) and verified against the resolved\n// material-icons-core + material-icons-extended classpath at generation\n// time (wave C5) — a name with no real member is a generation error, not\n// a silent per-icon fallback.\nobject IconMap {\n    val table: Map<String, String> = mapOf(\n"
+               text: (str/concat "// generated by `orb shell-renderers icon-map` from " @entity.tablePath "\npackage generated.patterns.core\n\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.*\nimport androidx.compose.ui.graphics.vector.ImageVector\n\n// `table`/`resolve` give the Material Symbols glyph NAME (e.g. " (json/stringify "add") ");\n// `vectors`/`resolveVector` give the real Compose ImageVector — every\n// `materialSymbol` deterministically converted to `Icons.Filled.<Member>`\n// (arrow_back -> ArrowBack) and verified against the resolved\n// material-icons-core + material-icons-extended classpath at generation\n// time (wave C5) — a name with no real member is a generation error, not\n// a silent per-icon fallback.\nobject IconMap {\n    val table: Map<String, String> = mapOf(\n"
                  (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) " to " (json/stringify (object/get @g "materialSymbol")) ",")))) "\n")
                  "\n    )\n\n    val fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "materialSymbol")) "\n\n    fun resolve(name: String): String = table[name] ?: fallback\n\n    val vectors: Map<String, ImageVector> = mapOf(\n"
                  (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) " to Icons.Filled." (str/join (array/map (array/filter (str/split (object/get @g "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") ",")))) "\n")
@@ -270,8 +270,9 @@ orbital OrbShellRenderersOrbital {
         (set @entity.vidTpl (default (bytes/to-string @payload.data) ""))
         (set @entity.pats (let ((reg (json/parse @entity.regText PatReg)) (nl (json/parse @entity.listsText NativeLists))) (array/map
           (array/filter
-            (array/sort (array/map (object/entries (object/get @reg "patterns")) (fn e { sort: (str/collate-key (array/nth @e 0)), name: (array/nth @e 0), tier: (object/get (array/nth @e 1) "tier"), props: (object/get (array/nth @e 1) "propsSchema" {}) })) "sort")
+            (array/sort (array/map (object/entries (object/get @reg "patterns")) (fn e { sort: (str/collate-key (array/nth @e 0)), name: (array/nth @e 0), tier: (object/get (array/nth @e 1) "tier"), source: (default (object/get (array/nth @e 1) "sourceFile") ""), props: (object/get (array/nth @e 1) "propsSchema" {}) })) "sort")
             (fn pr (and (array/includes (str/split "atoms|molecules|organisms|templates" "|") (object/get @pr "tier"))
+                        (not (str/includes (object/get @pr "source") "/organisms/debug/"))
                         (not (array/includes (object/get @nl "deferred") (object/get @pr "name")))
                         (not (array/includes (object/get @nl "canvas") (object/get @pr "name"))))))
           (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier"), props: (object/get @pr "props") }))))

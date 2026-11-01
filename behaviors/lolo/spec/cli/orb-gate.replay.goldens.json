@@ -7,7 +7,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "a\nb\n",
+        "knownText": "a  G-STD-001\nb  G-STD-001\n",
         "observedText": "b\na\n"
       },
       "steps": [
@@ -36,7 +36,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "a\n",
+        "knownText": "a  G-STD-001\n",
         "observedText": "a\nc\n"
       },
       "steps": [
@@ -65,7 +65,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "a\nb\n",
+        "knownText": "a  G-STD-001\nb  G-STD-001\n",
         "observedText": "a\n"
       },
       "steps": [
@@ -94,7 +94,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "z\nb\n",
+        "knownText": "z  G-STD-001\nb  G-STD-001\n",
         "observedText": "y\nc\n"
       },
       "steps": [
@@ -123,7 +123,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "# known reds\n\n  a  \na\n",
+        "knownText": "# known reds\n\n  a  G-STD-001  \na  G-STD-001\n",
         "observedText": "a\n\n# none new\n a\n"
       },
       "steps": [
@@ -181,7 +181,7 @@
       "entity": {
         "knownPath": "gates/known.txt",
         "observedPath": "obs.txt",
-        "knownText": "a\n",
+        "knownText": "a  G-STD-001\n",
         "observedText": ""
       },
       "steps": [
@@ -273,6 +273,151 @@
                 "payload": {
                   "status": 400,
                   "body": "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-entry-with-spaces-and-a-gap-code-passes",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "down --mac mints a token, not a docker rm  G-STD-001\n",
+        "observedText": "down --mac mints a token, not a docker rm\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "0 new, 0 fixed, 1 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-known-line-without-a-gap-code-is-refused",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "# header\n\na  G-STD-001\nb\n",
+        "observedText": "a\nb\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "gate: gates/known.txt:4: no gap code (a line is `<entry>  <GAP-CODE>`): b\n1 known-failures lines without a gap code"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-code-without-the-G-prefix-is-refused",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a  STD-001\n",
+        "observedText": "a\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "gate: gates/known.txt:1: no gap code (a line is `<entry>  <GAP-CODE>`): a  STD-001\n1 known-failures lines without a gap code"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-code-holding-a-space-is-refused",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a  G-STD-001 later\n",
+        "observedText": "a\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "gate: gates/known.txt:1: no gap code (a line is `<entry>  <GAP-CODE>`): a  G-STD-001 later\n1 known-failures lines without a gap code"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "every-codeless-line-is-named-with-its-line-number",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a\nb  G-STD-001\nc\n",
+        "observedText": "a\nb\nc\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "gate: gates/known.txt:1: no gap code (a line is `<entry>  <GAP-CODE>`): a\ngate: gates/known.txt:3: no gap code (a line is `<entry>  <GAP-CODE>`): c\n2 known-failures lines without a gap code"
                 }
               }
             ]

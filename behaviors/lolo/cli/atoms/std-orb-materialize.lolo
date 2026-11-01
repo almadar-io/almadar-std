@@ -10,6 +10,7 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type ProgramJson = string | number | boolean | [ProgramJson?] | Map string ProgramJson?
 type HashStamps = Map string string?
+type MaterializeFailure = { rel : string!, error : string! }
 
 orbital OrbMaterializeOrbital {
   entity MaterializeRun [runtime] {
@@ -26,6 +27,7 @@ orbital OrbMaterializeOrbital {
     prevValues : [string?] = []
     known : string = ""
     curKeys : [string] = []
+    failures : [MaterializeFailure] = []
     curEntries : [[string]] = []
     stale : [string] = []
   }
@@ -116,6 +118,7 @@ orbital OrbMaterializeOrbital {
       INIT -> idle
       MATERIALIZE_START -> mkdir
         (set @entity.out @payload.out)
+        (set @entity.failures [])
         (os/mkdir { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: @payload.out } true { key: "mkdir", emit: { success: MAT_OUT_READY, failure: MAT_FAILED } })
     }
 
@@ -194,8 +197,10 @@ orbital OrbMaterializeOrbital {
         (set @entity.curEntries (array/append @entity.curEntries [@entity.rel (default @entity.sha "")]))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit MAT_NEXT { })
-      MAT_UNLOWERED -> idle
-        (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " @entity.rel " does not lower: " (default @payload.error "no program")) })
+      MAT_UNLOWERED -> scanning
+        (set @entity.failures (array/append @entity.failures { rel: @entity.rel, error: (default @payload.error "no program") }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit MAT_NEXT { })
       MAT_FAILED -> idle
         (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " @entity.rel ": " (default @payload.error "failed")) })
     }
@@ -213,8 +218,10 @@ orbital OrbMaterializeOrbital {
 
     state saving {
       INIT -> saving
-      MAT_SAVED -> idle
+      MAT_SAVED -> idle when (= (array/len @entity.failures) 0)
         (emit MATERIALIZE_ANSWERED { status: 200, body: (str/concat @entity.out "\n") })
+      MAT_SAVED -> idle when (> (array/len @entity.failures) 0)
+        (emit MATERIALIZE_ANSWERED { status: 500, body: (str/concat @entity.out "\n"), stderr: (str/join (array/map @entity.failures (fn f (str/concat "Error: orb materialize: " (object/get @f "rel") " does not lower: " (object/get @f "error")))) "\n"), failures: @entity.failures })
       MAT_FAILED -> idle
         (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
     }
@@ -224,6 +231,7 @@ orbital OrbMaterializeOrbital {
         status : number!
         body : string!
         stderr : string
+        failures : [MaterializeFailure]
       }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"

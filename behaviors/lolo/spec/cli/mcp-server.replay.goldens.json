@@ -2231,6 +2231,90 @@
           "entity": {}
         }
       ]
+    },
+    {
+      "id": "behaviors-tool-with-an-empty-store-answers-a-named-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_PACKAGES",
+          "payload": {
+            "result": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED",
+                "payload": {
+                  "error": "the behavior store is empty: no behavior packages are installed (orb list --global shows none)"
+                }
+              }
+            ],
+            "neverEmits": [
+              "MCP_PKG_NEXT",
+              "MCP_TOOL_DONE"
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "tool": "behaviors",
+        "args": {}
+      }
+    },
+    {
+      "id": "play-tool-answers-the-played-steps",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_PLAYED",
+          "payload": {
+            "result": [
+              {
+                "trait": "T",
+                "event": "GO",
+                "result": {
+                  "transitionFired": true,
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "emitted": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_TOOL_DONE",
+                "payload": {
+                  "result": [
+                    {
+                      "trait": "T",
+                      "event": "GO",
+                      "result": {
+                        "transitionFired": true,
+                        "state": {
+                          "before": "a",
+                          "after": "b"
+                        },
+                        "emitted": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "tool": "play",
+        "args": {}
+      }
     }
   ]
 }

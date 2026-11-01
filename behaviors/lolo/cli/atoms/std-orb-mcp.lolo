@@ -23,6 +23,12 @@ uses Credit from "std/behaviors/std-verify-credit"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type McpJson = string | number | boolean | [McpJson?] | Map string McpJson?
+type McpPlayedState = { before : string, after : string }
+type McpPlayedEmitted = { type : string!, payload : Map string McpJson? }
+type McpPlayedEffect = { type : string, args : [McpJson?]!, status : string, error : string }
+type McpPlayedOutcome = { arm : number, effects : [McpPlayedEffect], emitted : [McpPlayedEmitted], event : string, fired : boolean, from : string, orbital : string, to : string, trait : string! }
+type McpPlayedResult = { transitionFired : boolean!, guard : string, state : McpPlayedState!, emitted : [McpPlayedEmitted]!, outcomes : [McpPlayedOutcome], effects : [McpPlayedEffect], rendered : [Map string McpJson?] }
+type McpPlayed = { trait : string!, event : string!, result : McpPlayedResult!, outcomes : [McpPlayedOutcome] }
 type McpInputRow = { event : string! }
 type McpInputsResult = { inputs : [McpInputRow]? }
 type McpParseError = { jsonrpc : string!, id : McpJson?, error : McpErrorBody! }
@@ -312,7 +318,9 @@ orbital OrbMcpOrbital {
       MCP_PROGRAM -> working when (= @entity.tool "validate")
         (program/validate @payload.result { final: (= (object/get @entity.args "final") true) emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_PROGRAM -> working when (= @entity.tool "play")
-        (program/step @payload.result (object/get @entity.args "steps") { emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
+        (program/step @payload.result (object/get @entity.args "steps") { emit: { success: MCP_PLAYED, failure: MCP_TOOL_FAILED } })
+      MCP_PLAYED -> working
+        (emit MCP_TOOL_DONE { result: (as @payload.result McpJson) })
       MCP_PRINTED -> working when (!= (object/get @entity.args "write") true)
         (emit MCP_TOOL_DONE { result: { source: @payload.result } })
       MCP_PRINTED -> working when (and (= (object/get @entity.args "write") true) (not (os/path-is-absolute (default (object/get @entity.args "path") ""))))
@@ -333,7 +341,9 @@ orbital OrbMcpOrbital {
         (emit MCP_TOOL_DONE { result: { behaviors: @payload.result } })
       MCP_RUN -> working when (and (= @entity.tool "behaviors") (= (array/len (default (object/get @entity.args "scopes") [])) 0))
         (behavior/packages { emit: { success: MCP_PACKAGES, failure: MCP_TOOL_FAILED } })
-      MCP_PACKAGES -> working
+      MCP_PACKAGES -> working when (= (array/len @payload.result) 0)
+        (emit MCP_TOOL_FAILED { error: "the behavior store is empty: no behavior packages are installed (orb list --global shows none)" })
+      MCP_PACKAGES -> working when (> (array/len @payload.result) 0)
         (set @entity.pkgs (array/map @payload.result (fn p (object/get @p "prefix"))))
         (set @entity.pkgCursor 0)
         (set @entity.found [])
@@ -354,7 +364,7 @@ orbital OrbMcpOrbital {
       MCP_RUN -> working when (and (= @entity.tool "evaluate") (not (object/has @entity.args "expr")))
         (emit MCP_TOOL_FAILED { error: "evaluate needs an expr" })
       MCP_RUN -> working when (and (= @entity.tool "evaluate") (object/has @entity.args "expr"))
-        (emit MCP_EVAL_START { expr: (object/get @entity.args "expr"), entity: (default (object/get @entity.args "entity") {}), payload: (default (object/get @entity.args "payload") {}), hasViewer: false })
+        (emit MCP_EVAL_START { expr: (object/get @entity.args "expr"), entity: (default (object/get @entity.args "entity") {}), payload: (default (object/get @entity.args "payload") {}), hasIdentity: false })
       MCP_EVAL_DONE -> working
         (emit MCP_TOOL_DONE { result: { value: @payload.value } })
       MCP_EVAL_FAILED -> working
@@ -570,9 +580,14 @@ orbital OrbMcpOrbital {
         expr : McpJson?
         entity : Map string McpJson?
         payload : Map string McpJson?
-        hasViewer : boolean!
+        hasIdentity : boolean!
       }
         @description "Internal: run std-orb-eval for the evaluate tool."
+        @tier "internal"
+      MCP_PLAYED {
+        result : [McpPlayed]!
+      }
+        @description "Internal: program/step's success for the play tool."
         @tier "internal"
       MCP_TOOL_DONE {
         result : McpJson

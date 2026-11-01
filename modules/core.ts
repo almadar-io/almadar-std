@@ -80,7 +80,7 @@ const HTTP_GRANT_REQUEST: OperatorTypeRef = shape({
 });
 
 const HTTP_AUTH: OperatorTypeRef = openShape({
-  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256'), lit('token-exchange'), lit('jwt-bearer'), lit('aws-sigv4'), lit('vapid'), lit('oauth-client')),
+  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256'), lit('token-exchange'), lit('jwt-bearer'), lit('oauth-client')),
   credential: HTTP_CREDENTIAL_SLOT,
   name: STRING,
   in: union(lit('header'), lit('query')),
@@ -111,13 +111,6 @@ const HTTP_AUTH: OperatorTypeRef = openShape({
   key: HTTP_CREDENTIAL_SLOT,
   alg: union(lit('RS256'), lit('ES256')),
   claims: rec('A'),
-  accessKeyId: HTTP_CREDENTIAL_SLOT,
-  secretAccessKey: HTTP_CREDENTIAL_SLOT,
-  sessionToken: HTTP_CREDENTIAL_SLOT,
-  region: STRING,
-  service: STRING,
-  privateKey: HTTP_CREDENTIAL_SLOT,
-  publicKey: STRING,
   subject: STRING,
 });
 
@@ -137,7 +130,6 @@ const HTTP_REQUEST: OperatorTypeRef = openShape({
   text: STRING,
   bytes: STRING,
   multipart: openShape({ kind: union(lit('related'), lit('form-data')), parts: list(openShape({ headers: mapOf(STRING, STRING), text: STRING, bytes: STRING })) }),
-  webpush: openShape({ subscription: openShape({ endpoint: STRING, keys: openShape({ p256dh: STRING, auth: STRING }) }), payload: STRING, ttl: NUMBER, urgency: union(lit('very-low'), lit('low'), lit('normal'), lit('high')) }),
   retry: HTTP_RETRY,
   presign: openShape({ expiresSec: NUMBER }),
   formEncoding: union(lit('html'), lit('rfc3986')),
@@ -953,10 +945,10 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'core',
     // emit key order: effect/keyed_call.rs:15
     emitKeys: ['success', 'failure', 'onMessage', 'cancelled'],
-    // effect/http.rs:22 REQUEST_KEYS, :42 BODY_KEYS, :49 AUTH_SCHEMES, :62-90 auth_keys, :234 onUnauthorized, :239 aws-sigv4 required, :398 queryEncoding; orbital-core wire/http_wire.rs:287 default ports
+    // effect/http.rs:22 REQUEST_KEYS, :42 BODY_KEYS, :49 AUTH_SCHEMES, :62-90 auth_keys, :234 onUnauthorized, :398 queryEncoding; orbital-core wire/http_wire.rs:287 default ports
     httpWire: {
-      requestKeys: ['query', 'headers', 'json', 'form', 'text', 'bytes', 'multipart', 'auth', 'timeoutMs', 'delayMs', 'responseAs', 'paginate', 'stream', 'retry', 'formEncoding', 'queryEncoding', 'presign', 'webpush'],
-      bodyKeys: ['json', 'form', 'text', 'bytes', 'multipart', 'webpush'],
+      requestKeys: ['query', 'headers', 'json', 'form', 'text', 'bytes', 'multipart', 'auth', 'timeoutMs', 'delayMs', 'responseAs', 'paginate', 'stream', 'retry', 'formEncoding', 'queryEncoding', 'presign'],
+      bodyKeys: ['json', 'form', 'text', 'bytes', 'multipart'],
       queryEncodings: ['uri', 'rfc3986'],
       defaultPorts: { http: 80, https: 443 },
       authSchemes: [
@@ -968,8 +960,6 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         { name: 'token-exchange', keys: ['scheme', 'tokenUrl', 'grant', 'body', 'clientAuth', 'clientId', 'clientSecret', 'accessField', 'expiresField', 'expiresMarginMs', 'storeAs', 'grantRequest', 'rotate', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
         { name: 'jwt-bearer', keys: ['scheme', 'key', 'alg', 'claims', 'tokenUrl', 'grant', 'scope', 'expiresMarginMs', 'storeAs', 'grantRequest', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
         { name: 'hmac-sha256', keys: ['scheme', 'credential', 'name', 'signs', 'encoding', 'prefix'] },
-        { name: 'aws-sigv4', keys: ['scheme', 'accessKeyId', 'secretAccessKey', 'sessionToken', 'region', 'service'], required: ['accessKeyId', 'secretAccessKey', 'region', 'service'] },
-        { name: 'vapid', keys: ['scheme', 'privateKey', 'publicKey', 'subject'] },
       ],
     },
     category: 'effect',
@@ -999,7 +989,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       {
         name: 'request',
         type: HTTP_REQUEST,
-        description: 'Request parts: query, headers, at most one body (json | form | text | bytes | multipart | webpush), auth, formEncoding, retry, presign, timeoutMs, delayMs (the host waits that many milliseconds before it sends; cancel-call aborts the wait), responseAs, paginate, stream',
+        description: 'Request parts: query, headers, at most one body (json | form | text | bytes | multipart), auth, formEncoding, retry, presign, timeoutMs, delayMs (the host waits that many milliseconds before it sends; cancel-call aborts the wait), responseAs, paginate, stream',
         optional: true,
       },
       {
