@@ -158,6 +158,8 @@ orbital HttpRouterOrbital {
         (emit MINT_REQUESTED { requestId: @payload.requestId, clientId: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
       IDENTITY_ANONYMOUS -> routing when (array/includes @entity.mints (default @payload.requestId 0))
         (emit MINT_REQUESTED { requestId: @payload.requestId, clientId: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
+      IDENTITY_SESSION_ENDED -> routing when (array/includes @entity.mints (default @payload.requestId 0))
+        (emit MINT_REQUESTED { requestId: @payload.requestId, clientId: (str/replace (default (array/find (str/split (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "query"))) "") "&") (fn s (str/startsWith @s "clientId="))) "") "clientId=" "") })
       IDENTITY_REFUSED -> routing when (array/includes @entity.mints (default @payload.requestId 0))
         (set @entity.status 401)
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) [] (object/get @found "responseHeaders"))) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
@@ -472,6 +474,10 @@ orbital HttpRouterOrbital {
         requestId : number
         reason : string!
       }
+      IDENTITY_SESSION_ENDED {
+        requestId : number
+      }
+        @description "The mint's client session has ended (EXEC-DIST-9); the ticket is minted anyway, since the stream it opens is how that client reconnects, and its next non-mount request answers SESSION_ENDED."
       BEARER_VERIFIED {
         requestId : number
         verified : Verified!

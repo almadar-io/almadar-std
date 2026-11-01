@@ -500,33 +500,33 @@ orbital OtelOrbital {
     listens {
       START_SPAN -> input {
         name : string!
-        traceId : string
-        parentSpanId : string
+        traceId : string?
+        parentSpanId : string?
         kind : "internal" | "server" | "client" | "producer" | "consumer"
-        attributes : Map string OtelAttrValue
+        attributes : (Map string OtelAttrValue)?
       }
         @description "Start a span. A traceId (32 lowercase hex characters) joins an existing trace; without one a new trace id is minted."
         @synonyms "begin span, open span, start trace"
       END_SPAN -> input {
         spanId : string!
-        status : "ok" | "error"
-        statusMessage : string
+        status : ("ok" | "error")?
+        statusMessage : string?
       }
         @description "End a span and export every ended span with its events to the collector."
         @synonyms "finish span, close span, stop span"
       ADD_EVENT -> input {
         spanId : string!
         name : string!
-        attributes : Map string OtelAttrValue
+        attributes : (Map string OtelAttrValue)?
       }
         @description "Attach a timed event to an in-flight span."
         @synonyms "span event, annotate span, log on span"
       RECORD_METRIC -> input {
         name : string!
-        value : number
-        type : "counter" | "gauge" | "histogram"
-        unit : string
-        labels : Map string OtelAttrValue
+        value : number?
+        type : ("counter" | "gauge" | "histogram")?
+        unit : string?
+        labels : (Map string OtelAttrValue)?
       }
         @description "Record one metric sample and export it to the collector; type defaults to counter and value to 0."
         @synonyms "emit metric, add sample, increment counter"

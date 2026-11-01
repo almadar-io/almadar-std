@@ -270,10 +270,6 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (str/concat "Couldn't list the source documents — " ?error))
-      ;; Self-loops so the validator sees in-atom listeners for the
-      ;; externally-consumed staging events.
-      MIGRATION_FETCHED -> mapping
-      MIGRATION_DOCUMENT -> mapping
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)

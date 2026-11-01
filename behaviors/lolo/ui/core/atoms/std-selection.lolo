@@ -166,7 +166,8 @@ orbital SelectableItemOrbital {
         (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
-          filter: (or (= ?searchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          ;; no search field means nothing matches the term
+          filter: (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm)))
           limit: @config.pageSize
           offset: 0
         })

@@ -443,7 +443,7 @@ orbital StripeOrbital {
       STRIPE_CREATE_PAYMENT_INTENT -> input {
         amount : number!
         currency : string!
-        metadata : Map string string
+        metadata : (Map string string)?
       }
         @description "Create a PaymentIntent for a one-off charge; amount is in the currency's smallest unit."
         @synonyms "charge, pay, one-off payment"
@@ -454,24 +454,24 @@ orbital StripeOrbital {
         @synonyms "confirm payment, complete charge"
       STRIPE_REFUND -> input {
         paymentIntentId : string!
-        amount : number
+        amount : number?
       }
         @description "Refund a PaymentIntent in full, or in part when amount is given."
         @synonyms "refund payment, return money"
       STRIPE_CREATE_CUSTOMER -> input {
         email : string!
         almadarUid : string!
-        displayName : string
+        displayName : string?
       }
         @description "Create a Stripe Customer for an Almadar user; the user id is stored as Stripe metadata."
         @synonyms "new customer, billing customer"
       STRIPE_CREATE_CHECKOUT_SESSION -> input {
-        customerId : string
+        customerId : string?
         tier : string!
         quantity : number!
         successUrl : string!
         cancelUrl : string!
-        metadata : Map string string
+        metadata : (Map string string)?
       }
         @description "Create a hosted Checkout Session subscribing a customer to the solo or teams tier."
         @synonyms "start checkout, subscribe checkout"
@@ -490,20 +490,20 @@ orbital StripeOrbital {
         customerId : string!
         tier : string!
         quantity : number!
-        metadata : Map string string
+        metadata : (Map string string)?
       }
         @description "Subscribe a customer to the solo or teams tier directly, without Checkout."
         @synonyms "subscribe customer, create plan"
       STRIPE_UPDATE_SUBSCRIPTION -> input {
         subscriptionId : string!
-        quantity : number
-        cancelAtPeriodEnd : boolean
+        quantity : number?
+        cancelAtPeriodEnd : boolean?
       }
         @description "Change a subscription's seat count or its cancel-at-period-end flag."
         @synonyms "change seats, resume subscription"
       STRIPE_CANCEL_SUBSCRIPTION -> input {
         subscriptionId : string!
-        atPeriodEnd : boolean
+        atPeriodEnd : boolean?
       }
         @description "Cancel a subscription at the period end (default) or immediately."
         @synonyms "cancel subscription, end plan"

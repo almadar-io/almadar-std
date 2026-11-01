@@ -258,7 +258,8 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (= ?searchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          ;; no search field means nothing matches the term
+          filter: (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm)))
         })
       REFETCH_QUERY -> viewing_board when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {

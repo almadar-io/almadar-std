@@ -1290,46 +1290,46 @@ orbital LlmOrbital {
       }
         @description "The wire refused to write the request: std-http-request HTTP_REQUEST_REFUSED."
       LLM_GENERATE -> input {
-        systemPrompt : string
+        systemPrompt : string?
         userPrompt : string!
-        model : string
-        temperature : number
-        maxTokens : number
-        key : string
-        images : [{ mediaType : string!, data : string! }]
-        stream : boolean
+        model : string?
+        temperature : number?
+        maxTokens : number?
+        key : string?
+        images : [{ mediaType : string!, data : string! }]?
+        stream : boolean?
       }
         @description "Generate text from a prompt. An optional key names the call for LLM_CANCEL. With stream true the reply is read as it arrives and each chunk is announced as LLM_GENERATE_DELTA before the final LLM_GENERATE_RESULT; without it nothing changes."
         @synonyms "complete, chat, ask the model"
       LLM_CLASSIFY -> input {
         text : string!
         categories : [string]!
-        model : string
-        key : string
+        model : string?
+        key : string?
       }
         @description "Classify a text into one of the given categories. An optional key names the call for LLM_CANCEL."
         @synonyms "label text, categorize"
       LLM_CLASSIFY_MANY -> input {
         items : [{ id : string!, text : string! }]!
         categories : [string]!
-        model : string
-        key : string
+        model : string?
+        key : string?
       }
         @description "Classify many texts in one model call; every item's id comes back once with a declared category. An optional key names the call for LLM_CANCEL."
         @synonyms "batch classify, label many"
       LLM_SUMMARIZE -> input {
         text : string!
-        maxLength : number
-        style : string
-        model : string
-        key : string
+        maxLength : number?
+        style : string?
+        model : string?
+        key : string?
       }
         @description "Summarize a text; style is bullet, detailed or concise (default), maxLength is a word limit."
         @synonyms "summarise, digest, condense"
       LLM_EMBED -> input {
         texts : [string]!
-        model : string
-        key : string
+        model : string?
+        key : string?
       }
         @description "Embed texts into vectors. An optional key names the call for LLM_CANCEL and is echoed on LLM_EMBED_RESULT and on the LLM_FAILED that ends it."
         @synonyms "vectorize, text embedding"
@@ -1348,22 +1348,22 @@ orbital LlmOrbital {
       LLM_EXTRACT -> input {
         text : string!
         schema : string!
-        systemPrompt : string
-        temperature : number
-        maxTokens : number
-        model : string
-        key : string
-        images : [{ mediaType : string!, data : string! }]
+        systemPrompt : string?
+        temperature : number?
+        maxTokens : number?
+        model : string?
+        key : string?
+        images : [{ mediaType : string!, data : string! }]?
       }
         @description "Extract structured data from a text. An optional key names the call for LLM_CANCEL. `schema` is the JSON Schema text the reply must follow, sent to the model as written inside the built-in extractor prompt; an optional systemPrompt replaces that whole prompt (the schema is then not sent) and an optional temperature replaces the default 0.2. The answer is the JSON text, read by the caller with json/parse under its own shape."
         @synonyms "parse, structure, pull fields"
       LLM_CALL_TOOLS -> input {
         messages : [{ role : "user" | "assistant", content : string! }]!
         tools : [LlmToolDef]!
-        instructions : string
+        instructions : string?
         maxSteps : number?
-        model : string
-        key : string
+        model : string?
+        key : string?
       }
         @description "Answer a conversation with tools (an optional key names the run for LLM_CANCEL, which aborts the model call at its provider): the model may ask for tool calls, which come back in LLM_TOOLS_REQUESTED for the caller to run and answer with LLM_TOOLS_ANSWERED, until the model replies or maxSteps (default 8) model calls are used."
         @synonyms "agent, tool use, function calling"

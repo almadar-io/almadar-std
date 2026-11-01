@@ -21,9 +21,9 @@ type GoldenOrbitalRef = { name : string!, traits : [GoldenTraitRef] }
 type GoldenProgramRef = { orbitals : [GoldenOrbitalRef]! }
 type GoldenState = { before : string, after : string }
 type GoldenEffect = { type : string, args : [GoldenValue?]!, status : string, error : string }
-type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted], emits : [GoldenEmitted] }
+type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted] }
 type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect], rendered : [GoldenPayload] }
-type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult!, outcomes : [GoldenOutcome] }
+type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult! }
 
 orbital GoldensOrbital {
   entity GoldensRun [runtime] {
@@ -192,8 +192,8 @@ orbital GoldensOrbital {
         (set @entity.fails (array/filter (array/flatten (array/reduce (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "steps") [] (fn acc s
           (array/append @acc
             (let ((np : GoldenPlayed { trait: "", event: "", result: { transitionFired: false, state: {}, emitted: [] } }) (ne : GoldenEmit { event: "" }) (nx : GoldenPayload {}) (pp (default (array/nth @payload.result (array/len @acc)) @np)) (ex (object/get @s "expect" {})))
-            (let ((rr (object/get @pp "result")) (outs (object/get (object/get @pp "result") "outcomes" (object/get @pp "outcomes" null))))
-            (let ((allEm (if (== @outs null) (object/get @rr "emitted") (array/flatten (array/map @outs (fn oc (object/get @oc "emitted" (object/get @oc "emits" []))))))))
+            (let ((rr (object/get @pp "result")) (outs (object/get @rr "outcomes" null)))
+            (let ((allEm (if (== @outs null) (object/get @rr "emitted") (array/flatten (array/map @outs (fn oc (default (object/get @oc "emitted") [])))))))
               (array/concat
                 (if (and (object/has @ex "fired") (!= (object/get @rr "transitionFired") (object/get @ex "fired"))) [(str/concat "step " (array/len @acc) ": fired expected " (json/stringify (object/get @ex "fired")) " actual " (json/stringify (object/get @rr "transitionFired")))] [])
                 (if (and (object/has @ex "state") (!= (object/get (object/get @rr "state") "after") (object/get @ex "state"))) [(str/concat "step " (array/len @acc) ": state expected " (default (object/get @ex "state") "") " got " (default (object/get (object/get @rr "state") "after") "") "; answer " (json/stringify (object/pick @rr ["transitionFired", "guard", "firedArm"])))] [])
@@ -227,7 +227,7 @@ orbital GoldensOrbital {
                 (array/map (array/filter (object/get @ex "neverEmits" []) (fn n (array/some @allEm (fn em (= (object/get @em "type") @n))))) (fn n (str/concat "step " (array/len @acc) ": emitted " @n " in " (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))))))))))) (fn m (!= @m ""))))
         (set @entity.fails (if (= (array/len @entity.fails) 0) @entity.fails (array/concat @entity.fails (array/flatten (array/reduce (object/get @entity.curCase "steps") [] (fn acc s
           (array/append @acc
-            (let ((pp (array/nth @payload.result (array/len @acc)))) (let ((outs (if (== @pp null) null (object/get (object/get @pp "result") "outcomes" (object/get @pp "outcomes" null))))
+            (let ((pp (array/nth @payload.result (array/len @acc)))) (let ((outs (if (== @pp null) null (object/get (object/get @pp "result") "outcomes" null)))
                   (own (object/get @s "trait" (object/get @entity.golden "trait")))
                   (declared (array/concat (array/map (array/take (object/get @entity.curCase "steps") (array/len @acc)) (fn p (object/get @p "trait" (object/get @entity.golden "trait")))) (object/get @entity.curCase "defaults" []))))
               (array/map (array/unique (array/map (array/filter (if (== @outs null) [] @outs) (fn oc (and (= (object/get @oc "fired") true) (!= (object/get @oc "trait") @own) (not (array/includes @declared (object/get @oc "trait")))))) (fn oc (object/get @oc "trait")))) (fn n (str/concat "step " (array/len @acc) ": trait " @n " ran on unseeded defaults: no earlier step of the case plays it and the case's defaults does not list it"))))))))))))

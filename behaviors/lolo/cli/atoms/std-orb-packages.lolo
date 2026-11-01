@@ -1,6 +1,8 @@
 app std-orb-packages [
   version: "1.0.0",
   inbound: ["cli-packages"],
+  env: ["PATH"],
+  exec: ["orb"],
   fs: { cwd: "**": [read, write, remove], "/**": [read], "~/.orb/**": [read, write, create, remove], "~/.orb": [create] },
   net: { "registry.npmjs.org:443": [tcp] },
   description: "std-orb-packages — the `orb list|add|update|remove [--global]` client of the package registry (spec/cli/orb-packages.lolo; golden: orbital-cli packages.rs), bun-free. Packages live in <dir>/node_modules (dir = the working directory, or ~/.orb with --global) and the lockfile <dir>/<lockfile> holds { packages: [{ name, version, url, integrity }] }. Every command first reads the lockfile (absent = empty) and scans node_modules (scoped names included; the entry kind symlink is the workspace link), reading each package.json: a package is an orb package when it declares orbLanguage, orb, orbVocabulary or orbProgram.kind shell|desktop, and its kinds are those. list prints one row per orb package sorted by name (package 34, version 12, kinds 26, `ok`, ` (linked)`, ` [<prefix>/]`) or --json rows. remove refuses a behavior package whose prefix a .lolo or .orb file under the working directory still imports, deletes the package (a link is unlinked, never its target) and drops its lock entry. add parses name@exact-version (a range is refused ORB_PACKAGE_RANGE; a workspace-linked package is refused ORB_PACKAGE_LINKED) or a direct tarball URL, resolves name@version through GET <registry>/packages/<name>/<version> and downloads the tarball over http. update seeds the missing baseline entries and moves each non-linked package to the highest non-yanked stable version of GET <registry>/packages/<name>. After the download the tarball bytes are hashed by std-sha256 (hex) and compared with the registry integrity: equal goes on to the unpack step, a different digest is refused `integrity-mismatch`, an unhashable one `integrity-unavailable`; nothing is unpacked, written to node_modules or recorded in the lockfile on a refusal, and the check is never skipped. The hash is interpreted, so it fits packages of tens of kilobytes. Not yet ported: unpack and install after a verified tarball, the kind-loads-for-this-orb problem column, the behaviors count, the update-check record and the engines subcommands. Tarballs come only from the registry knob (RegistryHttp) or the sourceOrigin knob (SourceHttp, one client per origin); any other host is refused ORB_PACKAGE_SOURCE."
@@ -21,7 +23,8 @@ type OrbPackagesBlock = { prefix : string? }
 type ProgramBlock = { kind : string?, name : string? }
 type OrbPackagesManifest = { name : string?, version : string?, orbLanguage : Marker?, orb : OrbPackagesBlock?, orbVocabulary : Marker?, orbProgram : ProgramBlock? }
 type Resolved = { name : string!, version : string!, url : string!, integrity : string!, yanked : boolean? }
-type VersionRow = { version : string!, yanked : boolean? }
+type VersionRow = { version : string!, yanked : boolean?, compiler : string? }
+type Candidate = { version : string!, key : number!, compiler : string! }
 type VersionList = { name : string!, versions : [VersionRow]! }
 type Scanned = { name : string!, kind : string! }
 type WalkOrb = { prefix : string?, registry : string?, source : string?, vectors : string?, compiler : string? }
@@ -34,6 +37,7 @@ type WalkRow = { name : string!, version : string!, root : string!, prefix : str
 orbital OrbPackagesOrbital {
   uses Args from "std/behaviors/std-args"
   uses Sha from "std/behaviors/std-sha256"
+  uses Semver from "std/behaviors/std-semver"
 
   entity PackageCall [runtime] {
     id : string!
@@ -70,6 +74,13 @@ orbital OrbPackagesOrbital {
     wrows : [WalkRow] = []
     wpend : WalkRow = { name: "", version: "", root: "", prefix: "", compiler: "" }
     wpath : string = ""
+    running : string = ""
+    pid : number = 0
+    reply : string = ""
+    cands : [Candidate] = []
+    ci : number = 0
+    curKey : number = 0
+    skipped : [string] = []
   }
 
   trait RegistryHttp = Http.traits.HttpClient {
@@ -93,6 +104,12 @@ orbital OrbPackagesOrbital {
     }
     listens {
       OrbPackages.PK_SRC_GET -> HTTP_SEND
+    }
+  }
+
+  trait Versions = Semver.traits.Semver {
+    listens {
+      OrbPackages.PKG_SEMVER -> SEMVER_SATISFIES
     }
   }
 
@@ -238,7 +255,8 @@ orbital OrbPackagesOrbital {
         (set @entity.targets (array/map (array/filter @config.baseline (fn b (= (array/len (array/filter @entity.rows (fn r (= (object/get @r "package") (object/get @b "name"))))) 0))) (fn b { name: (object/get @b "name"), version: (object/get @b "version"), url: "", integrity: "" })))
         (set @entity.refused (array/map (array/filter @config.baseline (fn b (and (= (array/len (array/filter @entity.rows (fn r (= (object/get @r "package") (object/get @b "name"))))) 0) (!= (object/get @b "registry") @config.registry)))) (fn b (str/concat (object/get @b "name") ": ORB_PACKAGE_SOURCE (baseline registry " (object/get @b "registry") " is not the registry knob)"))))
         (set @entity.cursor 0)
-        (emit PKG_UPGRADE_NEXT { })
+        (set @entity.skipped [])
+        (os/getenv "PATH" { key: "path" emit: { success: PKG_PATH_READ, failure: PKG_RUNNING_FAILED } })
     }
 
     state walking {
@@ -446,10 +464,50 @@ orbital OrbPackagesOrbital {
         (emit PKG_VERSIONS_UNLISTED { error: @payload.error, kind: @payload.kind })
       PK_FAILED -> resolving when (= @payload.key "resolve")
         (emit PKG_RESOLVE_FAILED { error: @payload.error, kind: @payload.kind })
-      PKG_VERSIONS -> resolving when (and (= @payload.status 200) (!= (json/parse @payload.body VersionList) null) (> (array/len (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") ""))))) 0))
-        (set @entity.targets (array/concat @entity.targets (let ((best (default (array/first (array/sort (array/map (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "")))) (fn v { version: (object/get @v "version"), key: (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 2) "")) 0)) })) "key" "desc")) { version: "", key: 0 }))) (let ((p0 (str/to-number (default (array/nth (str/split (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "version") ".") 0) ""))) (p1 (str/to-number (default (array/nth (str/split (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "version") ".") 1) ""))) (p2 (str/to-number (default (array/nth (str/split (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "version") ".") 2) "")))) (if (and (!= @p0 null) (!= @p1 null) (!= @p2 null) (> (object/get @best "key") (+ (* 1000000000000 @p0) (* 1000000 @p1) @p2))) [{ name: (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package"), version: (object/get @best "version"), url: "", integrity: "" }] [])))))
+      PKG_RUNNING_FAILED -> ready
+        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "orb update: the running orb's version could not be read: " (default @payload.error "")) })
+      PKG_PATH_READ -> resolving
+        (os/spawn "orb" ["--version"] { cwd: null env: { PATH: (default @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: PKG_SPAWNED, failure: PKG_RUNNING_FAILED } })
+      PKG_SPAWNED -> resolving
+        (set @entity.pid @payload.pid)
+        (os/read @payload.stdout 4096 { key: "version" emit: { success: PKG_VERSION_TEXT, failure: PKG_RUNNING_FAILED } })
+      PKG_VERSION_TEXT -> resolving when (= (bytes/to-string @payload.data) null)
+        (emit PKG_RUNNING_FAILED { error: "the host binary's --version answer is not text" })
+      PKG_VERSION_TEXT -> resolving when (!= (bytes/to-string @payload.data) null)
+        (set @entity.reply (str/trim (default (bytes/to-string @payload.data) "")))
+        (os/wait @entity.pid { key: "wait" emit: { success: PKG_WAITED, failure: PKG_RUNNING_FAILED } })
+      PKG_WAITED -> resolving when (str/startsWith @entity.reply "orb ")
+        (set @entity.running (str/slice @entity.reply 4))
+        (emit PKG_UPGRADE_NEXT { })
+      PKG_WAITED -> ready when (not (str/startsWith @entity.reply "orb "))
+        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: "orb update: the host binary did not answer --version as `orb X.Y.Z`" })
+      PKG_VERSIONS -> resolving when (and (= @payload.status 200) (!= (json/parse @payload.body VersionList) null))
+        (set @entity.curKey (let ((cv (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "version"))) (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split @cv ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split @cv ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split @cv ".") 2) "")) 0))))
+        (set @entity.cands (array/sort (array/map (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "")))) (fn v { version: (object/get @v "version"), key: (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 2) "")) 0)), compiler: (default (object/get @v "compiler") "") })) "key" "desc"))
+        (set @entity.ci 0)
+        (emit PKG_CAND_NEXT { at: 0 })
+      PKG_CAND_NEXT -> resolving when (or (>= @payload.at (array/len @entity.cands)) (<= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_UPGRADE_NEXT { })
+      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey) (= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") ""))
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_NO_COMPILER (the registry recorded no orb.compiler range for this version; treated as incompatible)")))
+        (set @entity.ci (+ @payload.at 1))
+        (emit PKG_CAND_NEXT { at: (+ @payload.at 1) })
+      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey) (!= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") ""))
+        (set @entity.ci @payload.at)
+        (emit PKG_SEMVER { requestId: "update", version: @entity.running, range: (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") })
+      PKG_SAT -> resolving when @payload.value
+        (set @entity.targets (array/append @entity.targets { name: (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package"), version: (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version"), url: "", integrity: "" }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PKG_UPGRADE_NEXT { })
+      PKG_SAT -> resolving when (not @payload.value)
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "compiler") " does not accept orb " @entity.running ")")))
+        (set @entity.ci (+ @entity.ci 1))
+        (emit PKG_CAND_NEXT { at: @entity.ci })
+      PKG_SAT_REFUSED -> resolving
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "compiler") " is not a range std-semver reads: " @payload.reason ")")))
+        (set @entity.ci (+ @entity.ci 1))
+        (emit PKG_CAND_NEXT { at: @entity.ci })
       PKG_VERSIONS -> resolving when (or (!= @payload.status 200) (= (json/parse @payload.body VersionList) null) (= (array/len (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") ""))))) 0))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_UPGRADE_NEXT { })
@@ -459,7 +517,7 @@ orbital OrbPackagesOrbital {
         (set @entity.cursor 0)
         (emit PKG_TARGET_NEXT { })
       PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (= (array/len @entity.refused) 0) (= @entity.cmd "update"))
-        (emit PACKAGES_ANSWERED { status: 200, body: (str/join (array/map @entity.rows (fn r (str/concat (str/padEnd (object/get @r "package") 34 " ") " " (str/padEnd (object/get @r "version") 12 " ") " " (str/padEnd (str/join (object/get @r "kinds") ", ") 26 " ") " ok" (if (object/get @r "link") " (linked)" "")))) "\n"), stderr: "" })
+        (emit PACKAGES_ANSWERED { status: 200, body: (str/join (array/map @entity.rows (fn r (str/concat (str/padEnd (object/get @r "package") 34 " ") " " (str/padEnd (object/get @r "version") 12 " ") " " (str/padEnd (str/join (object/get @r "kinds") ", ") 26 " ") " ok" (if (object/get @r "link") " (linked)" "")))) "\n"), stderr: (str/join @entity.skipped "\n") })
       PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (= (array/len @entity.refused) 0) (= @entity.cmd "add"))
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "installed nothing for " (str/join @entity.args " ")) })
       PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (> (array/len @entity.refused) 0))
@@ -708,6 +766,27 @@ orbital OrbPackagesOrbital {
       PKG_VERSIONS { status : number!  headers : Map string string  body : string!  key : string }
         @description "Internal: a registry version list."
         @tier "internal"
+      PKG_SEMVER { requestId : string!  version : string!  range : string! }
+        @description "Internal: ask std-semver whether the running orb satisfies a version's recorded orb.compiler range."
+        @tier "internal"
+      PKG_CAND_NEXT { at : number! }
+        @description "Internal: judge the next candidate version of the package under the cursor."
+        @tier "internal"
+      PKG_RUNNING_FAILED { kind : string  error : string }
+        @description "Internal: a host call reading the running orb's version failed."
+        @tier "internal"
+      PKG_PATH_READ { value : string }
+        @description "Internal: the PATH the orb --version child is given."
+        @tier "internal"
+      PKG_SPAWNED { pid : number!  stdout : number! }
+        @description "Internal: orb --version started."
+        @tier "internal"
+      PKG_VERSION_TEXT { data : bytes! }
+        @description "Internal: orb --version output."
+        @tier "internal"
+      PKG_WAITED { code : number }
+        @description "Internal: orb --version exited."
+        @tier "internal"
       PKG_VERSIONS_UNLISTED { error : string  kind : string }
         @description "Internal: the version list could not be fetched."
         @tier "internal"
@@ -808,9 +887,15 @@ orbital OrbPackagesOrbital {
         @description "Internal: the tarball could not be hashed."
       Digest.SHA256_DIGESTED -> PKG_DIGESTED
       Digest.SHA256_REFUSED -> PKG_HASH_FAILED
+      PKG_SAT { requestId : string!  value : boolean! }
+        @description "std-semver's SEMVER_SATISFIED: the range check answered."
+      PKG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "std-semver's SEMVER_REFUSED: the range check refused."
+      Versions.SEMVER_SATISFIED -> PKG_SAT
+      Versions.SEMVER_REFUSED -> PKG_SAT_REFUSED
       ArgsCli.ARGS_PARSED -> PKG_ARGS_DONE
     }
   }
 
-  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Digest, RegistryHttp, SourceHttp
+  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Digest, Versions, RegistryHttp, SourceHttp
 }

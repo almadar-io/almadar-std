@@ -1286,6 +1286,317 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-ended-session-answers-409-to-a-request-that-is-not-a-mount",
+   "note": "EXEC-DIST-9: the client re-mounts on SESSION_ENDED; a 401 would hide it.",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "eyJldmVudCI6ICJQSU5HIiwgImNsaWVudElkIjogInRhYi0xIn0=",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SESSION_ENDED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 409
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCH_ADMITTED",
+       "REQUEST_UNAUTHORIZED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-ended-session-admits-a-mount-so-it-revives-the-session",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "eyJldmVudCI6ICJJTklUIiwgImNsaWVudElkIjogInRhYi0xIiwgIm1vdW50IjogW3sidHJhaXQiOiAiUGluZ2VyIiwgImV2ZW50IjogIklOSVQifV19",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SESSION_ENDED",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_ADMITTED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reviving-mount-holds-its-answer-and-presents-the-credential-again",
+   "entity": {
+    "inflight": 7,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "Bearer a.b.c",
+      "body": "eyJldmVudCI6ICJJTklUIiwgImNsaWVudElkIjogInRhYi0xIiwgIm1vdW50IjogW3sidHJhaXQiOiAiUGluZ2VyIiwgImV2ZW50IjogIklOSVQifV19",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": [],
+      "revive": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "DISPATCH_ANSWERED",
+     "payload": {
+      "key": "dispatch-7",
+      "result": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Pinger": "ready"
+       },
+       "emittedEvents": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "authorization": "Bearer a.b.c",
+         "clientId": "tab-1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND",
+       "DISPATCH_DONE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-held-answer-is-released-once-the-revived-session-is-bound",
+   "entity": {
+    "inflight": 7,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "eyJldmVudCI6ICJJTklUIiwgImNsaWVudElkIjogInRhYi0xIiwgIm1vdW50IjogW3sidHJhaXQiOiAiUGluZ2VyIiwgImV2ZW50IjogIklOSVQifV19",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": [],
+      "revive": true,
+      "held": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Pinger": "ready"
+       },
+       "emittedEvents": []
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_BOUND",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_ANSWERED",
+        "payload": {
+         "key": "dispatch-7"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCH_ADMITTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-held-answer-is-released-for-an-anonymous-revived-session",
+   "entity": {
+    "inflight": 7,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "eyJldmVudCI6ICJJTklUIiwgImNsaWVudElkIjogInRhYi0xIiwgIm1vdW50IjogW3sidHJhaXQiOiAiUGluZ2VyIiwgImV2ZW50IjogIklOSVQifV19",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": [],
+      "revive": true,
+      "held": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Pinger": "ready"
+       },
+       "emittedEvents": []
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_ANONYMOUS",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DISPATCH_ANSWERED",
+        "payload": {
+         "key": "dispatch-7"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCH_ADMITTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-credential-after-a-revive-is-401-and-frees-the-queue",
+   "entity": {
+    "inflight": 7,
+    "waiting": [],
+    "frames": [],
+    "pending": [
+     {
+      "requestId": 7,
+      "kind": "events",
+      "orbital": "Notes",
+      "traitName": "",
+      "entityId": "",
+      "stream": false,
+      "authorization": "",
+      "body": "eyJldmVudCI6ICJJTklUIiwgImNsaWVudElkIjogInRhYi0xIiwgIm1vdW50IjogW3sidHJhaXQiOiAiUGluZ2VyIiwgImV2ZW50IjogIklOSVQifV19",
+      "hookName": "",
+      "dispatchKey": "dispatch-7",
+      "responseHeaders": [],
+      "revive": true,
+      "held": {
+       "success": true,
+       "transitioned": true,
+       "states": {
+        "Pinger": "ready"
+       },
+       "emittedEvents": []
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_REFUSED",
+     "payload": {
+      "requestId": 7,
+      "reason": "expired"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 7,
+         "status": 401
+        }
+       },
+       {
+        "event": "DISPATCH_DONE"
+       }
+      ],
+      "neverEmits": [
+       "DISPATCH_ANSWERED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

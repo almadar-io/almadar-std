@@ -128,7 +128,8 @@ orbital RowStoreFileOrbital {
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.fileName (let ((fc (default @payload.collection ""))) (if (!= @fc "") @fc @payload.entityType)))
-        (set @entity.project @payload.project)
+        ;; an ask without a project answers rows
+        (set @entity.project (default @payload.project "rows"))
         (set @entity.op "query")
         (os/read-file { anchor: "cwd" path: (str/concat @config.dir @entity.fileName ".json") } { emit: { success: FILE_READ, failure: FILE_READ_FAILED } })
 
@@ -296,14 +297,14 @@ orbital RowStoreFileOrbital {
         key : string!
         entityType : string!
         id : string!
-        collection : string
+        collection : string?
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
       ROW_LIST -> input {
         key : string!
         entityType : string!
-        collection : string
+        collection : string?
       }
         @description "List every row of an entity type."
         @tier "internal"
@@ -312,14 +313,14 @@ orbital RowStoreFileOrbital {
         entityType : string!
         query : RowQuery!
         project : "rows" | "ids"
-        collection : string
+        collection : string?
       }
         @description "A query ask; the file store pushes none down."
         @tier "internal"
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
-        collections : Map string string
+        collections : (Map string string)?
       }
         @description "Apply a batch of create, upsert, update and delete ops."
         @tier "internal"

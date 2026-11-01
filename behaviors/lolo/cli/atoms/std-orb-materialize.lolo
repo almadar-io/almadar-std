@@ -28,6 +28,7 @@ orbital OrbMaterializeOrbital {
     known : string = ""
     curKeys : [string] = []
     failures : [MaterializeFailure] = []
+    json : boolean = false
     curEntries : [[string]] = []
     stale : [string] = []
   }
@@ -46,7 +47,7 @@ orbital OrbMaterializeOrbital {
       MATERIALIZE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: "Error: orb materialize: the command arguments could not be read" })
       MATERIALIZE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit MATERIALIZE_ARGS_PARSE { stage: "materialize" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [] })
+        (emit MATERIALIZE_ARGS_PARSE { stage: "materialize" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -57,12 +58,15 @@ orbital OrbMaterializeOrbital {
         (emit MATERIALIZE_ANSWERED { status: 400, body: "", stderr: "error: expected <OUT>\n\nUsage: orb materialize <OUT>\n\nFor more information, try '--help'." })
       MATERIALIZE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
         (set @entity.out (default (array/first @payload.positionals) ""))
+        (set @entity.json (object/has @payload.flags "json"))
         (emit MATERIALIZE_START { out: (default (array/first @payload.positionals) "") })
     }
 
     state working {
       INIT -> working
-      MATERIALIZE_DONE -> ready
+      MATERIALIZE_DONE -> ready when (and @entity.json (= @payload.status 200))
+        (emit MATERIALIZE_ANSWERED { status: 200, body: (json/stringify { dir: @entity.out, failures: (default @payload.failures []) }) })
+      MATERIALIZE_DONE -> ready when (not (and @entity.json (= @payload.status 200)))
         (emit MATERIALIZE_ANSWERED { status: @payload.status, body: @payload.body, stderr: @payload.stderr })
     }
 
@@ -105,7 +109,7 @@ orbital OrbMaterializeOrbital {
         @description "std-args's ARGS_PARSED."
       ArgsCli.ARGS_PARSED -> MATERIALIZE_ARGS_DONE
       MaterializeEngine.MATERIALIZE_ANSWERED -> MATERIALIZE_DONE
-      MATERIALIZE_DONE { status : number!  body : string!  stderr : string }
+      MATERIALIZE_DONE { status : number!  body : string!  stderr : string  failures : [MaterializeFailure] }
         @description "Internal: the engine's answer, relayed to the hook by its handler."
         @tier "internal"
     }
@@ -221,7 +225,7 @@ orbital OrbMaterializeOrbital {
       MAT_SAVED -> idle when (= (array/len @entity.failures) 0)
         (emit MATERIALIZE_ANSWERED { status: 200, body: (str/concat @entity.out "\n") })
       MAT_SAVED -> idle when (> (array/len @entity.failures) 0)
-        (emit MATERIALIZE_ANSWERED { status: 500, body: (str/concat @entity.out "\n"), stderr: (str/join (array/map @entity.failures (fn f (str/concat "Error: orb materialize: " (object/get @f "rel") " does not lower: " (object/get @f "error")))) "\n"), failures: @entity.failures })
+        (emit MATERIALIZE_ANSWERED { status: 200, body: (str/concat @entity.out "\n"), stderr: (str/join (array/map @entity.failures (fn f (str/concat "Error: orb materialize: " (object/get @f "rel") " does not lower: " (object/get @f "error")))) "\n"), failures: @entity.failures })
       MAT_FAILED -> idle
         (emit MATERIALIZE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb materialize: " (default @payload.error "failed")) })
     }

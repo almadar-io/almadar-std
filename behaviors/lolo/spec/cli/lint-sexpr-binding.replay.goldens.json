@@ -845,6 +845,94 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-null-member-in-a-field-default-is-walked-not-a-crash",
+      "steps": [
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "SxbNOrbital",
+                  "entity": {
+                    "name": "SxbBoard",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "run",
+                        "type": "object",
+                        "default": {
+                          "services": [],
+                          "hours": 0,
+                          "billed": null,
+                          "note": "@Ghost"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "SxbN",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sexpr-binding",
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

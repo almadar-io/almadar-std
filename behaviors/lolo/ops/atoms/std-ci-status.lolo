@@ -111,14 +111,16 @@ orbital CiStatusOrbital {
       CI_ATTEMPT -> loading when (== @payload.key @entity.key)
         (emit CI_GQL { query: (str/concat "\nquery OrgRuns($org: String!, $appId: Int!, $cursor: String) {\n  organization(login: $org) {\n    repositories(first: " @config.pageSize ", after: $cursor, orderBy: {field: PUSHED_AT, direction: DESC}) {\n      pageInfo { hasNextPage endCursor }\n      nodes {\n        name\n        defaultBranchRef {\n          target {\n            ... on Commit {\n              history(first: " @config.historyDepth ") {\n                nodes {\n                  checkSuites(first: " @config.checkSuiteDepth ", filterBy: {appId: $appId}) {\n                    nodes {\n                      status\n                      conclusion\n                      workflowRun {\n                        databaseId\n                        url\n                        createdAt\n                        workflow { name }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"), variables: (json/stringify { org: @config.org, appId: @config.appId, cursor: (if (= @entity.page 1) null @entity.cursor) }) })
 
-      CI_GQL_ANSWERED -> loading when (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))
+      CI_GQL_ANSWERED -> loading when (and (!= @entity.key null) (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))
         (emit CI_RETRY_SUCCEEDED { key: @entity.key })
           (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: (object/get @s "workflowRun.createdAt" ""), suite: @s })) "at" "desc"))) (let ((top (array/nth @ss 0))) (if (== @top null) (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @r.name, fullName: (str/concat @config.org "/" @r.name) })) (let ((s @top.suite)) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: (object/get @s "workflowRun.url" ""), databaseId: (object/get @s "workflowRun.databaseId" 0), createdAt: (object/get @s "workflowRun.createdAt" "") }))))))))
         (set @entity.more (and (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.hasNextPage" false) (!= (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" "") "") (< @entity.page @config.maxPages)))
         (set @entity.cursor (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" ""))
         (emit CI_PAGE_READ { })
-      CI_GQL_ANSWERED -> loading when (not (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null)))
+      CI_GQL_ANSWERED -> loading when (and (!= @entity.key null) (not (and (!= (json/parse @payload.body CiReply) null) (!= (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) null))))
         (emit CI_RETRY_FAILED { key: @entity.key, error: "GitHub answered something that is not an organization repository list" })
+      ;; no key means no page read is in flight, so a reply has no run to join and the board goes idle
+      CI_GQL_ANSWERED -> idle when (= @entity.key null)
       CI_PAGE_READ -> loading when @entity.more
         (set @entity.page (+ @entity.page 1))
         (set @entity.seq (+ @entity.seq 1))
@@ -128,9 +130,10 @@ orbital CiStatusOrbital {
         (set @entity.extra 0)
         (emit CI_EXTRA_NEXT { })
 
-      CI_GQL_FAILED -> loading when (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+      CI_GQL_FAILED -> loading when (and (!= @entity.key null) (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
         (emit CI_RETRY_FAILED { key: @entity.key, error: @payload.message })
-      CI_GQL_FAILED -> idle when (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
+      CI_GQL_FAILED -> idle when (and (!= @entity.key null) (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))))
+      CI_GQL_FAILED -> idle when (= @entity.key null)
         (emit CI_RETRY_CANCEL { })
         (set @entity.runs (if @entity.hasCache @entity.runs []))
         (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt @now))

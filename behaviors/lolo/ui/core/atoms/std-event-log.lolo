@@ -224,7 +224,8 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= ?tabId "") (= (object/get @entity @config.kindField) ?tabId)) (or (= @entity.eventLogSearchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= ?tabId "") (= (object/get @entity @config.kindField) ?tabId)) (or (= @entity.eventLogSearchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.eventLogSearchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -249,7 +250,8 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?searchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -278,7 +280,8 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm))) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.eventLogSearchTerm))) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -296,7 +299,8 @@ orbital EventLogOrbital {
         (set @entity.eventLogPage ?page)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.eventLogSearchTerm))) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
           orderBy: (str/concat @config.dateField ":desc")

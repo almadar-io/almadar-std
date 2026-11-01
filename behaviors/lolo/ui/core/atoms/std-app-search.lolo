@@ -56,7 +56,8 @@ orbital AppSearchOrbital {
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?value)))
+          ;; no search field means nothing matches the term
+          filter: (or (= ?value "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
           limit: @config.pageSize
           offset: 0
@@ -113,7 +114,8 @@ orbital AppSearchOrbital {
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?value)))
+          ;; no search field means nothing matches the term
+          filter: (or (= ?value "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
           limit: @config.pageSize
           offset: 0
@@ -232,7 +234,8 @@ orbital AppSearchOrbital {
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?value)))
+          ;; no search field means nothing matches the term
+          filter: (or (= ?value "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
           limit: @config.pageSize
           offset: 0
@@ -274,7 +277,8 @@ orbital AppSearchOrbital {
       REFETCH_PAGE -> searching when (not (validate/required @config.searchRelation))
         (set @entity.appSearchPage ?page)
         (fetch AppSearchTarget {
-          filter: (or (= @entity.searchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.searchTerm)))
+          ;; no search field means nothing matches the term
+          filter: (or (= @entity.searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.searchTerm)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)

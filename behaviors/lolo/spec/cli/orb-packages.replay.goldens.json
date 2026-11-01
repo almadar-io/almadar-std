@@ -1141,6 +1141,557 @@
      }
     }
    ]
+  },
+  {
+   "id": "update-lists-versions-newest-first-and-judges-the-newest-against-the-running-orb",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_VERSIONS",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"pkg-a\", \"versions\": [{\"version\": \"2.0.0\", \"integrity\": \"i\", \"yanked\": false, \"compiler\": \">=99.0.0\"}, {\"version\": \"1.5.0\", \"integrity\": \"i\", \"yanked\": false, \"compiler\": \">=18.0.0\"}, {\"version\": \"1.4.0\", \"integrity\": \"i\", \"yanked\": false}, {\"version\": \"1.3.0\", \"integrity\": \"i\", \"yanked\": true, \"compiler\": \">=1.0.0\"}, {\"version\": \"1.0.0\", \"integrity\": \"i\", \"yanked\": false, \"compiler\": \">=1.0.0\"}]}",
+      "key": "versions"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_CAND_NEXT",
+        "payload": {
+         "at": 0
+        }
+       },
+       {
+        "event": "PKG_SEMVER",
+        "payload": {
+         "requestId": "update",
+         "version": "18.0.5",
+         "range": ">=99.0.0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_RESOLVED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-incompatible-newest-is-named-and-the-next-newest-is-judged",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_SAT",
+     "payload": {
+      "requestId": "update",
+      "value": false
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "cands": [
+       {
+        "version": "2.0.0",
+        "key": 2000000000000,
+        "compiler": ">=99.0.0"
+       },
+       {
+        "version": "1.5.0",
+        "key": 1000005000000,
+        "compiler": ">=18.0.0"
+       },
+       {
+        "version": "1.4.0",
+        "key": 1000004000000,
+        "compiler": ""
+       },
+       {
+        "version": "1.0.0",
+        "key": 1000000000000,
+        "compiler": ">=1.0.0"
+       }
+      ],
+      "ci": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_CAND_NEXT",
+        "payload": {
+         "at": 1
+        }
+       },
+       {
+        "event": "PKG_SEMVER",
+        "payload": {
+         "version": "18.0.5",
+         "range": ">=18.0.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-compatible-version-becomes-the-update-target",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_SAT",
+     "payload": {
+      "requestId": "update",
+      "value": true
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "cands": [
+       {
+        "version": "2.0.0",
+        "key": 2000000000000,
+        "compiler": ">=99.0.0"
+       },
+       {
+        "version": "1.5.0",
+        "key": 1000005000000,
+        "compiler": ">=18.0.0"
+       },
+       {
+        "version": "1.4.0",
+        "key": 1000004000000,
+        "compiler": ""
+       },
+       {
+        "version": "1.0.0",
+        "key": 1000000000000,
+        "compiler": ">=1.0.0"
+       }
+      ],
+      "ci": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_UPGRADE_NEXT"
+       },
+       {
+        "event": "PK_GET",
+        "payload": {
+         "key": "resolve",
+         "target": "/packages/pkg-a/1.5.0"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-version-with-no-recorded-range-is-skipped-never-guessed",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_CAND_NEXT",
+     "payload": {
+      "at": 2
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "cands": [
+       {
+        "version": "2.0.0",
+        "key": 2000000000000,
+        "compiler": ">=99.0.0"
+       },
+       {
+        "version": "1.5.0",
+        "key": 1000005000000,
+        "compiler": ">=18.0.0"
+       },
+       {
+        "version": "1.4.0",
+        "key": 1000004000000,
+        "compiler": ""
+       },
+       {
+        "version": "1.0.0",
+        "key": 1000000000000,
+        "compiler": ">=1.0.0"
+       }
+      ],
+      "ci": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_CAND_NEXT",
+        "payload": {
+         "at": 3
+        }
+       }
+      ],
+      "neverEmits": [
+       "PKG_SEMVER"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-nothing-newer-than-the-installed-version-asks-no-range-and-adds-no-target",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_CAND_NEXT",
+     "payload": {
+      "at": 3
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "cands": [
+       {
+        "version": "2.0.0",
+        "key": 2000000000000,
+        "compiler": ">=99.0.0"
+       },
+       {
+        "version": "1.5.0",
+        "key": 1000005000000,
+        "compiler": ">=18.0.0"
+       },
+       {
+        "version": "1.4.0",
+        "key": 1000004000000,
+        "compiler": ""
+       },
+       {
+        "version": "1.0.0",
+        "key": 1000000000000,
+        "compiler": ">=1.0.0"
+       }
+      ],
+      "ci": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_UPGRADE_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PKG_SEMVER",
+       "PK_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-range-semver-cannot-read-is-incompatible-not-installed",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_SAT_REFUSED",
+     "payload": {
+      "requestId": "update",
+      "operation": "satisfies",
+      "reason": "invalid"
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "cands": [
+       {
+        "version": "2.0.0",
+        "key": 2000000000000,
+        "compiler": ">=99.0.0"
+       },
+       {
+        "version": "1.5.0",
+        "key": 1000005000000,
+        "compiler": ">=18.0.0"
+       },
+       {
+        "version": "1.4.0",
+        "key": 1000004000000,
+        "compiler": ""
+       },
+       {
+        "version": "1.0.0",
+        "key": 1000000000000,
+        "compiler": ">=1.0.0"
+       }
+      ],
+      "ci": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_CAND_NEXT",
+        "payload": {
+         "at": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "PK_GET"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-running-orb-version-is-read-from-its-version-line",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_WAITED",
+     "payload": {
+      "code": 0
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [],
+      "cursor": 0,
+      "running": "",
+      "curKey": 1000000000000,
+      "reply": "orb 18.0.5"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_UPGRADE_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PKG_SEMVER"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-version-line-that-is-not-an-orb-line-fails-the-update",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_WAITED",
+     "payload": {
+      "code": 0
+     },
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "",
+      "curKey": 1000000000000,
+      "reply": "nonsense"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "skipped-versions-are-named-in-the-update-answer",
+   "config": {
+    "registry": "https://registry.example"
+   },
+   "steps": [
+    {
+     "from": "resolving",
+     "event": "PKG_TARGET_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "p",
+      "cmd": "update",
+      "dir": "/w",
+      "cwd": "/w",
+      "rows": [
+       {
+        "package": "pkg-a",
+        "kinds": [
+         "behaviors"
+        ],
+        "version": "1.0.0",
+        "path": "/w/node_modules/pkg-a",
+        "link": false
+       }
+      ],
+      "cursor": 0,
+      "running": "18.0.5",
+      "curKey": 1000000000000,
+      "targets": [],
+      "skipped": [
+       "pkg-a@1.4.0: ORB_PACKAGE_NO_COMPILER (the registry recorded no orb.compiler range for this version; treated as incompatible)"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 200,
+         "stderr": "pkg-a@1.4.0: ORB_PACKAGE_NO_COMPILER (the registry recorded no orb.compiler range for this version; treated as incompatible)"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

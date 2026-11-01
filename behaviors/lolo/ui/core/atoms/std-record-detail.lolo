@@ -137,7 +137,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "") (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
@@ -147,7 +148,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "") (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
@@ -162,7 +164,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "") (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
@@ -171,7 +174,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "") (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
@@ -266,7 +270,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "") (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
@@ -281,7 +286,8 @@ orbital RecordItemOrbital {
         (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        ;; an absent subtitle shows nothing: no subtitle field or an empty related value gives ""
+        (set @entity.description (if (= @config.subtitleRelation null) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "") (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (as (object/get @rel @config.subtitleRelatedField) string) "") ""))))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))

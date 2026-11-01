@@ -176,7 +176,8 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage 1)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (and (or (= ?searchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) ?searchTerm))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: 0
         })
@@ -203,7 +204,8 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage 1)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (and (or (= @entity.gallerySearchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.gallerySearchTerm))) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= @entity.gallerySearchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.gallerySearchTerm))) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           limit: @config.pageSize
           offset: 0
         })
@@ -220,7 +222,8 @@ orbital GalleryItemOrbital {
         (set @entity.galleryPage ?page)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (and (or (= @entity.gallerySearchTerm "") (and (validate/required (object/get @entity @config.searchField)) (str/includes (object/get @entity @config.searchField) @entity.gallerySearchTerm))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
+          ;; no search field means nothing matches the term
+          filter: (and (or (= @entity.gallerySearchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") @entity.gallerySearchTerm))) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
         })

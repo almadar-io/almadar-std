@@ -1869,6 +1869,47 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-ended-session-still-mints-so-its-client-can-reconnect",
+   "entity": {
+    "mints": [
+     5
+    ],
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=tab-1",
+      "headers": {},
+      "authorization": "",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_SESSION_ENDED",
+     "payload": {
+      "requestId": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MINT_REQUESTED",
+        "payload": {
+         "requestId": 5,
+         "clientId": "tab-1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESPOND"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

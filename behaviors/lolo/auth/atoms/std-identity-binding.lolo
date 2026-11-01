@@ -1,11 +1,12 @@
 app std-identity-binding [
   version: "2.0.0",
-  description: "std-identity-binding — binds each HTTP request's bearer as the identity of the request's own client session (EXEC-IDENTITY-3, -4), so the request event then runs with @user the identity row. The program session never signs in. BEARER_PRESENT { requestId, authorization, clientId } (the dispatch route's identity ask) forwards the raw Authorization header as data with a program/dispatch event request (orbital ownOrbital, targetTrait ownTrait, event CREDENTIAL_PRESENTED, input true) of CREDENTIAL_PRESENTED { requestId, authorization } to the clientId session, and reads CREDENTIAL_* from the EventResponse emittedEvents; a request naming no client session is anonymous when it carries no header and is refused no-client-session when it does (no session can keep the identity). It answers IDENTITY_BOUND, IDENTITY_ANONYMOUS or IDENTITY_REFUSED { requestId, reason } once the client session has answered. In the client session, CREDENTIAL_PRESENTED asks the composed std-bearer-verify (BEARER_VERIFY, whose jws/verify runs in this session) and then BEARER_VERIFIED calls identity/sign-in with the sealed Verified; BEARER_ANONYMOUS, BEARER_REFUSED and BEARER_KEY_VERIFIED (heard as ANONYMOUS_SEEN, REFUSED_SEEN and KEY_SEEN; an API key makes no Verified) call identity/sign-out. Every request signs the session in or out again (a bearer header is stateless). The role is only ever the identity row's. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (the entity's declared defaults, id the subject, email and name from the claims) and asks the bearer again once; any other sign-in failure refuses identity-<kind>; a key is refused api-key-identity. The client session answers with CREDENTIAL_BOUND, CREDENTIAL_ANONYMOUS or CREDENTIAL_REFUSED."
+  description: "std-identity-binding — binds each HTTP request's bearer as the identity of the request's own client session (EXEC-IDENTITY-3, -4), so the request event then runs with @user the identity row. The program session never signs in. BEARER_PRESENT { requestId, authorization, clientId } (the dispatch route's identity ask) forwards the raw Authorization header as data with a program/dispatch event request (orbital ownOrbital, targetTrait ownTrait, event CREDENTIAL_PRESENTED, input true) of CREDENTIAL_PRESENTED { requestId, authorization } to the clientId session, and reads CREDENTIAL_* from the EventResponse emittedEvents; a request naming no client session is anonymous when it carries no header and is refused no-client-session when it does (no session can keep the identity). It answers IDENTITY_BOUND, IDENTITY_ANONYMOUS or IDENTITY_REFUSED { requestId, reason } once the client session has answered, and IDENTITY_SESSION_ENDED { requestId } when the kernel refuses the forward because that session has ended (SESSION_ENDED, EXEC-DIST-9). In the client session, CREDENTIAL_PRESENTED asks the composed std-bearer-verify (BEARER_VERIFY, whose jws/verify runs in this session) and then BEARER_VERIFIED calls identity/sign-in with the sealed Verified; BEARER_ANONYMOUS, BEARER_REFUSED and BEARER_KEY_VERIFIED (heard as ANONYMOUS_SEEN, REFUSED_SEEN and KEY_SEEN; an API key makes no Verified) call identity/sign-out. Every request signs the session in or out again (a bearer header is stateless). The role is only ever the identity row's. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (the entity's declared defaults, id the subject, email and name from the claims) and asks the bearer again once; any other sign-in failure refuses identity-<kind>; a key is refused api-key-identity. The client session answers with CREDENTIAL_BOUND, CREDENTIAL_ANONYMOUS or CREDENTIAL_REFUSED."
 ]
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type BindingEmitPayload = { requestId : number, reason : string }
 type BindingEmitted = { event : string!, payload : BindingEmitPayload }
 type BindingWire = { success : boolean, emittedEvents : [BindingEmitted], error : string }
+type BindingFailure = { code : string, status : number }
 
 orbital IdentityBindingOrbital {
   entity IdentityRow [persistent: viewer_rows] {
@@ -56,7 +57,9 @@ orbital IdentityBindingOrbital {
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: (default (object/get (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { requestId: 0, reason: "" } }) "payload.reason") "credential-refused") })
       CREDENTIAL_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED"] @e.event))))
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: "credential-dispatch" })
-      CREDENTIAL_FAILED -> idle
+      CREDENTIAL_FAILED -> idle when (= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
+        (emit IDENTITY_SESSION_ENDED { requestId: (default (str/to-number (default @payload.key "0")) 0) })
+      CREDENTIAL_FAILED -> idle when (!= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: "credential-dispatch" })
 
       CREDENTIAL_PRESENTED -> idle
@@ -129,6 +132,12 @@ orbital IdentityBindingOrbital {
         requestId : number
         reason : string!
       }
+      IDENTITY_SESSION_ENDED -> external {
+        requestId : number
+      }
+        @description "The request's client session has ended (EXEC-DIST-9: its live stream dropped and it went quiet), so its credential could not be presented there; only a mount revives it."
+        @synonyms "session ended, reconnect"
+        @tier "primary"
         @description "The request's bearer was refused (by the verifier, or no-client-session, credential-dispatch, identity-no-identity, identity-store, identity-unsealed, api-key-identity); its client session is signed out when it has one."
         @synonyms "bearer refused, sign-in refused"
         @tier "primary"
@@ -178,6 +187,7 @@ orbital IdentityBindingOrbital {
         @tier "internal"
       CREDENTIAL_FAILED {
         error : string
+        errors : [BindingFailure]
         key : string
       }
         @description "Internal: the credential could not be forwarded to the client session."
@@ -202,8 +212,8 @@ orbital IdentityBindingOrbital {
       }
         @description "Internal: the dispatch route asks to bind the request's bearer in its client session."
       CREDENTIAL_PRESENTED -> input {
-        requestId : number
-        authorization : string
+        requestId : number?
+        authorization : string?
       }
         @description "Client session: a raw Authorization header forwarded by the program session; verified and bound here."
         @synonyms "present credential"

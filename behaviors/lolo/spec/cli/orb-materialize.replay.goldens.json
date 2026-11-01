@@ -3,7 +3,7 @@
  "trait": "MaterializeEngine",
  "cases": [
   {
-   "id": "the call asks std-args to parse with no flags",
+   "id": "the call asks std-args to parse with the json flag",
    "steps": [
     {
      "trait": "OrbMaterialize",
@@ -23,7 +23,14 @@
          "argv": [
           "reg/x"
          ],
-         "flags": []
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
         }
        }
       ]
@@ -482,7 +489,7 @@
    }
   },
   {
-   "id": "a saved mirror with failed sources answers 500 with its directory and the failures",
+   "id": "a saved mirror with failed sources answers 200 with its directory and the failures",
    "steps": [
     {
      "trait": "MaterializeEngine",
@@ -495,7 +502,7 @@
        {
         "event": "MATERIALIZE_ANSWERED",
         "payload": {
-         "status": 500,
+         "status": 200,
          "body": "out\n",
          "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token",
          "failures": [
@@ -519,6 +526,231 @@
      }
     ]
    }
+  },
+  {
+   "id": "--json prints the directory and no failures as one JSON object",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {
+       "json": []
+      },
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "MATERIALIZE_START",
+        "payload": {
+         "out": "reg/x"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbMaterialize",
+     "from": "working",
+     "event": "MATERIALIZE_DONE",
+     "payload": {
+      "status": 200,
+      "body": "reg/x\n",
+      "failures": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"dir\":\"reg/x\",\"failures\":[]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--json prints the failures in the same JSON object",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {
+       "json": []
+      },
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "MATERIALIZE_START",
+        "payload": {
+         "out": "reg/x"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbMaterialize",
+     "from": "working",
+     "event": "MATERIALIZE_DONE",
+     "payload": {
+      "status": 200,
+      "body": "reg/x\n",
+      "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token",
+      "failures": [
+       {
+        "rel": "bad.lolo",
+        "error": "unexpected token"
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"dir\":\"reg/x\",\"failures\":[{\"rel\":\"bad.lolo\",\"error\":\"unexpected token\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --json the answer is the plain directory line",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "MATERIALIZE_START",
+        "payload": {
+         "out": "reg/x"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbMaterialize",
+     "from": "working",
+     "event": "MATERIALIZE_DONE",
+     "payload": {
+      "status": 200,
+      "body": "reg/x\n",
+      "failures": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "reg/x\n"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --json the failures stay on stderr",
+   "steps": [
+    {
+     "trait": "OrbMaterialize",
+     "from": "parsing",
+     "event": "MATERIALIZE_ARGS_DONE",
+     "payload": {
+      "stage": "materialize",
+      "flags": {},
+      "positionals": [
+       "reg/x"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "MATERIALIZE_START",
+        "payload": {
+         "out": "reg/x"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbMaterialize",
+     "from": "working",
+     "event": "MATERIALIZE_DONE",
+     "payload": {
+      "status": 200,
+      "body": "reg/x\n",
+      "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token",
+      "failures": [
+       {
+        "rel": "bad.lolo",
+        "error": "unexpected token"
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MATERIALIZE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "reg/x\n",
+         "stderr": "Error: orb materialize: bad.lolo does not lower: unexpected token"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

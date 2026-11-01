@@ -1444,21 +1444,21 @@ orbital RowStorePostgresOrbital {
         key : string!
         entityType : string!
         id : string!
-        collection : string
+        collection : string?
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
       ROW_LIST -> input {
         key : string!
         entityType : string!
-        collection : string
+        collection : string?
       }
         @description "List every row of an entity type."
         @tier "internal"
       ROWS_SQL -> input {
         key : string!
         sql : string!
-        params : [RowCell?]
+        params : [RowCell?]?
       }
         @description "Run one statement as given on the held session, binds $1, $2, ... sent as text: the answer is SQL_ROWS with the rows as maps of column name to value, the command's row count and the result columns with their type OIDs. The statement is not checked here: the caller owns the read-only guard."
         @tier "internal"
@@ -1467,14 +1467,14 @@ orbital RowStorePostgresOrbital {
         entityType : string!
         query : RowQuery!
         project : "rows" | "ids"
-        collection : string
+        collection : string?
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
-        collections : Map string string
+        collections : (Map string string)?
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"

@@ -1,0 +1,96 @@
+{
+ "atom": "auth/atoms/std-identity-binding.lolo",
+ "trait": "IdentityBinder",
+ "note": "How a failed credential forward is answered: an ended client session (the kernel's SESSION_ENDED, EXEC-DIST-9) is told apart from every other failure.",
+ "cases": [
+  {
+   "id": "a-forward-refused-as-session-ended-answers-identity-session-ended",
+   "steps": [
+    {
+     "event": "CREDENTIAL_FAILED",
+     "payload": {
+      "key": "7",
+      "error": "session tab-1 ended: mount again with the frames the client holds",
+      "errors": [
+       {
+        "code": "SESSION_ENDED",
+        "status": 409
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IDENTITY_SESSION_ENDED",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ],
+      "neverEmits": [
+       "IDENTITY_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-any-other-forward-failure-is-refused-credential-dispatch",
+   "steps": [
+    {
+     "event": "CREDENTIAL_FAILED",
+     "payload": {
+      "key": "7",
+      "error": "boom",
+      "errors": [
+       {
+        "code": "EVENT_PROCESSING_ERROR",
+        "status": 500
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "credential-dispatch"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IDENTITY_SESSION_ENDED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failure-with-no-errors-is-refused-credential-dispatch",
+   "steps": [
+    {
+     "event": "CREDENTIAL_FAILED",
+     "payload": {
+      "key": "7",
+      "error": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "credential-dispatch"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IDENTITY_SESSION_ENDED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

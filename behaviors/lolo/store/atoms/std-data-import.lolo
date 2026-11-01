@@ -34,7 +34,7 @@ orbital DataImportOrbital {
     batchId : string @description "ImportBatch id this staged row belongs to." @synonyms "batch, import run, parent batch" = ""
     rowJson : string @description "The raw parsed CSV row as a JSON string (source shape, pre-mapping). The consumer maps it into its own entity shape after confirm." @synonyms "row, raw row, staged row, record json" = "{}"
     status : "staged" | "imported" | "failed" @description "staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected." = staged
-    createdAt : instant @description "When the row was staged; a row with no value is never aged out." @synonyms "staged at, staged time"
+    createdAt : instant! @description "When the row was staged; set on every staged row." @synonyms "staged at, staged time"
   }
 
   entity ImportRetentionLog [runtime] {
@@ -403,9 +403,6 @@ orbital DataImportOrbital {
         (set @entity.rowCount 0)
         (set @entity.errorCount 0)
         (render-ui main null)
-      ;; Mirrors the confirmed self-loop: IMPORT_FAILED is emitted for
-      ;; downstream consumers and listened to here for the validator.
-      IMPORT_FAILED -> failed
     }
 
     emits {
