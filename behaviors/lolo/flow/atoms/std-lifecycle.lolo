@@ -51,7 +51,7 @@ orbital LifecycleOrbital {
       LifecycleStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (= (object/get @entity status) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (= (object/get @entity status) @config.fromStatus) (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -103,7 +103,7 @@ orbital LifecycleOrbital {
       scanCycle every "0 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (= (object/get @entity status) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (= (object/get @entity status) @config.fromStatus) (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
     }
@@ -168,7 +168,7 @@ orbital LifecycleOrbital {
       LifecycleStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -217,7 +217,7 @@ orbital LifecycleOrbital {
       scanCycle every "0 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
     }
@@ -272,7 +272,7 @@ orbital LifecycleOrbital {
       LifecycleStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -321,7 +321,7 @@ orbital LifecycleOrbital {
       scanCycle every "0 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
           limit: 1
         })
     }

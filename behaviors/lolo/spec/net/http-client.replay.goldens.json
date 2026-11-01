@@ -6251,6 +6251,189 @@
      "authorization"
     ]
    }
+  },
+  {
+   "id": "a-chunk-of-multi-byte-utf8-text-is-framed-by-its-byte-length",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpUcmFuc2Zlci1FbmNvZGluZzogY2h1bmtlZA0KDQoxNQ0KcsOpc3Vtw6kg4oCUIOKAnG9r4oCdDQowDQoNCg==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "transfer-encoding": "chunked"
+         },
+         "body": "csOpc3Vtw6kg4oCUIOKAnG9r4oCd"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-chunk-whose-crlf-is-split-across-reads-asks-for-more",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_SENT",
+     "payload": {
+      "bytes": 10,
+      "key": "send"
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/recv"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "SFRUUC8xLjEgMjAwIE9LDQpUcmFuc2Zlci1FbmNvZGluZzogY2h1bmtlZA0KDQoxNQ0KcsOpc3Vtw6kg4oCUIOKAnG9r4oCdDQ==",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HC_WANT"
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED",
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_READ",
+     "payload": {
+      "data": "CjANCg0K",
+      "eof": false,
+      "key": "read"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REPLIED",
+        "payload": {
+         "key": "k1",
+         "status": 200,
+         "headers": {
+          "transfer-encoding": "chunked"
+         },
+         "body": "csOpc3Vtw6kg4oCUIOKAnG9r4oCd"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

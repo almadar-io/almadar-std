@@ -49,8 +49,8 @@ orbital DevPersonasOrbital {
       TOKEN_MINT -> ready
         (emit TOKEN_MINTED { key: @payload.key, purpose: @payload.purpose, token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
       ANSWER_TOKEN_MINT -> ready
-        (emit TOKEN_MINTED { key: @payload.key, purpose: "answer", token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
-      TOKEN_MINTED -> ready when (= @payload.purpose "answer")
+        (emit ANSWER_TOKEN_MINTED { key: @payload.key, token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
+      ANSWER_TOKEN_MINTED -> ready
         (emit PERSONA_SIGN_IN_ANSWERED { status: 200, body: (json/stringify { success: true, customToken: @payload.token, authEmulatorHost: @config.authEmulatorHost, projectId: @config.projectId }) })
       TOKEN_MINTED -> ready when (= @payload.purpose "sign-in")
         (identity/sign-in (jws/verify @payload.token [] { issuer: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), audience: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), allowUnsigned: true }) { emit: { success: PERSONA_SIGNED_IN, failure: PERSONA_SIGN_IN_REFUSED } })
@@ -257,12 +257,18 @@ orbital DevPersonasOrbital {
       }
         @description "Internal: build the emulator's unsigned custom token for the persona key a sign-in update answered; the answer carries it back to the caller and never signs a session in."
         @tier "internal"
+      ANSWER_TOKEN_MINTED -> internal {
+        key : string!
+        token : string!
+      }
+        @description "Internal: the unsigned custom token a sign-in update answered, on its way back to the caller."
+        @tier "internal"
       TOKEN_MINTED -> internal {
         key : string!
         purpose : string!
         token : string!
       }
-        @description "Internal: the unsigned custom token of one persona."
+        @description "Internal: the unsigned custom token of one persona, emitted only by the env-guarded TOKEN_MINT."
         @tier "internal"
       PERSONA_SIGNED_IN -> external {
         subject : string

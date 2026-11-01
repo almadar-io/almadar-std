@@ -54,6 +54,13 @@ case("a-chunked-body-is-assembled-and-trailers-skipped",
  flow(send(),[(read(head(200,"OK",[("Transfer-Encoding","chunked")])+chunked),{"state":"ready","emits":[replied("k1",200,{"transfer-encoding":"chunked"},"hello world")]})],None))
 case("a-chunk-split-across-reads-asks-for-more",
  flow(send(),[(read(head(200,"OK",[("Transfer-Encoding","chunked")])+"5\r\nhel"),{"state":"reading","emits":[{"event":"HC_WANT"}],"neverEmits":["HTTP_REPLIED","HTTP_FAILED"]}),(read("lo\r\n0\r\n\r\n"),{"state":"ready","emits":[replied("k1",200,{"transfer-encoding":"chunked"},"hello")]})],None))
+# a chunk size counts bytes: multi-byte UTF-8 text (an LLM's quotes and dashes) is framed by its byte length
+utf="r\u00e9sum\u00e9 \u2014 \u201cok\u201d"
+uhex="%x"%len(utf.encode())
+case("a-chunk-of-multi-byte-utf8-text-is-framed-by-its-byte-length",
+ flow(send(),[(read(head(200,"OK",[("Transfer-Encoding","chunked")])+uhex+"\r\n"+utf+"\r\n0\r\n\r\n"),{"state":"ready","emits":[replied("k1",200,{"transfer-encoding":"chunked"},utf)],"neverEmits":["HTTP_FAILED"]})],None))
+case("a-chunk-whose-crlf-is-split-across-reads-asks-for-more",
+ flow(send(),[(read(head(200,"OK",[("Transfer-Encoding","chunked")])+uhex+"\r\n"+utf+"\r"),{"state":"reading","emits":[{"event":"HC_WANT"}],"neverEmits":["HTTP_REPLIED","HTTP_FAILED"]}),(read("\n0\r\n\r\n"),{"state":"ready","emits":[replied("k1",200,{"transfer-encoding":"chunked"},utf)],"neverEmits":["HTTP_FAILED"]})],None))
 case("a-chunk-size-that-is-not-hex-fails-io",
  flow(send(),[(read(head(200,"OK",[("Transfer-Encoding","chunked")])+"zz\r\nhello\r\n"),{"state":"ready","emits":[failed("k1","io")],"neverEmits":["HTTP_REPLIED"]})],None))
 # close delimited

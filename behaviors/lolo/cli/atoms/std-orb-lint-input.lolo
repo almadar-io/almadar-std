@@ -366,7 +366,7 @@ orbital OrbLintInputOrbital {
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
             (let ((ops (object/get (json/parse @text OperatorTable) "operators")))
-              (let ((be (object/get (object/get @ops "emit") "busExcluded"))) (if (= @be null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" }) (let ((to (object/get (object/get @ops "program/dispatch") "targetOptions"))) (if (= @to null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" })
+              (let ((be (let ((ee (object/get @ops "emit"))) (if (= @ee null) null (object/get @ee "busExcluded"))))) (if (= @be null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" }) (let ((to (let ((pd (object/get @ops "program/dispatch"))) (if (= @pd null) null (object/get @pd "targetOptions"))))) (if (= @to null) (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table declares no emit.busExcluded or program/dispatch.targetOptions" })
               (emit LINT_OPERATOR_SEMANTICS {
                 busExcluded: @be,
                 targetOptions: @to,

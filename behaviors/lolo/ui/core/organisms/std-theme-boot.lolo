@@ -134,9 +134,10 @@ orbital ThemeBootOrbital {
         (set @entity.motion { entryDefault: ?entryDefault, staggerMs: ?staggerMs, shapes: ?shapes })
         (set @entity.gotMotion true)
         (emit THEME_PART { })
-      THEME_PART -> ready when (and @entity.gotCanvas (and @entity.gotMotion @entity.gotTokens))
+      ;; the flags say this resolve produced all three parts; the null tests carry that to the emitted types
+      THEME_PART -> ready when (and @entity.gotCanvas @entity.gotMotion @entity.gotTokens (!= @entity.canvasTheme null) (!= @entity.motion null) (!= @entity.tokens null))
         (emit THEME_APPLIED { theme: { key: @entity.key, base: @entity.base, mode: @entity.mode, tokens: @entity.tokens }, canvasTheme: @entity.canvasTheme, motion: @entity.motion })
-      THEME_PART -> ready when (not (and @entity.gotCanvas (and @entity.gotMotion @entity.gotTokens)))
+      THEME_PART -> ready when (not (and @entity.gotCanvas @entity.gotMotion @entity.gotTokens (!= @entity.canvasTheme null) (!= @entity.motion null) (!= @entity.tokens null)))
     }
 
     emits {

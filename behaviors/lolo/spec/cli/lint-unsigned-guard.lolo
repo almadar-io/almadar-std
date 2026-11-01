@@ -1,0 +1,21 @@
+app lint-unsigned-guard-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint unsigned-guard <file>`. It lowers the file with program/read and reports ORB_EFF_UNSIGNED_NOT_ENV_GUARDED for a literal `allowUnsigned: true` on a jws/verify call in an inline-trait transition that is not env-guarded: a transition is env-guarded when its event is an os/getenv success answer of the trait and its guard compares the answered value, or when its event has no listens source, at least one transition of the trait names it as a literal in its effects and none of those is unguarded (guard propagates from the env-guarded answer arms along those naming edges; a cycle with no guarded entry is not guarded)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintUnsignedGuardSpec {
+  expects trait OrbLintUnsignedGuard {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintUnsignedGuardCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintUnsignedGuard, OrbLintUnsignedGuardCli
+}

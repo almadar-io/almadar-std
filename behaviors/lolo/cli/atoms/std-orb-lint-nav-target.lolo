@@ -1,0 +1,203 @@
+app std-orb-lint-nav-target [
+  version: "1.0.0",
+  inbound: ["cli-lint-nav-target"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-nav-target — the `orb lint nav-target <file>` command, a `--final` rule: every configured link a finished program states as a literal path must name a page it declares. Literal navigate effect targets are not read here: std-orb-lint-navigate owns them (ORB_EFF_NAVIGATE_TARGET_UNREACHABLE). It lowers the file with program/read and reads two sources, each under the scope that owns it: the config defaults of the app, of every orbital and of every trait (a navItems entry, a link or action href, a navigatesTo; a call-site override is the trait default, so an atom's own defaults are never seen) and the render-ui payloads of every trait transition and tick (an href or navigatesTo anywhere in the payload); a `uses lazy` page's own links count too. A target is decided only when it is a string literal or a str/concat of string literals and `@config.<name>` bindings that fold through the trait, orbital and app config defaults (so a locale prefix `(str/concat @config.pathPrefix \"/x\")` resolves); any other computed path is not reported. A target that starts with / (not //), holds no binding or brace, is not the signIn route or /login, and matches no declared page route (an inline page, an `expects page` route or a `uses lazy` page; a :name segment matches any one segment; the query, the fragment and empty segments are ignored) is ORB_NAV_TARGET_UNDECLARED. It belongs to the final pass only, as the lone atom's pages are incomplete, so it answers only the whole-program scope and its findings leave the engine under the final rule nav-target-final. Findings carry the owning location (config, orbitals[i].config, orbitals[i].traits[j], lazyPages[k]) (status 500, exit 1). Clean answers `lint nav-target: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-nav-target"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type NtVal = string | number | boolean | [NtVal?] | Map string NtVal?
+type NtStrings = [string]
+type NtField = { default : NtVal? }
+type NtCall = { path : string!, node : NtVal! }
+type NtIndex = Map string [NtCall]
+type NtEffect = [NtVal?]
+type NtEffects = { effects : [NtVal?] }
+type NtMachine = { transitions : [NtEffects] }
+type NtTrait = { stateMachine : NtMachine, ticks : [NtEffects], config : Map string NtField }
+type NtPage = { path : string }
+type NtExpect = { kind : string, path : string }
+type NtOrbital = { traits : [NtTrait], config : Map string NtField, pages : [NtPage], expects : [NtExpect]? }
+type NtSite = { signIn : string }
+type NtLazy = { path : string, links : [string]? }
+type NtProgram = { site : NtSite, config : Map string NtField, orbitals : [NtOrbital], lazyPages : [NtLazy]? }
+type NtRt = Map string NtVal?
+type NtHit = { k : string, p : string }
+type NtScope = { loc : string, cfgs : [Map string NtField], roots : [NtVal?] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintNavTargetCodes = { navTargetUndeclared : LintCodeDecl }
+
+orbital OrbLintNavTargetOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintNavTargetRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintNavTarget -> OrbLintNavTargetRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if (!= @payload.scope "") [] (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")) (lzs (object/get @payload.program "lazyPages" [])))
+          (let ((patterns (array/concat
+                            (array/concat
+                              (array/flatten (array/map @orbitals (fn o (array/filter (array/map (object/get @o "pages" []) (fn pg (object/get @pg "path" ""))) (fn p (!= @p ""))))))
+                              (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "expects" []) (fn ex (and (= (object/get @ex "kind" "") "page") (!= (object/get @ex "path" "") "")))) (fn ex (object/get @ex "path" "")))))))
+                            (array/filter (array/map @lzs (fn lz (object/get @lz "path" ""))) (fn p (!= @p ""))))))
+            (let ((scopes (array/concat
+                            (array/concat
+                              [{ loc: "config", cfgs: [@appCfg], roots: (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))) }]
+                              (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                                (let ((oc (object/get (array/nth @orbitals @oi) "config" {})))
+                                  { loc: (str/concat "orbitals[" @oi "].config"), cfgs: [@appCfg @oc], roots: (array/filter (array/map (object/values @oc) (fn f (object/get @f "default" null))) (fn v (!= @v null))) }))))
+                            (array/concat
+                              (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                                (let ((oc (object/get (array/nth @orbitals @oi) "config" {})) (trs (object/get (array/nth @orbitals @oi) "traits" [])))
+                                  (array/map (array/range 0 (array/len @trs)) (fn tj
+                                    (let ((tr (array/nth @trs @tj)))
+                                      (let ((tc (object/get @tr "config" {}))
+                                            (rows (array/concat
+                                                    (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))))))
+                                                    (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r))))))))))
+                                        (let ((idxs (array/map @rows (fn r (default (as (tree/index { w: @r } ["render-ui"]) NtIndex) {})))))
+                                          { loc: (str/concat "orbitals[" @oi "].traits[" @tj "]"), cfgs: [@appCfg @oc @tc], roots: (array/concat
+                                              (array/filter (array/map (object/values @tc) (fn f (object/get @f "default" null))) (fn v (!= @v null)))
+                                              (array/flatten (array/map @idxs (fn ix (array/filter (array/map (object/get @ix "render-ui" []) (fn c (array/nth (default (as (object/get @c "node") NtEffect) []) 2))) (fn v (!= @v null))))))) })))))))))
+                              (array/map (array/range 0 (array/len @lzs)) (fn k
+                                { loc: (str/concat "lazyPages[" @k "]"), cfgs: [], roots: (array/map (object/get (array/nth @lzs @k) "links" []) (fn l { href: @l })) }))))))
+              (array/flatten (array/map @scopes (fn sc
+                (let ((rt0 : NtRt {})) (let ((rt (array/reduce (object/get @sc "cfgs") @rt0 (fn (prev cfg) (object/merge @prev (object/mapValues (object/mapValues @cfg (fn f (object/get @f "default" null))) (fn v (if (and (validate/string @v) (str/startsWith @v (quote "@config."))) (default (object/get @prev (str/slice @v 8 (str/len @v)) null) @v) @v))))))))
+                  (let ((hits (default (tree/fold { r: (object/get @sc "roots") } (fn (n kids)
+                                  (array/concat
+                                    (if (and (validate/object @n) (not (validate/array @n)))
+                                      (array/flatten (array/map ["href" "navigatesTo"] (fn k
+                                        (let ((hv (object/get @n @k null)))
+                                          (let ((parts (if (validate/string @hv) [@hv] (if (and (validate/array @hv) (> (array/len @hv) 1) (= (array/first @hv) "str/concat")) (array/drop (default (as @hv NtStrings) []) 1) null))))
+                                            (if (or (= @parts null) (not (array/every @parts (fn s (validate/string @s)))))
+                                              []
+                                              (let ((vals (array/map @parts (fn s (if (str/startsWith @s (quote "@config."))
+                                                                                    (let ((r (object/get @rt (str/slice @s 8 (str/len @s)) null))) (if (and (validate/string @r) (not (str/startsWith @r (quote "@")))) @r null))
+                                                                                    (if (str/startsWith @s (quote "@")) null @s))))))
+                                                (if (array/some @vals (fn s (= @s null))) [] [{ k: @k, p: (str/join (array/map @vals (fn s (default @s ""))) "") }]))))))))
+                                      [])
+                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) NtVal) [])))
+                    (array/flatten (array/map @hits (fn h
+                      (let ((p (object/get @h "p")))
+                        (let ((route (default (array/first (str/split (default (array/first (str/split @p "#")) "") "?")) "")))
+                          (if (or (not (str/startsWith @p "/")) (str/startsWith @p "//") (str/includes @p (quote "@")) (str/includes @p "{") (= @p @signIn) (= (str/replace-pattern @route "/+$" "") "/login")
+                                  (array/some @patterns (fn pt
+                                    (let ((pp (array/filter (str/split @route "/") (fn s (!= @s "")))) (qq (array/filter (str/split @pt "/") (fn s (!= @s "")))))
+                                      (and (= (array/len @pp) (array/len @qq))
+                                           (array/every (array/zip @qq @pp) (fn z (or (str/startsWith (array/nth @z 0) ":") (= (array/nth @z 0) (array/nth @z 1))))))))))
+                            []
+                            [{ code: @config.codes.navTargetUndeclared.code, path: (object/get @sc "loc"), message: (str/concat "the " (object/get @h "k") " '" @p "' names no page the program declares"), suggestion: (str/concat "declare a page at '" @p "', or point the " (object/get @h "k") " at a page that exists"), severity: "error" }])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "nav-target-final", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : NtProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintNavTargetCodes = { navTargetUndeclared: { code: "ORB_NAV_TARGET_UNDECLARED", category: "page", description: "A navigation target stated as a literal path (a navigate effect, a navItems or link href, a navigatesTo) names no page the finished program declares" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintNavTargetCli -> OrbLintNavTargetRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint nav-target <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint nav-target <file>" }) (emit LINT_REQUEST { file: @argFile })))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "nav-target-final") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint nav-target: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "nav-target-final") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint nav-target: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-nav-target" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint nav-target` with its arguments and working directory."
+        @synonyms "orb lint nav-target"
+      OrbLintNavTarget.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintNavTargetCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintNavTargetOrbitalStart -> OrbLintNavTarget, OrbLintNavTargetCli, OrbLintInput, Packs, Versions
+}

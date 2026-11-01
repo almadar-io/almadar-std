@@ -242,7 +242,7 @@ orbital NotificationCenterOrbital {
       DIGEST_STEPPED -> draining
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms")))
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (and (validate/required (object/get @entity recordedAt)) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms"))))
           limit: @config.batchSize
         })
       DIGEST_ROWS_LOADED -> draining when (> (array/len ?data) 0)
@@ -311,7 +311,7 @@ orbital NotificationCenterOrbital {
       digestCycle every "0 * * * *" [background]
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
-          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms")))
+          filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (and (validate/required (object/get @entity recordedAt)) (< (object/get @entity recordedAt) (time/subtract @now (* @config.minAgeHours 3600000) "ms"))))
           limit: @config.batchSize
         })
 

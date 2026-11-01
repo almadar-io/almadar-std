@@ -303,7 +303,8 @@ orbital ModalEditorOrbital {
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
-      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND") ?key) (!= ?key "Enter") (!= ?key "Escape") (!= ?key "Backspace"))
+      ;; a keymap with no COMMAND keys matches no command key
+      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND" []) ?key) (!= ?key "Enter") (!= ?key "Escape") (!= ?key "Backspace"))
         (set @entity.cmdline (str/concat @entity.cmdline ?key))
 
       EDITOR_FOCUS -> COMMAND

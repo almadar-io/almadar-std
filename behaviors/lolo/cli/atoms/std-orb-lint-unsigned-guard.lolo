@@ -1,0 +1,186 @@
+app std-orb-lint-unsigned-guard [
+  version: "1.0.0",
+  inbound: ["cli-lint-unsigned-guard"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-unsigned-guard — the `orb lint unsigned-guard <file>` command: a literal `allowUnsigned: true` on a `jws/verify` call accepts an alg:none token, so the transition holding it must be env-guarded or it is an error (ORB_EFF_UNSIGNED_NOT_ENV_GUARDED). It lowers the file with program/read and reads every inline trait's transitions. A transition is env-guarded when its event is the success answer of an `os/getenv` effect of the trait and its guard compares the answered value (`=` over a `@payload.value` read, alone or as an argument of `and`), or when its event has no listens source, at least one transition of the trait names it as a literal in its effects (an `emit`, or the answer name of a fetch, persist or os/getenv) and none of those transitions is unguarded: guard is propagated from the env-guarded answer arms along those naming edges, a transition reached by no guarded arm (a cycle with no guarded entry) is not guarded, and any transition that is not guarded and has a listens-sourced event or no naming transition taints everything it names. Only inline traits are read; an event named only by a computed expression is not tracked. Clean answers `lint unsigned-guard: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500.",
+]
+uses Spec from "almadar-std/lint-unsigned-guard"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type UgVal = string | number | boolean | [UgVal?] | Map string UgVal?
+type UgCall = { path : string!, node : UgVal! }
+type UgIndex = Map string [UgCall]
+type UgNames = [string]
+type UgRow = { i : number!, ev : string!, gs : [string]!, lv : [string]!, cmp : boolean!, un : [string]! }
+type UgRows = [UgRow]
+type UgListen = { event : string, triggers : string }
+type UgTransition = { event : string, guard : UgVal, effects : [UgVal] }
+type UgMachine = { transitions : [UgTransition] }
+type UgTrait = { name : string, stateMachine : UgMachine, listens : [UgListen] }
+type UgOrbital = { name : string, traits : [UgVal] }
+type UgProgram = { orbitals : [UgOrbital] }
+type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintUnsignedGuardCodes = { unsignedNotEnvGuarded : LintCodeDecl }
+
+orbital OrbLintUnsignedGuardOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintUnsignedGuardRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintUnsignedGuard -> OrbLintUnsignedGuardRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (pv : string (str/concat (str/slice "a@b" 1 2) "payload.value")))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (default (array/nth @orbitals @oi) {})))
+              (let ((trs (object/get @o "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((t (as (array/nth @trs @ti) UgTrait)))
+                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                      []
+                      (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
+                            (lst (array/map (object/get @t "listens" []) (fn l (let ((tg (object/get @l "triggers" ""))) (if (= @tg "") (object/get @l "event" "") @tg))))))
+                        (let ((rows (default (as (array/map (array/range 0 (array/len @trans)) (fn i
+                            (let ((tr (default (array/nth @trans @i) {})))
+                              (let ((effs (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
+                                (let ((ix (default (as (tree/index @effs ["emit" "os/getenv" "jws/verify"]) UgIndex) {}))
+                                      (lx (default (as (tree/index @effs [] { prefixes: [""] }) UgIndex) {})))
+                                  { i: @i,
+                                    ev: (object/get @tr "event" ""),
+                                    gs: (array/filter (array/map (object/get @ix "os/getenv" []) (fn c (let ((n (object/get @c "node" null))) (if (validate/array @n) (let ((o2 (array/nth @n 2))) (if (validate/object @o2) (let ((em (object/get @o2 "emit" null))) (if (validate/object @em) (let ((s (object/get @em "success" ""))) (if (validate/string @s) @s "")) "")) "")) "")))) (fn s (!= @s ""))),
+                                    lv: (array/map (object/get @lx "" []) (fn c (let ((x (object/get @c "node" ""))) (if (validate/string @x) @x "")))),
+                                    cmp: (if (validate/array @g)
+                                           (let ((forms (if (= (array/first @g) "and") (array/slice @g 1 (array/len @g)) [@g])))
+                                             (array/some @forms (fn f (if (validate/array @f)
+                                               (and (= (array/first @f) "=")
+                                                    (array/some (array/flatten (object/values (default (as (tree/index @f [] { prefixes: [@pv] }) UgIndex) {}))) (fn h (let ((x (object/get @h "node" ""))) (if (validate/string @x) (or (= @x @pv) (str/startsWith @x (str/concat @pv "."))) false)))))
+                                               false))))
+                                           false),
+                                    un: (array/map (array/filter (object/get @ix "jws/verify" []) (fn c (let ((n (object/get @c "node" null))) (if (validate/array @n) (let ((o2 (array/nth @n 3))) (if (validate/object @o2) (= (object/get @o2 "allowUnsigned" false) true) false)) false)))) (fn c (object/get @c "path" ""))) }))))) UgRows) [])))
+                          (let ((n (array/len @rows)) (idx (array/range 0 (array/len @rows))))
+                            (let ((getenvOk (array/flatten (array/map @rows (fn r (object/get @r "gs" []))))))
+                              (let ((emitters (array/map @rows (fn r (array/filter @idx (fn j (array/includes (object/get (default (array/nth @rows @j) {}) "lv" []) (object/get @r "ev" "")))))))
+                                    (unknown (array/map @rows (fn r (array/includes @lst (object/get @r "ev" ""))))))
+                                (let ((base (array/filter @idx (fn i (let ((r (default (array/nth @rows @i) {}))) (and (object/get @r "cmp" false) (array/includes @getenvOk (object/get @r "ev" ""))))))))
+                                  (let ((roots (array/filter @idx (fn i (and (not (array/includes @base @i)) (or (default (array/nth @unknown @i) true) (= (array/len (default (array/nth @emitters @i) [])) 0)))))))
+                                    (let ((tainted (array/reduce @idx @roots (fn acc k
+                                            (array/filter @idx (fn i (and (not (array/includes @base @i))
+                                              (or (array/includes @acc @i) (array/some (default (array/nth @emitters @i) []) (fn j (array/includes @acc @j))))))))))
+                                          (reached (array/reduce @idx @base (fn acc k
+                                            (array/filter @idx (fn i (or (array/includes @acc @i) (array/some (default (array/nth @emitters @i) []) (fn j (array/includes @acc @j))))))))))
+                                      (let ((guarded (array/filter @idx (fn i (or (array/includes @base @i) (and (array/includes @reached @i) (not (array/includes @tainted @i))))))))
+                                        (array/flatten (array/map (array/filter @rows (fn r (not (array/includes @guarded (object/get @r "i" 0))))) (fn r
+                                      (array/map (object/get @r "un" []) (fn up
+                                        { code: @config.codes.unsignedNotEnvGuarded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @r "i" 0) "].effects" @up), message: (str/concat "transition on '" (object/get @r "ev" "") "' passes `allowUnsigned: true` to jws/verify, which accepts an alg:none token, but it is not env-guarded"), suggestion: "reach this transition only from an os/getenv answer whose arm guards on `(= (default @payload.value \"\") <expected host>)`, directly or through emits that all start from such arms", severity: "error" }))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "unsigned-guard", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UgProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintUnsignedGuardCodes = { unsignedNotEnvGuarded: { code: "ORB_EFF_UNSIGNED_NOT_ENV_GUARDED", category: "effect", description: "A jws/verify call with a literal allowUnsigned true sits in a transition that is not env-guarded" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintUnsignedGuardCli -> OrbLintUnsignedGuardRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (or (= @a null) (!= (array/len (object/get @a "argv")) 1)))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint unsigned-guard <file>" })
+      LINT_CALLED -> waiting when (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @a null) (= (array/len (object/get @a "argv")) 1)))
+        (let ((a (json/parse @payload.rawBody OrbCommandArgs))) (if (= @a null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint unsigned-guard <file>" }) (let ((f (array/first (object/get @a "argv")))) (if (= @f null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint unsigned-guard <file>" }) (emit LINT_REQUEST { file: @f })))))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "unsigned-guard") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint unsigned-guard: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "unsigned-guard") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint unsigned-guard: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-unsigned-guard" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint unsigned-guard` with its arguments and working directory."
+        @synonyms "orb lint unsigned-guard"
+      OrbLintUnsignedGuard.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintUnsignedGuardCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintUnsignedGuardOrbitalStart -> OrbLintUnsignedGuard, OrbLintUnsignedGuardCli, OrbLintInput, Packs, Versions
+}

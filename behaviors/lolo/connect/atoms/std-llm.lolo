@@ -178,6 +178,7 @@ orbital LlmOrbital {
                   (and (str/startsWith @j.model "o") (array/includes ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9"] (str/slice @j.model 1 2)))
                   (and (str/startsWith @j.model "gpt-5") (not (str/startsWith @j.model "gpt-5-chat"))))))
                 (let ((pre (object/merge
+                  (object/merge
                     (object/merge
                       (object/merge
                         (object/merge
@@ -191,7 +192,8 @@ orbital LlmOrbital {
                           (if (= @config.provider "kimi") { thinking: { type: "disabled" } } {}))
                         (if (= @config.provider "openrouter") { tool_choice: "auto", usage: { include: true } } {}))
                       (if (and (> @j.maxTokens 0) (not @lr) (not @cr)) { max_tokens: @j.maxTokens } {}))
-                    (if (and (> @j.maxTokens 0) (!= @lr @cr)) { max_completion_tokens: @j.maxTokens } {}))))
+                    (if (and (> @j.maxTokens 0) (!= @lr @cr)) { max_completion_tokens: @j.maxTokens } {}))
+                  (if (!= @config.reasoningEffort "") { reasoning_effort: @config.reasoningEffort } {}))))
                   (if (> (array/len (object/get @j images [])) 0)
                     (json/stringify (object/merge @pre {
                       messages: [
@@ -607,6 +609,7 @@ orbital LlmOrbital {
           body: (let ((s (default (json/parse @payload.session ToolsSession) {})))
             (json/stringify (object/merge
               (object/merge
+              (object/merge
                 {
                   model: @s.model,
                   messages: @s.messages,
@@ -614,7 +617,8 @@ orbital LlmOrbital {
                   temperature: (if (= @config.provider "kimi") 0.6 0.7)
                 }
                 (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { type: "function", function: { name: @t.name, description: @t.description, parameters: @t.parameters } })) }))
-              (if (= @config.provider "openrouter") { reasoning: { enabled: true }, usage: { include: true } } {}))))
+              (if (= @config.provider "openrouter") { reasoning: { enabled: true }, usage: { include: true } } {}))
+              (if (!= @config.reasoningEffort "") { reasoning_effort: @config.reasoningEffort } {}))))
         })
 
       LLM_TOOLS_DISPATCH -> idle when (or (= @config.provider "lmstudio") (= @config.provider "orbgen"))
@@ -1381,6 +1385,11 @@ orbital LlmOrbital {
         @description "The chat provider; it picks the wire format (Anthropic Messages or OpenAI chat completions), the keyless providers (lmstudio, orbgen) and the provider-specific body fields (kimi, openrouter)."
         @synonyms "llm provider, model vendor"
         @tier "infra"
+      reasoningEffort : string = ""
+        @label "Reasoning effort"
+        @description "Sent as reasoning_effort on an OpenAI-compatible chat (lmstudio, openai, ...) when not empty: a reasoning model's thinking budget, and \"none\" turns thinking off (LM Studio honors it for qwen3). Empty sends nothing and the model decides. Not sent to the anthropic Messages wire."
+        @synonyms "thinking, reasoning, no think, thinking off"
+        @tier "domain"
       basePath : string = "/v1"
         @label "Chat base path"
         @description "The path before /chat/completions (or /messages for Anthropic), for example /v1 or /api/v1."

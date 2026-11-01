@@ -35,8 +35,9 @@ orbital VerifyExpectOrbital {
               ;; each optional key is read only after object/has, so its default never fires
               (let ((kept (object/merge (object/merge (object/merge (object/merge { trait: (object/get @payload.step "trait"), from: (object/get @payload.step "from"), event: (object/get @payload.step "event"), toStates: (object/get @payload.step "toStates"), guarded: (object/get @payload.step "guarded"), solved: (object/get @payload.step "solved"), payloadCase: (object/get @payload.step "payloadCase") } (if (object/has @payload.step "arm") { arm: (object/get @payload.step "arm" 0) } {})) (if (object/has @payload.step "reply") { reply: (object/get @payload.step "reply" "") } {})) (if (object/has @payload.step "guardCase") { guardCase: (object/get @payload.step "guardCase" "") } {})) (if (object/has @payload.step "guardSteerable") { guardSteerable: (object/get @payload.step "guardSteerable" false) } {}))))
                 (let ((withAccept (if (> (array/len @accepts) 0) (object/set @kept "acceptStates" @accepts) @kept)))
-                  (do (set @entity.expectation (if (!= @gap "") (object/set @withAccept "preconditionGap" @gap) @withAccept))
-                      (emit EXPECT_ANSWERED { expectation: @entity.expectation })))))))
+                  (let ((answer (if (!= @gap "") (object/set @withAccept "preconditionGap" @gap) @withAccept)))
+                    (do (set @entity.expectation @answer)
+                        (emit EXPECT_ANSWERED { expectation: @answer }))))))))
     }
 
     emits {

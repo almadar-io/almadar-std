@@ -1,0 +1,2820 @@
+{
+ "atom": "cli/atoms/std-orb-lint-nav-target.lolo",
+ "trait": "OrbLintNavTarget",
+ "note": "Cases for ORB_NAV_TARGET_UNDECLARED, a final-only rule (rule nav-target-final): a literal navigation target (an href or navigatesTo in a config default or a render-ui payload, a lazy page's links) must match a declared page route (inline page, expects page route, lazy page; :name matches one segment; query, fragment and empty segments ignored). Literal navigate effects belong to std-orb-lint-navigate. Reds: navItems href in app config and trait config; an orbital config href; a rendered href and navigatesTo; a locale-prefixed concat folded through the config defaults; a lazy page link. Controls: declared, param, query, fragment, root and trailing-slash targets, a protocol page, an expects page, a lazy page, an empty prefix, computed paths, external URLs, mailto, anchors, the signIn route, /login, a child (lazy) scope.",
+ "cases": [
+  {
+   "id": "an app config navItems href to /nowhere is flagged at the app config",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "navItems": {
+             "type": "[NavItem]",
+             "default": "@config.navItems"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "config": {
+        "navItems": {
+         "type": "[NavItem]",
+         "default": [
+          {
+           "href": "/tasks",
+           "label": "Tasks"
+          },
+          {
+           "href": "/nowhere",
+           "label": "Nowhere"
+          }
+         ]
+        }
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "config",
+           "message": "the href '/nowhere' names no page the program declares",
+           "suggestion": "declare a page at '/nowhere', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a trait config navItems href to an undeclared page is flagged at the trait",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "navItems": {
+             "type": "[NavItem]",
+             "default": [
+              {
+               "href": "/",
+               "label": "Home"
+              },
+              {
+               "href": "/nowhere",
+               "label": "Nowhere"
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/nowhere' names no page the program declares",
+           "suggestion": "declare a page at '/nowhere', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an orbital config href is flagged at the orbital config",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ],
+         "config": {
+          "shortcuts": {
+           "type": "[object]",
+           "default": [
+            {
+             "href": "/missing",
+             "label": "x"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].config",
+           "message": "the href '/missing' names no page the program declares",
+           "suggestion": "declare a page at '/missing', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an href in a rendered pattern payload is flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/categories"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/categories' names no page the program declares",
+           "suggestion": "declare a page at '/categories', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an href in a rendered payload under an if is flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "if",
+                [
+                 "=",
+                 "@entity.id",
+                 "x"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   {
+                    "type": "button",
+                    "href": "/nested-gone"
+                   }
+                  ]
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/nested-gone' names no page the program declares",
+           "suggestion": "declare a page at '/nested-gone', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an href in a tick effect is flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "name": "t",
+             "interval": 1000,
+             "effects": [
+              [
+               "render-ui",
+               "main",
+               {
+                "type": "stack",
+                "children": [
+                 {
+                  "type": "button",
+                  "href": "/tick-gone"
+                 }
+                ]
+               }
+              ]
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/tick-gone' names no page the program declares",
+           "suggestion": "declare a page at '/tick-gone', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a navigatesTo on a rendered action is flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "navigatesTo": "/categories"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the navigatesTo '/categories' names no page the program declares",
+           "suggestion": "declare a page at '/categories', or point the navigatesTo at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a literal navigate effect is std-orb-lint-navigate's, never reported here",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "navigate",
+                "/categories"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a declared page, a param route, a query, a fragment and a trailing slash all match",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/tasks"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/tasks/42"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/tasks/42?tab=2"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/tasks/#top"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "navItems": {
+             "type": "[NavItem]",
+             "default": [
+              {
+               "href": "/tasks/"
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a param segment matches exactly one segment, never two",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/tasks/42/edit"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/tasks/42/edit' names no page the program declares",
+           "suggestion": "declare a page at '/tasks/42/edit', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a protocol endpoint page, an expects page route and a lazy page are declared",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/api/export"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/promised"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/lazy-page"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "Api",
+           "path": "/api/export",
+           "protocol": "http",
+           "traits": []
+          }
+         ],
+         "expects": [
+          {
+           "kind": "page",
+           "path": "/promised"
+          }
+         ]
+        }
+       ],
+       "lazyPages": [
+        {
+         "path": "/lazy-page"
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a locale-prefixed literal resolves through the config defaults to a declared page",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "pathPrefix": {
+             "type": "string",
+             "default": "@config.pathPrefix"
+            },
+            "navItems": {
+             "type": "[NavItem]",
+             "default": [
+              {
+               "href": [
+                "str/concat",
+                "@config.pathPrefix",
+                "/blog"
+               ],
+               "label": "Blog"
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "BlogPage",
+           "path": "/ar/blog",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "config": {
+        "pathPrefix": {
+         "type": "string",
+         "default": "/ar"
+        }
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a locale-prefixed literal that resolves to an undeclared page is flagged with the resolved path",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "pathPrefix": {
+             "type": "string",
+             "default": "@config.pathPrefix"
+            },
+            "navItems": {
+             "type": "[NavItem]",
+             "default": [
+              {
+               "href": [
+                "str/concat",
+                "@config.pathPrefix",
+                "/gone"
+               ],
+               "label": "Gone"
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "BlogPage",
+           "path": "/ar/blog",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "config": {
+        "pathPrefix": {
+         "type": "string",
+         "default": "/ar"
+        }
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/ar/gone' names no page the program declares",
+           "suggestion": "declare a page at '/ar/gone', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an empty prefix folds away and the href matches the unprefixed page",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "pathPrefix": {
+             "type": "string",
+             "default": "@config.pathPrefix"
+            },
+            "navItems": {
+             "type": "[NavItem]",
+             "default": [
+              {
+               "href": [
+                "str/concat",
+                "@config.pathPrefix",
+                "/blog"
+               ]
+              }
+             ]
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "BlogPage",
+           "path": "/blog",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "config": {
+        "pathPrefix": {
+         "type": "string",
+         "default": ""
+        }
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a computed href is not decided and never reported",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": [
+                    "str/concat",
+                    "@entity.slug",
+                    "/x"
+                   ]
+                  },
+                  {
+                   "type": "button",
+                   "href": "@entity.url"
+                  },
+                  {
+                   "type": "button",
+                   "href": [
+                    "if",
+                    [
+                     "=",
+                     "@entity.id",
+                     "a"
+                    ],
+                    "/p",
+                    "/q"
+                   ]
+                  },
+                  {
+                   "type": "button",
+                   "href": [
+                    "str/concat",
+                    "@config.unknownKnob",
+                    "/x"
+                   ]
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: an external URL, a mailto and an in-page anchor are not page targets",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "https://example.com/x"
+                  },
+                  {
+                   "type": "button",
+                   "href": "mailto:a@b.c"
+                  },
+                  {
+                   "type": "button",
+                   "href": "#top"
+                  },
+                  {
+                   "type": "button",
+                   "href": "//cdn.example.com/x"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: the signIn route and /login are never reported",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/auth/in"
+                  },
+                  {
+                   "type": "button",
+                   "href": "/login"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "site": {
+        "signIn": "/auth/in"
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "an undeclared target inside a lazy page's own links is flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "lazyPages": [
+        {
+         "path": "/lazy",
+         "links": [
+          "/tasks",
+          "/lost"
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "lazyPages[0]",
+           "message": "the href '/lost' names no page the program declares",
+           "suggestion": "declare a page at '/lost', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a lazy child scope answers nothing: its pages are incomplete",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/categories"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TaskPage",
+           "path": "/tasks/:id",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": "0"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": "0"
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "control: a call-site override replaces the atom default, so only the overriding app hrefs are read (the atom's own default is never in the lowered program)",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "navItems": {
+             "type": "[NavItem]",
+             "default": "@config.navItems"
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/home",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "config": {
+        "navItems": {
+         "type": "[NavItem]",
+         "default": [
+          {
+           "href": "/home"
+          },
+          {
+           "href": "/tasks"
+          }
+         ]
+        }
+       }
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  },
+  {
+   "id": "a / href with the boot page elsewhere is flagged: no declared page matches the root",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "AppOrbital",
+         "entity": {
+          "name": "Widget",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Widget",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "href": "/"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "HomePage",
+           "path": "/home",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          },
+          {
+           "name": "TasksPage",
+           "path": "/tasks",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "nav-target-final",
+         "findings": [
+          {
+           "code": "ORB_NAV_TARGET_UNDECLARED",
+           "path": "orbitals[0].traits[0]",
+           "message": "the href '/' names no page the program declares",
+           "suggestion": "declare a page at '/', or point the href at a page that exists",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintNavTarget"
+    }
+   ]
+  }
+ ]
+}

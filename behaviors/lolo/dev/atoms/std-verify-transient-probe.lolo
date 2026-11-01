@@ -36,12 +36,12 @@ orbital VerifyTransientProbeOrbital {
               (let ((closureFrom (array/reduce @rounds [@payload.query.from] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))
                     (enter (array/find @ts (fn t (array/some (object/get @t "effects" []) (fn e (and (= (object/get @e "op") "persist") (array/includes @writeKinds (object/get @e "kind" "")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))))
                 (let ((closureTo (if (= @enter null) [] (array/reduce @rounds [(object/get @enter "to")] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))))
-                  (do (set @entity.answer
-                        (if (or (= (array/len @fails) 0) (<= (array/len @closureFrom) 1)) { outcome: "not-transient" }
+                  (let ((outcome (if (or (= (array/len @fails) 0) (<= (array/len @closureFrom) 1)) { outcome: "not-transient" }
                         (if (= @enter null) { outcome: "finding", finding: "no-entering-persist" }
                           (let ((eff (array/find (object/get @enter "effects" []) (fn e (and (= (object/get @e "op") "persist") (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))
-                            { outcome: "entering", entering: { from: (object/get @enter "from"), event: (object/get @enter "event"), to: (object/get @enter "to"), entity: (object/get (default @eff {}) "entity" ""), operation: (object/get (default @eff {}) "kind" ""), acceptStates: (if (> (array/len @closureTo) 1) @closureTo []), coverageKey: (str/concat @payload.query.trait ":" (object/get @enter "from") "+" (object/get @enter "event") "->" (object/get @enter "to") "[transient-failure-probe:" @ev "]") } }))))
-                      (emit TRANSIENT_ANSWERED { answer: @entity.answer })))))))
+                            { outcome: "entering", entering: { from: (object/get @enter "from"), event: (object/get @enter "event"), to: (object/get @enter "to"), entity: (object/get (default @eff {}) "entity" ""), operation: (object/get (default @eff {}) "kind" ""), acceptStates: (if (> (array/len @closureTo) 1) @closureTo []), coverageKey: (str/concat @payload.query.trait ":" (object/get @enter "from") "+" (object/get @enter "event") "->" (object/get @enter "to") "[transient-failure-probe:" @ev "]") } })))))
+                    (do (set @entity.answer @outcome)
+                        (emit TRANSIENT_ANSWERED { answer: @outcome }))))))))
     }
 
     emits {

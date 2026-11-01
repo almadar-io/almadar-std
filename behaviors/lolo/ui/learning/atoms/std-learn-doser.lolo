@@ -37,6 +37,7 @@ orbital LearnDoserOrbital {
     elapsedMs : number = 0
     dose : number = 0
     bandLabel : string = ""
+    ;; set only once a dose band is reached; readers take "" for no band colour
     bandColor : string
     narration : string
     containers : [DoserContainer]
@@ -70,7 +71,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [
@@ -154,7 +155,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [
@@ -233,7 +234,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [
@@ -311,7 +312,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [
@@ -367,7 +368,7 @@ orbital LearnDoserOrbital {
                 ] }
             ]
           }))
-        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: @entity.bandColor, done: @entity.done })
+        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: (default @entity.bandColor ""), done: @entity.done })
         (if @entity.done (emit LEARN_ROUND_COMPLETE { score: 1, total: 1 }) null)
 
       ADD_LARGE -> idle when (and (== @entity.active true) (== @entity.done false))
@@ -385,7 +386,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [
@@ -441,7 +442,7 @@ orbital LearnDoserOrbital {
                 ] }
             ]
           }))
-        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: @entity.bandColor, done: @entity.done })
+        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: (default @entity.bandColor ""), done: @entity.done })
         (if @entity.done (emit LEARN_ROUND_COMPLETE { score: 1, total: 1 }) null)
 
       TOGGLE_DRIP -> idle when (== @entity.active true)
@@ -515,7 +516,7 @@ orbital LearnDoserOrbital {
           )
         )
         (set @entity.containers [
-          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: (default @entity.bandColor ""), label: @config.reservoirLabel },
           { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
         ])
         (set @entity.readouts [

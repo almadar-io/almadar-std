@@ -45,6 +45,9 @@ lj=job("qwen3-30b-a3b","",False); lk=wkey(lj)
 lbody=J({"model":"qwen3-30b-a3b","temperature":0.7,"stream":False,"max_tokens":1024,"messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"hi"}]})
 ltail="POST /v1/chat/completions HTTP/1.1\r\nhost: 127.0.0.1:1234\r\naccept: application/json\r\ncontent-type: application/json\r\ncontent-length: %d\r\n\r\n%s"%(len(lbody.encode()),lbody)
 case("a-keyless-lm-studio-chat-writes-no-authorization-header",[start("LocalLlm","LLM_GENERATE_LOCAL",None,False,{"emits":[wire(lk,"/v1/chat/completions",{"Accept":"application/json"},lbody,"none"),{"event":"HC_BUILT","payload":{"head":"","request":b(ltail)}}],"neverEmits":["HTTP_FAILED","HTTP_REQUEST_REFUSED"]})])
+# reasoningEffort: a declared knob writes reasoning_effort into the chat body; unset (the keyless case above) writes none
+qbody=J({"model":"qwen3-30b-a3b","temperature":0.7,"stream":False,"max_tokens":1024,"reasoning_effort":"none","messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"hi"}]})
+case("a-reasoning-effort-knob-writes-reasoning-effort-into-the-chat-body",[start("LocalQuietLlm","LLM_GENERATE_LOCAL_QUIET",None,False,{"emits":[wire(lk,"/v1/chat/completions",{"Accept":"application/json"},qbody,"none")]})])
 # cancel aborts the request on the wire. The harness answers a connect as a failure, so the in-flight rows are seeded.
 k,exp=anthropic_start("c1",False)
 j1=job("claude-sonnet-4-5","c1",False)

@@ -4,7 +4,7 @@
   "note": "Cases for ORB_CONTROL_VALUE_DISCARDED (composition/composed_wiring.rs): a composed trait's rendered value control (std-orb-lint-input's LINT_VALUE_CONTROLS) fires an event it declares with a payload that no trait of the embedder closure (std-orb-embed-chain), no listens route and no other orbital hears and whose own arms keep nothing. Reds: the submission nothing keeps, an internal event, the unread-term search box, the event offered outward (final rule only). Controls: a store routing it, another orbital routing it, an embedder handling it, an arm that reads, persists or shows the value, a persistent entity, a notification, a button, an atom authoring its own form, a guard reading the payload.",
   "cases": [
     {
-      "id": "final-a-search-box-that-only-stores-an-unread-term-discards-it",
+      "id": "final-a-composer-overridden-external-search-box-that-only-stores-an-unread-term-discards-it",
       "steps": [
         {
           "trait": "OrbLintControlValueDiscarded",
@@ -54,7 +54,8 @@
                               "type": "string",
                               "required": true
                             }
-                          ]
+                          ],
+                          "scopeOverridden": true
                         }
                       ],
                       "stateMachine": {
@@ -514,7 +515,8 @@
                               "type": "boolean",
                               "required": true
                             }
-                          ]
+                          ],
+                          "scopeOverridden": true
                         }
                       ],
                       "stateMachine": {
@@ -592,7 +594,8 @@
                               "type": "string",
                               "required": true
                             }
-                          ]
+                          ],
+                          "scopeOverridden": true
                         }
                       ],
                       "stateMachine": {
@@ -834,7 +837,8 @@
                               "type": "string",
                               "required": true
                             }
-                          ]
+                          ],
+                          "scopeOverridden": true
                         }
                       ],
                       "stateMachine": {
@@ -1357,7 +1361,7 @@
       ]
     },
     {
-      "id": "control-without-final-an-outward-offer-still-defers-to-an-importer",
+      "id": "control-without-final-a-composer-overridden-outward-offer-still-defers-to-an-importer",
       "steps": [
         {
           "trait": "OrbLintControlValueDiscarded",
@@ -1407,7 +1411,8 @@
                               "type": "string",
                               "required": true
                             }
-                          ]
+                          ],
+                          "scopeOverridden": true
                         }
                       ],
                       "stateMachine": {
@@ -3508,7 +3513,7 @@
       ]
     },
     {
-      "id": "edge-an-event-the-atom-offers-outward-is-the-consumers-choice",
+      "id": "edge-an-event-the-atom-declares-outward-is-the-embedders-and-never-reported",
       "steps": [
         {
           "trait": "OrbLintControlValueDiscarded",
@@ -3798,15 +3803,7 @@
                 "payload": {
                   "rule": "control-value-discarded-final",
                   "scope": "",
-                  "findings": [
-                    {
-                      "code": "ORB_CONTROL_VALUE_DISCARDED",
-                      "path": "orbitals[0].traits[1]",
-                      "message": "'ItemForm' renders a control that fires SAVE with a value, but no other trait hears SAVE and its own SAVE arm reads none of it - what the user entered is discarded",
-                      "suggestion": "route it to a trait that keeps it: `listens { ItemForm.SAVE -> <its input> }` on that trait",
-                      "severity": "error"
-                    }
-                  ]
+                  "findings": []
                 }
               }
             ]
@@ -7965,6 +7962,235 @@
             "fired": true,
             "neverEmits": [
               "LINT_COMPUTE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hook-an-event-the-trait-declares-external-itself-is-an-embedder-output-and-is-never-reported",
+      "steps": [
+        {
+          "trait": "OrbLintControlValueDiscarded",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ItemOrbital",
+                  "entity": {
+                    "name": "SearchResult",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "searchTerm",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "NoteSearch",
+                      "linkedEntity": "SearchResult",
+                      "sourceBehavior": {
+                        "alias": "A",
+                        "behavior": "std/behaviors/std-search",
+                        "originalName": "SearchResultSearch"
+                      },
+                      "listens": [],
+                      "emits": [
+                        {
+                          "event": "SEARCH",
+                          "scope": "external",
+                          "payloadSchema": [
+                            {
+                              "name": "searchTerm",
+                              "type": "string",
+                              "required": true
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          },
+                          {
+                            "key": "SEARCH",
+                            "listened": true,
+                            "payloadSchema": [
+                              {
+                                "name": "searchTerm",
+                                "type": "string",
+                                "required": true
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "search-input",
+                                  "event": "SEARCH"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SEARCH",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.searchTerm",
+                                "?searchTerm"
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "search-input",
+                                  "event": "SEARCH"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "listens": [],
+                  "pages": [
+                    {
+                      "name": "ItemsPage",
+                      "path": "/items",
+                      "traits": [
+                        {
+                          "ref": "NoteSearch"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintControlValueDiscarded",
+          "event": "VALUE_CONTROLS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "form-section": [
+                "cancelEvent",
+                "submitEvent"
+              ],
+              "form": [
+                "cancelEvent",
+                "submitEvent"
+              ],
+              "search-input": [
+                "event"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintControlValueDiscarded",
+          "event": "CHAINS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "chains": [
+              {
+                "NoteSearch": []
+              }
+            ],
+            "embedders": [
+              {
+                "NoteSearch": []
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_COMPUTE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintControlValueDiscarded",
+          "event": "LINT_COMPUTE",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintControlValueDiscarded",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "control-value-discarded",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "control-value-discarded-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
             ]
           }
         }
