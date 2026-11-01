@@ -6,21 +6,23 @@ describe('http effect', () => {
   const http = STD_OPERATORS['http'];
   const params = http.params ?? [];
 
-  it('is a server effect of arity 3-5 producing the reply payload', () => {
+  it('is a server effect of arity 3-5 producing the reply payload or the redirect url', () => {
     expect(http.category).toBe('effect');
     expect(http.hasSideEffects).toBe(true);
     expect(getOperatorRunsOn('http')).toBe('server');
     expect([http.minArity, http.maxArity]).toEqual([3, 5]);
     expect(params.map((p) => p.name)).toEqual(['method', 'origin', 'path', 'request', 'options']);
     expect(http.effect?.kind).toBe('http');
+    const nullableKey = { kind: 'union', of: ['string', { kind: 'literal', value: null }] };
     expect(http.effect?.produces).toEqual({
-      kind: 'object',
-      fields: {
-        status: 'number',
-        headers: { kind: 'map', key: 'string', value: 'string' },
-        body: 'string',
-        key: { kind: 'union', of: ['string', { kind: 'literal', value: null }] },
-      },
+      kind: 'union',
+      of: [
+        {
+          kind: 'object',
+          fields: { status: 'number', headers: { kind: 'map', key: 'string', value: 'string' }, body: 'string', key: nullableKey },
+        },
+        { kind: 'object', fields: { url: 'string', key: nullableKey } },
+      ],
     });
   });
 
@@ -55,7 +57,7 @@ describe('codec operators', () => {
     ['base64/decode', 1, 1, ['s'], nullableString],
     ['hash/sha256', 2, 3, ['data', 'encoding', 'input'], nullableString],
     ['hash/md5', 2, 2, ['bytes', 'encoding'], nullableString],
-    ['hmac/sha256', 3, 3, ['key', 'message', 'encoding'], nullableString],
+    ['hmac/sha256', 3, 4, ['key', 'message', 'encoding', 'prefix'], nullableString],
   ];
 
   for (const [name, minArity, maxArity, params, returnType] of cases) {

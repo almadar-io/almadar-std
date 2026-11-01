@@ -38,7 +38,7 @@ describe('credential administration effects', () => {
       expect(STD_OPERATORS[name].effect?.kind).toBe(name);
       expect(canonical.operators[name].params).toEqual(STD_OPERATORS[name].params);
     }
-    expect(STD_OPERATORS['credential-set'].effect?.produces).toEqual({ kind: 'object', fields: { saved: 'boolean', service: 'string', envVar: 'string', last4: 'string' } });
+    expect(STD_OPERATORS['credential-set'].effect?.produces).toEqual({ kind: 'object', fields: { saved: 'boolean' } });
     expect(STD_OPERATORS['credential-rotate'].effect?.produces).toEqual({ kind: 'object', fields: { rotated: 'number', alreadyCurrent: 'number', unreadable: 'number' } });
   });
 
@@ -46,7 +46,7 @@ describe('credential administration effects', () => {
     for (const name of ['credential-set', 'credential-remove', 'credential-test', 'credential-mode', 'credential-rotate'] as const) {
       expect(STD_OPERATORS[name].description, name).toMatch(/ALMADAR_CREDENTIAL_ADMIN_ROLES/);
     }
-    expect(STD_OPERATORS['credential-list'].description).toMatch(/open to every caller/i);
+    expect(STD_OPERATORS['credential-list'].description).toMatch(/role gate are the std-credential-admin program's/i);
     expect(STD_OPERATORS['credential-list'].description).not.toMatch(/ALMADAR_CREDENTIAL_ADMIN_ROLES/);
   });
 

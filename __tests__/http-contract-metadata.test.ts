@@ -9,8 +9,11 @@ function fields(type: OperatorTypeRef | undefined): Record<string, OperatorTypeR
 }
 
 describe('HTTP contract metadata', () => {
-  it('declares the reply key with its actual nullable wire type', () => {
-    expect(fields(STD_OPERATORS.http.effect?.produces).key).toEqual({ kind: 'union', of: ['string', { kind: 'literal', value: null }] });
+  it('declares the reply key with its actual nullable wire type on every answer shape', () => {
+    const produced = STD_OPERATORS.http.effect?.produces;
+    const shapes = typeof produced === 'object' && produced !== null && produced.kind === 'union' ? produced.of : [produced];
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) expect(fields(shape).key).toEqual({ kind: 'union', of: ['string', { kind: 'literal', value: null }] });
   });
   it('keeps the generated compiler contract aligned with source metadata', () => {
     expect(canonical.operators.http.params).toEqual(STD_OPERATORS.http.params);
@@ -168,7 +171,7 @@ describe('host effect and key metadata', () => {
 
   it('marks exactly the host effects as closed calls, with the byte range as data', () => {
     const marked = Object.entries(STD_OPERATORS).filter(([, m]) => m.closedCall).map(([name]) => name).sort();
-    expect(marked).toEqual(['access-check', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'random-bytes']);
+    expect(marked).toEqual(['access-check', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'random-bytes']);
     expect(STD_OPERATORS['random-bytes'].closedCall).toEqual({ intRange: { arg: 0, min: 1, max: 1024 } });
     expect(STD_OPERATORS['credential-set'].closedCall).toEqual({ request: true });
     expect(STD_OPERATORS.fetch.closedCall).toBeUndefined();
@@ -194,20 +197,20 @@ describe('host effect and key metadata', () => {
     expect(Object.keys(fields(options))).toEqual(['appName', 'layout', 'theme', 'overrides']);
   });
 
-  it('carries a key only on the ask families that echo one: call/http, random-bytes, oauth-authorize, os/, kv/, browser/, auth/sign-in and the program host', () => {
+  it('carries a key only on the ask families that echo one: call/http, fetch, random-bytes, oauth-authorize, os/, kv/, browser/, auth/sign-in, auth/consent and the program host', () => {
     const keyed = Object.entries(STD_OPERATORS).filter(([, m]) => m.params?.some((p) => typeof p.type === 'object' && p.type.kind === 'object' && 'key' in p.type.fields)).map(([name]) => name);
-    const allowed = new Set(['call-service', 'http', 'random-bytes', 'oauth-authorize']);
+    const allowed = new Set(['call-service', 'http', 'fetch', 'random-bytes', 'oauth-authorize', 'auth/sign-in', 'auth/consent']);
     for (const name of keyed) {
       const m = STD_OPERATORS[name];
       expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || name === 'auth/sign-in' || m.host === 'program', name).toBe(true);
     }
-    for (const name of ['fetch', 'persist', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
+    for (const name of ['persist', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
   });
 });
 
 describe('retired protocol operators', () => {
   it('keeps no protocol operator: the std drivers speak over os/tcp-connect', () => {
-    expect(STD_OPERATORS.redis).toBeUndefined();
-    expect(canonical.operators.redis).toBeUndefined();
+    expect('redis' in STD_OPERATORS).toBe(false);
+    expect('redis' in canonical.operators).toBe(false);
   });
 });

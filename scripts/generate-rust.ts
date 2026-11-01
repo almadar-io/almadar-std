@@ -188,7 +188,6 @@ function toCanonicalEntry(
     if (meta.targetOptions) entry.targetOptions = meta.targetOptions;
     if (meta.resultByOption) entry.resultByOption = meta.resultByOption;
     if (meta.closedCall) entry.closedCall = meta.closedCall;
-    if (meta.defaultPorts) entry.defaultPorts = meta.defaultPorts;
     if (meta.grant) entry.grant = meta.grant;
     if (meta.oauth) entry.oauth = meta.oauth;
     if (meta.httpWire) entry.httpWire = meta.httpWire;

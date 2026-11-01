@@ -31,7 +31,7 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http', 'identity/sign-in', 'identity/sign-out',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
       'persist', 'persist/read-named', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());
@@ -127,8 +127,14 @@ describe('runsOn', () => {
     for (const op of ['os/write-file', 'os/append-file', 'os/write', 'os/sendto', 'os/stdout-write', 'os/stderr-write']) {
       expect(typeOf(op, 'data'), op).toBe('bytes');
     }
-    // os/send also takes credential segments the host resolves at the boundary (EXEC-CRYPTO).
-    expect(typeOf('os/send', 'data')).toEqual({ kind: 'union', of: ['bytes', { kind: 'array', of: { kind: 'object', fields: { bytes: 'bytes', credential: 'string' } } }] });
+    // os/send also takes credential segments the host resolves at the boundary (EXEC-CRYPTO), each with an optional encode and scope.
+    const literals = (...values: string[]) => ({ kind: 'union', of: values.map((value) => ({ kind: 'literal', value })) });
+    const segment = {
+      kind: 'object',
+      fields: { bytes: 'bytes', credential: 'string', encode: literals('base64', 'uri', 'form'), scope: literals('app', 'user') },
+      optional: ['encode', 'scope'],
+    };
+    expect(typeOf('os/send', 'data')).toEqual({ kind: 'union', of: ['bytes', { kind: 'array', of: segment }] });
     const anchored = { kind: 'object', fields: { anchor: { kind: 'union', of: [{ kind: 'literal', value: 'cwd' }, { kind: 'literal', value: 'exe-dir' }, { kind: 'object', fields: { env: 'string' } }] }, path: 'string' } };
     expect(typeOf('os/write-file', 'path')).toEqual({ kind: 'union', of: ['string', anchored] });
     expect(typeOf('os/sendto', 'port')).toEqual({ kind: 'union', of: ['number', { kind: 'object', fields: { anchor: { kind: 'object', fields: { env: 'string' } } } }] });
@@ -136,7 +142,7 @@ describe('runsOn', () => {
 
   it('the client set is rendering, navigation, audio, sign-in, the server send and the browser device APIs', () => {
     expect(getOperatorsRunningOn('client')).toEqual([
-      'audio/change-music', 'audio/play-sound', 'audio/stop-music', 'audio/stop-sound', 'auth/sign-in', 'auth/sign-out',
+      'audio/change-music', 'audio/play-sound', 'audio/stop-music', 'audio/stop-sound', 'auth/consent', 'auth/sign-in', 'auth/sign-out',
       'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe',
       'browser/tab-act', 'browser/tab-apply', 'browser/tab-apply-many', 'browser/tab-capture', 'browser/tab-close', 'browser/tab-list', 'browser/tab-navigate', 'browser/tab-open', 'browser/tab-query', 'browser/tab-unwatch', 'browser/tab-watch',
       'navigate', 'navigate-back', 'render-ui', 'send-server',

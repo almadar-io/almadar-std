@@ -20,7 +20,7 @@ const pageAtoms = readdirSync(atomsDir).filter((f) => /^std-page-.*\.lolo$/.test
 
 describe('std page atoms name no real site', () => {
   it('finds the page atoms', () => {
-    expect(pageAtoms.sort()).toEqual(['std-page-open.lolo', 'std-page-search.lolo', 'std-page-treat.lolo', 'std-page-watch.lolo']);
+    expect(pageAtoms.sort()).toEqual(['std-page-open.lolo', 'std-page-read.lolo', 'std-page-search.lolo', 'std-page-treat.lolo', 'std-page-watch.lolo']);
   });
 
   it.each(pageAtoms)('%s names only reserved example hosts', (file) => {
