@@ -1,7 +1,7 @@
 app std-vector-snapshot [
   version: "1.0.0",
   description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, userAnchor, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
-  net: { "127.0.0.1:1234": [tcp], "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp] },
+  net: { "openrouter.ai:443": [tcp] },
   fs: { cwd: "**": [read, write, remove, create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]

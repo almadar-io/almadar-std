@@ -2,7 +2,6 @@ app std-dev-persona-picker [
   version: "1.0.0",
   inbound: ["personas", "persona-sign-in"],
   env: ["FIREBASE_AUTH_EMULATOR_HOST"],
-  net: { "127.0.0.1:9099": [tcp] },
   egress: ["http://127.0.0.1:9099"],
   description: "std-dev-persona-picker — the in-app way to sign in as a development persona. On start it asks std-dev-personas (composed here, rebound to the app's identity entity) for the personas and lists them by name as buttons; picking one asks for that persona's custom token and signs the session in with it through the server (TOKEN_SIGN_IN_REQUESTED { token } to the composed std-dev-personas, which runs jws/verify with allowUnsigned for the emulator issuer and then identity/sign-in), then shows who is signed in. When the personas are refused (the Auth emulator is not configured, so a deployment lists nobody), unreadable or none, it shows the empty state with the reason; a refused or failed sign-in shows its error with a retry. Every text is config. The picker's PersonaEvents instance of std-dev-personas is also the program's handler of the personas and persona-sign-in hooks, so a program mounts either this atom or std-identity's DevPersonas, never both. The sign-in token is the emulator's unsigned alg-none token, accepted by jws/verify only for the emulator issuer; this dev-only path is the one exception to tokens-never-in-payloads. The page is /dev/personas. An importing program restates the env, net and egress."
 ]

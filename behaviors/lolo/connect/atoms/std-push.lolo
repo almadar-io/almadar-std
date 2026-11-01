@@ -2,7 +2,6 @@ app std-push [
   version: "2.0.0",
   description: "std-push — Web Push delivery to a browser PushSubscription, done in .lolo over std-http-client: PUSH_SEND checks the subscription, draws a 16-byte salt, runs an ephemeral ECDH P-256 with the subscription key, derives the content key with HKDF-SHA256 and encrypts the notification as aes128gcm records of 4096 bytes (RFC 8291, RFC 8188), signs a VAPID ES256 token (RFC 8292) with the stored private key, and posts it to the subscription endpoint. A push service reply answers PUSH_SEND_RESULT {statusCode, ok, expired} (expired when the subscription is gone, 404 or 410); a 5xx reply, a transport failure, an invalid subscription or VAPID setting, an endpoint host outside pushHosts answers PUSH_SEND_FAILED with the message. The endpoint host must be one of the push services composed below and in the app egress list.",
   egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://updates.push.services.mozilla.com", "https://web.push.apple.com"],
-  net: { "fcm.googleapis.com:443": [tcp], "android.googleapis.com:443": [tcp], "updates.push.services.mozilla.com:443": [tcp], "web.push.apple.com:443": [tcp], "*.notify.windows.com:443": [tcp] }
 ]
 uses Spec from "almadar-std/push"
 uses Http from "std/behaviors/std-http-client"

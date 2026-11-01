@@ -18,7 +18,7 @@ orbital CollectionItemOrbital {
           emit: { failure: CollectionItemLoadFailed, success: CollectionItemLoaded }
         })
       CollectionItemLoadFailed -> idle
-        (notify error (str/concat @config.failureMessage ?error))
+        (notify error (if (validate/required ?error) (str/concat @config.failureMessage " — " ?error) @config.failureMessage))
     }
 
     emits {
@@ -43,7 +43,7 @@ orbital CollectionItemOrbital {
     }
 
     config {
-      failureMessage : string = "Couldn't load the collection — "
+      failureMessage : string = "Couldn't load the collection"
         @label "Failure message"
         @description "Shown in the error toast when the fetch fails; the error text follows it."
         @tier "presentation"
