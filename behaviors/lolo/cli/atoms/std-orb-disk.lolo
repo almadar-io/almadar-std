@@ -187,7 +187,7 @@ orbital OrbDiskOrbital {
         (set @entity.json (object/has @payload.flags "json"))
         (set @entity.yes (object/has @payload.flags "yes"))
         (set @entity.clearMode (or (object/has @payload.flags "safe") (object/has @payload.flags "clear")))
-        (set @entity.clearId (if (> (array/len (default (object/get @payload.flags "clear") [])) 0) (default (array/first (object/get @payload.flags "clear")) "") ""))
+        (set @entity.clearId (if (> (array/len (default (object/get @payload.flags "clear") [])) 0) (default (array/first (default (object/get @payload.flags "clear") [])) "") ""))
         (set @entity.safeMode (or (object/has @payload.flags "safe") (= @entity.clearId "__safe_batch__")))
         (set @entity.badArgs (+ (array/len (array/filter @payload.errors (fn e (!= @e "missing value for --clear")))) (array/len @payload.positionals)))
         (emit DISK_ROUTE { })

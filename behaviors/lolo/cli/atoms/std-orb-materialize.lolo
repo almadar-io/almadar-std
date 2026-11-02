@@ -177,7 +177,7 @@ orbital OrbMaterializeOrbital {
         (os/read-file { anchor: "cwd" path: (default (array/nth @entity.items @entity.cursor) "") } { key: (str/concat "read-" @entity.cursor), emit: { success: MAT_READ, failure: MAT_FAILED } })
       MAT_READ -> scanning
         (set @entity.data @payload.data)
-        (set @entity.sha (hash/sha256 @payload.data "hex" "bytes"))
+        (set @entity.sha (hash/sha 256 @payload.data "hex" "bytes"))
         (set @entity.dest (str/concat @entity.out "/" (str/replace @entity.rel ".lolo" ".orb")))
         (set @entity.known (if (>= (array/indexOf @entity.prevKeys @entity.rel) 0) (default (array/nth @entity.prevValues (array/indexOf @entity.prevKeys @entity.rel)) "") ""))
         (emit MAT_HASHED { })

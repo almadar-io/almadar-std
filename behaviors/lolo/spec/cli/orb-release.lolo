@@ -1,0 +1,17 @@
+app orb-release-spec [
+  version: "1.0.0",
+  inbound: ["cli-release"],
+  description: "Design contract for `orb release [--publish] [--major|--minor|--patch]`: the release publisher for the packages in release.json. Without --publish it reads each entry's version, computes the next with std-semver and prints the plan, writing nothing. With --publish, per entry in order: the version and the dependents' ranges are written, then git add, commit, tag, push of main and the tag, and a registry poll until the version is listed; a released entry is skipped so a re-run resumes. Extra arguments or two bump flags answer the usage (status 400, exit 2); a stopped run answers status 500."
+]
+
+orbital OrbReleaseSpec {
+  expects trait OrbRelease {
+    state ready
+    state parsing
+    state running
+    emits {
+      RELEASE_ANSWERED { status : number!  body : string!  stderr : string }
+    }
+  }
+  expects page boot -> OrbRelease
+}

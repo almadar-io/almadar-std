@@ -1,0 +1,647 @@
+app std-orb-release [
+  version: "1.0.0",
+  inbound: ["cli-release"],
+  exec: ["git", "pnpm", "npm"],
+  env: ["PATH", "HOME", "SSH_AUTH_SOCK", "GITHUB_TOKEN"],
+  fs: { cwd: "**": [read, write] },
+  description: "std-orb-release — the `orb release [--publish] [--major|--minor|--patch]` command (spec/cli/orb-release.lolo): the release publisher for the packages listed in release.json at the working directory. release.json is an ordered list of { repo, package, file, tag, registry }: repo is a git directory under the working directory, package the npm name, file the version file inside repo (a package.json, or a Cargo.toml whose release version is the first key of [workspace.package] or, for a single crate, of [package], with an optional orb compiler range as the first key of [package.metadata.orb]), tag the prefix of the tag whose push publishes it (the repo's own workflow publishes on that tag) and registry npmjs or github. Without --publish nothing is written: each entry's version file is read, its next version is std-semver's bump of that version (patch unless --major or --minor is given), and the plan lists the entries in order with the @almadar dependency ranges that would be rewritten to ^<new>, and with a package.json orb.compiler (or orbVocabulary.compiler, or orbLanguage.compiler) range that would be rewritten to >=<new> of @almadar/orb when the run releases orb. The run plans every entry first without writing anything, so an entry listed before @almadar/orb still reads orb's planned version; with --publish the second pass writes. An entry needs a release when a file other than package.json, Cargo.toml, Cargo.lock or pnpm-lock.yaml changed under its directory since the tag <tag><version> (std-git diffNames; a tag that does not exist counts as changed) or when one of its @almadar dependency ranges differs from ^<version> of an entry earlier in the list; otherwise it is released, or pending when its version is not yet on the registry. With --publish, for each entry in order: the repo's tree must be clean and on main, the version and the dependents' ranges are written, pnpm updates the lockfile of a package whose ranges changed, then git add, commit, tag <tag><new>, push main and the tag, and the registry is polled (`npm view <package> versions` through std-cli under std-retry, waitAttempts every pollIntervalMs, with GITHUB_TOKEN passed through for GitHub Packages, which needs `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}` in ~/.npmrc) until <package>@<new> is listed before the next entry starts. A released entry is skipped and a pending one only pushes its tag and waits, so a re-run resumes. The first failure stops the run with its repo and reason. Usage errors answer status 400; a stopped run answers status 500 with the plan so far."
+]
+uses Spec from "almadar-std/orb-release"
+uses Args from "std/behaviors/std-args"
+uses Semver from "std/behaviors/std-semver"
+uses Git from "std/behaviors/std-git"
+uses Npm from "std/behaviors/std-cli"
+uses Retry from "std/behaviors/std-retry"
+uses Pnpm from "std/behaviors/std-cli"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ReleaseEntry = { repo : string!, package : string!, file : string!, tag : string!, registry : string! }
+type PkgOrb = { compiler : string }
+type PkgFile = { name : string, version : string, orb : PkgOrb, orbVocabulary : PkgOrb, orbLanguage : PkgOrb, dependencies : Map string string, devDependencies : Map string string, peerDependencies : Map string string, optionalDependencies : Map string string }
+type ReleaseList = [ReleaseEntry]
+type VersionList = [string]
+type RelDep = { dep : string!, range : string! }
+type RelRewrite = { dep : string!, old : string!, new : string! }
+
+orbital OrbReleaseOrbital {
+  config {
+    waitAttempts : number = 80
+      @label "Registry polls"
+      @description "How many times the registry is asked whether a published version is listed before the run stops."
+      @synonyms "publish timeout, registry wait, poll attempts"
+      @tier "domain"
+    pollIntervalMs : number = 15000
+      @label "Poll interval (ms)"
+      @description "The wait between two registry polls; waitAttempts times this is the publish timeout."
+      @synonyms "poll delay, registry lag"
+      @tier "domain"
+    npmjsUrl : url = "https://registry.npmjs.org"
+      @label "npmjs registry"
+      @description "The registry origin for entries whose registry is npmjs."
+      @synonyms "public npm"
+      @tier "infra"
+    githubUrl : url = "https://npm.pkg.github.com"
+      @label "GitHub Packages registry"
+      @description "The registry origin for entries whose registry is github."
+      @synonyms "private registry"
+      @tier "infra"
+    remote : string = "origin"
+      @label "Git remote"
+      @description "The remote the branch and the tag are pushed to."
+      @synonyms "origin, push target"
+      @tier "domain"
+    branch : string = "main"
+      @label "Release branch"
+      @description "The branch every repo must be on, and the one pushed."
+      @synonyms "main, release branch"
+      @tier "domain"
+  }
+
+  entity ReleaseRun [runtime] {
+    id : string!
+    publish : boolean = false
+    bump : string = "patch"
+    root : string = ""
+    entries : [ReleaseEntry] = []
+    cur : ReleaseEntry = { repo: "", package: "", file: "", tag: "", registry: "" }
+    cursor : number = 0
+    repo : string = ""
+    name : string = ""
+    file : string = ""
+    tagPrefix : string = ""
+    registry : string = ""
+    text : string = ""
+    pkg : PkgFile? = null
+    version : string = ""
+    next : string = ""
+    target : string = ""
+    deps : [RelDep] = []
+    compiler : string = ""
+    vhead : string = "[workspace.package]\nversion = \""
+    planning : boolean = false
+    writing : boolean = false
+    releasing : Map string string = {}
+    planned : Map string string = {}
+    rewrites : [RelRewrite] = []
+    changed : boolean = false
+    onReg : boolean = false
+    mode : string = ""
+    news : Map string string = {}
+    lines : [string] = []
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbRelease.REL_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait ReleaseSemver = Semver.traits.Semver {
+    listens {
+      OrbRelease.REL_SEMVER_BUMP -> SEMVER_BUMP
+    }
+  }
+
+  trait GitStepRunner = Git.traits.GitStepRunner {
+    listens {
+      OrbRelease.REL_GIT_STEP -> GIT_STEP
+      GitSteps.STEPS_DONE -> GIT_STEPS_DONE
+      GitSteps.STEPS_FAILED -> GIT_STEPS_FAILED
+    }
+  }
+
+  trait GitSteps = Git.traits.GitSteps {
+    listens {
+      GitStepRunner.GIT_STEPS_RUN -> STEPS_RUN
+      GitCli.CLI_DONE -> STEP_RAN
+      GitCli.CLI_FAILED -> STEP_CLI_FAILED
+    }
+  }
+
+  trait GitCli = Git.traits.GitCli {
+    listens { GitSteps.STEP_CLI_RUN -> CLI_RUN }
+  }
+
+  trait NpmCli = Npm.traits.CliRunner {
+    listens {
+      OrbRelease.REL_NPM_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["npm"]
+      passEnv: ["PATH", "HOME", "GITHUB_TOKEN"]
+    }
+  }
+
+  trait WaitRetry = Retry.traits.Retry {
+    listens {
+      OrbRelease.REL_RETRY_START -> START
+      OrbRelease.REL_RETRY_SUCCEEDED -> SUCCEEDED
+      OrbRelease.REL_RETRY_FAILED -> FAILED
+    }
+    config {
+      maxAttempts: @config.waitAttempts
+      baseDelayMs: @config.pollIntervalMs
+      multiplier: 1
+      maxDelayMs: @config.pollIntervalMs
+    }
+  }
+
+  trait PnpmCli = Pnpm.traits.CliRunner {
+    listens {
+      OrbRelease.REL_PNPM_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["pnpm"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait OrbRelease -> ReleaseRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RELEASE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit RELEASE_ANSWERED { status: 500, body: "", stderr: "Error: orb release: the command arguments could not be read" })
+      RELEASE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.root (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") ""))
+        (emit REL_ARGS_PARSE { stage: "release" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "publish" aliases: [] takesValue: false repeatable: false } { name: "major" aliases: [] takesValue: false repeatable: false } { name: "minor" aliases: [] takesValue: false repeatable: false } { name: "patch" aliases: [] takesValue: false repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      REL_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
+        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (default (array/first @payload.errors) "") "\n\nUsage: orb release [--publish] [--major|--minor|--patch]\n\nFor more information, try '--help'.") })
+      REL_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (or (> (array/len @payload.positionals) 0) (> (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1)))
+        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch]\n\nFor more information, try '--help'." })
+      REL_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (<= (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1))
+        (set @entity.writing (object/has @payload.flags "publish"))
+        (set @entity.publish false)
+        (set @entity.planning true)
+        (set @entity.releasing {})
+        (set @entity.bump (if (object/has @payload.flags "major") "major" (if (object/has @payload.flags "minor") "minor" "patch")))
+        (set @entity.lines [])
+        (set @entity.news {})
+        (set @entity.cursor 0)
+        (os/read-file { anchor: "cwd" path: "release.json" } { key: "list", emit: { success: REL_LIST_READ, failure: REL_FAILED } })
+    }
+
+    state running {
+      INIT -> running
+      REL_LIST_READ -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) null)
+        (emit RELEASE_ANSWERED { status: 500, body: "", stderr: "Error: orb release: release.json is not a list of { repo, package, file, tag, registry }" })
+      REL_LIST_READ -> running when (!= (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) null)
+        (set @entity.entries (default (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) []))
+        (emit REL_ENTRY { })
+
+      REL_ENTRY -> running when (and @entity.planning (>= @entity.cursor (array/len @entity.entries)))
+        (set @entity.planned @entity.releasing)
+        (set @entity.planning false)
+        (set @entity.publish @entity.writing)
+        (set @entity.cursor 0)
+        (set @entity.news {})
+        (set @entity.lines [])
+        (emit REL_PLANNED { })
+      REL_PLANNED -> running
+        (emit REL_ENTRY { })
+      REL_ENTRY -> ready when (and (not @entity.planning) (>= @entity.cursor (array/len @entity.entries)))
+        (emit RELEASE_ANSWERED { status: 200, body: (str/concat (if @entity.publish (str/concat "orb release --publish (--" @entity.bump "): every entry is done") (str/concat "orb release dry run (--" @entity.bump "): nothing was written")) "\n" (str/join @entity.lines "\n") "\n") })
+      REL_ENTRY -> running when (< @entity.cursor (array/len @entity.entries))
+        (set @entity.cur (default (array/nth @entity.entries @entity.cursor) { repo: "", package: "", file: "", tag: "", registry: "" }))
+        (emit REL_ENTRY_GO { })
+      REL_ENTRY_GO -> running
+        (set @entity.repo (object/get @entity.cur "repo"))
+        (set @entity.name (object/get @entity.cur "package"))
+        (set @entity.file (object/get @entity.cur "file"))
+        (set @entity.tagPrefix (object/get @entity.cur "tag"))
+        (set @entity.registry (object/get @entity.cur "registry"))
+        (set @entity.text "")
+        (set @entity.pkg null)
+        (set @entity.version "")
+        (set @entity.next "")
+        (set @entity.target "")
+        (set @entity.deps [])
+        (set @entity.compiler "")
+        (set @entity.rewrites [])
+        (set @entity.changed false)
+        (set @entity.onReg false)
+        (set @entity.mode "")
+        (os/read-file { anchor: "cwd" path: (os/path-join (object/get @entity.cur "repo") (object/get @entity.cur "file")) } { key: "version-file", emit: { success: REL_FILE_READ, failure: REL_FAILED } })
+
+      REL_FILE_READ -> running when (str/endsWith @entity.file "Cargo.toml")
+        (set @entity.text (default (bytes/to-string @payload.data) ""))
+        (set @entity.vhead (if (str/includes (default (bytes/to-string @payload.data) "") "[workspace.package]\nversion = \"") "[workspace.package]\nversion = \"" "[package]\nversion = \""))
+        (set @entity.version (default (array/nth (str/split (default (array/nth (str/split (default (bytes/to-string @payload.data) "") @entity.vhead) 1) "") "\"") 0) ""))
+        (set @entity.compiler (default (array/nth (str/split (default (array/nth (str/split (default (bytes/to-string @payload.data) "") "[package.metadata.orb]\ncompiler = \"") 1) "") "\"") 0) ""))
+        (emit REL_PARSED { })
+      REL_FILE_READ -> running when (not (str/endsWith @entity.file "Cargo.toml"))
+        (set @entity.text (default (bytes/to-string @payload.data) ""))
+        (set @entity.pkg (json/parse (default (bytes/to-string @payload.data) "") PkgFile))
+        (emit REL_PARSED { })
+      REL_PARSED -> running when (and (str/endsWith @entity.file "Cargo.toml") (!= @entity.version ""))
+        (emit REL_CHECK { })
+      REL_PARSED -> running when (and (not (str/endsWith @entity.file "Cargo.toml")) (!= @entity.pkg null) (= (default (object/get @entity.pkg "name") "") @entity.name) (!= (default (object/get @entity.pkg "version") "") ""))
+        (set @entity.version (default (object/get @entity.pkg "version") ""))
+        (set @entity.deps (array/filter (array/map (array/concat (array/concat (object/entries (default (object/get @entity.pkg "dependencies") {})) (object/entries (default (object/get @entity.pkg "devDependencies") {}))) (array/concat (object/entries (default (object/get @entity.pkg "peerDependencies") {})) (object/entries (default (object/get @entity.pkg "optionalDependencies") {})))) (fn e { dep: (default (array/nth @e 0) ""), range: (default (array/nth @e 1) "") })) (fn d (str/startsWith (object/get @d "dep") (quote "@almadar")))))
+        (set @entity.compiler (default (object/get (default (object/get @entity.pkg "orb") (default (object/get @entity.pkg "orbVocabulary") (default (object/get @entity.pkg "orbLanguage") { compiler: "" }))) "compiler") ""))
+        (emit REL_CHECK { })
+      REL_PARSED -> running when (or (and (str/endsWith @entity.file "Cargo.toml") (= @entity.version "")) (and (not (str/endsWith @entity.file "Cargo.toml")) (or (= @entity.pkg null) (!= (default (object/get @entity.pkg "name") "") @entity.name) (= (default (object/get @entity.pkg "version") "") ""))))
+        (emit REL_FAIL { why: (str/concat @entity.file " has no readable version for " @entity.name) })
+
+      REL_CHECK -> running when @entity.publish
+        (emit REL_GIT_STEP { requestId: "status", cwd: (os/path-join @entity.root @entity.repo), op: "status", args: [] })
+      REL_CHECK -> running when (not @entity.publish)
+        (emit REL_GIT_STEP { requestId: "diff", cwd: (os/path-join @entity.root @entity.repo), op: "diffNames", args: [(str/concat @entity.tagPrefix @entity.version) "HEAD"] })
+
+      REL_GIT_DONE -> running when (and (= @payload.requestId "status") (!= (str/trim @payload.stdout) ""))
+        (emit REL_FAIL { why: "the tree has uncommitted changes" })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "status") (= (str/trim @payload.stdout) ""))
+        (emit REL_GIT_STEP { requestId: "branch", cwd: (os/path-join @entity.root @entity.repo), op: "branch", args: [] })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "branch") (!= (str/trim @payload.stdout) @config.releaseBranch))
+        (emit REL_FAIL { why: (str/concat "the repo is on '" (str/trim @payload.stdout) "', not " @config.releaseBranch) })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "branch") (= (str/trim @payload.stdout) @config.releaseBranch))
+        (emit REL_GIT_STEP { requestId: "diff", cwd: (os/path-join @entity.root @entity.repo), op: "diffNames", args: [(str/concat @entity.tagPrefix @entity.version) "HEAD"] })
+      REL_GIT_DONE -> running when (= @payload.requestId "diff")
+        (set @entity.changed (let ((d (os/path-dir @entity.file))) (array/some (str/split (str/trim @payload.stdout) "\n") (fn f (and (!= @f "") (not (array/includes ["package.json" "Cargo.toml" "Cargo.lock" "pnpm-lock.yaml"] (os/path-base @f))) (or (= @d "") (= @d ".") (str/startsWith @f (str/concat @d "/"))))))))
+        (emit REL_REG_ASK { requestId: "check" })
+      REL_GIT_FAILED -> running when (= @payload.requestId "diff")
+        (set @entity.changed true)
+        (emit REL_REG_ASK { requestId: "check" })
+
+      REL_REG_ASK -> running
+        (emit REL_NPM_RUN { stage: @payload.requestId, argv: ["view" @entity.name "versions" "--json" "--registry" (if (= @entity.registry "github") @config.github @config.npmjs)] })
+      REL_NPM_DONE -> running when (and (= @payload.exitCode 0) (str/startsWith (str/trim @payload.stdout) "["))
+        (emit REL_LOOKED { requestId: @payload.stage, versions: (default (json/parse (str/trim @payload.stdout) VersionList) []) })
+      REL_NPM_DONE -> running when (and (= @payload.exitCode 0) (not (str/startsWith (str/trim @payload.stdout) "[")))
+        (emit REL_LOOKED { requestId: @payload.stage, versions: [(str/replaceAll (str/trim @payload.stdout) "\"" "")] })
+      REL_NPM_DONE -> running when (and (!= @payload.exitCode 0) (str/includes @payload.stderr "E404"))
+        (emit REL_LOOKED { requestId: @payload.stage, versions: [] })
+      REL_NPM_DONE -> running when (and (!= @payload.exitCode 0) (not (str/includes @payload.stderr "E404")))
+        (emit REL_REFUSED { requestId: @payload.stage, error: (str/trim @payload.stderr) })
+      REL_NPM_FAILED -> running
+        (emit REL_REFUSED { requestId: @payload.stage, error: (str/concat "npm did not run (" @payload.code "): " @payload.error) })
+
+      REL_LOOKED -> running when (= @payload.requestId "check")
+        (set @entity.onReg (array/includes @payload.versions @entity.version))
+        (emit REL_DECIDE { })
+      REL_LOOKED -> running when (and (= @payload.requestId "wait") (array/includes @payload.versions @entity.target))
+        (emit REL_RETRY_SUCCEEDED { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey) })
+      REL_LOOKED -> running when (and (= @payload.requestId "wait") (not (array/includes @payload.versions @entity.target)))
+        (emit REL_RETRY_FAILED { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey), error: (str/concat @entity.name (quote "@") @entity.target " is not listed yet") })
+      REL_REFUSED -> running when (= @payload.requestId "check")
+        (emit REL_FAIL { why: (str/concat "the registry refused the version check: " @payload.error) })
+      REL_REFUSED -> running when (= @payload.requestId "wait")
+        (emit REL_RETRY_FAILED { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey), error: @payload.error })
+
+      REL_DECIDE -> running
+        (set @entity.rewrites (array/concat (array/map (array/filter @entity.deps (fn d (and (object/has @entity.news (object/get @d "dep")) (!= (object/get @d "range") (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")))))) (fn d { dep: (object/get @d "dep"), old: (object/get @d "range"), new: (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")) })) (if (and (!= @entity.compiler "") (object/has @entity.planned (quote "@almadar/orb")) (!= @entity.compiler (str/concat ">=" (default (object/get @entity.planned (quote "@almadar/orb")) "")))) [{ dep: "compiler", old: @entity.compiler, new: (str/concat ">=" (default (object/get @entity.planned (quote "@almadar/orb")) "")) }] [])))
+        (emit REL_DECIDED { })
+      REL_DECIDED -> running when (or @entity.changed (> (array/len @entity.rewrites) 0))
+        (emit REL_SEMVER_BUMP { requestId: "bump", version: @entity.version, kind: @entity.bump })
+      REL_DECIDED -> running when (and (not @entity.changed) (= (array/len @entity.rewrites) 0) @entity.onReg)
+        (set @entity.mode "released")
+        (set @entity.target @entity.version)
+        (set @entity.news (object/merge @entity.news (object/fromEntries [[@entity.name @entity.version]])))
+        (emit REL_ROW { })
+      REL_DECIDED -> running when (and (not @entity.changed) (= (array/len @entity.rewrites) 0) (not @entity.onReg))
+        (set @entity.mode "pending")
+        (set @entity.target @entity.version)
+        (set @entity.news (object/merge @entity.news (object/fromEntries [[@entity.name @entity.version]])))
+        (emit REL_ROW { })
+      REL_BUMPED -> running
+        (set @entity.mode "release")
+        (set @entity.next @payload.version)
+        (set @entity.target @payload.version)
+        (set @entity.news (object/merge @entity.news (object/fromEntries [[@entity.name @payload.version]])))
+        (set @entity.releasing (object/merge @entity.releasing (object/fromEntries [[@entity.name @payload.version]])))
+        (emit REL_ROW { })
+      REL_BUMP_REFUSED -> running
+        (emit REL_FAIL { why: (str/concat "cannot bump " @entity.version " (" @payload.reason ")") })
+
+      REL_ROW -> running
+        (set @entity.lines (array/concat @entity.lines (array/concat [(str/concat (+ @entity.cursor 1) ". " @entity.repo "  " @entity.name "  " @entity.version (if (= @entity.mode "release") (str/concat " -> " @entity.target) "") "  tag " @entity.tagPrefix @entity.target "  " @entity.registry "  [" @entity.mode "]")] (array/map @entity.rewrites (fn r (str/concat "     " (object/get @r "dep") " " (object/get @r "old") " -> " (object/get @r "new")))))))
+        (emit REL_ROWN { })
+      REL_ROWN -> running when (or (not @entity.publish) (= @entity.mode "released"))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit REL_ENTRY { })
+      REL_ROWN -> running when (and @entity.publish (= @entity.mode "release"))
+        (emit REL_WRITE { })
+      REL_ROWN -> running when (and @entity.publish (= @entity.mode "pending"))
+        (emit REL_GIT_STEP { requestId: "tag", cwd: (os/path-join @entity.root @entity.repo), op: "tag", args: [(str/concat @entity.tagPrefix @entity.target)] })
+
+      REL_WRITE -> running when (not (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\""))))
+        (emit REL_FAIL { why: (str/concat @entity.file " does not spell its version the way the writer replaces it") })
+      REL_WRITE -> running when (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\"")))
+        (emit REL_WRITE_TEXT { text: (array/reduce @entity.rewrites (if (str/endsWith @entity.file "Cargo.toml") (str/replace @entity.text (str/concat @entity.vhead @entity.version "\"") (str/concat @entity.vhead @entity.next "\"")) (str/replace @entity.text (str/concat "\"version\": \"" @entity.version "\"") (str/concat "\"version\": \"" @entity.next "\""))) (fn (acc r) (if (str/endsWith @entity.file "Cargo.toml") (str/replace @acc (str/concat "[package.metadata.orb]\ncompiler = \"" (object/get @r "old") "\"") (str/concat "[package.metadata.orb]\ncompiler = \"" (object/get @r "new") "\"")) (str/replaceAll @acc (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "old") "\"") (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "new") "\""))))) })
+      REL_WRITE_TEXT -> running
+        (os/write-file { anchor: "cwd" path: (os/path-join @entity.repo @entity.file) } (bytes/from-string @payload.text) { key: "write", emit: { success: REL_WRITTEN, failure: REL_FAILED } })
+      REL_WRITTEN -> running when (and (> (array/len @entity.rewrites) 0) (not (str/endsWith @entity.file "Cargo.toml")))
+        (os/exists { anchor: "cwd" path: (os/path-join @entity.repo (os/path-dir @entity.file) "pnpm-lock.yaml") } { key: "lock", emit: { success: REL_LOCK_EXISTS, failure: REL_FAILED } })
+      REL_WRITTEN -> running when (not (and (> (array/len @entity.rewrites) 0) (not (str/endsWith @entity.file "Cargo.toml"))))
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+      REL_LOCK_EXISTS -> running when @payload.ok
+        (emit REL_PNPM_RUN { stage: "lock", argv: ["-C" (os/path-join @entity.root @entity.repo (os/path-dir @entity.file)) "install" "--lockfile-only" "--ignore-scripts" "--ignore-workspace"] })
+      REL_LOCK_EXISTS -> running when (not @payload.ok)
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+      REL_PNPM_DONE -> running when (= @payload.exitCode 0)
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+      REL_PNPM_DONE -> running when (!= @payload.exitCode 0)
+        (emit REL_FAIL { why: (str/concat "pnpm could not update the lockfile: " (str/trim @payload.stderr)) })
+      REL_PNPM_FAILED -> running
+        (emit REL_FAIL { why: (str/concat "pnpm did not run (" @payload.code "): " @payload.error) })
+
+      REL_GIT_DONE -> running when (= @payload.requestId "add")
+        (emit REL_GIT_STEP { requestId: "commit", cwd: (os/path-join @entity.root @entity.repo), op: "commit", args: [(str/concat "release " @entity.name " " @entity.target)] })
+      REL_GIT_DONE -> running when (= @payload.requestId "commit")
+        (emit REL_GIT_STEP { requestId: "tag", cwd: (os/path-join @entity.root @entity.repo), op: "tag", args: [(str/concat @entity.tagPrefix @entity.target)] })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "tag") (= @entity.mode "release"))
+        (emit REL_GIT_STEP { requestId: "push-branch", cwd: (os/path-join @entity.root @entity.repo), op: "pushBranch", args: [@config.pushRemote @config.releaseBranch] })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "tag") (= @entity.mode "pending"))
+        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
+      REL_GIT_DONE -> running when (= @payload.requestId "push-branch")
+        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
+      REL_GIT_DONE -> running when (= @payload.requestId "push-tag")
+        (emit REL_RETRY_START { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey) })
+      REL_GIT_FAILED -> running when (and (= @payload.requestId "tag") (= @payload.code "git_tag_exists") (= @entity.mode "pending"))
+        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
+      REL_GIT_FAILED -> running when (and (!= @payload.requestId "diff") (not (and (= @payload.requestId "tag") (= @payload.code "git_tag_exists") (= @entity.mode "pending"))))
+        (emit REL_FAIL { why: (str/concat "git " @payload.op " failed (" @payload.code "): " (str/trim @payload.stderr)) })
+
+      REL_ATTEMPT -> running
+        (emit REL_REG_ASK { requestId: "wait" })
+      REL_WAIT_DONE -> running
+        (set @entity.lines (array/append @entity.lines (str/concat "     published " @entity.name (quote "@") @entity.target)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit REL_ENTRY { })
+      REL_GAVE_UP -> running
+        (emit REL_FAIL { why: (str/concat @entity.name (quote "@") @entity.target " was not listed on " @entity.registry " after " @payload.attempts " polls") })
+
+      REL_FAIL -> ready
+        (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) @payload.why ". Fix it and re-run to resume.") })
+      REL_FAILED -> ready
+        (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) (default @payload.error "failed") ". Fix it and re-run to resume.") })
+    }
+
+    emits {
+      RELEASE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      REL_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      REL_SEMVER_BUMP {
+        requestId : string!
+        version : string!
+        kind : string!
+      }
+        @description "Internal: ask std-semver for the next version."
+        @tier "internal"
+      REL_GIT_STEP {
+        requestId : string!
+        cwd : string!
+        op : string!
+        args : [string]!
+      }
+        @description "Internal: one git step in the entry's repo."
+        @tier "internal"
+      REL_NPM_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: list the package's versions on its registry with npm view."
+        @tier "internal"
+      REL_LOOKED {
+        requestId : string!
+        versions : [string]!
+      }
+        @description "Internal: the versions the registry lists."
+        @tier "internal"
+      REL_REFUSED {
+        requestId : string!
+        error : string!
+      }
+        @description "Internal: the registry could not be asked."
+        @tier "internal"
+      REL_RETRY_START {
+        key : CallKey!
+      }
+        @description "Internal: begin the registry poll."
+        @tier "internal"
+      REL_RETRY_SUCCEEDED {
+        key : CallKey!
+      }
+        @description "Internal: the version is listed."
+        @tier "internal"
+      REL_RETRY_FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "Internal: the version is not listed yet."
+        @tier "internal"
+      REL_PNPM_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: refresh the lockfile of a package whose ranges changed."
+        @tier "internal"
+      REL_LIST_READ {
+        data : bytes!
+      }
+        @description "os/read-file: release.json."
+        @tier "internal"
+      REL_FILE_READ {
+        data : bytes!
+      }
+        @description "os/read-file: the entry's version file."
+        @tier "internal"
+      REL_WRITTEN {
+        bytes : number
+      }
+        @description "os/write-file: the version file is written."
+        @tier "internal"
+      REL_LOCK_EXISTS {
+        ok : boolean!
+      }
+        @description "os/exists: whether the package has a pnpm lockfile."
+        @tier "internal"
+      REL_FAILED {
+        error : string
+      }
+        @description "os/read-file, os/write-file or os/exists failed."
+        @tier "internal"
+      REL_ENTRY { }
+        @description "Internal: take the entry at the cursor."
+        @tier "internal"
+      REL_PLANNED { }
+        @description "Internal: every entry is planned; the second pass starts from the first entry."
+        @tier "internal"
+      REL_ENTRY_GO { }
+        @description "Internal: read the taken entry's version file."
+        @tier "internal"
+      REL_PARSED { }
+        @description "Internal: the version file is read."
+        @tier "internal"
+      REL_CHECK { }
+        @description "Internal: start the git and registry facts."
+        @tier "internal"
+      REL_REG_ASK {
+        requestId : string!
+      }
+        @description "Internal: ask the entry's registry for the package's versions."
+        @tier "internal"
+      REL_DECIDE { }
+        @description "Internal: compare the dependency ranges with the released versions."
+        @tier "internal"
+      REL_DECIDED { }
+        @description "Internal: the ranges are compared."
+        @tier "internal"
+      REL_ROW { }
+        @description "Internal: record the entry in the plan."
+        @tier "internal"
+      REL_ROWN { }
+        @description "Internal: the entry is in the plan."
+        @tier "internal"
+      REL_WRITE { }
+        @description "Internal: write the entry's new version and ranges."
+        @tier "internal"
+      REL_WRITE_TEXT {
+        text : string!
+      }
+        @description "Internal: the version file's new text."
+        @tier "internal"
+      REL_FAIL {
+        why : string!
+      }
+        @description "Internal: stop the run."
+        @tier "internal"
+    }
+
+    listens {
+      RELEASE_CALLED -> inbound "cli-release" answers RELEASE_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb release`."
+        @synonyms "orb release, publish the packages, release plan, dry run release"
+      REL_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+        @tier "internal"
+      REL_BUMPED {
+        version : string!
+      }
+        @description "std-semver's SEMVER_BUMPED."
+        @tier "internal"
+      REL_BUMP_REFUSED {
+        operation : string!
+        reason : string!
+      }
+        @description "std-semver's SEMVER_REFUSED."
+        @tier "internal"
+      REL_GIT_DONE {
+        requestId : string!
+        op : string!
+        exitCode : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-git's GIT_DONE."
+        @tier "internal"
+      REL_GIT_FAILED {
+        requestId : string!
+        op : string!
+        code : string!
+        stderr : string!
+      }
+        @description "std-git's GIT_FAILED."
+        @tier "internal"
+      REL_ATTEMPT {
+        key : CallKey!
+        attempt : number!
+      }
+        @description "std-retry's ATTEMPT."
+        @tier "internal"
+      REL_WAIT_DONE {
+        key : CallKey!
+        attempts : number!
+      }
+        @description "std-retry's COMPLETED."
+        @tier "internal"
+      REL_GAVE_UP {
+        key : CallKey!
+        attempts : number!
+        error : string
+      }
+        @description "std-retry's GAVE_UP."
+        @tier "internal"
+      REL_NPM_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE for the npm run."
+        @tier "internal"
+      REL_NPM_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED for the npm run."
+        @tier "internal"
+      REL_PNPM_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE for the pnpm run."
+        @tier "internal"
+      REL_PNPM_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED for the pnpm run."
+        @tier "internal"
+      ArgsCli.ARGS_PARSED -> REL_ARGS_DONE
+      ReleaseSemver.SEMVER_BUMPED -> REL_BUMPED
+      ReleaseSemver.SEMVER_REFUSED -> REL_BUMP_REFUSED
+      GitStepRunner.GIT_DONE -> REL_GIT_DONE
+      GitStepRunner.GIT_FAILED -> REL_GIT_FAILED
+      NpmCli.CLI_DONE -> REL_NPM_DONE
+      NpmCli.CLI_FAILED -> REL_NPM_FAILED
+      WaitRetry.ATTEMPT -> REL_ATTEMPT
+      WaitRetry.COMPLETED -> REL_WAIT_DONE
+      WaitRetry.GAVE_UP -> REL_GAVE_UP
+      PnpmCli.CLI_DONE -> REL_PNPM_DONE
+      PnpmCli.CLI_FAILED -> REL_PNPM_FAILED
+    }
+
+    config {
+      npmjs : url = @config.npmjsUrl
+      github : url = @config.githubUrl
+      pushRemote : string = @config.remote
+      releaseBranch : string = @config.branch
+    }
+  }
+
+  page boot as OrbReleaseOrbitalStart -> OrbRelease, ArgsCli, ReleaseSemver, GitStepRunner, GitSteps, GitCli, NpmCli, WaitRetry, PnpmCli
+}

@@ -121,7 +121,7 @@ orbital OtelOrbital {
           emit: { success: OTEL_SPAN_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_SPAN_DRAWN -> idle
-        (let ((spanHash (hash/sha256 (str/concat @payload.value "span") "hex")) (traceHash (hash/sha256 (str/concat @payload.value "trace") "hex")))
+        (let ((spanHash (hash/sha 256 (str/concat @payload.value "span") "hex")) (traceHash (hash/sha 256 (str/concat @payload.value "trace") "hex")))
           (if (or (== @spanHash null) (== @traceHash null))
             (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: "the drawn random bytes could not be hashed" })
             (let ((d (default (json/parse @payload.key OtelSpanDraw) {})) (spanId (str/slice @spanHash 0 16)) (traceId (if (!= (object/get (default (json/parse @payload.key OtelSpanDraw) {}) traceId "") "") (object/get (default (json/parse @payload.key OtelSpanDraw) {}) traceId "") (str/slice @traceHash 0 32))))
@@ -212,7 +212,7 @@ orbital OtelOrbital {
           emit: { success: OTEL_METRIC_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_METRIC_DRAWN -> idle
-        (let ((idHash (hash/sha256 (str/concat @payload.value "metric") "hex")))
+        (let ((idHash (hash/sha 256 (str/concat @payload.value "metric") "hex")))
           (if (== @idHash null)
             (emit OTEL_EXPORT_FAILED { signal: "metrics", kind: "random", error: "the drawn random bytes could not be hashed" })
             (let ((d (default (json/parse @payload.key OtelMetricDraw) {})) (id (str/slice @idHash 0 32)) (now (time/now)))

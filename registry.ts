@@ -50,7 +50,7 @@ import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
 import { BYTES_OPERATORS } from './modules/bytes.js';
 import { BIT_OPERATORS } from './modules/bit.js';
-import { BASE64_OPERATORS, BROTLI_OPERATORS, GZIP_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS, CREDENTIAL_VALUE_OPERATORS, RSA_OPERATORS, ECDSA_OPERATORS, JWS_OPERATORS, ECDH_OPERATORS, AES_GCM_OPERATORS } from './modules/codec.js';
+import { BASE64_OPERATORS, BROTLI_OPERATORS, GZIP_OPERATORS, TAR_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS, CREDENTIAL_VALUE_OPERATORS, RSA_OPERATORS, ECDSA_OPERATORS, JWS_OPERATORS, ECDH_OPERATORS, AES_GCM_OPERATORS } from './modules/codec.js';
 
 // ============================================================================
 // Combined Registry
@@ -97,6 +97,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...BASE64_OPERATORS,
   ...HASH_OPERATORS,
   ...GZIP_OPERATORS,
+  ...TAR_OPERATORS,
   ...BROTLI_OPERATORS,
   ...HMAC_OPERATORS,
   ...CREDENTIAL_VALUE_OPERATORS,
@@ -162,6 +163,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   ecdh: ECDH_OPERATORS,
   'aes-gcm': AES_GCM_OPERATORS,
   gzip: GZIP_OPERATORS,
+  tar: TAR_OPERATORS,
   brotli: BROTLI_OPERATORS,
   xml: XML_OPERATORS,
   yaml: YAML_OPERATORS,

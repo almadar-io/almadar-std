@@ -172,7 +172,7 @@ orbital OAuthOrbital {
       OAUTH_DRAWN -> idle when (!= (str/len ?value) 86)
         (emit OAUTH_AUTHORIZE_ERROR { code: "SERVICE_ERROR", message: "The host drew an unusable state" })
       OAUTH_DRAWN -> idle when (= (str/len ?value) 86)
-        (let ((digest (hash/sha256 (str/slice ?value 43 86) "base64")))
+        (let ((digest (hash/sha 256 (str/slice ?value 43 86) "base64")))
           (if (= @digest null)
             (emit OAUTH_AUTHORIZE_ERROR { code: "SERVICE_ERROR", message: "The PKCE challenge could not be computed" })
             (let ((url (str/concat @entity.authEndpoint (if (str/includes @entity.authEndpoint "?") "&" "?") (if (= @config.provider "google") "access_type=offline&prompt=consent&" "") "redirect_uri=" (str/encode-uri-component @entity.redirectUri) "&scope=" (str/encode-uri-component (str/join @entity.scopes " ")) "&state=" (str/slice ?value 0 43) "&code_challenge=" (str/replaceAll (str/replaceAll (str/replaceAll @digest "+" "-") "/" "_") "=" "") "&code_challenge_method=S256&client_id=" (str/encode-uri-component @config.authClientId) "&response_type=code")))

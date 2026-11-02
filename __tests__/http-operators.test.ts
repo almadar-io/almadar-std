@@ -31,7 +31,7 @@ describe('codec operators', () => {
     ['str/decode-uri-component', 1, 1, ['s'], nullableString],
     ['base64/encode', 1, 1, ['s'], 'string'],
     ['base64/decode', 1, 1, ['s'], nullableString],
-    ['hash/sha256', 2, 3, ['data', 'encoding', 'input'], nullableString],
+    ['hash/sha', 3, 4, ['bits', 'data', 'encoding', 'input'], nullableString],
     ['hash/md5', 2, 2, ['bytes', 'encoding'], nullableString],
     ['hmac/sha256', 3, 4, ['key', 'message', 'encoding', 'prefix'], nullableString],
   ];
@@ -51,12 +51,13 @@ describe('codec operators', () => {
   }
 
   it('types the encoding argument as the hex|base64 literal union', () => {
-    expect(STD_OPERATORS['hash/sha256'].params?.[1]?.type).toEqual(encoding);
+    expect(STD_OPERATORS['hash/sha'].params?.[2]?.type).toEqual(encoding);
     expect(STD_OPERATORS['hash/md5'].params?.[1]?.type).toEqual(encoding);
     expect(STD_OPERATORS['hmac/sha256'].params?.[2]?.type).toEqual(encoding);
   });
 
   it('control: an unregistered sibling is absent', () => {
     expect(STD_OPERATORS['hash/md4']).toBeUndefined();
+    expect(STD_OPERATORS['hash/sha256']).toBeUndefined();
   });
 });

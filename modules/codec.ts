@@ -52,22 +52,23 @@ export const BASE64_OPERATORS: Record<string, StdOperatorMeta> = {
 };
 
 export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
-  'hash/sha256': {
+  'hash/sha': {
     module: 'hash',
     category: 'std-codec',
-    minArity: 2,
-    maxArity: 3,
+    minArity: 3,
+    maxArity: 4,
     description:
-      'SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input "text" (the default) hashes a string\'s UTF-8 bytes; "bytes" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid',
+      'SHA-2 digest (FIPS 180-4) at 256 or 512 bits, through the sha2 crate, as lower-case hex or standard base64. Input "text" (the default) hashes a string\'s UTF-8 bytes; "bytes" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Another bit count, encoding or input kind, or invalid base64, fails with kind invalid. npm\'s dist.integrity is "sha512-" followed by the 512-bit base64 digest of the tarball bytes',
     hasSideEffects: false,
     failable: {},
     returnType: nullable('string'),
     params: [
+      { name: 'bits', type: union(lit(256), lit(512)), description: 'The digest size: 256 or 512' },
       { name: 'data', type: union(STRING, BYTES), description: 'The string to hash, or a bytes value when input is "bytes"' },
       { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
       { name: 'input', type: union(lit('text'), lit('bytes')), description: 'Input kind: "text" (default) or "bytes"', optional: true, defaultValue: 'text' },
     ],
-    example: '["hash/sha256", "abc", "hex"] // => "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"',
+    example: '["hash/sha", 256, "abc", "hex"] // => "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"',
   },
   'hash/md5': {
     module: 'hash',
@@ -380,6 +381,31 @@ export const GZIP_OPERATORS: Record<string, StdOperatorMeta> = {
     returnSemantics: 'option-branch<2,result>',
     params: [{ name: 'data', type: BYTES, description: 'The gzip bytes' }, BYTES_LIMIT, RESULT_OPTIONS],
     example: '["gzip/decompress", "H4sIAAAAAAAAA8tIzcnJV8hAkACAiPnlEQAAAA==", 1024] // => "aGVsbG8gaGVsbG8gaGVsbG8="',
+  },
+};
+
+const TAR_CODE = union(...['truncated', 'header-checksum', 'number', 'path', 'duplicate', 'type', 'pax', 'entry-limit'].map(lit));
+const TAR_ENTRY = shape({ path: STRING, data: BYTES, executable: BOOLEAN });
+const TAR_RESULT = shape({ ok: BOOLEAN, entries: nullable(list(TAR_ENTRY)), code: nullable(TAR_CODE) });
+
+export const TAR_OPERATORS: Record<string, StdOperatorMeta> = {
+  'tar/entries': {
+    module: 'tar',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 3,
+    description:
+      'The regular files of a ustar archive (the bytes gzip/decompress returns for a .tgz) as [{ path, data, executable }] in archive order. Directories and pax global headers are skipped; a pax path record or a GNU long name names the next entry. The whole archive is refused, never read in part, when a header checksum does not match (header-checksum), a header number is not octal (number), an entry runs past the archive or the end-of-archive block is missing (truncated), a path is not relative with normal components only, so no leading slash, ".", "..", empty component, backslash or NUL (path), a path appears twice (duplicate), an entry is a link, device or fifo (type), a pax record is malformed (pax), or there are more than maxEntries files (entry-limit). A refusal, invalid base64 or a maxEntries that is not a whole number from 0 fails with kind invalid',
+    hasSideEffects: false,
+    failable: {},
+    returnType: nullable(union(list(TAR_ENTRY), TAR_RESULT)),
+    returnSemantics: 'option-branch<2,result>',
+    params: [
+      { name: 'data', type: BYTES, description: 'The tar archive bytes' },
+      { name: 'maxEntries', type: NUMBER, description: 'The most files accepted; more fails with kind invalid (the archive-bomb guard)' },
+      { name: 'options', type: shape({ result: BOOLEAN }, ['result']), optional: true, description: 'With result: true, return { ok, entries, code }; failures are closed tar codes, never error text' },
+    ],
+    example: '["tar/entries", "@payload.tarball", 10000] // => [{ "path": "package/package.json", "data": "e30=", "executable": false }]',
   },
 };
 

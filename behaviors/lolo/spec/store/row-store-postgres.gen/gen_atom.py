@@ -256,7 +256,7 @@ QUERY_FRAME = chain(
 
 def SHA_BYTES(x):
     n = fresh('sh')
-    return chain([(n, '(hash/sha256 ' + x + ' "base64" "bytes")')], '(bytes/from-base64 @' + n + ')')
+    return chain([(n, '(hash/sha 256 ' + x + ' "base64" "bytes")')], '(bytes/from-base64 @' + n + ')')
 
 
 ESC_USER = '(str/replaceAll (str/replaceAll @entity.userName "=" "=3D") "," "=2C")'
@@ -1161,7 +1161,7 @@ DESCRIPTION = (
     "from a window count, atomic batches in BEGIN and COMMIT, stop batches and the atomic take in one statement, and column "
     "kinds discovered from information_schema. The wire is spoken here: an SSLRequest unless sslmode is disable or allow (an S "
     "answer is STORE_FAILED because os sockets carry no TLS), the startup message, cleartext, md5 and SCRAM-SHA-256 login (HMAC "
-    "built from hash/sha256 over bytes), then every statement is one Parse, Bind, Describe, Execute and Sync send read until "
+    "built from hash/sha 256 over bytes), then every statement is one Parse, Bind, Describe, Execute and Sync send read until "
     "ReadyForQuery. One session is held; a transport failure closes it and the next ask reconnects. Every send emits "
     "PG_WIRE_SENT with the stage, the SQL, the binds and the exact frame, the diagnostic the replay goldens assert. One "
     "request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb "

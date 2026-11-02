@@ -31,10 +31,10 @@ orbital OrbLintAllOrbital {
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint all <file> [--json]" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (set @entity.asJson false)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_RUN { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json"))
         (set @entity.asJson true)
-        (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_RUN { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {
@@ -71,7 +71,7 @@ orbital OrbLintAllOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-all" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint all` with its arguments and working directory."
         @synonyms "orb lint all, run every lint rule"

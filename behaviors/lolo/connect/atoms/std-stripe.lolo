@@ -124,7 +124,7 @@ orbital StripeOrbital {
             (set @entity.seq (+ @entity.seq 1))
             (emit STRIPE_HTTP_SEND { key: @k, method: "DELETE", target: (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)), headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/x-www-form-urlencoded" }, { name: "stripe-version", value: @config.apiVersion }], body: (bytes/from-string ""), stream: "none" })))
       STRIPE_KEY_DRAWN -> idle
-        (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (h (hash/sha256 @payload.value "hex")))
+        (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))) (h (hash/sha 256 @payload.value "hex")))
           (if (= @e null)
             (emit STRIPE_FAILED { message: "Stripe drew an idempotency key for a request that is not pending" })
             (if (= @h null)

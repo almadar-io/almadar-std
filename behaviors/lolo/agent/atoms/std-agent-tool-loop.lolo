@@ -213,6 +213,11 @@ orbital AgentToolLoopOrbital {
         @label "Model round-trips per request"
         @description "How many model calls one request may take before it fails."
         @tier "policy"
+      caller : "user" | "process" = user
+        @label "Whose tools are these?"
+        @description "user: each tool is offered only to a signed-in user whose role it lists. process: the tools are the running program's own, offered with no signed-in user and no role filter, for a command-line or headless run that its composer declares."
+        @synonyms "headless, command line, no user, unattended"
+        @tier "policy"
       quiet : boolean = false
         @label "Run in the background?"
         @description "No live ASSISTANT_STEP stream: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own."
@@ -231,8 +236,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live (not @config.quiet))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
-        (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (if (= @user null) [] (array/filter @all (fn t (array/includes @t.roles (default @user.role "")))))))
-        (program/inputs { select: (let ((all : [AgentTool] @config.tools)) (if (= @user null) [] (array/filter @all (fn t (and (object/has @t event) (array/includes @t.roles (default @user.role ""))))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+        (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role ""))))))))
+        (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       CONVERSE -> preparing when ?ephemeral
         (set @entity.status thinking)
         (set @entity.ephemeral true)
@@ -240,8 +245,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live false)
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
-        (set @entity.turnTools (if (= @user null) [] (array/filter (object/get ? tools []) (fn t (array/includes @t.roles (default @user.role ""))))))
-        (program/inputs { select: (if (= @user null) [] (array/filter (object/get ? tools []) (fn t (and (object/has @t event) (array/includes @t.roles (default @user.role "")))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+        (set @entity.turnTools (array/filter (object/get ? tools []) (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role "")))))))
+        (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
     }
 
     state preparing {

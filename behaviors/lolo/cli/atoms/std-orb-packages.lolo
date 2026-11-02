@@ -3,9 +3,9 @@ app std-orb-packages [
   inbound: ["cli-packages"],
   env: ["PATH"],
   exec: ["orb"],
-  fs: { cwd: "**": [read, write, remove], "/**": [read], "~/.orb/**": [read, write, create, remove], "~/.orb": [create] },
+  fs: { cwd: "**": [read, write, create, remove], "/**": [read], "~/.orb/**": [read, write, create, remove], "~/.orb": [create] },
   net: { "registry.npmjs.org:443": [tcp] },
-  description: "std-orb-packages — the `orb list|add|update|remove [--global]` client of the package registry (spec/cli/orb-packages.lolo; golden: orbital-cli packages.rs), bun-free. Packages live in <dir>/node_modules (dir = the working directory, or ~/.orb with --global) and the lockfile <dir>/<lockfile> holds { packages: [{ name, version, url, integrity }] }. Every command first reads the lockfile (absent = empty) and scans node_modules (scoped names included; the entry kind symlink is the workspace link), reading each package.json: a package is an orb package when it declares orbLanguage, orb, orbVocabulary or orbProgram.kind shell|desktop, and its kinds are those. list prints one row per orb package sorted by name (package 34, version 12, kinds 26, `ok`, ` (linked)`, ` [<prefix>/]`) or --json rows. remove refuses a behavior package whose prefix a .lolo or .orb file under the working directory still imports, deletes the package (a link is unlinked, never its target) and drops its lock entry. add parses name@exact-version (a range is refused ORB_PACKAGE_RANGE; a workspace-linked package is refused ORB_PACKAGE_LINKED) or a direct tarball URL, resolves name@version through GET <registry>/packages/<name>/<version> and downloads the tarball over http. update seeds the missing baseline entries and moves each non-linked package to the highest non-yanked stable version of GET <registry>/packages/<name>. After the download the tarball bytes are hashed by std-sha256 (hex) and compared with the registry integrity: equal goes on to the unpack step, a different digest is refused `integrity-mismatch`, an unhashable one `integrity-unavailable`; nothing is unpacked, written to node_modules or recorded in the lockfile on a refusal, and the check is never skipped. The hash is interpreted, so it fits packages of tens of kilobytes. Not yet ported: unpack and install after a verified tarball, the kind-loads-for-this-orb problem column, the behaviors count, the update-check record and the engines subcommands. Tarballs come only from the registry knob (RegistryHttp) or the sourceOrigin knob (SourceHttp, one client per origin); any other host is refused ORB_PACKAGE_SOURCE."
+  description: "std-orb-packages — the `orb list|add|update|remove [--global]` client of the npm registry (spec/cli/orb-packages.lolo; golden: orbital-cli packages.rs), bun-free. Packages live in <dir>/node_modules (dir = the working directory, or ~/.orb with --global) and the lockfile <dir>/<lockfile> holds { packages: [{ name, version, url, integrity }] }. Every command first reads the lockfile (absent = empty) and scans node_modules (scoped names included; the entry kind symlink is the workspace link), reading each package.json: a package is an orb package when it declares orbLanguage, orb, orbVocabulary or orbProgram.kind shell|desktop, and its kinds are those. list prints one row per orb package sorted by name (package 34, version 12, kinds 26, `ok`, ` (linked)`, ` [<prefix>/]`) or --json rows. remove refuses a behavior package whose prefix a .lolo or .orb file under the working directory still imports, deletes the package (a link is unlinked, never its target) and drops its lock entry. add parses name@exact-version (a range is refused ORB_PACKAGE_RANGE; a workspace-linked package is refused ORB_PACKAGE_LINKED) or a direct tarball URL (refused: it carries no integrity), and resolves name@version through GET <registry>/<name>/<version> (the npm version manifest: dist.tarball and dist.integrity). update reads the npm packument GET <registry>/<name> of every non-linked orb package and of every missing baseline package (an upgrade from nothing), and moves each to the newest stable, non-deprecated version above the installed one whose compiler range (orb.compiler, orbLanguage.compiler, orbVocabulary.compiler or orbProgram.compiler, the first present) the running orb satisfies; a version with no range is skipped ORB_PACKAGE_NO_COMPILER. The tarball is downloaded from the registry knob (RegistryHttp) or the sourceOrigin knob (SourceHttp, one client per origin; any other host is refused ORB_PACKAGE_SOURCE), and its sha512 digest must equal the registry dist.integrity (sha512- plus base64, hash/sha): a different digest is refused `integrity-mismatch`, an unhashable one `integrity-unavailable`, and nothing is written or recorded. A verified tarball is gunzipped (maxUnpackedBytes) and read as a ustar archive (maxEntries) by the kernel; a codec refusal is ORB_PACKAGE_ARCHIVE (<code>), an entry outside package/ ORB_PACKAGE_LAYOUT. The files are written into node_modules/.orb-staging/<name>@<version> (mode 755 for executables, else 644), the old node_modules/<name> is removed and the staging directory is renamed into place; only then is the package's lock entry replaced and the lockfile written last. Not yet ported: the kind-loads-for-this-orb problem column, the behaviors count, the update-check record and the engines subcommands; add does not remove a package that declares no orb kind."
 ]
 uses Spec from "almadar-std/orb-packages"
 uses Http from "std/behaviors/std-http-client"
@@ -15,17 +15,22 @@ type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, rep
 type PackageKind = "language" | "behaviors" | "language pack" | "shell" | "desktop"
 type PackageRow = { package : string!, kinds : [PackageKind]!, version : string!, path : string!, link : boolean!, prefix : string?, behaviors : number?, problem : string? }
 type LockEntry = { name : string!, version : string!, url : string!, integrity : string! }
-type BaselineEntry = { name : string!, version : string!, registry : string! }
+type BaselineEntry = { name : string!, registry : string! }
 type LockFile = { packages : [LockEntry]! }
 type PackageTarget = { name : string!, version : string!, url : string!, integrity : string! }
 type Marker = { x : string? }
 type OrbPackagesBlock = { prefix : string? }
 type ProgramBlock = { kind : string?, name : string? }
 type OrbPackagesManifest = { name : string?, version : string?, orbLanguage : Marker?, orb : OrbPackagesBlock?, orbVocabulary : Marker?, orbProgram : ProgramBlock? }
-type Resolved = { name : string!, version : string!, url : string!, integrity : string!, yanked : boolean? }
-type VersionRow = { version : string!, yanked : boolean?, compiler : string? }
-type Candidate = { version : string!, key : number!, compiler : string! }
-type VersionList = { name : string!, versions : [VersionRow]! }
+type NpmDist = { tarball : string!, integrity : string? }
+type NpmCompiler = { compiler : string? }
+type NpmManifest = { version : string!, deprecated : string?, dist : NpmDist?, orb : NpmCompiler?, orbLanguage : NpmCompiler?, orbVocabulary : NpmCompiler?, orbProgram : NpmCompiler? }
+type Packument = { name : string!, versions : Map string NpmManifest! }
+type Candidate = { version : string!, key : number!, compiler : string!, url : string!, integrity : string! }
+type Subject = { package : string!, version : string!, missing : boolean! }
+type TarEntry = { path : string!, data : bytes!, executable : boolean! }
+type GzResult = { ok : boolean!, data : bytes, crc : number, code : string }
+type TarResult = { ok : boolean!, entries : [TarEntry], code : string }
 type Scanned = { name : string!, kind : string! }
 type WalkOrb = { prefix : string?, registry : string?, source : string?, vectors : string?, compiler : string? }
 type WalkManifest = { name : string?, version : string?, orb : WalkOrb? }
@@ -36,7 +41,6 @@ type WalkRow = { name : string!, version : string!, root : string!, prefix : str
 
 orbital OrbPackagesOrbital {
   uses Args from "std/behaviors/std-args"
-  uses Sha from "std/behaviors/std-sha256"
   uses Semver from "std/behaviors/std-semver"
 
   entity PackageCall [runtime] {
@@ -64,7 +68,17 @@ orbital OrbPackagesOrbital {
     hits : [string] = []
     tarballSize : number = 0
     digest : string = ""
-    unpacked : boolean = false
+    tarball : bytes = ""
+    gz : GzResult?
+    tar : TarResult?
+    files : [TarEntry] = []
+    ei : number = 0
+    stage : string = ""
+    installed : boolean = false
+    done : [string] = []
+    subjects : [Subject] = []
+    pack : Packument?
+    mf : NpmManifest?
     ancestors : boolean = false
     rungs : [string] = []
     wr : number = 0
@@ -113,12 +127,6 @@ orbital OrbPackagesOrbital {
     }
   }
 
-  trait Digest = Sha.traits.Sha256 {
-    listens {
-      OrbPackages.PKG_HASH -> SHA256_DIGEST
-    }
-  }
-
   trait ArgsCli = Args.traits.ArgsParser {
     listens {
       OrbPackages.PKG_ARGS_PARSE -> ARGS_PARSE
@@ -156,6 +164,8 @@ orbital OrbPackagesOrbital {
         (set @entity.refused [])
         (set @entity.out [])
         (set @entity.lockDirty false)
+        (set @entity.installed false)
+        (set @entity.done [])
         (emit PKG_DIR { })
     }
 
@@ -242,17 +252,22 @@ orbital OrbPackagesOrbital {
         (emit PKG_LIST { })
       PKG_DISPATCH -> walking when (and (= @entity.cmd "list") @entity.ancestors)
         (emit PKG_W_START { })
+      PKG_DISPATCH -> ready when (and @entity.installed (= @entity.cmd "update"))
+        (emit PACKAGES_ANSWERED { status: 200, body: (str/join (array/map @entity.rows (fn r (str/concat (str/padEnd (object/get @r "package") 34 " ") " " (str/padEnd (object/get @r "version") 12 " ") " " (str/padEnd (str/join (object/get @r "kinds") ", ") 26 " ") " ok" (if (object/get @r "link") " (linked)" "")))) "\n"), stderr: (str/join @entity.skipped "\n") })
+      PKG_DISPATCH -> ready when (and @entity.installed (= @entity.cmd "add"))
+        (emit PACKAGES_ANSWERED { status: 200, body: (str/join (array/map @entity.done (fn n (let ((hit (array/filter @entity.rows (fn x (= (object/get @x "package") @n))))) (if (= (array/len @hit) 0) (str/concat "added " @n " (not an orb package: its package.json declares none of orbLanguage, orb, orbVocabulary, orbProgram)") (let ((r (default (array/first @hit) { package: "", kinds: [], version: "", path: "", link: false }))) (str/concat "added " @n (str/slice "a@b" 1 2) (object/get @r "version") " (" (str/join (object/get @r "kinds") ", ") ")")))))) "\n"), stderr: "" })
       PKG_DISPATCH -> removing when (= @entity.cmd "remove")
         (set @entity.cursor 0)
         (emit PKG_RM_NEXT { })
-      PKG_DISPATCH -> ready when (and (= @entity.cmd "add") (= (array/len @entity.args) 0))
+      PKG_DISPATCH -> ready when (and (not @entity.installed) (= @entity.cmd "add") (= (array/len @entity.args) 0))
         (emit PACKAGES_ANSWERED { status: 400, body: "", stderr: "usage: orb add <package, an at sign and an exact version | tarball url> [--global]" })
-      PKG_DISPATCH -> resolving when (and (= @entity.cmd "add") (> (array/len @entity.args) 0))
+      PKG_DISPATCH -> resolving when (and (not @entity.installed) (= @entity.cmd "add") (> (array/len @entity.args) 0))
         (set @entity.targets [])
         (set @entity.cursor 0)
         (emit PKG_PLAN_ADD { })
-      PKG_DISPATCH -> resolving when (= @entity.cmd "update")
-        (set @entity.targets (array/map (array/filter @config.baseline (fn b (= (array/len (array/filter @entity.rows (fn r (= (object/get @r "package") (object/get @b "name"))))) 0))) (fn b { name: (object/get @b "name"), version: (object/get @b "version"), url: "", integrity: "" })))
+      PKG_DISPATCH -> resolving when (and (not @entity.installed) (= @entity.cmd "update"))
+        (set @entity.targets [])
+        (set @entity.subjects (array/concat (array/map (array/filter @entity.rows (fn r (not (object/get @r "link")))) (fn r { package: (object/get @r "package"), version: (object/get @r "version"), missing: false })) (array/map (array/filter @config.baseline (fn b (and (= (array/len (array/filter @entity.rows (fn r (= (object/get @r "package") (object/get @b "name"))))) 0) (= (object/get @b "registry") @config.registry)))) (fn b { package: (object/get @b "name"), version: "0.0.0", missing: true }))))
         (set @entity.refused (array/map (array/filter @config.baseline (fn b (and (= (array/len (array/filter @entity.rows (fn r (= (object/get @r "package") (object/get @b "name"))))) 0) (!= (object/get @b "registry") @config.registry)))) (fn b (str/concat (object/get @b "name") ": ORB_PACKAGE_SOURCE (baseline registry " (object/get @b "registry") " is not the registry knob)"))))
         (set @entity.cursor 0)
         (set @entity.skipped [])
@@ -435,8 +450,13 @@ orbital OrbPackagesOrbital {
         (os/write-file (str/concat "~/.orb/" @config.lockfile) (bytes/from-string (json/stringify { packages: @entity.lock })) { key: "lockwrite" emit: { success: PKG_LOCK_WRITTEN, failure: PKG_FAILED } })
       PKG_LOCK_DIR -> writing when (not @entity.global)
         (os/write-file { anchor: "cwd" path: @config.lockfile } (bytes/from-string (json/stringify { packages: @entity.lock })) { key: "lockwrite" emit: { success: PKG_LOCK_WRITTEN, failure: PKG_FAILED } })
-      PKG_LOCK_WRITTEN -> ready
+      PKG_LOCK_WRITTEN -> ready when (= @entity.cmd "remove")
         (emit PACKAGES_ANSWERED { status: 200, body: (str/join @entity.out "\n"), stderr: "" })
+      PKG_LOCK_WRITTEN -> ready when (and (!= @entity.cmd "remove") (> (array/len @entity.refused) 0))
+        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat (if (= @entity.cmd "add") "not added:\n  " "these packages could not be installed:\n  ") (str/join @entity.refused "\n  ") (if (> (array/len @entity.skipped) 0) (str/concat "\n" (str/join @entity.skipped "\n")) "")) })
+      PKG_LOCK_WRITTEN -> scanning when (and (!= @entity.cmd "remove") (= (array/len @entity.refused) 0))
+        (set @entity.installed true)
+        (emit PKG_LIST_ROOT { })
     }
 
     state resolving {
@@ -449,17 +469,14 @@ orbital OrbPackagesOrbital {
         (set @entity.targets (array/filter @entity.targets (fn t (and (or (!= (object/get @t "url") "") (and (!= (object/get @t "version") "") (= (str/replace-pattern (object/get @t "version") "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$" "") ""))) (= (array/len (array/filter @entity.rows (fn r (and (= (object/get @r "package") (object/get @t "name")) (object/get @r "link"))))) 0)))))
         (set @entity.cursor 0)
         (emit PKG_TARGET_NEXT { })
-      PKG_UPGRADE_NEXT -> resolving when (< @entity.cursor (array/len @entity.rows))
-        (emit PKG_UPGRADE_ROW { })
-      PKG_UPGRADE_ROW -> resolving when (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "link")
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit PKG_UPGRADE_NEXT { })
-      PKG_UPGRADE_ROW -> resolving when (not (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "link"))
-        (emit PK_GET { key: "versions", method: "GET", target: (str/concat "/packages/" (str/encode-uri-component (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package"))), headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
+      PKG_UPGRADE_NEXT -> resolving when (< @entity.cursor (array/len @entity.subjects))
+        (emit PK_GET { key: "versions", method: "GET", target: (str/concat "/" (str/join (str/split (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") "/") "%2f")), headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
       PK_REPLIED -> resolving when (= @payload.key "versions")
-        (emit PKG_VERSIONS { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: @payload.key })
+        (set @entity.pack (if (= @payload.status 200) (json/parse (default (bytes/to-string @payload.body) "") Packument) null))
+        (emit PKG_VERSIONS { status: @payload.status, key: @payload.key })
       PK_REPLIED -> resolving when (= @payload.key "resolve")
-        (emit PKG_RESOLVED { status: @payload.status, headers: @payload.headers, body: (default (bytes/to-string @payload.body) ""), key: @payload.key })
+        (set @entity.mf (if (= @payload.status 200) (json/parse (default (bytes/to-string @payload.body) "") NpmManifest) null))
+        (emit PKG_RESOLVED { status: @payload.status, key: @payload.key })
       PK_FAILED -> resolving when (= @payload.key "versions")
         (emit PKG_VERSIONS_UNLISTED { error: @payload.error, kind: @payload.kind })
       PK_FAILED -> resolving when (= @payload.key "resolve")
@@ -481,58 +498,65 @@ orbital OrbPackagesOrbital {
         (emit PKG_UPGRADE_NEXT { })
       PKG_WAITED -> ready when (not (str/startsWith @entity.reply "orb "))
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: "orb update: the host binary did not answer --version as `orb X.Y.Z`" })
-      PKG_VERSIONS -> resolving when (and (= @payload.status 200) (!= (json/parse @payload.body VersionList) null))
-        (set @entity.curKey (let ((cv (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "version"))) (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split @cv ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split @cv ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split @cv ".") 2) "")) 0))))
-        (set @entity.cands (array/sort (array/map (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "")))) (fn v { version: (object/get @v "version"), key: (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split (object/get @v "version") ".") 2) "")) 0)), compiler: (default (object/get @v "compiler") "") })) "key" "desc"))
+      PKG_VERSIONS -> resolving when (!= @entity.pack null)
+        (set @entity.curKey (let ((cv (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "version"))) (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split @cv ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split @cv ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split @cv ".") 2) "")) 0))))
+        (set @entity.cands (array/sort (array/map (array/filter (object/entries (object/get @entity.pack "versions")) (fn e (and (= (str/replace-pattern (array/nth @e 0) "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") "") (= (default (object/get (array/nth @e 1) "deprecated") "") "") (!= (object/get (array/nth @e 1) "dist") null)))) (fn e (let ((k (array/nth @e 0)) (m (array/nth @e 1))) { version: @k, key: (+ (* 1000000000000 (default (str/to-number (default (array/nth (str/split @k ".") 0) "")) 0)) (* 1000000 (default (str/to-number (default (array/nth (str/split @k ".") 1) "")) 0)) (default (str/to-number (default (array/nth (str/split @k ".") 2) "")) 0)), compiler: (default (object/get (default (object/get @m "orb") { }) "compiler") (default (object/get (default (object/get @m "orbLanguage") { }) "compiler") (default (object/get (default (object/get @m "orbVocabulary") { }) "compiler") (default (object/get (default (object/get @m "orbProgram") { }) "compiler") "")))), url: (default (object/get (default (object/get @m "dist") { tarball: "" }) "tarball") ""), integrity: (default (object/get (default (object/get @m "dist") { tarball: "" }) "integrity") "") }))) "key" "desc"))
+        (set @entity.pack null)
         (set @entity.ci 0)
         (emit PKG_CAND_NEXT { at: 0 })
-      PKG_CAND_NEXT -> resolving when (or (>= @payload.at (array/len @entity.cands)) (<= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey))
+      PKG_VERSIONS -> resolving when (= @entity.pack null)
+        (set @entity.refused (if (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "missing") (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") ": ORB_PACKAGE_NOT_FOUND (the registry answered " @payload.status " with no readable package)")) @entity.refused))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_UPGRADE_NEXT { })
-      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey) (= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") ""))
-        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_NO_COMPILER (the registry recorded no orb.compiler range for this version; treated as incompatible)")))
+      PKG_CAND_NEXT -> resolving when (or (>= @payload.at (array/len @entity.cands)) (<= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "key") @entity.curKey))
+        (set @entity.refused (if (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "missing") (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") ": ORB_PACKAGE_NOT_FOUND (no stable, non-deprecated version accepts this orb)")) @entity.refused))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PKG_UPGRADE_NEXT { })
+      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "key") @entity.curKey) (= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "compiler") ""))
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "version") ": ORB_PACKAGE_NO_COMPILER (the registry recorded no orb compiler range for this version; treated as incompatible)")))
         (set @entity.ci (+ @payload.at 1))
         (emit PKG_CAND_NEXT { at: (+ @payload.at 1) })
-      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "key") @entity.curKey) (!= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") ""))
+      PKG_CAND_NEXT -> resolving when (and (< @payload.at (array/len @entity.cands)) (> (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "key") @entity.curKey) (!= (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "compiler") ""))
         (set @entity.ci @payload.at)
-        (emit PKG_SEMVER { requestId: "update", version: @entity.running, range: (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "" }) "compiler") })
+        (emit PKG_SEMVER { requestId: "update", version: @entity.running, range: (object/get (default (array/nth @entity.cands @payload.at) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "compiler") })
       PKG_SAT -> resolving when @payload.value
-        (set @entity.targets (array/append @entity.targets { name: (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package"), version: (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version"), url: "", integrity: "" }))
+        (set @entity.targets (array/append @entity.targets { name: (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package"), version: (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "version"), url: (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "url"), integrity: (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "integrity") }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_UPGRADE_NEXT { })
       PKG_SAT -> resolving when (not @payload.value)
-        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "compiler") " does not accept orb " @entity.running ")")))
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "compiler") " does not accept orb " @entity.running ")")))
         (set @entity.ci (+ @entity.ci 1))
         (emit PKG_CAND_NEXT { at: @entity.ci })
       PKG_SAT_REFUSED -> resolving
-        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.rows @entity.cursor) { package: "", kinds: [], version: "", path: "", link: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "" }) "compiler") " is not a range std-semver reads: " @payload.reason ")")))
+        (set @entity.skipped (array/append @entity.skipped (str/concat (object/get (default (array/nth @entity.subjects @entity.cursor) { package: "", version: "", missing: false }) "package") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "version") ": ORB_PACKAGE_INCOMPATIBLE (orb.compiler " (object/get (default (array/nth @entity.cands @entity.ci) { version: "", key: 0, compiler: "", url: "", integrity: "" }) "compiler") " is not a range std-semver reads: " @payload.reason ")")))
         (set @entity.ci (+ @entity.ci 1))
         (emit PKG_CAND_NEXT { at: @entity.ci })
-      PKG_VERSIONS -> resolving when (or (!= @payload.status 200) (= (json/parse @payload.body VersionList) null) (= (array/len (array/filter (object/get (json/parse @payload.body VersionList) "versions") (fn v (and (not (default (object/get @v "yanked") false)) (= (str/replace-pattern (object/get @v "version") "^[0-9]+\\.[0-9]+\\.[0-9]+$" "") ""))))) 0))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit PKG_UPGRADE_NEXT { })
       PKG_VERSIONS_UNLISTED -> ready
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "ORB_PACKAGE_UNREACHABLE: " (default @payload.error "")) })
-      PKG_UPGRADE_NEXT -> resolving when (>= @entity.cursor (array/len @entity.rows))
+      PKG_UPGRADE_NEXT -> resolving when (>= @entity.cursor (array/len @entity.subjects))
         (set @entity.cursor 0)
         (emit PKG_TARGET_NEXT { })
-      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (= (array/len @entity.refused) 0) (= @entity.cmd "update"))
+      PKG_TARGET_NEXT -> writing when (and (>= @entity.cursor (array/len @entity.targets)) @entity.lockDirty @entity.global)
+        (os/mkdir "~/.orb" true { key: "dir" emit: { success: PKG_LOCK_DIR, failure: PKG_FAILED } })
+      PKG_TARGET_NEXT -> writing when (and (>= @entity.cursor (array/len @entity.targets)) @entity.lockDirty (not @entity.global))
+        (emit PKG_LOCK_DIR { })
+      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (not @entity.lockDirty) (= (array/len @entity.refused) 0) (= @entity.cmd "update"))
         (emit PACKAGES_ANSWERED { status: 200, body: (str/join (array/map @entity.rows (fn r (str/concat (str/padEnd (object/get @r "package") 34 " ") " " (str/padEnd (object/get @r "version") 12 " ") " " (str/padEnd (str/join (object/get @r "kinds") ", ") 26 " ") " ok" (if (object/get @r "link") " (linked)" "")))) "\n"), stderr: (str/join @entity.skipped "\n") })
-      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (= (array/len @entity.refused) 0) (= @entity.cmd "add"))
+      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (not @entity.lockDirty) (= (array/len @entity.refused) 0) (= @entity.cmd "add"))
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "installed nothing for " (str/join @entity.args " ")) })
-      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (> (array/len @entity.refused) 0))
-        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat (if (= @entity.cmd "add") "not added:\n  " "these packages could not be installed:\n  ") (str/join @entity.refused "\n  ")) })
+      PKG_TARGET_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.targets)) (not @entity.lockDirty) (> (array/len @entity.refused) 0))
+        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat (if (= @entity.cmd "add") "not added:\n  " "these packages could not be installed:\n  ") (str/join @entity.refused "\n  ") (if (> (array/len @entity.skipped) 0) (str/concat "\n" (str/join @entity.skipped "\n")) "")) })
       PKG_TARGET_NEXT -> downloading when (and (< @entity.cursor (array/len @entity.targets)) (!= (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url") ""))
         (emit PKG_DOWNLOAD { url: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url") })
       PKG_TARGET_NEXT -> resolving when (and (< @entity.cursor (array/len @entity.targets)) (= (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url") ""))
-        (emit PK_GET { key: "resolve", method: "GET", target: (str/concat "/packages/" (str/encode-uri-component (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")) "/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version")), headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
-      PKG_RESOLVED -> downloading when (and (= @payload.status 200) (!= (json/parse @payload.body Resolved) null))
-        (set @entity.targets (let ((resolved (json/parse @payload.body Resolved))) (if (= @resolved null) @entity.targets (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (default (array/nth @entity.targets @i) { name: "", version: "", url: "", integrity: "" }) "name"), version: (object/get (default (array/nth @entity.targets @i) { name: "", version: "", url: "", integrity: "" }) "version"), url: (object/get @resolved "url"), integrity: (object/get @resolved "integrity") } (default (array/nth @entity.targets @i) { name: "", version: "", url: "", integrity: "" })))))))
-        (emit PKG_DOWNLOAD { url: (object/get (json/parse @payload.body Resolved) "url") })
-      PKG_RESOLVED -> resolving when (or (!= @payload.status 200) (= (json/parse @payload.body Resolved) null))
+        (emit PK_GET { key: "resolve", method: "GET", target: (str/concat "/" (str/join (str/split (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") "/") "%2f") "/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version")), headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
+      PKG_RESOLVED -> downloading when (and (!= @entity.mf null) (!= (object/get @entity.mf "dist") null))
+        (set @entity.targets (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), version: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version"), url: (default (object/get (default (object/get @entity.mf "dist") { tarball: "" }) "tarball") ""), integrity: (default (object/get (default (object/get @entity.mf "dist") { tarball: "" }) "integrity") "") } (default (array/nth @entity.targets @i) { name: "", version: "", url: "", integrity: "" })))))
+        (emit PKG_DOWNLOAD { url: (default (object/get (default (object/get @entity.mf "dist") { tarball: "" }) "tarball") "") })
+      PKG_RESOLVED -> resolving when (or (= @entity.mf null) (= (object/get @entity.mf "dist") null))
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") " version " (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version") ": ORB_PACKAGE_NOT_FOUND (registry answered " @payload.status ")")))
-        (set @entity.cursor (+ @entity.cursor 1))
         (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_NOT_FOUND" })
+        (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
       PKG_RESOLVE_FAILED -> ready
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "ORB_PACKAGE_UNREACHABLE: " (default @payload.error "")) })
@@ -554,10 +578,10 @@ orbital OrbPackagesOrbital {
       PK_FAILED -> downloading when (= @payload.key "tarball")
         (emit PKG_DOWNLOAD_FAILED { error: @payload.error, kind: @payload.kind })
       PKG_DOWNLOADED -> verifying when (= @payload.status 200)
+        (set @entity.tarball @payload.body)
         (set @entity.tarballSize (bytes/length @payload.body))
-        (set @entity.digest "")
-        (set @entity.unpacked false)
-        (emit PKG_HASH { requestId: "tarball", data: @payload.body, encoding: "hex" })
+        (set @entity.digest (let ((h (hash/sha 512 @payload.body "base64" "bytes"))) (if (= @h null) "" (str/concat "sha512-" @h))))
+        (emit PKG_VERIFY { })
       PKG_DOWNLOADED -> resolving when (!= @payload.status 200)
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": ORB_PACKAGE_DOWNLOAD (the tarball url answered " @payload.status ")")))
         (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_DOWNLOAD" })
@@ -569,36 +593,102 @@ orbital OrbPackagesOrbital {
 
     state verifying {
       INIT -> verifying
-      PKG_DIGESTED -> verifying
-        (set @entity.digest @payload.digest)
-        (emit PKG_VERIFY { })
-      PKG_HASH_FAILED -> verifying
-        (set @entity.digest "")
-        (emit PKG_VERIFY { })
       PKG_VERIFY -> installing when (and (!= @entity.digest "") (= @entity.digest (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "integrity")))
-        (emit PKG_INSTALL { })
+        (set @entity.gz (gzip/decompress @entity.tarball @config.maxUnpackedBytes { result: true }))
+        (emit PKG_UNGZIPPED { })
       PKG_VERIFY -> resolving when (or (= @entity.digest "") (!= @entity.digest (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "integrity")))
         (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: (if (= @entity.digest "") "integrity-unavailable" "integrity-mismatch") })
-        (set @entity.refused (array/append @entity.refused (str/concat (if (!= (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") "") (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url")) ": " (if (= @entity.digest "") "integrity-unavailable (the tarball could not be hashed" "integrity-mismatch (the tarball hashed to a different sha256 than the registry integrity") "; " @entity.tarballSize " bytes; nothing was installed or recorded)")))
+        (set @entity.refused (array/append @entity.refused (str/concat (if (!= (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") "") (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url")) ": " (if (= @entity.digest "") "integrity-unavailable (the tarball could not be hashed" "integrity-mismatch (the tarball hashed to a different sha512 than the registry integrity") "; " @entity.tarballSize " bytes; nothing was installed or recorded)")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
     }
 
     state installing {
       INIT -> installing
-      PKG_INSTALL -> checking
-        (emit PKG_CHECK { })
-    }
-
-    state checking {
-      INIT -> checking
-      PKG_CHECK -> resolving when @entity.unpacked
-        (emit PACKAGE_INSTALLED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), version: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version"), kinds: [] })
+      PKG_INSTALL_FAILED -> resolving
+        (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_INSTALL" })
+        (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": ORB_PACKAGE_INSTALL (" (default @payload.error "") ")")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
-      PKG_CHECK -> resolving when (not @entity.unpacked)
-        (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "install-unavailable" })
-        (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": install-unavailable (unpack into node_modules and the kind check are not ported)")))
+      PKG_UNGZIPPED -> resolving when (or (= @entity.gz null) (not (default (object/get @entity.gz "ok") false)))
+        (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_ARCHIVE" })
+        (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": ORB_PACKAGE_ARCHIVE (" (if (= @entity.gz null) "the codec refused its limits" (default (object/get @entity.gz "code") "")) ")")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PKG_TARGET_NEXT { })
+      PKG_UNGZIPPED -> installing when (and (!= @entity.gz null) (default (object/get @entity.gz "ok") false))
+        (set @entity.tar (tar/entries (default (object/get @entity.gz "data") (bytes/from-string "")) @config.maxEntries { result: true }))
+        (set @entity.gz null)
+        (emit PKG_UNTARRED { })
+      PKG_UNTARRED -> resolving when (or (= @entity.tar null) (not (default (object/get @entity.tar "ok") false)))
+        (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_ARCHIVE" })
+        (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": ORB_PACKAGE_ARCHIVE (" (if (= @entity.tar null) "the codec refused its limits" (default (object/get @entity.tar "code") "")) ")")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PKG_TARGET_NEXT { })
+      PKG_UNTARRED -> installing when (and (!= @entity.tar null) (default (object/get @entity.tar "ok") false))
+        (set @entity.files (default (object/get @entity.tar "entries") []))
+        (set @entity.tar null)
+        (emit PKG_LAYOUT { })
+      PKG_LAYOUT -> resolving when (or (= (array/len @entity.files) 0) (> (array/len (array/filter @entity.files (fn e (not (str/startsWith (object/get @e "path") "package/"))))) 0))
+        (emit PACKAGE_REFUSED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), problem: "ORB_PACKAGE_LAYOUT" })
+        (set @entity.refused (array/append @entity.refused (str/concat (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") ": ORB_PACKAGE_LAYOUT (" "an npm tarball holds its files under package/" ")")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PKG_TARGET_NEXT { })
+      PKG_LAYOUT -> installing when (and (> (array/len @entity.files) 0) (not (> (array/len (array/filter @entity.files (fn e (not (str/startsWith (object/get @e "path") "package/"))))) 0)))
+        (set @entity.stage (str/concat ".orb-staging/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") (str/slice "a@b" 1 2) (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version")))
+        (set @entity.ei 0)
+        (emit PKG_STAGE_CLEAR { })
+      PKG_STAGE_CLEAR -> installing when @entity.global
+        (os/rmdir (str/concat "~/.orb/node_modules/" @entity.stage) true { key: "stageclear" emit: { success: PKG_STAGE_READY, failure: PKG_STAGE_CLEAR_FAILED } })
+      PKG_STAGE_CLEAR -> installing when (not @entity.global)
+        (os/rmdir { anchor: "cwd" path: (str/concat "node_modules/" @entity.stage) } true { key: "stageclear" emit: { success: PKG_STAGE_READY, failure: PKG_STAGE_CLEAR_FAILED } })
+      PKG_STAGE_CLEAR_FAILED -> installing when (= (default @payload.kind "") "not-found")
+        (emit PKG_STAGE_READY { })
+      PKG_STAGE_CLEAR_FAILED -> installing when (!= (default @payload.kind "") "not-found")
+        (emit PKG_INSTALL_FAILED { error: (default @payload.error "") })
+      PKG_STAGE_READY -> installing
+        (emit PKG_ENTRY { })
+      PKG_ENTRY -> installing when (and (< @entity.ei (array/len @entity.files)) @entity.global)
+        (os/mkdir (str/concat "~/.orb/node_modules/" (str/replace-pattern (str/concat @entity.stage "/" (str/slice (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "path") 8)) "/[^/]*$" "")) true 493 { key: "entrydir" emit: { success: PKG_ENTRY_DIR, failure: PKG_ENTRY_DIR_FAILED } })
+      PKG_ENTRY -> installing when (and (< @entity.ei (array/len @entity.files)) (not @entity.global))
+        (os/mkdir { anchor: "cwd" path: (str/concat "node_modules/" (str/replace-pattern (str/concat @entity.stage "/" (str/slice (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "path") 8)) "/[^/]*$" "")) } true 493 { key: "entrydir" emit: { success: PKG_ENTRY_DIR, failure: PKG_ENTRY_DIR_FAILED } })
+      PKG_ENTRY_DIR_FAILED -> installing when (= (default @payload.kind "") "exists")
+        (emit PKG_ENTRY_DIR { })
+      PKG_ENTRY_DIR_FAILED -> installing when (!= (default @payload.kind "") "exists")
+        (emit PKG_INSTALL_FAILED { error: (default @payload.error "") })
+      PKG_ENTRY_DIR -> installing when @entity.global
+        (os/write-file (str/concat "~/.orb/node_modules/" (str/concat @entity.stage "/" (str/slice (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "path") 8))) (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "data") (if (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "executable") 493 420) { key: "entrywrite" emit: { success: PKG_ENTRY_WRITTEN, failure: PKG_INSTALL_FAILED } })
+      PKG_ENTRY_DIR -> installing when (not @entity.global)
+        (os/write-file { anchor: "cwd" path: (str/concat "node_modules/" (str/concat @entity.stage "/" (str/slice (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "path") 8))) } (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "data") (if (object/get (default (array/nth @entity.files @entity.ei) { path: "", data: (bytes/from-string ""), executable: false }) "executable") 493 420) { key: "entrywrite" emit: { success: PKG_ENTRY_WRITTEN, failure: PKG_INSTALL_FAILED } })
+      PKG_ENTRY_WRITTEN -> installing
+        (set @entity.ei (+ @entity.ei 1))
+        (emit PKG_ENTRY { })
+      PKG_ENTRY -> installing when (and (>= @entity.ei (array/len @entity.files)) @entity.global)
+        (os/rmdir (str/concat "~/.orb/node_modules/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")) true { key: "oldclear" emit: { success: PKG_OLD_CLEARED, failure: PKG_OLD_CLEAR_FAILED } })
+      PKG_ENTRY -> installing when (and (>= @entity.ei (array/len @entity.files)) (not @entity.global))
+        (os/rmdir { anchor: "cwd" path: (str/concat "node_modules/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")) } true { key: "oldclear" emit: { success: PKG_OLD_CLEARED, failure: PKG_OLD_CLEAR_FAILED } })
+      PKG_OLD_CLEAR_FAILED -> installing when (= (default @payload.kind "") "not-found")
+        (emit PKG_OLD_CLEARED { })
+      PKG_OLD_CLEAR_FAILED -> installing when (!= (default @payload.kind "") "not-found")
+        (emit PKG_INSTALL_FAILED { error: (default @payload.error "") })
+      PKG_OLD_CLEARED -> installing when @entity.global
+        (os/mkdir (str/concat "~/.orb/node_modules/" (str/replace-pattern (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") "/?[^/]*$" "")) true 493 { key: "destdir" emit: { success: PKG_DEST_READY, failure: PKG_DEST_READY_FAILED } })
+      PKG_OLD_CLEARED -> installing when (not @entity.global)
+        (os/mkdir { anchor: "cwd" path: (str/concat "node_modules/" (str/replace-pattern (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name") "/?[^/]*$" "")) } true 493 { key: "destdir" emit: { success: PKG_DEST_READY, failure: PKG_DEST_READY_FAILED } })
+      PKG_DEST_READY_FAILED -> installing when (= (default @payload.kind "") "exists")
+        (emit PKG_DEST_READY { })
+      PKG_DEST_READY_FAILED -> installing when (!= (default @payload.kind "") "exists")
+        (emit PKG_INSTALL_FAILED { error: (default @payload.error "") })
+      PKG_DEST_READY -> installing when @entity.global
+        (os/rename (str/concat "~/.orb/node_modules/" @entity.stage) (str/concat "~/.orb/node_modules/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")) { key: "place" emit: { success: PKG_PLACED, failure: PKG_INSTALL_FAILED } })
+      PKG_DEST_READY -> installing when (not @entity.global)
+        (os/rename { anchor: "cwd" path: (str/concat "node_modules/" @entity.stage) } { anchor: "cwd" path: (str/concat "node_modules/" (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")) } { key: "place" emit: { success: PKG_PLACED, failure: PKG_INSTALL_FAILED } })
+      PKG_PLACED -> resolving
+        (set @entity.lock (array/append (array/filter @entity.lock (fn l (!= (object/get @l "name") (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")))) { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), version: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version"), url: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "url"), integrity: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "integrity") }))
+        (set @entity.lockDirty true)
+        (set @entity.done (array/append @entity.done (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name")))
+        (set @entity.files [])
+        (set @entity.tarball (bytes/from-string ""))
+        (emit PACKAGE_INSTALLED { name: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "name"), version: (object/get (default (array/nth @entity.targets @entity.cursor) { name: "", version: "", url: "", integrity: "" }) "version"), kinds: [] })
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
     }
@@ -612,9 +702,9 @@ orbital OrbPackagesOrbital {
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
       PACKAGE_INSTALLED -> external { name : string!  version : string!  kinds : [PackageKind]! }
-        @description "A package passed its integrity check and was installed (not yet reachable: integrity is pending)."
+        @description "A package passed its integrity check, was written into node_modules and recorded in the lock."
       PACKAGE_REFUSED -> external { name : string!  problem : string! }
-        @description "A package was refused; integrity-unavailable until std-sha256 lands."
+        @description "A package was refused: integrity, archive, layout, source, download, install or not-found."
       PKG_ARGS_UNREAD {  }
         @description "Internal: the call's arguments could not be read."
         @tier "internal"
@@ -760,11 +850,8 @@ orbital OrbPackagesOrbital {
       PKG_UPGRADE_NEXT { }
         @description "Internal: check the next installed package for a newer version."
         @tier "internal"
-      PKG_UPGRADE_ROW { }
-        @description "Internal: the row under the cursor."
-        @tier "internal"
-      PKG_VERSIONS { status : number!  headers : Map string string  body : string!  key : string }
-        @description "Internal: a registry version list."
+      PKG_VERSIONS { status : number!  key : string }
+        @description "Internal: a registry packument is read into the entity."
         @tier "internal"
       PKG_SEMVER { requestId : string!  version : string!  range : string! }
         @description "Internal: ask std-semver whether the running orb satisfies a version's recorded orb.compiler range."
@@ -799,17 +886,59 @@ orbital OrbPackagesOrbital {
       PKG_LIST_ROOT { }
         @description "Internal: list node_modules."
         @tier "internal"
-      PKG_INSTALL { }
-        @description "Internal: unpack a verified tarball (pending)."
+      PKG_UNGZIPPED { }
+        @description "Internal: the verified tarball is gunzipped."
         @tier "internal"
-      PKG_CHECK { }
-        @description "Internal: check the installed package declares a loadable kind (pending)."
+      PKG_UNTARRED { }
+        @description "Internal: the gunzipped archive is read as ustar."
+        @tier "internal"
+      PKG_LAYOUT { }
+        @description "Internal: the archive entries are checked to sit under package/."
+        @tier "internal"
+      PKG_STAGE_CLEAR { }
+        @description "Internal: clear any leftover staging directory of the package."
+        @tier "internal"
+      PKG_STAGE_READY { }
+        @description "Internal: the staging directory is clear."
+        @tier "internal"
+      PKG_STAGE_CLEAR_FAILED { kind : string  error : string }
+        @description "Internal: a leftover staging directory could not be removed."
+        @tier "internal"
+      PKG_ENTRY { }
+        @description "Internal: write the next archive entry into staging."
+        @tier "internal"
+      PKG_ENTRY_DIR { }
+        @description "Internal: the entry's parent directory exists."
+        @tier "internal"
+      PKG_ENTRY_DIR_FAILED { kind : string  error : string }
+        @description "Internal: an entry's parent directory could not be created."
+        @tier "internal"
+      PKG_ENTRY_WRITTEN { bytes : number }
+        @description "Internal: an entry is written."
+        @tier "internal"
+      PKG_OLD_CLEARED { }
+        @description "Internal: the old package directory is gone."
+        @tier "internal"
+      PKG_OLD_CLEAR_FAILED { kind : string  error : string }
+        @description "Internal: the old package directory could not be removed."
+        @tier "internal"
+      PKG_DEST_READY { }
+        @description "Internal: the directory that holds the package exists."
+        @tier "internal"
+      PKG_DEST_READY_FAILED { kind : string  error : string }
+        @description "Internal: the directory that holds the package could not be created."
+        @tier "internal"
+      PKG_PLACED { }
+        @description "Internal: the staging directory is renamed into node_modules."
+        @tier "internal"
+      PKG_INSTALL_FAILED { error : string }
+        @description "Internal: a host call failed while installing one package; that package is refused."
         @tier "internal"
       PKG_TARGET_NEXT { }
         @description "Internal: resolve the next target."
         @tier "internal"
-      PKG_RESOLVED { status : number!  headers : Map string string  body : string!  key : string }
-        @description "Internal: a resolved version."
+      PKG_RESOLVED { status : number!  key : string }
+        @description "Internal: a version manifest is read into the entity."
         @tier "internal"
       PKG_RESOLVE_FAILED { error : string  kind : string }
         @description "Internal: the registry could not be reached."
@@ -829,27 +958,30 @@ orbital OrbPackagesOrbital {
       PKG_DOWNLOAD_FAILED { error : string  kind : string }
         @description "Internal: the download failed."
         @tier "internal"
-      PKG_HASH { requestId : string!  data : bytes!  encoding : string! }
-        @description "Internal: hash the downloaded tarball bytes."
-        @tier "internal"
       PKG_VERIFY { }
-        @description "Internal: the integrity step, pending std-sha256: always refuses integrity-unavailable."
+        @description "Internal: compare the tarball's sha512 digest with the registry integrity."
         @tier "internal"
     }
 
     config {
-      registry : string
+      registry : string = "https://registry.npmjs.org"
         @label "Registry"
-        @description "The registry origin (scheme://host[:port], no trailing slash) name@version resolves through; must be the origin the composed RegistryHttp trait is configured with (its host, port and serverName knobs; the program declares that host as a net grant)."
+        @description "The npm registry origin (scheme://host[:port], no trailing slash) packuments and version manifests are read from; must be the origin the composed RegistryHttp trait is configured with (its host, port and serverName knobs; the program declares that host as a net grant)."
       sourceOrigin : string = "https://registry.npmjs.org"
         @label "Tarball source origin"
         @description "The origin, besides the registry, a tarball url may be downloaded from (scheme://host[:port], no trailing slash); must be the origin the composed SourceHttp trait is configured with (its host, port and serverName knobs; the program declares that host as a net grant). One client trait is one host, so another origin is another sibling client and its own knob."
       lockfile : string = "orb.lock.json"
         @label "Lockfile"
         @description "The lockfile name inside the install directory."
-      baseline : [BaselineEntry] = []
+      baseline : [BaselineEntry] = [{ name: (quote "@almadar/core"), registry: "https://registry.npmjs.org" }, { name: (quote "@almadar/std"), registry: "https://registry.npmjs.org" }, { name: (quote "@almadar/lolo-ar"), registry: "https://registry.npmjs.org" }, { name: (quote "@almadar/lolo-sl"), registry: "https://registry.npmjs.org" }, { name: (quote "@almadar/orb-shell-typescript"), registry: "https://registry.npmjs.org" }]
         @label "Baseline"
-        @description "The exact name@version packages `orb update` installs when missing, seeded by the installer."
+        @description "The packages `orb update` installs when missing, each resolved like an upgrade from nothing: the newest stable, non-deprecated version whose compiler range the running orb satisfies, read from its registry."
+      maxUnpackedBytes : number = 536870912
+        @label "Largest unpacked tarball"
+        @description "The most bytes a package tarball may inflate to; a larger one is refused ORB_PACKAGE_ARCHIVE (output-limit)."
+      maxEntries : number = 100000
+        @label "Most archive entries"
+        @description "The most files a package archive may hold; more is refused ORB_PACKAGE_ARCHIVE (entry-limit)."
       programGlobs : [string] = ["**/*.lolo", "**/*.orb"]
         @label "Program globs"
         @description "The program files remove scans for imports of a behavior package prefix."
@@ -881,12 +1013,6 @@ orbital OrbPackagesOrbital {
         words : [string]!
       }
         @description "std-args's ARGS_PARSED: the call's words, parsed."
-      PKG_DIGESTED { requestId : string  digest : string! }
-        @description "Internal: the tarball's SHA-256 (hex)."
-      PKG_HASH_FAILED { requestId : string  reason : string! }
-        @description "Internal: the tarball could not be hashed."
-      Digest.SHA256_DIGESTED -> PKG_DIGESTED
-      Digest.SHA256_REFUSED -> PKG_HASH_FAILED
       PKG_SAT { requestId : string!  value : boolean! }
         @description "std-semver's SEMVER_SATISFIED: the range check answered."
       PKG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
@@ -897,5 +1023,5 @@ orbital OrbPackagesOrbital {
     }
   }
 
-  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Digest, Versions, RegistryHttp, SourceHttp
+  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Versions, RegistryHttp, SourceHttp
 }

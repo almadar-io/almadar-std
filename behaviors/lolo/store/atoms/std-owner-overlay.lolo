@@ -25,7 +25,7 @@ orbital OwnerOverlayOrbital {
       OVERLAY_PICK -> ready
         (do (set @entity.rowId
               (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
-                (let ((h (hash/sha256 @payload.ownerId "base64")))
+                (let ((h (hash/sha 256 @payload.ownerId "base64")))
                   (if (== @h null)
                     ""
                     (let ((n (let ((hb (bytes/from-base64 @h))) (if (== @hb null) null (bytes/read-uint @hb 0 4 "be")))))
@@ -40,7 +40,7 @@ orbital OwnerOverlayOrbital {
         (if (= (array/len @payload.fields) 0)
           (set @entity.rows @payload.rows)
           (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
-            (let ((target (let ((h (hash/sha256 @payload.ownerId "base64")))
+            (let ((target (let ((h (hash/sha 256 @payload.ownerId "base64")))
                             (if (== @h null)
                               ""
                               (let ((n (let ((hb (bytes/from-base64 @h))) (if (== @hb null) null (bytes/read-uint @hb 0 4 "be")))))

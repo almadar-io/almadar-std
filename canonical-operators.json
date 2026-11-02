@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-01T18:54:58.986Z",
+  "generated": "2026-11-02T05:38:01.402Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -9981,10 +9981,10 @@
       ],
       "docsSource": "generated"
     },
-    "hash/sha256": {
+    "hash/sha": {
       "category": "std-codec",
-      "minArity": 2,
-      "maxArity": 3,
+      "minArity": 3,
+      "maxArity": 4,
       "returnType": {
         "kind": "union",
         "of": [
@@ -9995,13 +9995,30 @@
           }
         ]
       },
-      "description": "SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid",
+      "description": "SHA-2 digest (FIPS 180-4) at 256 or 512 bits, through the sha2 crate, as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Another bit count, encoding or input kind, or invalid base64, fails with kind invalid. npm's dist.integrity is \"sha512-\" followed by the 512-bit base64 digest of the tarball bytes",
       "module": "hash",
       "visual": {
         "form": "block"
       },
       "failable": {},
       "params": [
+        {
+          "name": "bits",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 256
+              },
+              {
+                "kind": "literal",
+                "value": 512
+              }
+            ]
+          },
+          "description": "The digest size: 256 or 512"
+        },
         {
           "name": "data",
           "type": {
@@ -10051,8 +10068,7 @@
         }
       ],
       "examples": [
-        "(hash/sha256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\"",
-        "(hash/sha256 \"YWJj\" \"hex\" \"bytes\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
+        "(hash/sha 256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
       ],
       "docsSource": "generated"
     },
@@ -27151,6 +27167,145 @@
       ],
       "examples": [
         "(str/uri-component-valid \"a%20b\") // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "tar/entries": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "path": "string",
+                    "data": "bytes",
+                    "executable": "boolean"
+                  }
+                }
+              },
+              {
+                "kind": "object",
+                "fields": {
+                  "ok": "boolean",
+                  "entries": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "array",
+                        "of": {
+                          "kind": "object",
+                          "fields": {
+                            "path": "string",
+                            "data": "bytes",
+                            "executable": "boolean"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "code": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "truncated"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "header-checksum"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "number"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "path"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "duplicate"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "type"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "pax"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "entry-limit"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "The regular files of a ustar archive (the bytes gzip/decompress returns for a .tgz) as [{ path, data, executable }] in archive order. Directories and pax global headers are skipped; a pax path record or a GNU long name names the next entry. The whole archive is refused, never read in part, when a header checksum does not match (header-checksum), a header number is not octal (number), an entry runs past the archive or the end-of-archive block is missing (truncated), a path is not relative with normal components only, so no leading slash, \".\", \"..\", empty component, backslash or NUL (path), a path appears twice (duplicate), an entry is a link, device or fifo (type), a pax record is malformed (pax), or there are more than maxEntries files (entry-limit). A refusal, invalid base64 or a maxEntries that is not a whole number from 0 fails with kind invalid",
+      "module": "tar",
+      "visual": {
+        "form": "block"
+      },
+      "returnSemantics": "option-branch<2,result>",
+      "failable": {},
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The tar archive bytes"
+        },
+        {
+          "name": "maxEntries",
+          "type": "number",
+          "description": "The most files accepted; more fails with kind invalid (the archive-bomb guard)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "result": "boolean"
+            },
+            "optional": [
+              "result"
+            ]
+          },
+          "optional": true,
+          "description": "With result: true, return { ok, entries, code }; failures are closed tar codes, never error text"
+        }
+      ],
+      "examples": [
+        "(tar/entries @payload.tarball 10000) // => [{ \"path\": \"package/package.json\", \"data\": \"e30=\", \"executable\": false }]"
       ],
       "docsSource": "generated"
     },

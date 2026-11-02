@@ -445,6 +445,146 @@
     "LoopChatRequest",
     "LoopChatHttp"
    ]
+  },
+  {
+   "id": "a-process-caller-is-offered-its-tools-with-no-viewer",
+   "note": "caller: process (a headless command such as orb agent): the tools are the program's own, offered with no signed-in viewer.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "caller": "process",
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-process-caller-ignores-roles-even-when-empty",
+   "note": "caller: process control: no role filter applies, so a tool with empty roles is still the program's own.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "caller": "process",
+    "tools": [
+     {
+      "read": "Note",
+      "roles": []
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
   }
  ]
 }

@@ -8,6 +8,8 @@ type RegistryClaim = { name : string!, value : string! }
 type RegistryOrb = { compiler : string? }
 type RegistryManifest = { orb : RegistryOrb? }
 type RegistryGunzip = { ok : boolean!, data : bytes, crc : number, code : string }
+type RegistryTarEntry = { path : string!, data : bytes!, executable : boolean! }
+type RegistryTarRead = { ok : boolean!, entries : [RegistryTarEntry], code : string }
 type RegistryCall = { requestId : number!, op : string!, name : string!, version : string!, integrity : string! }
 orbital PackageRegistryOrbital {
   uses Sha from "std/behaviors/std-sha256"
@@ -20,7 +22,7 @@ orbital PackageRegistryOrbital {
     queue : [RegistryRequest] @description "Requests received while one is being served." = []
     tarball : bytes @description "The tarball of the publish being served."
     gz : RegistryGunzip? @description "The gunzip answer for the publish tarball."
-    tar : bytes @description "The publish tarball gunzipped, while its package.json is located."
+    tarRead : RegistryTarRead? @description "The tar reader answer for the gunzipped publish tarball."
   }
 
   entity PackageVersion [persistent: package_versions] {
@@ -63,6 +65,10 @@ orbital PackageRegistryOrbital {
         @label "Versions per package"
         @description "Most versions one GET /packages/:name listing may read. The answer names every version, so a partial read would be a wrong answer; a package with more versions is refused through the store-unavailable answer instead of listing a cut set."
         @synonyms "version cap, listing limit"
+        @tier "policy"
+      maxEntries : number = 100000
+        @label "Archive entry cap"
+        @description "Most files a publish tarball may hold while its package.json is read for the orb.compiler range; a tarball with more, or one the tar reader refuses, records no range."
         @tier "policy"
       maxUnpackedBytes : number = 536870912
         @label "Unpacked size cap"
@@ -178,20 +184,12 @@ orbital PackageRegistryOrbital {
       REG_DIGESTED -> serving
         (set @entity.current (object/set @entity.current "integrity" @payload.digest))
         (set @entity.gz (gzip/decompress (default @entity.tarball (bytes/from-string "")) @config.maxUnpackedBytes { result: true }))
-        (set @entity.tar (default @entity.gz.data (bytes/from-string "")))
-        (emit REG_SCAN { from: 0 })
-      REG_SCAN -> serving when (= (bytes/index-of (default @entity.tar (bytes/from-string "")) (bytes/from-string "package/package.json") @payload.from) -1)
-        (emit REG_COMPILER { compiler: "" })
-      REG_SCAN -> serving when (let ((t (default @entity.tar (bytes/from-string ""))) (pos (bytes/index-of (default @entity.tar (bytes/from-string "")) (bytes/from-string "package/package.json") @payload.from))) (and (>= @pos 0) (not (and (= (% @pos 512) 0) (= (bytes/at @t (+ @pos 20)) 0) (or (= (bytes/at @t (+ @pos 156)) 48) (= (bytes/at @t (+ @pos 156)) 0)) (= (str/replace-pattern (default (bytes/to-string (bytes/slice @t (+ @pos 124) (+ @pos 135))) "") "^[0-7]{11}$" "") "")))))
-        (emit REG_SCAN { from: (+ (bytes/index-of (default @entity.tar (bytes/from-string "")) (bytes/from-string "package/package.json") @payload.from) 1) })
-      REG_SCAN -> serving when (let ((t (default @entity.tar (bytes/from-string ""))) (pos (bytes/index-of (default @entity.tar (bytes/from-string "")) (bytes/from-string "package/package.json") @payload.from))) (and (>= @pos 0) (= (% @pos 512) 0) (= (bytes/at @t (+ @pos 20)) 0) (or (= (bytes/at @t (+ @pos 156)) 48) (= (bytes/at @t (+ @pos 156)) 0)) (= (str/replace-pattern (default (bytes/to-string (bytes/slice @t (+ @pos 124) (+ @pos 135))) "") "^[0-7]{11}$" "") "")))
-        (let ((t (default @entity.tar (bytes/from-string "")))
-              (pos (bytes/index-of (default @entity.tar (bytes/from-string "")) (bytes/from-string "package/package.json") @payload.from)))
-          (let ((size (default (str/to-number (str/concat "0o" (default (bytes/to-string (bytes/slice @t (+ @pos 124) (+ @pos 135))) ""))) 0)))
-            (let ((m (json/parse (default (bytes/to-string (bytes/slice @t (+ @pos 512) (+ @pos 512 @size))) "") RegistryManifest)))
-              (emit REG_COMPILER { compiler: (if (= @m null) "" (if (= (object/get @m "orb") null) "" (default (object/get (object/get @m "orb") "compiler") ""))) }))))
+        (set @entity.tarRead (tar/entries (default @entity.gz.data (bytes/from-string "")) @config.maxEntries { result: true }))
+        (let ((e (array/find (default @entity.tarRead.entries []) (fn x (= @x.path "package/package.json")))))
+          (let ((m (if (= @e null) null (json/parse (default (bytes/to-string @e.data) "") RegistryManifest))))
+            (emit REG_COMPILER { compiler: (if (= @m null) "" (if (= (object/get @m "orb") null) "" (default (object/get (object/get @m "orb") "compiler") ""))) })))
       REG_COMPILER -> serving
-        (set @entity.tar (bytes/from-string ""))
+        (set @entity.tarRead null)
         (persist create PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), name: @entity.current.name, version: @entity.current.version, integrity: @entity.current.integrity, tarball: @entity.tarball, yanked: false, compiler: @payload.compiler, publishedAt: (time/now) } { emit: { success: REGISTRY_PUBLISHED, failure: REGISTRY_STORE_REFUSED } })
       REGISTRY_PUBLISHED -> serving
         (set @entity.tarball (bytes/from-string ""))
@@ -271,11 +269,6 @@ orbital PackageRegistryOrbital {
       }
         @description "A package version was published; integrity is sha256 over its tarball bytes, hex."
         @tier "primary"
-      REG_SCAN -> internal {
-        from : number!
-      }
-        @description "Internal: look for the package.json header in the gunzipped publish tarball."
-        @tier "secondary"
       REG_COMPILER -> internal {
         compiler : string!
       }

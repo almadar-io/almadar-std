@@ -148,7 +148,7 @@ orbital SocialGraphOrbital {
                 (let ((vpct (object/get @vstat convergencePct 0)))
                   {
                     peerRef: (str/slice @entity.reqRandom (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3))))
-                    handle: (str/concat "peer-" (str/slice (default (hash/sha256 (object/get @vm memberId "") "hex") "") 0 6))
+                    handle: (str/concat "peer-" (str/slice (default (hash/sha 256 (object/get @vm memberId "") "hex") "") 0 6))
                     conceptsCompleted: (object/get @vstat completed 0)
                     convergencePct: @vpct
                     activeNow: (<= (time/diff @now (object/get @vm lastSeenOnNode @config.epoch) "ms") (* @config.activeNowMinutes 60000))
@@ -456,14 +456,14 @@ orbital SocialGraphOrbital {
 
     state loadingMessages {
       INIT -> idle
-      MessagesLoaded -> idle when (= (hash/sha256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
+      MessagesLoaded -> idle when (= (hash/sha 256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
         (emit SOCIAL_CONNECTION_FAILED { error: "the peer handle could not be derived" })
-      MessagesLoaded -> idle when (!= (hash/sha256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
+      MessagesLoaded -> idle when (!= (hash/sha 256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
         (let ((vconn (array/first @entity.scratchConn)))
           (if (= @vconn null) (emit SOCIAL_CONNECTION_FAILED { error: "the connection was not loaded" }) (emit SOCIAL_VIEWED {
             connectionId: @entity.reqConnection
             status: @entity.scratchStatus
-            peerHandle: (str/concat "peer-" (str/slice (default (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqMember) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") "") 0 6))
+            peerHandle: (str/concat "peer-" (str/slice (default (hash/sha 256 (if (= (object/get @vconn callerId "") @entity.reqMember) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") "") 0 6))
             originKind: (object/get @vconn originKind "")
             originLabel: (object/get @vconn originId "")
             badges: (array/map (let ((noSocialBadges : SocialBadges [])) (object/get @vconn badges @noSocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))

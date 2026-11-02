@@ -4,7 +4,7 @@ app std-orb-behaviors [
   fs: { "/dev/fd/0": [read], cwd: "**": [read], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   exec: ["kill", "orb"],
-  net: { "openrouter.ai:443": [tcp] },
+  net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
   description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` (`--topics` lists each package and topic once with its count, counted here over the rows) lists the installed behaviors under the scopes (`behavior/catalog`, which lists no vectors; `--no-vectors` reads no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector; a whole-behavior description carries each orbital's `forwards`, the unhandled controls its `emitsScope external` traits leave for the embedder, from the control-unhandled analysis over std-orb-fired-events); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (built by std-behavior-texts; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). With vectors, the catalog lists rows asked for with `texts: true`, builds the organism and capability texts (std-behavior-texts), reads the packages' snapshots and the environment (std-vector-sources) and resolves every text's vector (std-vector-resolve: snapshots, then the user store, then the configured provider); `describe --knob-vectors` does the same for the trait's knob texts, and `texts` builds every kind itself, package by package in first-mention order and path order. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
@@ -546,8 +546,10 @@ orbital OrbBehaviorsOrbital {
         (set @entity.vpath @payload.result.path)
         (set @entity.stem (str/replace-pattern (os/path-base @payload.result.path) "\\.[^.]*$" ""))
         (behavior/packages { emit: { success: PACKAGES_LISTED, failure: BEHAVIORS_FAILED } })
-      PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (not (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/"))))))
+      PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (not (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/"))))) (validate/required @entity.base))
         (emit TRAIT_ATTACHED { result: @entity.base })
+      PACKAGES_LISTED -> ready when (and (= @entity.sub "describe") (not (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/"))))) (not (validate/required @entity.base)))
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the trait description is missing" })
       PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/")))))
         (set @entity.vpaths (array/map (array/filter @payload.result (fn p (and (str/startsWith @entity.vpath (str/concat @p.root "/")) (!= (default @p.vectors "") "")))) (fn p { path: (default @p.vectors ""), in: (default @p.vectorsIn ""), rel: (default @p.vectorsRel "") })))
         (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")) } {
@@ -558,10 +560,12 @@ orbital OrbBehaviorsOrbital {
         (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: KNOB_SOURCED, failure: BEHAVIORS_FAILED }
         })
-      KNOB_SOURCED -> working when (!= (as @payload.result WrittenProgram) null)
+      KNOB_SOURCED -> working when (and (!= (as @payload.result WrittenProgram) null) (validate/required @entity.whole))
         (emit BV_KNOB_TEXTS { name: @entity.stem, described: @entity.whole, written: (default (as @payload.result WrittenProgram) { orbitals: [] }) })
       KNOB_SOURCED -> ready when (= (as @payload.result WrittenProgram) null)
         (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/source: the program is not a program" })
+      KNOB_SOURCED -> ready when (and (!= (as @payload.result WrittenProgram) null) (not (validate/required @entity.whole)))
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the behavior description is not a description" })
       KNOB_TEXTS_BUILT -> working when (= @entity.sub "describe")
         (set @entity.wanted (array/filter (array/map (default @entity.base.knobs []) (fn k (let ((key (str/concat @entity.stem "/" (default (array/first (array/map (array/filter (default @entity.whole.orbitals []) (fn o (array/some (default @o.traits []) (fn t (= @t.trait @entity.trait))))) (fn o (default @o.value.orbital "")))) "") "/" @entity.trait "/" @k.key))) (let ((hit (array/find @payload.texts (fn t (= @t.key @key))))) (if (= @hit null) { key: "", text: "" } { key: @key, text: (default @hit.text "") }))))) (fn w (!= @w.key ""))))
         (emit BV_SOURCES { paths: @entity.vpaths })
@@ -624,10 +628,12 @@ orbital OrbBehaviorsOrbital {
         (behavior/source { behavior: (default @entity.cur.behavior "") } {
           emit: { success: TX_SOURCED, failure: BEHAVIORS_FAILED }
         })
-      TX_SOURCED -> working when (!= (as @payload.result WrittenProgram) null)
+      TX_SOURCED -> working when (and (!= (as @payload.result WrittenProgram) null) (validate/required @entity.whole))
         (emit BV_KNOB_TEXTS { name: (default @entity.cur.name ""), described: @entity.whole, written: (default (as @payload.result WrittenProgram) { orbitals: [] }) })
       TX_SOURCED -> ready when (= (as @payload.result WrittenProgram) null)
         (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/source: the program is not a program" })
+      TX_SOURCED -> ready when (and (!= (as @payload.result WrittenProgram) null) (not (validate/required @entity.whole)))
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the behavior description is not a description" })
       KNOB_TEXTS_BUILT -> working when (= @entity.sub "texts")
         (set @entity.gKnobs (array/concat @entity.gKnobs @payload.texts))
         (set @entity.ri (+ @entity.ri 1))

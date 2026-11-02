@@ -88,7 +88,7 @@ orbital AnalyticsCollectorOrbital {
           } }))
 
       BEACON_ACCEPTED -> ready when (= @entity.saltDay (time/format @payload.draft.ts "YYYY-MM-DD"))
-        (persist create AnalyticsEvent { ts: @payload.draft.ts, name: @payload.draft.name, domain: @payload.draft.domain, path: @payload.draft.path, referrer: @payload.draft.referrer, screenWidth: @payload.draft.screenWidth, props: @payload.draft.props, visitorId: (default (hash/sha256 (str/concat @entity.salt ":" @payload.draft.ip ":" @payload.draft.ua ":" @payload.draft.domain) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
+        (persist create AnalyticsEvent { ts: @payload.draft.ts, name: @payload.draft.name, domain: @payload.draft.domain, path: @payload.draft.path, referrer: @payload.draft.referrer, screenWidth: @payload.draft.screenWidth, props: @payload.draft.props, visitorId: (default (hash/sha 256 (str/concat @entity.salt ":" @payload.draft.ip ":" @payload.draft.ua ":" @payload.draft.domain) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
       BEACON_ACCEPTED -> ready when (!= @entity.saltDay (time/format @payload.draft.ts "YYYY-MM-DD"))
         (set @entity.pending @payload.draft)
         (fetch AnalyticsSalt { id: (time/format @payload.draft.ts "YYYY-MM-DD"), emit: { success: SALT_LOADED, failure: SALT_ABSENT } })
@@ -125,7 +125,7 @@ orbital AnalyticsCollectorOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Beacon not stored: " @payload.error) })
 
       SALT_READY -> ready
-        (persist create AnalyticsEvent { ts: (default @entity.pending.ts @now), name: @entity.pending.name, domain: @entity.pending.domain, path: @entity.pending.path, referrer: @entity.pending.referrer, screenWidth: @entity.pending.screenWidth, props: @entity.pending.props, visitorId: (default (hash/sha256 (str/concat @entity.salt ":" (default @entity.pending.ip "") ":" (default @entity.pending.ua "") ":" (default @entity.pending.domain "")) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
+        (persist create AnalyticsEvent { ts: (default @entity.pending.ts @now), name: @entity.pending.name, domain: @entity.pending.domain, path: @entity.pending.path, referrer: @entity.pending.referrer, screenWidth: @entity.pending.screenWidth, props: @entity.pending.props, visitorId: (default (hash/sha 256 (str/concat @entity.salt ":" (default @entity.pending.ip "") ":" (default @entity.pending.ua "") ":" (default @entity.pending.domain "")) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
         (set @entity.pending null)
 
       EVENT_RECORDED -> ready
@@ -155,7 +155,7 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "Internal: the day's salt row was read."
       SALT_ABSENT {
-        error : string
+        error : string!
         code : string
       }
         @description "Internal: the day's salt row could not be read; not-found means it does not exist yet."
@@ -173,12 +173,12 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "Internal: the day's salt row was created."
       SALT_TAKEN {
-        error : string
+        error : string!
         code : string
       }
         @description "Internal: the salt row could not be created; duplicate-id means another instance created it first."
       SALT_UNREADABLE {
-        error : string
+        error : string!
         code : string
       }
         @description "Internal: the salt row another instance created could not be read."
@@ -187,7 +187,7 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "Internal: the beacon's event row was stored."
       EVENT_UNRECORDED {
-        error : string
+        error : string!
         code : string
       }
         @description "Internal: the beacon's event row could not be stored."
@@ -281,7 +281,7 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "Internal: the stored events of the window."
       STATS_UNREADABLE {
-        error : string
+        error : string!
         code : string
       }
         @description "Internal: the stored events could not be read."

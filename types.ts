@@ -270,6 +270,7 @@ export const STD_MODULES = [
   'ecdh',
   'aes-gcm',
   'gzip',
+  'tar',
   'brotli',
   'xml',
   'yaml',

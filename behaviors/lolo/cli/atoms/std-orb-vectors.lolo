@@ -297,7 +297,7 @@ orbital OrbVectorsOrbital {
         (emit VECTORS_CMD_ANSWERED { status: 400, body: "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]" })
       VECTORS_ARGS_DONE -> packaging when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (array/len (default (object/get @payload.flags "package") [])) 1))
         ;; the guard fixed --package at exactly one value, so the default never answers
-        (set @entity.pkgDir (default (array/first (object/get @payload.flags "package")) ""))
+        (set @entity.pkgDir (default (array/first (default (object/get @payload.flags "package") [])) ""))
         (set @entity.outArg (default (array/first (default (object/get @payload.flags "out") [""])) ""))
         (emit VECTORS_PACKAGE_NEEDED { dir: @entity.pkgDir })
     }
