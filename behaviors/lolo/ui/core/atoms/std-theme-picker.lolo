@@ -1,0 +1,114 @@
+app std-theme-picker [
+  version: "1.0.0",
+  description: "std-theme-picker — the viewer's theme switcher: a select listing the themes the app offers, the one in effect selected. Picking one runs theme/set where the pick happens, in the viewer's browser, so @currentTheme of every orbital, an orbital's own theme included, becomes that key and the whole app repaints at once; the empty entry (the default label) runs theme/clear and the declared themes apply again. A key the program does not declare (the app's theme, an orbital's theme or the app's themes list) is refused with undeclared-theme and the reason is shown under the select. The kernel holds the pick for the viewer's session. With keep on, it is also kept in the bound ThemePick entity, one row per viewer (id the viewer's @user.id), and bound again when the picker mounts; an importing orbital that wants it kept beyond the session turns keep on and retags the entity, for example [persistent: theme_picks]. Compose ThemePicker once per page, in the slot where the select belongs."
+]
+type ThemeChoiceOption = { value : string!, label : string! }
+orbital ThemePickerOrbital {
+  entity ThemePick [runtime] {
+    id : string! @description "The viewer the pick belongs to: their @user.id."
+    theme : string @description "The theme key the viewer picked; empty for the declared themes." = ""
+    current : string @description "The theme key in effect for the viewer, as the select shows it." = ""
+    problem : string @description "Why the last pick was refused; empty when it was not." = ""
+  }
+
+  trait ThemePicker -> @rebindable ThemePick {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.current @currentTheme)
+        (render-ui @config.slot @config.pickerContent)
+        (when @config.keep (fetch ThemePick { emit: { success: PICKS_READ, failure: PICKS_UNREAD } }))
+      PICKS_READ -> idle
+        (let ((kept (object/get (default (array/find ?data (fn r (== @r.id @user.id))) { id: "", theme: "" }) theme "")))
+          (when (!= @kept "") (theme/set @kept { emit: { success: THEME_BOUND, failure: THEME_REFUSED } })))
+      PICKS_UNREAD -> idle
+        (set @entity.problem (default ?error "the kept theme could not be read"))
+        (render-ui @config.slot @config.pickerContent)
+      THEME_PICKED -> idle when (!= ?value "")
+        (theme/set ?value { emit: { success: THEME_BOUND, failure: THEME_REFUSED } })
+      THEME_PICKED -> idle when (== ?value "")
+        (theme/clear { emit: { success: THEME_CLEARED, failure: THEME_REFUSED } })
+      THEME_BOUND -> idle
+        (set @entity.current ?theme)
+        (set @entity.problem "")
+        (render-ui @config.slot @config.pickerContent)
+        (when @config.keep (persist upsert ThemePick { id: @user.id, theme: ?theme } { emit: { success: PICK_KEPT, failure: PICK_UNKEPT } }))
+      THEME_CLEARED -> idle
+        (set @entity.current ?theme)
+        (set @entity.problem "")
+        (render-ui @config.slot @config.pickerContent)
+        (when @config.keep (persist upsert ThemePick { id: @user.id, theme: "" } { emit: { success: PICK_KEPT, failure: PICK_UNKEPT } }))
+      THEME_REFUSED -> idle
+        (set @entity.problem (str/concat ?kind ": " ?error))
+        (render-ui @config.slot @config.pickerContent)
+      PICK_KEPT -> idle
+      PICK_UNKEPT -> idle
+        (set @entity.problem (default ?error "the pick could not be kept"))
+        (render-ui @config.slot @config.pickerContent)
+    }
+
+    listens {
+      THEME_PICKED { value : string! }
+        @description "The viewer chose a theme key from the select; empty returns to the declared themes."
+      PICKS_READ { data : [ThemePick]!, totalCount : number }
+        @description "The kept picks were read."
+      PICKS_UNREAD { error : string, code : string }
+        @description "The kept picks could not be read."
+      THEME_BOUND { theme : string! }
+        @description "theme/set bound the key to the viewer's session."
+      THEME_CLEARED { theme : string! }
+        @description "theme/clear returned the session to its declared themes; theme is the one now in effect."
+      THEME_REFUSED { error : string!, kind : string! }
+        @description "theme/set or theme/clear refused, for example undeclared-theme."
+      PICK_KEPT { id : string }
+        @description "The pick was kept in ThemePick."
+      PICK_UNKEPT { error : string, code : string }
+        @description "The pick could not be kept."
+    }
+
+    config {
+      keep : boolean = false
+        @label "Keep the pick"
+        @description "Off: the pick lasts as long as the viewer's session, held by the kernel. On: the pick is also kept in the bound ThemePick entity and bound again when the picker mounts; retag the entity (for example [persistent: theme_picks], one table for every page) to keep it beyond the session."
+        @synonyms "remember theme, persist theme, save appearance"
+        @tier "presentation"
+      slot : slot = main
+        @label "Slot"
+        @description "Where the select renders; a page-level slot such as hud-top shows it on every page that composes the picker."
+        @tier "presentation"
+      themes : [ThemeChoiceOption] = []
+        @label "Themes"
+        @description "The themes the viewer may pick, each a registry key (value) and its label. Each key must be in the app's themes list, or be the app's or an orbital's theme, so its stylesheet ships."
+        @synonyms "skins, color schemes, appearance options, theme list"
+        @tier "presentation"
+      label : string = "Theme"
+        @label "Label"
+        @description "The select's visible label."
+        @tier "presentation"
+      defaultLabel : string = "Default"
+        @label "Default entry"
+        @description "The label of the empty entry that returns to the declared themes."
+        @tier "presentation"
+      pickerContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: xs
+        children: [
+          {
+            type: select
+            label: @config.label
+            options: (array/concat [{ value: "", label: @config.defaultLabel }] @config.themes)
+            value: @entity.current
+            action: THEME_PICKED
+          },
+          { type: typography, variant: caption, color: error, className: (if (== @entity.problem "") hidden ""), content: @entity.problem }
+        ]
+      }
+        @label "Picker body"
+        @tier "internal"
+    }
+  }
+
+  page "/theme-picker" as ThemePickerPage -> ThemePicker
+}

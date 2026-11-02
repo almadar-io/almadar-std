@@ -989,6 +989,51 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["identity/sign-out", { "emit": { "success": "SIGNED_OUT" } }]',
     effect: { kind: 'custom', produces: shape({ subject: STRING }) },
   },
+  'theme/set': {
+    module: 'core',
+    emitKeys: ['success', 'failure'],
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Bind a theme key as the session's theme (G-CROSS-395, on the identity path): (theme/set key { emit }). The key must be one the program declares: the app's theme, an orbital's own theme, or a key in the app's themes list; any other key, or an empty one, answers failure kind undeclared-theme, and a value that is not a string answers failure kind invalid. @currentTheme in this session is then the key, ahead of every declared theme (the app's and each orbital's own). The theme takes hold when the step commits. Whether a pick is kept beyond the session is the program's: it keeps the key in an entity it declares and calls theme/set from it. The success payload is { theme }; the failure payload is { error, kind }. It runs on whichever side the calling trait runs (runsOn any): a client trait binds the key in the browser's kernel at once, and a server trait's binding reaches the client in its frames; a later binding replaces an earlier one.",
+    hasSideEffects: true,
+    runsOn: 'any',
+    returnType: 'void',
+    params: [
+      { name: 'key', type: 'string', description: 'A declared theme key, such as "ink-wash-dark"' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { theme } payload and the { error, kind } failure',
+        optional: true,
+      },
+    ],
+    example: '["theme/set", "@payload.value", { "emit": { "success": "THEME_SET", "failure": "THEME_REFUSED" } }]',
+    effect: { kind: 'custom', produces: shape({ theme: STRING }) },
+  },
+  'theme/clear': {
+    module: 'core',
+    emitKeys: ['success', 'failure'],
+    category: 'effect',
+    minArity: 0,
+    maxArity: 1,
+    description:
+      "Return the session to its declared theme (G-CROSS-395): (theme/clear { emit }). @currentTheme is again each orbital's own theme or the app's. The success payload is { theme }, the app-level theme now in effect; like theme/set it takes hold when the step commits and runs on whichever side the calling trait runs.",
+    hasSideEffects: true,
+    runsOn: 'any',
+    returnType: 'void',
+    params: [
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { theme } payload and the { error, kind } failure',
+        optional: true,
+      },
+    ],
+    example: '["theme/clear", { "emit": { "success": "THEME_CLEARED" } }]',
+    effect: { kind: 'custom', produces: shape({ theme: STRING }) },
+  },
   'credential-connect': {
     module: 'core',
     category: 'effect',
