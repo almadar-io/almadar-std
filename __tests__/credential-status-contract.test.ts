@@ -63,7 +63,9 @@ describe('credential-connect grant contract', () => {
 
   it('declares grant as a union of the four literal words and publishes it in the table', () => {
     expect(request).toMatchObject({ kind: 'object', fields: { grant: { kind: 'union' } } });
-    const words = (request as { fields: { grant: { of: { value: string }[] } } }).fields.grant.of.map((member) => member.value);
+    const grant = typeof request === 'object' && request.kind === 'object' ? request.fields.grant : undefined;
+    const members = typeof grant === 'object' && grant.kind === 'union' ? grant.of : [];
+    const words = members.map((member) => (typeof member === 'object' && member.kind === 'literal' ? member.value : null));
     expect(words).toEqual(['authorization_code', 'refresh_token', 'jwt-bearer', 'json-token']);
     expect(canonical.operators['credential-connect'].params[0]).toEqual(connect.params?.[0]);
     expect(canonical.operators['credential-connect'].closedCall).toEqual(connect.closedCall);
