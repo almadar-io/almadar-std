@@ -1,6 +1,6 @@
 app std-app-layout [
-  version: "1.5.0",
-  description: "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM) and account/settings pages: the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions. Bind once per orbital — the consumer rebinds linkedEntity via `XAppLayout = AppShell.traits.AppLayout -> XEntity` so multiple orbitals in one file each get their own chrome without colliding on a shared atom entity."
+  version: "1.6.0",
+  description: "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot, with an optional headerTrait in the top bar. Use for list-style apps (CMS / helpdesk / CRM) and account/settings pages: the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions. Bind once per orbital — the consumer rebinds linkedEntity via `XAppLayout = AppShell.traits.AppLayout -> XEntity` so multiple orbitals in one file each get their own chrome without colliding on a shared atom entity."
 ]
 ;; @capabilities "settings page shell, preferences page, account settings layout, profile settings, admin console shell"
 type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
@@ -48,6 +48,7 @@ orbital AppLayoutOrbital {
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
+            headerActions: @config.headerTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
@@ -87,6 +88,7 @@ orbital AppLayoutOrbital {
             searchEvent: (if @config.showSearch @config.searchEvent null)
             showThemeToggle: @config.showThemeToggle
             sidebarContent: @config.sidebarTrait
+            headerActions: @config.headerTrait
             topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             userMenuItems: (array/filter @config.userMenuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
@@ -156,6 +158,11 @@ orbital AppLayoutOrbital {
         @label "Sidebar trait"
         @description "Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only."
         @synonyms "sidebar tree, nav tree, page tree in sidebar, hierarchy rail"
+        @tier "presentation"
+      headerTrait : trait
+        @label "Header trait"
+        @description "Optional trait rendered in the top bar, right before the theme toggle and the topBarActions: a theme picker, a workspace switcher or any control that belongs on every page. Unset leaves the top bar as it is."
+        @synonyms "header control, top bar content, header slot, toolbar trait"
         @tier "presentation"
       appName : string = App
         @label "What should this app be called?"
