@@ -1,0 +1,389 @@
+{
+  "atom": "cli/atoms/std-orb-lint-guest-view-not-client.lolo",
+  "trait": "OrbLintGuestViewNotClient",
+  "note": "A render-ui effect whose content tree holds a guest-view node, in a trait whose dispatch mode is not client, is reported at its transition. Cases: a server trait, the client control, a guest-view nested deep in a stack, and the text guest-view in a typography string.",
+  "cases": [
+    {
+      "id": "server-trait-painting-a-guest-view-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Stage",
+                  "traits": [
+                    {
+                      "name": "Stage",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "guest-view",
+                                  "guest": "guest-1",
+                                  "source": "Stage",
+                                  "deliver": "GV_CONTROL",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GV_CONTROL"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "guest-view-not-client",
+                  "findings": [
+                    {
+                      "code": "ORB_GUEST_VIEW_NOT_CLIENT",
+                      "path": "orbitals[0 (Stage)].traits[0 (Stage)].stateMachine.transitions[0]",
+                      "message": "Trait 'Stage' paints a guest-view but does not run on the client: the kernel routes a click inside the guest only through the client render store, so its controls are dead",
+                      "suggestion": "Mark the painting trait [client]; run the program/* calls in a server trait",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        }
+      ]
+    },
+    {
+      "id": "client-trait-painting-a-guest-view-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Stage",
+                  "traits": [
+                    {
+                      "name": "Stage",
+                      "linkedEntity": "Run",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "guest-view",
+                                  "guest": "guest-1",
+                                  "source": "Stage",
+                                  "deliver": "GV_CONTROL",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GV_CONTROL"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "guest-view-not-client",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        }
+      ]
+    },
+    {
+      "id": "guest-view-nested-deep-in-a-stack-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Stage",
+                  "traits": [
+                    {
+                      "name": "Stage",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "children": [
+                                    {
+                                      "type": "box",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "children": [
+                                            {
+                                              "type": "guest-view",
+                                              "guest": "guest-1",
+                                              "source": "Stage",
+                                              "deliver": "GV_CONTROL",
+                                              "children": []
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GV_CONTROL"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "guest-view-not-client",
+                  "findings": [
+                    {
+                      "code": "ORB_GUEST_VIEW_NOT_CLIENT",
+                      "path": "orbitals[0 (Stage)].traits[0 (Stage)].stateMachine.transitions[0]",
+                      "message": "Trait 'Stage' paints a guest-view but does not run on the client: the kernel routes a click inside the guest only through the client render store, so its controls are dead",
+                      "suggestion": "Mark the painting trait [client]; run the program/* calls in a server trait",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        }
+      ]
+    },
+    {
+      "id": "guest-view-text-in-a-typography-string-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Stage",
+                  "traits": [
+                    {
+                      "name": "Stage",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "text": "guest-view"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GV_CONTROL"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "guest-view-not-client",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintGuestViewNotClient"
+        }
+      ]
+    }
+  ]
+}

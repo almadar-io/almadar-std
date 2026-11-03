@@ -189,6 +189,104 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "a-loaded-behavior-hands-its-program-to-the-guest-session",
+   "steps": [
+    {
+     "trait": "PlaygroundOpen",
+     "event": "BEHAVIOR_LOADED",
+     "payload": {
+      "behavior": "almadar-std/std-x",
+      "programJson": "{\"name\":\"std-x\",\"orbitals\":[]}"
+     },
+     "entity": {
+      "id": "p"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_OPEN",
+        "payload": {
+         "program": {
+          "name": "std-x",
+          "orbitals": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-program-that-is-not-readable-is-an-error",
+   "steps": [
+    {
+     "trait": "PlaygroundOpen",
+     "event": "BEHAVIOR_LOADED",
+     "payload": {
+      "behavior": "almadar-std/std-x",
+      "programJson": "not json"
+     },
+     "entity": {
+      "id": "p"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "GUEST_OPEN"
+      ],
+      "emits": [
+       {
+        "event": "GUEST_FAIL",
+        "payload": {
+         "message": "The opened behavior could not be read to run."
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opening-another-behavior-resets-the-previous-guest",
+   "steps": [
+    {
+     "trait": "PlaygroundStage",
+     "event": "OPEN",
+     "payload": {
+      "behavior": "almadar-std/std-y"
+     },
+     "entity": {
+      "id": "p",
+      "status": "open",
+      "guestHandle": "guest-1"
+     },
+     "from": "open",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "emit",
+        "arg0": "GUEST_RESET"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "defaults": [
+    "PlaygroundLoader"
+   ]
   }
  ]
 }

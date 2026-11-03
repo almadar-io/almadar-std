@@ -8,7 +8,7 @@ type FiredR = { h : string!, ok : boolean!, it : [FiredItem]! }
 type FiredS = { s : [string]!, ls : [string]! }
 type FiredB = { f : boolean!, t : boolean!, lit : boolean!, v : string! }
 type FiredLive = { ev : string!, site : string! }
-type FiredRec = { trait : string!, ev : [string]!, ctl : [string]!, lv : [FiredLive]!, br : [string]! }
+type FiredRec = { trait : string!, ev : [string]!, ctl : [string]!, lv : [FiredLive]! }
 type FiredScalar = string | number | boolean
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
 type FiredField = { default : FiredNode? }
@@ -79,7 +79,7 @@ orbital OrbFiredEventsOrbital {
             (let ((cond (and (= @op "if") (>= @len 3)))
                   (its (array/map @k (fn r (object/get (if (= @r null) @nr @r) "it")))))
               (let ((flat (array/flatten @its)))
-                (if (and (not @cond) (= (array/len @flat) 0) (!= @op "emit") (!= @op "program/dispatch") (!= @op "behavior/apply")) @nr
+                (if (and (not @cond) (= (array/len @flat) 0) (!= @op "emit") (!= @op "program/dispatch")) @nr
                   (let ((dead (and @cond (let ((c1 (array/nth @n 1))) (if (= @c1 null) true (if (or (and (validate/array @c1) (> (array/len @c1) 0) (let ((e0 (array/nth @c1 0))) (and (validate/string @e0) (or (not (array/includes ["and", "or", "not", "=", "==", "!="] @e0)) (and (array/includes ["=", "==", "!="] @e0) (not (and (= (array/len @c1) 3) (let ((x1 (array/nth @c1 1)) (x2 (array/nth @c1 2))) (and (or (= @x1 null) (validate/number @x1) (validate/boolean @x1) (and (validate/string @x1) (or (not (str/startsWith @x1 (quote "@"))) (str/startsWith @x1 (quote "@config."))))) (or (= @x2 null) (validate/number @x2) (validate/boolean @x2) (and (validate/string @x2) (or (not (str/startsWith @x2 (quote "@"))) (str/startsWith @x2 (quote "@config.")))))))))))))) (and (validate/string @c1) (str/startsWith @c1 (quote "@")) (not (str/startsWith @c1 (quote "@config."))))) false (object/get (let ((jj 1)) (tree/fold @c1 (fn (m q)
   (if (validate/array @m)
     (let ((len2 (array/len @m)))
@@ -114,19 +114,7 @@ orbital OrbFiredEventsOrbital {
                                            [])
                                          []))
                                      [])
-                                   (if (and (>= @len 2) (= @op "emit")) (let ((r1 (let ((q1 (array/nth @k 1))) (if (= @q1 null) @nr @q1)))) (if (object/get @r1 "ok") [{ k: "e", h: (object/get @r1 "h"), site: "", kind: "", src: "" }] [])) [])
-                                   (if (and (= @len 3) (= @op "behavior/apply"))
-                                     (let ((ov (array/nth @n 2)))
-                                       (if (validate/object @ov)
-                                         (let ((br (object/get @ov "bridge" null)))
-                                           (if (validate/object @br)
-                                             (let ((bl (object/get @br "listens" null)) (be (object/get @br "emits" null)))
-                                               (if (and (validate/array @bl) (validate/array @be) (array/every @bl (fn z (validate/string @z))) (array/every @be (fn z (validate/string @z))))
-                                                 (array/map @bl (fn z { k: "b", h: @z, site: "", kind: "", src: "" }))
-                                                 []))
-                                             []))
-                                         []))
-                                     []))))
+                                   (if (and (>= @len 2) (= @op "emit")) (let ((r1 (let ((q1 (array/nth @k 1))) (if (= @q1 null) @nr @q1)))) (if (object/get @r1 "ok") [{ k: "e", h: (object/get @r1 "h"), site: "", kind: "", src: "" }] [])) []))))
                       (let ((all (array/flatten (array/concat (array/concat [@local] (if @cond [(array/flatten (array/concat (array/concat [(array/nth @its 1)] (if @dead [] [(array/nth @its 2)])) (if (>= @len 4) [(array/nth @its 3)] [])))] [@flat]))
                                                               (if @cond [(array/filter @flat (fn x (= (object/get @x "k") "o")))] [])))))
                         (if (= (array/len @all) 0) @nr
@@ -248,7 +236,7 @@ orbital OrbFiredEventsOrbital {
                             (let ((tp (array/map (array/range 0 (array/len @trs)) (fn ti (let ((x (array/nth @trs @ti))) { x: @x, a: (or (= (object/get @x "guard" null) null) (array/includes @evAll (str/concat "~T" @ti))) })))))
                               (let ((reach (if (= @init null) [] (array/reduce (array/range 0 (array/len @sts)) [(object/get @init "name" "")] (fn (vis i) (array/unique (array/concat @vis (array/map (array/filter @tp (fn p (and (object/get @p "a") (let ((fr (let ((f (object/get (object/get @p "x") "from" ""))) (if (validate/string @f) (array/append [] @f) @f)))) (or (array/includes @fr "*") (array/some @fr (fn q (array/includes @vis @q)))))))) (fn p (object/get (object/get @p "x") "to" ""))))))))))
                                 (let ((liveIdx (array/map (array/filter @tp (fn p (and (object/get @p "a") (or (= @init null) (let ((fr (let ((f (object/get (object/get @p "x") "from" ""))) (if (validate/string @f) (array/append [] @f) @f)))) (or (array/includes @fr "*") (array/some @fr (fn q (array/includes @reach @q))))))))) (fn p (str/concat "t" (array/indexOf @trs (object/get @p "x")))))))
-                                  { trait: (object/get @t "name" ""), ev: (array/filter @evAll (fn e (not (str/startsWith @e "~T")))), ctl: (array/map (array/filter @items (fn x (= (object/get @x "k") "c"))) (fn x (object/get @x "h"))), lv: (array/map (array/filter @items (fn x (and (= (object/get @x "k") "c") (= (object/get @x "kind") "y") (or (= (object/get @x "src") "tick") (array/includes @liveIdx (object/get @x "src")))))) (fn x { ev: (object/get @x "h"), site: (object/get @x "site") })), br: (array/map (array/filter @items (fn x (= (object/get @x "k") "b"))) (fn x (object/get @x "h"))) })))))))))))))))
+                                  { trait: (object/get @t "name" ""), ev: (array/filter @evAll (fn e (not (str/startsWith @e "~T")))), ctl: (array/map (array/filter @items (fn x (= (object/get @x "k") "c"))) (fn x (object/get @x "h"))), lv: (array/map (array/filter @items (fn x (and (= (object/get @x "k") "c") (= (object/get @x "kind") "y") (or (= (object/get @x "src") "tick") (array/includes @liveIdx (object/get @x "src")))))) (fn x { ev: (object/get @x "h"), site: (object/get @x "site") })) })))))))))))))))
             (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
                   (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d"))))
                   (kernelSet (default (object/fromEntries (array/map (array/flatten (array/map (object/get (default @payload.program { orbitals: [] }) "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get @t "listens" []) (fn l (and (object/has @l "key") (!= (object/get @l "source.trait" "") "")))) (fn l (object/get @l "source.trait" ""))))))))) (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
@@ -256,13 +244,12 @@ orbital OrbFiredEventsOrbital {
                 scope: @payload.scope,
                 byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" []))))))]))) {}),
                 byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/concat (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" [])))) (if (object/has @kernelSet (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d")) ["DELIVERY_REJECTED"] []))))]))) {}),
-                controls: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (let ((pairs (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "lv" [])))))) (array/map (array/sort (array/unique (array/map @pairs (fn p (object/get @p "ev"))))) (fn ev { event: @ev, sites: (array/sort (array/unique (array/map (array/filter @pairs (fn p (= (object/get @p "ev") @ev))) (fn p (object/get @p "site"))))) })))]))) {}),
-                bridged: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "br" []))))))]))) {}) }))))
+                controls: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (let ((pairs (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "lv" [])))))) (array/map (array/sort (array/unique (array/map @pairs (fn p (object/get @p "ev"))))) (fn ev { event: @ev, sites: (array/sort (array/unique (array/map (array/filter @pairs (fn p (= (object/get @p "ev") @ev))) (fn p (object/get @p "site"))))) })))]))) {}) }))))
     }
 
     emits {
-      FIRED_EVENTS -> external { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]!  controls : Map string [FiredControl]!  bridged : Map string [string]! }
-        @description "The event names the program produces, per trait: byControl by a rendered control's event-bearing prop, byEffect by an emit effect or an operator's emit config; controls the live non-notification controls of the registry's control props with the pattern.prop sites that fire each (reachable, unguarded-false transitions and ticks only); bridged the events a bridged behavior/apply embed in the trait delivers into the embed."
+      FIRED_EVENTS -> external { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]!  controls : Map string [FiredControl]! }
+        @description "The event names the program produces, per trait: byControl by a rendered control's event-bearing prop, byEffect by an emit effect or an operator's emit config; controls the live non-notification controls of the registry's control props with the pattern.prop sites that fire each (reachable, unguarded-false transitions and ticks only)."
         @tier "internal"
     }
 

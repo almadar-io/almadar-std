@@ -1,6 +1,6 @@
 app std-agent-builder [
   version: "3.0.0",
-  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did. A ladder step out of range, a missing fill target, or a fill tool that cannot be built from the knobs ends in BUILD_REJECTED with a named error.",
+  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds the best match's own orbital, with its traits and pages, as a program of its own (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did. A ladder step out of range, a missing fill target, or a fill tool that cannot be built from the knobs ends in BUILD_REJECTED with a named error.",
   net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] },
 ]
 ;; @capabilities "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation"
@@ -26,7 +26,6 @@ type PoolHit = {
 type Ranked = {
   behavior : string!
   value : behavior!
-  trait : trait?
   description : string
   fields : Map string string
   score : number!
@@ -170,7 +169,6 @@ orbital AgentBuilderOrbital {
     queryVector : [number] = []
     step : number = 0
     ranked : [Ranked] = []
-    pick : trait = none
     chosen : string = ""
     chosenDescription : string = ""
     target : orbital = none
@@ -193,7 +191,7 @@ orbital AgentBuilderOrbital {
         @tier "policy"
       ladder : [BuilderStep] = [{ name: "mount", source: "catalog", scope: ["almadar-std/ui/core/molecules"], threshold: 0, action: "mount", take: 1 }]
         @label "Caching tiers, cheapest first"
-        @description "Each step ranks its source (a registry catalog under `scope`, or the pool) against the request and, when the best match reaches `threshold`, runs `action` on it: `mount` (a page around its first trait), `adopt` (serve it as it is, no model call) or `fill` (one model turn setting its knobs). A step whose best match falls short hands over to the next one; when no step serves, the build is rejected."
+        @description "Each step ranks its source (a registry catalog under `scope`, or the pool) against the request and, when the best match reaches `threshold`, runs `action` on it: `mount` (its own orbital, traits and pages, as a program of its own), `adopt` (serve it as it is, no model call) or `fill` (one model turn setting its knobs). A step whose best match falls short hands over to the next one; when no step serves, the build is rejected."
         @synonyms "tiers, cache levels, retrieval ladder"
         @tier "domain"
       fillFields : [AgentToolField] = []
@@ -289,7 +287,7 @@ orbital AgentBuilderOrbital {
               (set @entity.status failed)
               (emit BUILD_REJECTED { error: @msg, errors: [] }))))
       CATALOG_LISTED -> searching when (= (array/len (array/filter (array/filter ?result (fn e (> (array/len (object/get (default @e.vectors {}) description [])) 0))) (fn e (= (array/cosine (object/get (default @e.vectors {}) description []) @entity.queryVector) null)))) 0)
-        (set @entity.ranked (array/sort (array/flatten (array/map (array/filter ?result (fn e (> (array/len (object/get (default @e.vectors {}) description [])) 0))) (fn e (let ((s (array/cosine (object/get (default @e.vectors {}) description []) @entity.queryVector))) (if (= @s null) [] [{ behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), fields: {}, score: @s }]))))) score desc))
+        (set @entity.ranked (array/sort (array/flatten (array/map (array/filter ?result (fn e (> (array/len (object/get (default @e.vectors {}) description [])) 0))) (fn e (let ((s (array/cosine (object/get (default @e.vectors {}) description []) @entity.queryVector))) (if (= @s null) [] [{ behavior: @e.behavior, value: @e.value, description: (object/get @e description ""), fields: {}, score: @s }]))))) score desc))
         (emit RANKED {})
       POOL_FOUND -> searching
         (set @entity.ranked (array/map ?hits (fn h { behavior: @h.behavior, value: @h.value, description: (object/get @h description ""), fields: (object/get @h fields {}), score: @h.score })))
@@ -298,27 +296,9 @@ orbital AgentBuilderOrbital {
         (set @entity.step (+ @entity.step 1))
         (emit STEP {})
       RANKED -> building when (and (validate/required (array/nth @config.ladder @entity.step)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "mount"))))
-        (set @entity.pick (default (object/get (array/first @entity.ranked) trait) none))
         (set @entity.status building)
         (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
-        (program/eval (quasiquote {
-          name: (unquote @entity.orbitalName)
-          orbitals: [{
-            name: (unquote @entity.orbitalName)
-            entity: { name: "BuiltView", persistence: "runtime", fields: [{ name: "id", type: "string" }] }
-            traits: [{
-              name: "BuiltFrame"
-              scope: "instance"
-              linkedEntity: "BuiltView"
-              stateMachine: {
-                states: [{ name: "idle", isInitial: true }]
-                events: [{ key: "INIT", name: "Init" }]
-                transitions: [{ from: "idle", to: "idle", event: "INIT", effects: [["render-ui", "main", { type: "stack", children: [(unquote @entity.pick)] }]] }]
-              }
-            }]
-            pages: [{ name: "Built", path: "/", traits: [{ ref: "BuiltFrame" }] }]
-          }]
-        }) {
+        (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply (object/get (array/first @entity.ranked) value) { config: {}, traits: {} }))] }) {
           emit: { failure: BUILD_FAILED, success: BUILT }
         })
       RANKED -> done when (and (validate/required (array/nth @config.ladder @entity.step)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "adopt"))))
@@ -529,7 +509,6 @@ orbital AgentBuilderOrbital {
         (set @entity.status done)
       RESET -> idle
         (set @entity.status idle)
-        (set @entity.pick none)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
@@ -546,7 +525,6 @@ orbital AgentBuilderOrbital {
         (set @entity.status failed)
       RESET -> idle
         (set @entity.status idle)
-        (set @entity.pick none)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)

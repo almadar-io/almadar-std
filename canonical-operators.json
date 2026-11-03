@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-02T07:46:53.752Z",
+  "generated": "2026-11-03T05:10:16.523Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -23247,6 +23247,63 @@
       ],
       "docsSource": "reference-docs"
     },
+    "program/close": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "closed": "boolean"
+        }
+      },
+      "description": "Close a guest session `program/open` answered, dropping its state. Success carries `{ result: { closed: true } }`. A failure carries `{ error }` (an unknown or already closed session). Runs on the server.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "guest",
+          "type": "string",
+          "description": "The guest session id `program/open` answered"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/close @entity.guest {\"emit\":{\"success\":\"CLOSED\",\"failure\":\"CLOSE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/compose": {
       "category": "std-program",
       "minArity": 2,
@@ -23374,7 +23431,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
+      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`. With `{ guest: id }` (a session `program/open` answered) the event is dispatched into that guest session, acting as the guest's client: the address is `Orbital.Trait.EVENT` or `Trait.EVENT` and may name any event the guest trait handles, not only a declared external input; success carries `{ result: { states, rendered, emitted, outcomes, rejections? } }`, the same record `program/open` answers.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -23516,11 +23573,12 @@
                   }
                 },
                 "open": true
-              }
+              },
+              "guest": "string"
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`)",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program",
           "optional": true
         },
         {
@@ -23790,7 +23848,7 @@
         },
         "open": true
       },
-      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off).",
+      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session's program instead of the running one.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -23816,11 +23874,12 @@
               },
               "state": "string",
               "stats": "boolean",
-              "trace": "number"
+              "trace": "number",
+              "guest": "string"
             },
             "open": true
           },
-          "description": "An optional selection (`select`) of inputs to reflect with a stated payload, and the runtime reads to add: `state` (an orbital), `stats`, `trace` (a step count)",
+          "description": "An optional selection (`select`) of inputs to reflect with a stated payload, and the runtime reads to add: `state` (an orbital), `stats`, `trace` (a step count); `guest` (a session id from `program/open`) reflects that guest session instead of the running program",
           "optional": true
         },
         {
@@ -23915,6 +23974,130 @@
       ],
       "examples": [
         "(program/live {\"clientId\":\"@payload.clientId\"} {\"key\":\"@payload.streamKey\",\"emit\":{\"onMessage\":\"LIVE_ITEM\",\"failure\":\"LIVE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/open": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "guest": "string",
+          "states": {
+            "kind": "map",
+            "key": "string",
+            "value": "string"
+          },
+          "rendered": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "slot": "string",
+                "trait": "string",
+                "content": {
+                  "kind": "sexpr"
+                }
+              }
+            }
+          },
+          "emitted": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "event": "string"
+              },
+              "open": true
+            }
+          },
+          "outcomes": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "event": "string",
+                "from": "string",
+                "to": "string",
+                "fired": "boolean"
+              },
+              "optional": [
+                "event"
+              ]
+            }
+          },
+          "rejections": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "code": "string"
+              },
+              "open": true
+            }
+          }
+        },
+        "open": true
+      },
+      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, content }`), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). The options are a record that currently takes no key; `grants` is refused (a guest has no host ports yet, G-CROSS-400). A failure carries `{ error, errors? }`. Runs on the server.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A resolved program (`.orb` IR), as `behavior/resolve` answers"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "map",
+            "key": "string",
+            "value": "string"
+          },
+          "description": "The guest options record (an empty record today); no key is accepted yet (`grants` is refused: a guest has no host ports yet)",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/open @entity.program {} {\"emit\":{\"success\":\"OPENED\",\"failure\":\"OPEN_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

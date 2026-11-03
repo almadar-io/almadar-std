@@ -10,6 +10,7 @@ uses Layout from "std/behaviors/std-workspace-layout"
 uses Catalog from "std/behaviors/std-behavior-catalog"
 uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
 uses Loader from "std/behaviors/std-behavior-loader"
+uses Guest from "std/behaviors/std-guest-session"
 
 type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
@@ -256,9 +257,6 @@ orbital BehaviorPlayground {
 
     state browsing {
       INIT -> browsing
-        (set @entity.topicPackage @config.openPackage)
-        (set @entity.topic @config.openTopic)
-        (emit STAGE_SHOWN {})
       STAGE_SHOWN -> browsing
         (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-6", children: [
           { type: stack, direction: vertical, gap: xs, children: [
@@ -273,6 +271,7 @@ orbital BehaviorPlayground {
         (set @entity.topic ?topic)
         (emit STAGE_SHOWN {})
       OPEN -> opening
+        (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
@@ -286,6 +285,7 @@ orbital BehaviorPlayground {
       INIT -> browsing
         (emit STAGE_SHOWN {})
       OPEN -> opening
+        (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
@@ -344,7 +344,7 @@ orbital BehaviorPlayground {
             (if (= @entity.tab live)
               (if (= @entity.check valid)
                 (if (= @entity.renders inline)
-                  { type: box, className: "h-full", children: [(object/set @entity.value "resolved" @entity.programJson)] }
+                  @trait.GuestStage
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: "Nothing to show on its own", message: (if (= @entity.renders overlay) "This behavior draws only into overlay slots (modal, drawer, overlay or toast), which appear over a page that opens them, so it has no page of its own to show here. Its state machines and source are in the other tabs." "This behavior draws nothing: none of its traits renders a UI. Its state machines and source are in the other tabs.") }] })
                 { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: alert, variant: warning, title: "This behavior does not run on its own", message: "It does not validate alone (it expects a host that provides what it needs); its state machines and source are in the other tabs." }] (array/map @entity.findings (fn f { type: typography, content: (str/concat @f.code ": " @f.message), variant: caption }))) }] })
               { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" })
@@ -359,11 +359,13 @@ orbital BehaviorPlayground {
         (set @entity.tab source)
         (emit STAGE_SHOWN {})
       BACK -> browsing
+        (emit GUEST_RESET {})
         (set @entity.behavior "")
         (set @entity.value null)
         (set @entity.status browsing)
         (emit STAGE_SHOWN {})
       TOPIC_PICKED -> browsing
+        (emit GUEST_RESET {})
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
         (set @entity.behavior "")
@@ -371,6 +373,7 @@ orbital BehaviorPlayground {
         (set @entity.status browsing)
         (emit STAGE_SHOWN {})
       OPEN -> opening
+        (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
@@ -384,6 +387,7 @@ orbital BehaviorPlayground {
       INIT -> browsing
         (emit STAGE_SHOWN {})
       OPEN -> opening
+        (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
@@ -392,6 +396,7 @@ orbital BehaviorPlayground {
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
       BACK -> browsing
+        (emit GUEST_RESET {})
         (set @entity.behavior "")
         (set @entity.value null)
         (set @entity.status browsing)
@@ -424,6 +429,8 @@ orbital BehaviorPlayground {
         topic : string!
       }
         @description "What the status strip shows."
+      GUEST_RESET -> external { }
+        @description "The opened behavior is replaced or closed: the guest session ends."
     }
 
     listens {
@@ -473,6 +480,53 @@ orbital BehaviorPlayground {
     }
   }
 
+  trait PlaygroundOpen -> PlaygroundView {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      BEHAVIOR_LOADED -> idle
+        (let ((shown (json/parse ?programJson PlaygroundProgram))) (if (== @shown null) (emit GUEST_FAIL { message: "The opened behavior could not be read to run." }) (emit GUEST_OPEN { program: @shown })))
+    }
+
+    emits {
+      GUEST_OPEN -> external {
+        program : PlaygroundProgram!
+      }
+        @description "The opened behavior's resolved program, for the guest session to run."
+      GUEST_FAIL -> external {
+        message : string!
+      }
+        @description "The opened behavior's program could not be read."
+    }
+
+    listens {
+      PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
+      BEHAVIOR_LOADED {
+        behavior : string!
+        programJson : string!
+      }
+    }
+  }
+
+  trait GuestSession = Guest.traits.GuestSession {
+    listens {
+      PlaygroundOpen.GUEST_OPEN -> GUEST_OPEN
+      PlaygroundOpen.GUEST_FAIL -> GUEST_FAIL
+      PlaygroundStage.GUEST_RESET -> GUEST_RESET
+      GuestStage.GUEST_SEND -> GUEST_SEND
+    }
+  }
+
+  trait GuestStage = Guest.traits.GuestStage {
+    config {
+      className: "h-full"
+      errorTitle: "The behavior could not be run"
+      pending: detail
+      pendingRows: 4
+    }
+  }
+
   trait PlaygroundStatus -> PlaygroundView [client] {
     initial: idle
 
@@ -518,5 +572,5 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus
 }
