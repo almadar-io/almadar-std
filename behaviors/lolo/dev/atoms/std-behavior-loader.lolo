@@ -6,7 +6,9 @@ app std-behavior-loader [
 ;; @capabilities "load an installed behavior's program, resolved program, knobs, source and validation so it can run live"
 
 type LoaderKnob = { name : string!, type : string!, label : string, description : string }
-type LoaderDescription = { behavior : string!, knobs : [LoaderKnob]! }
+type LoaderTraitName = { trait : string! }
+type LoaderOrbitalTraits = { traits : [LoaderTraitName]! }
+type LoaderDescription = { behavior : string!, knobs : [LoaderKnob]!, orbitals : [LoaderOrbitalTraits]! }
 type LoaderProgram = { name : string }
 type LoaderSourceFile = { path : string!, source : string! }
 type LoaderFinding = { code : string!, message : string! }
@@ -20,6 +22,7 @@ orbital BehaviorLoaderOrbital {
     sourceJson : string = ""
     sourceText : string = ""
     knobs : [LoaderKnob] = []
+    traits : [string] @description "The names of the behavior's traits, every orbital's in order, from behavior/describe." = []
     valid : boolean = false
     findings : [LoaderFinding] = []
     waiting : number @description "How many of the five answers (source, resolve, describe, file, check) are still to come." = 0
@@ -36,6 +39,7 @@ orbital BehaviorLoaderOrbital {
         (set @entity.sourceJson "")
         (set @entity.sourceText "")
         (set @entity.knobs [])
+        (set @entity.traits [])
         (set @entity.valid false)
         (set @entity.findings [])
         (set @entity.waiting 5)
@@ -49,6 +53,7 @@ orbital BehaviorLoaderOrbital {
       INIT -> idle
       LOAD_BEHAVIOR -> loading
         (set @entity.behavior ?behavior)
+        (set @entity.traits [])
         (set @entity.waiting 5)
         (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
         (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
@@ -77,6 +82,7 @@ orbital BehaviorLoaderOrbital {
         (emit LOAD_STEP {})
       DESCRIBED -> loading
         (set @entity.knobs (object/get ?result knobs []))
+        (set @entity.traits (array/flatten (array/map ?result.orbitals (fn o (array/map @o.traits (fn t @t.trait))))))
         (emit LOAD_STEP {})
       DESCRIBE_FAILED -> loading
         (emit LOAD_STEP {})
@@ -84,7 +90,7 @@ orbital BehaviorLoaderOrbital {
         (set @entity.waiting (- @entity.waiting 1))
       LOAD_STEP -> idle when (<= @entity.waiting 1)
         (set @entity.waiting 0)
-        (emit BEHAVIOR_LOADED { behavior: @entity.behavior, programJson: @entity.programJson, sourceJson: @entity.sourceJson, sourceText: @entity.sourceText, knobs: @entity.knobs, valid: @entity.valid, findings: @entity.findings })
+        (emit BEHAVIOR_LOADED { behavior: @entity.behavior, programJson: @entity.programJson, sourceJson: @entity.sourceJson, sourceText: @entity.sourceText, knobs: @entity.knobs, traits: @entity.traits, valid: @entity.valid, findings: @entity.findings })
       LOAD_FAILED -> idle
         (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
     }
@@ -96,10 +102,11 @@ orbital BehaviorLoaderOrbital {
         sourceJson : string!
         sourceText : string!
         knobs : [LoaderKnob]!
+        traits : [string]!
         valid : boolean!
         findings : [LoaderFinding]!
       }
-        @description "The opened behavior's program, source file text, resolved program, knobs and validation."
+        @description "The opened behavior's program, source file text, resolved program, knobs, trait names and validation."
       BEHAVIOR_FAILED -> external {
         behavior : string!
         error : string!

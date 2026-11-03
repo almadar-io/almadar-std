@@ -1,7 +1,7 @@
 app std-live-machine [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's .lolo source (the lines of the transition that fired are highlighted) next to its state machine (active state, fired transition, visited states). A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { subject } re-describes another trait and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's .lolo source (the lines of the transition that fired are highlighted) next to its state machine (active state, fired transition, visited states). A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
 ]
 ;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
 uses Spec from "almadar-std/live-machine"
@@ -24,7 +24,7 @@ orbital LiveMachineOrbital {
   entity LiveMachineView [runtime] {
     id : string!
     subject : DescribedSubject
-    current : trait
+    current : TraitRef?
     title : string = ""
     transitions : [DescribedTransition] = []
     sourceText : string = ""
@@ -41,7 +41,7 @@ orbital LiveMachineOrbital {
     ;; a trait value always has its name, a described machine an initial state and the guard finds the fired index, so the empty fallbacks are never read
     state describing {
       INIT -> describing when (validate/required @config.subject)
-        (set @entity.current @config.subject)
+        (set @entity.current (as @config.subject TraitRef))
         (set @entity.title (object/get (default (as @config.subject TraitRef) { trait: "" }) trait))
         (render-ui main { type: state-machine-view, isLoading: true })
         (behavior/describe @entity.current { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
@@ -58,10 +58,10 @@ orbital LiveMachineOrbital {
         (set @entity.visited [(object/get (default (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))) { name: "", isInitial: true }) name)])
         (render-ui main @config.view)
       SUBJECT -> describing
-        (set @entity.current ?subject)
-        (set @entity.title (object/get (default (as ?subject TraitRef) { trait: "" }) trait))
+        (set @entity.current { behavior: ?behavior, trait: ?trait })
+        (set @entity.title ?trait)
         (render-ui main { type: state-machine-view, isLoading: true })
-        (behavior/describe ?subject { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/describe { behavior: ?behavior, trait: ?trait } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
       DESCRIBE_FAILED -> describing
         (render-ui main { type: error-state, title: (i18n/t "diagram.failed"), message: ?error, retryEvent: RETRY })
       MOVES -> describing
@@ -71,17 +71,17 @@ orbital LiveMachineOrbital {
 
     state idle {
       INIT -> describing when (validate/required @config.subject)
-        (set @entity.current @config.subject)
+        (set @entity.current (as @config.subject TraitRef))
         (set @entity.title (object/get (default (as @config.subject TraitRef) { trait: "" }) trait))
         (render-ui main { type: state-machine-view, isLoading: true })
         (behavior/describe @entity.current { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
       INIT -> idle when (not (validate/required @config.subject))
         (render-ui main { type: empty-state, title: (i18n/t "diagram.empty") })
       SUBJECT -> describing
-        (set @entity.current ?subject)
-        (set @entity.title (object/get (default (as ?subject TraitRef) { trait: "" }) trait))
+        (set @entity.current { behavior: ?behavior, trait: ?trait })
+        (set @entity.title ?trait)
         (render-ui main { type: state-machine-view, isLoading: true })
-        (behavior/describe ?subject { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/describe { behavior: ?behavior, trait: ?trait } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
       ADVANCE -> idle when (array/some @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))
         (let ((fired (array/findIndex @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))))
           (let ((target (object/get (default (array/nth @entity.transitions @fired) { from: "", to: "", event: "" }) to)))
@@ -123,9 +123,10 @@ orbital LiveMachineOrbital {
         @description "The demo took the transition named by this event from the current state; `to` names the target when the event has more than one arm from that state."
         @tier "internal"
       SUBJECT {
-        subject : trait!
+        behavior : string!
+        trait : string!
       }
-        @description "Describe another trait in place of the current one; the view resets to that trait's initial state."
+        @description "Describe another trait, named by its behavior and trait name, in place of the current one; the view resets to that trait's initial state."
       MOVES {
         moves : [MachineMove]!
       }

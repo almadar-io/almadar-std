@@ -154,7 +154,7 @@ orbital BehaviorCatalogOrbital {
         @tier "policy"
       prefetch : boolean = false
         @label "Prefetch the whole tree"
-        @description "List every behavior once and announce the whole tree as CATALOG_TREE, so opening a topic reads nothing and CATALOG_TRAITS answers a behavior's traits from memory; off announces no tree."
+        @description "List every behavior once and announce the whole tree as CATALOG_TREE, so opening a topic reads nothing; the prefetch lists without traits. Off announces no tree."
         @tier "policy"
     }
     initial: loading
@@ -173,7 +173,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
-        (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: ?paths } { traits: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> loading when (and @config.loadOnInit @config.prefetch)
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
@@ -181,6 +181,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
         (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
+          traits: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       INIT -> loading when (and @config.loadOnInit (not @config.prefetch))
@@ -204,6 +205,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
         (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
+          traits: false
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       CATALOG_LOAD -> loading when (not @config.prefetch)
@@ -234,9 +236,6 @@ orbital BehaviorCatalogOrbital {
         (set @entity.error ?error)
         (set @entity.status failed)
         (emit CATALOG_SHOWN {})
-      CATALOG_TRAITS -> loading
-        (let ((hit (array/find @entity.entries (fn e (= @e.behavior ?behavior)))))
-          (emit CATALOG_TRAITS_OF { behavior: ?behavior, traits: (if (= @hit null) [] (default @hit.traits [])) }))
     }
 
     state ready {
@@ -253,7 +252,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
-        (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: ?paths } { traits: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> ready
         (emit CATALOG_TOPICS { topics: @entity.topics })
         (emit CATALOG_SHOWN {})
@@ -292,9 +291,6 @@ orbital BehaviorCatalogOrbital {
         (behavior/describe { behavior: ?behavior } {
           emit: { success: DESCRIBED, failure: DESCRIBE_FAILED }
         })
-      CATALOG_TRAITS -> ready
-        (let ((hit (array/find @entity.entries (fn e (= @e.behavior ?behavior)))))
-          (emit CATALOG_TRAITS_OF { behavior: ?behavior, traits: (if (= @hit null) [] (default @hit.traits [])) }))
     }
 
     state searching {
@@ -311,7 +307,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
-        (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: ?paths } { traits: false emit: { success: LISTED, failure: LIST_FAILED } })
       SEARCH_LISTED -> ready when (> (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
         (set @entity.error "The listed behaviors carry no embedding vectors: a plain behavior/catalog listing has none, and a search needs rows from std-catalog-vectors")
         (set @entity.status ready)
@@ -346,9 +342,6 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status ready)
         (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?message) })
         (emit CATALOG_SHOWN {})
-      CATALOG_TRAITS -> searching
-        (let ((hit (array/find @entity.entries (fn e (= @e.behavior ?behavior)))))
-          (emit CATALOG_TRAITS_OF { behavior: ?behavior, traits: (if (= @hit null) [] (default @hit.traits [])) }))
     }
 
     state describing {
@@ -365,7 +358,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
-        (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: ?paths } { traits: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> loading
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
@@ -383,9 +376,6 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status ready)
         (render-ui toast { type: alert, variant: error, message: (str/concat "Details failed: " ?error) })
         (emit CATALOG_SHOWN {})
-      CATALOG_TRAITS -> describing
-        (let ((hit (array/find @entity.entries (fn e (= @e.behavior ?behavior)))))
-          (emit CATALOG_TRAITS_OF { behavior: ?behavior, traits: (if (= @hit null) [] (default @hit.traits [])) }))
     }
 
     state failed {
@@ -402,7 +392,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (set @entity.loadingMessage "Loading the catalog")
         (emit CATALOG_SHOWN {})
-        (behavior/catalog { paths: ?paths } { emit: { success: LISTED, failure: LIST_FAILED } })
+        (behavior/catalog { paths: ?paths } { traits: false emit: { success: LISTED, failure: LIST_FAILED } })
       INIT -> failed
         (emit CATALOG_SHOWN {})
       RETRY -> loading
@@ -412,9 +402,6 @@ orbital BehaviorCatalogOrbital {
         (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
           emit: { success: LISTED, failure: LIST_FAILED }
         })
-      CATALOG_TRAITS -> failed
-        (let ((hit (array/find @entity.entries (fn e (= @e.behavior ?behavior)))))
-          (emit CATALOG_TRAITS_OF { behavior: ?behavior, traits: (if (= @hit null) [] (default @hit.traits [])) }))
     }
 
     emits {
@@ -437,12 +424,6 @@ orbital BehaviorCatalogOrbital {
         @description "Every listed behavior of a prefetching catalog, one per behavior with its package, topic and level, in one event: feed a tree that shows each topic's behaviors under it."
         @synonyms "catalog tree, tree leaves, every behavior by topic"
         @tier "primary"
-      CATALOG_TRAITS_OF -> external {
-        behavior : string!
-        traits : [trait]!
-      }
-        @description "The traits of one listed behavior, as values, answering CATALOG_TRAITS; empty when the catalog lists no such behavior."
-        @synonyms "behavior traits, traits of a behavior"
       CATALOG_TOPICS -> external {
         topics : [BehaviorCatalogTopic]!
       }
@@ -513,10 +494,6 @@ orbital BehaviorCatalogOrbital {
       SELECTION {
         behaviors : [string]!
       }
-      CATALOG_TRAITS -> input {
-        behavior : string!
-      }
-        @description "Ask for one listed behavior's traits as values; answered with CATALOG_TRAITS_OF."
       TOPIC {
         package : string!
         topic : string!

@@ -20,7 +20,6 @@ type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, 
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundFinding = { code : string!, message : string! }
-type PlaygroundTraitRef = { behavior : string, trait : string! }
 
 orbital BehaviorPlayground {
   entity PlaygroundView [runtime] {
@@ -36,7 +35,7 @@ orbital BehaviorPlayground {
     description : string = ""
     value : behavior?
     machineBehavior : string @description "The behavior whose traits the dock lists." = ""
-    machineTraits : [trait] @description "The opened behavior's traits, as the catalog lists them." = []
+    machineTraits : [string] @description "The opened behavior's trait names, as its loader describes them." = []
     machinePick : number @description "The listed trait the dock draws." = 0
     tab : "live" | "source" = live
     programJson : string = ""
@@ -97,7 +96,6 @@ orbital BehaviorPlayground {
       BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
       BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
       PlaygroundTopics.TOPIC_PICKED -> TOPIC
-      PlaygroundMachine.CATALOG_TRAITS -> CATALOG_TRAITS
       EMBEDDED {
         embeddings : [[number]]!
       }
@@ -129,27 +127,26 @@ orbital BehaviorPlayground {
     state idle {
       INIT -> idle
         (emit MACHINE_SHOWN {})
-      BEHAVIOR_LOADED -> idle
+      BEHAVIOR_LOADED -> idle when (> (array/len ?traits) 0)
+        (set @entity.machineBehavior ?behavior)
+        (set @entity.machineTraits ?traits)
+        (set @entity.machinePick 0)
+        (emit SUBJECT { behavior: ?behavior, trait: (default (array/nth ?traits 0) "") })
+        (emit MACHINE_SHOWN {})
+      BEHAVIOR_LOADED -> idle when (= (array/len ?traits) 0)
         (set @entity.machineBehavior ?behavior)
         (set @entity.machineTraits [])
         (set @entity.machinePick 0)
-        (emit CATALOG_TRAITS { behavior: ?behavior })
         (emit MACHINE_SHOWN {})
-      CATALOG_TRAITS_OF -> idle when (and (= ?behavior @entity.machineBehavior) (> (array/len ?traits) 0))
-        (set @entity.machineTraits ?traits)
-        (set @entity.machinePick 0)
-        (emit SUBJECT { subject: (array/nth ?traits 0) })
-        (emit MACHINE_SHOWN {})
-      CATALOG_TRAITS_OF -> idle when (or (!= ?behavior @entity.machineBehavior) (= (array/len ?traits) 0))
       MACHINE_PICK -> idle when (and (>= ?index 0) (< ?index (array/len @entity.machineTraits)))
         (set @entity.machinePick ?index)
-        (emit SUBJECT { subject: (array/nth @entity.machineTraits ?index) })
+        (emit SUBJECT { behavior: @entity.machineBehavior, trait: (default (array/nth @entity.machineTraits ?index) "") })
         (emit MACHINE_SHOWN {})
       MACHINE_PICK -> idle when (or (< ?index 0) (>= ?index (array/len @entity.machineTraits)))
       MACHINE_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [
           (if (> (array/len @entity.machineTraits) 1)
-            { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map (array/range (array/len @entity.machineTraits)) (fn i { type: button, size: sm, variant: (if (= @i @entity.machinePick) primary ghost), label: (object/get (default (as (array/nth @entity.machineTraits @i) PlaygroundTraitRef) { trait: "" }) trait), action: MACHINE_PICK, actionPayload: { index: @i } })) }
+            { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map (array/range (array/len @entity.machineTraits)) (fn i { type: button, size: sm, variant: (if (= @i @entity.machinePick) primary ghost), label: (default (array/nth @entity.machineTraits @i) ""), action: MACHINE_PICK, actionPayload: { index: @i } })) }
             { type: box })
           @trait.PlaygroundLive
         ] })
@@ -157,25 +154,18 @@ orbital BehaviorPlayground {
 
     emits {
       MACHINE_SHOWN
-      CATALOG_TRAITS -> external {
-        behavior : string!
-      }
-        @description "Ask the catalog for the opened behavior's traits."
       SUBJECT -> external {
-        subject : trait!
+        behavior : string!
+        trait : string!
       }
-        @description "The trait whose machine the dock draws."
+        @description "The trait, by behavior and trait name, whose machine the dock draws."
     }
 
     listens {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
-      BehaviorCatalogData.CATALOG_TRAITS_OF -> CATALOG_TRAITS_OF
       BEHAVIOR_LOADED {
         behavior : string!
-      }
-      CATALOG_TRAITS_OF {
-        behavior : string!
-        traits : [trait]!
+        traits : [string]!
       }
       MACHINE_PICK {
         index : number!
