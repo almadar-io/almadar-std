@@ -79,7 +79,8 @@ orbital Launchpad {
       sidebarTrait: @trait.LaunchpadRail
       headerTrait: @trait.LaunchpadTheme
       layoutMode: drawer
-      contentClassName: "w-full"
+      fullBleed: true
+      contentClassName: "w-full h-full"
       showSearch: false
       showNotifications: false
       notifications: []
@@ -428,15 +429,15 @@ orbital Launchpad {
       INIT -> ready
         (emit TABS_SHOWN {})
       TABS_SHOWN -> ready
-        (render-ui main { type: stack, direction: vertical, gap: none, flex: true, children: [
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "") "" "hidden"), children: [@trait.LaunchpadHome] },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-ci-status") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-ci-status"))) [@trait.CiBoard] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-aws-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-aws-board"))) [@trait.AwsView] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-app-hosting-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-app-hosting-board"))) [@trait.AhView] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-cloud-run-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-cloud-run-board"))) [@trait.CloudRunView] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-training-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-training-board"))) [@trait.TrainingView] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-llm-spend-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-llm-spend-board"))) [@trait.LlmSpendView] []) },
-          { type: box, fullHeight: true, overflow: auto, className: (if (= @entity.active "almadar-std/std-behavior-playground") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-behavior-playground"))) [@trait.PlaygroundFrame] []) }
+        (render-ui main { type: box, fullHeight: true, overflow: hidden, children: [
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "") "" "hidden"), children: [@trait.LaunchpadHome] },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-ci-status") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-ci-status"))) [@trait.CiBoard] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-aws-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-aws-board"))) [@trait.AwsView] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-app-hosting-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-app-hosting-board"))) [@trait.AhView] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-cloud-run-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-cloud-run-board"))) [@trait.CloudRunView] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-training-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-training-board"))) [@trait.TrainingView] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-llm-spend-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-llm-spend-board"))) [@trait.LlmSpendView] []) },
+          { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-behavior-playground") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-behavior-playground"))) [@trait.PlaygroundFrame] []) }
         ] })
       TAB_OPEN -> ready when (array/some @entity.tabs (fn t (= @t.id ?behavior)))
         (set @entity.active ?behavior)
