@@ -123,34 +123,34 @@ orbital WorkspaceOrbital {
       INIT -> idle
 
       WORKSPACE_TREE -> working
-        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (default @user.id ""), path: (default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: (default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_READ_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_WRITE_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_REMOVE_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_SNAPSHOT -> working
-        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_HISTORY -> working
-        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: (default @payload.limit -1) }))
+        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: (default @payload.limit -1) }))
         (emit WS_NEXT { })
       WORKSPACE_CHANGES -> working
-        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_RESTORE -> working
-        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_UNDO -> working
-        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
       WORKSPACE_REDO -> working
-        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: -1 }))
         (emit WS_NEXT { })
     }
 
@@ -158,25 +158,25 @@ orbital WorkspaceOrbital {
       INIT -> working
 
       WORKSPACE_TREE -> working
-        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (default @user.id ""), path: (default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: (default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
       WORKSPACE_READ_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
       WORKSPACE_WRITE_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
       WORKSPACE_REMOVE_FILE -> working
-        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
       WORKSPACE_SNAPSHOT -> working
-        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
       WORKSPACE_HISTORY -> working
-        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: (default @payload.limit -1) }))
+        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: (default @payload.limit -1) }))
       WORKSPACE_CHANGES -> working
-        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
       WORKSPACE_RESTORE -> working
-        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
       WORKSPACE_UNDO -> working
-        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: -1 }))
       WORKSPACE_REDO -> working
-        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (if (== (default @user.role "anonymous") "anonymous") "" @user.id), path: "", content: "", reason: "", oid: "", limit: -1 }))
 
       WS_NEXT -> idle when (== (array/len @entity.queue) 0)
       WS_NEXT -> working when (> (array/len @entity.queue) 0)
