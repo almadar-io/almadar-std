@@ -1,6 +1,6 @@
 app std-guest-session [
   version: "1.0.0",
-  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), opens it with program/open, keeps the latest paint per slot and emits GUEST_PAINTS { guest, paints }; a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot (a skeleton until the guest has painted, an alert when it failed) and turns a control used in it into GUEST_SEND (the session steps only the open guest). The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), opens it with program/open, keeps the latest paint per slot and emits GUEST_PAINTS { guest, paints }; a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
   egress: []
 ]
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
@@ -196,8 +196,9 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (set @entity.guestError "")
         (emit GUEST_SHOWN {})
-      GUEST_CONTROL -> idle
+      GUEST_CONTROL -> idle when (= ?guest @entity.guestHandle)
         (emit GUEST_SEND { guest: ?guest, address: ?address, event: ?event, payload: ?payload })
+      GUEST_CONTROL -> idle when (!= ?guest @entity.guestHandle)
       GUEST_SHOWN -> idle
         (render-ui main { type: box, className: @config.className, children: [
           (if (!= @entity.guestError "")
