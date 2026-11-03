@@ -23,6 +23,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `ml/label-capture.lolo` | `std-ml-label-capture` |
 | `ml/ladder.lolo` | `std-ml-ladder` (bound; `std-escalating-decision` composes both traits) |
 | `ml/llm-provider.lolo` | `std-llm` (bound; dropping `LLM_FAILED` or the `LLM_GENERATE`/`LLM_CLASSIFY`/`LLM_EMBED` arms fails it) |
+| `ui/avl/live-machine.lolo` | `std-live-machine` (bound; a trait's own source beside its state machine, `ADVANCE { event, to? }` lights the transition it took, an event with no arm from the active state is ignored, `SUBJECT { subject }` re-describes another trait; 7 replay goldens in `ui/avl/live-machine.replay.goldens.json`, each arm paired with a control; the goldens runner answers no post-step entity row, so the moved active state is asserted through `fired` and the paired no-arm controls) |
 | `ui/core/gallery.lolo` | `std-gallery` |
 | `ui/core/canvas-theme.lolo` | `std-canvas-theme` (bound; twin of `canvas_theme.rs`; `CANVAS_THEME_PRESET` merges one preset with its dark variant and resolves; 124 Chromium fixtures + 10 Rust-semantics edge cases in `ui/core/canvas-theme-{1,2,3}.replay.goldens.json`; the atom is generated text, regenerate nothing by hand) |
 | `ui/core/theme-resolve.lolo` | `std-theme-resolve` (bound; twin of `theme.rs` `theme_keys`, `carry_theme_definitions`, `resolve_theme` precedence and key split; 26 replay goldens from the Rust tests, each paired with a control, in `ui/core/theme-resolve.replay.goldens.json`) |

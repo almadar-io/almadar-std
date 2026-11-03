@@ -2145,6 +2145,769 @@
         "personaTrait": "DevPersonas",
         "seedTrait": "MockSeed"
       }
+    },
+    {
+      "id": "plan-two-related-entities-answers-linked-rows-and-writes-nothing",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "owner",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "one"
+                        }
+                      },
+                      {
+                        "name": "peers",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "many"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "browser": false,
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "collection": "tags"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 3,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": [
+                    {
+                      "entity": "Doc",
+                      "rows": [
+                        {
+                          "owner": "Tag Id 1",
+                          "peers": [
+                            "Tag Id 1",
+                            "Tag Id 2"
+                          ],
+                          "id": "Doc Id 1",
+                          "createdAt": "2026-02-28T21:27:22.569Z",
+                          "updatedAt": "2026-03-02T21:27:22.569Z"
+                        },
+                        {
+                          "owner": "Tag Id 2",
+                          "peers": [
+                            "Tag Id 2",
+                            "Tag Id 3",
+                            "Tag Id 1"
+                          ],
+                          "id": "Doc Id 2",
+                          "createdAt": "2025-11-02T07:01:00.133Z",
+                          "updatedAt": "2025-11-08T07:01:00.133Z"
+                        },
+                        {
+                          "owner": "Tag Id 3",
+                          "peers": [
+                            "Tag Id 3",
+                            "Tag Id 1"
+                          ],
+                          "id": "Doc Id 3",
+                          "createdAt": "2026-01-14T21:13:00.024Z",
+                          "updatedAt": "2026-01-14T21:13:00.024Z"
+                        }
+                      ]
+                    },
+                    {
+                      "entity": "Tag",
+                      "rows": [
+                        {
+                          "id": "Tag Id 1",
+                          "createdAt": "2025-12-19T17:48:57.369Z",
+                          "updatedAt": "2025-12-22T17:48:57.369Z"
+                        },
+                        {
+                          "id": "Tag Id 2",
+                          "createdAt": "2025-07-17T01:23:30.976Z",
+                          "updatedAt": "2025-08-16T01:23:30.976Z"
+                        },
+                        {
+                          "id": "Tag Id 3",
+                          "createdAt": "2025-07-24T13:56:38.907Z",
+                          "updatedAt": "2025-08-08T13:56:38.907Z"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_PLANNED": 1
+            },
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "plan-control-input-on-the-same-program-starts-the-writes",
+      "steps": [
+        {
+          "event": "DATASET_INPUT",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "owner",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "one"
+                        }
+                      },
+                      {
+                        "name": "peers",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "many"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "browser": false,
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "collection": "tags"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 3,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "",
+            "ownerPairs": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_PLANNED",
+              "DATASET_DONE",
+              "DATASET_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 1",
+                  "peers": [
+                    "Tag Id 1",
+                    "Tag Id 2"
+                  ],
+                  "id": "Doc Id 1",
+                  "createdAt": "2026-02-28T21:27:22.569Z",
+                  "updatedAt": "2026-03-02T21:27:22.569Z"
+                }
+              ],
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 2",
+                  "peers": [
+                    "Tag Id 2",
+                    "Tag Id 3",
+                    "Tag Id 1"
+                  ],
+                  "id": "Doc Id 2",
+                  "createdAt": "2025-11-02T07:01:00.133Z",
+                  "updatedAt": "2025-11-08T07:01:00.133Z"
+                }
+              ],
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 3",
+                  "peers": [
+                    "Tag Id 3",
+                    "Tag Id 1"
+                  ],
+                  "id": "Doc Id 3",
+                  "createdAt": "2026-01-14T21:13:00.024Z",
+                  "updatedAt": "2026-01-14T21:13:00.024Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 1",
+                  "createdAt": "2025-12-19T17:48:57.369Z",
+                  "updatedAt": "2025-12-22T17:48:57.369Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 2",
+                  "createdAt": "2025-07-17T01:23:30.976Z",
+                  "updatedAt": "2025-08-16T01:23:30.976Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 3",
+                  "createdAt": "2025-07-24T13:56:38.907Z",
+                  "updatedAt": "2025-08-08T13:56:38.907Z"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "plan-an-entity-with-seed-mock-false-plans-no-rows",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "seedMock": false
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "plan-control-the-same-entity-with-seed-mock-true-plans-its-rows",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "browser": true,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "seedMock": true
+                  }
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": [
+                    {
+                      "entity": "Note",
+                      "rows": [
+                        {
+                          "label": "Heath Keystone",
+                          "id": "Note Id 1",
+                          "createdAt": "2026-02-28T21:27:22.569Z",
+                          "updatedAt": "2026-03-02T21:27:22.569Z"
+                        },
+                        {
+                          "label": "Zenith Ember",
+                          "id": "Note Id 2",
+                          "createdAt": "2026-01-14T21:13:00.024Z",
+                          "updatedAt": "2026-01-14T21:13:00.024Z"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ]
+    },
+    {
+      "id": "plan-runtime-true-samples-count-rows-of-each-runtime-entity",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "browser": false,
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "collection": "tags"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "runtime": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": [
+                    {
+                      "entity": "Item",
+                      "rows": [
+                        {
+                          "name": "Heath Keystone",
+                          "id": "Item Id 1",
+                          "createdAt": "2026-02-28T21:27:22.569Z",
+                          "updatedAt": "2026-03-02T21:27:22.569Z"
+                        },
+                        {
+                          "name": "Zenith Ember",
+                          "id": "Item Id 2",
+                          "createdAt": "2026-01-14T21:13:00.024Z",
+                          "updatedAt": "2026-01-14T21:13:00.024Z"
+                        }
+                      ]
+                    },
+                    {
+                      "entity": "Tag",
+                      "rows": [
+                        {
+                          "id": "Tag Id 1",
+                          "createdAt": "2025-07-17T01:23:30.976Z",
+                          "updatedAt": "2025-08-16T01:23:30.976Z"
+                        },
+                        {
+                          "id": "Tag Id 2",
+                          "createdAt": "2025-07-24T13:56:38.907Z",
+                          "updatedAt": "2025-08-08T13:56:38.907Z"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_PLANNED": 1
+            },
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ]
+    },
+    {
+      "id": "plan-runtime-control-absent-plans-persistent-entities-only",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "browser": false,
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "collection": "tags"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": [
+                    {
+                      "entity": "Tag",
+                      "rows": [
+                        {
+                          "id": "Tag Id 1",
+                          "createdAt": "2026-02-28T21:27:22.569Z",
+                          "updatedAt": "2026-03-02T21:27:22.569Z"
+                        },
+                        {
+                          "id": "Tag Id 2",
+                          "createdAt": "2025-11-02T07:01:00.133Z",
+                          "updatedAt": "2025-11-08T07:01:00.133Z"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_PLANNED": 1
+            },
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "plan-runtime-edge-false-plans-persistent-entities-only",
+      "steps": [
+        {
+          "event": "DATASET_PLAN",
+          "payload": {
+            "program": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "browser": false,
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "collection": "tags"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": 2,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "runtime": false
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "DATASET_PLANNED",
+                "payload": {
+                  "rows": [
+                    {
+                      "entity": "Tag",
+                      "rows": [
+                        {
+                          "id": "Tag Id 1",
+                          "createdAt": "2026-02-28T21:27:22.569Z",
+                          "updatedAt": "2026-03-02T21:27:22.569Z"
+                        },
+                        {
+                          "id": "Tag Id 2",
+                          "createdAt": "2025-11-02T07:01:00.133Z",
+                          "updatedAt": "2025-11-08T07:01:00.133Z"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "emitCounts": {
+              "DATASET_PLANNED": 1
+            },
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DATASET_DONE",
+              "DS_WRITER",
+              "DS_WRITE_NEXT",
+              "DS_PROGRAM_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
     }
   ]
 }

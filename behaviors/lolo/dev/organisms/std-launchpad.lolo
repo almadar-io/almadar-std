@@ -1,6 +1,7 @@
 app std-launchpad [
   version: "5.0.0",
   theme: "linear-clean-light",
+  locales: [en, ar, sl],
   themes: ["linear-clean-dark", "almadar-light", "almadar-dark", "minimalist-light", "minimalist-dark", "notion-editorial-light", "swiss-light", "bloomberg-dense-dark", "terminal-dark", "game-sci-fi-dark"],
   exec: ["orb", "aws", "bq", "gcloud", "gh", "ssh"],
   env: ["PATH", "HOME"],
@@ -289,6 +290,7 @@ orbital Launchpad {
       BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
       PlaygroundTopics.TOPIC_PICKED -> TOPIC
       LaunchpadStage.PLAYGROUND_OPENED -> CATALOG_LOAD
+      PlaygroundMachine.CATALOG_TRAITS -> CATALOG_TRAITS
       EMBEDDED {
         embeddings : [[number]]!
       }
@@ -307,8 +309,16 @@ orbital Launchpad {
   trait CatEmbedWait = Play.traits.CatEmbedWait {}
   trait CatEmbedRequest = Play.traits.CatEmbedRequest {}
   trait CatEmbedHttp = Play.traits.CatEmbedHttp {}
-  trait PlaygroundCosmic = Play.traits.PlaygroundCosmic {}
+  trait PlaygroundMachine = Play.traits.PlaygroundMachine {}
+  trait PlaygroundLive = Play.traits.PlaygroundLive {}
+  trait MockSeed = Play.traits.MockSeed {
+    config {
+      seedOrbital: "Launchpad"
+    }
+  }
+  trait MockStream = Play.traits.MockStream {}
   trait PlaygroundStatus = Play.traits.PlaygroundStatus {}
+  trait PlaygroundRoute = Play.traits.PlaygroundRoute {}
 
   trait RecentsStore = Recents.traits.RecentsStore {
     listens {
@@ -455,16 +465,27 @@ orbital Launchpad {
           { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-llm-spend-board") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-llm-spend-board"))) [@trait.LlmSpendView] []) },
           { type: box, fullHeight: true, overflow: auto, padding: lg, className: (if (= @entity.active "almadar-std/std-behavior-playground") "" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-behavior-playground"))) [@trait.PlaygroundFrame] []) }
         ] })
-      TAB_OPEN -> ready when (array/some @entity.tabs (fn t (= @t.id ?behavior)))
+      TAB_OPEN -> ready when (and (array/some @entity.tabs (fn t (= @t.id ?behavior))) (= ?behavior "almadar-std/std-behavior-playground"))
         (set @entity.active ?behavior)
-        (when (= ?behavior "almadar-std/std-behavior-playground") (emit PLAYGROUND_OPENED {}))
+        (emit PLAYGROUND_OPENED {})
         (emit TABS_PUSH {})
         (emit TABS_SHOWN {})
         (emit APP_SHOWN { id: ?behavior })
-      TAB_OPEN -> ready when (not (array/some @entity.tabs (fn t (= @t.id ?behavior))))
+      TAB_OPEN -> ready when (and (array/some @entity.tabs (fn t (= @t.id ?behavior))) (!= ?behavior "almadar-std/std-behavior-playground"))
+        (set @entity.active ?behavior)
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+        (emit APP_SHOWN { id: ?behavior })
+      TAB_OPEN -> ready when (and (not (array/some @entity.tabs (fn t (= @t.id ?behavior)))) (= ?behavior "almadar-std/std-behavior-playground"))
         (set @entity.tabs (array/append @entity.tabs { id: ?behavior, label: ?label, icon: ?icon, topic: ?topic }))
         (set @entity.active ?behavior)
-        (when (= ?behavior "almadar-std/std-behavior-playground") (emit PLAYGROUND_OPENED {}))
+        (emit PLAYGROUND_OPENED {})
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+        (emit APP_SHOWN { id: ?behavior })
+      TAB_OPEN -> ready when (and (not (array/some @entity.tabs (fn t (= @t.id ?behavior)))) (!= ?behavior "almadar-std/std-behavior-playground"))
+        (set @entity.tabs (array/append @entity.tabs { id: ?behavior, label: ?label, icon: ?icon, topic: ?topic }))
+        (set @entity.active ?behavior)
         (emit TABS_PUSH {})
         (emit TABS_SHOWN {})
         (emit APP_SHOWN { id: ?behavior })
@@ -472,7 +493,13 @@ orbital Launchpad {
         (set @entity.active "")
         (emit TABS_PUSH {})
         (emit TABS_SHOWN {})
-      TAB_SELECT -> ready when (array/some @entity.tabs (fn t (= @t.id ?id)))
+      TAB_SELECT -> ready when (and (array/some @entity.tabs (fn t (= @t.id ?id))) (= ?id "almadar-std/std-behavior-playground"))
+        (set @entity.active ?id)
+        (emit PLAYGROUND_OPENED {})
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+        (emit APP_SHOWN { id: ?id })
+      TAB_SELECT -> ready when (and (array/some @entity.tabs (fn t (= @t.id ?id))) (!= ?id "almadar-std/std-behavior-playground"))
         (set @entity.active ?id)
         (emit TABS_PUSH {})
         (emit TABS_SHOWN {})
@@ -507,7 +534,6 @@ orbital Launchpad {
 
     listens {
       LaunchpadHome.TAB_OPEN -> TAB_OPEN
-      LaunchpadHome.HOME_FOCUS -> TAB_SELECT
       LaunchpadHome.HOME_CLOSE -> TAB_CLOSE
       LaunchpadRail.RAIL_HOME -> TAB_HOME
       LaunchpadRail.RAIL_CLOSE_ASKED -> TAB_CLOSE
@@ -614,13 +640,12 @@ orbital Launchpad {
         (emit HOME_SHOWN {})
       ORB_PUSH -> ready
         (emit ORB_STATE { machine: { label: (if @entity.statsReady (str/concat "CPU " (math/round @entity.cpuPercent 0) "% · RAM " (math/round @entity.memoryPercent 0) "%") "This machine"), detail: (let ((used (format/bytes @entity.memoryUsed)) (total (format/bytes @entity.memoryTotal))) (if (and @entity.statsReady (!= @used null) (!= @total null)) (str/concat @used " of " @total " in use · load " (math/round @entity.load1 2)) "Reading the machine")) }, stars: (array/concat (array/map @entity.openTabs (fn t { id: @t.id, label: @t.label, kind: @t.topic, state: "running", weight: 0, detail: (str/concat @t.topic " · open") })) (array/map (array/filter @entity.recents (fn c (not (array/some @entity.openTabs (fn t (= @t.id @c.behavior)))))) (fn c { id: @c.behavior, label: @c.label, kind: "recent", state: "stopped", weight: 0, detail: (str/concat "not open · last opened " (time/relative @c.at)) }))) })
-      APP_OPEN -> ready when (and (array/some @config.boardList (fn a (= @a.id ?behavior))) (array/some @entity.openTabs (fn t (= @t.id ?behavior))))
-        (emit HOME_FOCUS { id: ?behavior })
-      APP_OPEN -> ready when (and (array/some @config.boardList (fn a (= @a.id ?behavior))) (not (array/some @entity.openTabs (fn t (= @t.id ?behavior)))))
+      APP_OPEN -> ready when (array/some @config.boardList (fn a (= @a.id ?behavior)))
         (let ((a (array/find @config.boardList (fn x (= @x.id ?behavior))))) (emit TAB_OPEN { behavior: ?behavior, label: @a.label, icon: @a.icon, topic: @a.topic }))
         (let ((a (array/find @config.boardList (fn x (= @x.id ?behavior))))) (emit RECENT_ADD { behavior: ?behavior, label: @a.label, kind: "route", command: "", route: "" }))
-      ORB_OPENED -> ready
-        (emit HOME_FOCUS { id: ?id })
+      ORB_OPENED -> ready when (array/some @config.boardList (fn a (= @a.id ?id)))
+        (let ((a (array/find @config.boardList (fn x (= @x.id ?id))))) (emit TAB_OPEN { behavior: ?id, label: @a.label, icon: @a.icon, topic: @a.topic }))
+      ORB_OPENED -> ready when (not (array/some @config.boardList (fn a (= @a.id ?id))))
       ORB_STOPPED -> ready
         (emit HOME_CLOSE { id: ?id })
       ORB_RELAUNCHED -> ready
@@ -655,10 +680,6 @@ orbital Launchpad {
         topic : string!
       }
         @description "Open an app and put it in the rail."
-      HOME_FOCUS -> external {
-        id : string!
-      }
-        @description "Bring an open tab to the front."
       HOME_CLOSE -> external {
         id : string!
       }
@@ -690,6 +711,8 @@ orbital Launchpad {
       SystemOrb.ORB_STOP -> ORB_STOPPED
       SystemOrb.ORB_RELAUNCH -> ORB_RELAUNCHED
       LaunchpadRail.RAIL_OPEN -> APP_OPEN
+      LaunchpadBehaviorRoute.BEHAVIOR_LINKED -> APP_OPEN
+        with { behavior: "almadar-std/std-behavior-playground" }
       HOME_SHOWN { }
       ORB_PUSH { }
       TABS_CHANGED {
@@ -755,5 +778,31 @@ orbital Launchpad {
     }
   }
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus, AhApi, CrMonitoring
+
+  trait LaunchpadBehaviorRoute -> LaunchpadView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit BEHAVIOR_LINKED {})
+    }
+
+    emits {
+      BEHAVIOR_LINKED -> external {
+      }
+        @description "A link to /<package>/<behavior> was opened: the playground tab opens, and its route trait opens the behavior once the catalog is listed."
+    }
+
+    listens {
+      INIT {
+        package : string!
+        name : string!
+      }
+    }
+  }
+
+
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring
+  page "/:package/:name" as LaunchpadBehaviorPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, PlaygroundRoute, LaunchpadBehaviorRoute
+  page boot as LaunchpadSeed -> MockStream, MockSeed
 }

@@ -1,0 +1,1483 @@
+{
+  "atom": "../ui/avl/atoms/std-live-machine.lolo",
+  "trait": "LiveMachine",
+  "cases": [
+    {
+      "id": "described-renders-the-split-at-the-initial-state",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "describing",
+          "entity": {
+            "id": "m",
+            "title": "CheckoutRules",
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "transitions": [],
+            "sourceText": "",
+            "sourceLines": [],
+            "visited": []
+          },
+          "event": "DESCRIBED",
+          "payload": {
+            "result": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "advance-with-a-matching-transition-lights-it-and-moves-the-active-state",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "a",
+            "fired": -1,
+            "visited": [
+              "a"
+            ]
+          },
+          "event": "ADVANCE",
+          "payload": {
+            "event": "GO"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "advance-with-no-transition-from-the-active-state-is-ignored",
+      "note": "control: BACK leaves b only; the active state is a",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "a",
+            "fired": -1,
+            "visited": [
+              "a"
+            ]
+          },
+          "event": "ADVANCE",
+          "payload": {
+            "event": "BACK"
+          },
+          "expect": {
+            "fired": false,
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "advance-naming-an-arm-the-state-does-not-have-is-ignored",
+      "note": "control: GO leaves a only towards b, never towards c",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "a",
+            "fired": -1,
+            "visited": [
+              "a"
+            ]
+          },
+          "event": "ADVANCE",
+          "payload": {
+            "event": "GO",
+            "to": "c"
+          },
+          "expect": {
+            "fired": false,
+            "state": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "advance-with-to-picks-the-named-arm",
+      "note": "b has GO towards c and BACK towards a; to names the target and lights that arm",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "ADVANCE",
+          "payload": {
+            "event": "BACK",
+            "to": "a"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "subject-re-describes-another-trait-and-resets-the-view",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "SUBJECT",
+          "payload": {
+            "subject": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutTotals"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "describing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "advance-while-describing-is-ignored",
+      "note": "control: no described machine yet, so ADVANCE has no arm in describing",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "describing",
+          "entity": {
+            "id": "m",
+            "title": "CheckoutRules",
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "transitions": [],
+            "sourceText": "",
+            "sourceLines": [],
+            "visited": []
+          },
+          "event": "ADVANCE",
+          "payload": {
+            "event": "GO"
+          },
+          "expect": {
+            "fired": false,
+            "state": "describing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "moves-of-the-drawn-trait-move-the-view-to-the-last-target",
+      "note": "two fired moves of CheckoutRules; the view lands on the last one's target",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "CheckoutRules",
+                "event": "BACK",
+                "from": "b",
+                "to": "a",
+                "fired": true
+              },
+              {
+                "trait": "CheckoutRules",
+                "event": "GO",
+                "from": "a",
+                "to": "b",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-moves-of-another-trait-are-ignored",
+      "note": "a move of a sibling trait leaves the drawn machine as it is",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "Sibling",
+                "event": "GO",
+                "from": "a",
+                "to": "b",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-moves-that-did-not-fire-are-ignored",
+      "note": "an outcome the kernel reports as not fired moves nothing",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "idle",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "CheckoutRules",
+                "event": "GO",
+                "from": "b",
+                "to": "c",
+                "fired": false
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-moves-while-describing-are-ignored",
+      "note": "the machine is still being read",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "describing",
+          "entity": {
+            "id": "m",
+            "subject": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b",
+                      "isInitial": false
+                    },
+                    {
+                      "name": "c",
+                      "isInitial": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            },
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "title": "CheckoutRules",
+            "transitions": [
+              {
+                "from": "a",
+                "to": "b",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "c",
+                "event": "GO"
+              },
+              {
+                "from": "b",
+                "to": "a",
+                "event": "BACK"
+              }
+            ],
+            "sourceText": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              },
+              {
+                "index": 2,
+                "start": 4,
+                "end": 4
+              }
+            ],
+            "active": "b",
+            "fired": 0,
+            "visited": [
+              "a",
+              "b"
+            ],
+            "highlight": {
+              "start": 2,
+              "end": 2
+            }
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "CheckoutRules",
+                "event": "GO",
+                "from": "a",
+                "to": "b",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "describing",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "described-accepts-states-that-carry-no-initial-flag",
+      "config": {
+        "subject": {
+          "behavior": "std-checkout",
+          "trait": "CheckoutRules"
+        }
+      },
+      "steps": [
+        {
+          "trait": "LiveMachine",
+          "from": "describing",
+          "entity": {
+            "id": "m",
+            "title": "CheckoutRules",
+            "current": {
+              "behavior": "std-checkout",
+              "trait": "CheckoutRules"
+            },
+            "transitions": [],
+            "sourceText": "",
+            "sourceLines": [],
+            "visited": []
+          },
+          "event": "DESCRIBED",
+          "payload": {
+            "result": {
+              "machine": {
+                "stateMachine": {
+                  "states": [
+                    {
+                      "name": "a",
+                      "isInitial": true
+                    },
+                    {
+                      "name": "b"
+                    },
+                    {
+                      "name": "c"
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "from": "a",
+                      "to": "b",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "c",
+                      "event": "GO"
+                    },
+                    {
+                      "from": "b",
+                      "to": "a",
+                      "event": "BACK"
+                    }
+                  ]
+                }
+              },
+              "source": {
+                "text": "trait Demo {\n  a GO b\n  b GO c\n  b BACK a\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  },
+                  {
+                    "index": 2,
+                    "start": 4,
+                    "end": 4
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        }
+      ],
+      "note": "behavior/describe marks only the initial state; the others carry no isInitial"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-03T06:59:42.838Z",
+  "generated": "2026-11-03T14:58:45.401Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2317,6 +2317,9 @@
       },
       "returnSemantics": "lambda-result",
       "lambdaArgPosition": 1,
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      },
       "params": [
         {
           "name": "arr",
@@ -2350,10 +2353,7 @@
       "examples": [
         "(array/pmap [{\"price\":100},{\"price\":200}] [\"fn\",\"x\",[\"*\",\"@x.price\",1.1]])"
       ],
-      "docsSource": "generated",
-      "valueSourceSlots": {
-        "kind": "lambdaResult"
-      }
+      "docsSource": "generated"
     },
     "array/preduce": {
       "category": "std-array",
@@ -2370,6 +2370,9 @@
       },
       "returnSemantics": "lambda-result",
       "lambdaArgPosition": 2,
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      },
       "params": [
         {
           "name": "arr",
@@ -2415,10 +2418,7 @@
       "examples": [
         "(array/preduce [{\"price\":10},{\"price\":25}] 0 [\"fn\",[\"acc\",\"x\"],[\"+\",\"@acc\",\"@x.price\"]])"
       ],
-      "docsSource": "generated",
-      "valueSourceSlots": {
-        "kind": "lambdaResult"
-      }
+      "docsSource": "generated"
     },
     "array/prepend": {
       "category": "std-array",
@@ -25910,14 +25910,34 @@
               "arenas": {
                 "kind": "array",
                 "of": "Arena"
+              },
+              "rows": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "entity": "string",
+                    "rows": {
+                      "kind": "array",
+                      "of": {
+                        "kind": "map",
+                        "key": "string",
+                        "value": {
+                          "kind": "sexpr"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             },
             "optional": [
               "grants",
-              "arenas"
+              "arenas",
+              "rows"
             ]
           },
-          "description": "The guest options: `grants` (the os grants the guest's asks are answered under) and `arenas` (shared Arenas of the opener the guest may use); both optional",
+          "description": "The guest options: `grants` (the os grants the guest's asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest's store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open); all optional",
           "optional": true
         },
         {

@@ -1,0 +1,37 @@
+app live-machine-spec [
+  version: "1.0.0",
+  description: "Design contract for std-live-machine: a trait read with behavior/describe is drawn as its own source beside its state machine. DESCRIBED fills the view and starts at the machine's initial state; ADVANCE { event, to? } lights the first transition leaving the active state on that event (the arm named by `to` when given) and moves the active state; an event with no transition from the active state changes nothing; SUBJECT { subject } describes another trait and resets the view."
+]
+
+type DescribedState = { name : string!, isInitial : boolean }
+type DescribedTransition = { from : string!, to : string!, event : string! }
+type DescribedStateMachine = { states : [DescribedState]!, transitions : [DescribedTransition]! }
+type DescribedMachine = { stateMachine : DescribedStateMachine! }
+type TransitionLines = { index : number!, start : number!, end : number! }
+type DescribedSource = { text : string!, transitions : [TransitionLines]! }
+type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
+type CodeHighlight = { start : number!, end : number! }
+
+orbital LiveMachineSpec {
+  expects entity LiveMachineView [runtime] {
+    id : string!
+    subject : DescribedSubject
+    current : trait
+    title : string
+    transitions : [DescribedTransition]
+    sourceText : string
+    sourceLines : [TransitionLines]
+    highlight : CodeHighlight
+    active : string
+    fired : number
+    visited : [string]
+  }
+  expects trait LiveMachine {
+    state describing
+    state idle
+    emits {
+      DESCRIBED { result : DescribedSubject! }
+    }
+  }
+  expects page "/live-machine" -> LiveMachine
+}

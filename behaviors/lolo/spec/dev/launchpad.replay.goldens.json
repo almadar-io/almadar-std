@@ -167,7 +167,7 @@
    "now": 1760531445678
   },
   {
-   "id": "open-on-a-board-that-has-a-tab-brings-the-tab-to-the-front",
+   "id": "an-open-on-a-board-hands-the-stage-tab-open-even-when-home-remembers-it",
    "steps": [
     {
      "trait": "LaunchpadHome",
@@ -193,20 +193,35 @@
       "fired": true,
       "emits": [
        {
-        "event": "HOME_FOCUS",
+        "event": "TAB_OPEN",
         "payload": {
-         "id": "almadar-std/std-ci-status"
+         "behavior": "almadar-std/std-ci-status",
+         "label": "CI status",
+         "icon": "activity",
+         "topic": "ops"
+        }
+       },
+       {
+        "event": "RECENT_ADD",
+        "payload": {
+         "behavior": "almadar-std/std-ci-status",
+         "label": "CI status",
+         "kind": "route",
+         "command": "",
+         "route": ""
         }
        }
       ],
       "neverEmits": [
-       "TAB_OPEN",
-       "RECENT_ADD"
+       "HOME_FOCUS"
       ]
      }
     }
    ],
-   "now": 1760531445678
+   "now": 1760531445678,
+   "defaults": [
+    "RecentsStore"
+   ]
   },
   {
    "id": "control-open-on-an-app-the-launchpad-does-not-compose-does-nothing",
@@ -403,8 +418,8 @@
         "event": "ORB_STATE",
         "payload": {
          "machine": {
-          "label": "CPU 24% \u00b7 RAM 66%",
-          "detail": "10 GB of 16 GB in use \u00b7 load 1.5"
+          "label": "CPU 24% · RAM 66%",
+          "detail": "10 GB of 16 GB in use · load 1.5"
          },
          "stars": [
           {
@@ -413,7 +428,7 @@
            "kind": "ops",
            "state": "running",
            "weight": 0,
-           "detail": "ops \u00b7 open"
+           "detail": "ops · open"
           },
           {
            "id": "almadar-std/std-behavior-playground",
@@ -421,7 +436,7 @@
            "kind": "dev",
            "state": "running",
            "weight": 0,
-           "detail": "dev \u00b7 open"
+           "detail": "dev · open"
           }
          ]
         }
@@ -472,7 +487,7 @@
            "kind": "recent",
            "state": "stopped",
            "weight": 0,
-           "detail": "not open \u00b7 last opened 7 minutes ago"
+           "detail": "not open · last opened 7 minutes ago"
           }
          ]
         }
@@ -526,7 +541,7 @@
            "kind": "ops",
            "state": "running",
            "weight": 0,
-           "detail": "ops \u00b7 open"
+           "detail": "ops · open"
           }
          ]
         }
@@ -732,7 +747,7 @@
    "now": 1760531445678
   },
   {
-   "id": "a-star-open-brings-its-tab-to-the-front",
+   "id": "a-star-open-hands-the-stage-tab-open",
    "steps": [
     {
      "trait": "LaunchpadHome",
@@ -758,11 +773,17 @@
       "fired": true,
       "emits": [
        {
-        "event": "HOME_FOCUS",
+        "event": "TAB_OPEN",
         "payload": {
-         "id": "almadar-std/std-ci-status"
+         "behavior": "almadar-std/std-ci-status",
+         "label": "CI status",
+         "icon": "activity",
+         "topic": "ops"
         }
        }
+      ],
+      "neverEmits": [
+       "HOME_FOCUS"
       ]
      }
     }
@@ -925,7 +946,7 @@
            "kind": "recent",
            "state": "stopped",
            "weight": 0,
-           "detail": "not open \u00b7 last opened 7 minutes ago"
+           "detail": "not open · last opened 7 minutes ago"
           }
          ]
         }
@@ -935,6 +956,89 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "a-behavior-link-asks-for-the-playground-tab",
+   "steps": [
+    {
+     "trait": "LaunchpadBehaviorRoute",
+     "event": "INIT",
+     "payload": {
+      "package": "almadar-std",
+      "name": "std-x"
+     },
+     "entity": {
+      "id": "l"
+     },
+     "from": "ready",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "BEHAVIOR_LINKED"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-behavior-link-hands-the-stage-the-playground-tab-open",
+   "steps": [
+    {
+     "trait": "LaunchpadHome",
+     "event": "APP_OPEN",
+     "payload": {
+      "behavior": "almadar-std/std-behavior-playground"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [
+       {
+        "id": "almadar-std/std-behavior-playground",
+        "label": "Behavior playground",
+        "icon": "flask-conical",
+        "topic": "dev"
+       }
+      ],
+      "recents": [],
+      "tabs": [],
+      "active": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TAB_OPEN",
+        "payload": {
+         "behavior": "almadar-std/std-behavior-playground",
+         "label": "Behavior playground",
+         "icon": "flask-conical",
+         "topic": "dev"
+        }
+       },
+       {
+        "event": "RECENT_ADD",
+        "payload": {
+         "behavior": "almadar-std/std-behavior-playground",
+         "label": "Behavior playground",
+         "kind": "route",
+         "command": "",
+         "route": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "HOME_FOCUS"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "defaults": [
+    "RecentsStore"
+   ]
   }
  ]
 }

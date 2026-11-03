@@ -236,7 +236,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     }),
     params: [
       { name: 'program', type: SEXPR, description: 'A resolved program (`.orb` IR), as `behavior/resolve` answers' },
-      { name: 'options', type: shape({ grants: GUEST_GRANTS, arenas: list('Arena') }, ['grants', 'arenas']), description: 'The guest options: `grants` (the os grants the guest\'s asks are answered under) and `arenas` (shared Arenas of the opener the guest may use); both optional', optional: true },
+      { name: 'options', type: shape({ grants: GUEST_GRANTS, arenas: list('Arena'), rows: list(shape({ entity: STRING, rows: list(mapOf(STRING, SEXPR)) })) }, ['grants', 'arenas', 'rows']), description: 'The guest options: `grants` (the os grants the guest\'s asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest\'s store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open); all optional', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/open", "@entity.program", {}, { "emit": { "success": "OPENED", "failure": "OPEN_FAILED" } }]',

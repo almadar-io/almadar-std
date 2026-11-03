@@ -1,897 +1,1135 @@
 {
- "atom": "dev/atoms/std-guest-session.lolo",
- "trait": "GuestSession",
- "cases": [
-  {
-   "id": "open-from-idle-asks-the-kernel-and-clears-the-painter",
-   "steps": [
+  "atom": "dev/atoms/std-guest-session.lolo",
+  "trait": "GuestSession",
+  "cases": [
     {
-     "trait": "GuestSession",
-     "event": "GUEST_OPEN",
-     "payload": {
-      "program": {
-       "name": "x",
-       "orbitals": []
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "opening",
-      "emits": [
-       {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
-      "effects": [
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit"
-       },
-       {
-        "type": "program/open"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "open-while-live-closes-the-previous-guest",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPEN",
-     "payload": {
-      "program": {
-       "name": "x",
-       "orbitals": []
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
-        }
-       }
-      ],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "opening",
-      "emits": [
-       {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
-      "effects": [
-       {
-        "type": "program/close"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit"
-       },
-       {
-        "type": "program/open"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-an-open-while-opening-asks-again-without-closing",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPEN",
-     "payload": {
-      "program": {
-       "name": "x",
-       "orbitals": []
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "opening",
-     "expect": {
-      "fired": true,
-      "state": "opening",
-      "effects": [
-       {
-        "type": "emit"
-       },
-       {
-        "type": "program/open"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "the-opened-guest-paints-its-slots",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPENED",
-     "payload": {
-      "result": {
-       "guest": "guest-1",
-       "rendered": [
+      "id": "open-from-idle-plans-sample-rows-and-clears-the-painter",
+      "steps": [
         {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "stack"
-         }
-        }
-       ]
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "opening",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_PAINTS",
-        "payload": {
-         "guest": "guest-1",
-         "paints": [
-          {
-           "slot": "main",
-           "trait": "A.T",
-           "content": {
-            "type": "stack"
-           }
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-later-paint-of-a-slot-replaces-the-earlier-one",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPENED",
-     "payload": {
-      "result": {
-       "guest": "guest-1",
-       "rendered": [
-        {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "stack"
-         }
-        },
-        {
-         "slot": "aside",
-         "trait": "A.U",
-         "content": {
-          "type": "box"
-         }
-        },
-        {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "grid"
-         }
-        }
-       ]
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "opening",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_PAINTS",
-        "payload": {
-         "guest": "guest-1",
-         "paints": [
-          {
-           "slot": "aside",
-           "trait": "A.U",
-           "content": {
-            "type": "box"
-           }
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
           },
-          {
-           "slot": "main",
-           "trait": "A.T",
-           "content": {
-            "type": "grid"
-           }
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "an-open-that-lands-after-a-reset-is-closed-unpainted",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPENED",
-     "payload": {
-      "result": {
-       "guest": "guest-2",
-       "rendered": [
-        {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "stack"
-         }
-        }
-       ]
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "neverEmits": [
-       "GUEST_PAINTS"
-      ],
-      "effects": [
-       {
-        "type": "program/close"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "an-open-that-lands-over-a-live-guest-replaces-it",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_OPENED",
-     "payload": {
-      "result": {
-       "guest": "guest-2",
-       "rendered": [
-        {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "grid"
-         }
-        }
-       ]
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
-        }
-       }
-      ],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_PAINTS",
-        "payload": {
-         "guest": "guest-2",
-         "paints": [
-          {
-           "slot": "main",
-           "trait": "A.T",
-           "content": {
-            "type": "grid"
-           }
-          }
-         ]
-        }
-       }
-      ],
-      "effects": [
-       {
-        "type": "program/close"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-step-dispatches-into-the-open-guest",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_SEND",
-     "payload": {
-      "guest": "guest-1",
-      "address": "Counter.INC",
-      "event": "INC",
-      "payload": {}
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "effects": [
-       {
-        "type": "program/dispatch",
-        "arg0": "@payload.address"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-a-step-for-another-guest-is-ignored",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_SEND",
-     "payload": {
-      "guest": "guest-9",
-      "address": "Counter.INC",
-      "event": "INC",
-      "payload": {}
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "effects": []
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-stepped-slot-replaces-only-its-own-paint",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_STEPPED",
-     "payload": {
-      "result": {
-       "rendered": [
-        {
-         "slot": "main",
-         "trait": "A.T",
-         "content": {
-          "type": "grid"
-         }
-        }
-       ]
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
-        }
-       },
-       {
-        "slot": "aside",
-        "trait": "A.U",
-        "content": {
-         "type": "box"
-        }
-       }
-      ],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_PAINTS",
-        "payload": {
-         "guest": "guest-1",
-         "paints": [
-          {
-           "slot": "aside",
-           "trait": "A.U",
-           "content": {
-            "type": "box"
-           }
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
           },
-          {
-           "slot": "main",
-           "trait": "A.T",
-           "content": {
-            "type": "grid"
-           }
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "DATASET_PLAN"
+              }
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "let"
+              }
+            ]
           }
-         ]
         }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-failed-step-is-a-notice",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_STEP_FAILED",
-     "payload": {
-      "error": "boom"
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_NOTICE",
-        "payload": {
-         "message": "boom"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-failed-open-is-an-error",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_FAILED",
-     "payload": {
-      "error": "cannot run"
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "opening",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GUEST_ERROR",
-        "payload": {
-         "message": "cannot run"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-a-failed-open-over-a-live-guest-is-only-a-notice",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_FAILED",
-     "payload": {
-      "error": "cannot run"
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "live",
-      "neverEmits": [
-       "GUEST_ERROR"
       ],
-      "emits": [
-       {
-        "event": "GUEST_NOTICE",
-        "payload": {
-         "message": "cannot run"
-        }
-       }
+      "now": 1760531445678,
+      "defaults": [
+        "MockSeed"
       ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-host-that-has-no-program-reports-the-error",
-   "steps": [
+    },
     {
-     "trait": "GuestSession",
-     "event": "GUEST_FAIL",
-     "payload": {
-      "message": "no program"
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GUEST_ERROR",
-        "payload": {
-         "message": "no program"
+      "id": "open-while-live-closes-the-previous-guest",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "DATASET_PLAN"
+              }
+            ],
+            "effects": [
+              {
+                "type": "program/close"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "let"
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-reset-closes-the-guest-and-clears-the-painter",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_RESET",
-     "payload": {},
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
-        }
-       }
       ],
-      "guestError": ""
-     },
-     "from": "live",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
-      "effects": [
-       {
-        "type": "program/close"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit"
-       }
+      "now": 1760531445678,
+      "defaults": [
+        "MockSeed"
       ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-a-reset-with-no-guest-closes-nothing",
-   "steps": [
+    },
     {
-     "trait": "GuestSession",
-     "event": "GUEST_RESET",
-     "payload": {},
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GUEST_CLEARED",
-        "payload": {}
-       }
-      ],
-      "effects": [
-       {
-        "type": "emit"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "the-stage-shows-the-paint-it-is-given",
-   "steps": [
-    {
-     "trait": "GuestStage",
-     "event": "GUEST_PAINTS",
-     "payload": {
-      "guest": "guest-1",
-      "paints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
+      "id": "control-an-open-while-opening-plans-again-without-closing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "emit"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "let"
+              }
+            ],
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "DATASET_PLAN"
+              }
+            ]
+          }
         }
-       }
-      ]
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "effects": [
-       {
-        "type": "set",
-        "arg0": "@entity.guestHandle"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit",
-        "arg0": "GUEST_SHOWN"
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "a-control-of-the-open-guest-becomes-a-send",
-   "steps": [
-    {
-     "trait": "GuestStage",
-     "event": "GUEST_CONTROL",
-     "payload": {
-      "guest": "guest-1",
-      "address": "Counter.INC",
-      "event": "INC",
-      "payload": {}
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "emits": [
-       {
-        "event": "GUEST_SEND",
-        "payload": {
-         "guest": "guest-1",
-         "address": "Counter.INC",
-         "event": "INC",
-         "payload": {}
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-a-control-of-another-guest-sends-nothing",
-   "steps": [
-    {
-     "trait": "GuestStage",
-     "event": "GUEST_CONTROL",
-     "payload": {
-      "guest": "guest-9",
-      "address": "Counter.INC",
-      "event": "INC",
-      "payload": {}
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "neverEmits": [
-       "GUEST_SEND"
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "the-stage-clears-when-the-guest-is-gone",
-   "steps": [
-    {
-     "trait": "GuestStage",
-     "event": "GUEST_CLEARED",
-     "payload": {},
-     "entity": {
-      "id": "g",
-      "guestHandle": "guest-1",
-      "guestPaints": [
-       {
-        "slot": "main",
-        "trait": "A.T",
-        "content": {
-         "type": "stack"
-        }
-       }
       ],
-      "guestError": "x"
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "effects": [
-       {
-        "type": "set",
-        "arg0": "@entity.guestHandle",
-        "arg1": ""
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
-        "type": "emit",
-        "arg0": "GUEST_SHOWN"
-       }
+      "now": 1760531445678,
+      "defaults": [
+        "MockSeed"
       ]
-     }
+    },
+    {
+      "id": "the-opened-guest-paints-its-slots",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-1",
+              "rendered": [
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "stack"
+                  }
+                }
+              ],
+              "outcomes": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.T",
+                      "content": {
+                        "type": "stack"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-later-paint-of-a-slot-replaces-the-earlier-one",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-1",
+              "rendered": [
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "stack"
+                  }
+                },
+                {
+                  "slot": "aside",
+                  "trait": "A.U",
+                  "content": {
+                    "type": "box"
+                  }
+                },
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "grid"
+                  }
+                }
+              ],
+              "outcomes": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "paints": [
+                    {
+                      "slot": "aside",
+                      "trait": "A.U",
+                      "content": {
+                        "type": "box"
+                      }
+                    },
+                    {
+                      "slot": "main",
+                      "trait": "A.T",
+                      "content": {
+                        "type": "grid"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "an-open-that-lands-after-a-reset-is-closed-unpainted",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-2",
+              "rendered": [
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "stack"
+                  }
+                }
+              ],
+              "outcomes": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_PAINTS"
+            ],
+            "effects": [
+              {
+                "type": "program/close"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "an-open-that-lands-over-a-live-guest-replaces-it",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-2",
+              "rendered": [
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "grid"
+                  }
+                }
+              ],
+              "outcomes": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-2",
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.T",
+                      "content": {
+                        "type": "grid"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "program/close"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-step-dispatches-into-the-open-guest",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEND",
+          "payload": {
+            "guest": "guest-1",
+            "address": "Counter.INC",
+            "event": "INC",
+            "payload": {}
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "program/dispatch",
+                "arg0": "@payload.address"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-step-for-another-guest-is-ignored",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEND",
+          "payload": {
+            "guest": "guest-9",
+            "address": "Counter.INC",
+            "event": "INC",
+            "payload": {}
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-stepped-slot-replaces-only-its-own-paint",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_STEPPED",
+          "payload": {
+            "result": {
+              "rendered": [
+                {
+                  "slot": "main",
+                  "trait": "A.T",
+                  "content": {
+                    "type": "grid"
+                  }
+                }
+              ],
+              "outcomes": [
+                {
+                  "trait": "T",
+                  "event": "GO",
+                  "from": "a",
+                  "to": "b",
+                  "fired": true
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "aside",
+                "trait": "A.U",
+                "content": {
+                  "type": "box"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "paints": [
+                    {
+                      "slot": "aside",
+                      "trait": "A.U",
+                      "content": {
+                        "type": "box"
+                      }
+                    },
+                    {
+                      "slot": "main",
+                      "trait": "A.T",
+                      "content": {
+                        "type": "grid"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "GUEST_MOVED",
+                "payload": {
+                  "guest": "guest-1",
+                  "moves": [
+                    {
+                      "trait": "T",
+                      "event": "GO",
+                      "from": "a",
+                      "to": "b",
+                      "fired": true
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-step-is-a-notice",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_STEP_FAILED",
+          "payload": {
+            "error": "boom"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_NOTICE",
+                "payload": {
+                  "message": "boom"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-open-is-an-error",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_FAILED",
+          "payload": {
+            "error": "cannot run"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ERROR",
+                "payload": {
+                  "message": "cannot run"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-failed-open-over-a-live-guest-is-only-a-notice",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_FAILED",
+          "payload": {
+            "error": "cannot run"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "GUEST_ERROR"
+            ],
+            "emits": [
+              {
+                "event": "GUEST_NOTICE",
+                "payload": {
+                  "message": "cannot run"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-host-that-has-no-program-reports-the-error",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_FAIL",
+          "payload": {
+            "message": "no program"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ERROR",
+                "payload": {
+                  "message": "no program"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-reset-closes-the-guest-and-clears-the-painter",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_RESET",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              }
+            ],
+            "effects": [
+              {
+                "type": "program/close"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-reset-with-no-guest-closes-nothing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_RESET",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              }
+            ],
+            "effects": [
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-shows-the-paint-it-is-given",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "guest-1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.guestHandle"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit",
+                "arg0": "GUEST_SHOWN"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-control-of-the-open-guest-becomes-a-send",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_CONTROL",
+          "payload": {
+            "guest": "guest-1",
+            "address": "Counter.INC",
+            "event": "INC",
+            "payload": {}
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_SEND",
+                "payload": {
+                  "guest": "guest-1",
+                  "address": "Counter.INC",
+                  "event": "INC",
+                  "payload": {}
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-control-of-another-guest-sends-nothing",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_CONTROL",
+          "payload": {
+            "guest": "guest-9",
+            "address": "Counter.INC",
+            "event": "INC",
+            "payload": {}
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_SEND"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-clears-when-the-guest-is-gone",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_CLEARED",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": "x"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.guestHandle",
+                "arg1": ""
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit",
+                "arg0": "GUEST_SHOWN"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "planned-rows-open-the-guest-with-them",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "DATASET_PLANNED",
+          "payload": {
+            "rows": [
+              {
+                "entity": "Item",
+                "rows": [
+                  {
+                    "id": "Item Id 1",
+                    "name": "a"
+                  }
+                ]
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/open"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-failed-plan-opens-the-guest-empty-and-says-so",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "DATASET_FAILED",
+          "payload": {
+            "error": "boom"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_NOTICE",
+                "payload": {
+                  "message": "Sample rows could not be made, so the guest opens empty: boom"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "emit"
+              },
+              {
+                "type": "program/open"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-a-plan-answer-after-the-guest-is-live-is-ignored",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "DATASET_PLANNED",
+          "payload": {
+            "rows": [
+              {
+                "entity": "Item",
+                "rows": [
+                  {
+                    "id": "Item Id 1",
+                    "name": "a"
+                  }
+                ]
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-a-program-the-sampler-cannot-read-opens-empty-and-says-so",
+      "defaults": [
+        "MockSeed"
+      ],
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "entity": {
+                    "persistence": "runtime"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "GUEST_NOTICE",
+                "payload": {
+                  "message": "Sample rows could not be made for this program, so it opens empty."
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_PLAN"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
     }
-   ],
-   "now": 1760531445678
-  }
- ]
+  ]
 }

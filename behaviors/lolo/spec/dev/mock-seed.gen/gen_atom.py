@@ -25,6 +25,7 @@ def stamped(base,members): return f'(let ((rs {{ {members} }})) (default (object
 nx=S.nxt
 NEW=f'''      CORPUS_IS -> ready
         (set @entity.words ?words)
+        (when (!= @entity.dsHeld null) (do (emit DS_PROGRAM_READ {{ result: (default @entity.dsHeld {{ orbitals: [] }}) }}) (set @entity.dsHeld null)))
         (when @entity.dsBoot (do (set @entity.dsBoot false) (fetch MockSeedMark {{ id: "seeded", emit: {{ success: DS_MARK_FOUND, failure: DS_MARK_ABSENT }} }})))
       WALK_START -> ready
         (let ((sampled {run_start}))
@@ -86,7 +87,7 @@ orbs=f'(object/get {RES_} "orbitals" [])'
 prim=f'(array/filter (array/map {orbs} (fn o (object/get @o "entity"))) (fn e (validate/object @e)))'
 aux=f'(array/filter (array/flatten (array/map {orbs} (fn o (object/get @o "auxiliaryEntities" [])))) (fn e (validate/object @e)))'
 # order: per orbital: entity then its auxiliaries
-defs=f'(array/filter (array/flatten (array/map {orbs} (fn o (array/concat (array/filter [(object/get @o "entity")] (fn e (validate/object @e))) (array/filter (object/get @o "auxiliaryEntities" []) (fn e (validate/object @e))))))) (fn e (!= (object/get @e "persistence" "") "runtime")))'
+defs=f'(array/filter (array/flatten (array/map {orbs} (fn o (array/concat (array/filter [(object/get @o "entity")] (fn e (validate/object @e))) (array/filter (object/get @o "auxiliaryEntities" []) (fn e (validate/object @e))))))) (fn e (or @entity.dsRuntime (!= (object/get @e "persistence" "") "runtime"))))'
 idprim=f'(array/filter {prim} (fn e (object/get @e "identity" false)))'
 idaux=f'(array/filter {aux} (fn e (object/get @e "identity" false)))'
 iddef=f'(let ((ip (array/first {idprim}))) (if (= @ip null) (array/first {idaux}) @ip))'
@@ -105,7 +106,7 @@ def owner_cols(d):
     mirror=f'(array/filter {decl_cols(f"(object/get {d} {chr(34)}collection{chr(34)} {chr(34)}{chr(34)})")} (fn c (array/includes (array/map (object/get {d} "fields" []) (fn f (object/get @f "name" ""))) @c)))'
     return f'(if (= {idname} "") [] (array/unique (array/concat {own} (if (!= (object/get {d} "collection" "") "") {mirror} []))))'
 def reg(d,seeds):
-    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (and (= (object/get {d} "persistence" "") "runtime") (not @entity.dsRuntime)), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= @idd null) (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= @idd null) (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
@@ -230,7 +231,7 @@ def owner_cols(d):
     allc=f'(array/unique (array/concat {schema_cols} {env_cols("(object/get "+d+" "+chr(34)+"name"+chr(34)+")")}))'
     return f'(let ((oc {allc})) (array/concat (array/filter @oc (fn c (= @c "id"))) (array/filter @oc (fn c (!= @c "id")))))'
 def reg(d,seeds):
-    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (and (= (object/get {d} "persistence" "") "runtime") (not @entity.dsRuntime)), seeds: {seeds}, ownerCols: {owner_cols(d)}, instances: {selected_instances(d)} }}')
 regs_expr=(f'(let ((alld {defs}) (idd {iddef})) (array/concat (if (and (!= @idd null) (not {has_inst("@idd")})) [{reg("@idd","true")}] []) '
            f'(array/map @alld (fn d {reg("@d",f"(and (not {has_inst(chr(64)+chr(100))}) {mock_seeds(chr(64)+chr(100))})")}))))')
 # ---- projections
@@ -281,7 +282,7 @@ def policy_owner(d):
     return f'(object/get @storePolicy {storekey(d)} null)'
 def reg(d,seeds):
     po=policy_owner(d)
-    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (= (object/get {d} "persistence" "") "runtime"), seeds: {seeds}, ownerCols: {owner_cols(d)}, '
+    return (f'{{ label: (object/get {d} "name"), store: {storekey(d)}, fields: (object/get {d} "fields" []), identity: (object/get {d} "identity" false), runtime: (and (= (object/get {d} "persistence" "") "runtime") (not @entity.dsRuntime)), seeds: {seeds}, ownerCols: {owner_cols(d)}, '
             f'policyEntity: (let ((po {po})) (if (= @po null) (object/get {d} "name") (object/get @po "name"))), hasRead: (let ((po {po})) (if (= @po null) false (object/get @po "hasRead"))), hasCreate: (let ((po {po})) (if (= @po null) (object/has {d} "create_policy") (object/get @po "hasCreate"))), policyRefs: (let ((po {po})) (if (= @po null) [] (object/get @po "refs"))), instances: {selected_instances(d)} }}')
 REF_FOLD=('(fn (n k) (array/concat (if (validate/string @n) (if (str/startsWith @n (quote "@entity.")) [(str/slice @n 8 (str/len @n))] '
           '(if (and (str/startsWith @n (quote "@")) (not (str/startsWith @n (quote "@user"))) (!= @n (quote "@entity"))) ["*"] [])) '
@@ -421,6 +422,7 @@ row_owner=('(if (= @sc @entity.dsIdStore) '+SID('(object/get @sr "id")')+' '
            '(array/reduce @cols "" (fn acc c (if (and (= @acc "") (validate/string (object/get @sr @c "")) (array/includes @ids (object/get @sr @c ""))) (object/get @sr @c "") @acc))))')
 WRITE_ROWS=('(let ((ids '+ID_IDS+')) (array/flatten (array/map (object/keys @entity.dsStores) (fn sc (let ((se '+entity_of('@sc')+') (pe '+policy_entity_of('@sc')+') (cols '+owner_cols_of('@sc')+') (checked '+creates_checked('@sc')+')) '
            '(array/map (array/range (array/len (object/get @entity.dsStores @sc []))) (fn si (let ((sr (default (array/nth (object/get @entity.dsStores @sc []) @si) { }))) { store: @sc, i: @si, label: @se, entity: @pe, owner: '+row_owner+', checked: @checked }))))))))')
+PLAN_ROWS=('(array/map (object/keys @entity.dsStores) (fn sc { entity: '+entity_of('@sc')+', rows: (object/get @entity.dsStores @sc []) }))')
 WR='(array/nth @entity.dsWriteAll @entity.dsWriteAt)'
 WRITER_PLAN=('(let ((wr '+WR+')) (let ((row (default (array/nth (object/get @entity.dsStores (object/get @wr "store") []) (object/get @wr "i")) { })) (idrows '+ID_ROWS+') (own (object/get @wr "owner"))) '
              '(let ((cands (array/concat (if (= @own "") [""] [@own, ""]) (array/filter (array/map @idrows (fn t '+SID('(object/get @t "id")')+')) (fn x (!= @x @own)))))) '
@@ -540,7 +542,10 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (set @entity.dsWriteAt (+ @entity.dsWriteAt 1))
         (set @entity.dsWork (+ @entity.dsWork 3))
         (if (>= @entity.dsWork @config.stepsPerDispatch) (do (set @entity.dsNext "writer") (program/dispatch (str/concat @config.seedOrbital "." @config.seedTrait ".DS_RESUME") {{ }} {{ orbital: @config.seedOrbital, targetTrait: @config.seedTrait, event: "DS_RESUME", clientId: (str/concat "seed-resume-" @entity.dsResumes), wire: true }} {{ key: "mock-seed-resume", emit: {{ success: DS_RESUMED, failure: DS_WRITE_FAILED }} }})) (emit DS_WRITER {{ at: @entity.dsWriteAt }}))
-      DS_PROJS -> ready
+      DS_PROJS -> ready when (= @entity.dsMode "plan")
+        (set @entity.dsStores {projs_only})
+        (emit DATASET_PLANNED {{ rows: {PLAN_ROWS} }})
+      DS_PROJS -> ready when (!= @entity.dsMode "plan")
         (set @entity.dsStores {projs_only})
         (set @entity.dsWriteAll {WRITE_ROWS})
         (set @entity.dsRegsAll [])
@@ -618,6 +623,7 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (emit RESTAMP_DONE {{ journal: ?journal, changes: [] }})
       RESTAMP_INPUT -> ready when (or (= ?firstOwner true) @config.restampOnPersona)
         (set @entity.dsMode "restamp")
+        (set @entity.dsRuntime false)
         (set @entity.dsOwnerPairs [])
         (set @entity.dsLocale "")
         (set @entity.dsViewerRecord {{ id: "", claims: [] }})
@@ -629,7 +635,7 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.rsJournal (object/set ?journal "viewerId" @entity.dsViewer))
         (set @entity.rsChanges [])
         (set @entity.dsStamps (if (or (= @entity.dsViewer "") (= @entity.dsViewer (object/get ?journal "viewerId"))) [] {restamp_queue}))
-        (emit DS_PROGRAM_READ {{ result: ?program }})
+        (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
       DS_MARK_FOUND -> ready
       DS_MARK_ABSENT -> ready when (and (= ?code "not-found") @entity.dsActive)
       DS_MARK_ABSENT -> ready when (and (= ?code "not-found") (not @entity.dsActive))
@@ -641,6 +647,7 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsActive true)
         (set @entity.dsSelf true)
         (set @entity.dsMode "seed")
+        (set @entity.dsRuntime false)
         (set @entity.dsHasViewerRecord false)
         (set @entity.dsViewer "")
         (set @entity.dsCount @config.count)
@@ -656,10 +663,11 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsStamped [])
         (set @entity.dsWork 0)
         (set @entity.dsDeferred [])
-        (emit DS_PROGRAM_READ {{ result: ?result }})
+        (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?result }}) (do (set @entity.dsHeld ?result) (emit CORPUS_ASK {{ }})))
       DATASET_INPUT -> ready
         (set @entity.dsSelf false)
         (set @entity.dsMode "seed")
+        (set @entity.dsRuntime false)
         (set @entity.dsHasViewerRecord false)
         (set @entity.dsViewer ?viewerId)
         (set @entity.dsCount (if (= ?count null) @config.count ?count))
@@ -675,10 +683,31 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsStamped [])
         (set @entity.dsWork 0)
         (set @entity.dsDeferred [])
-        (emit DS_PROGRAM_READ {{ result: ?program }})
+        (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
+      DATASET_PLAN -> ready
+        (set @entity.dsSelf false)
+        (set @entity.dsMode "plan")
+        (set @entity.dsRuntime (default ?runtime false))
+        (set @entity.dsHasViewerRecord false)
+        (set @entity.dsViewer "")
+        (set @entity.dsCount (if (= ?count null) @config.count ?count))
+        (set @entity.dsSource "")
+        (set @entity.dsOwns "")
+        (set @entity.dsOwnerPairs [])
+        (set @entity.dsLocale (default ?locale ""))
+        (set @entity.nowMs ?nowMs)
+        (set @entity.dsNowIso {iso("?nowMs")})
+        (set @entity.rng (math/mod (if (= ?seed null) @config.seed ?seed) 4294967296))
+        (set @entity.dsMinted 0)
+        (set @entity.dsStores {{}})
+        (set @entity.dsStamped [])
+        (set @entity.dsWork 0)
+        (set @entity.dsDeferred [])
+        (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
       DATASET_START -> ready
         (set @entity.dsSelf false)
         (set @entity.dsMode "seed")
+        (set @entity.dsRuntime false)
         (set @entity.dsHasViewerRecord false)
         (set @entity.dsOwnerPairs [])
         (set @entity.dsLocale "")
@@ -756,6 +785,7 @@ L+=w('SEED_STREAM','seed : number!  nowMs : instant!','Start a store stream: res
 L+=w('SEED_ROW','fields : [MockFieldSpec]!  label : string!  n : number!  index : number!  identity : boolean!  runtime : boolean!  nowMs : instant!','Seed one row of a mock store the way the kernel does: the Label Id n id, createdAt and updatedAt drawn first from the stream, then the seeded fields.','seed row, mock store row')
 L+=w('RESTAMP_INPUT','program : SeedProgram!  stores : Map string [Map string MockValue?]!  journal : SeedOwnerJournal!  viewer : Viewer  firstOwner : boolean','Restamp only retained seed-owner cells against current rows and the full current viewer, retaining legacy fallback and rekey behavior.','restamp seed owners, switch seed persona')
 L+=w('DATASET_INPUT','program : SeedProgram!  count : number  seed : number  nowMs : instant!  viewerId : string!  ownerPairs : [SeedOwnerPair]!  locale : string','Seed an already-resolved program with explicit owner pairs and optional locale, without reading program text or environment variables.','seed resolved dataset, embedded mock dataset')
+L+=w('DATASET_PLAN','program : SeedProgram!  count : number  seed : number  nowMs : instant!  locale : string  runtime : boolean','Sample a mock dataset for an already-resolved program and answer its rows per entity, writing nothing; runtime true also samples count rows of each [runtime] entity.','plan mock dataset, preview seed rows')
 L+=w('DATASET_START','source : string!  count : number!  seed : number!  nowMs : instant!  viewerId : string!','Seed a whole mock dataset from a program the way the kernel does: read the program, derive the store order, owner columns and relation links from it, seed the identity store first, then each store with stamps drawn from one stream, owner columns stamped for the viewer, later registrants backfilled, and relations and projected fields linked.','seed dataset, mock dataset')
 L+=w('DS_OWNS_ENV','value : string','The ALMADAR_PERSONA_OWNS value.','owner env')
 L+=w('DS_OWNS_ENV_FAILED','error : string','The owner environment variable could not be read.','owner env failed')
@@ -801,6 +831,7 @@ E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of e
 E+=ext('OWNERS_FAILED',['error : string'],'The owner columns could not be keyed by entity name.')
 E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('DS_WRITTEN','','the seeded rows were written'),('DS_RESTAMPED','','the owner changes were written'),('DS_WRITE_FAILED','error : string','a seed write failed'),('DS_WRITE_NEXT','at : number','the next owner chunk'),('DS_CHUNK_WRITTEN','','an owner chunk was written'),('DS_CHUNK_REFUSED','error : string','an owner chunk was refused'),('DS_WRITER','at : number','the next row writer'),('DS_SELF_READ','result : SeedProgram!','the running app program was read'),('DS_MARK_FOUND','data : MockSeedMark!','the seed marker exists'),('DS_MARK_ABSENT','error : string  code : string','no seed marker, or the store failed'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
 E+=ext('ACCESS_CHECK_FAILED',['error : string'],'An owner access check failed; it was counted as a denial and the seed carried on.')
+E+=ext('DATASET_PLANNED',['rows : [SeedRows]!'],'The sampled rows of each seeded entity in store order, complete as DATASET_INPUT would write them, with owner columns as sampled; nothing was written.')
 E+=ext('DATASET_FAILED',['error : string'],'The program could not be read or a consumed identity ID was not a primitive; the request stops without a success journal.')
 E+='      CORPUS_ASK { }\n        @description "Internal: ask the stream for its word corpus."\n        @tier "internal"\n'
 E+='      ROWS_NEXT { at : number }\n        @description "Internal: sample the next row."\n        @tier "internal"\n'
@@ -816,6 +847,7 @@ fields='''    id : string!
     nowMs : instant @description "The instant the stream relative dates and stamps are drawn against."
     rng : number @description "The seeded stream generator state." = 42
     words : [string] @description "The word corpus the stream draws text from." = []
+    dsHeld : SeedProgram? @description "A request's program held until the word corpus has answered, so its text fields are sampled from words." = null
     out : WalkOut @description "The last sampler result." = { cells: [], s: 42 }
     createdMs : instant @description "The seeded row creation instant."
     updatedMs : instant @description "The seeded row update instant."
@@ -827,7 +859,7 @@ fields='''    id : string!
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
     dsSelf : boolean @description "The running seed was started by seedOnInit, so its write leaves the seed marker." = false
     dsBoot : boolean @description "seedOnInit asked for the word corpus at INIT; its answer starts the seed, so the boot seed draws text from the corpus." = false
-    dsMode : string @description "The shared request lifecycle: seed, restamp or terminal failed." = "seed"
+    dsMode : string @description "The shared request lifecycle: seed, plan, restamp or terminal failed." = "seed"
     dsHasViewerRecord : boolean = false
     dsViewerRecord : Viewer = { id: "", claims: [] }
     rsJournal : SeedOwnerJournal = { viewerId: "", stamped: [], deferred: [] }
@@ -872,6 +904,7 @@ fields='''    id : string!
     dsViewer : string @description "The viewer id owner columns are stamped for, or empty." = ""
     dsIdStore : string @description "The store key of the identity entity." = ""
     dsCount : number @description "The seed count the host named." = 0
+    dsRuntime : boolean @description "Whether this request also samples [runtime] entities, count rows each." = false
     dsMinted : number @description "Ids minted so far for id-less authored instances." = 0
     dsNowIso : string @description "The clock as an ISO timestamp, for authored instances." = ""
 '''
@@ -897,6 +930,7 @@ type SeedEntity = { name : string!, persistence : string, collection : string, i
 type SeedOrbital = { entity : SeedEntity!, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
+type SeedRows = { entity : string!, rows : [Map string MockValue?]! }
 type SampleValueMap = Map string MockValue?
 type MockRelation = { entity : string, cardinality : string }
 type MockProjection = { type : string!, field : string }

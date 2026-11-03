@@ -17,6 +17,7 @@ type SeedEntity = { name : string!, persistence : string, collection : string, i
 type SeedOrbital = { entity : SeedEntity!, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
+type SeedRows = { entity : string!, rows : [Map string MockValue?]! }
 type SampleValueMap = Map string MockValue?
 type MockRelation = { entity : string, cardinality : string }
 type MockProjection = { type : string!, field : string }
@@ -57,6 +58,7 @@ orbital MockSeedHostOrbital {
     nowMs : instant @description "The instant the stream relative dates and stamps are drawn against."
     rng : number @description "The seeded stream generator state." = 42
     words : [string] @description "The word corpus the stream draws text from." = []
+    dsHeld : SeedProgram? @description "A request's program held until the word corpus has answered, so its text fields are sampled from words." = null
     out : WalkOut @description "The last sampler result." = { cells: [], s: 42 }
     createdMs : instant @description "The seeded row creation instant."
     updatedMs : instant @description "The seeded row update instant."
@@ -68,7 +70,7 @@ orbital MockSeedHostOrbital {
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
     dsSelf : boolean @description "The running seed was started by seedOnInit, so its write leaves the seed marker." = false
     dsBoot : boolean @description "seedOnInit asked for the word corpus at INIT; its answer starts the seed, so the boot seed draws text from the corpus." = false
-    dsMode : string @description "The shared request lifecycle: seed, restamp or terminal failed." = "seed"
+    dsMode : string @description "The shared request lifecycle: seed, plan, restamp or terminal failed." = "seed"
     dsHasViewerRecord : boolean = false
     dsViewerRecord : Viewer = { id: "", claims: [] }
     rsJournal : SeedOwnerJournal = { viewerId: "", stamped: [], deferred: [] }
@@ -113,6 +115,7 @@ orbital MockSeedHostOrbital {
     dsViewer : string @description "The viewer id owner columns are stamped for, or empty." = ""
     dsIdStore : string @description "The store key of the identity entity." = ""
     dsCount : number @description "The seed count the host named." = 0
+    dsRuntime : boolean @description "Whether this request also samples [runtime] entities, count rows each." = false
     dsMinted : number @description "Ids minted so far for id-less authored instances." = 0
     dsNowIso : string @description "The clock as an ISO timestamp, for authored instances." = ""
   }

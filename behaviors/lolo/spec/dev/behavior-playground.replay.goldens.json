@@ -287,6 +287,577 @@
    "defaults": [
     "PlaygroundLoader"
    ]
+  },
+  {
+   "id": "a-route-page-holds-the-behavior-its-path-names",
+   "steps": [
+    {
+     "trait": "PlaygroundRoute",
+     "event": "INIT",
+     "payload": {
+      "package": "almadar-std",
+      "name": "std-x"
+     },
+     "entity": {
+      "id": "p"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.routeBehavior"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-tree-arriving-opens-the-routes-behavior",
+   "steps": [
+    {
+     "trait": "PlaygroundRoute",
+     "event": "TREE_LOADED",
+     "payload": {
+      "data": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "routeBehavior": "almadar-std/std-x"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ROUTE_OPEN",
+        "payload": {
+         "behavior": "almadar-std/std-x",
+         "package": "@almadar/std",
+         "topic": "ui/core",
+         "value": {
+          "behavior": "almadar-std/std-x"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-page-without-a-route-behavior-opens-nothing",
+   "steps": [
+    {
+     "trait": "PlaygroundRoute",
+     "event": "TREE_LOADED",
+     "payload": {
+      "data": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "routeBehavior": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "ROUTE_OPEN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-route-behavior-not-in-the-tree-opens-nothing",
+   "steps": [
+    {
+     "trait": "PlaygroundRoute",
+     "event": "TREE_LOADED",
+     "payload": {
+      "data": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "routeBehavior": "almadar-std/std-nope"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "ROUTE_OPEN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-click-on-a-behavior-in-the-tree-moves-the-url-to-its-route",
+   "steps": [
+    {
+     "trait": "PlaygroundTopics",
+     "event": "NODE_SELECTED",
+     "payload": {
+      "id": "almadar-std/std-x"
+     },
+     "entity": {
+      "id": "p",
+      "topics": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "count": 1
+       }
+      ],
+      "leaves": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "navigate"
+       }
+      ],
+      "emits": [
+       {
+        "event": "LEAF_PICKED",
+        "payload": {
+         "behavior": "almadar-std/std-x",
+         "value": {
+          "behavior": "almadar-std/std-x"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "defaults": [
+    "PlaygroundStage"
+   ]
+  },
+  {
+   "id": "control-a-click-on-a-topic-picks-the-topic-and-opens-no-behavior",
+   "steps": [
+    {
+     "trait": "PlaygroundTopics",
+     "event": "NODE_SELECTED",
+     "payload": {
+      "id": "@almadar/std ui/core"
+     },
+     "entity": {
+      "id": "p",
+      "topics": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "count": 1
+       }
+      ],
+      "leaves": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "LEAF_PICKED"
+      ],
+      "emits": [
+       {
+        "event": "TOPIC_PICKED",
+        "payload": {
+         "package": "@almadar/std",
+         "topic": "ui/core",
+         "count": 1
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-whole-tree-lists-every-topics-behaviors-at-once",
+   "steps": [
+    {
+     "trait": "PlaygroundTopics",
+     "event": "TREE_LOADED",
+     "payload": {
+      "data": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "behavior": "almadar-std/std-x",
+        "kind": "atom",
+        "value": {
+         "behavior": "almadar-std/std-x"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "topics": [
+       {
+        "package": "@almadar/std",
+        "topic": "ui/core",
+        "count": 1
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.leaves"
+       }
+      ],
+      "emits": [
+       {
+        "event": "TOPICS_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-route-open-opens-the-behavior-in-the-stage-under-its-topic",
+   "steps": [
+    {
+     "trait": "PlaygroundStage",
+     "event": "OPEN",
+     "payload": {
+      "behavior": "almadar-std/std-x",
+      "package": "@almadar/std",
+      "topic": "ui/core",
+      "value": {
+       "behavior": "almadar-std/std-x"
+      }
+     },
+     "entity": {
+      "id": "p",
+      "status": "browsing"
+     },
+     "from": "browsing",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.topic"
+       }
+      ],
+      "emits": [
+       {
+        "event": "LOAD_BEHAVIOR"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "defaults": [
+    "PlaygroundLoader",
+    "GuestSession"
+   ]
+  },
+  {
+   "id": "dock-a-loaded-behavior-asks-the-catalog-for-its-traits",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "BEHAVIOR_LOADED",
+     "payload": {
+      "behavior": "almadar-std/std-browse",
+      "programJson": "{}",
+      "sourceJson": "{}",
+      "sourceText": "",
+      "knobs": [],
+      "valid": true,
+      "findings": []
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "",
+      "machineTraits": [],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "CATALOG_TRAITS",
+        "payload": {
+         "behavior": "almadar-std/std-browse"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "dock-the-opened-behaviors-traits-draw-its-first-trait",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "CATALOG_TRAITS_OF",
+     "payload": {
+      "behavior": "almadar-std/std-browse",
+      "traits": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "BrowseItemBrowse"
+       },
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "MasterListView"
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "almadar-std/std-browse",
+      "machineTraits": [],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SUBJECT",
+        "payload": {
+         "subject": {
+          "behavior": "almadar-std/std-browse",
+          "trait": "BrowseItemBrowse"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "dock-control-traits-of-another-behavior-draw-nothing",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "CATALOG_TRAITS_OF",
+     "payload": {
+      "behavior": "almadar-std/std-card-grid",
+      "traits": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "BrowseItemBrowse"
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "almadar-std/std-browse",
+      "machineTraits": [],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [],
+      "neverEmits": [
+       "SUBJECT"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "dock-edge-a-behavior-with-no-listed-traits-draws-nothing",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "CATALOG_TRAITS_OF",
+     "payload": {
+      "behavior": "almadar-std/std-browse",
+      "traits": []
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "almadar-std/std-browse",
+      "machineTraits": [],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [],
+      "neverEmits": [
+       "SUBJECT"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "dock-a-picked-trait-is-drawn",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "MACHINE_PICK",
+     "payload": {
+      "index": 1
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "almadar-std/std-browse",
+      "machineTraits": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "BrowseItemBrowse"
+       },
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "MasterListView"
+       }
+      ],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SUBJECT",
+        "payload": {
+         "subject": {
+          "behavior": "almadar-std/std-browse",
+          "trait": "MasterListView"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "dock-edge-a-pick-out-of-range-draws-nothing",
+   "steps": [
+    {
+     "trait": "PlaygroundMachine",
+     "event": "MACHINE_PICK",
+     "payload": {
+      "index": 2
+     },
+     "entity": {
+      "id": "p",
+      "machineBehavior": "almadar-std/std-browse",
+      "machineTraits": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "BrowseItemBrowse"
+       },
+       {
+        "behavior": "almadar-std/std-browse",
+        "trait": "MasterListView"
+       }
+      ],
+      "machinePick": 0
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [],
+      "neverEmits": [
+       "SUBJECT"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

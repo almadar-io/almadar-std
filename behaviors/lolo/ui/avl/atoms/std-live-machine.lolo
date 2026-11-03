@@ -1,0 +1,200 @@
+app std-live-machine [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's .lolo source (the lines of the transition that fired are highlighted) next to its state machine (active state, fired transition, visited states). A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { subject } re-describes another trait and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
+]
+;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
+uses Spec from "almadar-std/live-machine"
+
+type DescribedState = { name : string!, isInitial : boolean }
+type DescribedTransition = { from : string!, to : string!, event : string! }
+type DescribedStateMachine = { states : [DescribedState]!, transitions : [DescribedTransition]! }
+type DescribedMachine = { stateMachine : DescribedStateMachine! }
+type TransitionLines = { index : number!, start : number!, end : number! }
+type DescribedSource = { text : string!, transitions : [TransitionLines]! }
+type TraitRef = { behavior : string, trait : string! }
+type MachineMove = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
+type SubjectExpr = SExpr
+type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
+type CodeHighlight = { start : number!, end : number! }
+type DiagramNote = { title : string, body : string! }
+type DiagramNotes = { states : Map string DiagramNote, transitions : Map string DiagramNote, effects : Map string DiagramNote }
+
+orbital LiveMachineOrbital {
+  entity LiveMachineView [runtime] {
+    id : string!
+    subject : DescribedSubject
+    current : trait
+    title : string = ""
+    transitions : [DescribedTransition] = []
+    sourceText : string = ""
+    sourceLines : [TransitionLines] = []
+    highlight : CodeHighlight?
+    active : string
+    fired : number
+    visited : [string] = []
+  }
+
+  trait LiveMachine -> @rebindable LiveMachineView [optimistic] {
+    initial: describing
+
+    ;; a trait value always has its name, a described machine an initial state and the guard finds the fired index, so the empty fallbacks are never read
+    state describing {
+      INIT -> describing when (validate/required @config.subject)
+        (set @entity.current @config.subject)
+        (set @entity.title (object/get (default (as @config.subject TraitRef) { trait: "" }) trait))
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (behavior/describe @entity.current { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      INIT -> idle when (not (validate/required @config.subject))
+        (render-ui main { type: empty-state, title: (i18n/t "diagram.empty") })
+      DESCRIBED -> idle
+        (set @entity.subject ?result)
+        (set @entity.transitions ?result.machine.stateMachine.transitions)
+        (set @entity.sourceText ?result.source.text)
+        (set @entity.sourceLines ?result.source.transitions)
+        (set @entity.highlight null)
+        (set @entity.active (object/get (default (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))) { name: "", isInitial: true }) name))
+        (set @entity.fired -1)
+        (set @entity.visited [(object/get (default (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))) { name: "", isInitial: true }) name)])
+        (render-ui main @config.view)
+      SUBJECT -> describing
+        (set @entity.current ?subject)
+        (set @entity.title (object/get (default (as ?subject TraitRef) { trait: "" }) trait))
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (behavior/describe ?subject { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      DESCRIBE_FAILED -> describing
+        (render-ui main { type: error-state, title: (i18n/t "diagram.failed"), message: ?error, retryEvent: RETRY })
+      MOVES -> describing
+      RETRY -> describing
+        (if (validate/required @entity.current) (behavior/describe @entity.current { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } }) null)
+    }
+
+    state idle {
+      INIT -> describing when (validate/required @config.subject)
+        (set @entity.current @config.subject)
+        (set @entity.title (object/get (default (as @config.subject TraitRef) { trait: "" }) trait))
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (behavior/describe @entity.current { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      INIT -> idle when (not (validate/required @config.subject))
+        (render-ui main { type: empty-state, title: (i18n/t "diagram.empty") })
+      SUBJECT -> describing
+        (set @entity.current ?subject)
+        (set @entity.title (object/get (default (as ?subject TraitRef) { trait: "" }) trait))
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (behavior/describe ?subject { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      ADVANCE -> idle when (array/some @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))
+        (let ((fired (array/findIndex @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))))
+          (let ((target (object/get (default (array/nth @entity.transitions @fired) { from: "", to: "", event: "" }) to)))
+            (do
+              (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @fired))))) { start: @at.start, end: @at.end }))
+              (set @entity.fired @fired)
+              (set @entity.visited (if (== (array/nth @entity.visited 0) @target) [@target] (array/append @entity.visited @target)))
+              (set @entity.active @target))))
+        (render-ui main @config.view)
+      MOVES -> idle when (> (array/len (array/filter ?moves (fn m (and @m.fired (== @m.trait (object/get (default (as @entity.current TraitRef) { trait: "" }) trait)))))) 0)
+        (let ((mine (array/filter ?moves (fn m (and @m.fired (== @m.trait (object/get (default (as @entity.current TraitRef) { trait: "" }) trait)))))))
+          (let ((last (array/nth @mine (- (array/len @mine) 1))))
+            (let ((fired (array/findIndex @entity.transitions (fn t (and (== @t.event @last.event) (== @t.from @last.from) (== @t.to @last.to))))))
+              (do
+                (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @fired))))) (if (== @at null) null { start: @at.start, end: @at.end })))
+                (set @entity.fired @fired)
+                (set @entity.visited (array/reduce @mine @entity.visited (fn acc m (if (== (array/nth @acc 0) @m.to) [@m.to] (array/append @acc @m.to)))))
+                (set @entity.active @last.to)))))
+        (render-ui main @config.view)
+      MOVES -> idle when (== (array/len (array/filter ?moves (fn m (and @m.fired (== @m.trait (object/get (default (as @entity.current TraitRef) { trait: "" }) trait)))))) 0)
+    }
+
+    emits {
+      DESCRIBED {
+        result : DescribedSubject!
+      }
+        @tier "internal"
+      DESCRIBE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      ADVANCE {
+        event : string!
+        to : string
+      }
+        @description "The demo took the transition named by this event from the current state; `to` names the target when the event has more than one arm from that state."
+        @tier "internal"
+      SUBJECT {
+        subject : trait!
+      }
+        @description "Describe another trait in place of the current one; the view resets to that trait's initial state."
+      MOVES {
+        moves : [MachineMove]!
+      }
+        @description "Transitions a running program took, in order, by trait name; the ones of the drawn trait that fired move the view to the last one's target."
+      DESCRIBED {
+        result : DescribedSubject!
+      }
+        @tier "internal"
+      DESCRIBE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      RETRY
+        @description "Try reading the diagram again."
+        @tier "internal"
+    }
+
+    config {
+      subject : trait
+        @label "Trait"
+        @description "The initial trait whose state machine is drawn: its states, transitions, guards and effects, exactly as the program runs them; without one the view waits for SUBJECT."
+      showHeader : boolean = false
+        @label "Show header"
+        @description "Show the machine's name, entity, and what it listens to and emits above the diagram."
+      codeShare : number = 1
+        @label "Code share"
+        @description "The code column's share at rest."
+      diagramShare : number = 1
+        @label "Diagram share"
+        @description "The diagram column's share at rest."
+      focusShare : number = 3
+        @label "Hovered share"
+        @description "The share the hovered or focused column grows to; the other keeps its own, so it shrinks."
+      annotations : DiagramNotes = { states: {}, transitions: {}, effects: {} }
+        @label "Notes"
+        @description "Plain-language notes on the diagram's states, transitions and effects, shown on hover."
+      view : render-ui = {
+        type: split
+        ratio: "1:1"
+        gap: md
+        stackBreakpoint: sm
+        leftClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.codeShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
+        rightClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.diagramShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
+        children: [{
+        type: code-block
+        className: "p-0"
+        code: @entity.sourceText
+        language: "lolo"
+        title: (str/concat @entity.title ".lolo")
+        highlightLines: @entity.highlight
+        maxHeight: "26rem"
+        showCopyButton: true
+        }, {
+        type: state-machine-view
+        description: (as @entity.subject SubjectExpr)
+        showHeader: @config.showHeader
+        annotations: @config.annotations
+        activeState: @entity.active
+        activeTransition: @entity.fired
+        visitedStates: @entity.visited
+        followActive: true
+        direction: (if (== @locale "ar") "rtl" "ltr")
+        aria-label: (str/concat @entity.title " — " (i18n/t "diagram.label"))
+        }]
+      }
+        @label "Diagram view"
+        @tier "internal"
+    }
+  }
+
+  page "/live-machine" as LiveMachinePage -> LiveMachine
+}

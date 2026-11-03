@@ -988,9 +988,9 @@
    ]
   },
   {
-   "id": "per-topic-a-changed-scope-lists-the-topics",
+   "id": "prefetch-a-changed-scope-lists-the-topics",
    "config": {
-    "perTopic": true
+    "prefetch": true
    },
    "steps": [
     {
@@ -1021,9 +1021,9 @@
    ]
   },
   {
-   "id": "per-topic-an-unchanged-scope-reads-nothing",
+   "id": "prefetch-an-unchanged-scope-reads-nothing",
    "config": {
-    "perTopic": true
+    "prefetch": true
    },
    "steps": [
     {
@@ -1049,9 +1049,9 @@
    ]
   },
   {
-   "id": "per-topic-a-scope-after-a-failure-lists-the-topics",
+   "id": "prefetch-a-scope-after-a-failure-lists-the-topics",
    "config": {
-    "perTopic": true
+    "prefetch": true
    },
    "steps": [
     {
@@ -1075,334 +1075,6 @@
       "effects": [
        {
         "type": "behavior/catalog"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-the-held-topic-in-the-listing-reads-its-entries",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "loading",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topicPackage": "@almadar/std",
-      "topic": "dev"
-     },
-     "event": "TOPICS_LISTED",
-     "payload": {
-      "result": [
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "dev",
-        "count": 2
-       },
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "cli",
-        "count": 5
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "loading",
-      "emits": [
-       {
-        "event": "CATALOG_TOPICS"
-       }
-      ],
-      "effects": [
-       {
-        "type": "behavior/catalog"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-a-held-topic-the-listing-dropped-shows-the-topics",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "loading",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topicPackage": "@almadar/std",
-      "topic": "gone"
-     },
-     "event": "TOPICS_LISTED",
-     "payload": {
-      "result": [
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "dev",
-        "count": 2
-       },
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "cli",
-        "count": 5
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "CATALOG_TOPICS"
-       },
-       {
-        "event": "CATALOG_SHOWN"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-no-held-topic-shows-the-topics",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "loading",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topic": ""
-     },
-     "event": "TOPICS_LISTED",
-     "payload": {
-      "result": [
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "dev",
-        "count": 2
-       },
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "cli",
-        "count": 5
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "CATALOG_TOPICS"
-       },
-       {
-        "event": "CATALOG_SHOWN"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-a-topic-reads-its-entries",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "ready",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topics": [
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "dev",
-        "count": 2
-       },
-       {
-        "package": "@almadar/std",
-        "prefix": "std",
-        "topic": "cli",
-        "count": 5
-       }
-      ]
-     },
-     "event": "TOPIC",
-     "payload": {
-      "package": "@almadar/std",
-      "topic": "cli"
-     },
-     "expect": {
-      "fired": true,
-      "state": "loading",
-      "effects": [
-       {
-        "type": "behavior/catalog"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-the-listing-is-counted-per-package-and-topic-in-first-appearance-order",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "loading",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topic": ""
-     },
-     "event": "TOPIC_ROWS",
-     "payload": {
-      "result": [
-       {
-        "behavior": "std/a",
-        "package": "@almadar/std",
-        "description": "d",
-        "topic": "ui/core",
-        "level": "atom",
-        "value": {
-         "behavior": "std/a"
-        },
-        "vectors": {}
-       },
-       {
-        "behavior": "std/b",
-        "package": "@almadar/std",
-        "description": "d",
-        "topic": "ui/core",
-        "level": "atom",
-        "value": {
-         "behavior": "std/b"
-        },
-        "vectors": {}
-       },
-       {
-        "behavior": "std/c",
-        "package": "@almadar/std",
-        "description": "d",
-        "topic": "net",
-        "level": "atom",
-        "value": {
-         "behavior": "std/c"
-        },
-        "vectors": {}
-       },
-       {
-        "behavior": "app/d",
-        "package": "@app",
-        "description": "d",
-        "topic": "ui/core",
-        "level": "atom",
-        "value": {
-         "behavior": "app/d"
-        },
-        "vectors": {}
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "state": "loading",
-      "emits": [
-       {
-        "event": "TOPICS_LISTED",
-        "payload": {
-         "result": [
-          {
-           "package": "@almadar/std",
-           "prefix": "std",
-           "topic": "ui/core",
-           "count": 2
-          },
-          {
-           "package": "@almadar/std",
-           "prefix": "std",
-           "topic": "net",
-           "count": 1
-          },
-          {
-           "package": "@app",
-           "prefix": "app",
-           "topic": "ui/core",
-           "count": 1
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "per-topic-control-an-empty-listing-has-no-topics",
-   "config": {
-    "perTopic": true
-   },
-   "steps": [
-    {
-     "trait": "BehaviorCatalogData",
-     "from": "loading",
-     "entity": {
-      "id": "c",
-      "paths": [
-       "p1"
-      ],
-      "topic": ""
-     },
-     "event": "TOPIC_ROWS",
-     "payload": {
-      "result": []
-     },
-     "expect": {
-      "fired": true,
-      "state": "loading",
-      "emits": [
-       {
-        "event": "TOPICS_LISTED",
-        "payload": {
-         "result": []
-        }
        }
       ]
      }
@@ -1568,6 +1240,472 @@
          "behavior": "almadar-std/std-app-layout",
          "description": "",
          "trait": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prefetch-one-listing-announces-every-topics-behaviors-as-one-tree",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "net",
+        "level": "atom",
+        "value": {
+         "behavior": "std/b"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "app/d",
+        "package": "@app",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "app/d"
+        },
+        "vectors": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS"
+       },
+       {
+        "event": "CATALOG_TREE",
+        "payload": {
+         "data": [
+          {
+           "package": "@almadar/std",
+           "topic": "ui/core",
+           "behavior": "std/a",
+           "kind": "atom",
+           "value": {
+            "behavior": "std/a"
+           }
+          },
+          {
+           "package": "@almadar/std",
+           "topic": "net",
+           "behavior": "std/b",
+           "kind": "atom",
+           "value": {
+            "behavior": "std/b"
+           }
+          },
+          {
+           "package": "@app",
+           "topic": "ui/core",
+           "behavior": "app/d",
+           "kind": "atom",
+           "value": {
+            "behavior": "app/d"
+           }
+          }
+         ]
+        }
+       },
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-prefetch-a-listing-announces-no-tree",
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "net",
+        "level": "atom",
+        "value": {
+         "behavior": "std/b"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "app/d",
+        "package": "@app",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "app/d"
+        },
+        "vectors": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "neverEmits": [
+       "CATALOG_TREE"
+      ],
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS"
+       },
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prefetch-an-empty-listing-announces-an-empty-tree",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "LISTED",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TREE",
+        "payload": {
+         "data": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "prefetch-a-topic-narrows-the-held-entries-without-a-read",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "entries": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "net",
+        "level": "atom",
+        "value": {
+         "behavior": "std/b"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "app/d",
+        "package": "@app",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "app/d"
+        },
+        "vectors": {}
+       }
+      ]
+     },
+     "event": "TOPIC",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "net"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "neverEmits": [
+       "CATALOG_TREE"
+      ],
+      "emits": [
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-listing-with-prefetch-lists-without-traits-once",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "loading",
+     "entity": {
+      "id": "c"
+     },
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "traits-of-a-listed-behavior-are-answered-from-memory",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "entries": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atoms",
+        "traits": [
+         {
+          "behavior": "almadar-std/std-browse",
+          "trait": "BrowseItemBrowse"
+         }
+        ],
+        "value": {
+         "behavior": "almadar-std/std-browse"
+        }
+       }
+      ]
+     },
+     "event": "CATALOG_TRAITS",
+     "payload": {
+      "behavior": "almadar-std/std-browse"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TRAITS_OF",
+        "payload": {
+         "behavior": "almadar-std/std-browse",
+         "traits": [
+          {
+           "behavior": "almadar-std/std-browse",
+           "trait": "BrowseItemBrowse"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "LISTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-traits-of-an-unlisted-behavior-are-empty",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "entries": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atoms",
+        "traits": [
+         {
+          "behavior": "almadar-std/std-browse",
+          "trait": "BrowseItemBrowse"
+         }
+        ],
+        "value": {
+         "behavior": "almadar-std/std-browse"
+        }
+       }
+      ]
+     },
+     "event": "CATALOG_TRAITS",
+     "payload": {
+      "behavior": "almadar-std/std-nope"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TRAITS_OF",
+        "payload": {
+         "behavior": "almadar-std/std-nope",
+         "traits": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-traits-asked-while-loading-answer-without-leaving-loading",
+   "config": {
+    "prefetch": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalogData",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "entries": [
+       {
+        "behavior": "almadar-std/std-browse",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atoms",
+        "traits": [
+         {
+          "behavior": "almadar-std/std-browse",
+          "trait": "BrowseItemBrowse"
+         }
+        ],
+        "value": {
+         "behavior": "almadar-std/std-browse"
+        }
+       }
+      ]
+     },
+     "event": "CATALOG_TRAITS",
+     "payload": {
+      "behavior": "almadar-std/std-browse"
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "CATALOG_TRAITS_OF",
+        "payload": {
+         "behavior": "almadar-std/std-browse",
+         "traits": [
+          {
+           "behavior": "almadar-std/std-browse",
+           "trait": "BrowseItemBrowse"
+          }
+         ]
         }
        }
       ]

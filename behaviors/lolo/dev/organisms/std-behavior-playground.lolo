@@ -1,14 +1,15 @@
 app std-behavior-playground [
   version: "1.0.0",
   theme: "linear-clean-light",
-  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its .lolo source file reads in a code view, and its state machines open in the right dock, drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel). The tree lists each package's topics and, as a topic opens, its behaviors from std-behavior-catalog's data trait (scope, starting topic and labels are knobs); a click on a behavior opens it, and the stage shows a prompt until one is open; the frame is std-workspace-layout with the state machine dock on the right. It runs as a tab of std-launchpad.",
+  locales: [en, ar, sl],
+  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its .lolo source file reads in a code view, and the right dock draws one of its traits with std-live-machine (the trait's source beside its state machine, moved by the transitions the running guest takes; a picker switches traits). The guest's entities, [runtime] ones included, are filled with sampled rows before it mounts. The tree lists each package's topics and, as a topic opens, its behaviors from std-behavior-catalog's data trait, prefetched whole in one listing (scope, starting topic and labels are knobs); a click on a behavior opens it and moves the URL to /<package>/<behavior> (a link to that route opens the playground with it loaded), and the stage shows a prompt until one is open; the frame is std-workspace-layout with the live machine dock on the right. It runs as a tab of std-launchpad.",
   net: { "openrouter.ai:443": [tcp] },
 ]
 ;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source"
 
 uses Layout from "std/behaviors/std-workspace-layout"
 uses Catalog from "std/behaviors/std-behavior-catalog"
-uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
+uses Live from "std/behaviors/std-live-machine"
 uses Loader from "std/behaviors/std-behavior-loader"
 uses Guest from "std/behaviors/std-guest-session"
 
@@ -19,7 +20,7 @@ type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, 
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundFinding = { code : string!, message : string! }
-type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
+type PlaygroundTraitRef = { behavior : string, trait : string! }
 
 orbital BehaviorPlayground {
   entity PlaygroundView [runtime] {
@@ -27,11 +28,16 @@ orbital BehaviorPlayground {
     topics : [PlaygroundTopic] = []
     leaves : [PlaygroundLeaf] = []
     leafSelected : string = ""
+    expanded : [string] @description "The topics opened in the tree, by `<package> <topic>`." = []
+    routeBehavior : string @description "The behavior the route names; empty when the page has none or it was opened." = ""
     topicPackage : string = ""
     topic : string = ""
     behavior : string = ""
     description : string = ""
     value : behavior?
+    machineBehavior : string @description "The behavior whose traits the dock lists." = ""
+    machineTraits : [trait] @description "The opened behavior's traits, as the catalog lists them." = []
+    machinePick : number @description "The listed trait the dock draws." = 0
     tab : "live" | "source" = live
     programJson : string = ""
     sourceJson : string = ""
@@ -69,9 +75,9 @@ orbital BehaviorPlayground {
       sidebarTrait: @trait.PlaygroundTopics
       sidebarMinSize: 220
       showSecondarySidebar: true
-      secondarySidebarTrait: @trait.PlaygroundCosmic
-      secondarySidebarLabel: "State machines"
-      secondarySidebarWidth: 480
+      secondarySidebarTrait: @trait.PlaygroundMachine
+      secondarySidebarLabel: "State machine"
+      secondarySidebarWidth: 760
       showBottomPanel: false
       showStatusBar: true
       statusBarTrait: @trait.PlaygroundStatus
@@ -85,12 +91,13 @@ orbital BehaviorPlayground {
       scope: @config.scope
       startPackage: @config.startPackage
       startTopic: @config.startTopic
-      perTopic: true
+      prefetch: true
     }
     listens {
       BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
       BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
       PlaygroundTopics.TOPIC_PICKED -> TOPIC
+      PlaygroundMachine.CATALOG_TRAITS -> CATALOG_TRAITS
       EMBEDDED {
         embeddings : [[number]]!
       }
@@ -109,47 +116,73 @@ orbital BehaviorPlayground {
   trait CatEmbedRequest = Catalog.traits.CatEmbedRequest {}
   trait CatEmbedHttp = Catalog.traits.CatEmbedHttp {}
 
-  trait PlaygroundCosmic = Cosmic.traits.CosmicZoom {
-    config {
-      emptyTitle: "No machines yet"
-      emptyDescription: "Open a behavior to see its orbitals, traits and transitions."
-    }
+  trait PlaygroundLive = Live.traits.LiveMachine {
     listens {
-      PlaygroundStage.COSMIC_LOAD -> LOAD
-      LOAD {
-        program : PlaygroundProgram!
-        source : PlaygroundProgram!
-        highlighted : string!
-      }
-      OPEN_TRAITS {
-        orbital : string!
-      }
-      OPEN_CODE {
-        orbital : string!
-      }
-      NODE_CLICK {
-        context : CosmicNodeContext!
-      }
-      ZOOM_OUT
-      CRUMB {
-        label : string!
-        href : string
-        index : number!
-      }
-      CURSOR {
-        value : number!
-      }
-      STOP
-      STEP {
-        orbital : string!
-        trait : string!
-        from : string!
-        event : event!
-        payload : @payload event!
-      }
+      PlaygroundMachine.SUBJECT -> SUBJECT
+      GuestSession.GUEST_MOVED -> MOVES
     }
   }
 
+  trait PlaygroundMachine -> PlaygroundView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MACHINE_SHOWN {})
+      BEHAVIOR_LOADED -> idle
+        (set @entity.machineBehavior ?behavior)
+        (set @entity.machineTraits [])
+        (set @entity.machinePick 0)
+        (emit CATALOG_TRAITS { behavior: ?behavior })
+        (emit MACHINE_SHOWN {})
+      CATALOG_TRAITS_OF -> idle when (and (= ?behavior @entity.machineBehavior) (> (array/len ?traits) 0))
+        (set @entity.machineTraits ?traits)
+        (set @entity.machinePick 0)
+        (emit SUBJECT { subject: (array/nth ?traits 0) })
+        (emit MACHINE_SHOWN {})
+      CATALOG_TRAITS_OF -> idle when (or (!= ?behavior @entity.machineBehavior) (= (array/len ?traits) 0))
+      MACHINE_PICK -> idle when (and (>= ?index 0) (< ?index (array/len @entity.machineTraits)))
+        (set @entity.machinePick ?index)
+        (emit SUBJECT { subject: (array/nth @entity.machineTraits ?index) })
+        (emit MACHINE_SHOWN {})
+      MACHINE_PICK -> idle when (or (< ?index 0) (>= ?index (array/len @entity.machineTraits)))
+      MACHINE_SHOWN -> idle
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [
+          (if (> (array/len @entity.machineTraits) 1)
+            { type: stack, direction: horizontal, gap: xs, wrap: true, children: (array/map (array/range (array/len @entity.machineTraits)) (fn i { type: button, size: sm, variant: (if (= @i @entity.machinePick) primary ghost), label: (object/get (default (as (array/nth @entity.machineTraits @i) PlaygroundTraitRef) { trait: "" }) trait), action: MACHINE_PICK, actionPayload: { index: @i } })) }
+            { type: box })
+          @trait.PlaygroundLive
+        ] })
+    }
+
+    emits {
+      MACHINE_SHOWN
+      CATALOG_TRAITS -> external {
+        behavior : string!
+      }
+        @description "Ask the catalog for the opened behavior's traits."
+      SUBJECT -> external {
+        subject : trait!
+      }
+        @description "The trait whose machine the dock draws."
+    }
+
+    listens {
+      PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
+      BehaviorCatalogData.CATALOG_TRAITS_OF -> CATALOG_TRAITS_OF
+      BEHAVIOR_LOADED {
+        behavior : string!
+      }
+      CATALOG_TRAITS_OF {
+        behavior : string!
+        traits : [trait]!
+      }
+      MACHINE_PICK {
+        index : number!
+      }
+        @description "Draw another trait of the opened behavior."
+    }
+  }
   trait PlaygroundTopics -> PlaygroundView [client] {
     config {
       openPackage : string = @config.startPackage
@@ -163,7 +196,7 @@ orbital BehaviorPlayground {
         @tier "presentation"
       leaves : boolean = true
         @label "Behaviors in the tree"
-        @description "List each loaded topic's behaviors under it, as LEAVES_LOADED names them; a click on one answers LEAF_PICKED."
+        @description "List each topic's behaviors under it, as TREE_LOADED names them; a click on one answers LEAF_PICKED."
         @tier "presentation"
       leafIcons : [PlaygroundLeafIcon] = []
         @label "Behavior icons"
@@ -176,6 +209,7 @@ orbital BehaviorPlayground {
       INIT -> idle
         (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: skeleton, variant: list, rows: 8 }] })
       TOPICS_LOADED -> idle
+        (set @entity.expanded (array/unique (array/append @entity.expanded (str/concat (if (= @entity.topic "") @config.openPackage @entity.topicPackage) " " (if (= @entity.topic "") @config.openTopic @entity.topic)))))
         (set @entity.topics ?topics)
         (set @entity.topicPackage (if (= @entity.topic "") @config.openPackage @entity.topicPackage))
         (set @entity.topic (if (= @entity.topic "") @config.openTopic @entity.topic))
@@ -183,7 +217,7 @@ orbital BehaviorPlayground {
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
-          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat [@entity.topicPackage] (array/map (array/unique (array/map @entity.leaves (fn l { package: @l.package, topic: @l.topic }))) (fn l (str/concat @l.package " " @l.topic)))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
+          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) @entity.expanded), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
             (array/concat
               (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
               (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
@@ -196,15 +230,23 @@ orbital BehaviorPlayground {
             (set @entity.topicPackage @picked.package)
             (set @entity.topic @picked.topic)
             (set @entity.leafSelected "")
+            (set @entity.expanded (array/unique (array/append @entity.expanded ?id)))
             (emit TOPIC_PICKED { package: @picked.package, topic: @picked.topic, count: @picked.count })
             (emit TOPICS_SHOWN {})))
       NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (array/some @entity.leaves (fn l (= @l.behavior ?id))))
         (set @entity.leafSelected ?id)
         (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior ?id))))) (when (!= @leaf null) (emit LEAF_PICKED { behavior: ?id, value: (object/get @leaf "value") })))
+        (navigate (str/concat "/" ?id))
         (emit TOPICS_SHOWN {})
       NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (not (array/some @entity.leaves (fn l (= @l.behavior ?id)))))
-      LEAVES_LOADED -> idle
-        (set @entity.leaves (array/concat (array/filter @entity.leaves (fn l (not (and (= @l.package ?package) (= @l.topic ?topic))))) ?data))
+      TREE_LOADED -> idle
+        (set @entity.leaves ?data)
+        (emit TOPICS_SHOWN {})
+      ROUTE_OPENED -> idle
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (set @entity.leafSelected ?behavior)
+        (set @entity.expanded (array/unique (array/append @entity.expanded (str/concat ?package " " ?topic))))
         (emit TOPICS_SHOWN {})
     }
 
@@ -225,19 +267,64 @@ orbital BehaviorPlayground {
 
     listens {
       BehaviorCatalogData.CATALOG_TOPICS -> TOPICS_LOADED
-      BehaviorCatalogData.CATALOG_LEAVES -> LEAVES_LOADED
+      BehaviorCatalogData.CATALOG_TREE -> TREE_LOADED
+      PlaygroundRoute.ROUTE_OPEN -> ROUTE_OPENED
       TOPICS_LOADED {
         topics : [PlaygroundTopic]!
       }
       NODE_SELECTED {
         id : string!
       }
-      LEAVES_LOADED {
-        package : string!
-        topic : string!
+      TREE_LOADED {
         data : [PlaygroundLeaf]!
       }
-        @description "The behaviors of a topic, listed under it when the leaves knob is on; a topic heard again replaces its own."
+        @description "Every behavior of the catalog, listed under its topic when the leaves knob is on; a tree heard again replaces the last."
+      ROUTE_OPENED {
+        behavior : string!
+        package : string!
+        topic : string!
+        value : behavior!
+      }
+        @description "The route named a behavior: its topic opens in the tree and it shows selected."
+    }
+  }
+
+  trait PlaygroundRoute -> PlaygroundView [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.routeBehavior (str/concat ?package "/" ?name))
+      TREE_LOADED -> idle when (and (!= @entity.routeBehavior "") (array/some ?data (fn l (= @l.behavior @entity.routeBehavior))))
+        (let ((leaf (array/find ?data (fn l (= @l.behavior @entity.routeBehavior)))))
+          (do
+            (set @entity.routeBehavior "")
+            (emit ROUTE_OPEN { behavior: @leaf.behavior, package: @leaf.package, topic: @leaf.topic, value: @leaf.value })))
+      TREE_LOADED -> idle when (and (!= @entity.routeBehavior "") (not (array/some ?data (fn l (= @l.behavior @entity.routeBehavior)))))
+        (notify error (str/concat @entity.routeBehavior " is not an installed behavior."))
+        (set @entity.routeBehavior "")
+      TREE_LOADED -> idle when (= @entity.routeBehavior "")
+    }
+
+    emits {
+      ROUTE_OPEN -> external {
+        behavior : string!
+        package : string!
+        topic : string!
+        value : behavior!
+      }
+        @description "The route's behavior is in the catalog: open it."
+    }
+
+    listens {
+      BehaviorCatalogData.CATALOG_TREE -> TREE_LOADED
+      INIT {
+        package : string!
+        name : string!
+      }
+      TREE_LOADED {
+        data : [PlaygroundLeaf]!
+      }
     }
   }
 
@@ -273,6 +360,8 @@ orbital BehaviorPlayground {
       OPEN -> opening
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
+        (set @entity.topicPackage (default ?package @entity.topicPackage))
+        (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
         (set @entity.tab live)
@@ -287,6 +376,8 @@ orbital BehaviorPlayground {
       OPEN -> opening
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
+        (set @entity.topicPackage (default ?package @entity.topicPackage))
+        (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
         (set @entity.tab live)
@@ -304,7 +395,6 @@ orbital BehaviorPlayground {
         (set @entity.status open)
         (emit LIVE_CLASSIFY {})
         (emit STAGE_SHOWN {})
-        (let ((shown (json/parse ?programJson PlaygroundProgram)) (written (json/parse ?sourceJson PlaygroundProgram))) (if (or (== @shown null) (== @written null)) (notify error "The opened behavior could not be read for the explorer.") (emit COSMIC_LOAD { program: @shown, source: @written, highlighted: "" })))
       BEHAVIOR_LOADED -> opening when (!= ?behavior @entity.behavior)
       BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
         (set @entity.error ?error)
@@ -355,9 +445,6 @@ orbital BehaviorPlayground {
         (set @entity.tab ?tabId)
         (emit STAGE_SHOWN {})
       TAB_SELECTED -> open when (not (array/includes ["live", "source"] ?tabId))
-      CODE_REQUESTED -> open
-        (set @entity.tab source)
-        (emit STAGE_SHOWN {})
       BACK -> browsing
         (emit GUEST_RESET {})
         (set @entity.behavior "")
@@ -375,6 +462,8 @@ orbital BehaviorPlayground {
       OPEN -> opening
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
+        (set @entity.topicPackage (default ?package @entity.topicPackage))
+        (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
         (set @entity.tab live)
@@ -389,6 +478,8 @@ orbital BehaviorPlayground {
       OPEN -> opening
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
+        (set @entity.topicPackage (default ?package @entity.topicPackage))
+        (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
         (set @entity.tab live)
@@ -418,12 +509,6 @@ orbital BehaviorPlayground {
         value : behavior
       }
         @description "Ask the loader for the opened behavior's source, resolved program, knobs and validation."
-      COSMIC_LOAD -> external {
-        program : PlaygroundProgram!
-        source : PlaygroundProgram!
-        highlighted : string!
-      }
-        @description "Hand the opened behavior, resolved and as written, to the state machine explorer."
       STATUS -> external {
         behavior : string!
         topic : string!
@@ -436,7 +521,7 @@ orbital BehaviorPlayground {
     listens {
       PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
       PlaygroundTopics.LEAF_PICKED -> OPEN
-      PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
+      PlaygroundRoute.ROUTE_OPEN -> OPEN
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
       LIVE_CLASSIFY { }
@@ -445,14 +530,13 @@ orbital BehaviorPlayground {
         description : string
         trait : trait
         value : behavior
+        package : string
+        topic : string
       }
       TOPIC_PICKED {
         package : string!
         topic : string!
         count : number!
-      }
-      CODE_REQUESTED {
-        orbital : string!
       }
       BEHAVIOR_LOADED {
         behavior : string!
@@ -515,8 +599,18 @@ orbital BehaviorPlayground {
       PlaygroundOpen.GUEST_FAIL -> GUEST_FAIL
       PlaygroundStage.GUEST_RESET -> GUEST_RESET
       GuestStage.GUEST_SEND -> GUEST_SEND
+      MockSeed.DATASET_PLANNED -> DATASET_PLANNED
+      MockSeed.DATASET_FAILED -> DATASET_FAILED
     }
   }
+
+  trait MockSeed = Guest.traits.MockSeed {
+    config {
+      seedOrbital: "BehaviorPlayground"
+    }
+  }
+
+  trait MockStream = Guest.traits.MockStream {}
 
   trait GuestStage = Guest.traits.GuestStage {
     config {
@@ -572,5 +666,7 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, PlaygroundRoute
+  page boot as PlaygroundSeed -> MockStream, MockSeed
 }
