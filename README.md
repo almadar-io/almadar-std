@@ -11,7 +11,7 @@
 
 </div>
 
-<p align="center"><sub>Part of <a href="https://github.com/almadar-io/orb"><b>Orb</b></a>: the language where the rule is the program. <a href="https://orb.almadar.io">orb.almadar.io</a></sub></p>
+<p align="center"><sub>Part of <a href="https://github.com/almadar-io/orb"><b>Orb</b></a>: a programming language of composable state machines. <a href="https://orb.almadar.io">orb.almadar.io</a></sub></p>
 
 `@almadar/std` is the substrate of the Almadar language: the behaviors (state machines in `.lolo`) and the operator table that programs build on. A behavior here is generic and subject-agnostic, with all vocabulary declared in config; themed, product-shaped behaviors live downstream in [`@almadar-io/behaviors`](https://github.com/almadar-io/behaviors). The package ships `.lolo` source, the lowered `.orb` registry and a TypeScript entry that exposes the operator registry (`STD_OPERATORS`, `getStdOperatorMeta`, `isKnownStdOperator`).
 
