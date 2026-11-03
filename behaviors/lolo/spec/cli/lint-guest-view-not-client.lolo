@@ -1,0 +1,21 @@
+app lint-guest-view-not-client-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint guest-view-not-client <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintGuestViewNotClientSpec {
+  expects trait OrbLintGuestViewNotClient {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintGuestViewNotClientCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintGuestViewNotClient, OrbLintGuestViewNotClientCli
+}

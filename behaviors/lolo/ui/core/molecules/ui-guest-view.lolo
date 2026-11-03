@@ -1,0 +1,46 @@
+app ui-guest-view [
+  version: "1.0.0",
+  description: "GuestView — UI factory (1:1 with the @almadar/ui guest-view pattern)."
+]
+;; @pattern "guest-view"
+orbital GuestViewOrbital {
+  entity GuestViewItem [runtime] {
+    id : string!
+  }
+
+  trait GuestViewRender -> @rebindable GuestViewItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          guest: @config.guest
+          source: @config.source
+          deliver: @config.deliver
+          children: @config.children
+          type: guest-view
+        })
+    }
+
+    config {
+      guest : string
+        @label "Guest"
+        @description "Guest session handle (`program/open` answers it, e.g. \"guest-1\"). Data for the kernel; never rendered."
+        @tier "presentation"
+      source : string
+        @label "Source"
+        @description "Guest trait that painted this content (`rendered[].trait`); the kernel delivers a click as address `<source>.<EVENT>`. Data for the kernel; never rendered."
+        @tier "presentation"
+      deliver : event
+        @label "Deliver"
+        @description "The opener trait's declared event a click inside this view is delivered as. The kernel emits it, never the renderer."
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "The guest's painted content"
+        @tier "presentation"
+    }
+  }
+
+  page "/guest-view" as GuestViewPage -> GuestViewRender
+}

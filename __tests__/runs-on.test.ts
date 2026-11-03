@@ -39,7 +39,7 @@ describe('runsOn', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
       'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'ffi/call', 'identity/sign-in', 'identity/sign-out',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
+      'persist', 'persist/read-named', 'program/close', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/open', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());
   });
 
