@@ -1,0 +1,151 @@
+app std-orb-lint-guest-view-not-client [
+  version: "1.0.0",
+  inbound: ["cli-lint-guest-view-not-client"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-guest-view-not-client — the `orb lint guest-view-not-client <file>` command. It lowers the file with program/read and reports ORB_GUEST_VIEW_NOT_CLIENT for every transition of an inline trait whose dispatch mode is not client and whose render-ui effect, at any depth of the effect list, holds a `guest-view` node anywhere in its content tree. The kernel delivers a click inside a guest session's view only when the trait that paints it runs on the client, because only the client render store holds that paint, so a server trait painting a guest-view leaves its controls dead. One finding per transition at `orbitals[i (Orbital)].traits[j (Trait)].stateMachine.transitions[k]` (status 500, exit 1). A guest-view that appears only as text, or a client trait, is not reported. Clean answers `lint guest-view-not-client: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-guest-view-not-client"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GvVal = string | number | boolean | [GvVal?] | Map string GvVal?
+type GvTransition = { effects : [GvVal] }
+type GvMachine = { transitions : [GvTransition] }
+type GvTrait = { name : string, ref : string, dispatch : string, stateMachine : GvMachine }
+type GvOrbital = { name : string, traits : [GvTrait] }
+type GvProgram = { orbitals : [GvOrbital] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintGuestViewNotClientCodes = { guestViewNotClient : LintCodeDecl }
+
+orbital OrbLintGuestViewNotClientOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintGuestViewNotClientRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintGuestViewNotClient -> OrbLintGuestViewNotClientRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (default (array/nth @orbitals @oi) {})))
+              (let ((trs (object/get @orb "traits" [])) (oname (object/get @orb "name" "")))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                  (let ((t (default (array/nth @trs @tj) {})))
+                    (if (or (not (object/has @t "stateMachine")) (= (object/get @t "dispatch" "") "client"))
+                      []
+                      (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" [])))
+                        (array/flatten (array/map (array/range 0 (array/len @trans)) (fn tk
+                          (if (array/some (json/nodes (object/get (default (array/nth @trans @tk) {}) "effects" [])) (fn n (and (validate/array @n) (= (array/first @n) "render-ui") (array/some (json/nodes @n) (fn m (and (validate/object @m) (= (object/get @m "type" null) "guest-view")))))))
+                            [{ code: @config.codes.guestViewNotClient.code, path: (str/concat "orbitals[" @oi " (" @oname ")].traits[" @tj " (" (object/get @t "name" "") ")].stateMachine.transitions[" @tk "]"), message: (str/concat "Trait '" (object/get @t "name" "") "' paints a guest-view but does not run on the client: the kernel routes a click inside the guest only through the client render store, so its controls are dead"), suggestion: "Mark the painting trait [client]; run the program/* calls in a server trait", severity: "error" }]
+                            [])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "guest-view-not-client", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : GvProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintGuestViewNotClientCodes = { guestViewNotClient: { code: "ORB_GUEST_VIEW_NOT_CLIENT", category: "trait", description: "A trait that does not run on the client paints a guest-view, so the kernel cannot route a click inside the guest" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintGuestViewNotClientCli -> OrbLintGuestViewNotClientRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint guest-view-not-client <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint guest-view-not-client <file>" }) (emit LINT_REQUEST { file: @argFile })))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "guest-view-not-client") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint guest-view-not-client: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "guest-view-not-client") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint guest-view-not-client: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-guest-view-not-client" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint guest-view-not-client` with its arguments and working directory."
+        @synonyms "orb lint guest-view-not-client"
+      OrbLintGuestViewNotClient.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintGuestViewNotClientCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintGuestViewNotClientOrbitalStart -> OrbLintGuestViewNotClient, OrbLintGuestViewNotClientCli, OrbLintInput, Packs, Versions
+}

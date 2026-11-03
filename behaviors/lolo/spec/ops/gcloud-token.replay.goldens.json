@@ -1,0 +1,316 @@
+{
+ "atom": "ops/atoms/std-gcloud-token.lolo",
+ "trait": "GcloudToken",
+ "note": "the access token is made by the host credential store (credential-connect, refresh_token grant over the stored gcloud Application Default Credentials) and held under GCLOUD_ACCESS_TOKEN, never carried by an event",
+ "cases": [
+  {
+   "id": "an-ensure-asks-the-store-whether-the-token-is-held",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_ENSURE",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "credential-status",
+        "arg0": {
+         "credential": "@config.token",
+         "scope": "app"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-held-token-is-ready",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_PROBED",
+     "payload": {
+      "connected": true,
+      "label": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_READY",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_MISSING"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-token-not-held-is-made-by-a-refresh-token-grant-from-the-stored-adc",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_PROBED",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.token",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-probe-that-fails-answers-not-configured",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_PROBE_FAILED",
+     "payload": {
+      "error": "no credential store"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: no credential store"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-connected-token-is-ready",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_READY",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_MISSING"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-connect-that-does-not-connect-answers-not-configured",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECTED",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: the credential store did not connect the access token"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-unavailable-connect-failure-answers-not-configured-naming-the-credential",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-connect-failure-answers-not-configured-naming-the-credential",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored",
+      "kind": "refused"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-invalid-grant-connect-failure-answers-not-configured-naming-the-credential",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-invalid-client-connect-failure-answers-not-configured-naming-the-credential",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored",
+      "kind": "invalid_client"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google access not configured: credential `GCLOUD_ADC_CLIENT_ID` (the client id) is not stored"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-transport-connect-failure-answers-the-request-failed",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "timed out",
+      "kind": "transport"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google token request failed: timed out"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-malformed-connect-failure-answers-the-request-failed",
+   "steps": [
+    {
+     "event": "GCLOUD_TOKEN_CONNECT_FAILED",
+     "payload": {
+      "error": "timed out",
+      "kind": "malformed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GCLOUD_TOKEN_MISSING",
+        "payload": {
+         "message": "Google token request failed: timed out"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GCLOUD_TOKEN_READY"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

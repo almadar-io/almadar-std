@@ -26,6 +26,9 @@ export { PROB_OPERATORS, getProbOperators } from './prob.js';
 // OS triggers module
 export { OS_OPERATORS } from './os.js';
 export { KV_OPERATORS } from './kv.js';
+export { MEM_OPERATORS } from './mem.js';
+export { KERNEL_OPERATORS } from './kernel.js';
+export { FFI_OPERATORS } from './ffi.js';
 
 // Bytes module (pure binary operators)
 export { BYTES_OPERATORS } from './bytes.js';

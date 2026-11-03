@@ -34,6 +34,11 @@ export const OPERATOR_CATEGORIES = [
   'std-prob',
   'std-os',
   'std-kv',
+  'std-mem',
+  'std-mem-read',
+  'std-kernel',
+  'std-kernel-read',
+  'std-ffi',
   'std-browser',
   'std-composition',
   'std-vec',
@@ -79,6 +84,7 @@ export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
  * - `'integer-closed'` — an integer when every argument is an integer (a literal without a fraction counts), else the declared number (`+`, `-`, `*`, `%`, `math/min`).
  * - `'integer-result'` — an integer when called with one argument (`math/floor`; `math/round` without decimals).
  * - `'tuple-element'` — a tuple's element at a literal index (`array/nth`).
+ * - `'applied-operator<N,M>'` — the result is the operator named by the literal string at arg N applied to the elements of the list literal at arg M (`kernel/apply`); undetermined when the name is not a literal.
  *
  * An operator whose result elements are NOT provably drawn from its inputs (`array/range`, `array/zip`,
  * `array/groupBy`, `array/partition`, `array/flatten`) declares nothing and the walk treats it as opaque.
@@ -96,7 +102,8 @@ export type ReturnSemantics =
   | 'last-of-args'
   | 'integer-closed'
   | 'integer-result'
-  | 'tuple-element';
+  | 'tuple-element'
+  | 'applied-operator<0,1>';
 
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';
@@ -156,13 +163,19 @@ export type OsGrantNeed =
   /** A store name at `store`. */
   | { kind: 'kv'; access: 'read' | 'write'; store: number }
   | { kind: 'mmio'; access: 'read' | 'write'; base: number; offset: number; width: number }
-  | { kind: 'irq'; access: 'wait' | 'ack'; line: number };
+  | { kind: 'irq'; access: 'wait' | 'ack'; line: number }
+  /** An arena grant: `create` needs the capacity argument (at `capacity`) within the granted maxBytes; `free` needs a target listing free. */
+  | { kind: 'mem'; access: 'create' | 'free' | 'atomic'; capacity?: number; arenaKind?: number }
+  /** A kernel grant: `call` needs the operator name argument (at `operator`) covered by an `apply:<pattern>` target; `reorder` the `queue` target; `read` the `introspect` target; `spawn` the `guest` target. */
+  | { kind: 'kernel'; access: 'call' | 'reorder' | 'read' | 'spawn'; operator?: number }
+  /** An ffi grant: the library (argument index) and symbol (argument index) must be a granted `ffi` pair. */
+  | { kind: 'ffi'; library: number; symbol: number };
 
 /** A family of effects only one kind of host holds: `on-device` = the browser's on-device model, `tab` = the browser's tabs. */
 export type EffectFamily = 'on-device' | 'tab';
 
 /** A host outside the runtime that executes an effect. */
-export type EffectHost = 'program' | 'os' | 'kv' | 'substrate';
+export type EffectHost = 'program' | 'os' | 'kv' | 'kernel' | 'substrate';
 
 export interface OperatorMeta {
   /** Operator category */
@@ -240,6 +253,9 @@ export const STD_MODULES = [
   'prob',
   'os',
   'kv',
+  'mem',
+  'kernel',
+  'ffi',
   'browser',
   'composition',
   'vec',
@@ -296,6 +312,11 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-prob',
   'std-os',
   'std-kv',
+  'std-mem',
+  'std-mem-read',
+  'std-kernel',
+  'std-kernel-read',
+  'std-ffi',
   'std-browser',
   'std-composition',
   'std-vec',

@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, STRING, each, fn, keyOf, list, lit, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
+import { BOOLEAN, INT, NUMBER, STRING, each, fn, keyOf, list, lit, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
 
 /**
  * Array module operators.
@@ -25,7 +25,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Array length',
     hasSideEffects: false,
     sign: 'nonNegative',
-    returnType: 'number',
+    returnType: INT,
     params: [{ name: 'arr', type: list(tv('T')), description: 'The array' }],
     example: '["array/len", [1, 2, 3]] // => 3',
   },
@@ -284,7 +284,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Find index of item (-1 if not found)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: INT,
     params: [
       { name: 'arr', type: list(tv('T')), description: 'The array' },
       { name: 'item', type: tv('T'), description: 'Item to find' },
@@ -314,7 +314,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Find index of first element matching predicate (-1 if none)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: INT,
     acceptsLambda: true,
     lambdaArgPosition: 1,
     params: [
@@ -392,6 +392,41 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["array/reduce", [{"price": 10}, {"price": 25}], 0, ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]]]',
   },
+  'array/pmap': {
+    module: 'array',
+    category: 'std-array',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Transform each element like array/map, evaluating elements in parallel (rayon on native hosts, sequential on wasm and no_std with identical results); the result keeps input order. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
+    hasSideEffects: false,
+    returnType: list(tv('U')),
+    returnSemantics: 'lambda-result',
+    acceptsLambda: true,
+    lambdaArgPosition: 1,
+    params: [
+      { name: 'arr', type: list(tv('T')), description: 'The array' },
+      { name: 'fn', type: fn([tv('T')], tv('U')), description: 'Pure transform function' },
+    ],
+    example: '["array/pmap", [{"price": 100}, {"price": 200}], ["fn", "x", ["*", "@x.price", 1.1]]]',
+  },
+  'array/preduce': {
+    module: 'array',
+    category: 'std-array',
+    minArity: 3,
+    maxArity: 3,
+    description: 'Reduce like array/reduce with a fixed grouping so the result is the same parallel or sequential: the array is split into chunks of 1024 elements, each chunk is folded left to right starting from its first element, then the chunk results are folded left to right starting from init; an empty array answers init. The reducer should therefore be associative with init as its identity. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.',
+    hasSideEffects: false,
+    returnType: tv('A'),
+    returnSemantics: 'lambda-result',
+    acceptsLambda: true,
+    lambdaArgPosition: 2,
+    params: [
+      { name: 'arr', type: list(tv('T')), description: 'The array' },
+      { name: 'init', type: tv('A'), description: 'Initial accumulator value, combined with the chunk results' },
+      { name: 'fn', type: fn([tv('A'), tv('T')], tv('A')), description: 'Pure reducer function (acc, item) => newAcc' },
+    ],
+    example: '["array/preduce", [{"price": 10}, {"price": 25}], 0, ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]]]',
+  },
   'array/every': {
     module: 'array',
     category: 'std-array',
@@ -432,7 +467,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Count elements (optionally matching predicate)',
     hasSideEffects: false,
     sign: 'nonNegative',
-    returnType: 'number',
+    returnType: INT,
     acceptsLambda: true,
     lambdaArgPosition: 1,
     params: [

@@ -1,0 +1,201 @@
+app std-asm-inspect [
+  version: "1.0.0",
+  description: "std-asm-inspect — lists the machine code of one symbol in a compiled binary or object file by running the platform disassembler through std-cli (os/spawn, os/read, os/wait) and parsing its text into typed instruction records. ASM_INSPECT { path, symbol } runs objdump --disassemble-symbols=<symbol> --no-show-raw-insn <path> and answers ASM_LISTED { symbol, instructions, count, bytes }. ASM_COMPARE { path, a, b } lists both symbols one after the other and answers ASM_COMPARED { a, b, countA, countB, smaller }, so a program can choose between two strategies by their compiled size. The documented objdump line format is the whole contract: an instruction line is <hex address>: <tab> <mnemonic> <tab> <operands>; blank lines, the <file>: file format line, the Disassembly of section line and the <hex address> <symbol>: header are skipped; any other line fails the run with kind invalid naming that line. ASM_ERROR kinds: tool_failed (objdump exited non-zero; error carries its stderr), symbol_missing (the symbol produced no instructions), invalid, asm_busy, or the std-cli code of a run that could not be made (cli_spawn_failed when the tool is absent). The disassembler is the commands knob of the AsmCli trait; the header grant covers the default /usr/bin/objdump, a call site that moves it grants its own. Pass a single-architecture file: a universal binary prints one architecture banner per slice, which is not part of the documented format and fails as invalid. Throughput estimation through llvm-mca is not provided: its text output is not specified here.",
+  exec: ["/usr/bin/objdump"]
+]
+type AsmInstruction = { address : string!, mnemonic : string!, operands : string! }
+
+orbital AsmInspectOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity AsmInspection [runtime] {
+    id : string!
+    stage : string @description "Which listing is in flight: inspect, a or b; blank when idle." = ""
+    path : string @description "The binary or object file under inspection." = ""
+    symbol : string @description "The symbol whose listing is in flight." = ""
+    a : string @description "First symbol of a compare." = ""
+    b : string @description "Second symbol of a compare." = ""
+    countA : int @description "Instruction count of the first symbol of a compare." = 0
+    rawExit : number @description "Exit code of the last disassembler run." = 0
+    rawOut : string @description "Stdout of the last disassembler run." = ""
+    rawErr : string @description "Stderr of the last disassembler run." = ""
+    instructions : [AsmInstruction] @description "The parsed listing of the last run." = []
+    badLine : string @description "The first line of the last run that is not part of the documented format; blank when none." = ""
+  }
+
+  trait AsmCli = Cli.traits.CliRunner {
+    listens { AsmInspector.ASM_RUN -> CLI_RUN }
+    config {
+      commands: ["/usr/bin/objdump"]
+    }
+  }
+
+  trait AsmInspector -> AsmInspection [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ASM_INSPECT -> listing
+        (set @entity.stage "inspect")
+        (set @entity.path @payload.path)
+        (set @entity.symbol @payload.symbol)
+        (emit ASM_RUN { stage: "inspect", argv: [(str/concat "--disassemble-symbols=" @payload.symbol), "--no-show-raw-insn", @payload.path] })
+      ASM_COMPARE -> listingA
+        (set @entity.stage "a")
+        (set @entity.path @payload.path)
+        (set @entity.symbol @payload.a)
+        (set @entity.a @payload.a)
+        (set @entity.b @payload.b)
+        (emit ASM_RUN { stage: "a", argv: [(str/concat "--disassemble-symbols=" @payload.a), "--no-show-raw-insn", @payload.path] })
+    }
+
+    state listing {
+      INIT -> listing
+      ASM_INSPECT -> listing
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_COMPARE -> listing
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_RAN -> parsing
+        (set @entity.rawExit @payload.exitCode)
+        (set @entity.rawOut @payload.stdout)
+        (set @entity.rawErr @payload.stderr)
+        (emit ASM_PARSE {})
+      ASM_RUN_FAILED -> idle
+        (emit ASM_ERROR { error: @payload.error, kind: @payload.code })
+    }
+
+    state listingA {
+      INIT -> listingA
+      ASM_INSPECT -> listingA
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_COMPARE -> listingA
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_RAN -> parsing
+        (set @entity.rawExit @payload.exitCode)
+        (set @entity.rawOut @payload.stdout)
+        (set @entity.rawErr @payload.stderr)
+        (emit ASM_PARSE {})
+      ASM_RUN_FAILED -> idle
+        (emit ASM_ERROR { error: @payload.error, kind: @payload.code })
+    }
+
+    state listingB {
+      INIT -> listingB
+      ASM_INSPECT -> listingB
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_COMPARE -> listingB
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_RAN -> parsing
+        (set @entity.rawExit @payload.exitCode)
+        (set @entity.rawOut @payload.stdout)
+        (set @entity.rawErr @payload.stderr)
+        (emit ASM_PARSE {})
+      ASM_RUN_FAILED -> idle
+        (emit ASM_ERROR { error: @payload.error, kind: @payload.code })
+    }
+
+    state parsing {
+      INIT -> parsing
+      ASM_INSPECT -> parsing
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_COMPARE -> parsing
+        (emit ASM_ERROR { error: "a listing is in flight", kind: "asm_busy" })
+      ASM_PARSE -> parsing
+        (let ((lines (array/map (str/split @entity.rawOut "\n") (fn l (str/trimEnd @l)))))
+          (do
+          (set @entity.badLine (default (array/find @lines (fn l (and (!= (str/trim @l) "") (not (validate/pattern @l "^[0-9a-f]{16} <.+>:$")) (not (validate/pattern @l "^.+:\\tfile format .+$")) (not (validate/pattern @l "^Disassembly of section .+:$")) (not (validate/pattern @l "^ *[0-9a-f]+: *\\t[^\\t]+(\\t.*)?$"))))) ""))
+          (set @entity.instructions (array/map (array/filter @lines (fn l (validate/pattern @l "^ *[0-9a-f]+: *\\t[^\\t]+(\\t.*)?$"))) (fn l (let ((parts (str/split @l "\t"))) { address: (str/replace (str/trim (default (array/nth @parts 0) "")) ":" ""), mnemonic: (default (array/nth @parts 1) ""), operands: (str/join (array/drop @parts 2) "\t") }))))))
+        (emit ASM_ROUTE {})
+      ASM_ROUTE -> idle when (!= @entity.rawExit 0)
+        (emit ASM_ERROR { error: @entity.rawErr, kind: "tool_failed" })
+      ASM_ROUTE -> idle when (and (= @entity.rawExit 0) (!= @entity.badLine ""))
+        (emit ASM_ERROR { error: (str/concat "unrecognized objdump line: " @entity.badLine), kind: "invalid" })
+      ASM_ROUTE -> idle when (and (= @entity.rawExit 0) (= @entity.badLine "") (= (array/len @entity.instructions) 0))
+        (emit ASM_ERROR { error: (str/concat "no instructions for symbol " @entity.symbol), kind: "symbol_missing" })
+      ASM_ROUTE -> idle when (and (= @entity.rawExit 0) (= @entity.badLine "") (> (array/len @entity.instructions) 0) (= @entity.stage "inspect"))
+        (emit ASM_LISTED { symbol: @entity.symbol, instructions: @entity.instructions, count: (array/len @entity.instructions), bytes: (math/floor (- (default (str/to-number (str/concat "0x" (object/get (array/last @entity.instructions) "address" "0"))) 0) (default (str/to-number (str/concat "0x" (object/get (array/first @entity.instructions) "address" "0"))) 0))) })
+      ASM_ROUTE -> listingB when (and (= @entity.rawExit 0) (= @entity.badLine "") (> (array/len @entity.instructions) 0) (= @entity.stage "a"))
+        (set @entity.countA (array/len @entity.instructions))
+        (set @entity.stage "b")
+        (set @entity.symbol @entity.b)
+        (emit ASM_RUN { stage: "b", argv: [(str/concat "--disassemble-symbols=" @entity.b), "--no-show-raw-insn", @entity.path] })
+      ASM_ROUTE -> idle when (and (= @entity.rawExit 0) (= @entity.badLine "") (> (array/len @entity.instructions) 0) (= @entity.stage "b"))
+        (emit ASM_COMPARED { a: @entity.a, b: @entity.b, countA: @entity.countA, countB: (array/len @entity.instructions), smaller: (if (< @entity.countA (array/len @entity.instructions)) @entity.a (if (> @entity.countA (array/len @entity.instructions)) @entity.b "")) })
+    }
+
+    emits {
+      ASM_LISTED -> external {
+        symbol : string!
+        instructions : [AsmInstruction]!
+        count : int!
+        bytes : int!
+      }
+        @description "The symbol's instructions in listing order. count is the number of instructions; bytes is the span from the first instruction's address to the last instruction's address, which excludes the last instruction's own length (the text carries no instruction lengths)."
+        @tier "primary"
+      ASM_COMPARED -> external {
+        a : string!
+        b : string!
+        countA : int!
+        countB : int!
+        smaller : string!
+      }
+        @description "Instruction counts of both symbols and the name of the one with fewer instructions; blank on a tie."
+        @tier "primary"
+      ASM_ERROR -> external {
+        error : string!
+        kind : string!
+      }
+        @description "The listing failed: tool_failed, symbol_missing, invalid, asm_busy, or the std-cli code of a run that could not be made."
+        @tier "primary"
+      ASM_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one disassembler run, to the CLI runner."
+        @tier "internal"
+      ASM_PARSE {}
+        @description "Internal: parse the last run's stdout."
+        @tier "internal"
+      ASM_ROUTE {}
+        @description "Internal: judge the parsed run and continue the listing."
+        @tier "internal"
+    }
+
+    listens {
+      ASM_INSPECT -> input {
+        path : string!
+        symbol : string!
+      }
+        @description "List the instructions of one symbol in a binary or object file."
+        @synonyms "disassemble, assembly listing, machine code"
+      ASM_COMPARE -> input {
+        path : string!
+        a : string!
+        b : string!
+      }
+        @description "List two symbols of one file and report which compiled smaller."
+        @synonyms "compare compiled size, instruction count"
+      ASM_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: the disassembler exited."
+      ASM_RUN_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: the disassembler could not run."
+      ASM_PARSE {}
+      ASM_ROUTE {}
+      AsmCli.CLI_DONE -> ASM_RAN
+      AsmCli.CLI_FAILED -> ASM_RUN_FAILED
+    }
+  }
+
+  page boot as AsmInspectOrbitalStart -> AsmInspector, AsmCli
+}

@@ -55,11 +55,50 @@
    ]
   },
   {
-   "id": "start-of-a-status-read-asks-the-rollouts-with-no-token-step",
+   "id": "start-of-a-status-read-ensures-the-google-token",
    "now": 1760531445678,
    "steps": [
     {
      "event": "AH_START",
+     "payload": {},
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      },
+      "statusCache": []
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "AH_TOKEN_ENSURE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "AH_ROLLOUTS",
+       "AH_GCLOUD"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "AppHostingStatus",
+    "AhToken"
+   ]
+  },
+  {
+   "id": "a-held-token-asks-the-rollouts",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_TOKEN_READY",
      "payload": {},
      "from": "reading",
      "entity": {
@@ -83,6 +122,64 @@
       ],
       "neverEmits": [
        "AH_GCLOUD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-token-that-cannot-be-made-answers-unknown-and-pumps",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "event": "AH_TOKEN_MISSING",
+     "payload": {
+      "message": "Google access not configured: credential `GCLOUD_ADC_REFRESH_TOKEN` (the refresh token) is not stored"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "b",
+      "current": {
+       "kind": "status",
+       "backendId": "b1",
+       "force": true,
+       "cloudBuildId": "",
+       "region": ""
+      },
+      "statusCache": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "AH_STATUS",
+        "payload": {
+         "backendId": "b1",
+         "status": {
+          "rolloutState": "UNKNOWN",
+          "rolloutId": "",
+          "rolloutTime": "",
+          "commitMessage": "",
+          "commitHash": "",
+          "commitUrl": "",
+          "buildLogsUrl": "",
+          "cloudBuildId": "",
+          "cloudBuildRegion": "",
+          "errorSource": ""
+         }
+        }
+       },
+       {
+        "event": "AH_RENDER",
+        "payload": {}
+       },
+       {
+        "event": "AH_PUMP",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "AH_ROLLOUTS"
       ]
      }
     }

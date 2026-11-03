@@ -9,11 +9,9 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BOOLEAN, BYTES, NUMBER, STRING, lit, list, nullable, union } from '../signature.js';
+import { BOOLEAN, BYTES, ENDIAN, INT, UINT_WIDTH, NUMBER, STRING, lit, list, nullable, union } from '../signature.js';
 
 const REPRESENTATION = 'A bytes value is a standard padded base64 string at run time.';
-const UINT_WIDTH: OperatorTypeRef = union(lit(1), lit(2), lit(4), lit(8));
-const ENDIAN: OperatorTypeRef = union(lit('be'), lit('le'));
 
 export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/from-string': {
@@ -81,7 +79,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     description: `Number of bytes (not the length of the base64 text). ${REPRESENTATION}`,
     hasSideEffects: false,
     sign: 'nonNegative',
-    returnType: NUMBER,
+    returnType: INT,
     params: [{ name: 'data', type: BYTES, description: 'The bytes to measure' }],
     example: '["bytes/length", "aGVsbG8="] // => 5',
   },
@@ -132,7 +130,7 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: `Byte offset of the first occurrence of needle at or after from (default 0; a negative from counts from the end, out-of-range clamps), or -1 when absent. An empty needle answers from. ${REPRESENTATION}`,
     hasSideEffects: false,
-    returnType: NUMBER,
+    returnType: INT,
     params: [
       { name: 'data', type: BYTES, description: 'The bytes to search' },
       { name: 'needle', type: BYTES, description: 'The bytes to find' },
@@ -145,10 +143,10 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-codec',
     minArity: 2,
     maxArity: 2,
-    description: `The byte at index i as a number 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. ${REPRESENTATION}`,
+    description: `The byte at index i as an integer 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. ${REPRESENTATION}`,
     hasSideEffects: false,
     failable: {},
-    returnType: nullable(NUMBER),
+    returnType: nullable(INT),
     params: [
       { name: 'data', type: BYTES, description: 'The bytes to read' },
       { name: 'i', type: NUMBER, description: 'Byte index' },
@@ -160,10 +158,10 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-codec',
     minArity: 4,
     maxArity: 4,
-    description: `The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^53 - 1 fails with kind invalid rather than round. ${REPRESENTATION}`,
+    description: `The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^63 - 1 answers null rather than round; every width up to that is an exact int. ${REPRESENTATION}`,
     hasSideEffects: false,
     failable: {},
-    returnType: nullable(NUMBER),
+    returnType: nullable(INT),
     params: [
       { name: 'data', type: BYTES, description: 'The bytes to read' },
       { name: 'offset', type: NUMBER, description: 'Byte index of the first byte' },
@@ -171,6 +169,23 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'endian', type: ENDIAN, description: 'Byte order: "be" or "le"' },
     ],
     example: '["bytes/read-uint", "EjQ=", 0, 2, "be"] // => 4660',
+  },
+  'bytes/read-int': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: `The signed (two complement) integer stored in width bytes at offset, big-endian (be) or little-endian (le), sign-extended from its top bit; null when those bytes run past the data. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    failable: {},
+    returnType: nullable(INT),
+    params: [
+      { name: 'data', type: BYTES, description: 'The bytes to read' },
+      { name: 'offset', type: NUMBER, description: 'Byte index of the first byte' },
+      { name: 'width', type: UINT_WIDTH, description: 'Byte count: 1, 2, 4 or 8' },
+      { name: 'endian', type: ENDIAN, description: 'Byte order: "be" or "le"' },
+    ],
+    example: '["bytes/read-int", "/v8=", 0, 2, "le"] // => -2',
   },
   'bytes/write-uint': {
     module: 'bytes',

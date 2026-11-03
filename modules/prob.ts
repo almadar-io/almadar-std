@@ -12,7 +12,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER, list, sexprOf, shape, tuple, tv, nullable } from '../signature.js';
+import { INT, NUMBER, list, sexprOf, shape, tuple, tv, nullable } from '../signature.js';
 
 /**
  * Probabilistic module operators.
@@ -107,7 +107,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Sample from a Poisson distribution',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: INT,
     params: [{ name: 'lambda', type: 'number', description: 'Rate parameter (> 0)' }],
     example: '["prob/poisson", 4] // => non-negative integer, mean ~ 4',
   },
@@ -207,7 +207,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Bin numeric samples into a histogram',
     hasSideEffects: false,
     failable: {},
-    returnType: nullable(shape({ binEdges: list(NUMBER), counts: list(NUMBER) })),
+    returnType: nullable(shape({ binEdges: list(NUMBER), counts: list(INT) })),
     params: [
       { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'bins', type: 'number', description: 'Number of bins' },

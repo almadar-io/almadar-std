@@ -1,6 +1,6 @@
 app orb-update-notice-spec [
   version: "1.0.0",
-  description: "Design contract for the daily updates-available notice (golden: orbital-cli update_notice.rs). Once a day (the cache ~/.orb/.update-check.json holds { checkedAt (seconds), available [[name, installed, newest]] }) it asks the registry for each @almadar/ package declared in ~/.orb/package.json and, when the newest stable version inside the declared range is above the installed one, answers one stderr line. Off with ORB_NO_UPDATE_CHECK, with CI set, or when stderr is not a terminal. `record` (after orb update) stamps the cache as checked now with nothing available."
+  description: "Design contract for the daily updates-available notice and the urgent auto-update (golden: orbital-cli update_notice.rs). Once a day (the cache ~/.orb/.update-check.json holds { checkedAt (seconds), available [[name, installed, newest, store]], urgent [[store, status applied|failed, text]] }) it asks the registry for each @almadar/ package declared in ~/.orb/package.json and for each package pinned in ./orb.lock.json and, when the newest stable version inside the declared range (any version, for a pinned package) is above the installed one, answers one stderr line per store (`run orb update --global` for the user store, `run orb update` for the project). Normal updates only announce and wait. Urgent updates act: after the scan it runs `orb update --urgent` (project, when the lockfile pins packages) and `orb update --urgent --global` as child processes with ORB_NO_UPDATE_CHECK set, so what the registry marks security or critical (orbRelease: severity, advisory, fixes; the update decides urgency, language compatibility included) is installed without asking; each applied line is printed with its advisory. A failed urgent update keeps the installed version, is recorded as failed, and is reported loudly on stderr (why, and that the vulnerable version is still installed); a failed row in the cache is acted on at once on the next call, not after a day. Off with ORB_NO_UPDATE_CHECK or CI (a quiet call still reports a cached failed urgent row, and never scans or updates) and silent when stderr is not a terminal. `record` (after orb update) stamps the cache as checked now with nothing available."
 ]
 
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -17,6 +17,7 @@ orbital OrbUpdateNoticeSpec {
     state reading
     state scanning
     state looking
+    state urgenting
     state writing
     emits {
       UPDATE_NOTICE_ANSWERED { status : number!  body : string!  stderr : string }

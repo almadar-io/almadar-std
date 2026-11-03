@@ -49,7 +49,7 @@
    ]
   },
   {
-   "id": "update-check-off-env-answers-silent",
+   "id": "update-check-off-env-goes-quiet-and-on-to-ci",
    "steps": [
     {
      "event": "UN_ENV_NOUPD",
@@ -71,17 +71,15 @@
       "found": []
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "type": "os/getenv",
+        "key": "ci",
+        "optionsAt": 1
        }
       ],
       "neverEmits": [
+       "UPDATE_NOTICE_ANSWERED",
        "UN_ENV_FAILED"
       ]
      }
@@ -121,7 +119,7 @@
    ]
   },
   {
-   "id": "ci-set-answers-silent",
+   "id": "ci-set-goes-quiet-and-on-to-the-terminal-check",
    "steps": [
     {
      "event": "UN_ENV_CI",
@@ -143,17 +141,15 @@
       "found": []
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
-        }
+        "type": "os/isatty",
+        "key": "tty",
+        "optionsAt": 1
        }
       ],
       "neverEmits": [
+       "UPDATE_NOTICE_ANSWERED",
        "UN_ENV_FAILED"
       ]
      }
@@ -588,7 +584,7 @@
         "payload": {}
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ],
@@ -625,7 +621,7 @@
      "expect": {
       "emits": [
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ],
@@ -832,7 +828,7 @@
         }
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ]
@@ -937,7 +933,7 @@
         }
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ]
@@ -992,7 +988,7 @@
         }
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ]
@@ -1048,7 +1044,7 @@
         "payload": {}
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ],
@@ -1110,7 +1106,7 @@
         }
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ]
@@ -1156,7 +1152,7 @@
         "payload": {}
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ],
@@ -1331,7 +1327,7 @@
         "payload": {}
        },
        {
-        "event": "UN_WRITE",
+        "event": "UN_END_PHASE",
         "payload": {}
        }
       ],
@@ -1575,6 +1571,772 @@
       ]
      }
     }
+   ]
+  },
+  {
+   "id": "an-urgent-update-applied-by-orb-is-recorded-and-the-next-store-runs",
+   "steps": [
+    {
+     "from": "urgenting",
+     "event": "UN_CLI_DONE",
+     "payload": {
+      "stage": "project",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "security update: @almadar/core 1.0.0 → 1.0.1: loader remote code execution\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "project",
+       "global"
+      ],
+      "sc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_URGENT_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
+   ]
+  },
+  {
+   "id": "the-urgent-stores-run-through-orb-update-urgent-project-first-then-global",
+   "steps": [
+    {
+     "from": "urgenting",
+     "event": "UN_URGENT_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "project",
+       "global"
+      ],
+      "sc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_CLI_RUN",
+        "payload": {
+         "stage": "project",
+         "argv": [
+          "update",
+          "--urgent"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "urgenting",
+     "event": "UN_URGENT_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "project",
+       "global"
+      ],
+      "sc": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_CLI_RUN",
+        "payload": {
+         "stage": "global",
+         "argv": [
+          "update",
+          "--urgent",
+          "--global"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "urgenting",
+     "event": "UN_URGENT_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "project",
+       "global"
+      ],
+      "sc": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_CLI_RUN"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
+   ]
+  },
+  {
+   "id": "an-applied-urgent-update-is-printed-with-its-advisory",
+   "steps": [
+    {
+     "from": "writing",
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "urgentRows": [
+       [
+        "global",
+        "applied",
+        "security update: @almadar/core 1.0.0 → 1.0.1: loader remote code execution"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: applied urgent security update: @almadar/core 1.0.0 → 1.0.1: loader remote code execution (global store)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-normal-newer-version-is-only-announced",
+   "steps": [
+    {
+     "from": "writing",
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [
+       [
+        "@almadar/core",
+        "1.0.0",
+        "1.1.0",
+        "global"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.0.0 → 1.1.0); run `orb update --global`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-project-package-is-announced-for-the-project-store",
+   "steps": [
+    {
+     "from": "writing",
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [
+       [
+        "@almadar/std",
+        "1.0.0",
+        "1.2.0",
+        "project"
+       ],
+       [
+        "@almadar/core",
+        "1.0.0",
+        "1.1.0",
+        "global"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: updates available (@almadar/core 1.0.0 → 1.1.0); run `orb update --global`\norb: updates available in this project (@almadar/std 1.0.0 → 1.2.0); run `orb update`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-urgent-update-keeps-the-installed-version-and-reports-loudly",
+   "steps": [
+    {
+     "from": "writing",
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "urgentRows": [
+       [
+        "global",
+        "failed",
+        "orb update --urgent: not every urgent update was installed; the vulnerable version stays installed where it is listed:\n  @almadar/core: ORB_PACKAGE_INTEGRITY (mismatch)"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: URGENT UPDATE FAILED for the global packages: orb update --urgent: not every urgent update was installed; the vulnerable version stays installed where it is listed:\n  @almadar/core: ORB_PACKAGE_INTEGRITY (mismatch)\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent --global`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-urgent-update-records-the-child-stderr-as-the-reason",
+   "steps": [
+    {
+     "from": "urgenting",
+     "event": "UN_CLI_DONE",
+     "payload": {
+      "stage": "global",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "boom\n"
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "global"
+      ],
+      "sc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_URGENT_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
+   ]
+  },
+  {
+   "id": "an-orb-that-cannot-be-run-is-a-failed-urgent-row",
+   "steps": [
+    {
+     "from": "urgenting",
+     "event": "UN_CLI_FAILED",
+     "payload": {
+      "stage": "global",
+      "error": "not found",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "stores": [
+       "global"
+      ],
+      "sc": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_URGENT_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UN_WRITE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
+   ]
+  },
+  {
+   "id": "a-failed-project-urgent-update-names-the-project-retry-command",
+   "steps": [
+    {
+     "from": "writing",
+     "event": "UN_WRITTEN",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "urgentRows": [
+       [
+        "project",
+        "failed",
+        "why"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: URGENT UPDATE FAILED for the project packages: why\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-fresh-cache-holding-a-failed-urgent-row-acts-at-once",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImZhaWxlZCIsICJib29tIl1dfQ=="
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_DUE",
+        "payload": {}
+       },
+       {
+        "event": "UN_URGENT_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_MANIFEST_ABSENT",
+       "UPDATE_NOTICE_ANSWERED"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
+   ]
+  },
+  {
+   "id": "control-a-fresh-cache-holding-only-an-applied-urgent-row-does-not-rerun",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImFwcGxpZWQiLCAic2VjdXJpdHkgdXBkYXRlOiBAYWxtYWRhci9jb3JlIDEuMC4wIFx1MjE5MiAxLjAuMTogbG9hZGVyIHJlbW90ZSBjb2RlIGV4ZWN1dGlvbiJdXX0="
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_URGENT_NEXT",
+       "UN_CLI_RUN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-quiet-call-reports-a-cached-failed-urgent-row-but-never-acts",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImZhaWxlZCIsICJib29tIl1dfQ=="
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "quiet": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": "orb: URGENT UPDATE FAILED for the global packages: boom\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent --global`"
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_URGENT_NEXT",
+       "UN_CLI_RUN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-quiet-call-with-no-failed-urgent-row-is-silent",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "UN_CACHE_READ",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImFwcGxpZWQiLCAic2VjdXJpdHkgdXBkYXRlOiBAYWxtYWRhci9jb3JlIDEuMC4wIFx1MjE5MiAxLjAuMTogbG9hZGVyIHJlbW90ZSBjb2RlIGV4ZWN1dGlvbiJdXX0="
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "quiet": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "",
+         "stderr": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "UN_URGENT_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stale-cache-after-the-global-scan-reads-the-project-lockfile",
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "UN_END_PHASE",
+     "payload": {},
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "phase": "global"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "lock",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-project-lockfile-package-is-looked-up-at-its-pinned-version",
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "UN_LOCK_READ",
+     "payload": {
+      "data": "eyJwYWNrYWdlcyI6IFt7Im5hbWUiOiAiQGFsbWFkYXIvc3RkIiwgInZlcnNpb24iOiAiMS4wLjAiLCAidXJsIjogInUiLCAiaW50ZWdyaXR5IjogImkifV19"
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "phase": "project"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "UN_ASK",
+        "payload": {
+         "requestId": "0",
+         "name": "@almadar/std",
+         "tag": "latest"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "Registry",
+    "RegistryHttp",
+    "RegistryTimeout"
+   ]
+  },
+  {
+   "id": "control-a-missing-project-lockfile-goes-straight-to-the-urgent-updates",
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "UN_LOCK_ABSENT",
+     "payload": {
+      "kind": "not-found"
+     },
+     "entity": {
+      "id": "run",
+      "mode": "check",
+      "nowSec": 100000,
+      "checkedAt": 0,
+      "cached": [],
+      "deps": [],
+      "cursor": 0,
+      "installed": "",
+      "cands": [],
+      "cc": 0,
+      "found": [],
+      "phase": "project"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "UN_END_PHASE",
+        "payload": {}
+       },
+       {
+        "event": "UN_URGENT_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "UN_ASK"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "OrbCli"
    ]
   }
  ]

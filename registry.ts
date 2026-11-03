@@ -29,6 +29,9 @@ import { I18N_OPERATORS } from './modules/i18n.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
 import { KV_OPERATORS } from './modules/kv.js';
+import { MEM_OPERATORS } from './modules/mem.js';
+import { KERNEL_OPERATORS } from './modules/kernel.js';
+import { FFI_OPERATORS } from './modules/ffi.js';
 import { BROWSER_OPERATORS } from './modules/browser.js';
 import { COMPOSITION_OPERATORS } from './modules/composition.js';
 import { VEC_OPERATORS } from './modules/vector.js';
@@ -74,6 +77,9 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
   ...KV_OPERATORS,
+  ...MEM_OPERATORS,
+  ...KERNEL_OPERATORS,
+  ...FFI_OPERATORS,
   ...BROWSER_OPERATORS,
   ...COMPOSITION_OPERATORS,
   ...VEC_OPERATORS,
@@ -133,6 +139,9 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
   kv: KV_OPERATORS,
+  mem: MEM_OPERATORS,
+  kernel: KERNEL_OPERATORS,
+  ffi: FFI_OPERATORS,
   browser: BROWSER_OPERATORS,
   composition: COMPOSITION_OPERATORS,
   vec: VEC_OPERATORS,

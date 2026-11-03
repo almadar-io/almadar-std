@@ -3,12 +3,40 @@
  "trait": "CloudRunStatus",
  "cases": [
   {
-   "id": "load-starts-the-monitoring-read-with-no-token-step",
+   "id": "load-ensures-the-google-token-before-the-monitoring-read",
    "now": 1792067445678,
    "steps": [
     {
      "event": "CLOUD_RUN_LOAD",
      "payload": {},
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_TOKEN_ENSURE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "CR_MONITOR",
+       "CR_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "CloudRunStatus",
+    "CrToken"
+   ]
+  },
+  {
+   "id": "a-held-token-starts-the-monitoring-read",
+   "now": 1792067445678,
+   "steps": [
+    {
+     "event": "CR_TOKEN_READY",
+     "payload": {},
+     "from": "reading",
      "expect": {
       "state": "reading",
       "emits": [
@@ -42,26 +70,22 @@
    ]
   },
   {
-   "id": "refresh-starts-the-monitoring-read-with-no-token-step",
+   "id": "a-token-that-cannot-be-made-skips-monitoring-and-goes-on-to-cost",
    "now": 1792067445678,
    "steps": [
     {
-     "event": "CLOUD_RUN_REFRESH",
-     "payload": {},
+     "event": "CLOUD_RUN_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "CR_TOKEN_MISSING",
+     "payload": {
+      "message": "Google access not configured: credential `GCLOUD_ADC_REFRESH_TOKEN` (the refresh token) is not stored"
+     },
+     "from": "reading",
      "expect": {
       "state": "reading",
       "emits": [
-       {
-        "event": "CR_MONITOR",
-        "payload": {}
-       },
-       {
-        "event": "CR_HTTP_SEND",
-        "payload": {
-         "key": "time",
-         "method": "GET"
-        }
-       },
        {
         "event": "CR_COST",
         "payload": {}
@@ -73,11 +97,42 @@
         }
        }
       ],
-      "emitCounts": {
-       "CR_GCLOUD": 1
-      }
+      "neverEmits": [
+       "CR_HTTP_SEND"
+      ]
      }
     }
+   ],
+   "defaults": [
+    "CloudRunStatus",
+    "CrToken"
+   ]
+  },
+  {
+   "id": "refresh-ensures-the-google-token-before-the-monitoring-read",
+   "now": 1792067445678,
+   "steps": [
+    {
+     "event": "CLOUD_RUN_REFRESH",
+     "payload": {},
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_TOKEN_ENSURE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "CR_MONITOR",
+       "CR_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "CloudRunStatus",
+    "CrToken"
    ]
   },
   {

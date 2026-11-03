@@ -1,0 +1,247 @@
+{
+  "atom": "mem/atoms/std-mem-buffer.lolo",
+  "trait": "MemBuffer",
+  "cases": [
+    {
+      "id": "open creates a bump arena",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "BUFFER_OPEN",
+          "payload": {
+            "capacity": 64
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "mem/arena-new"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a write borrows the block exclusively",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "BUFFER_WRITE",
+          "payload": {
+            "offset": 0,
+            "data": "aGk="
+          },
+          "expect": {
+            "fired": true,
+            "state": "writeBorrowing",
+            "effects": [
+              {
+                "type": "mem/borrow"
+              }
+            ]
+          },
+          "entity": {
+            "id": "b",
+            "block": {
+              "id": 1,
+              "arena": 1,
+              "length": 64
+            },
+            "capacity": 64
+          }
+        }
+      ]
+    },
+    {
+      "id": "a write beyond capacity reports invalid and releases the borrow",
+      "steps": [
+        {
+          "from": "writing",
+          "event": "BUFFER_FAILED",
+          "payload": {
+            "error": "out of bounds",
+            "kind": "invalid"
+          },
+          "expect": {
+            "fired": true,
+            "state": "releasingFailed",
+            "emits": [
+              {
+                "event": "BUFFER_ERROR",
+                "payload": {
+                  "error": "out of bounds",
+                  "kind": "invalid"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "mem/release"
+              }
+            ]
+          },
+          "entity": {
+            "id": "b",
+            "block": {
+              "id": 1,
+              "arena": 1,
+              "length": 64
+            },
+            "borrow": {
+              "id": 1,
+              "block": 1,
+              "mode": "exclusive"
+            },
+            "capacity": 64
+          }
+        }
+      ]
+    },
+    {
+      "id": "a read after close reports closed",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "BUFFER_READ",
+          "payload": {
+            "offset": 0,
+            "length": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "BUFFER_ERROR",
+                "payload": {
+                  "kind": "closed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an open beyond the grant reports denied",
+      "steps": [
+        {
+          "from": "opening",
+          "event": "BUFFER_FAILED",
+          "payload": {
+            "error": "beyond the grant",
+            "kind": "denied"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "BUFFER_ERROR",
+                "payload": {
+                  "kind": "denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a written block releases its exclusive borrow",
+      "steps": [
+        {
+          "from": "writing",
+          "event": "BUFFER_WRITTEN",
+          "entity": {
+            "id": "b",
+            "block": {
+              "id": 1,
+              "arena": 1,
+              "length": 64
+            },
+            "borrow": {
+              "id": 1,
+              "block": 1,
+              "mode": "exclusive"
+            },
+            "capacity": 64
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "releasing",
+            "effects": [
+              {
+                "type": "mem/release"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "close frees the block",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "BUFFER_CLOSE",
+          "entity": {
+            "id": "b",
+            "block": {
+              "id": 1,
+              "arena": 1,
+              "length": 64
+            },
+            "capacity": 64
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "freeing",
+            "effects": [
+              {
+                "type": "mem/free"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a freed block drops the arena",
+      "steps": [
+        {
+          "from": "freeing",
+          "event": "BUFFER_FREED",
+          "entity": {
+            "id": "b",
+            "arena": {
+              "id": 1,
+              "kind": "bump",
+              "capacity": 64
+            },
+            "block": {
+              "id": 1,
+              "arena": 1,
+              "length": 64
+            },
+            "capacity": 64
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "dropping",
+            "effects": [
+              {
+                "type": "mem/arena-drop"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

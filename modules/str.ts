@@ -7,7 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, PRIMITIVE_VALUE, STRING, list, nullable, rec, tv, union } from '../signature.js';
+import { BOOLEAN, INT, NUMBER, PRIMITIVE_VALUE, STRING, list, nullable, rec, tv, union } from '../signature.js';
 
 /**
  * String module operators.
@@ -31,9 +31,9 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-str',
     minArity: 1,
     maxArity: 1,
-    description: 'Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). Null for any other text and for a value beyond 2^53 - 1 in either direction',
+    description: 'Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). An exact int (EXEC-EVAL-11); null for any other text and for a value beyond the 64-bit range',
     hasSideEffects: false,
-    returnType: nullable(NUMBER),
+    returnType: nullable(INT),
     params: [{ name: 's', type: STRING, description: 'The decimal integer text' }],
     example: '["str/to-int", "-42"] // => -42',
   },
@@ -45,7 +45,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'String length',
     hasSideEffects: false,
     sign: 'nonNegative',
-    returnType: 'number',
+    returnType: INT,
     params: [{ name: 's', type: 'string', description: 'The string' }],
     example: '["str/len", "hello"] // => 5',
   },
@@ -428,7 +428,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; a non-string on either side (null included) is a type mismatch',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: INT,
     params: [
       { name: 'a', type: 'string', description: 'The left string' },
       { name: 'b', type: 'string', description: 'The right string' },

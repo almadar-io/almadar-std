@@ -1,0 +1,250 @@
+app std-guest-session [
+  version: "1.0.0",
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), opens it with program/open, keeps the latest paint per slot and emits GUEST_PAINTS { guest, paints }; a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
+  egress: []
+]
+;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
+
+type GuestProgram = { name : string, orbitals : [orbital] }
+type GuestPaint = { slot : string!, trait : string!, content : node! }
+type GuestOpened = { guest : string!, rendered : [GuestPaint]! }
+type GuestStepped = { rendered : [GuestPaint]! }
+type GuestClosed = { closed : boolean! }
+
+orbital GuestSessionOrbital {
+  entity GuestRun [runtime] {
+    id : string!
+    guestHandle : string = ""
+    guestPaints : [GuestPaint] = []
+    guestError : string = ""
+  }
+
+  trait GuestSession -> GuestRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GUEST_OPEN -> opening
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+        (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_FAIL -> idle
+        (emit GUEST_ERROR { message: ?message })
+      GUEST_RESET -> idle
+        (emit GUEST_CLEARED {})
+      GUEST_OPENED -> idle
+        (program/close ?result.guest { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+      GUEST_FAILED -> idle
+      GUEST_CLOSED -> idle
+      GUEST_CLOSE_FAILED -> idle
+    }
+
+    state opening {
+      INIT -> idle
+      GUEST_OPEN -> opening
+        (emit GUEST_CLEARED {})
+        (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_OPENED -> live
+        (set @entity.guestHandle ?result.guest)
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (!= @q.slot @p.slot))) [@p]))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+      GUEST_FAILED -> idle
+        (emit GUEST_ERROR { message: ?error })
+      GUEST_FAIL -> idle
+        (emit GUEST_ERROR { message: ?message })
+      GUEST_RESET -> idle
+        (emit GUEST_CLEARED {})
+      GUEST_CLOSED -> opening
+      GUEST_CLOSE_FAILED -> opening
+    }
+
+    state live {
+      INIT -> idle
+      GUEST_OPEN -> opening
+        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+        (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_OPENED -> live
+        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle ?result.guest)
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (!= @q.slot @p.slot))) [@p]))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+      GUEST_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_SEND -> live when (= ?guest @entity.guestHandle)
+        (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
+      GUEST_STEPPED -> live
+        (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (!= @q.slot @p.slot))) [@p]))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+      GUEST_STEP_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_FAIL -> idle
+        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+        (emit GUEST_ERROR { message: ?message })
+      GUEST_RESET -> idle
+        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (emit GUEST_CLEARED {})
+      GUEST_CLOSED -> live
+      GUEST_CLOSE_FAILED -> live
+    }
+
+    emits {
+      GUEST_PAINTS -> external {
+        guest : string!
+        paints : [GuestPaint]!
+      }
+        @description "The guest's current paint for every slot it draws into."
+      GUEST_ERROR -> external {
+        message : string!
+      }
+        @description "The guest could not be opened, or the host could not supply its program."
+      GUEST_NOTICE -> external {
+        message : string!
+      }
+        @description "A step of the guest failed, or a second guest could not replace the open one."
+      GUEST_CLEARED -> external { }
+        @description "The previous guest is gone: a new one is opening or the session was reset."
+      GUEST_OPENED {
+        result : GuestOpened!
+      }
+      GUEST_FAILED {
+        error : string!
+      }
+      GUEST_STEPPED {
+        result : GuestStepped!
+      }
+      GUEST_STEP_FAILED {
+        error : string!
+      }
+      GUEST_CLOSED {
+        result : GuestClosed!
+      }
+      GUEST_CLOSE_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      GUEST_OPEN -> input {
+        program : GuestProgram!
+      }
+        @description "Open a resolved program as the guest, closing the one already open."
+        @synonyms "run a program live, mount a behavior at run time, open a guest session"
+      GUEST_FAIL -> input {
+        message : string!
+      }
+        @description "The host could not obtain a program to open: report it as the guest's error."
+      GuestStage.GUEST_SEND -> GUEST_SEND
+      GUEST_SEND {
+        guest : string!
+        address : string!
+        event : event!
+        payload : @payload event!
+      }
+      GUEST_RESET { }
+        @description "Close the open guest and clear the paint."
+    }
+  }
+
+  trait GuestStage -> GuestRun [client] {
+    config {
+      slot : string = "main"
+        @label "Guest slot"
+        @description "The slot of the guest's paint this stage shows."
+        @tier "domain"
+      className : string = ""
+        @label "Class name"
+        @description "Classes of the box that holds the guest's paint."
+        @tier "presentation"
+      errorTitle : string = ""
+        @label "Error title"
+        @description "Title of the alert shown when the guest could not be run; none when empty."
+        @tier "presentation"
+      pending : "card" | "detail" = card
+        @label "Placeholder"
+        @description "The skeleton shown until the guest has painted."
+        @tier "presentation"
+      pendingRows : number = 2
+        @label "Placeholder rows"
+        @tier "presentation"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit GUEST_SHOWN {})
+      GUEST_PAINTS -> idle
+        (set @entity.guestHandle ?guest)
+        (set @entity.guestError "")
+        (set @entity.guestPaints ?paints)
+        (emit GUEST_SHOWN {})
+      GUEST_ERROR -> idle
+        (set @entity.guestError ?message)
+        (emit GUEST_SHOWN {})
+      GUEST_NOTICE -> idle
+        (notify error ?message)
+      GUEST_CLEARED -> idle
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (set @entity.guestError "")
+        (emit GUEST_SHOWN {})
+      GUEST_CONTROL -> idle when (= ?guest @entity.guestHandle)
+        (emit GUEST_SEND { guest: ?guest, address: ?address, event: ?event, payload: ?payload })
+      GUEST_CONTROL -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_SHOWN -> idle
+        (render-ui main { type: box, className: @config.className, children: [
+          (if (!= @entity.guestError "")
+            { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
+            (let ((paint (array/find @entity.guestPaints (fn p (= @p.slot @config.slot)))))
+              (if (= @paint null)
+                { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
+                { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, children: [@paint.content] })))
+        ] })
+    }
+
+    emits {
+      GUEST_SHOWN
+      GUEST_SEND -> external {
+        guest : string!
+        address : string!
+        event : event!
+        payload : @payload event!
+      }
+        @description "A control of the guest was used: the session steps it."
+    }
+
+    listens {
+      GuestSession.GUEST_PAINTS -> GUEST_PAINTS
+      GuestSession.GUEST_ERROR -> GUEST_ERROR
+      GuestSession.GUEST_NOTICE -> GUEST_NOTICE
+      GuestSession.GUEST_CLEARED -> GUEST_CLEARED
+      GUEST_PAINTS {
+        guest : string!
+        paints : [GuestPaint]!
+      }
+      GUEST_ERROR {
+        message : string!
+      }
+      GUEST_NOTICE {
+        message : string!
+      }
+      GUEST_CLEARED { }
+      GUEST_CONTROL {
+        guest : string!
+        address : string!
+        event : event!
+        payload : @payload event!
+      }
+    }
+  }
+
+  page "/" as GuestSessionPage -> GuestSession, GuestStage
+}

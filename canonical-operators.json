@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-02T07:46:53.752Z",
+  "generated": "2026-11-03T06:59:42.838Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -125,6 +125,36 @@
       "description": "OS-level event watchers for system triggers",
       "target": [
         "ts"
+      ]
+    },
+    "std-mem": {
+      "description": "Kernel-owned memory: arenas, blocks and borrows (EXEC-METAL)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-mem-read": {
+      "description": "Pure reads of borrowed kernel memory (EXEC-METAL-3)",
+      "target": [
+        "rust"
+      ]
+    },
+    "std-kernel": {
+      "description": "Kernel-owned queue reordering (EXEC-METAL-5)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-ffi": {
+      "description": "Granted native foreign-function calls (EXEC-METAL-2)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-kernel-read": {
+      "description": "Pure kernel introspection and granted operator application (EXEC-METAL)",
+      "target": [
+        "rust"
       ]
     },
     "std-kv": {
@@ -1256,7 +1286,7 @@
       "category": "std-array",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Count elements (optionally matching predicate)",
       "module": "array",
       "visual": {
@@ -1553,7 +1583,7 @@
       "category": "std-array",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Find index of first element matching predicate (-1 if none)",
       "module": "array",
       "visual": {
@@ -1782,7 +1812,7 @@
       "category": "std-array",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Find index of item (-1 if not found)",
       "module": "array",
       "visual": {
@@ -1916,7 +1946,7 @@
       "category": "std-array",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Array length",
       "module": "array",
       "visual": {
@@ -2268,6 +2298,127 @@
         "(array/partition [{\"price\":30},{\"price\":80}] [\"fn\",\"x\",[\">\",\"@x.price\",50]])"
       ],
       "docsSource": "reference-docs"
+    },
+    "array/pmap": {
+      "category": "std-array",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "array",
+        "of": {
+          "kind": "var",
+          "name": "U"
+        }
+      },
+      "description": "Transform each element like array/map, evaluating elements in parallel (rayon on native hosts, sequential on wasm and no_std with identical results); the result keeps input order. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.",
+      "module": "array",
+      "visual": {
+        "form": "conveyor"
+      },
+      "returnSemantics": "lambda-result",
+      "lambdaArgPosition": 1,
+      "params": [
+        {
+          "name": "arr",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "var",
+              "name": "T"
+            }
+          },
+          "description": "The array"
+        },
+        {
+          "name": "fn",
+          "type": {
+            "kind": "fn",
+            "params": [
+              {
+                "kind": "var",
+                "name": "T"
+              }
+            ],
+            "returns": {
+              "kind": "var",
+              "name": "U"
+            }
+          },
+          "description": "Pure transform function"
+        }
+      ],
+      "examples": [
+        "(array/pmap [{\"price\":100},{\"price\":200}] [\"fn\",\"x\",[\"*\",\"@x.price\",1.1]])"
+      ],
+      "docsSource": "generated",
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      }
+    },
+    "array/preduce": {
+      "category": "std-array",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "var",
+        "name": "A"
+      },
+      "description": "Reduce like array/reduce with a fixed grouping so the result is the same parallel or sequential: the array is split into chunks of 1024 elements, each chunk is folded left to right starting from its first element, then the chunk results are folded left to right starting from init; an empty array answers init. The reducer should therefore be associative with init as its identity. validate refuses a lambda that is not provably pure (any effect, @entity write, prob/*, math/random*, @now, time/now, kernel/*, mem/*) with ORB_X_PARALLEL_LAMBDA_IMPURE.",
+      "module": "array",
+      "visual": {
+        "form": "conveyor"
+      },
+      "returnSemantics": "lambda-result",
+      "lambdaArgPosition": 2,
+      "params": [
+        {
+          "name": "arr",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "var",
+              "name": "T"
+            }
+          },
+          "description": "The array"
+        },
+        {
+          "name": "init",
+          "type": {
+            "kind": "var",
+            "name": "A"
+          },
+          "description": "Initial accumulator value, combined with the chunk results"
+        },
+        {
+          "name": "fn",
+          "type": {
+            "kind": "fn",
+            "params": [
+              {
+                "kind": "var",
+                "name": "A"
+              },
+              {
+                "kind": "var",
+                "name": "T"
+              }
+            ],
+            "returns": {
+              "kind": "var",
+              "name": "A"
+            }
+          },
+          "description": "Pure reducer function (acc, item) => newAcc"
+        }
+      ],
+      "examples": [
+        "(array/preduce [{\"price\":10},{\"price\":25}] 0 [\"fn\",[\"acc\",\"x\"],[\"+\",\"@acc\",\"@x.price\"]])"
+      ],
+      "docsSource": "generated",
+      "valueSourceSlots": {
+        "kind": "lambdaResult"
+      }
     },
     "array/prepend": {
       "category": "std-array",
@@ -4142,7 +4293,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4174,7 +4325,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4206,7 +4357,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4238,7 +4389,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4275,7 +4426,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4312,7 +4463,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4349,7 +4500,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4386,7 +4537,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -4439,7 +4590,7 @@
                   "crc": {
                     "kind": "union",
                     "of": [
-                      "number",
+                      "int",
                       {
                         "kind": "literal",
                         "value": null
@@ -4575,7 +4726,7 @@
                   "crc": {
                     "kind": "union",
                     "of": [
-                      "number",
+                      "int",
                       {
                         "kind": "literal",
                         "value": null
@@ -6692,14 +6843,14 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
           }
         ]
       },
-      "description": "The byte at index i as a number 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
+      "description": "The byte at index i as an integer 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "visual": {
         "form": "block"
@@ -6832,7 +6983,7 @@
       "category": "std-codec",
       "minArity": 2,
       "maxArity": 3,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Byte offset of the first occurrence of needle at or after from (default 0; a negative from counts from the end, out-of-range clamps), or -1 when absent. An empty needle answers from. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "visual": {
@@ -6874,7 +7025,7 @@
       "category": "std-codec",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Number of bytes (not the length of the base64 text). A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "visual": {
@@ -6893,6 +7044,85 @@
       ],
       "docsSource": "generated"
     },
+    "bytes/read-int": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "int",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "The signed (two complement) integer stored in width bytes at offset, big-endian (be) or little-endian (le), sign-extended from its top bit; null when those bytes run past the data. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "visual": {
+        "form": "block"
+      },
+      "failable": {},
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to read"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "description": "Byte index of the first byte"
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 2
+              },
+              {
+                "kind": "literal",
+                "value": 4
+              },
+              {
+                "kind": "literal",
+                "value": 8
+              }
+            ]
+          },
+          "description": "Byte count: 1, 2, 4 or 8"
+        },
+        {
+          "name": "endian",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "be"
+              },
+              {
+                "kind": "literal",
+                "value": "le"
+              }
+            ]
+          },
+          "description": "Byte order: \"be\" or \"le\""
+        }
+      ],
+      "examples": [
+        "(bytes/read-int \"/v8=\" 0 2 \"le\") // => -2"
+      ],
+      "docsSource": "generated"
+    },
     "bytes/read-uint": {
       "category": "std-codec",
       "minArity": 4,
@@ -6900,14 +7130,14 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
           }
         ]
       },
-      "description": "The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^53 - 1 fails with kind invalid rather than round. A bytes value is a standard padded base64 string at run time.",
+      "description": "The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^63 - 1 answers null rather than round; every width up to that is an exact int. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "visual": {
         "form": "block"
@@ -8083,7 +8313,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -8642,6 +8872,112 @@
       ],
       "examples": [
         "(fetch-stream \"https://api.example.com/stream\")"
+      ],
+      "docsSource": "generated"
+    },
+    "ffi/call": {
+      "category": "std-ffi",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Call a C function of a native library (grant ffi: { \"<library>\": { \"<symbol>\": \"<C signature>\" } }). The library string is passed to dlopen verbatim: the program states the exact path or soname, nothing is guessed per platform. The granted signature is closed: \"(\" [type (\",\" type)*] \") -> \" ret, type one of i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 ptr mutptr, ret a scalar type or void (no pointer returns), at most 8 parameters. args is a list with one entry per granted parameter: an int or number for a numeric type (an integer must be exact and in range for its C type; f32 and f64 accept int or number), a Borrow handle for ptr (any live borrow, passed read-only) or mutptr (an exclusive borrow whose bytes the call may write). The kernel reads the borrowed block, sends the bytes with the call, and after the answer writes each mutptr buffer back into its block like mem/write, committed with the step; the host never holds kernel memory (EXEC-BOUND-2, EXEC-METAL-2). Success payload: { value, buffers } (value is an int for an integer return, a number for f32 and f64, null for void; buffers is one bytes per mutptr parameter in order, the bytes after the call). Failure kind: denied (the library and symbol are not granted), invalid (args do not match the granted signature, a bad or non-exclusive borrow, an out-of-range integer), not-found (the library or symbol cannot be loaded), unsupported (a host without native ffi: wasm, browser, node, mobile, seL4).",
+      "module": "ffi",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": {
+              "kind": "union",
+              "of": [
+                "int",
+                "number",
+                {
+                  "kind": "literal",
+                  "value": null
+                }
+              ]
+            },
+            "buffers": {
+              "kind": "array",
+              "of": "bytes"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "ffi",
+          "library": 0,
+          "symbol": 1
+        }
+      ],
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "library",
+          "type": "string",
+          "description": "The library path or soname, passed to dlopen verbatim; must match a granted library"
+        },
+        {
+          "name": "symbol",
+          "type": "string",
+          "description": "The C symbol to call; must be granted for the library"
+        },
+        {
+          "name": "args",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "union",
+              "of": [
+                "int",
+                "number",
+                "Borrow"
+              ]
+            }
+          },
+          "description": "One argument per granted parameter: int or number for numeric types, a Borrow for ptr and mutptr"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(ffi/call \"/usr/lib/libSystem.B.dylib\" \"cos\" [0.5] {\"emit\":{\"success\":\"COS_DONE\",\"failure\":\"FFI_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -9559,7 +9895,7 @@
                   "crc": {
                     "kind": "union",
                     "of": [
-                      "number",
+                      "int",
                       {
                         "kind": "literal",
                         "value": null
@@ -9693,7 +10029,7 @@
                   "crc": {
                     "kind": "union",
                     "of": [
-                      "number",
+                      "int",
                       {
                         "kind": "literal",
                         "value": null
@@ -10678,6 +11014,283 @@
       ],
       "docsSource": "generated"
     },
+    "kernel/apply": {
+      "category": "std-kernel-read",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "var",
+        "name": "T"
+      },
+      "description": "Apply the pure operator named by name to the list args and answer its result (grant kernel: { \"apply:<pattern>\": [call] }, the pattern an exact operator name such as \"str/concat\" or a namespace prefix such as \"math/*\"). The name must be a static string (a computed name is refused at validate time). Refused: an unknown name, any operator with side effects or a host, kernel/apply itself and every kernel/* operator, and a name the grant does not cover. Arity and type errors are the operator's own.",
+      "module": "kernel",
+      "visual": {
+        "form": "block"
+      },
+      "returnSemantics": "applied-operator<0,1>",
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "call",
+          "operator": 0
+        }
+      ],
+      "host": "kernel",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The operator name; a static string covered by an apply grant"
+        },
+        {
+          "name": "args",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "var",
+              "name": "T"
+            }
+          },
+          "description": "The operator's arguments"
+        }
+      ],
+      "examples": [
+        "(kernel/apply \"str/concat\" [\"a\",\"b\"]) // => \"ab\""
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/frame": {
+      "category": "std-kernel-read",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "trait": "string",
+          "state": "string",
+          "event": "string",
+          "entityId": "string"
+        }
+      },
+      "description": "The frame of the running step: the trait, its current state, the event being handled and the entity id (grant kernel: { \"introspect\": [read] }).",
+      "module": "kernel",
+      "visual": {
+        "form": "block"
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "read"
+        }
+      ],
+      "host": "kernel",
+      "examples": [
+        "(kernel/frame) // => { trait, state, event, entityId }"
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/queue-back": {
+      "category": "std-kernel",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Move every pending worklist item whose event name equals the literal event to the back of the queue, keeping their relative order (grant kernel: { \"queue\": [reorder] }). The reorder applies where this step's own emits and listeners are queued, never mid-step (EXEC-METAL-5). event must be a string literal. Success payload: {}. Failure kind: invalid (event is not a string literal), denied (no grant).",
+      "module": "kernel",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "reorder"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "event",
+          "type": "string",
+          "description": "The event name to move; a string literal"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kernel/queue-back \"BACKGROUND\" {\"emit\":{\"failure\":\"KERNEL_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/queue-front": {
+      "category": "std-kernel",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Move every pending worklist item whose event name equals the literal event to the front of the queue, keeping their relative order (grant kernel: { \"queue\": [reorder] }). The reorder applies where this step's own emits and listeners are queued, never mid-step (EXEC-METAL-5). event must be a string literal. Success payload: {}. Failure kind: invalid (event is not a string literal), denied (no grant).",
+      "module": "kernel",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "reorder"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "event",
+          "type": "string",
+          "description": "The event name to move; a string literal"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(kernel/queue-front \"URGENT\" {\"emit\":{\"failure\":\"KERNEL_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/stamp": {
+      "category": "std-kernel-read",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "now": "int",
+          "dispatch": "int",
+          "step": "int",
+          "journal": "int"
+        }
+      },
+      "description": "The kernel's counters now: the clock in milliseconds (now), the dispatch number, the step number inside the dispatch and the journal length (grant kernel: { \"introspect\": [read] }).",
+      "module": "kernel",
+      "visual": {
+        "form": "block"
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "read"
+        }
+      ],
+      "host": "kernel",
+      "examples": [
+        "(kernel/stamp) // => { now, dispatch, step, journal }"
+      ],
+      "docsSource": "generated"
+    },
+    "kernel/worklist": {
+      "category": "std-kernel-read",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": {
+        "kind": "array",
+        "of": {
+          "kind": "object",
+          "fields": {
+            "event": "string",
+            "trait": "string",
+            "orbital": "string"
+          }
+        }
+      },
+      "description": "Snapshot of the pending worklist as it stood at the start of this step: the event, trait and orbital of each item in queue order (grant kernel: { \"introspect\": [read] }).",
+      "module": "kernel",
+      "visual": {
+        "form": "block"
+      },
+      "grant": [
+        {
+          "kind": "kernel",
+          "access": "read"
+        }
+      ],
+      "host": "kernel",
+      "examples": [
+        "(kernel/worklist) // => [{ event, trait, orbital }]"
+      ],
+      "docsSource": "generated"
+    },
     "kv/batch": {
       "category": "std-kv",
       "minArity": 2,
@@ -11640,7 +12253,7 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Round up to integer",
       "module": "math",
       "visual": {
@@ -11744,7 +12357,7 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Round down to integer",
       "module": "math",
       "visual": {
@@ -12119,7 +12732,7 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
@@ -12185,7 +12798,7 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Returns -1, 0, or 1 indicating sign",
       "module": "math",
       "visual": {
@@ -12318,6 +12931,1121 @@
       ],
       "examples": [
         "(math/wrap 15 0 10) // => 5"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/alloc": {
+      "category": "std-mem",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Allocate length bytes aligned to align inside an arena. The block is zero-filled and belongs to the arena until freed or the arena drops (EXEC-METAL-2). Success payload: { block } (a sealed Block handle). Failure kind: closed (the arena is not live), invalid (non-positive length, align not a power of two, no room left in the arena).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "block": "Block",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "arena",
+          "type": "Arena",
+          "description": "The arena to allocate from"
+        },
+        {
+          "name": "length",
+          "type": "int",
+          "description": "Block size in bytes; positive"
+        },
+        {
+          "name": "align",
+          "type": "int",
+          "description": "Alignment in bytes; a power of two"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/alloc @entity.arena 256 8 {\"emit\":{\"success\":\"BLOCK_READY\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/arena-drop": {
+      "category": "std-mem",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Drop an arena and every block in it (grant mem: { \"arena:<maxBytes>\": [free] }). Success payload: {}. Failure kind: closed (the arena is not live), borrowed (a block of the arena still has a live borrow), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "free"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "arena",
+          "type": "Arena",
+          "description": "The arena handle to drop"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/arena-drop @entity.arena {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/arena-new": {
+      "category": "std-mem",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create an arena of capacity bytes (grant mem: { \"arena:<maxBytes>\": [create] }; capacity must not exceed the granted maxBytes). kind is \"bump\" (blocks are freed only with the arena), \"stack\" (the newest block is freed first) or \"shared\" (blocks can be frozen and read by other kernels, and hold atomic cells; needs a grant target \"shared:<maxBytes>\" with [create] for the arena and [atomic] for the atomic ops). The kernel owns the arena and answers without asking a host (EXEC-METAL-1). Success payload: { arena } (a sealed Arena handle). A shared arena handed to a guest through program/dispatch arrives in the guest as an Arena whose optional blocks field lists the committed blocks of the owner, in the order the owner made them; the guest reaches them only as frozen blocks or through mem/atomic-* (EXEC-CONC-7). Failure kind: invalid (kind is not \"bump\", \"stack\" or \"shared\", non-positive capacity), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "arena": "Arena",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "create",
+          "capacity": 1,
+          "arenaKind": 0
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "kind",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "bump"
+              },
+              {
+                "kind": "literal",
+                "value": "stack"
+              },
+              {
+                "kind": "literal",
+                "value": "shared"
+              }
+            ]
+          },
+          "description": "Arena discipline: \"bump\", \"stack\" or \"shared\""
+        },
+        {
+          "name": "capacity",
+          "type": "int",
+          "description": "Arena size in bytes; positive and within the granted maxBytes"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/arena-new \"bump\" 4096 {\"emit\":{\"success\":\"ARENA_READY\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/atomic-add": {
+      "category": "std-mem",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Atomically add delta to the 8-byte aligned signed integer cell at offset of a shared-arena block and answer the new value (grant mem: { \"shared:<maxBytes>\": [atomic] }). Journaled. Success payload: { value } (the new value). Failure kind: closed (the block is not live), invalid (the block is not in a shared arena, offset not 8-byte aligned or outside the block, the block is frozen), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "int",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "atomic"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "A block of a shared arena"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset of the cell; a multiple of 8"
+        },
+        {
+          "name": "delta",
+          "type": "int",
+          "description": "The amount to add; may be negative"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/atomic-add @entity.block 0 1 {\"emit\":{\"success\":\"ADDED\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/atomic-cas": {
+      "category": "std-mem",
+      "minArity": 4,
+      "maxArity": 5,
+      "returnType": "void",
+      "description": "Atomic compare-and-swap on the 8-byte aligned signed integer cell at offset of a shared-arena block: when the cell equals expected it becomes new (grant mem: { \"shared:<maxBytes>\": [atomic] }). Journaled. Success payload: { value, swapped } (value is the cell content after the call, swapped says whether it changed). Failure kind: closed (the block is not live), invalid (the block is not in a shared arena, offset not 8-byte aligned or outside the block, the block is frozen), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "int",
+            "swapped": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "atomic"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "A block of a shared arena"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset of the cell; a multiple of 8"
+        },
+        {
+          "name": "expected",
+          "type": "int",
+          "description": "The value the cell must hold for the swap to happen"
+        },
+        {
+          "name": "new",
+          "type": "int",
+          "description": "The value to store when the cell equals expected"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/atomic-cas @entity.block 0 0 1 {\"emit\":{\"success\":\"CAS_DONE\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/atomic-load": {
+      "category": "std-mem",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Atomically load the 8-byte aligned signed integer cell at offset of a shared-arena block (grant mem: { \"shared:<maxBytes>\": [atomic] }). The answer is journaled, so replay returns the recorded value and never re-executes. Success payload: { value }. Failure kind: closed (the block is not live), invalid (the block is not in a shared arena, offset not 8-byte aligned or outside the block), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "int",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "atomic"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "A block of a shared arena"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset of the cell; a multiple of 8"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/atomic-load @entity.block 0 {\"emit\":{\"success\":\"LOADED\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/atomic-store": {
+      "category": "std-mem",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Atomically store value into the 8-byte aligned signed integer cell at offset of a shared-arena block (grant mem: { \"shared:<maxBytes>\": [atomic] }). Journaled. Success payload: {}. Failure kind: closed (the block is not live), invalid (the block is not in a shared arena, offset not 8-byte aligned or outside the block, the block is frozen), denied (no grant).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "mem",
+          "access": "atomic"
+        }
+      ],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "A block of a shared arena"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset of the cell; a multiple of 8"
+        },
+        {
+          "name": "value",
+          "type": "int",
+          "description": "The value to store"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/atomic-store @entity.block 0 1 {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/borrow": {
+      "category": "std-mem",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Borrow a block, \"shared\" (any number, read only) or \"exclusive\" (one, read and write); the kernel refuses a conflicting borrow instead of aliasing (EXEC-METAL-3). Success payload: { borrow } (a sealed Borrow handle). Failure kind: closed (the block is not live), borrowed (a conflicting borrow is live), invalid (mode is neither \"shared\" nor \"exclusive\").",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "borrow": "Borrow",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "The block handle to borrow"
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "shared"
+              },
+              {
+                "kind": "literal",
+                "value": "exclusive"
+              }
+            ]
+          },
+          "description": "Borrow mode: \"shared\" or \"exclusive\""
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/borrow @entity.block \"exclusive\" {\"emit\":{\"success\":\"BORROWED\",\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/free": {
+      "category": "std-mem",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Free a block. In a stack arena only the newest live block may be freed; in a bump arena the space returns with the arena. Success payload: {}. Failure kind: closed (the block is not live), borrowed (the block has a live borrow), invalid (a stack arena block that is not the newest).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "The block handle to free"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/free @entity.block {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/freeze": {
+      "category": "std-mem",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Freeze a block of a shared arena: it becomes read-only and may then be read by other kernels (a block must be frozen before a guest kernel can read it). Needs no grant beyond holding the handle. Success payload: {}. Failure kind: closed (the block is not live), borrowed (the block has a live borrow), invalid (the block is not in a shared arena).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "block",
+          "type": "Block",
+          "description": "The block handle to freeze"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/freeze @entity.block {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/length": {
+      "category": "std-mem-read",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "int",
+      "description": "The length in bytes of a Block, or of the block a Borrow covers. A handle that is not live is an evaluation error.",
+      "module": "mem",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "handle",
+          "type": {
+            "kind": "union",
+            "of": [
+              "Block",
+              "Borrow"
+            ]
+          },
+          "description": "A Block or Borrow handle"
+        }
+      ],
+      "examples": [
+        "(mem/length @entity.block) // => int"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/read": {
+      "category": "std-mem-read",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "bytes",
+      "description": "Read length bytes at offset from a live borrow (shared or exclusive) and answer bytes. A closed borrow or a range outside the block is an evaluation error (EXEC-METAL-3).",
+      "module": "mem",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "A live borrow of the block"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset inside the block"
+        },
+        {
+          "name": "length",
+          "type": "int",
+          "description": "Number of bytes to read"
+        }
+      ],
+      "examples": [
+        "(mem/read @entity.borrow 0 16) // => bytes"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/read-int": {
+      "category": "std-mem-read",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "int",
+      "description": "Read a signed (two complement) integer of width bytes (1, 2, 4 or 8) at offset from a live borrow, sign-extended from its top bit; endian is \"be\" (big-endian) or \"le\" (little-endian). A closed borrow, a range outside the block or a bad width is an evaluation error.",
+      "module": "mem",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "A live borrow of the block"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset inside the block"
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 2
+              },
+              {
+                "kind": "literal",
+                "value": 4
+              },
+              {
+                "kind": "literal",
+                "value": 8
+              }
+            ]
+          },
+          "description": "Integer width in bytes: 1, 2, 4 or 8"
+        },
+        {
+          "name": "endian",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "be"
+              },
+              {
+                "kind": "literal",
+                "value": "le"
+              }
+            ]
+          },
+          "description": "Byte order: \"be\" or \"le\""
+        }
+      ],
+      "examples": [
+        "(mem/read-int @entity.borrow 0 2 \"le\") // => int"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/read-uint": {
+      "category": "std-mem-read",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "int",
+      "description": "Read an unsigned integer of width bytes (1, 2, 4 or 8) at offset from a live borrow; endian is \"be\" (big-endian) or \"le\" (little-endian). A closed borrow, a range outside the block or a bad width is an evaluation error.",
+      "module": "mem",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "A live borrow of the block"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset inside the block"
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 2
+              },
+              {
+                "kind": "literal",
+                "value": 4
+              },
+              {
+                "kind": "literal",
+                "value": 8
+              }
+            ]
+          },
+          "description": "Integer width in bytes: 1, 2, 4 or 8"
+        },
+        {
+          "name": "endian",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "be"
+              },
+              {
+                "kind": "literal",
+                "value": "le"
+              }
+            ]
+          },
+          "description": "Byte order: \"be\" or \"le\""
+        }
+      ],
+      "examples": [
+        "(mem/read-uint @entity.borrow 0 4 \"le\") // => int"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/release": {
+      "category": "std-mem",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Release a borrow so the block can be borrowed differently or freed. Success payload: {}. Failure kind: closed (the borrow is not live or already released).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "The borrow handle to release"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/release @entity.borrow {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "mem/write": {
+      "category": "std-mem",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Write data into the borrowed block at offset. Needs an exclusive borrow; the write must lie wholly inside the block. Success payload: {}. Failure kind: closed (the borrow is not live), borrowed (the borrow is shared), invalid (offset below zero or the write runs past the block).",
+      "module": "mem",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "An exclusive borrow of the block"
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Byte offset inside the block"
+        },
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "Bytes to write"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(mem/write @entity.borrow 0 @payload.data {\"emit\":{\"failure\":\"MEM_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -13774,7 +15502,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -13882,7 +15610,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -13989,7 +15717,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14042,7 +15770,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14095,7 +15823,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14153,7 +15881,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14254,7 +15982,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14360,7 +16088,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14471,7 +16199,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14532,7 +16260,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14597,7 +16325,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14738,7 +16466,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14791,7 +16519,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14852,7 +16580,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14913,7 +16641,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -14966,7 +16694,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15019,7 +16747,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15107,7 +16835,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15203,7 +16931,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15267,7 +16995,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15369,7 +17097,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15482,7 +17210,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15547,7 +17275,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15619,7 +17347,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15685,7 +17413,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15789,7 +17517,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15864,7 +17592,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15917,7 +17645,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -15970,7 +17698,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16041,7 +17769,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16113,7 +17841,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16179,7 +17907,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16289,7 +18017,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16430,7 +18158,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16541,7 +18269,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16594,7 +18322,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16703,7 +18431,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16756,7 +18484,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16869,7 +18597,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -16977,7 +18705,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17061,7 +18789,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17149,7 +18877,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17202,7 +18930,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17255,7 +18983,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17308,7 +19036,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17361,7 +19089,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17446,7 +19174,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17559,7 +19287,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -17573,7 +19301,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "string",
-      "description": "Final path component (POSIX semantics, no OS access)",
+      "description": "Final path component (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17625,7 +19353,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "string",
-      "description": "Path without its final component (POSIX semantics, no OS access)",
+      "description": "Path without its final component (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17677,7 +19405,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "string",
-      "description": "Extension of the final component, with the dot, or an empty string (POSIX semantics, no OS access)",
+      "description": "Extension of the final component, with the dot, or an empty string (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17729,7 +19457,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "Whether the path starts at the root (POSIX semantics, no OS access)",
+      "description": "Whether the path starts at the root (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17781,7 +19509,7 @@
       "minArity": 1,
       "maxArity": null,
       "returnType": "string",
-      "description": "Join path segments with \"/\" and normalize (POSIX semantics on every host, no OS access)",
+      "description": "Join path segments with \"/\" and normalize (POSIX semantics on every host; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17803,7 +19531,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "string",
-      "description": "Collapse \".\", \"..\" and repeated separators (POSIX semantics, no OS access)",
+      "description": "Collapse \".\", \"..\" and repeated separators (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17855,7 +19583,7 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "string",
-      "description": "Relative path from one path to another (POSIX semantics, no OS access)",
+      "description": "Relative path from one path to another (POSIX semantics; drive-rooted paths like C:/x are absolute on their drive, with either separator; no OS access)",
       "module": "os",
       "visual": {
         "form": "block"
@@ -17989,7 +19717,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18050,7 +19778,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18122,7 +19850,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18224,7 +19952,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18326,7 +20054,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18428,7 +20156,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18500,7 +20228,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18572,7 +20300,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18673,7 +20401,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18814,7 +20542,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -18921,7 +20649,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19013,7 +20741,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19133,7 +20861,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19255,7 +20983,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19330,7 +21058,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19395,7 +21123,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19646,7 +21374,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19704,7 +21432,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19813,7 +21541,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19884,7 +21612,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -19980,7 +21708,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20051,7 +21779,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20104,7 +21832,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20240,7 +21968,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20374,7 +22102,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20502,7 +22230,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20555,7 +22283,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20642,7 +22370,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20754,7 +22482,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20821,7 +22549,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20933,7 +22661,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -20999,7 +22727,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21052,7 +22780,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21122,7 +22850,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21175,7 +22903,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21241,7 +22969,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21352,7 +23080,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21405,7 +23133,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21463,7 +23191,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21521,7 +23249,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21590,7 +23318,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21669,7 +23397,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21754,7 +23482,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21843,7 +23571,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -21956,7 +23684,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -22051,7 +23779,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -22170,7 +23898,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -22241,7 +23969,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -22354,7 +24082,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
           "optional": true
         }
       ],
@@ -22943,7 +24671,7 @@
               },
               "counts": {
                 "kind": "array",
-                "of": "number"
+                "of": "int"
               }
             }
           },
@@ -23074,7 +24802,7 @@
       "category": "std-prob",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Sample from a Poisson distribution",
       "module": "prob",
       "visual": {
@@ -23253,6 +24981,63 @@
       ],
       "docsSource": "reference-docs"
     },
+    "program/close": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "closed": "boolean"
+        }
+      },
+      "description": "Close a guest session `program/open` answered, dropping its state. Success carries `{ result: { closed: true } }`. A failure carries `{ error }` (an unknown or already closed session). Runs on the server.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "guest",
+          "type": "string",
+          "description": "The guest session id `program/open` answered"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/close @entity.guest {\"emit\":{\"success\":\"CLOSED\",\"failure\":\"CLOSE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/compose": {
       "category": "std-program",
       "minArity": 2,
@@ -23380,7 +25165,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`.",
+      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`. With `{ guest: id }` (a session `program/open` answered) the event is dispatched into that guest session, acting as the guest's client: the address is `Orbital.Trait.EVENT` or `Trait.EVENT` (or a bare `EVENT`, to every guest trait whose state handles it) and may name any event the guest trait handles, not only a declared external input; the payload is copied (an Arena crosses only if `program/open` shared it; any other sealed value is refused) and a `grants` option is refused (grants are given at `program/open`). The key decides the lane: unkeyed, the guest runs inside the asking dispatch and success carries `{ result: { states, rendered, emitted, outcomes, rejections? } }`, the same record `program/open` answers; keyed, the guest runs on its own lane on a host thread (gated by the grant `kernel: { \"guest\": [spawn] }`) and that record arrives later as the keyed completion `{ result, text, key }`.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -23522,11 +25307,12 @@
                   }
                 },
                 "open": true
-              }
+              },
+              "guest": "string"
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`)",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program",
           "optional": true
         },
         {
@@ -23796,7 +25582,7 @@
         },
         "open": true
       },
-      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off).",
+      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session's program instead of the running one.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -23822,11 +25608,12 @@
               },
               "state": "string",
               "stats": "boolean",
-              "trace": "number"
+              "trace": "number",
+              "guest": "string"
             },
             "open": true
           },
-          "description": "An optional selection (`select`) of inputs to reflect with a stated payload, and the runtime reads to add: `state` (an orbital), `stats`, `trace` (a step count)",
+          "description": "An optional selection (`select`) of inputs to reflect with a stated payload, and the runtime reads to add: `state` (an orbital), `stats`, `trace` (a step count); `guest` (a session id from `program/open`) reflects that guest session instead of the running program",
           "optional": true
         },
         {
@@ -23921,6 +25708,254 @@
       ],
       "examples": [
         "(program/live {\"clientId\":\"@payload.clientId\"} {\"key\":\"@payload.streamKey\",\"emit\":{\"onMessage\":\"LIVE_ITEM\",\"failure\":\"LIVE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/open": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "guest": "string",
+          "states": {
+            "kind": "map",
+            "key": "string",
+            "value": "string"
+          },
+          "rendered": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "slot": "string",
+                "trait": "string",
+                "content": {
+                  "kind": "sexpr"
+                }
+              }
+            }
+          },
+          "emitted": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "event": "string"
+              },
+              "open": true
+            }
+          },
+          "outcomes": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "event": "string",
+                "from": "string",
+                "to": "string",
+                "fired": "boolean"
+              },
+              "optional": [
+                "event"
+              ]
+            }
+          },
+          "rejections": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "code": "string"
+              },
+              "open": true
+            }
+          }
+        },
+        "open": true
+      },
+      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, content }`), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). The options take `grants` (an os grants object in IR form) and `arenas` (a list of the opener's shared Arenas). Without either the guest has no host ports: its `os/*`, `http` and service asks fail. With them the opening orbital needs the grant `kernel: { \"guest\": [spawn] }` and must hold every grant it passes (a grant not covered is refused, the missing grants named); the guest's asks are then answered by a host holding only those grants, and each listed arena is shared with it (only those arenas may later cross in a dispatch payload). A failure carries `{ error, errors? }`. Runs on the server.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A resolved program (`.orb` IR), as `behavior/resolve` answers"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "grants": {
+                "kind": "object",
+                "fields": {
+                  "fs": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "glob": "string",
+                        "modes": {
+                          "kind": "array",
+                          "of": "string"
+                        }
+                      }
+                    }
+                  },
+                  "exec": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "net": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "target": "string",
+                        "kinds": {
+                          "kind": "array",
+                          "of": "string"
+                        }
+                      }
+                    }
+                  },
+                  "env": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "stdio": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "sys": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "desktop": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "dev": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "target": "string",
+                        "kinds": {
+                          "kind": "array",
+                          "of": "string"
+                        }
+                      }
+                    }
+                  },
+                  "mem": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "target": "string",
+                        "kinds": {
+                          "kind": "array",
+                          "of": "string"
+                        }
+                      }
+                    }
+                  },
+                  "kernel": {
+                    "kind": "array",
+                    "of": {
+                      "kind": "object",
+                      "fields": {
+                        "target": "string",
+                        "kinds": {
+                          "kind": "array",
+                          "of": "string"
+                        }
+                      }
+                    }
+                  },
+                  "credentials": {
+                    "kind": "array",
+                    "of": "string"
+                  },
+                  "kv": {
+                    "kind": "map",
+                    "key": "string",
+                    "value": {
+                      "kind": "array",
+                      "of": "string"
+                    }
+                  }
+                },
+                "optional": [
+                  "fs",
+                  "exec",
+                  "net",
+                  "env",
+                  "stdio",
+                  "sys",
+                  "desktop",
+                  "dev",
+                  "mem",
+                  "kernel",
+                  "credentials",
+                  "kv"
+                ]
+              },
+              "arenas": {
+                "kind": "array",
+                "of": "Arena"
+              }
+            },
+            "optional": [
+              "grants",
+              "arenas"
+            ]
+          },
+          "description": "The guest options: `grants` (the os grants the guest's asks are answered under) and `arenas` (shared Arenas of the opener the guest may use); both optional",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/open @entity.program {} {\"emit\":{\"success\":\"OPENED\",\"failure\":\"OPEN_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -26261,7 +28296,7 @@
       "category": "std-str",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; a non-string on either side (null included) is a type mismatch",
       "module": "str",
       "visual": {
@@ -26515,7 +28550,7 @@
       "category": "std-str",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "String length",
       "module": "str",
       "visual": {
@@ -26971,14 +29006,14 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          "int",
           {
             "kind": "literal",
             "value": null
           }
         ]
       },
-      "description": "Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). Null for any other text and for a value beyond 2^53 - 1 in either direction",
+      "description": "Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). An exact int (EXEC-EVAL-11); null for any other text and for a value beyond the 64-bit range",
       "module": "str",
       "visual": {
         "form": "block"
@@ -27589,7 +29624,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get day of month from a date or datetime (UTC, 1-31)",
       "module": "time",
       "visual": {
@@ -27976,7 +30011,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get hour from a date or datetime (UTC, 0-23)",
       "module": "time",
       "visual": {
@@ -28379,7 +30414,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get minute from a date or datetime (UTC, 0-59)",
       "module": "time",
       "visual": {
@@ -28408,7 +30443,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get month from a date or datetime (UTC, 1-12)",
       "module": "time",
       "visual": {
@@ -28529,7 +30564,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get second from a date or datetime (UTC, 0-59)",
       "module": "time",
       "visual": {
@@ -28901,7 +30936,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get day of week (UTC, 0=Sunday, 6=Saturday)",
       "module": "time",
       "visual": {
@@ -28931,7 +30966,7 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": "int",
       "description": "Get year from a date or datetime (UTC)",
       "module": "time",
       "visual": {

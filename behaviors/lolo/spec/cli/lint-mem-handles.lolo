@@ -1,0 +1,21 @@
+app lint-mem-handles-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint mem-handles <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintMemHandlesSpec {
+  expects trait OrbLintMemHandles {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintMemHandlesCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintMemHandles, OrbLintMemHandlesCli
+}

@@ -31,7 +31,7 @@ export function arg(name: string, type: OperatorTypeRef, description: string, op
 const OPTIONS: OsParam = {
   name: 'options',
   type: EMIT_ENVELOPE,
-  description: 'Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed',
+  description: 'Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed',
   optional: true,
 };
 
@@ -43,7 +43,7 @@ const STREAM_OPTIONS: OsParam = {
     key: STRING,
     emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY, onMessage: EVENT_KEY }),
   }),
-  description: 'Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed',
+  description: 'Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed',
   optional: true,
 };
 

@@ -1,0 +1,488 @@
+{
+ "atom": "dev/atoms/std-launchpad-updates.lolo",
+ "trait": "UpdatesBanner",
+ "cases": [
+  {
+   "id": "no-record-no-banner",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children": []
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "control-a-normal-update-row-is-an-info-banner-with-update",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [
+       [
+        "@almadar/std",
+        "1.0.0",
+        "1.1.0",
+        "global"
+       ]
+      ],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.0.type": "alert",
+         "children.0.children.0.variant": "info",
+         "children.0.children.1.type": "button",
+         "children.0.children.1.label": "Update",
+         "children.0.children.1.actionPayload": {
+          "store": "global"
+         }
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "a-failed-urgent-row-is-an-error-banner-with-retry",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [
+       [
+        "global",
+        "failed",
+        "registry refused"
+       ]
+      ],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.0.type": "alert",
+         "children.0.children.0.variant": "error",
+         "children.0.children.0.message": "registry refused. The vulnerable version is still installed.",
+         "children.0.children.1.label": "Retry"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "an-applied-urgent-row-is-a-success-notice-with-restart",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [
+       [
+        "global",
+        "applied",
+        "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1)"
+       ]
+      ],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.0.type": "alert",
+         "children.0.children.0.variant": "success",
+         "children.0.children.0.message": "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1). The launchpad restarts if a service manager runs it.",
+         "children.0.children.1.type": "button",
+         "children.0.children.1.label": "Restart",
+         "children.0.children.1.action": "RESTART_PRESSED"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "update-click-runs-the-command-and-repaints",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATE_PRESSED",
+     "payload": {
+      "store": "global"
+     },
+     "entity": {
+      "id": "l",
+      "updAvailable": [
+       [
+        "@almadar/std",
+        "1.0.0",
+        "1.1.0",
+        "global"
+       ]
+      ],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_RUN",
+        "payload": {
+         "store": "global"
+        }
+       },
+       {
+        "event": "UPDATES_SHOWN"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "control-update-click-while-running-does-nothing",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATE_PRESSED",
+     "payload": {
+      "store": "global"
+     },
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": true,
+      "updError": ""
+     },
+     "expect": {
+      "fired": false
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "loaded-record-repaints",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_LOADED",
+     "payload": {
+      "available": [],
+      "urgent": []
+     },
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_SHOWN"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "a-finished-run-says-the-launchpad-restarts-with-restart",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_RAN",
+     "payload": {
+      "store": "global"
+     },
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": true,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_SHOWN"
+       }
+      ]
+     },
+     "from": "ready"
+    },
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": true,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.0.title": "Update applied",
+         "children.0.children.0.message": "The launchpad restarts if a service manager runs it.",
+         "children.0.children.1.label": "Restart",
+         "children.0.children.1.action": "RESTART_PRESSED"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "a-failed-run-is-an-error-alert",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": "orb update (global store): boom"
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.variant": "error",
+         "children.0.message": "orb update (global store): boom"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "refresh-reads-the-record",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_REFRESH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_LOAD"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "init-reads-the-record",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "INIT",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_LOAD"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "control-no-applied-row-has-no-restart-button",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [
+       [
+        "global",
+        "failed",
+        "registry refused"
+       ]
+      ],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.1.label": "Retry"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "restart-click-emits-the-restart-event",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "RESTART_PRESSED",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_RESTART"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  }
+ ]
+}
