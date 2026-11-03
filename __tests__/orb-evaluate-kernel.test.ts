@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ORB = process.env.ORB_BIN ?? 'orb';
@@ -31,5 +31,35 @@ describe('orb evaluate plays the std eval atom on the real kernel', () => {
   it('control: an expression the evaluator refuses answers its error and a failing exit', () => {
     const result = evaluate('["+", 1, "a"]');
     expect(result.status).not.toBe(0);
+  });
+});
+
+describe('UI factory event defaults lower without duplicate dispatches', () => {
+  function defaults(path: string): Record<string, string | undefined> {
+    const run = spawnSync(ORB, ['lower', resolve(HERE, path)], { cwd: HERE, encoding: 'utf8' });
+    expect(run.status, run.stderr).toBe(0);
+    const lowered: {
+      orb: { orbitals: Array<{ traits: Array<{ config: Record<string, { default?: string }> }> }> };
+    } = JSON.parse(run.stdout);
+    return Object.fromEntries(
+      Object.entries(lowered.orb.orbitals[0].traits[0].config).map(([name, config]) => [name, config.default]),
+    );
+  }
+
+  it('uses one default press and release event while retaining optional callback names', () => {
+    const button = defaults('../behaviors/lolo/ui/game/atoms/ui-control-button.lolo');
+    expect([button.onPress, button.pressEvent]).toEqual(['', 'PRESS']);
+    expect([button.onRelease, button.releaseEvent]).toEqual(['', 'RELEASE']);
+  });
+
+  it('uses one default action and direction event while retaining optional callback names', () => {
+    const grid = defaults('../behaviors/lolo/ui/game/atoms/ui-control-grid.lolo');
+    expect([grid.onAction, grid.actionEvent]).toEqual(['', 'ACTION']);
+    expect([grid.onDirection, grid.directionEvent]).toEqual(['', 'DIRECTION']);
+  });
+
+  it('keeps intentionally distinct choice callback and declarative events', () => {
+    const choice = defaults('../behaviors/lolo/ui/game/atoms/ui-choice-button.lolo');
+    expect([choice.onClick, choice.action]).toEqual(['CLICK', 'ACTION']);
   });
 });

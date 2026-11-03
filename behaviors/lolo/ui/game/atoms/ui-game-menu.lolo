@@ -1,5 +1,6 @@
 app ui-game-menu [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "GameMenu — UI factory (1:1 with the @almadar/ui game-menu pattern)."
 ]
 ;; @pattern "game-menu"
@@ -58,10 +59,14 @@ orbital GameMenuOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          title: @config.title
+          title: (if (= @config.title "") (i18n/t "defaultTitle") @config.title)
           subtitle: @config.subtitle
-          options: (array/filter @config.options (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
-          menuItems: (array/filter @config.menuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          options: (if (> (array/len @config.options) 0)
+            (array/filter @config.options (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            (if (> (array/len @config.menuItems) 0)
+              (array/filter @config.menuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+              [{ id: "new-game", label: (i18n/t "newGame"), event: "NEW_GAME", variant: "primary" }, { id: "continue", label: (i18n/t "continue"), event: "CONTINUE", variant: "secondary" }, { id: "settings", label: (i18n/t "settings"), event: "SETTINGS", variant: "ghost" }]))
+          menuItems: []
           onSelect: @config.onSelect
           background: @config.background
           logo: @config.logo

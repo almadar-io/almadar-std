@@ -1,5 +1,6 @@
 app ui-game-audio-toggle [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "GameAudioToggle — UI factory (1:1 with the @almadar/ui game-audio-toggle pattern)."
 ]
 ;; @pattern "game-audio-toggle"
@@ -51,6 +52,9 @@ orbital GameAudioToggleOrbital {
         (render-ui main {
           size: @config.size
           className: @config.className
+          muted: @config.muted
+          soundOnLabel: (if (= @config.soundOnLabel "") (i18n/t "soundOn") @config.soundOnLabel)
+          mutedLabel: (if (= @config.mutedLabel "") (i18n/t "muted") @config.mutedLabel)
           isLoading: @config.isLoading
           error: @config.error
           onAsset: @config.onAsset
@@ -93,6 +97,18 @@ orbital GameAudioToggleOrbital {
       className : string
         @label "Class Name"
         @description "Additional CSS classes"
+        @tier "presentation"
+      muted : boolean = false
+        @label "Muted"
+        @description "Authored mute state; the parent updates it in response to toggleEvent."
+        @tier "presentation"
+      soundOnLabel : string = ""
+        @label "Sound On Label"
+        @description "Translated accessible name while sound is on."
+        @tier "presentation"
+      mutedLabel : string = ""
+        @label "Muted Label"
+        @description "Translated accessible name while muted."
         @tier "presentation"
       isLoading : boolean
         @label "Is Loading"

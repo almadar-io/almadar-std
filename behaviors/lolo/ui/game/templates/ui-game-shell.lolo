@@ -1,5 +1,6 @@
 app ui-game-shell [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern)."
 ]
 orbital GameShellOrbital {
@@ -42,7 +43,7 @@ orbital GameShellOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          appName: @config.appName
+          appName: (if (= @config.appName "") (i18n/t "defaultName") @config.appName)
           hud: @config.hud
           addons: @config.addons
           controls: @config.controls
@@ -59,7 +60,7 @@ orbital GameShellOrbital {
     }
 
     config {
-      appName : string = Game
+      appName : string = ""
         @label "App Name"
         @description "Application / game title shown as a floating chip"
         @tier "presentation"

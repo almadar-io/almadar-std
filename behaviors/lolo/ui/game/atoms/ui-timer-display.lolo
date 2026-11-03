@@ -1,5 +1,6 @@
 app ui-timer-display [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "TimerDisplay — counts down every second while running; re-renders on each tick."
 ]
 orbital TimerDisplayOrbital {
@@ -33,6 +34,15 @@ orbital TimerDisplayOrbital {
         (set @entity.running @config.running)
         (render-ui main {
           seconds: @entity.seconds
+          displayText: (let ((s (if (> @entity.seconds 0) (math/floor @entity.seconds) 0)))
+            (if (== @config.format "ss")
+              (i18n/t "seconds" { count: @s })
+              (let ((m (math/floor (/ @s 60))) (r (math/mod @s 60)))
+                (if (== @config.format "countdown")
+                  (if (> @m 0)
+                    (str/concat @m ":" (str/padStart (str/concat "" @r) 2 "0"))
+                    (str/concat "" @r))
+                  (str/concat (str/padStart (str/concat "" @m) 2 "0") ":" (str/padStart (str/concat "" @r) 2 "0"))))))
           running: @entity.running
           format: @config.format
           size: @config.size
@@ -49,6 +59,15 @@ orbital TimerDisplayOrbital {
         (set @entity.seconds (- @entity.seconds 1))
         (render-ui main {
           seconds: @entity.seconds
+          displayText: (let ((s (if (> @entity.seconds 0) (math/floor @entity.seconds) 0)))
+            (if (== @config.format "ss")
+              (i18n/t "seconds" { count: @s })
+              (let ((m (math/floor (/ @s 60))) (r (math/mod @s 60)))
+                (if (== @config.format "countdown")
+                  (if (> @m 0)
+                    (str/concat @m ":" (str/padStart (str/concat "" @r) 2 "0"))
+                    (str/concat "" @r))
+                  (str/concat (str/padStart (str/concat "" @m) 2 "0") ":" (str/padStart (str/concat "" @r) 2 "0"))))))
           running: @entity.running
           format: @config.format
           size: @config.size
