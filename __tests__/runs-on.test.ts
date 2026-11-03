@@ -19,6 +19,12 @@ const OS_EFFECTS = [
 // Effects either side runs: the browser's HTTP port and the stream handles it answers (EXEC-HTTP).
 const OS_ANY = ['os/close', 'os/fetch', 'os/recv'];
 
+const MEM_EFFECTS = ['mem/alloc', 'mem/arena-drop', 'mem/arena-new', 'mem/atomic-add', 'mem/atomic-cas', 'mem/atomic-load', 'mem/atomic-store', 'mem/borrow', 'mem/free', 'mem/freeze', 'mem/release', 'mem/write'];
+const KERNEL_EFFECTS = ['kernel/queue-back', 'kernel/queue-front'];
+const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/worklist'];
+const FFI_EFFECTS = ['ffi/call'];
+const MEM_PURE = ['mem/length', 'mem/read', 'mem/read-int', 'mem/read-uint'];
+
 const effects = Object.entries(STD_OPERATORS).filter(([, m]) => m.hasSideEffects);
 
 describe('runsOn', () => {
@@ -31,7 +37,7 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'identity/sign-in', 'identity/sign-out',
+      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'ffi/call', 'identity/sign-in', 'identity/sign-out',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
       'persist', 'persist/read-named', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());
@@ -95,6 +101,52 @@ describe('runsOn', () => {
     expect(JSON.stringify(Object.entries(STD_OPERATORS).filter(([k]) => k.startsWith('os/')), (key, value) => (key === 'runsOn' ? undefined : value))).not.toMatch(/"(any|unknown|json)"/);
   });
 
+  it('the mem family is kernel-owned: effects run on either side with host kernel, reads are pure', () => {
+    const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('mem/')).sort();
+    expect(declared).toEqual([...MEM_EFFECTS, ...MEM_PURE].sort());
+    for (const name of MEM_EFFECTS) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('any');
+      expect(STD_OPERATORS[name].host, name).toBe('kernel');
+      expect(STD_OPERATORS[name].category, name).toBe('std-mem');
+    }
+    for (const name of MEM_PURE) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
+      expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();
+      expect(STD_OPERATORS[name].category, name).toBe('std-mem-read');
+    }
+  });
+
+  it('the kernel family is kernel-owned: queue reorders are effects on either side, the reads are pure with host kernel', () => {
+    const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('kernel/')).sort();
+    expect(declared).toEqual([...KERNEL_EFFECTS, ...KERNEL_PURE].sort());
+    for (const name of KERNEL_EFFECTS) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('any');
+      expect(STD_OPERATORS[name].host, name).toBe('kernel');
+      expect(STD_OPERATORS[name].category, name).toBe('std-kernel');
+    }
+    for (const name of KERNEL_PURE) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
+      expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();
+      expect(STD_OPERATORS[name].host, name).toBe('kernel');
+      expect(STD_OPERATORS[name].category, name).toBe('std-kernel-read');
+    }
+  });
+
+  it('the ffi family is a server os effect with the ffi grant', () => {
+    const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('ffi/')).sort();
+    expect(declared).toEqual(FFI_EFFECTS);
+    for (const name of FFI_EFFECTS) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('server');
+      expect(STD_OPERATORS[name].host, name).toBe('os');
+      expect(STD_OPERATORS[name].module, name).toBe('ffi');
+      expect(STD_OPERATORS[name].category, name).toBe('std-ffi');
+      expect(STD_OPERATORS[name].grant, name).toEqual([{ kind: 'ffi', library: 0, symbol: 1 }]);
+    }
+  });
+
   it('every os/ sys payload is a closed shape documented in its description', () => {
     expect(Object.keys(OS_SYS_PAYLOADS)).toHaveLength(16);
     for (const [op, payload] of Object.entries(OS_SYS_PAYLOADS)) {
@@ -106,7 +158,7 @@ describe('runsOn', () => {
 
   it('bytes/ is a pure closed family and os/ reads return bytes', () => {
     const names = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('bytes/')).sort();
-    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/valid-utf8', 'bytes/write-uint']);
+    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-int', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/valid-utf8', 'bytes/write-uint']);
     for (const name of names) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();

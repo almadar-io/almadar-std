@@ -1,0 +1,1621 @@
+{
+  "atom": "cli/atoms/std-orb-lint-parallel-pure.lolo",
+  "trait": "OrbLintParallelPure",
+  "cases": [
+    {
+      "id": "a-pmap-of-pure-math-on-the-element-is-clean",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "*",
+                                      "@x",
+                                      2
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-pmap-lambda-that-emits-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "emit",
+                                      "DONE",
+                                      {
+                                        "v": "@x"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `emit`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-pmap-lambda-that-sets-the-entity-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "set",
+                                      "@entity.total",
+                                      [
+                                        "*",
+                                        "@x",
+                                        2
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `set`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-preduce-lambda-calling-prob-sample-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/preduce",
+                                  "@entity.xs",
+                                  0,
+                                  [
+                                    "fn",
+                                    [
+                                      "acc",
+                                      "x"
+                                    ],
+                                    [
+                                      "+",
+                                      "@acc",
+                                      [
+                                        "prob/sample",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/preduce ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `prob/sample`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-preduce-of-pure-arithmetic-is-clean",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/preduce",
+                                  "@entity.xs",
+                                  0,
+                                  [
+                                    "fn",
+                                    [
+                                      "acc",
+                                      "x"
+                                    ],
+                                    [
+                                      "+",
+                                      "@acc",
+                                      "@x"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-computed-lambda-cannot-be-proved-pure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  "@entity.f"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` takes a lambda that is not a literal `fn` form, so its purity cannot be proved",
+                      "suggestion": "Pass the lambda inline as `(fn x ...)`",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-of-now-in-the-lambda-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "+",
+                                      "@x",
+                                      "@now"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `@now`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-time-now-call-in-the-lambda-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "+",
+                                      "@x",
+                                      [
+                                        "time/now"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `time/now`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-operator-the-table-marks-hasSideEffects-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "x/log",
+                                      "@x"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `x/log`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-operator-that-declares-a-host-is-impure",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/pmap",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "kv/get",
+                                      "@x"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PARALLEL_LAMBDA_IMPURE",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0][2]",
+                      "message": "`(array/pmap ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `kv/get`",
+                      "suggestion": "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-array-map-with-an-effect-is-not-a-parallel-call",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "set": {
+                "hasSideEffects": true
+              },
+              "emit": {
+                "hasSideEffects": true
+              },
+              "x/log": {
+                "hasSideEffects": true
+              },
+              "*": {
+                "hasSideEffects": false
+              },
+              "+": {
+                "hasSideEffects": false
+              },
+              "array/map": {
+                "hasSideEffects": false
+              },
+              "array/pmap": {
+                "hasSideEffects": false
+              },
+              "array/preduce": {
+                "hasSideEffects": false
+              },
+              "prob/sample": {
+                "hasSideEffects": false
+              },
+              "kv/get": {
+                "hasSideEffects": false,
+                "host": "kv"
+              },
+              "kernel/apply": {
+                "hasSideEffects": false,
+                "host": "kernel"
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": []
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "array/map",
+                                  "@entity.xs",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "emit",
+                                      "DONE",
+                                      {
+                                        "v": "@x"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "parallel-pure",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

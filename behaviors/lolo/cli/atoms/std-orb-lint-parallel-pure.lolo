@@ -1,0 +1,178 @@
+app std-orb-lint-parallel-pure [
+  version: "1.0.0",
+  inbound: ["cli-lint-parallel-pure"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-parallel-pure — the `orb lint parallel-pure <file>` command. ORB_X_PARALLEL_LAMBDA_IMPURE: the lambda of an `array/pmap` call (argument 1) or an `array/preduce` call (argument 2), counted after the head is not provably pure, because the order a parallel combinator runs its lambda in is not defined. The lambda must be a literal `fn` form (a computed or missing lambda cannot be proved, so it is a finding), and its body must contain no call whose head is an operator the installed table marks hasSideEffects (read from std-orb-lint-input's operator shapes), none that declares a host (the table's host field), none of the exact entropy and clock operators listed in the knob nondeterministicHeads, and no read of `@now`. The effect forms (set, emit, persist, fetch and the like) are table operators with hasSideEffects, so the table covers them, a `set @entity.<f>` included. Findings are reported at the combinator call. Clean answers `lint parallel-pure: clean` (status 200, exit 0); findings are status 500, exit 1. Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-parallel-pure"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type PpValue = string | number | boolean | [PpValue?] | Map string PpValue?
+type PpCall = [PpValue?]
+type PpHit = { path : string!, node : [PpValue?]!, at : number! }
+type PpIndex = Map string [PpHit]
+type PpProgram = { orbitals : [PpValue?] }
+type PpShape = { hasSideEffects : boolean!, host : string? }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintParallelPureCodes = { lambdaImpure : LintCodeDecl, shapesUnread : LintCodeDecl }
+
+orbital OrbLintParallelPureOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintParallelPureRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    effectful : [string] = []
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintParallelPure -> OrbLintParallelPureRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.effectful (array/sort (array/filter (object/keys @payload.operators) (fn k (or (object/get (object/get @payload.operators @k) "hasSideEffects" false) (!= (object/get (object/get @payload.operators @k) "host" null) null))))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if @entity.shapesUnread
+          [{ code: @config.codes.shapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so which operators have side effects is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the shape of every operator", severity: "error" }]
+          (let ((idx : PpIndex (default (as (tree/index @payload.program @config.combinators) PpIndex) {})))
+            (array/flatten (array/map @config.combinators (fn head
+              (array/flatten (array/map (object/get @idx @head []) (fn hit
+                (let ((node : PpCall (object/get @hit "node"))
+                      (lam : PpValue? (array/nth (object/get @hit "node") (object/get @config.lambdaArg @head 2))))
+                  (if (not (and (validate/array @lam) (= (default (as (array/first (default (as @lam PpCall) [])) string) "") "fn")))
+                    [{ code: @config.codes.lambdaImpure.code, path: (object/get @hit "path"), message: (str/concat "`(" @head " ...)` takes a lambda that is not a literal `fn` form, so its purity cannot be proved"), suggestion: "Pass the lambda inline as `(fn x ...)`", severity: "error" }]
+                    (let ((nodes (json/nodes [@lam])) (nowName : string (str/concat (str/slice "x@" 1) "now")))
+                      (let ((heads : [string] (array/filter (array/map (array/filter (array/map @nodes (fn n (default (as @n PpCall) []))) (fn c (> (array/len @c) 0))) (fn c (default (as (array/first @c) string) ""))) (fn h (!= @h ""))))
+                            (leaves : [string] (array/map @nodes (fn n (default (as @n string) "")))))
+                        (let ((bad : [string] (array/unique (array/concat
+                                (array/filter @heads (fn h (or (array/includes @entity.effectful @h) (array/includes @config.nondeterministicHeads @h))))
+                                (array/filter @leaves (fn s (or (= @s @nowName) (str/startsWith @s (str/concat @nowName ".")))))))))
+                          (if (= (array/len @bad) 0)
+                            []
+                            [{ code: @config.codes.lambdaImpure.code, path: (object/get @hit "path"), message: (str/concat "`(" @head " ...)` runs its lambda in an undefined order, but the lambda is not pure: it uses `" (str/join @bad "`, `") "`"), suggestion: "Keep the lambda to pure computation of its arguments, or use array/map or array/reduce for ordered work", severity: "error" }])))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "parallel-pure", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PpProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SHAPES_HEARD { operators : Map string PpShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator with its hasSideEffects flag."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+    config {
+      codes : LintParallelPureCodes = { lambdaImpure: { code: "ORB_X_PARALLEL_LAMBDA_IMPURE", category: "parallel", description: "The lambda of array/pmap or array/preduce is not a literal fn or is not provably pure" }, shapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+      combinators : [string] = ["array/pmap", "array/preduce"]
+        @label "Parallel combinators"
+        @description "The operators whose lambda must be pure."
+      lambdaArg : Map string number = { "array/pmap": 2, "array/preduce": 3 }
+        @label "Lambda argument"
+        @description "The position of the lambda in each combinator call node, the head being 0."
+      nondeterministicHeads : [string] = ["math/random", "math/randomInt", "array/shuffle", "rsa/sign", "ecdh/p256-ephemeral", "time/now", "prob/beta", "prob/categorical", "prob/condition", "prob/credible-interval", "prob/expected-value", "prob/flip", "prob/gaussian", "prob/histogram", "prob/infer", "prob/percentile", "prob/poisson", "prob/posterior", "prob/sample", "prob/seed", "prob/uniform", "prob/variance"]
+        @label "Nondeterministic operators"
+        @description "Operators, by exact name, whose result is not a function of their arguments: those that draw entropy (the evaluator's draws_entropy set) and the clock read time/now."
+    }
+
+  }
+
+  trait OrbLintParallelPureCli -> OrbLintParallelPureRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint parallel-pure <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint parallel-pure <file>" }) (emit LINT_REQUEST { file: @argFile })))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "parallel-pure") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint parallel-pure: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "parallel-pure") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint parallel-pure: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-parallel-pure" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint parallel-pure` with its arguments and working directory."
+        @synonyms "orb lint parallel-pure"
+      OrbLintParallelPure.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintParallelPureCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintParallelPureOrbitalStart -> OrbLintParallelPure, OrbLintParallelPureCli, OrbLintInput, Packs, Versions
+}

@@ -1,0 +1,219 @@
+app std-mem-buffer [
+  version: "1.0.0",
+  mem: { "arena:65536": [create, free] },
+  description: "A byte buffer in a kernel arena. BUFFER_OPEN creates a bump arena and one zero-filled block of the requested capacity; BUFFER_WRITE borrows the block exclusively, writes the bytes at an offset and releases; BUFFER_READ borrows it shared, reads a range, releases and emits BUFFER_DATA; BUFFER_CLOSE frees the block and drops the arena. Every failure emits BUFFER_ERROR with the kernel's kind (denied, invalid, closed, borrowed). A failure after the arena exists releases any borrow and keeps the arena held until a BUFFER_CLOSE drops it; a failed drop (the arena is already gone, since every borrow was released and the block freed first) returns to idle with BUFFER_ERROR. Every path drops the arena exactly once. The grant caps one arena at 64 KiB; a call site that needs more grants its own cap."
+]
+
+orbital MemBufferOrbital {
+  entity ByteBuffer [runtime] {
+    id : string!
+    arena : Arena?
+    block : Block?
+    borrow : Borrow?
+    capacity : int = 0
+    pendingOffset : int = 0
+    pendingLength : int = 0
+    pendingData : bytes = ""
+  }
+
+  trait MemBuffer -> ByteBuffer [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      BUFFER_OPEN -> opening
+        (set @entity.capacity @payload.capacity)
+        (mem/arena-new "bump" @config.arenaBytes { emit: { success: BUFFER_ARENA, failure: BUFFER_FAILED } })
+      BUFFER_WRITE -> idle
+        (emit BUFFER_ERROR { error: "the buffer is closed", kind: "closed" })
+      BUFFER_READ -> idle
+        (emit BUFFER_ERROR { error: "the buffer is closed", kind: "closed" })
+      BUFFER_CLOSE -> idle
+    }
+
+    state opening {
+      INIT -> opening
+      BUFFER_ARENA -> allocating
+        (set @entity.arena @payload.arena)
+        (mem/alloc @payload.arena @entity.capacity 1 { emit: { success: BUFFER_BLOCK, failure: BUFFER_FAILED } })
+      BUFFER_FAILED -> idle
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state allocating {
+      INIT -> allocating
+      BUFFER_BLOCK -> ready
+        (set @entity.block @payload.block)
+        (emit BUFFER_OPENED {})
+      BUFFER_FAILED -> dropping when (not (= @entity.arena null))
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+        (mem/arena-drop @entity.arena { emit: { success: BUFFER_DROPPED, failure: BUFFER_FAILED } })
+    }
+
+    state ready {
+      INIT -> ready
+      BUFFER_OPEN -> ready
+        (emit BUFFER_ERROR { error: "the buffer is already open", kind: "invalid" })
+      BUFFER_WRITE -> writeBorrowing when (not (= @entity.block null))
+        (set @entity.pendingOffset @payload.offset)
+        (set @entity.pendingData @payload.data)
+        (mem/borrow @entity.block "exclusive" { emit: { success: BUFFER_WRITE_BORROWED, failure: BUFFER_FAILED } })
+      BUFFER_READ -> readBorrowing when (not (= @entity.block null))
+        (set @entity.pendingOffset @payload.offset)
+        (set @entity.pendingLength @payload.length)
+        (mem/borrow @entity.block "shared" { emit: { success: BUFFER_READ_BORROWED, failure: BUFFER_FAILED } })
+      BUFFER_CLOSE -> freeing when (not (= @entity.block null))
+        (mem/free @entity.block { emit: { success: BUFFER_FREED, failure: BUFFER_FAILED } })
+      BUFFER_CLOSE -> broken when (= @entity.block null)
+        (emit BUFFER_ERROR { error: "the buffer holds no block", kind: "closed" })
+    }
+
+    state writeBorrowing {
+      INIT -> writeBorrowing
+      BUFFER_WRITE_BORROWED -> writing
+        (set @entity.borrow @payload.borrow)
+        (mem/write @payload.borrow @entity.pendingOffset @entity.pendingData { emit: { success: BUFFER_WRITTEN, failure: BUFFER_FAILED } })
+      BUFFER_FAILED -> ready
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state writing {
+      INIT -> writing
+      BUFFER_WRITTEN -> releasing when (not (= @entity.borrow null))
+        (mem/release @entity.borrow { emit: { success: BUFFER_RELEASED, failure: BUFFER_FAILED } })
+      BUFFER_WRITTEN -> broken when (= @entity.borrow null)
+        (emit BUFFER_ERROR { error: "the write held no borrow", kind: "closed" })
+      BUFFER_FAILED -> releasingFailed when (not (= @entity.borrow null))
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+        (mem/release @entity.borrow { emit: { success: BUFFER_RELEASED_AFTER_FAILURE, failure: BUFFER_FAILED } })
+      BUFFER_FAILED -> broken when (= @entity.borrow null)
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state releasing {
+      INIT -> releasing
+      BUFFER_RELEASED -> ready
+        (set @entity.borrow null)
+      BUFFER_FAILED -> broken
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state releasingFailed {
+      INIT -> releasingFailed
+      BUFFER_RELEASED_AFTER_FAILURE -> ready
+        (set @entity.borrow null)
+      BUFFER_FAILED -> broken
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state readBorrowing {
+      INIT -> readBorrowing
+      BUFFER_READ_BORROWED -> releasing
+        (emit BUFFER_DATA { data: (mem/read @payload.borrow @entity.pendingOffset @entity.pendingLength) })
+        (set @entity.borrow @payload.borrow)
+        (mem/release @payload.borrow { emit: { success: BUFFER_RELEASED, failure: BUFFER_FAILED } })
+      BUFFER_FAILED -> ready
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state freeing {
+      INIT -> freeing
+      BUFFER_FREED -> dropping when (not (= @entity.arena null))
+        (set @entity.block null)
+        (mem/arena-drop @entity.arena { emit: { success: BUFFER_DROPPED, failure: BUFFER_FAILED } })
+      BUFFER_FAILED -> broken
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state dropping {
+      INIT -> dropping
+      BUFFER_DROPPED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit BUFFER_CLOSED {})
+      BUFFER_FAILED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit BUFFER_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state broken {
+      INIT -> broken
+      BUFFER_CLOSE -> dropping when (not (= @entity.arena null))
+        (mem/arena-drop @entity.arena { emit: { success: BUFFER_DROPPED, failure: BUFFER_FAILED } })
+      BUFFER_WRITE -> broken
+        (emit BUFFER_ERROR { error: "the buffer failed; close it", kind: "invalid" })
+      BUFFER_READ -> broken
+        (emit BUFFER_ERROR { error: "the buffer failed; close it", kind: "invalid" })
+    }
+
+    emits {
+      BUFFER_OPENED -> external {}
+        @description "The arena and block exist; the buffer accepts writes and reads."
+      BUFFER_CLOSED -> external {}
+        @description "The block was freed and the arena dropped."
+      BUFFER_DATA -> external { data : bytes! }
+        @description "The bytes a BUFFER_READ asked for."
+      BUFFER_ERROR -> external { error : string! kind : string! }
+        @description "A buffer call failed; kind is the kernel's answer (denied, invalid, closed, borrowed)."
+      BUFFER_ARENA { arena : Arena! }
+        @description "Internal: the arena was created."
+        @tier "internal"
+      BUFFER_BLOCK { block : Block! }
+        @description "Internal: the block was allocated."
+        @tier "internal"
+      BUFFER_WRITE_BORROWED { borrow : Borrow! }
+        @description "Internal: the block is exclusively borrowed for a write."
+        @tier "internal"
+      BUFFER_READ_BORROWED { borrow : Borrow! }
+        @description "Internal: the block is shared-borrowed for a read."
+        @tier "internal"
+      BUFFER_WRITTEN {}
+        @description "Internal: the bytes were written."
+        @tier "internal"
+      BUFFER_RELEASED {}
+        @description "Internal: the borrow was released."
+        @tier "internal"
+      BUFFER_RELEASED_AFTER_FAILURE {}
+        @description "Internal: the borrow of a failed write was released."
+        @tier "internal"
+      BUFFER_FREED {}
+        @description "Internal: the block was freed."
+        @tier "internal"
+      BUFFER_DROPPED {}
+        @description "Internal: the arena was dropped."
+        @tier "internal"
+      BUFFER_FAILED { error : string! kind : string! }
+        @description "Internal: a memory call failed."
+        @tier "internal"
+    }
+
+    listens {
+      BUFFER_OPEN { capacity : int! }
+        @description "Create an arena and one block of this many bytes."
+      BUFFER_WRITE { offset : int! data : bytes! }
+        @description "Write these bytes at the offset."
+      BUFFER_READ { offset : int! length : int! }
+        @description "Read length bytes from the offset; answers BUFFER_DATA."
+      BUFFER_CLOSE {}
+        @description "Free the block and drop the arena."
+      BUFFER_ARENA { arena : Arena! }
+      BUFFER_BLOCK { block : Block! }
+      BUFFER_WRITE_BORROWED { borrow : Borrow! }
+      BUFFER_READ_BORROWED { borrow : Borrow! }
+      BUFFER_WRITTEN {}
+      BUFFER_RELEASED {}
+      BUFFER_RELEASED_AFTER_FAILURE {}
+      BUFFER_FREED {}
+      BUFFER_DROPPED {}
+      BUFFER_FAILED { error : string! kind : string! }
+    }
+
+    config {
+      arenaBytes : int = 65536
+        @description "Size of the arena in bytes; the header grant caps it, and a call site that raises it grants its own cap."
+    }
+  }
+
+  page boot as MemBufferOrbitalStart -> MemBuffer
+}

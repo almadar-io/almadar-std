@@ -1,0 +1,680 @@
+{
+  "atom": "connect/atoms/std-asm-inspect.lolo",
+  "trait": "AsmInspector",
+  "cases": [
+    {
+      "id": "inspect runs objdump on one symbol with the exact flags",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "idle",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_INSPECT",
+          "payload": {
+            "path": "/tmp/asm/t.o",
+            "symbol": "_add"
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "emits": [
+              {
+                "event": "ASM_RUN",
+                "payload": {
+                  "stage": "inspect",
+                  "argv": [
+                    "--disassemble-symbols=_add",
+                    "--no-show-raw-insn",
+                    "/tmp/asm/t.o"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "compare starts with the first symbol",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "idle",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_COMPARE",
+          "payload": {
+            "path": "/tmp/asm/t.o",
+            "a": "_add",
+            "b": "_sum3"
+          },
+          "expect": {
+            "fired": true,
+            "state": "listingA",
+            "emits": [
+              {
+                "event": "ASM_RUN",
+                "payload": {
+                  "stage": "a",
+                  "argv": [
+                    "--disassemble-symbols=_add",
+                    "--no-show-raw-insn",
+                    "/tmp/asm/t.o"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a finished run is handed to the parser",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listing",
+          "entity": {
+            "id": "asm",
+            "stage": "inspect"
+          },
+          "event": "ASM_RAN",
+          "payload": {
+            "stage": "inspect",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000000 <_add>:\n       0:      \tadd\tw0, w1, w0\n       4:      \tret\n",
+            "stdoutBytes": "CnQubzoJZmlsZSBmb3JtYXQgbWFjaC1vIGFybTY0CgpEaXNhc3NlbWJseSBvZiBzZWN0aW9uIF9fVEVYVCxfX3RleHQ6CgowMDAwMDAwMDAwMDAwMDAwIDxfYWRkPjoKICAgICAgIDA6ICAgICAgCWFkZAl3MCwgdzEsIHcwCiAgICAgICA0OiAgICAgIAlyZXQK",
+            "stderr": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "ASM_PARSE",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "recorded objdump text parses into a listing",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "stage": "inspect",
+            "symbol": "_add",
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000000 <_add>:\n       0:      \tadd\tw0, w1, w0\n       4:      \tret\n"
+          },
+          "event": "ASM_PARSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "ASM_ROUTE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "inspect",
+            "symbol": "_add",
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000000 <_add>:\n       0:      \tadd\tw0, w1, w0\n       4:      \tret\n",
+            "badLine": "",
+            "instructions": [
+              {
+                "address": "0",
+                "mnemonic": "add",
+                "operands": "w0, w1, w0"
+              },
+              {
+                "address": "4",
+                "mnemonic": "ret",
+                "operands": ""
+              }
+            ]
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_LISTED",
+                "payload": {
+                  "symbol": "_add",
+                  "instructions": [
+                    {
+                      "address": "0",
+                      "mnemonic": "add",
+                      "operands": "w0, w1, w0"
+                    },
+                    {
+                      "address": "4",
+                      "mnemonic": "ret",
+                      "operands": ""
+                    }
+                  ],
+                  "count": 2,
+                  "bytes": 4
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "compare lists the first symbol then asks for the second",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "a",
+            "symbol": "_add",
+            "a": "_add",
+            "b": "_sum3",
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000000 <_add>:\n       0:      \tadd\tw0, w1, w0\n       4:      \tret\n",
+            "badLine": "",
+            "instructions": [
+              {
+                "address": "0",
+                "mnemonic": "add",
+                "operands": "w0, w1, w0"
+              },
+              {
+                "address": "4",
+                "mnemonic": "ret",
+                "operands": ""
+              }
+            ]
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "listingB",
+            "emits": [
+              {
+                "event": "ASM_RUN",
+                "payload": {
+                  "stage": "b",
+                  "argv": [
+                    "--disassemble-symbols=_sum3",
+                    "--no-show-raw-insn",
+                    "/tmp/asm/t.o"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "compare picks the symbol with fewer instructions",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "b",
+            "symbol": "_sum3",
+            "a": "_add",
+            "b": "_sum3",
+            "countA": 2,
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000008 <_sum3>:\n       8:      \tadd\tw8, w1, w0\n       c:      \tadd\tw0, w8, w2\n      10:      \tret\n",
+            "badLine": "",
+            "instructions": [
+              {
+                "address": "8",
+                "mnemonic": "add",
+                "operands": "w8, w1, w0"
+              },
+              {
+                "address": "c",
+                "mnemonic": "add",
+                "operands": "w0, w8, w2"
+              },
+              {
+                "address": "10",
+                "mnemonic": "ret",
+                "operands": ""
+              }
+            ]
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_COMPARED",
+                "payload": {
+                  "a": "_add",
+                  "b": "_sum3",
+                  "countA": 2,
+                  "countB": 3,
+                  "smaller": "_add"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "b",
+            "symbol": "_add",
+            "a": "_sum3",
+            "b": "_add",
+            "countA": 3,
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n\nDisassembly of section __TEXT,__text:\n\n0000000000000000 <_add>:\n       0:      \tadd\tw0, w1, w0\n       4:      \tret\n",
+            "badLine": "",
+            "instructions": [
+              {
+                "address": "0",
+                "mnemonic": "add",
+                "operands": "w0, w1, w0"
+              },
+              {
+                "address": "4",
+                "mnemonic": "ret",
+                "operands": ""
+              }
+            ]
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_COMPARED",
+                "payload": {
+                  "a": "_sum3",
+                  "b": "_add",
+                  "countA": 3,
+                  "countB": 2,
+                  "smaller": "_add"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a line outside the documented format is an invalid error naming it",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "stage": "inspect",
+            "symbol": "_main",
+            "rawExit": 0,
+            "rawOut": "/usr/bin/true (architecture x86_64):\n(__TEXT,__text) section\n100000388:\tpushq\t%rbp\n"
+          },
+          "event": "ASM_PARSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "ASM_ROUTE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "inspect",
+            "symbol": "_main",
+            "rawExit": 0,
+            "rawOut": "/usr/bin/true (architecture x86_64):\n(__TEXT,__text) section\n100000388:\tpushq\t%rbp\n",
+            "badLine": "/usr/bin/true (architecture x86_64):",
+            "instructions": []
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "unrecognized objdump line: /usr/bin/true (architecture x86_64):",
+                  "kind": "invalid"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a symbol the file does not define is symbol_missing",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "stage": "inspect",
+            "symbol": "_nosuch",
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n"
+          },
+          "event": "ASM_PARSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "ASM_ROUTE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "inspect",
+            "symbol": "_nosuch",
+            "rawExit": 0,
+            "rawOut": "\nt.o:\tfile format mach-o arm64\n",
+            "rawErr": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/objdump: warning: '/tmp/asm/t.o': failed to disassemble missing symbol _nosuch\n",
+            "badLine": "",
+            "instructions": []
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "no instructions for symbol _nosuch",
+                  "kind": "symbol_missing"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a non-zero exit is tool_failed carrying stderr",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listing",
+          "entity": {
+            "id": "asm",
+            "stage": "inspect"
+          },
+          "event": "ASM_RAN",
+          "payload": {
+            "stage": "inspect",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/objdump: error: '/tmp/asm/nonexist.o': No such file or directory\n"
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "ASM_PARSE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AsmInspector",
+          "from": "parsing",
+          "entity": {
+            "id": "asm",
+            "path": "/tmp/asm/t.o",
+            "stage": "inspect",
+            "symbol": "_add",
+            "rawExit": 1,
+            "rawOut": "",
+            "rawErr": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/objdump: error: '/tmp/asm/nonexist.o': No such file or directory\n",
+            "badLine": "",
+            "instructions": []
+          },
+          "event": "ASM_ROUTE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/objdump: error: '/tmp/asm/nonexist.o': No such file or directory\n",
+                  "kind": "tool_failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a spawn failure in listing is an ASM_ERROR with the std-cli code",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listing",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_RUN_FAILED",
+          "payload": {
+            "stage": "inspect",
+            "error": "No such file or directory (os error 2)",
+            "code": "cli_spawn_failed"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "No such file or directory (os error 2)",
+                  "kind": "cli_spawn_failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a spawn failure in listingA is an ASM_ERROR with the std-cli code",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listingA",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_RUN_FAILED",
+          "payload": {
+            "stage": "inspect",
+            "error": "No such file or directory (os error 2)",
+            "code": "cli_spawn_failed"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "No such file or directory (os error 2)",
+                  "kind": "cli_spawn_failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a spawn failure in listingB is an ASM_ERROR with the std-cli code",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listingB",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_RUN_FAILED",
+          "payload": {
+            "stage": "inspect",
+            "error": "No such file or directory (os error 2)",
+            "code": "cli_spawn_failed"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "No such file or directory (os error 2)",
+                  "kind": "cli_spawn_failed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a second request while listing is refused",
+      "defaults": [
+        "AsmCli"
+      ],
+      "steps": [
+        {
+          "trait": "AsmInspector",
+          "from": "listing",
+          "entity": {
+            "id": "asm"
+          },
+          "event": "ASM_INSPECT",
+          "payload": {
+            "path": "/tmp/asm/t.o",
+            "symbol": "_add"
+          },
+          "expect": {
+            "fired": true,
+            "state": "listing",
+            "emits": [
+              {
+                "event": "ASM_ERROR",
+                "payload": {
+                  "error": "a listing is in flight",
+                  "kind": "asm_busy"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,7 @@ type Tagged<K extends string> = Extract<OperatorTypeRef, { kind: K }>;
 export const RECORD: Tagged<'record'> = { kind: 'record' };
 
 export const NUMBER: OperatorTypeRef = 'number';
+export const INT: OperatorTypeRef = 'int';
 export const STRING: OperatorTypeRef = 'string';
 export const BYTES: OperatorTypeRef = 'bytes';
 export const BOOLEAN: OperatorTypeRef = 'boolean';
@@ -119,6 +120,10 @@ export function childrenOf(record: string, result: string): Tagged<'childrenOf'>
 
 /** A value `str/concat` and the formatters render as text. */
 export const PRIMITIVE_VALUE: OperatorTypeRef = union(STRING, NUMBER, BOOLEAN, 'date', 'datetime');
+
+export const ENDIAN: OperatorTypeRef = union(lit('be'), lit('le'));
+
+export const UINT_WIDTH: OperatorTypeRef = union(lit(1), lit(2), lit(4), lit(8));
 
 export const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
 
