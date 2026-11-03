@@ -19,7 +19,6 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 Next code: `G-STD-249`
 
-- **G-STD-246** [owner-decision] — The launchpad banner (dev/atoms/std-launchpad-updates.lolo) can only tell the user to restart the launchpad after an update, because no std atom restarts a running server program. std (dev launchpad) — symptom: an applied urgent fix runs only after a manual restart; rung: none (a missing capability); needs an owner ruling on how a served program restarts itself (P-022 step 4). Root cause: one-off.
 - **G-STD-247** [mechanical] — The update record `~/.orb/.update-check.json` is read in two places: inline in cli/atoms/std-orb-update-notice.lolo (`NoticeCache` plus `os/read-file`) and in dev/atoms/std-launchpad-updates.lolo, so its shape lives twice. Fix: extract one std atom owning the record (type, path, read, write) and compose it from both. std (cli, dev) — rung: `orb validate` cannot see a duplicated record shape; review. Root cause: one-off.
 - **G-STD-248** [mechanical] — ops/atoms/std-package-registry.lolo now records and serves `language` (from `orb.language`) instead of `compiler`, renaming a persisted `PackageVersion` field and a wire field (P-022 step 1); a deployed registry's stored rows still hold `compiler`. std (ops) — symptom: rows written before the rename read with no `language`; rung: none; needs a row migration where a registry is deployed. Root cause: one-off.
 

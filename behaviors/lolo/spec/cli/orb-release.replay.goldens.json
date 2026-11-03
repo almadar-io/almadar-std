@@ -3,7 +3,7 @@
  "trait": "OrbRelease",
  "cases": [
   {
-   "id": "the call asks std-args to parse the seven flags",
+   "id": "the call asks std-args to parse the eight flags",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -39,6 +39,12 @@
           },
           {
            "name": "minor",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "language-major",
            "aliases": [],
            "takesValue": false,
            "repeatable": false
@@ -152,7 +158,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -185,7 +191,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -217,7 +223,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: unknown flag --bogus\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: unknown flag --bogus\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -727,7 +733,8 @@
      "from": "running",
      "event": "REL_BUMPED",
      "payload": {
-      "version": "11.0.0"
+      "version": "11.0.0",
+      "requestId": "bump"
      },
      "expect": {
       "state": "running",
@@ -3957,7 +3964,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: --severity security or critical needs both --advisory and --fixes\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: --severity security or critical needs both --advisory and --fixes\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -3994,7 +4001,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: --severity security or critical needs both --advisory and --fixes\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: --severity security or critical needs both --advisory and --fixes\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -4031,7 +4038,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: --advisory and --fixes are only for --severity security or critical\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: --advisory and --fixes are only for --severity security or critical\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -4065,7 +4072,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: --advisory and --fixes are only for --severity security or critical\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: --advisory and --fixes are only for --severity security or critical\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -4099,7 +4106,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "error: --severity takes security, critical or normal\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+         "stderr": "error: --severity takes security, critical or normal\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
         }
        }
       ]
@@ -4285,6 +4292,790 @@
       "rewrites": []
      }
     }
+   ]
+  },
+  {
+   "id": "language data changed: the release raises orbLanguage.version by a minor after the package bump",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GIT_DONE",
+     "payload": {
+      "requestId": "diff",
+      "op": "diffNames",
+      "exitCode": 0,
+      "stdout": "core/src/patterns/patterns-registry.json\n",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_REG_ASK",
+        "payload": {
+         "requestId": "check"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_LOOKED",
+     "payload": {
+      "requestId": "check",
+      "versions": [
+       "10.129.0"
+      ]
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release dry run (--patch): nothing was written\n1. orbital-rust/crates/orbital-shell-typescript  @almadar/core  10.129.0 -> 10.129.1  tag core-v10.129.1  npmjs  [release]\n     \"orbRelease\": { \"severity\": \"normal\" }\n     language 1.0.0 -> 1.1.0\n"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "control: a changed file outside orbLanguage.sources leaves orbLanguage.version alone and prints no language line",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GIT_DONE",
+     "payload": {
+      "requestId": "diff",
+      "op": "diffNames",
+      "exitCode": 0,
+      "stdout": "core/src/types/other.ts\ncore/src/patterns/other.ts\n",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_REG_ASK",
+        "payload": {
+         "requestId": "check"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_LOOKED",
+     "payload": {
+      "requestId": "check",
+      "versions": [
+       "10.129.0"
+      ]
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release dry run (--patch): nothing was written\n1. orbital-rust/crates/orbital-shell-typescript  @almadar/core  10.129.0 -> 10.129.1  tag core-v10.129.1  npmjs  [release]\n     \"orbRelease\": { \"severity\": \"normal\" }\n"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "--language-major with changed language data raises the major and prints the kernel warning",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GIT_DONE",
+     "payload": {
+      "requestId": "diff",
+      "op": "diffNames",
+      "exitCode": 0,
+      "stdout": "core/themes/dark.json\n",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_REG_ASK",
+        "payload": {
+         "requestId": "check"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ],
+      "langMajor": true
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_LOOKED",
+     "payload": {
+      "requestId": "check",
+      "versions": [
+       "10.129.0"
+      ]
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release dry run (--patch): nothing was written\n1. orbital-rust/crates/orbital-shell-typescript  @almadar/core  10.129.0 -> 10.129.1  tag core-v10.129.1  npmjs  [release]\n     \"orbRelease\": { \"severity\": \"normal\" }\n     language 1.0.0 -> 2.0.0\n     warning: the orb kernel's LANGUAGE_READS must be raised to read language 2.0.0 before this release\n"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "control: --language-major when no language data changed is refused at the end of planning, before any write",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_ENTRY",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: --language-major needs a released package whose orbLanguage.sources changed since its last tag; none does, so nothing was written\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--language-major] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'."
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_WRITE",
+       "REL_GIT_STEP",
+       "REL_PLANNED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "cursor": 1,
+      "planning": true,
+      "writing": true,
+      "langMajor": true,
+      "langBumped": false
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "control: --language-major after a language bump ends the planning pass and starts the second",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_ENTRY",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_PLANNED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "RELEASE_ANSWERED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "cursor": 1,
+      "planning": true,
+      "writing": true,
+      "langMajor": true,
+      "langBumped": true
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "core without orbLanguage.sources is refused naming the field",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_FILE_READ",
+     "payload": {
+      "data": "ewogICJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLAogICJ2ZXJzaW9uIjogIjEwLjEyOS4wIiwKICAib3JiTGFuZ3VhZ2UiOiB7CiAgICAidmVyc2lvbiI6ICIxLjAuMCIsCiAgICAicGF0dGVybnMiOiAiZGlzdC9wYXR0ZXJucy9wYXR0ZXJucy1yZWdpc3RyeS5qc29uIgogIH0KfQo="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_FAIL",
+        "payload": {
+         "why": "core/package.json declares orbLanguage without orbLanguage.sources"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_CHECK",
+       "REL_GIT_STEP"
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": false,
+      "langVersion": "",
+      "langSources": []
+     }
+    }
+   ],
+   "defaults": [
+    "GitStepRunner"
+   ]
+  },
+  {
+   "id": "control: core with orbLanguage.sources is read and the dry run asks git for the changed files",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_FILE_READ",
+     "payload": {
+      "data": "ewogICJuYW1lIjogIkBhbG1hZGFyL2NvcmUiLAogICJ2ZXJzaW9uIjogIjEwLjEyOS4wIiwKICAib3JiTGFuZ3VhZ2UiOiB7CiAgICAidmVyc2lvbiI6ICIxLjAuMCIsCiAgICAic291cmNlcyI6IFsiY29yZS90aGVtZXMiXQogIH0KfQo="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "diff",
+         "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
+         "op": "diffNames",
+         "args": [
+          "core-v10.129.0",
+          "HEAD"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_FAIL"
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": false,
+      "langVersion": "",
+      "langSources": []
+     }
+    }
+   ],
+   "defaults": [
+    "GitStepRunner"
+   ]
+  },
+  {
+   "id": "a tag that does not exist counts the language data as changed",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GIT_FAILED",
+     "payload": {
+      "requestId": "diff",
+      "op": "diffNames",
+      "code": "git_failed",
+      "stderr": "unknown revision"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_REG_ASK",
+        "payload": {
+         "requestId": "check"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": false,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_LOOKED",
+     "payload": {
+      "requestId": "check",
+      "versions": [
+       "10.129.0"
+      ]
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release dry run (--patch): nothing was written\n1. orbital-rust/crates/orbital-shell-typescript  @almadar/core  10.129.0 -> 10.129.1  tag core-v10.129.1  npmjs  [release]\n     \"orbRelease\": { \"severity\": \"normal\" }\n     language 1.0.0 -> 1.1.0\n"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "publish: the orbLanguage version and the package version are written in the same text",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_WRITE",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_WRITE_TEXT",
+        "payload": {
+         "text": "{\n  \"name\": \"@almadar/core\",\n  \"version\": \"10.129.1\",\n  \"orbRelease\": { \"severity\": \"normal\" },\n  \"orbLanguage\": {\n    \"version\": \"1.1.0\",\n    \"sources\": [\"core/themes\"]\n  }\n}\n"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": true,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ],
+      "mode": "release",
+      "target": "10.129.1",
+      "next": "10.129.1",
+      "bump": "patch",
+      "text": "{\n  \"name\": \"@almadar/core\",\n  \"version\": \"10.129.0\",\n  \"orbLanguage\": {\n    \"version\": \"1.0.0\",\n    \"sources\": [\"core/themes\"]\n  }\n}\n",
+      "rewrites": [],
+      "langNext": "1.1.0",
+      "langChanged": true
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "control: with no language bump the written text keeps orbLanguage.version",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_WRITE",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_WRITE_TEXT",
+        "payload": {
+         "text": "{\n  \"name\": \"@almadar/core\",\n  \"version\": \"10.129.1\",\n  \"orbRelease\": { \"severity\": \"normal\" },\n  \"orbLanguage\": {\n    \"version\": \"1.0.0\",\n    \"sources\": [\"core/themes\"]\n  }\n}\n"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": true,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ],
+      "mode": "release",
+      "target": "10.129.1",
+      "next": "10.129.1",
+      "bump": "patch",
+      "text": "{\n  \"name\": \"@almadar/core\",\n  \"version\": \"10.129.0\",\n  \"orbLanguage\": {\n    \"version\": \"1.0.0\",\n    \"sources\": [\"core/themes\"]\n  }\n}\n",
+      "rewrites": [],
+      "langNext": "",
+      "langChanged": false
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
+   ]
+  },
+  {
+   "id": "control: a package.json that does not spell orbLanguage.version the replaced way is not written",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_WRITE",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_FAIL",
+        "payload": {
+         "why": "core/package.json does not spell its orbLanguage version the way the writer replaces it"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_WRITE_TEXT"
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "publish": true,
+      "hasLang": true,
+      "langVersion": "1.0.0",
+      "langSources": [
+       "core/src/patterns/patterns-registry.json",
+       "core/src/generated/language",
+       "core/themes"
+      ],
+      "mode": "release",
+      "target": "10.129.1",
+      "next": "10.129.1",
+      "bump": "patch",
+      "text": "{\n  \"name\": \"@almadar/core\",\n  \"version\": \"10.129.0\",\n  \"orbLanguage\": {\n      \"version\": \"1.0.0\",\n    \"sources\": [\"core/themes\"]\n  }\n}\n",
+      "rewrites": [],
+      "langNext": "1.1.0",
+      "langChanged": true
+     }
+    }
+   ],
+   "defaults": [
+    "ReleaseSemver",
+    "NpmPublic"
    ]
   }
  ]

@@ -2,8 +2,9 @@ app std-launchpad-updates [
   version: "1.0.0",
   exec: ["orb"],
   env: ["PATH", "HOME"],
+  sys: [self-signal],
   fs: { "~/.orb/.update-check.json": [read] },
-  description: "std-launchpad-updates — the launchpad's view of the update record orb's update notice keeps in ~/.orb/.update-check.json ({ checkedAt, available [[name, installed, newest, store]], urgent [[store, applied|failed, text]] }) and the button that runs the update. UPDATES_LOAD reads the record: a file that does not exist (os/read-file's not-found failure, and only that one) is no update, a record that is not in that shape or any other failure answers UPDATES_FAILED { error }, and a good record answers UPDATES_LOADED { available, urgent } (urgent is empty when the record has none). UPDATES_RUN { store } runs `orb update --global` for the global store and `orb update` for any other store through std-cli (the orb on PATH) and, when the run ends, answers UPDATES_RAN { store } on exit 0 or UPDATES_RUN_FAILED { store, error } (the child's stderr, or its exit code, or why orb could not start), then reads the record again either way; The banner (UpdatesBanner) reads the record at INIT and on UPDATES_REFRESH and draws, as core patterns, an info alert with an Update button per store that has available updates, a success alert per applied urgent row (advisory text and the restart text), an error alert per failed urgent row (the vulnerable version is still installed) with a Retry button, a success alert after a finished run that says to restart the launchpad, and an error alert for a failed run or an unreadable record; no record draws nothing. A run asked while another is in flight answers UPDATES_RUN_FAILED at once.",
+  description: "std-launchpad-updates — the launchpad's view of the update record orb's update notice keeps in ~/.orb/.update-check.json ({ checkedAt, available [[name, installed, newest, store]], urgent [[store, applied|failed, text]] }) and the button that runs the update. UPDATES_LOAD reads the record: a file that does not exist (os/read-file's not-found failure, and only that one) is no update, a record that is not in that shape or any other failure answers UPDATES_FAILED { error }, and a good record answers UPDATES_LOADED { available, urgent } (urgent is empty when the record has none). UPDATES_RUN { store } runs `orb update --global` for the global store and `orb update` for any other store through std-cli (the orb on PATH) and, when the run ends, answers UPDATES_RAN { store } on exit 0 or UPDATES_RUN_FAILED { store, error } (the child's stderr, or its exit code, or why orb could not start), then reads the record again either way; The banner (UpdatesBanner) reads the record at INIT and on UPDATES_REFRESH and draws, as core patterns, an info alert with an Update button per store that has available updates, a success alert per applied urgent row (advisory text and the restart text), an error alert per failed urgent row (the vulnerable version is still installed) with a Retry button, a success alert after a finished run that says the launchpad restarts if a service manager runs it, each applied alert with a Restart button (UPDATES_RESTART_PRESSED, listened as UPDATES_RESTART, the store reads os/pid and sends os/kill TERM to its own pid, so the process exits and its service manager starts it again on the new orb), and an error alert for a failed run or an unreadable record; no record draws nothing. A run asked while another is in flight answers UPDATES_RUN_FAILED at once.",
   egress: []
 ]
 ;; @capabilities "show the available and urgent orb updates, run orb update for the global or the project store"
@@ -60,6 +61,10 @@ orbital LaunchpadUpdatesOrbital {
         (set @entity.running false)
         (emit UPDATES_RUN_FAILED { store: ?stage, error: (if (= (str/trim ?stderr) "") (str/concat "orb exited with code " ?exitCode) (str/trim ?stderr)) })
         (emit UPDATES_LOAD {})
+      UPDATES_RESTART -> ready
+        (os/pid { key: "self", emit: { success: UPDATES_PID, failure: UPDATES_RESTART_FAILED } })
+      UPDATES_PID -> ready
+        (os/kill ?pid "TERM" { key: "restart", emit: { success: UPDATES_RESTARTING, failure: UPDATES_RESTART_FAILED } })
       UPDATES_CLI_FAILED -> ready
         (set @entity.running false)
         (emit UPDATES_RUN_FAILED { store: ?stage, error: (str/concat "orb could not be run: " ?error " (" ?code ")") })
@@ -95,6 +100,14 @@ orbital LaunchpadUpdatesOrbital {
       }
         @description "Internal: run orb through std-cli."
         @tier "internal"
+      UPDATES_RESTARTING -> external { }
+        @description "The launchpad was sent TERM and is exiting; its service manager starts it again."
+        @tier "domain"
+      UPDATES_RESTART_FAILED -> external {
+        error : string!
+      }
+        @description "The launchpad could not signal itself."
+        @tier "domain"
       UPDATES_LOAD { }
         @description "Internal: read the record again after a run."
         @tier "internal"
@@ -114,6 +127,13 @@ orbital LaunchpadUpdatesOrbital {
     listens {
       UpdatesBanner.UPDATES_LOAD -> UPDATES_LOAD
       UpdatesBanner.UPDATES_RUN -> UPDATES_RUN
+      UpdatesBanner.UPDATES_RESTART -> UPDATES_RESTART
+      UPDATES_RESTART { }
+        @description "Exit the launchpad process cleanly."
+      UPDATES_PID {
+        pid : number!
+      }
+        @description "os/pid's success."
       UPDATES_LOAD { }
         @description "Read the update record."
       UPDATES_RUN {
@@ -176,12 +196,18 @@ orbital LaunchpadUpdatesOrbital {
             { type: alert, variant: info, title: "Updates available in this project", message: (str/join (array/map @rows (fn t (str/concat (default (array/nth @t 0) "") " " (default (array/nth @t 1) "") " → " (default (array/nth @t 2) "")))) ", ") },
             { type: button, label: "Update", icon: download, variant: primary, size: sm, disabled: @entity.updRunning, action: UPDATE_PRESSED, actionPayload: { store: "project" } }
           ] }]))
-          (array/map (array/filter @entity.updUrgent (fn r (= (default (array/nth @r 1) "") "applied"))) (fn r { type: alert, variant: success, title: (str/concat "Security update applied (" (default (array/nth @r 0) "") " store)"), message: (str/concat (default (array/nth @r 2) "") ". Restart the launchpad to use the new version.") }))
+          (array/map (array/filter @entity.updUrgent (fn r (= (default (array/nth @r 1) "") "applied"))) (fn r { type: stack, direction: vertical, gap: xs, children: [
+            { type: alert, variant: success, title: (str/concat "Security update applied (" (default (array/nth @r 0) "") " store)"), message: (str/concat (default (array/nth @r 2) "") ". The launchpad restarts if a service manager runs it.") },
+            { type: button, label: "Restart", icon: refresh-cw, variant: primary, size: sm, action: RESTART_PRESSED }
+          ] }))
           (array/map (array/filter @entity.updUrgent (fn r (= (default (array/nth @r 1) "") "failed"))) (fn r { type: stack, direction: vertical, gap: xs, children: [
             { type: alert, variant: error, title: (str/concat "Urgent update failed (" (default (array/nth @r 0) "") " store)"), message: (str/concat (default (array/nth @r 2) "") ". The vulnerable version is still installed.") },
             { type: button, label: "Retry", icon: refresh-cw, variant: primary, size: sm, disabled: @entity.updRunning, action: UPDATE_PRESSED, actionPayload: { store: (default (array/nth @r 0) "global") } }
           ] }))
-          (if (and @entity.updApplied (= @entity.updError "")) [{ type: alert, variant: success, title: "Update applied", message: "Restart the launchpad to use the new version." }] [])
+          (if (and @entity.updApplied (= @entity.updError "")) [{ type: stack, direction: vertical, gap: xs, children: [
+            { type: alert, variant: success, title: "Update applied", message: "The launchpad restarts if a service manager runs it." },
+            { type: button, label: "Restart", icon: refresh-cw, variant: primary, size: sm, action: RESTART_PRESSED }
+          ] }] [])
           (if (= @entity.updError "") [] [{ type: alert, variant: error, title: "Update failed", message: @entity.updError }])) })
       UPDATES_LOADED -> ready
         (set @entity.updAvailable ?available)
@@ -204,6 +230,8 @@ orbital LaunchpadUpdatesOrbital {
         (set @entity.updError "")
         (emit UPDATES_RUN { store: ?store })
         (emit UPDATES_SHOWN {})
+      RESTART_PRESSED -> ready
+        (emit UPDATES_RESTART {})
       UPDATES_REFRESH -> ready
         (emit UPDATES_LOAD {})
     }
@@ -219,6 +247,8 @@ orbital LaunchpadUpdatesOrbital {
         store : string!
       }
         @description "Run orb update for the store."
+      UPDATES_RESTART -> external { }
+        @description "Exit the launchpad so its service manager starts it again."
     }
 
     listens {
@@ -230,6 +260,7 @@ orbital LaunchpadUpdatesOrbital {
       UPDATE_PRESSED {
         store : string!
       }
+      RESTART_PRESSED { }
       UPDATES_LOADED {
         available : [[string]]!
         urgent : [[string]]!

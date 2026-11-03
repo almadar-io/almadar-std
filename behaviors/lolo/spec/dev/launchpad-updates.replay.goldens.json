@@ -127,7 +127,7 @@
    ]
   },
   {
-   "id": "an-applied-urgent-row-is-a-success-notice-with-the-restart-text",
+   "id": "an-applied-urgent-row-is-a-success-notice-with-restart",
    "steps": [
     {
      "trait": "UpdatesBanner",
@@ -153,9 +153,12 @@
        {
         "slot": "main",
         "props": {
-         "children.0.type": "alert",
-         "children.0.variant": "success",
-         "children.0.message": "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1). Restart the launchpad to use the new version."
+         "children.0.children.0.type": "alert",
+         "children.0.children.0.variant": "success",
+         "children.0.children.0.message": "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1). The launchpad restarts if a service manager runs it.",
+         "children.0.children.1.type": "button",
+         "children.0.children.1.label": "Restart",
+         "children.0.children.1.action": "RESTART_PRESSED"
         }
        }
       ]
@@ -265,7 +268,7 @@
    ]
   },
   {
-   "id": "a-finished-run-says-restart",
+   "id": "a-finished-run-says-the-launchpad-restarts-with-restart",
    "steps": [
     {
      "trait": "UpdatesBanner",
@@ -309,8 +312,10 @@
        {
         "slot": "main",
         "props": {
-         "children.0.title": "Update applied",
-         "children.0.message": "Restart the launchpad to use the new version."
+         "children.0.children.0.title": "Update applied",
+         "children.0.children.0.message": "The launchpad restarts if a service manager runs it.",
+         "children.0.children.1.label": "Restart",
+         "children.0.children.1.action": "RESTART_PRESSED"
         }
        }
       ]
@@ -405,6 +410,73 @@
       "emits": [
        {
         "event": "UPDATES_LOAD"
+       }
+      ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "control-no-applied-row-has-no-restart-button",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [
+       [
+        "global",
+        "failed",
+        "registry refused"
+       ]
+      ],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.1.label": "Retry"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "restart-click-emits-the-restart-event",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "RESTART_PRESSED",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_RESTART"
        }
       ]
      },
