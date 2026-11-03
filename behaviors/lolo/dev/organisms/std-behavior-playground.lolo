@@ -14,7 +14,7 @@ uses Loader from "std/behaviors/std-behavior-loader"
 type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
-type PlaygroundLeaf = { behavior : string!, kind : string! }
+type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundFinding = { code : string!, message : string! }
@@ -111,6 +111,9 @@ orbital BehaviorPlayground {
       }
       PICK {
         behavior : string!
+        description : string
+        trait : string
+        value : behavior
       }
       DESCRIBE {
         behavior : string!
@@ -118,6 +121,8 @@ orbital BehaviorPlayground {
       TOGGLE {
         behavior : string!
         checked : boolean!
+        topic : string
+        value : behavior
       }
       SELECTION {
         behaviors : [string]!
@@ -186,9 +191,9 @@ orbital BehaviorPlayground {
       labels : [PlaygroundPackageLabel] = @config.packageLabels
         @label "Package names"
         @tier "presentation"
-      leaves : boolean = false
+      leaves : boolean = true
         @label "Behaviors in the tree"
-        @description "List the open topic's behaviors under it, as LEAVES_LOADED names them; a click on one answers LEAF_PICKED."
+        @description "List each loaded topic's behaviors under it, as LEAVES_LOADED names them; a click on one answers LEAF_PICKED."
         @tier "presentation"
       leafIcons : [PlaygroundLeafIcon] = []
         @label "Behavior icons"
@@ -208,31 +213,29 @@ orbital BehaviorPlayground {
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
-          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: [@entity.topicPackage, (str/concat @entity.topicPackage " " @entity.topic)], onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
+          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat [@entity.topicPackage] (array/map (array/unique (array/map @entity.leaves (fn l { package: @l.package, topic: @l.topic }))) (fn l (str/concat @l.package " " @l.topic)))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
             (array/concat
               (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
               (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
             (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder })))
-            (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @entity.topicPackage " " @entity.topic), icon: (object/get (array/find @config.leafIcons (fn i (= @i.kind @l.kind))) "icon" "file") })) [])) }
+            (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @l.package " " @l.topic), icon: (let ((ic (array/find @config.leafIcons (fn i (= @i.kind @l.kind))))) (if (= @ic null) "file" (object/get @ic "icon" "file"))) })) [])) }
         ] })
       NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
         (let ((picked (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))))
           (do
             (set @entity.topicPackage @picked.package)
             (set @entity.topic @picked.topic)
-            (set @entity.leaves [])
             (set @entity.leafSelected "")
             (emit TOPIC_PICKED { package: @picked.package, topic: @picked.topic, count: @picked.count })
             (emit TOPICS_SHOWN {})))
       NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (array/some @entity.leaves (fn l (= @l.behavior ?id))))
         (set @entity.leafSelected ?id)
-        (emit LEAF_PICKED { behavior: ?id })
+        (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior ?id))))) (when (!= @leaf null) (emit LEAF_PICKED { behavior: ?id, value: (object/get @leaf "value") })))
         (emit TOPICS_SHOWN {})
       NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (not (array/some @entity.leaves (fn l (= @l.behavior ?id)))))
-      LEAVES_LOADED -> idle when (and (= ?package (if (= @entity.topic "") @config.openPackage @entity.topicPackage)) (= ?topic (if (= @entity.topic "") @config.openTopic @entity.topic)))
-        (set @entity.leaves ?data)
+      LEAVES_LOADED -> idle
+        (set @entity.leaves (array/concat (array/filter @entity.leaves (fn l (not (and (= @l.package ?package) (= @l.topic ?topic))))) ?data))
         (emit TOPICS_SHOWN {})
-      LEAVES_LOADED -> idle when (not (and (= ?package (if (= @entity.topic "") @config.openPackage @entity.topicPackage)) (= ?topic (if (= @entity.topic "") @config.openTopic @entity.topic))))
     }
 
     emits {
@@ -244,6 +247,7 @@ orbital BehaviorPlayground {
         @description "A topic was chosen in the tree."
       LEAF_PICKED -> external {
         behavior : string!
+        value : behavior!
       }
         @description "A behavior was chosen in the tree."
       TOPICS_SHOWN
@@ -251,6 +255,7 @@ orbital BehaviorPlayground {
 
     listens {
       BehaviorCatalog.CATALOG_TOPICS -> TOPICS_LOADED
+      BehaviorCatalog.CATALOG_LEAVES -> LEAVES_LOADED
       TOPICS_LOADED {
         topics : [PlaygroundTopic]!
       }
@@ -262,7 +267,7 @@ orbital BehaviorPlayground {
         topic : string!
         data : [PlaygroundLeaf]!
       }
-        @description "The behaviors of a topic, listed under it when the leaves knob is on."
+        @description "The behaviors of a topic, listed under it when the leaves knob is on; a topic heard again replaces its own."
     }
   }
 
@@ -313,6 +318,14 @@ orbital BehaviorPlayground {
     state opening {
       INIT -> browsing
         (emit STAGE_SHOWN {})
+      OPEN -> opening
+        (set @entity.behavior ?behavior)
+        (set @entity.description (default ?description ""))
+        (set @entity.value ?value)
+        (set @entity.tab live)
+        (set @entity.status opening)
+        (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
+        (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
       BEHAVIOR_LOADED -> open when (= ?behavior @entity.behavior)
         (set @entity.programJson ?programJson)
         (set @entity.sourceJson ?sourceJson)
@@ -410,6 +423,14 @@ orbital BehaviorPlayground {
     state failed {
       INIT -> browsing
         (emit STAGE_SHOWN {})
+      OPEN -> opening
+        (set @entity.behavior ?behavior)
+        (set @entity.description (default ?description ""))
+        (set @entity.value ?value)
+        (set @entity.tab live)
+        (set @entity.status opening)
+        (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
+        (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
       BACK -> browsing
         (set @entity.behavior "")
         (set @entity.value null)
@@ -454,6 +475,7 @@ orbital BehaviorPlayground {
     listens {
       BehaviorCatalog.PICKED -> OPEN
       PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
+      PlaygroundTopics.LEAF_PICKED -> OPEN
       PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED

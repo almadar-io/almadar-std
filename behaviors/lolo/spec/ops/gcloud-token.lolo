@@ -1,0 +1,20 @@
+app gcloud-token-spec [
+  version: "1.0.0",
+  description: "Design contract for the Google access token the Google Cloud boards read with: an ensure asks whether the token credential is held; when it is, the token is ready; when it is not, the credential store makes it from the stored Application Default Credentials; a token that cannot be made is answered as missing with a message naming why, never read as an empty board."
+]
+
+orbital GcloudTokenSpec {
+  expects entity GcloudTokenRun [runtime] {
+    id : string!
+  }
+  expects trait GcloudToken {
+    state idle {
+      GCLOUD_TOKEN_ENSURE -> idle
+    }
+    emits {
+      GCLOUD_TOKEN_READY { }
+      GCLOUD_TOKEN_MISSING { message : string! }
+    }
+  }
+  expects page boot -> GcloudToken
+}

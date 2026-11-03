@@ -23,6 +23,15 @@ type BehaviorCatalogRow = {
   topic : string!
   level : string!
   score : number!
+  trait : string
+  value : behavior?
+}
+type BehaviorCatalogLeaf = {
+  package : string!
+  topic : string!
+  behavior : string!
+  kind : string!
+  value : behavior!
 }
 type BehaviorCatalogTopic = {
   package : string!
@@ -257,12 +266,13 @@ orbital BehaviorCatalogOrbital {
         (emit CATALOG_SHOWN {})
       TOPIC_LISTED -> ready
         (set @entity.entries ?result)
-        (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0, trait: (default (array/first (object/get @e traits [])) ""), value: @e.value })))
         (set @entity.status ready)
+        (emit CATALOG_LEAVES { package: @entity.topicPackage, topic: @entity.topic, data: (array/map ?result (fn e { package: @e.package, topic: @e.topic, behavior: @e.behavior, kind: @e.level, value: @e.value })) })
         (emit CATALOG_SHOWN {})
       LISTED -> ready
         (set @entity.entries ?result)
-        (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0, trait: (default (array/first (object/get @e traits [])) ""), value: @e.value })))
         (set @entity.status ready)
         (set @entity.topics (array/map (array/unique (array/map ?result (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count ?result (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })))
         (emit CATALOG_TOPICS { topics: @entity.topics })
@@ -307,7 +317,7 @@ orbital BehaviorCatalogOrbital {
             size: sm
             className: "rounded-full"
             action: PICK
-            actionPayload: { behavior: @row.behavior }
+            actionPayload: { behavior: @row.behavior, description: @row.description, trait: @row.trait, value: @row.value }
           }))
         })
       CATALOG_SHOWN -> ready when (!= @config.look chips)
@@ -376,8 +386,8 @@ orbital BehaviorCatalogOrbital {
                   gap: sm
                   align: center
                   children: [
-                    { type: button, label: @config.pickLabel, variant: primary, size: sm, action: PICK, actionPayload: { behavior: @row.behavior }, className: (if (= @config.pick toggle) hidden "") },
-                    { type: switch, label: @config.toggleLabel, checked: (array/includes @entity.selected @row.behavior), action: TOGGLE, actionPayload: { behavior: @row.behavior }, className: (if (= @config.pick toggle) "" hidden) },
+                    { type: button, label: @config.pickLabel, variant: primary, size: sm, action: PICK, actionPayload: { behavior: @row.behavior, description: @row.description, trait: @row.trait, value: @row.value }, className: (if (= @config.pick toggle) hidden "") },
+                    { type: switch, label: @config.toggleLabel, checked: (array/includes @entity.selected @row.behavior), action: TOGGLE, actionPayload: { behavior: @row.behavior, topic: @row.topic, value: @row.value }, className: (if (= @config.pick toggle) "" hidden) },
                     { type: button, label: @config.describeLabel, variant: ghost, size: sm, action: DESCRIBE, actionPayload: { behavior: @row.behavior } }
                   ]
                 }, {
@@ -397,7 +407,7 @@ orbital BehaviorCatalogOrbital {
         })
       SEARCH -> ready when (= ?searchTerm "")
         (set @entity.query "")
-        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0, trait: (default (array/first (object/get @e traits [])) ""), value: @e.value })))
         (emit CATALOG_SHOWN {})
       TOPIC -> loading when @config.perTopic
         (set @entity.topicPackage ?package)
@@ -410,7 +420,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
         (set @entity.query "")
-        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= ?topic "") (and (= @e.package ?package) (= @e.topic ?topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= ?topic "") (and (= @e.package ?package) (= @e.topic ?topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0, trait: (default (array/first (object/get @e traits [])) ""), value: @e.value })))
         (emit CATALOG_SHOWN {})
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
@@ -419,14 +429,14 @@ orbital BehaviorCatalogOrbital {
           emit: { success: SEARCH_LISTED, failure: SEARCH_LIST_FAILED }
         })
       PICK -> ready
-        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit PICKED { behavior: ?behavior, description: (object/get @en description ""), trait: (default (array/first (object/get @en traits [])) ""), value: (object/get @en value) })))
+        (emit PICKED { behavior: ?behavior, description: (default ?description ""), trait: (default ?trait ""), value: ?value })
       TOGGLE -> ready when ?checked
         (set @entity.selected (array/append (array/filter @entity.selected (fn b (!= @b ?behavior))) ?behavior))
-        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit TOGGLED { behavior: ?behavior, checked: true, topic: (object/get @en topic ""), value: (object/get @en value) })))
+        (emit TOGGLED { behavior: ?behavior, checked: true, topic: (default ?topic ""), value: ?value })
         (emit CATALOG_SHOWN {})
       TOGGLE -> ready when (not ?checked)
         (set @entity.selected (array/filter @entity.selected (fn b (!= @b ?behavior))))
-        (let ((en (array/find @entity.entries (fn e (= @e.behavior ?behavior))))) (if (= @en null) (notify error (str/concat "Unknown behavior " ?behavior)) (emit TOGGLED { behavior: ?behavior, checked: false, topic: (object/get @en topic ""), value: (object/get @en value) })))
+        (emit TOGGLED { behavior: ?behavior, checked: false, topic: (default ?topic ""), value: ?value })
         (emit CATALOG_SHOWN {})
       SELECTION -> ready
         (set @entity.selected ?behaviors)
@@ -472,7 +482,7 @@ orbital BehaviorCatalogOrbital {
           emit: { success: LISTED, failure: LIST_FAILED }
         })
       EMBEDDED -> ready when (> (array/len ?embeddings) 0)
-        (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (let ((vs (default @e.vectors {}))) (if (object/has @vs description) (array/cosine (object/get @vs description) (array/first ?embeddings)) 0)))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (default @c 0) }] [])))))) score desc))
+        (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (let ((vs (default @e.vectors {}))) (if (object/has @vs description) (array/cosine (object/get @vs description) (array/first ?embeddings)) 0)))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (default @c 0), trait: (default (array/first (object/get @e traits [])) ""), value: @e.value }] [])))))) score desc))
         (set @entity.status ready)
         (emit CATALOG_SHOWN {})
       EMBEDDED -> ready when (= (array/len ?embeddings) 0)
@@ -557,6 +567,14 @@ orbital BehaviorCatalogOrbital {
         value : behavior
       }
       CATALOG_SHOWN
+      CATALOG_LEAVES -> external {
+        package : string!
+        topic : string!
+        data : [BehaviorCatalogLeaf]!
+      }
+        @description "The behaviors of the topic a perTopic catalog just listed, one per behavior with its package, topic and level: feed a tree that shows a topic's behaviors under it."
+        @synonyms "topic behaviors, tree leaves, behaviors of a topic"
+        @tier "primary"
       CATALOG_TOPICS -> external {
         topics : [BehaviorCatalogTopic]!
       }
@@ -617,6 +635,9 @@ orbital BehaviorCatalogOrbital {
       }
       PICK {
         behavior : string!
+        description : string
+        trait : string
+        value : behavior
       }
       DESCRIBE {
         behavior : string!
@@ -624,6 +645,8 @@ orbital BehaviorCatalogOrbital {
       TOGGLE {
         behavior : string!
         checked : boolean!
+        topic : string
+        value : behavior
       }
       SELECTION {
         behaviors : [string]!
