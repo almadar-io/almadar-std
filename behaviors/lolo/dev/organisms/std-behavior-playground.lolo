@@ -1,10 +1,10 @@
 app std-behavior-playground [
   version: "1.0.0",
   theme: "linear-clean-light",
-  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source file reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. It runs as a tab of std-launchpad.",
+  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its .lolo source file reads in a code view, and its state machines open in the right dock, drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel). The tree lists each package's topics and, as a topic opens, its behaviors from std-behavior-catalog's data trait (scope, starting topic and labels are knobs); a click on a behavior opens it, and the stage shows a prompt until one is open; the frame is std-workspace-layout with the state machine dock on the right. It runs as a tab of std-launchpad.",
   net: { "openrouter.ai:443": [tcp] },
 ]
-;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source, inspect a behavior's knobs"
+;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source"
 
 uses Layout from "std/behaviors/std-workspace-layout"
 uses Catalog from "std/behaviors/std-behavior-catalog"
@@ -31,11 +31,10 @@ orbital BehaviorPlayground {
     behavior : string = ""
     description : string = ""
     value : behavior?
-    tab : "live" | "machines" | "source" = live
+    tab : "live" | "source" = live
     programJson : string = ""
     sourceJson : string = ""
     sourceText : string = ""
-    knobs : [PlaygroundKnob] = []
     check : "pending" | "valid" | "invalid" = pending
     renderHeads : number @description "How many render-ui effects the opened program holds." = 0
     renderOverlays : number @description "How many of those draw into the modal, drawer, overlay or toast slot." = 0
@@ -69,13 +68,10 @@ orbital BehaviorPlayground {
       sidebarTrait: @trait.PlaygroundTopics
       sidebarMinSize: 220
       showSecondarySidebar: true
-      secondarySidebarTrait: @trait.PlaygroundInspector
-      secondarySidebarLabel: "Inspector"
-      secondarySidebarWidth: 320
-      showBottomPanel: true
-      bottomPanelTrait: @trait.PlaygroundRuntime
-      bottomPanelLabel: "Runtime"
-      bottomPanelIcon: "activity"
+      secondarySidebarTrait: @trait.PlaygroundCosmic
+      secondarySidebarLabel: "State machines"
+      secondarySidebarWidth: 480
+      showBottomPanel: false
       showStatusBar: true
       statusBarTrait: @trait.PlaygroundStatus
       showTopBar: true
@@ -83,17 +79,12 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait BehaviorCatalog = Catalog.traits.BehaviorCatalog {
+  trait BehaviorCatalogData = Catalog.traits.BehaviorCatalogData {
     config {
       scope: @config.scope
       startPackage: @config.startPackage
       startTopic: @config.startTopic
       perTopic: true
-      look: list
-      pickLabel: "Open"
-      describeLabel: "Knobs"
-      searchPlaceholder: "Search this topic by meaning"
-      emptyLabel: "Nothing in this topic matches."
     }
     listens {
       BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
@@ -106,32 +97,10 @@ orbital BehaviorPlayground {
         code : string
         message : string!
       }
-      SEARCH {
-        searchTerm : string!
-      }
-      PICK {
-        behavior : string!
-        description : string
-        trait : string
-        value : behavior
-      }
-      DESCRIBE {
-        behavior : string!
-      }
-      TOGGLE {
-        behavior : string!
-        checked : boolean!
-        topic : string
-        value : behavior
-      }
-      SELECTION {
-        behaviors : [string]!
-      }
       TOPIC {
         package : string!
         topic : string!
       }
-      RETRY
     }
   }
   trait BehaviorCatalogLlm = Catalog.traits.BehaviorCatalogLlm {}
@@ -254,8 +223,8 @@ orbital BehaviorPlayground {
     }
 
     listens {
-      BehaviorCatalog.CATALOG_TOPICS -> TOPICS_LOADED
-      BehaviorCatalog.CATALOG_LEAVES -> LEAVES_LOADED
+      BehaviorCatalogData.CATALOG_TOPICS -> TOPICS_LOADED
+      BehaviorCatalogData.CATALOG_LEAVES -> LEAVES_LOADED
       TOPICS_LOADED {
         topics : [PlaygroundTopic]!
       }
@@ -295,11 +264,9 @@ orbital BehaviorPlayground {
           { type: stack, direction: vertical, gap: xs, children: [
             { type: typography, content: (let ((hit (array/find @config.labels (fn l (= @l.package @entity.topicPackage))))) (if (= @hit null) @entity.topicPackage (object/get @hit "label"))), variant: overline, color: muted },
             { type: typography, content: @entity.topic, variant: h2, weight: bold },
-            { type: typography, content: "Open a behavior to run it live, explore its state machines and read its source.", variant: body, color: muted }
           ] },
-          { type: box, children: [@trait.BehaviorCatalog] }
+          { type: empty-state, icon: mouse-pointer-click, title: "Pick a behavior in the tree", description: "Open a topic in the tree on the left and click a behavior: it runs live here, with its state machines and source a tab away." }
         ] })
-        (emit INSPECTED { behavior: "", description: "", knobs: [] })
         (emit STATUS { behavior: "", topic: @entity.topic })
       TOPIC_PICKED -> browsing
         (set @entity.topicPackage ?package)
@@ -330,7 +297,6 @@ orbital BehaviorPlayground {
         (set @entity.programJson ?programJson)
         (set @entity.sourceJson ?sourceJson)
         (set @entity.sourceText ?sourceText)
-        (set @entity.knobs ?knobs)
         (set @entity.check (if ?valid valid invalid))
         (set @entity.findings ?findings)
         (set @entity.renderHeads (- (array/len (str/split ?programJson "[\"render-ui\",")) 1))
@@ -338,6 +304,7 @@ orbital BehaviorPlayground {
         (set @entity.status open)
         (emit LIVE_CLASSIFY {})
         (emit STAGE_SHOWN {})
+        (let ((shown (json/parse ?programJson PlaygroundProgram)) (written (json/parse ?sourceJson PlaygroundProgram))) (if (or (== @shown null) (== @written null)) (notify error "The opened behavior could not be read for the explorer.") (emit COSMIC_LOAD { program: @shown, source: @written, highlighted: "" })))
       BEHAVIOR_LOADED -> opening when (!= ?behavior @entity.behavior)
       BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
         (set @entity.error ?error)
@@ -371,7 +338,7 @@ orbital BehaviorPlayground {
               { type: typography, content: (array/last (str/split @entity.behavior "/")), variant: h3, weight: semibold },
               { type: typography, content: @entity.behavior, variant: caption, color: muted }
             ] },
-            { type: tabs, activeTab: @entity.tab, tabChangeEvent: TAB_SELECTED, items: [{ id: "live", label: "Live" }, { id: "machines", label: "State machines" }, { id: "source", label: "Source" }] }
+            { type: tabs, activeTab: @entity.tab, tabChangeEvent: TAB_SELECTED, items: [{ id: "live", label: "Live" }, { id: "source", label: "Source" }] }
           ] },
           { type: box, className: "flex-1 min-h-0 overflow-auto", children: [
             (if (= @entity.tab live)
@@ -380,21 +347,14 @@ orbital BehaviorPlayground {
                   { type: box, className: "h-full", children: [(object/set @entity.value "resolved" @entity.programJson)] }
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: "Nothing to show on its own", message: (if (= @entity.renders overlay) "This behavior draws only into overlay slots (modal, drawer, overlay or toast), which appear over a page that opens them, so it has no page of its own to show here. Its state machines and source are in the other tabs." "This behavior draws nothing: none of its traits renders a UI. Its state machines and source are in the other tabs.") }] })
                 { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: alert, variant: warning, title: "This behavior does not run on its own", message: "It does not validate alone (it expects a host that provides what it needs); its state machines and source are in the other tabs." }] (array/map @entity.findings (fn f { type: typography, content: (str/concat @f.code ": " @f.message), variant: caption }))) }] })
-              (if (= @entity.tab machines)
-                { type: box, className: "h-[calc(100vh-9rem)] min-h-0", children: [@trait.PlaygroundCosmic] }
-                { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" }))
+              { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" })
           ] }
         ] }))
-        (emit INSPECTED { behavior: @entity.behavior, description: @entity.description, knobs: @entity.knobs })
         (emit STATUS { behavior: @entity.behavior, topic: @entity.topic })
-      TAB_SELECTED -> open when (= ?tabId machines)
-        (set @entity.tab machines)
-        (emit STAGE_SHOWN {})
-        (let ((shown (json/parse @entity.programJson PlaygroundProgram)) (written (json/parse @entity.sourceJson PlaygroundProgram))) (if (or (== @shown null) (== @written null)) (notify error "The opened behavior could not be read for the explorer.") (emit COSMIC_LOAD { program: @shown, source: @written, highlighted: "" })))
-      TAB_SELECTED -> open when (and (!= ?tabId machines) (array/includes ["live", "source"] ?tabId))
+      TAB_SELECTED -> open when (array/includes ["live", "source"] ?tabId)
         (set @entity.tab ?tabId)
         (emit STAGE_SHOWN {})
-      TAB_SELECTED -> open when (not (array/includes ["live", "machines", "source"] ?tabId))
+      TAB_SELECTED -> open when (not (array/includes ["live", "source"] ?tabId))
       CODE_REQUESTED -> open
         (set @entity.tab source)
         (emit STAGE_SHOWN {})
@@ -459,12 +419,6 @@ orbital BehaviorPlayground {
         highlighted : string!
       }
         @description "Hand the opened behavior, resolved and as written, to the state machine explorer."
-      INSPECTED -> external {
-        behavior : string!
-        description : string!
-        knobs : [PlaygroundKnob]!
-      }
-        @description "The opened behavior's facts for the inspector; an empty behavior clears it."
       STATUS -> external {
         behavior : string!
         topic : string!
@@ -473,7 +427,6 @@ orbital BehaviorPlayground {
     }
 
     listens {
-      BehaviorCatalog.PICKED -> OPEN
       PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
       PlaygroundTopics.LEAF_PICKED -> OPEN
       PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
@@ -520,42 +473,6 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundInspector -> PlaygroundView [client] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (render-ui main { type: empty-state, icon: info, title: "Nothing open", description: "Open a behavior to see its knobs here.", className: "p-4" })
-      INSPECTED -> idle when (= ?behavior "")
-        (render-ui main { type: empty-state, icon: info, title: "Nothing open", description: "Open a behavior to see its knobs here.", className: "p-4" })
-      INSPECTED -> idle when (!= ?behavior "")
-        (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-4", children: [
-          { type: typography, content: ?behavior, variant: h4, weight: semibold },
-          { type: typography, content: ?description, variant: body, color: muted },
-          { type: divider },
-          { type: typography, content: (str/concat "Knobs · " (array/len ?knobs)), variant: overline, color: muted },
-          { type: typography, content: "This behavior has no knobs.", variant: caption, color: muted, className: (if (= (array/len ?knobs) 0) "" hidden) },
-          { type: stack, direction: vertical, gap: sm, children: (array/map ?knobs (fn k { type: stack, direction: vertical, gap: none, children: [
-            { type: stack, direction: horizontal, gap: xs, align: center, children: [
-              { type: typography, content: (object/get @k label @k.name), variant: body, weight: medium },
-              { type: badge, label: @k.type, variant: default }
-            ] },
-            { type: typography, content: @k.name, variant: caption, color: muted },
-            { type: typography, content: (object/get @k description ""), variant: caption, className: (if (= (object/get @k description "") "") hidden "") }
-          ] })) }
-        ] })
-    }
-
-    listens {
-      PlaygroundStage.INSPECTED -> INSPECTED
-      INSPECTED {
-        behavior : string!
-        description : string!
-        knobs : [PlaygroundKnob]!
-      }
-    }
-  }
-
   trait PlaygroundStatus -> PlaygroundView [client] {
     initial: idle
 
@@ -572,7 +489,7 @@ orbital BehaviorPlayground {
     }
 
     listens {
-      BehaviorCatalog.CATALOG_TOPICS -> TOPICS_COUNTED
+      BehaviorCatalogData.CATALOG_TOPICS -> TOPICS_COUNTED
       PlaygroundStage.STATUS -> STATUS
       TOPICS_COUNTED {
         topics : [PlaygroundTopic]!
@@ -601,14 +518,5 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundRuntime -> PlaygroundView [client] {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (render-ui main { type: runtime-debugger, mode: inline, defaultCollapsed: false, className: "h-full" })
-    }
-  }
-
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalog, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus
 }
