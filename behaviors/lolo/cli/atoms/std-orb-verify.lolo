@@ -1,0 +1,108 @@
+app std-orb-verify [
+  version: "1.0.0",
+  env: ["ALMADAR_PERSONA_OWNS"],
+  inbound: ["cli-verify"],
+  fs: { cwd: "**/*.lolo": [read] },
+  description: "std-orb-verify — run the existing strict kernel walk with core render facts and its shared judge. The command reports the real runtime-verifier gate as unavailable until the supported browser/native verifier transport is installed; a partial kernel/render pass never exits successfully."
+]
+uses Spec from "almadar-std/orb-verify"
+uses Walk from "std/behaviors/std-verify-walk"
+uses Machine from "std/behaviors/std-machine"
+uses Plan from "std/behaviors/std-verify-plan"
+uses Seed from "std/behaviors/std-mock-seed"
+uses Judge from "std/behaviors/std-verify-judge"
+uses Credit from "std/behaviors/std-verify-credit"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type VerifyAnswer = { status : number!, body : string! }
+
+orbital OrbVerifyOrbital {
+  entity VerifyInvocation [runtime] {
+    id : string!
+    report : string! = "text"
+  }
+
+  trait VerifyMachine = Machine.traits.Machine {
+    listens {
+      VerifyWalk.WALK_MACHINE_READ -> MACHINE_READ
+    }
+  }
+
+  trait VerifyPlan = Plan.traits.Plan {
+    listens {
+      VerifyWalk.WALK_PLAN_REQUEST -> PLAN_REQUEST
+      MockSeed.ROWS_DONE -> ROWS_DONE
+    }
+  }
+
+  trait MockSeed = Seed.traits.MockSeed {
+    listens {
+      MockStream.CORPUS_IS -> CORPUS_IS
+      VerifyPlan.SAMPLE_ROWS -> SAMPLE_ROWS
+    }
+  }
+
+  trait MockStream = Seed.traits.MockStream {
+  }
+
+  trait VerifyJudge = Judge.traits.Judge {
+    listens {
+      VerifyWalk.WALK_JUDGE_REQUEST -> JUDGE_REQUEST
+    }
+  }
+
+  trait VerifyCreditor = Credit.traits.Credit {
+    listens {
+      VerifyWalk.WALK_CREDIT_REQUEST -> CREDIT_REQUEST
+    }
+  }
+
+  trait VerifyWalk = Walk.traits.VerifyWalk {
+    listens {
+      OrbVerify.VERIFY_WALK_START -> VERIFY_WALK_START
+      VerifyMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      VerifyMachine.MACHINE_UNREAD -> WALK_MACHINE_UNREAD
+      VerifyPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      VerifyJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
+      VerifyCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
+    }
+  }
+
+  trait OrbVerify -> VerifyInvocation [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      VERIFY_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit VERIFY_ANSWERED { status: 500, body: "verify: the call's arguments could not be read" })
+      VERIFY_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (not (or (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 3) (= (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) "--report") (= (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 2) "json")))))
+        (emit VERIFY_ANSWERED { status: 400, body: "usage: orb verify <program.lolo> [--report json]" })
+      VERIFY_CALLED -> checking when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (or (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 3) (= (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 1) "--report") (= (array/nth (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") 2) "json"))))
+        (set @entity.report (if (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 3) "json" "text"))
+        (emit VERIFY_WALK_START { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""), cwd: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"), render: true, strict: true })
+    }
+
+    state checking {
+      INIT -> checking
+      WALK_ANSWERED -> ready
+        (emit VERIFY_ANSWERED { status: 500, body: (if (= @entity.report "json")
+          (json/stringify { complete: false, gates: [{ name: "kernel-render", status: (if (= @payload.status 200) "passed" "failed"), detail: @payload.body }, { name: "runtime-verify", status: "unavailable", detail: "the supported runtime verifier transport is not installed" }] })
+          (str/concat @payload.body "\nruntime-verify: unavailable — the supported verifier transport is not installed")) })
+    }
+
+    emits {
+      VERIFY_ANSWERED -> external { status : number!, body : string! }
+      VERIFY_WALK_START { file : string!, cwd : string!, render : boolean!, strict : boolean! }
+    }
+
+    listens {
+      VERIFY_CALLED -> inbound "cli-verify" answers VERIFY_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+      WALK_ANSWERED { status : number!, body : string! }
+      VerifyWalk.VERIFY_WALK_ANSWERED -> WALK_ANSWERED
+    }
+  }
+
+  page boot as OrbVerifyPage -> OrbVerify, VerifyWalk, VerifyMachine, VerifyPlan, VerifyJudge, VerifyCreditor, MockSeed, MockStream
+}

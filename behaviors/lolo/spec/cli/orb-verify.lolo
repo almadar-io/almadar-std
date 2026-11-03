@@ -1,0 +1,18 @@
+app orb-verify-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb verify <program.lolo> [--report json]`: compose the existing kernel transition walk and core render probe, then require a runtime-verifier verdict. A missing runtime verifier is an unavailable gate and the command exits nonzero even when kernel and render checks pass. The JSON report names each gate and never treats a partial result as complete."
+]
+
+orbital OrbVerifySpec {
+  expects entity VerifyInvocation [runtime] {
+    id : string!
+    report : string!
+  }
+  expects trait OrbVerify {
+    state ready
+    emits {
+      VERIFY_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbVerify
+}
