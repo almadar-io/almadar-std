@@ -1,0 +1,120 @@
+app std-gcloud-token [
+  version: "1.0.0",
+  description: "std-gcloud-token — makes sure the host credential store holds a Google access token for the REST reads of the Google Cloud boards. GCLOUD_TOKEN_ENSURE asks credential-status whether the token credential is held (the store renews an expired one on its own from its refresh token); when it is, GCLOUD_TOKEN_READY answers. When it is not, a refresh_token credential-connect makes the token from gcloud's Application Default Credentials, held as three credentials the store keeps: the OAuth client id, the client secret and the refresh token (the client_id, client_secret and refresh_token of ~/.config/gcloud/application_default_credentials.json). The program never holds a value; a credential the store lacks is named in the answer. GCLOUD_TOKEN_MISSING { message } answers when the token cannot be made: not configured (the store holds no such credential, or no credential store can connect) or failed (Google refused or could not be reached).",
+  egress: ["https://oauth2.googleapis.com"]
+]
+uses Spec from "almadar-std/gcloud-token"
+orbital GcloudTokenOrbital {
+  entity GcloudTokenRun [runtime] {
+    id : string!
+  }
+
+  trait GcloudToken -> @rebindable GcloudTokenRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GCLOUD_TOKEN_ENSURE -> idle
+        (credential-status { credential: @config.token, scope: app } { emit: { success: GCLOUD_TOKEN_PROBED, failure: GCLOUD_TOKEN_PROBE_FAILED } })
+      GCLOUD_TOKEN_PROBED -> idle when @payload.connected
+        (emit GCLOUD_TOKEN_READY { })
+      GCLOUD_TOKEN_PROBED -> idle when (not @payload.connected)
+        (credential-connect { credential: @config.token, scope: app, tokenEndpoint: @config.tokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: GCLOUD_TOKEN_CONNECTED, failure: GCLOUD_TOKEN_CONNECT_FAILED } })
+      GCLOUD_TOKEN_PROBE_FAILED -> idle
+        (emit GCLOUD_TOKEN_MISSING { message: (str/concat "Google access not configured: " @payload.error) })
+      GCLOUD_TOKEN_CONNECTED -> idle when @payload.connected
+        (emit GCLOUD_TOKEN_READY { })
+      GCLOUD_TOKEN_CONNECTED -> idle when (not @payload.connected)
+        (emit GCLOUD_TOKEN_MISSING { message: "Google access not configured: the credential store did not connect the access token" })
+      GCLOUD_TOKEN_CONNECT_FAILED -> idle when (array/includes ["unavailable", "refused", "invalid_grant", "invalid_client"] @payload.kind)
+        (emit GCLOUD_TOKEN_MISSING { message: (str/concat "Google access not configured: " @payload.error) })
+      GCLOUD_TOKEN_CONNECT_FAILED -> idle when (not (array/includes ["unavailable", "refused", "invalid_grant", "invalid_client"] @payload.kind))
+        (emit GCLOUD_TOKEN_MISSING { message: (str/concat "Google token request failed: " @payload.error) })
+    }
+
+    emits {
+      GCLOUD_TOKEN_READY -> external { }
+        @description "The Google access token is held: the REST reads may send."
+        @tier "primary"
+      GCLOUD_TOKEN_MISSING -> external {
+        message : string!
+      }
+        @description "The Google access token could not be made; the message names the credential the store lacks or why Google refused."
+        @tier "primary"
+      GCLOUD_TOKEN_PROBED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: whether the access token is held."
+        @tier "internal"
+      GCLOUD_TOKEN_PROBE_FAILED -> internal {
+        error : string!
+      }
+        @description "Internal: the credential store could not tell whether the access token is held."
+        @tier "internal"
+      GCLOUD_TOKEN_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store made the access token."
+        @tier "internal"
+      GCLOUD_TOKEN_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not make the access token."
+        @tier "internal"
+    }
+
+    listens {
+      GCLOUD_TOKEN_ENSURE -> input { }
+        @description "Make sure the Google access token is held, making it from the stored Application Default Credentials when it is not."
+        @synonyms "google token, gcloud token, access token"
+      GCLOUD_TOKEN_PROBED {
+        connected : boolean!
+        label : string
+      }
+      GCLOUD_TOKEN_PROBE_FAILED {
+        error : string!
+      }
+      GCLOUD_TOKEN_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      GCLOUD_TOKEN_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      token : secret = "GCLOUD_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Host credential name the made access token lives under; the composing board's std-http-client trait carries the same name as its credential, restate it there when this knob changes."
+        @synonyms "access token name"
+        @tier "infra"
+      clientId : secret = "GCLOUD_ADC_CLIENT_ID"
+        @label "OAuth client id credential"
+        @description "Name of the stored credential holding the client_id of gcloud's Application Default Credentials."
+        @synonyms "client id"
+        @tier "infra"
+      clientSecret : secret = "GCLOUD_ADC_CLIENT_SECRET"
+        @label "OAuth client secret credential"
+        @description "Name of the stored credential holding the client_secret of gcloud's Application Default Credentials."
+        @synonyms "client secret"
+        @tier "infra"
+      refreshToken : secret = "GCLOUD_ADC_REFRESH_TOKEN"
+        @label "Refresh token credential"
+        @description "Name of the stored credential holding the refresh_token of gcloud's Application Default Credentials; the credential store makes and renews the access token from it."
+        @synonyms "refresh token"
+        @tier "infra"
+      tokenUrl : url = "https://oauth2.googleapis.com/token"
+        @label "Token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the refresh token at. Must be declared in the app egress list."
+        @synonyms "token url"
+        @tier "infra"
+    }
+  }
+
+  page boot as GcloudTokenOrbitalStart -> GcloudToken
+}
