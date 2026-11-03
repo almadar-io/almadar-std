@@ -161,7 +161,7 @@ CI runs on Node 22 and 24 (typecheck, materialize, build, lint, gate scripts). T
 
 ## Docs
 
-Monorepo docs at [itechdom/kflow.ai](https://github.com/itechdom/kflow.ai): `docs/Almadar_Summary.md`, `docs/Almadar_Execution_Semantics.md`, `docs/Almadar_Orbital_Lolo.md`.
+- [Orb documentation](https://orb.almadar.io/docs): the language, the `orb` CLI and how the pieces fit
 
 ## License
 
