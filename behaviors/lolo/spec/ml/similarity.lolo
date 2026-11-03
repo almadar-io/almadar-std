@@ -18,8 +18,12 @@ orbital MlSimilaritySpec {
       COMPARE -> embedding
     }
     state embedding {
-      EMBEDDED -> resolved
+      EMBEDDED -> gating
       EMBED_FAILED -> resolved
+    }
+    state gating {
+      GATE_MATCHED -> resolved
+      GATE_ABSTAINED -> resolved
     }
     state resolved {
       RESET -> idle
@@ -29,5 +33,14 @@ orbital MlSimilaritySpec {
       SIMILARITY_ABSTAINED { reason : string!  request : { candidate : string!, key : string!, accepted : [string]!, categories : [string]! } }
     }
   }
-  expects page boot -> SimilarityRun
+  expects trait SimilarityGate {
+    state ready {
+      COMPARE_VECTORS -> ready
+    }
+    emits {
+      SIMILARITY_MATCHED { index : int!  score : number!  margin : number!  key : string! }
+      SIMILARITY_ABSTAINED { reason : string!  score : number!  margin : number! }
+    }
+  }
+  expects page boot -> SimilarityRun, SimilarityGate
 }

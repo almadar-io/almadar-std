@@ -1,6 +1,6 @@
 app std-ml-similarity [
   version: "1.0.0",
-  description: "Retrieval rung (R3) — embed a candidate against references through std-llm (LLM_EMBED) and gate on cosine floor + margin; abstains when not confident.",
+  description: "Retrieval rung (R3) — embed a candidate against references through std-llm (LLM_EMBED) and gate on cosine floor + margin; abstains when not confident. The gate is SimilarityGate, which SimilarityRun asks once the embeddings arrive: COMPARE_VECTORS { query, references } gates vectors a caller already holds (resolved through std-vector-resolve, so query and references share one model) without an embed call; each reference is a { key, vector }, a key may carry several vectors and scores its best, and keys rank against each other, so its SIMILARITY_MATCHED carries the winning key and its index among the distinct keys in first-seen order. floor and margin are SimilarityGate knobs.",
   net: { "openrouter.ai:443": [tcp] },
 ]
 
@@ -82,16 +82,6 @@ orbital MlSimilarityOrbital {
   trait SimilarityRun -> SimilarityComparison [client] {
     initial: idle
 
-    config {
-      floor : float = 0.82
-        @label "Match floor"
-        @description "Minimum cosine score for a confident match"
-        @tier "policy"
-      margin : float = 0.05
-        @label "Match margin"
-        @description "Minimum gap between the best and second-best score required to trust the match"
-        @tier "policy"
-    }
 
     state idle {
       INIT -> idle
@@ -143,42 +133,22 @@ orbital MlSimilarityOrbital {
         (set @entity.request {})
         (set @entity.status idle)
 
-      EMBEDDED -> resolved
+      EMBEDDED -> resolved when (< (array/len ?embeddings) 2)
         (set @entity.embeddings ?embeddings)
+        (set @entity.queryVector [])
+        (set @entity.candidateVectors [])
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore 0)
+        (set @entity.matchMargin 0)
+        (set @entity.reason "embedding result incomplete")
         (set @entity.status resolved)
-        ;; An embed result without query + at least one candidate vector is an
-        ;; abstain, not a crash — the rung can prove nothing from it.
-        (if (< (array/len ?embeddings) 2)
-          (do
-            (set @entity.queryVector [])
-            (set @entity.candidateVectors [])
-            (set @entity.matchIndex 0)
-            (set @entity.matchScore 0)
-            (set @entity.matchMargin 0)
-            (set @entity.reason "embedding result incomplete")
-            (emit SIMILARITY_ABSTAINED { reason: "embedding result incomplete", request: @entity.request }))
-          (do
-            (set @entity.queryVector (default (array/first @entity.embeddings) []))
-            (set @entity.candidateVectors (array/drop @entity.embeddings 1))
-            (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
-              (if (= @nearest null)
-                (do
-                  (set @entity.matchIndex 0)
-                  (set @entity.matchScore 0)
-                  (set @entity.matchMargin 0)
-                  (set @entity.reason "vectors not comparable")
-                  (emit SIMILARITY_ABSTAINED { reason: "vectors not comparable", request: @entity.request }))
-                (do
-                  (set @entity.matchIndex (math/floor (object/get @nearest "index")))
-                  (set @entity.matchScore (object/get @nearest "score"))
-                  (set @entity.matchMargin (object/get @nearest "margin"))
-                  (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
-                      (do
-                        (set @entity.reason "")
-                        (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
-                      (do
-                        (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
-                        (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request }))))))))
+        (emit SIMILARITY_ABSTAINED { reason: "embedding result incomplete", request: @entity.request })
+
+      EMBEDDED -> gating when (>= (array/len ?embeddings) 2)
+        (set @entity.embeddings ?embeddings)
+        (set @entity.queryVector (default (array/first ?embeddings) []))
+        (set @entity.candidateVectors (array/drop ?embeddings 1))
+        (emit SIM_GATE { query: @entity.queryVector, references: (array/map (array/range (array/len @entity.candidateVectors)) (fn i { key: (str/concat "" @i), vector: (default (array/nth @entity.candidateVectors @i) []) })) })
 
       EMBED_FAILED -> resolved
         (set @entity.embeddings [])
@@ -190,6 +160,25 @@ orbital MlSimilarityOrbital {
         (set @entity.reason "embedding unavailable")
         (set @entity.status resolved)
         (emit SIMILARITY_ABSTAINED { reason: "embedding unavailable", request: @entity.request })
+    }
+
+    state gating {
+      INIT -> idle
+        (set @entity.status idle)
+      GATE_MATCHED -> resolved
+        (set @entity.matchIndex ?index)
+        (set @entity.matchScore ?score)
+        (set @entity.matchMargin ?margin)
+        (set @entity.reason "")
+        (set @entity.status resolved)
+        (emit SIMILARITY_MATCHED { index: ?index, score: ?score })
+      GATE_ABSTAINED -> resolved
+        (set @entity.matchIndex 0)
+        (set @entity.matchScore ?score)
+        (set @entity.matchMargin ?margin)
+        (set @entity.reason ?reason)
+        (set @entity.status resolved)
+        (emit SIMILARITY_ABSTAINED { reason: ?reason, request: @entity.request })
     }
 
     state resolved {
@@ -215,6 +204,13 @@ orbital MlSimilarityOrbital {
       }
         @description "Ask std-llm to embed the query (index 0) followed by the candidates"
         @tier "secondary"
+
+      SIM_GATE {
+        query : [number]!
+        references : [{ key : string!, vector : [number]! }]!
+      }
+        @description "Internal: ask SimilarityGate to gate the query vector against the candidates' vectors, keyed by candidate index."
+        @tier "internal"
 
       SIMILARITY_MATCHED -> external {
         index : int!
@@ -246,8 +242,103 @@ orbital MlSimilarityOrbital {
         candidates : [string]!
         request : DecisionRequest
       }
+      SimilarityGate.SIMILARITY_MATCHED -> GATE_MATCHED
+      SimilarityGate.SIMILARITY_ABSTAINED -> GATE_ABSTAINED
+      GATE_MATCHED {
+        index : int!
+        score : number!
+        margin : number!
+      }
+      GATE_ABSTAINED {
+        reason : string!
+        score : number!
+        margin : number!
+      }
     }
   }
 
-  page boot as MlSimilarityPage -> SimilarityRun, SimilarityLlm, SimEmbedWait, SimEmbedRequest, SimEmbedHttp
+  entity SimilarityGateRun [runtime] {
+    id         : string!
+    matchKey   : string = ""
+    matchIndex : int    = 0
+    matchScore : number = 0
+    matchMargin : number = 0
+    reason     : string = ""
+  }
+
+  trait SimilarityGate -> SimilarityGateRun [client] {
+    initial: ready
+
+    config {
+      floor : float = 0.82
+        @label "Match floor"
+        @description "Minimum cosine score for a confident match"
+        @tier "policy"
+      margin : float = 0.05
+        @label "Match margin"
+        @description "Minimum gap between the best and second-best score required to trust the match"
+        @tier "policy"
+    }
+
+    state ready {
+      INIT -> ready
+
+      COMPARE_VECTORS -> ready when (> (array/len ?references) 0)
+        (let ((keys (array/unique (array/map ?references (fn r @r.key)))))
+          (let ((ranked (array/sort (array/flatten (array/map @keys (fn k (let ((best (array/max (array/flatten (array/map (array/filter ?references (fn r (= @r.key @k))) (fn r (let ((c (array/cosine @r.vector ?query))) (if (== @c null) [] [@c])))))))) (if (== @best null) [] [{ key: @k, score: @best }]))))) score desc)))
+            (if (= (array/len @ranked) 0)
+              (do
+                (set @entity.matchKey "")
+                (set @entity.reason "vectors not comparable")
+                (emit SIMILARITY_ABSTAINED { reason: "vectors not comparable", score: 0, margin: 0 }))
+              (let ((top (array/first @ranked)))
+                (do
+                  (set @entity.matchKey @top.key)
+                  (set @entity.matchIndex (array/indexOf @keys @top.key))
+                  (set @entity.matchScore @top.score)
+                  (set @entity.matchMargin (- @top.score (default (object/get (default (array/nth @ranked 1) {}) score) 0)))
+                  (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
+                    (do
+                      (set @entity.reason "")
+                      (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore, margin: @entity.matchMargin, key: @entity.matchKey }))
+                    (do
+                      (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
+                      (emit SIMILARITY_ABSTAINED { reason: @entity.reason, score: @entity.matchScore, margin: @entity.matchMargin }))))))))
+
+      COMPARE_VECTORS -> ready when (= (array/len ?references) 0)
+        (set @entity.matchKey "")
+        (set @entity.reason "empty candidate list")
+        (emit SIMILARITY_ABSTAINED { reason: "empty candidate list", score: 0, margin: 0 })
+    }
+
+    emits {
+      SIMILARITY_MATCHED -> external {
+        index : int!
+        score : number!
+        margin : number!
+        key : string!
+      }
+        @description "The best key reached floor and leads the next key by margin; index is its position among the distinct keys in first-seen order."
+        @tier "primary"
+      SIMILARITY_ABSTAINED -> external {
+        reason : string!
+        score : number!
+        margin : number!
+      }
+        @description "No confident key: empty candidate list, vectors not comparable, below floor or thin margin."
+        @tier "primary"
+    }
+
+    listens {
+      COMPARE_VECTORS -> input {
+        query : [number]!
+        references : [{ key : string!, vector : [number]! }]!
+      }
+        @description "Gate vectors the caller already holds: the query vector against keyed reference vectors, best vector per key."
+        @synonyms "rank by cosine, nearest key, semantic gate"
+      SimilarityRun.SIM_GATE -> COMPARE_VECTORS
+    }
+  }
+
+  page boot as MlSimilarityPage -> SimilarityRun, SimilarityGate, SimilarityLlm, SimEmbedWait, SimEmbedRequest, SimEmbedHttp
 }

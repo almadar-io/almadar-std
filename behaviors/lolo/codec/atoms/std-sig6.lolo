@@ -7,6 +7,7 @@ uses BigCmp from "std/behaviors/std-bigcmp"
 uses F32 from "std/behaviors/std-f32"
 
 type Sig6Row = { x : number!, m : number!, e : number!, t0 : number!, t : number!, k : number!, f : number!, n : number!, q0 : number!, q : number!, gexp : number!, f24 : number!, hiC : number!, loC : number!, fres : number!, f53 : number! }
+type Sig6Cmp = { ahi : number!, alo : number!, p2 : number!, p10 : number!, bhi : number!, blo : number!, q2 : number!, q10 : number! }
 
 orbital Sig6Orbital {
   entity Sig6Run [runtime] {
@@ -64,7 +65,7 @@ orbital Sig6Orbital {
     state s5 {
       BIGCMP_ANSWERED -> s6
         (set @entity.rows (array/map (array/range 0 (array/len @entity.rows)) (fn i (let ((r (array/nth @entity.rows @i))) { x: @r.x, m: @r.m, e: @r.e, t0: @r.t0, t: @r.t, k: @r.k, f: @r.f, n: @r.n, q0: @r.q0, q: @r.q, gexp: @r.gexp, f24: (+ @r.f24 (if (< (default (array/nth @payload.results (+ (* @i 10) 0)) 0) 0) -1 (if (>= (default (array/nth @payload.results (+ (* @i 10) 1)) 0) 0) 1 0))), f53: (- (+ @r.f53 (array/len (array/filter (array/slice @payload.results (+ (* @i 10) 2) (+ (* @i 10) 10)) (fn z (>= @z 0))))) 1), d53: @r.d53, hiC: @r.hiC, loC: @r.loC, fres: @r.fres }))))
-        (emit BIGCMP_BATCH { tag: "s6", items: (array/flatten (array/map @entity.rows (fn r (let ((va (+ (* 2 @r.f24) 1))) (let ((fl2 (let ((fa (math/floor (/ (default (math/ln @va) 0) 0.6931471805599453)))) (let ((fb (if (> (default (math/pow 2 @fa) 0) @va) (- @fa 1) @fa))) (if (<= (default (math/pow 2 (+ @fb 1)) 0) @va) (+ @fb 1) @fb))))) (let ((bint (* @va (default (math/pow 2 (- 53 @fl2)) 0)))) (let ((bh (/ @bint 16777216))) [{ ahi: 0, alo: @r.n, p2: (- 1 @r.gexp), p10: (- 0 @r.k), bhi: (math/floor (/ @va 16777216)), blo: (math/mod @va 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: @bh, blo: 1, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: (- @bh 1), blo: 16777215, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 53 @r.q), p10: (- 0 @r.k), bhi: (+ (* 2 (math/floor (/ @r.f53 16777216))) (math/floor (/ (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216))), blo: (math/mod (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216), q2: 0, q10: 0 }]))))))) })
+        (emit BIGCMP_BATCH { tag: "s6", items: (array/flatten (array/map @entity.rows (fn r (let ((va (+ (* 2 @r.f24) 1))) (let ((fl2 (let ((fa (math/floor (/ (default (math/ln @va) 0) 0.6931471805599453)))) (let ((fb (if (> (default (math/pow 2 @fa) 0) @va) (- @fa 1) @fa))) (if (<= (default (math/pow 2 (+ @fb 1)) 0) @va) (+ @fb 1) @fb))))) (let ((bint (* @va (default (math/pow 2 (- 53 @fl2)) 0)))) (let ((bh (/ @bint 16777216))) (let ((cmps : [Sig6Cmp] [{ ahi: 0, alo: @r.n, p2: (- 1 @r.gexp), p10: (- 0 @r.k), bhi: (math/floor (/ @va 16777216)), blo: (math/mod @va 16777216), q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: @bh, blo: 1, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- (- 54 @r.gexp) @fl2), p10: (- 0 @r.k), bhi: (- @bh 1), blo: 16777215, q2: 0, q10: 0 } { ahi: 0, alo: @r.n, p2: (- 53 @r.q), p10: (- 0 @r.k), bhi: (+ (* 2 (math/floor (/ @r.f53 16777216))) (math/floor (/ (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216))), blo: (math/mod (+ (* 2 (math/mod @r.f53 16777216)) 1) 16777216), q2: 0, q10: 0 }])) @cmps)))))))) })
     }
 
     state s6 {

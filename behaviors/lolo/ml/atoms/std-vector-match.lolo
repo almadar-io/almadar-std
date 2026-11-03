@@ -1,0 +1,276 @@
+app std-vector-match [
+  version: "1.0.0",
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  fs: { cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
+  exec: ["kill"],
+  description: "std-vector-match — find which of a set of candidates a short text means. MATCH { query, candidates } takes the text and the candidates, each an id with the texts that describe it (a name, synonyms, a description); it reads where the vectors live and which embedding provider is configured (std-vector-sources), resolves the query and every candidate text in one batch the way orb does (std-vector-resolve: the user store first, then the provider, writing what it embeds back to the store, so a candidate text is embedded once and query and candidates share one model), and gates the query vector against the candidates' vectors with std-ml-similarity's SimilarityGate (COMPARE_VECTORS) (a candidate scores its best text; the best candidate must reach `floor` and lead the next one by `margin`). It answers MATCH_FOUND { query, id, score }, MATCH_ABSTAINED { query, reason } when no candidate is confident (below floor, thin margin, no candidates), or MATCH_FAILED { query, code, detail } when the vectors cannot be read or embedded. A MATCH that arrives while one is running is answered MATCH_FAILED { code: \"VECTOR_MATCH_BUSY\" }. The composer declares the same env, fs, net and exec grants as this app."
+]
+;; @capabilities "match a short text to one of a set of candidates by meaning, resolve embeddings through the vector store, abstain when no candidate is confident"
+
+uses Sources from "std/behaviors/std-vector-sources"
+uses Resolve from "std/behaviors/std-vector-resolve"
+uses Similarity from "std/behaviors/std-ml-similarity"
+
+type WantedText = { key : string!, text : string! }
+type KeyedVector = { key : string!, vector : [number]! }
+type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
+type MatchCandidate = { id : string!, texts : [string]! }
+
+orbital VectorMatchOrbital {
+  entity VectorMatchRun [runtime] {
+    id : string!
+    query : string = ""
+    wanted : [WantedText] = []
+  }
+
+  config {
+    floor : float = 0.82
+      @label "Match floor"
+      @description "Minimum cosine score the best candidate must reach."
+      @tier "policy"
+    margin : float = 0.05
+      @label "Match margin"
+      @description "Minimum gap between the best candidate and the next one."
+      @tier "policy"
+  }
+
+  trait MatchGate = Similarity.traits.SimilarityGate [server] {
+    config {
+      floor: @config.floor
+      margin: @config.margin
+    }
+    listens {
+      VectorMatch.VM_COMPARE -> COMPARE_VECTORS
+    }
+  }
+
+  trait MatchSources = Sources.traits.VectorSources [server] {
+    listens {
+      VectorMatch.VM_SOURCES -> SOURCES
+      VectorResolve.USER_STORE_NEEDED -> USER_STORE_NEEDED
+    }
+  }
+
+  trait ResolveStore = Resolve.traits.ResolveStore [server] {}
+  trait ResolveWrite = Resolve.traits.ResolveWrite [server] {}
+  trait ResolveQuantize = Resolve.traits.ResolveQuantize [server] {}
+  trait ResolveF32 = Resolve.traits.ResolveF32 [server] {}
+  trait ResolveSig6 = Resolve.traits.ResolveSig6 [server] {}
+  trait ResolveBigCmp = Resolve.traits.ResolveBigCmp [server] {}
+  trait ResolveDelay = Resolve.traits.ResolveDelay {}
+  trait ResolveLlmOrShared = Resolve.traits.ResolveLlmOrShared [server] {}
+  trait ResolveLlmOrOwn = Resolve.traits.ResolveLlmOrOwn [server] {}
+  trait ResolveLlmOaShared = Resolve.traits.ResolveLlmOaShared [server] {}
+  trait ResolveLlmOaOwn = Resolve.traits.ResolveLlmOaOwn [server] {}
+  trait ResolveLlmLm = Resolve.traits.ResolveLlmLm [server] {}
+  trait ResolveOrSharedWait = Resolve.traits.ResolveOrSharedWait {}
+  trait ResolveOrSharedRequest = Resolve.traits.ResolveOrSharedRequest [server] {}
+  trait ResolveOrSharedHttp = Resolve.traits.ResolveOrSharedHttp [server] {}
+  trait ResolveOrOwnWait = Resolve.traits.ResolveOrOwnWait {}
+  trait ResolveOrOwnRequest = Resolve.traits.ResolveOrOwnRequest [server] {}
+  trait ResolveOrOwnHttp = Resolve.traits.ResolveOrOwnHttp [server] {}
+  trait ResolveOaSharedWait = Resolve.traits.ResolveOaSharedWait {}
+  trait ResolveOaSharedRequest = Resolve.traits.ResolveOaSharedRequest [server] {}
+  trait ResolveOaSharedHttp = Resolve.traits.ResolveOaSharedHttp [server] {}
+  trait ResolveOaOwnWait = Resolve.traits.ResolveOaOwnWait {}
+  trait ResolveOaOwnRequest = Resolve.traits.ResolveOaOwnRequest [server] {}
+  trait ResolveOaOwnHttp = Resolve.traits.ResolveOaOwnHttp [server] {}
+  trait ResolveLmWait = Resolve.traits.ResolveLmWait {}
+  trait ResolveLmRequest = Resolve.traits.ResolveLmRequest [server] {}
+  trait ResolveLmHttp = Resolve.traits.ResolveLmHttp [server] {}
+
+  trait VectorResolve = Resolve.traits.VectorResolve [server] {
+    listens {
+      VectorMatch.VM_RESOLVE -> RESOLVE
+      MatchSources.USER_STORE_READ -> USER_STORE_READ
+      ResolveStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      ResolveStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      ResolveWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
+      ResolveWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
+      RESOLVE {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+      USER_STORE_READ {
+        data : bytes!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      LLM_EMBED_RESULT {
+        embeddings : [[number]]!
+      }
+      LLM_FAILED {
+        code : string
+        message : string!
+      }
+      VECTOR_WRITTEN {
+        path : string!
+        count : number!
+      }
+      VECTOR_WRITE_REFUSED {
+        code : string!
+        detail : string!
+      }
+    }
+  }
+
+  trait VectorMatch -> VectorMatchRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MATCH -> sourcing
+        (set @entity.query ?query)
+        (set @entity.wanted (array/concat [{ key: "", text: ?query }] (array/flatten (array/map ?candidates (fn c (array/map @c.texts (fn t { key: @c.id, text: @t })))))))
+        (emit VM_SOURCES { paths: [] })
+    }
+
+    state sourcing {
+      INIT -> sourcing
+      MATCH -> sourcing
+        (emit MATCH_FAILED { query: ?query, code: "VECTOR_MATCH_BUSY", detail: (str/concat "a match for " @entity.query " is running") })
+      SOURCES_READY -> resolving
+        (emit VM_RESOLVE { wanted: @entity.wanted, snapshots: ?snapshots, snapshotPaths: ?snapshotPaths, userDir: ?userDir, userAnchor: ?userAnchor, providerModel: ?providerModel, providerKind: ?providerKind, embedModel: ?embedModel })
+      SOURCES_REFUSED -> idle
+        (emit MATCH_FAILED { query: @entity.query, code: ?code, detail: ?detail })
+    }
+
+    state resolving {
+      INIT -> resolving
+      MATCH -> resolving
+        (emit MATCH_FAILED { query: ?query, code: "VECTOR_MATCH_BUSY", detail: (str/concat "a match for " @entity.query " is running") })
+      VECTORS_ANSWERED -> comparing
+        (emit VM_COMPARE { query: (object/get (default (array/first ?vectors) {}) vector []), references: (array/drop ?vectors 1) })
+      VECTORS_REFUSED -> idle
+        (emit MATCH_FAILED { query: @entity.query, code: ?code, detail: ?detail })
+    }
+
+    state comparing {
+      INIT -> comparing
+      MATCH -> comparing
+        (emit MATCH_FAILED { query: ?query, code: "VECTOR_MATCH_BUSY", detail: (str/concat "a match for " @entity.query " is running") })
+      SIMILARITY_MATCHED -> idle
+        (emit MATCH_FOUND { query: @entity.query, id: ?key, score: ?score })
+      SIMILARITY_ABSTAINED -> idle
+        (emit MATCH_ABSTAINED { query: @entity.query, reason: ?reason })
+    }
+
+    emits {
+      VM_SOURCES {
+        paths : [{ path : string!, in : string!, rel : string! }]!
+      }
+        @description "Internal: ask std-vector-sources where the vectors live and which provider is configured."
+        @tier "internal"
+      VM_RESOLVE {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @description "Internal: resolve the query (first) and every candidate text through std-vector-resolve."
+        @tier "internal"
+      VM_COMPARE {
+        query : [number]!
+        references : [KeyedVector]!
+      }
+        @description "Internal: gate the query vector against the candidates' vectors."
+        @tier "internal"
+      MATCH_FOUND -> external {
+        query : string!
+        id : string!
+        score : number!
+      }
+        @description "The candidate the query means, with its score."
+        @tier "primary"
+      MATCH_ABSTAINED -> external {
+        query : string!
+        reason : string!
+      }
+        @description "No candidate is confident: below floor, thin margin or no candidates."
+        @tier "primary"
+      MATCH_FAILED -> external {
+        query : string!
+        code : string!
+        detail : string!
+      }
+        @description "The vectors could not be read or embedded, or a match was already running; the code names which."
+        @tier "primary"
+    }
+
+    listens {
+      MATCH -> input {
+        query : string!
+        candidates : [MatchCandidate]!
+      }
+        @description "Find which candidate this text means."
+        @synonyms "semantic lookup, find by meaning, fuzzy open, intent match"
+      MatchSources.SOURCES_READY -> SOURCES_READY
+      MatchSources.SOURCES_REFUSED -> SOURCES_REFUSED
+      VectorResolve.VECTORS_ANSWERED -> VECTORS_ANSWERED
+      VectorResolve.VECTORS_REFUSED -> VECTORS_REFUSED
+      MatchGate.SIMILARITY_MATCHED -> SIMILARITY_MATCHED
+      MatchGate.SIMILARITY_ABSTAINED -> SIMILARITY_ABSTAINED
+      SOURCES_READY {
+        snapshots : [bytes]!
+        snapshotPaths : [string]!
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string!
+        embedModel : string!
+      }
+      SOURCES_REFUSED {
+        code : string!
+        detail : string!
+      }
+      VECTORS_ANSWERED {
+        model : string!
+        vectors : [KeyedVector]!
+      }
+      VECTORS_REFUSED {
+        code : string!
+        detail : string!
+      }
+      SIMILARITY_MATCHED {
+        index : number!
+        score : number!
+        margin : number!
+        key : string!
+      }
+      SIMILARITY_ABSTAINED {
+        reason : string!
+        score : number!
+        margin : number!
+      }
+    }
+  }
+
+  page boot as VectorMatchPage -> VectorMatch, MatchGate, MatchSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+}

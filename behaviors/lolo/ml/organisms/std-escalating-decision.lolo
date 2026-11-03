@@ -143,6 +143,24 @@ orbital EscalatingDecisionOrbital {
       }
       LookupRung.KEY_MISS -> COMPARE
         with { query: (str/concat ?candidate), candidates: (object/get ?request "categories"), request: ?request }
+      SimilarityGateRung.SIMILARITY_MATCHED -> GATE_MATCHED
+      SimilarityGateRung.SIMILARITY_ABSTAINED -> GATE_ABSTAINED
+      GATE_MATCHED {
+        index : int!
+        score : number!
+        margin : number!
+      }
+      GATE_ABSTAINED {
+        reason : string!
+        score : number!
+        margin : number!
+      }
+    }
+  }
+
+  trait SimilarityGateRung = Rung3.traits.SimilarityGate {
+    listens {
+      SimilarityRung.SIM_GATE -> COMPARE_VECTORS
     }
   }
 
@@ -266,5 +284,5 @@ orbital EscalatingDecisionOrbital {
     }
   }
 
-  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, EscEmbedWait, EscEmbedRequest, EscEmbedHttp, ClassifyChatRequest, ClassifyChatHttp, LadderVerdictSink
+  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, SimilarityGateRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, EscEmbedWait, EscEmbedRequest, EscEmbedHttp, ClassifyChatRequest, ClassifyChatHttp, LadderVerdictSink
 }

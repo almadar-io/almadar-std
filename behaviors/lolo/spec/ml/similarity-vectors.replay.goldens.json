@@ -1,0 +1,397 @@
+{
+  "atom": "ml/atoms/std-ml-similarity.lolo",
+  "trait": "SimilarityGate",
+  "note": "COMPARE_VECTORS gates vectors the caller holds: best vector per key, keys ranked against each other, no embed call",
+  "cases": [
+    {
+      "id": "a key with two vectors scores its best and wins with a clear margin",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              0,
+              0
+            ],
+            "references": [
+              {
+                "key": "ci",
+                "vector": [
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "key": "ci",
+                "vector": [
+                  1,
+                  0.1,
+                  0
+                ]
+              },
+              {
+                "key": "aws",
+                "vector": [
+                  0,
+                  0,
+                  1
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMILARITY_MATCHED",
+                "payload": {
+                  "index": 0,
+                  "key": "ci"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIM_GATE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two keys equally close abstain on a thin margin",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              1,
+              0
+            ],
+            "references": [
+              {
+                "key": "ci",
+                "vector": [
+                  1,
+                  0.9,
+                  0
+                ]
+              },
+              {
+                "key": "aws",
+                "vector": [
+                  0.9,
+                  1,
+                  0
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMILARITY_ABSTAINED",
+                "payload": {
+                  "reason": "thin margin"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a best key under the floor abstains below floor",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              0,
+              0
+            ],
+            "references": [
+              {
+                "key": "ci",
+                "vector": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "key": "aws",
+                "vector": [
+                  0,
+                  0,
+                  1
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIMILARITY_ABSTAINED",
+                "payload": {
+                  "reason": "below floor"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no references abstain as an empty candidate list",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              0,
+              0
+            ],
+            "references": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMILARITY_ABSTAINED",
+                "payload": {
+                  "reason": "empty candidate list"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a second comparison runs from resolved without a reset",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              0,
+              0
+            ],
+            "references": []
+          }
+        },
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              0,
+              0,
+              1
+            ],
+            "references": [
+              {
+                "key": "ci",
+                "vector": [
+                  1,
+                  0,
+                  0
+                ]
+              },
+              {
+                "key": "aws",
+                "vector": [
+                  0,
+                  0,
+                  1
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIMILARITY_MATCHED",
+                "payload": {
+                  "index": 1,
+                  "key": "aws"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "vectors of mismatched length are not comparable",
+      "steps": [
+        {
+          "event": "COMPARE_VECTORS",
+          "payload": {
+            "query": [
+              1,
+              0,
+              0
+            ],
+            "references": [
+              {
+                "key": "ci",
+                "vector": [
+                  1,
+                  0
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIMILARITY_ABSTAINED",
+                "payload": {
+                  "reason": "vectors not comparable"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an embedded text comparison is gated by SimilarityGate and answers the candidate index",
+      "steps": [
+        {
+          "trait": "SimilarityRun",
+          "event": "COMPARE",
+          "payload": {
+            "query": "lamp",
+            "candidates": [
+              "fan",
+              "light"
+            ],
+            "request": {
+              "candidate": "lamp",
+              "key": "k",
+              "accepted": [],
+              "categories": [
+                "light",
+                "fan"
+              ]
+            }
+          }
+        },
+        {
+          "trait": "SimilarityRun",
+          "event": "EMBEDDED",
+          "payload": {
+            "embeddings": [
+              [
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0.05
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIM_GATE"
+              },
+              {
+                "event": "SIMILARITY_MATCHED",
+                "payload": {
+                  "index": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an embedded text comparison the gate abstains on echoes the request",
+      "steps": [
+        {
+          "trait": "SimilarityRun",
+          "event": "COMPARE",
+          "payload": {
+            "query": "lamp",
+            "candidates": [
+              "fan",
+              "light"
+            ],
+            "request": {
+              "candidate": "lamp",
+              "key": "k",
+              "accepted": [],
+              "categories": [
+                "light",
+                "fan"
+              ]
+            }
+          }
+        },
+        {
+          "trait": "SimilarityRun",
+          "event": "EMBEDDED",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                1,
+                0
+              ],
+              [
+                1,
+                0.9,
+                0
+              ],
+              [
+                0.9,
+                1,
+                0
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SIM_GATE"
+              },
+              {
+                "event": "SIMILARITY_ABSTAINED",
+                "payload": {
+                  "reason": "thin margin",
+                  "request": {
+                    "candidate": "lamp",
+                    "key": "k",
+                    "accepted": [],
+                    "categories": [
+                      "light",
+                      "fan"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

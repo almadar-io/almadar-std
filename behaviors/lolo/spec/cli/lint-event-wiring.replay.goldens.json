@@ -10151,6 +10151,1381 @@
           }
         }
       ]
+    },
+    {
+      "id": "a renamed route already delivers the emit: a sibling fed elsewhere is not unrouted",
+      "steps": [
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PROPS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "action",
+              "event",
+              "submitEvent",
+              "cancelEvent",
+              "dismissEvent"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "busExcluded": [
+              "INIT"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GOT"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "listens": [
+                        {
+                          "event": "SIG",
+                          "triggers": "GOT",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "A"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Z",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "listens": [
+                        {
+                          "event": "SIG",
+                          "triggers": "SIG",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Z"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OStart",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "Z"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "C": [],
+              "Z": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [
+                "SIG"
+              ],
+              "C": [],
+              "Z": [
+                "SIG"
+              ],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PRODUCED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "C": [],
+              "Z": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [],
+              "C": [],
+              "Z": [],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_TRY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_TRY",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "event-wiring",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "emitter and handler each feed the event to themselves: no route is missing",
+      "steps": [
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PROPS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "action",
+              "event",
+              "submitEvent",
+              "cancelEvent",
+              "dismissEvent"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "busExcluded": [
+              "INIT"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG",
+                          "scope": "internal"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task",
+                                {
+                                  "emit": {
+                                    "success": "SIG"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OStart",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [
+                "SIG"
+              ],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PRODUCED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [],
+              "B": [
+                "SIG"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_TRY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_TRY",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "event-wiring",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a renamed route elsewhere does not excuse a sibling with no feed of its own",
+      "steps": [
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PROPS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "action",
+              "event",
+              "submitEvent",
+              "cancelEvent",
+              "dismissEvent"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "busExcluded": [
+              "INIT"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GOT"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "listens": [
+                        {
+                          "event": "SIG",
+                          "triggers": "GOT",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "A"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OStart",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "C": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [
+                "SIG"
+              ],
+              "C": [],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PRODUCED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "C": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [],
+              "C": [],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_TRY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_TRY",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "event-wiring",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+                      "path": "orbitals.O.traits.A",
+                      "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it — events reach another trait only through `listens`",
+                      "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an operator call's emit route feeds the handler itself, like an effect's",
+      "steps": [
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PROPS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "action",
+              "event",
+              "submitEvent",
+              "cancelEvent",
+              "dismissEvent"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "busExcluded": [
+              "INIT"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG",
+                          "scope": "internal"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/validate",
+                                "@payload.x",
+                                {
+                                  "emit": {
+                                    "success": "SIG",
+                                    "failure": "NOPE"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NOPE"
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OStart",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [
+                "SIG"
+              ],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PRODUCED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [],
+              "B": [
+                "SIG"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_TRY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_TRY",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "event-wiring",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an operator call routing another event does not feed the handler's arm",
+      "steps": [
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PROPS_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "action",
+              "event",
+              "submitEvent",
+              "cancelEvent",
+              "dismissEvent"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "busExcluded": [
+              "INIT"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "SIG",
+                                {}
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "emits": [
+                        {
+                          "event": "SIG",
+                          "scope": "internal"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "program/validate",
+                                "@payload.x",
+                                {
+                                  "emit": {
+                                    "success": "OTHER",
+                                    "failure": "NOPE"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SIG"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OTHER"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "NOPE"
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OStart",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "FIRED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [
+                "SIG"
+              ],
+              "B": []
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "PRODUCED_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "byControl": {
+              "A": [],
+              "B": []
+            },
+            "byEffect": {
+              "A": [],
+              "B": [
+                "SIG"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_TRY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_TRY",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEventWiring",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "event-wiring",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+                      "path": "orbitals.O.traits.A",
+                      "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it — events reach another trait only through `listens`",
+                      "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

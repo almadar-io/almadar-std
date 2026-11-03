@@ -41,6 +41,9 @@ orbital VectorResolveOrbital {
     got : [[number]] = []
     persisted : number = 0
     userPath : string = ""
+    heldModel : string = ""
+    heldTexts : [string] = []
+    heldVectors : [[number]] = []
   }
 
   trait ResolveStore = Store.traits.VectorLookup {
@@ -380,21 +383,29 @@ orbital VectorResolveOrbital {
         (set @entity.providerModel @payload.providerModel)
         (set @entity.providerKind (default @payload.providerKind ""))
         (set @entity.embedModel (default @payload.embedModel ""))
-        (set @entity.texts (array/unique (array/map @payload.wanted (fn wt @wt.text))))
         (set @entity.got [])
         (set @entity.chunkIdx 0)
         (set @entity.persisted 0)
         (set @entity.model (let ((snap (array/reduce @payload.snapshots "" (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (let ((ml (bytes/read-uint @sb 8 2 "le"))) (if (validate/required @ml) (bytes/to-string (bytes/slice @sb 10 (+ 10 @ml))) ""))))))))
           (if (!= @snap "") @snap (if (!= @payload.providerModel "") @payload.providerModel "baai/bge-base-en-v1.5"))))
         (set @entity.userPath (str/concat @entity.userDir "/" (str/replace-pattern @entity.model "[^A-Za-z0-9._-]" "_") ".vec"))
+        ;; a stored vector never changes for its model, so what this run already resolved is answered without a store lookup
+        (set @entity.heldTexts (if (== @entity.heldModel @entity.model) @entity.heldTexts []))
+        (set @entity.heldVectors (if (== @entity.heldModel @entity.model) @entity.heldVectors []))
+        (set @entity.heldModel @entity.model)
+        (set @entity.texts (array/filter (array/unique (array/map @payload.wanted (fn wt @wt.text))) (fn ut (not (array/includes @entity.heldTexts @ut)))))
         (emit USER_STORE_NEEDED { model: @entity.model, path: @entity.userPath })
 
       FINISHED -> idle
-        (emit VECTORS_ANSWERED { model: @entity.model, vectors: (array/map @entity.wanted (fn w (let ((en (array/nth @entity.entries (array/indexOf @entity.texts @w.text)))) { key: @w.key, vector: (if @en.found @en.vector (array/nth @entity.got (array/indexOf @entity.misses @w.text))) }))) })
+        (set @entity.heldVectors (array/concat @entity.heldVectors (array/map @entity.texts (fn ft (let ((en (array/nth @entity.entries (array/indexOf @entity.texts @ft)))) (if @en.found @en.vector (array/nth @entity.got (array/indexOf @entity.misses @ft))))))))
+        (set @entity.heldTexts (array/concat @entity.heldTexts @entity.texts))
+        (emit VECTORS_ANSWERED { model: @entity.model, vectors: (array/map @entity.wanted (fn w { key: @w.key, vector: (default (array/nth @entity.heldVectors (array/indexOf @entity.heldTexts @w.text)) []) })) })
     }
 
     state reading {
-      USER_STORE_READ -> looking
+      USER_STORE_READ -> idle when (== (array/len @entity.texts) 0)
+        (emit FINISHED { })
+      USER_STORE_READ -> looking when (> (array/len @entity.texts) 0)
         (emit VECTOR_LOOKUP_MANY { stores: (array/append @entity.snapshots @payload.data), origins: (array/append (array/map (array/range 0 (array/len @entity.snapshots)) (fn si (if (< @si (array/len @entity.snapshotPaths)) (default (array/nth @entity.snapshotPaths @si) (str/concat "snapshot " @si)) (str/concat "snapshot " @si)))) @entity.userPath), model: @entity.model, texts: @entity.texts })
     }
 

@@ -29,7 +29,7 @@ orbital VectorSourcesOrbital {
     embedModel : string = ""
   }
 
-  trait VectorSources -> SourcesRun [optimistic] {
+  trait VectorSources -> SourcesRun [server] {
     initial: idle
 
     state idle {
@@ -43,9 +43,9 @@ orbital VectorSourcesOrbital {
         (os/getenv "ALMADAR_VECTORS_DIR" { key: "ALMADAR_VECTORS_DIR" emit: { success: SRC_ENV, failure: SRC_FAILED } })
         (os/getenv "HOME" { key: "HOME" emit: { success: SRC_ENV, failure: SRC_FAILED } })
         (os/getenv "EMBEDDING_PROVIDER" { key: "EMBEDDING_PROVIDER" emit: { success: SRC_ENV, failure: SRC_FAILED } })
-        (os/getenv "EMBEDDING_API_KEY" { key: "EMBEDDING_API_KEY" emit: { success: SRC_ENV, failure: SRC_FAILED } })
-        (os/getenv "OPENAI_API_KEY" { key: "OPENAI_API_KEY" emit: { success: SRC_ENV, failure: SRC_FAILED } })
-        (os/getenv "OPEN_ROUTER_API_KEY" { key: "OPEN_ROUTER_API_KEY" emit: { success: SRC_ENV, failure: SRC_FAILED } })
+        (os/getenv "EMBEDDING_API_KEY" { key: "EMBEDDING_API_KEY" emit: { success: SRC_SECRET, failure: SRC_FAILED } })
+        (os/getenv "OPENAI_API_KEY" { key: "OPENAI_API_KEY" emit: { success: SRC_SECRET, failure: SRC_FAILED } })
+        (os/getenv "OPEN_ROUTER_API_KEY" { key: "OPEN_ROUTER_API_KEY" emit: { success: SRC_SECRET, failure: SRC_FAILED } })
         (os/getenv "EMBEDDING_MODEL" { key: "EMBEDDING_MODEL" emit: { success: SRC_ENV, failure: SRC_FAILED } })
         (os/getenv "LMSTUDIO_EMBEDDING_MODEL" { key: "LMSTUDIO_EMBEDDING_MODEL" emit: { success: SRC_ENV, failure: SRC_FAILED } })
       USER_STORE_NEEDED -> idle when (!= @entity.envDir "")
@@ -62,6 +62,9 @@ orbital VectorSourcesOrbital {
 
     state envs {
       INIT -> envs
+      ;; a key is held only as set or unset: this row reaches the viewer's frame, and the embed asks read the key as a credential
+      SRC_SECRET -> envs
+        (emit SRC_ENV { key: (default @payload.key ""), value: (if (!= (default @payload.value "") "") "set" "") })
       SRC_FAILED -> idle
         (emit SOURCES_REFUSED { code: "ORB_VECTOR_ENV", detail: (str/concat "cannot read the environment: " @payload.error) })
       SRC_ENV -> envs when (< @entity.idx 7)
@@ -111,6 +114,10 @@ orbital VectorSourcesOrbital {
     }
 
     emits {
+      SRC_ENV -> internal {
+        key : string
+        value : string
+      }
       SRC_NEXT -> internal { }
       SRC_PLACE -> internal { }
       SOURCES_READY -> external {
@@ -144,6 +151,10 @@ orbital VectorSourcesOrbital {
         path : string!
       }
       SRC_ENV {
+        key : string
+        value : string
+      }
+      SRC_SECRET {
         key : string
         value : string
       }
