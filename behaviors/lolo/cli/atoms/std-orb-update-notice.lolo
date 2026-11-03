@@ -1,21 +1,25 @@
 app std-orb-update-notice [
   version: "1.0.0",
   inbound: ["cli-notice"],
-  env: ["ORB_NO_UPDATE_CHECK", "CI"],
-  fs: { "~/.orb/**": [read, write, create], "~/.orb": [create] },
+  env: ["ORB_NO_UPDATE_CHECK", "CI", "PATH", "HOME"],
+  exec: ["orb"],
+  fs: { "~/.orb/**": [read, write, create], "~/.orb": [create], cwd: "orb.lock.json": [read] },
   net: { "registry.npmjs.org:443": [tcp], "*.npmjs.org:443": [tcp] },
-  description: "std-orb-update-notice — the daily updates-available notice (spec/cli/orb-update-notice.lolo; golden: orbital-cli update_notice.rs). The call's first argv word `record` (after orb update) stamps ~/.orb/.update-check.json as checked now with nothing available and prints nothing. Any other call stays silent when ORB_NO_UPDATE_CHECK or CI is set or stderr is not a terminal; otherwise it reads the cache { checkedAt (seconds), available [[name, installed, newest]] }: a cache under a day old answers its list, an older, absent or garbled one rescans. The scan reads each @almadar/ dependency of ~/.orb/package.json with its range and its installed version (~/.orb/node_modules/<name>/package.json), asks std-npm-lookup for the versions, walks the stable ones (no prerelease) from the newest down until std-semver says one satisfies the range, and keeps the package when that version compares above the installed one. A package that is not installed, whose lookup is refused, whose range std-semver refuses, or that no stable version satisfies is skipped. The cache is written (a failed write is ignored) and the answer carries the one stderr line `orb: updates available (<name> <from> → <to>, …); run `orb update --global`` or nothing."
+  description: "std-orb-update-notice — the daily updates-available notice and the urgent auto-update (spec/cli/orb-update-notice.lolo; golden: orbital-cli update_notice.rs). The call's first argv word `record` (after orb update) stamps ~/.orb/.update-check.json as checked now with nothing available and no urgent rows and prints nothing. Any other call is quiet when ORB_NO_UPDATE_CHECK or CI is set, and silent when stderr is not a terminal; a quiet call on a terminal only reports, loudly on stderr, each failed urgent row the cache holds, and never scans or updates. Otherwise it reads the cache { checkedAt (seconds), available [[name, installed, newest, store]] (a three-word row is the global store), urgent [[store, status, text]] (status applied or failed) }: a cache under a day old with no failed urgent row answers its list, an older, absent or garbled one rescans, and a cache with a failed urgent row acts at once on those stores without waiting for the day. The scan covers the global store (each @almadar/ dependency of ~/.orb/package.json with its range and its installed version in ~/.orb/node_modules/<name>/package.json) and the working directory's orb-installed packages (each name and version pinned in ./orb.lock.json, any version above the pinned one counts): it asks std-npm-lookup for the versions, walks the stable ones (no prerelease) from the newest down until std-semver says one satisfies the range, and keeps the package when that version compares above the installed one; a package that is not installed, whose lookup is refused, whose range std-semver refuses, or that no stable version satisfies is skipped. The registry's per-version orbRelease block (severity, advisory, fixes) is read by the update itself, not here: after the scan the notice runs `orb update --urgent` (project store, when the lockfile pins packages) and `orb update --urgent --global` through std-cli with ORB_NO_UPDATE_CHECK set so the child never recurses, and records what each printed. Every stdout line of the child is an applied urgent update (recorded status applied and printed as `orb: applied urgent <line> (<store> store)`); a non-zero exit, or a child that could not run, records status failed with the child's stderr and prints `orb: URGENT UPDATE FAILED for the <store> packages: <why>` and that the vulnerable version is still installed, on stderr, so the installed version is kept and nothing is hidden. Normal updates keep the one stderr line `orb: updates available (<name> <from> → <to>, …); run `orb update --global`` (a project package says `in this project` and `orb update`). The cache is written (a failed write is ignored) with the urgent rows, and the answer carries the stderr lines or nothing."
 ]
 uses Spec from "almadar-std/orb-update-notice"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type NoticeCache = { checkedAt : number!, available : [[string]]! }
+type NoticeCache = { checkedAt : number!, available : [[string]]!, urgent : [[string]]? }
+type NoticeLockEntry = { name : string!, version : string! }
+type NoticeLock = { packages : [NoticeLockEntry]! }
 type NoticeManifest = { dependencies : Map string string! }
 type NoticeInstalled = { version : string! }
-type NoticeDep = { name : string!, range : string! }
+type NoticeDep = { name : string!, range : string!, store : string?, installed : string? }
 
 orbital OrbUpdateNoticeOrbital {
   uses Npm from "std/behaviors/std-npm-lookup"
   uses Semver from "std/behaviors/std-semver"
+  uses Cli from "std/behaviors/std-cli"
 
   entity UpdateNoticeRun [runtime] {
     id : string!
@@ -29,6 +33,14 @@ orbital OrbUpdateNoticeOrbital {
     cands : [string] = []
     cc : number = 0
     found : [[string]] = []
+    quiet : boolean = false
+    phase : string = "global"
+    keepStamp : boolean = false
+    hasProject : boolean = false
+    cachedUrgent : [[string]] = []
+    urgentRows : [[string]] = []
+    stores : [string] = []
+    sc : number = 0
   }
 
   trait Registry = Npm.traits.NpmLookup {
@@ -69,6 +81,17 @@ orbital OrbUpdateNoticeOrbital {
     }
   }
 
+  trait OrbCli = Cli.traits.CliRunner {
+    listens {
+      OrbUpdateNotice.UN_CLI_RUN -> CLI_RUN
+    }
+    config {
+      commands: ["orb"]
+      passEnv: ["PATH", "HOME"]
+      env: { ORB_NO_UPDATE_CHECK: "1" }
+    }
+  }
+
   trait OrbUpdateNotice -> UpdateNoticeRun [optimistic] {
     initial: ready
 
@@ -92,12 +115,14 @@ orbital OrbUpdateNoticeOrbital {
       INIT -> gating
       UN_GATE -> gating
         (os/getenv "ORB_NO_UPDATE_CHECK" { key: "noupd" emit: { success: UN_ENV_NOUPD, failure: UN_ENV_FAILED } })
-      UN_ENV_NOUPD -> ready when (!= @payload.value null)
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_ENV_NOUPD -> gating when (!= @payload.value null)
+        (set @entity.quiet true)
+        (os/getenv "CI" { key: "ci" emit: { success: UN_ENV_CI, failure: UN_ENV_FAILED } })
       UN_ENV_NOUPD -> gating when (= @payload.value null)
         (os/getenv "CI" { key: "ci" emit: { success: UN_ENV_CI, failure: UN_ENV_FAILED } })
-      UN_ENV_CI -> ready when (!= @payload.value null)
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
+      UN_ENV_CI -> gating when (!= @payload.value null)
+        (set @entity.quiet true)
+        (os/isatty 2 { key: "tty" emit: { success: UN_TTY, failure: UN_ENV_FAILED } })
       UN_ENV_CI -> gating when (= @payload.value null)
         (os/isatty 2 { key: "tty" emit: { success: UN_TTY, failure: UN_ENV_FAILED } })
       UN_ENV_FAILED -> ready
@@ -113,37 +138,74 @@ orbital OrbUpdateNoticeOrbital {
       UN_CACHE_READ -> reading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0))
         (set @entity.checkedAt (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt"))
         (set @entity.cached (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "available"))
+        (set @entity.cachedUrgent (default (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "urgent") []))
         (emit UN_DUE { })
       UN_CACHE_READ -> reading when (not (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0)))
         (set @entity.checkedAt 0)
         (set @entity.cached [])
+        (set @entity.cachedUrgent [])
         (emit UN_DUE { })
       UN_CACHE_ABSENT -> reading
         (set @entity.checkedAt 0)
         (set @entity.cached [])
+        (set @entity.cachedUrgent [])
         (emit UN_DUE { })
-      UN_DUE -> ready when (< (- @entity.nowSec @entity.checkedAt) 86400)
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (let ((lines (array/flatten (array/map @entity.cached (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (if (= (array/len @lines) 0) "" (str/concat "orb: updates available (" (str/join @lines ", ") "); run `orb update --global`"))) })
-      UN_DUE -> scanning when (>= (- @entity.nowSec @entity.checkedAt) 86400)
+      UN_DUE -> ready when @entity.quiet
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (str/join (array/map (array/filter @entity.cachedUrgent (fn r (= (default (array/nth @r 1) "") "failed"))) (fn r (str/concat "orb: URGENT UPDATE FAILED for the " (default (array/nth @r 0) "") " packages: " (default (array/nth @r 2) "") "\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent" (if (= (default (array/nth @r 0) "") "global") " --global" "") "`"))) "\n") })
+      UN_DUE -> ready when (and (not @entity.quiet) (< (- @entity.nowSec @entity.checkedAt) 86400) (= (array/len (array/filter @entity.cachedUrgent (fn r (= (default (array/nth @r 1) "") "failed")))) 0))
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (let ((g (array/flatten (array/map (array/filter @entity.cached (fn t (= (default (array/nth @t 3) "global") "global"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] [])))))) (q (array/flatten (array/map (array/filter @entity.cached (fn t (= (default (array/nth @t 3) "global") "project"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (str/join (array/filter [(if (= (array/len @g) 0) "" (str/concat "orb: updates available (" (str/join @g ", ") "); run `orb update --global`")), (if (= (array/len @q) 0) "" (str/concat "orb: updates available in this project (" (str/join @q ", ") "); run `orb update`"))] (fn x (!= @x ""))) "\n")) })
+      UN_DUE -> urgenting when (and (not @entity.quiet) (< (- @entity.nowSec @entity.checkedAt) 86400) (not (= (array/len (array/filter @entity.cachedUrgent (fn r (= (default (array/nth @r 1) "") "failed")))) 0)))
+        (set @entity.found @entity.cached)
+        (set @entity.keepStamp true)
+        (set @entity.stores (array/unique (array/map (array/filter @entity.cachedUrgent (fn r (= (default (array/nth @r 1) "") "failed"))) (fn r (default (array/nth @r 0) "")))))
+        (set @entity.urgentRows [])
+        (set @entity.sc 0)
+        (emit UN_URGENT_NEXT { })
+      UN_DUE -> scanning when (and (not @entity.quiet) (>= (- @entity.nowSec @entity.checkedAt) 86400))
+        (set @entity.phase "global")
         (os/read-file "~/.orb/package.json" { key: "manifest" emit: { success: UN_MANIFEST_READ, failure: UN_MANIFEST_ABSENT } })
     }
 
     state scanning {
       INIT -> scanning
       UN_MANIFEST_READ -> scanning when (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) null)
-        (set @entity.deps (array/map (array/filter (object/entries (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) "dependencies" {})) (fn t (str/startsWith (array/nth @t 0) (quote "@almadar/")))) (fn t { name: (array/nth @t 0), range: (array/nth @t 1) })))
+        (set @entity.deps (array/map (array/filter (object/entries (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) "dependencies" {})) (fn t (str/startsWith (array/nth @t 0) (quote "@almadar/")))) (fn t { name: (array/nth @t 0), range: (array/nth @t 1), store: "global", installed: "" })))
         (set @entity.cursor 0)
         (emit UN_NEXT { })
-      UN_MANIFEST_READ -> writing when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) null)
-        (emit UN_WRITE { })
-      UN_MANIFEST_ABSENT -> writing
-        (emit UN_WRITE { })
-      UN_NEXT -> writing when (>= @entity.cursor (array/len @entity.deps))
-        (emit UN_WRITE { })
-      UN_NEXT -> scanning when (and (< @entity.cursor (array/len @entity.deps)) (validate/required (array/nth @entity.deps @entity.cursor)))
+      UN_MANIFEST_READ -> scanning when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) null)
+        (emit UN_END_PHASE { })
+      UN_MANIFEST_ABSENT -> scanning
+        (emit UN_END_PHASE { })
+      UN_NEXT -> scanning when (>= @entity.cursor (array/len @entity.deps))
+        (emit UN_END_PHASE { })
+      UN_END_PHASE -> scanning when (= @entity.phase "global")
+        (set @entity.phase "project")
+        (set @entity.deps [])
+        (set @entity.cursor 0)
+        (os/read-file { anchor: "cwd" path: "orb.lock.json" } { key: "lock" emit: { success: UN_LOCK_READ, failure: UN_LOCK_ABSENT } })
+      UN_LOCK_READ -> scanning when (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeLock) null)
+        (set @entity.deps (array/map (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeLock) "packages") (fn e { name: (object/get @e "name"), range: ">=0.0.0", store: "project", installed: (object/get @e "version") })))
+        (set @entity.hasProject (> (array/len (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeLock) "packages")) 0))
+        (set @entity.cursor 0)
+        (emit UN_NEXT { })
+      UN_LOCK_READ -> scanning when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeLock) null)
+        (set @entity.deps [])
+        (emit UN_NEXT { })
+      UN_LOCK_ABSENT -> scanning
+        (set @entity.deps [])
+        (emit UN_NEXT { })
+      UN_END_PHASE -> urgenting when (= @entity.phase "project")
+        (set @entity.stores (if @entity.hasProject ["project", "global"] ["global"]))
+        (set @entity.urgentRows [])
+        (set @entity.sc 0)
+        (emit UN_URGENT_NEXT { })
+      UN_NEXT -> looking when (and (< @entity.cursor (array/len @entity.deps)) (validate/required (array/nth @entity.deps @entity.cursor)) (!= (default (object/get (array/nth @entity.deps @entity.cursor) "installed") "") ""))
+        (set @entity.installed (default (object/get (array/nth @entity.deps @entity.cursor) "installed") ""))
+        (emit UN_ASK { requestId: (str/concat @entity.cursor), name: (object/get (array/nth @entity.deps @entity.cursor) "name"), tag: "latest" })
+      UN_NEXT -> scanning when (and (< @entity.cursor (array/len @entity.deps)) (validate/required (array/nth @entity.deps @entity.cursor)) (= (default (object/get (array/nth @entity.deps @entity.cursor) "installed") "") ""))
         (os/read-file (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.deps @entity.cursor) "name") "/package.json") { key: "installed" emit: { success: UN_PKG_READ, failure: UN_PKG_ABSENT } })
-      UN_NEXT -> writing when (and (< @entity.cursor (array/len @entity.deps)) (not (validate/required (array/nth @entity.deps @entity.cursor))))
-        (emit UN_WRITE { })
+      UN_NEXT -> scanning when (and (< @entity.cursor (array/len @entity.deps)) (not (validate/required (array/nth @entity.deps @entity.cursor))))
+        (emit UN_END_PHASE { })
       UN_PKG_ABSENT -> scanning
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
@@ -190,7 +252,7 @@ orbital OrbUpdateNoticeOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
       UN_COMPARED -> scanning when (and (= @payload.value 1) (and (validate/required (array/nth @entity.deps @entity.cursor)) (validate/required (array/nth @entity.cands @entity.cc))))
-        (set @entity.found (array/append @entity.found [(object/get (array/nth @entity.deps @entity.cursor) "name"), @entity.installed, (array/nth @entity.cands @entity.cc)]))
+        (set @entity.found (array/append @entity.found [(object/get (array/nth @entity.deps @entity.cursor) "name"), @entity.installed, (array/nth @entity.cands @entity.cc), (default (object/get (array/nth @entity.deps @entity.cursor) "store") "global")]))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
       UN_COMPARED -> scanning when (!= @payload.value 1)
@@ -198,16 +260,32 @@ orbital OrbUpdateNoticeOrbital {
         (emit UN_NEXT { })
     }
 
+    state urgenting {
+      INIT -> urgenting
+      UN_URGENT_NEXT -> writing when (>= @entity.sc (array/len @entity.stores))
+        (emit UN_WRITE { })
+      UN_URGENT_NEXT -> urgenting when (and (< @entity.sc (array/len @entity.stores)) (= (default (array/nth @entity.stores @entity.sc) "") "global"))
+        (emit UN_CLI_RUN { stage: "global", argv: ["update", "--urgent", "--global"] })
+      UN_URGENT_NEXT -> urgenting when (and (< @entity.sc (array/len @entity.stores)) (!= (default (array/nth @entity.stores @entity.sc) "") "global"))
+        (emit UN_CLI_RUN { stage: (default (array/nth @entity.stores @entity.sc) ""), argv: ["update", "--urgent"] })
+      UN_CLI_DONE -> urgenting
+        (set @entity.urgentRows (array/concat @entity.urgentRows (let ((st @payload.stage)) (array/concat (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= (str/trim @l) ""))) (fn l [@st, "applied", (str/trim @l)])) (if (= @payload.exitCode 0) [] [[@st, "failed", (if (= (str/trim @payload.stderr) "") (str/concat "orb exited with code " @payload.exitCode) (str/trim @payload.stderr))]])))))
+        (set @entity.sc (+ @entity.sc 1))
+        (emit UN_URGENT_NEXT { })
+      UN_CLI_FAILED -> urgenting
+        (set @entity.urgentRows (array/append @entity.urgentRows [@payload.stage, "failed", (str/concat "orb could not be run: " @payload.error " (" @payload.code ")")]))
+        (set @entity.sc (+ @entity.sc 1))
+        (emit UN_URGENT_NEXT { })
+    }
+
     state writing {
       INIT -> writing
       UN_WRITE -> writing
         (os/mkdir "~/.orb" true { key: "dir" emit: { success: UN_DIR, failure: UN_DIR } })
       UN_DIR -> writing
-        (os/write-file "~/.orb/.update-check.json" (bytes/from-string (json/stringify { checkedAt: @entity.nowSec, available: @entity.found })) { key: "cache" emit: { success: UN_WRITTEN, failure: UN_WRITTEN } })
-      UN_WRITTEN -> ready when (or (= @entity.mode "record") (= (array/len @entity.found) 0))
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
-      UN_WRITTEN -> ready when (and (!= @entity.mode "record") (> (array/len @entity.found) 0))
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (let ((lines (array/flatten (array/map @entity.found (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (str/concat "orb: updates available (" (str/join @lines ", ") "); run `orb update --global`")) })
+        (os/write-file "~/.orb/.update-check.json" (bytes/from-string (json/stringify { checkedAt: (if @entity.keepStamp @entity.checkedAt @entity.nowSec), available: @entity.found, urgent: @entity.urgentRows })) { key: "cache" emit: { success: UN_WRITTEN, failure: UN_WRITTEN } })
+      UN_WRITTEN -> ready
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (if (= @entity.mode "record") "" (str/join (array/filter [(let ((g (array/flatten (array/map (array/filter @entity.found (fn t (= (default (array/nth @t 3) "global") "global"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] [])))))) (q (array/flatten (array/map (array/filter @entity.found (fn t (= (default (array/nth @t 3) "global") "project"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (str/join (array/filter [(if (= (array/len @g) 0) "" (str/concat "orb: updates available (" (str/join @g ", ") "); run `orb update --global`")), (if (= (array/len @q) 0) "" (str/concat "orb: updates available in this project (" (str/join @q ", ") "); run `orb update`"))] (fn x (!= @x ""))) "\n")), (str/join (array/concat (array/map (array/filter @entity.urgentRows (fn r (= (default (array/nth @r 1) "") "applied"))) (fn r (str/concat "orb: applied urgent " (default (array/nth @r 2) "") " (" (default (array/nth @r 0) "") " store)"))) (array/map (array/filter @entity.urgentRows (fn r (= (default (array/nth @r 1) "") "failed"))) (fn r (str/concat "orb: URGENT UPDATE FAILED for the " (default (array/nth @r 0) "") " packages: " (default (array/nth @r 2) "") "\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent" (if (= (default (array/nth @r 0) "") "global") " --global" "") "`")))) "\n")] (fn x (!= @x ""))) "\n")) })
     }
 
     emits {
@@ -274,6 +352,21 @@ orbital OrbUpdateNoticeOrbital {
       UN_WRITTEN { }
         @description "Internal: the cache write finished or failed (ignored)."
         @tier "internal"
+      UN_END_PHASE { }
+        @description "Internal: the current store's packages are all judged; go to the next store or to the urgent updates."
+        @tier "internal"
+      UN_LOCK_READ { data : bytes! }
+        @description "Internal: the working directory's orb.lock.json."
+        @tier "internal"
+      UN_LOCK_ABSENT { error : string  kind : string }
+        @description "Internal: no readable orb.lock.json in the working directory."
+        @tier "internal"
+      UN_URGENT_NEXT { }
+        @description "Internal: run the urgent update of the next store."
+        @tier "internal"
+      UN_CLI_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run orb update --urgent for one store through std-cli."
+        @tier "internal"
     }
 
     config {
@@ -289,6 +382,10 @@ orbital OrbUpdateNoticeOrbital {
       }
         @description "Run the daily updates-available notice, or `record` after orb update."
         @synonyms "update check, new version available, outdated packages"
+      UN_CLI_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for an orb update --urgent run."
+      UN_CLI_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED: orb could not be run."
       UN_LOOKED { requestId : string!  name : string!  versions : [string]!  distTags : Map string string  version : string!  tarballs : Map string string }
         @description "Internal: the package's versions."
       UN_LOOK_REFUSED { requestId : string!  name : string  code : string!  status : number!  error : string! }
@@ -304,8 +401,10 @@ orbital OrbUpdateNoticeOrbital {
       Versions.SEMVER_SATISFIED -> UN_SATISFIED
       Versions.SEMVER_COMPARED -> UN_COMPARED
       Versions.SEMVER_REFUSED -> UN_SEMVER_REFUSED
+      OrbCli.CLI_DONE -> UN_CLI_DONE
+      OrbCli.CLI_FAILED -> UN_CLI_FAILED
     }
   }
 
-  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, RegistryHttp, RegistryTimeout, Versions
+  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, RegistryHttp, RegistryTimeout, Versions, OrbCli
 }

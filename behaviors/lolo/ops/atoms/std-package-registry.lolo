@@ -5,7 +5,7 @@ app std-package-registry [
 type RegistryHeader = { name : string!, value : string! }
 type RegistryRequest = { requestId : number!, method : string!, path : string!, authorization : string!, body : bytes! }
 type RegistryClaim = { name : string!, value : string! }
-type RegistryOrb = { compiler : string? }
+type RegistryOrb = { language : string? }
 type RegistryManifest = { orb : RegistryOrb? }
 type RegistryGunzip = { ok : boolean!, data : bytes, crc : number, code : string }
 type RegistryTarEntry = { path : string!, data : bytes!, executable : boolean! }
@@ -32,7 +32,7 @@ orbital PackageRegistryOrbital {
     integrity : string!
     tarball : bytes!
     yanked : boolean = false
-    compiler : string @description "The orb.compiler range of the version's package.json, recorded at publish; empty when the tarball declares none." = ""
+    language : string @description "The orb.language range of the version's package.json, recorded at publish; empty when the tarball declares none." = ""
     publishedAt : instant!
     @read none "served only through the registry routes"
   }
@@ -68,11 +68,11 @@ orbital PackageRegistryOrbital {
         @tier "policy"
       maxEntries : number = 100000
         @label "Archive entry cap"
-        @description "Most files a publish tarball may hold while its package.json is read for the orb.compiler range; a tarball with more, or one the tar reader refuses, records no range."
+        @description "Most files a publish tarball may hold while its package.json is read for the orb.language range; a tarball with more, or one the tar reader refuses, records no range."
         @tier "policy"
       maxUnpackedBytes : number = 536870912
         @label "Unpacked size cap"
-        @description "Most bytes a publish tarball may inflate to while its package.json is read for the orb.compiler range; a tarball that inflates past it records no range."
+        @description "Most bytes a publish tarball may inflate to while its package.json is read for the orb.language range; a tarball that inflates past it records no range."
         @tier "policy"
     }
 
@@ -165,7 +165,7 @@ orbital PackageRegistryOrbital {
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 409, code: "VERSION_EXISTS", error: "Version already published" })
         (emit REGISTRY_DONE {})
       REGISTRY_FOUND -> serving when (= @entity.current.op "fetch")
-        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @payload.data.integrity, yanked: @payload.data.yanked, compiler: @payload.data.compiler })) })
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @payload.data.integrity, yanked: @payload.data.yanked, language: @payload.data.language })) })
         (emit REGISTRY_DONE {})
       REGISTRY_FOUND -> serving when (and (= @entity.current.op "tarball") @payload.data.yanked)
         (emit RESPOND { requestId: @entity.current.requestId, status: 410, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version yanked", code: "YANKED" })) })
@@ -187,10 +187,10 @@ orbital PackageRegistryOrbital {
         (set @entity.tarRead (tar/entries (default @entity.gz.data (bytes/from-string "")) @config.maxEntries { result: true }))
         (let ((e (array/find (default @entity.tarRead.entries []) (fn x (= @x.path "package/package.json")))))
           (let ((m (if (= @e null) null (json/parse (default (bytes/to-string @e.data) "") RegistryManifest))))
-            (emit REG_COMPILER { compiler: (if (= @m null) "" (if (= (object/get @m "orb") null) "" (default (object/get (object/get @m "orb") "compiler") ""))) })))
-      REG_COMPILER -> serving
+            (emit REG_LANGUAGE { language: (if (= @m null) "" (if (= (object/get @m "orb") null) "" (default (object/get (object/get @m "orb") "language") ""))) })))
+      REG_LANGUAGE -> serving
         (set @entity.tarRead null)
-        (persist create PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), name: @entity.current.name, version: @entity.current.version, integrity: @entity.current.integrity, tarball: @entity.tarball, yanked: false, compiler: @payload.compiler, publishedAt: (time/now) } { emit: { success: REGISTRY_PUBLISHED, failure: REGISTRY_STORE_REFUSED } })
+        (persist create PackageVersion { id: (str/concat @entity.current.name (str/slice "a@b" 1 2) @entity.current.version), name: @entity.current.name, version: @entity.current.version, integrity: @entity.current.integrity, tarball: @entity.tarball, yanked: false, language: @payload.language, publishedAt: (time/now) } { emit: { success: REGISTRY_PUBLISHED, failure: REGISTRY_STORE_REFUSED } })
       REGISTRY_PUBLISHED -> serving
         (set @entity.tarball (bytes/from-string ""))
         (emit RESPOND { requestId: @entity.current.requestId, status: 201, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, version: @entity.current.version, url: (str/concat @config.baseUrl @config.apiPrefix "/packages/" @entity.current.name "/" @entity.current.version "/tarball"), integrity: @entity.current.integrity })) })
@@ -220,7 +220,7 @@ orbital PackageRegistryOrbital {
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
         (emit REGISTRY_DONE {})
       REGISTRY_LISTED -> serving when (> (array/len @payload.data) 0)
-        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, versions: (array/map (array/sort @payload.data "publishedAt" "desc") (fn r { version: @r.version, integrity: @r.integrity, yanked: @r.yanked, compiler: @r.compiler, publishedAt: @r.publishedAt })) })) })
+        (emit RESPOND { requestId: @entity.current.requestId, status: 200, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { name: @entity.current.name, versions: (array/map (array/sort @payload.data "publishedAt" "desc") (fn r { version: @r.version, integrity: @r.integrity, yanked: @r.yanked, language: @r.language, publishedAt: @r.publishedAt })) })) })
         (emit REGISTRY_DONE {})
     }
 
@@ -269,10 +269,10 @@ orbital PackageRegistryOrbital {
       }
         @description "A package version was published; integrity is sha256 over its tarball bytes, hex."
         @tier "primary"
-      REG_COMPILER -> internal {
-        compiler : string!
+      REG_LANGUAGE -> internal {
+        language : string!
       }
-        @description "Internal: the orb.compiler range read from the tarball's package.json; empty when it declares none."
+        @description "Internal: the orb.language range read from the tarball's package.json; empty when it declares none."
         @tier "secondary"
       REGISTRY_ENTER -> internal {
         requestId : number!

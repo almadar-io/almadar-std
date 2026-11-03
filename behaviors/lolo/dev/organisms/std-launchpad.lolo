@@ -5,8 +5,8 @@ app std-launchpad [
   exec: ["orb", "aws", "bq", "gcloud", "gh", "ssh"],
   env: ["PATH", "HOME"],
   sys: [memory, cpu],
-  fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
-  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status (with std-ci-run-logs reading the failing logs its rows open), std-aws-board, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. The frame is std-app-layout in its drawer mode (the navigation behind a menu button): its header carries the theme picker (std-theme-picker over the app's themes list), and its drawer lists Home and every program of the boards knob under its section's heading, the one in front highlighted and each open app with its own Close button. Picking a program in the drawer opens it (or brings its view to the front) and shows the board's own view in the stage, with `@trait.X` embedding; picking a sidebar item switches the view and every open board keeps its state; closing an app removes its sidebar item (its trait keeps its state, as any trait does when its view is not shown). Every board is drawn by std-status-board and reads the first time its app is brought to the front (the stage sends APP_SHOWN, which each board view takes as BOARD_OPEN), so opening the launchpad itself reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home is the page header and two cards: the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open app, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its app) and the machine's memory, CPU, load and uptime (std-system-stats), the orb's own version, uptime and kernel counters (std-orb-stats). The launchpad has no sign-in and composes no boot gate. Opening a CI row shows its jobs and the failing job's log inline. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is PATH and HOME for the CLIs; egress is the Google OAuth token endpoint the Google boards connect through (std-gcloud-token); net lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. Serve it with `orb launchpad`.",
+  fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create], "~/.orb/.update-check.json": [read] },
+  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status (with std-ci-run-logs reading the failing logs its rows open), std-aws-board, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. The frame is std-app-layout in its drawer mode (the navigation behind a menu button): its header carries the theme picker (std-theme-picker over the app's themes list), and its drawer lists Home and every program of the boards knob under its section's heading, the one in front highlighted and each open app with its own Close button. Picking a program in the drawer opens it (or brings its view to the front) and shows the board's own view in the stage, with `@trait.X` embedding; picking a sidebar item switches the view and every open board keeps its state; closing an app removes its sidebar item (its trait keeps its state, as any trait does when its view is not shown). Every board is drawn by std-status-board and reads the first time its app is brought to the front (the stage sends APP_SHOWN, which each board view takes as BOARD_OPEN), so opening the launchpad itself reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home is the page header and two cards: the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open app, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its app) and the machine's memory, CPU, load and uptime (std-system-stats), the orb's own version, uptime and kernel counters (std-orb-stats). Home opens with the update banner (std-launchpad-updates: the update record orb keeps in ~/.orb/.update-check.json, read when the launchpad opens and each time Home is shown; Update and Retry run `orb update`). The launchpad has no sign-in and composes no boot gate. Opening a CI row shows its jobs and the failing job's log inline. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is PATH and HOME for the CLIs; egress is the Google OAuth token endpoint the Google boards connect through (std-gcloud-token); net lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. Serve it with `orb launchpad`.",
   egress: ["https://oauth2.googleapis.com"],
   net: { "api.github.com:443": [tcp], "api.deepseek.com:443": [tcp], "api.moonshot.ai:443": [tcp], "127.0.0.1:3000": [tcp], "openrouter.ai:443": [tcp], "firebaseapphosting.googleapis.com:443": [tcp], "monitoring.googleapis.com:443": [tcp] },
 ]
@@ -18,6 +18,7 @@ uses Recents from "std/behaviors/std-launchpad-recents"
 uses Orb from "std/behaviors/std-launchpad-orb"
 uses Stats from "std/behaviors/std-system-stats"
 uses OrbStats from "std/behaviors/std-orb-stats"
+uses Updates from "std/behaviors/std-launchpad-updates"
 uses Ci from "std/behaviors/std-ci-status"
 uses Aws from "std/behaviors/std-aws-board"
 uses Ah from "std/behaviors/std-app-hosting-board"
@@ -332,6 +333,18 @@ orbital Launchpad {
   }
   trait OrbVersionRunner = OrbStats.traits.OrbVersionRunner {}
 
+  trait UpdatesStore = Updates.traits.UpdatesStore {}
+  trait UpdatesCli = Updates.traits.UpdatesCli {}
+  trait UpdatesBanner = Updates.traits.UpdatesBanner {
+    listens {
+      UpdatesStore.UPDATES_LOADED -> UPDATES_LOADED
+      UpdatesStore.UPDATES_FAILED -> UPDATES_FAILED
+      UpdatesStore.UPDATES_RAN -> UPDATES_RAN
+      UpdatesStore.UPDATES_RUN_FAILED -> UPDATES_RUN_FAILED
+      LaunchpadStage.TABS_CHANGED -> UPDATES_REFRESH when (= ?active "")
+    }
+  }
+
   trait SystemOrb = Orb.traits.SystemOrb {
     config {
       hint: "Each star is an open app, coloured by its topic; all stars are the same size because nothing in-process measures an app honestly. Click one to open, close or reopen its tab."
@@ -536,6 +549,7 @@ orbital Launchpad {
         (emit HOME_SHOWN {})
       HOME_SHOWN -> ready
         (render-ui main { type: stack, direction: vertical, gap: lg, children: [
+            @trait.UpdatesBanner,
             { type: page-header, icon: layout-dashboard, title: @config.heading, subtitle: "This machine and the open apps; every program is in the menu" },
             { type: simple-grid, minChildWidth: 360, gap: lg, children: [
                 { type: card, variant: bordered, padding: md, children: [@trait.SystemOrb] },
@@ -741,5 +755,5 @@ orbital Launchpad {
     }
   }
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus, AhApi, CrMonitoring
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundCosmic, PlaygroundStatus, AhApi, CrMonitoring
 }

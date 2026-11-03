@@ -433,7 +433,7 @@
       ]
     },
     {
-      "id": "version-is-parsed-from-orb-x-y-z",
+      "id": "version-is-parsed-from-orb-x-y-z-language-r",
       "steps": [
         {
           "trait": "McpServer",
@@ -443,7 +443,7 @@
             "code": 0
           },
           "entity": {
-            "reply": "orb 18.0.5"
+            "reply": "orb 18.0.5 (language ^1)"
           },
           "expect": {
             "emits": [
@@ -459,7 +459,7 @@
       ]
     },
     {
-      "id": "control-a-version-answer-not-shaped-orb-x-y-z-refuses",
+      "id": "control-a-version-answer-not-shaped-orb-x-y-z-language-r-refuses",
       "steps": [
         {
           "trait": "McpServer",
@@ -477,6 +477,33 @@
                 "event": "MCP_ANSWERED",
                 "payload": {
                   "status": 500
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-old-orb-x-y-z-version-form-is-refused",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "versioning",
+          "event": "MCP_WAITED",
+          "payload": {
+            "code": 0
+          },
+          "entity": {
+            "reply": "orb 18.0.5"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "orb mcp: the host binary did not answer --version as `orb X.Y.Z (language R)`"
                 }
               }
             ]

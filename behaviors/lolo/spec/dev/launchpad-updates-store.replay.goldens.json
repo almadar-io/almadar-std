@@ -1,0 +1,252 @@
+{
+ "atom": "dev/atoms/std-launchpad-updates.lolo",
+ "trait": "UpdatesStore",
+ "cases": [
+  {
+   "id": "load-reads-the-record",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_LOAD",
+     "payload": {},
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-missing-record-is-no-update",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_READ_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "not-found"
+     },
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "UPDATES_LOADED",
+        "payload": {
+         "available": [],
+         "urgent": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-read-failure-is-reported",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_READ_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "permission"
+     },
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "UPDATES_FAILED",
+        "payload": {
+         "error": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-global-runs-orb-update-global",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_RUN",
+     "payload": {
+      "store": "global"
+     },
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_CLI_RUN",
+        "payload": {
+         "stage": "global",
+         "argv": [
+          "update",
+          "--global"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-project-runs-orb-update",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_RUN",
+     "payload": {
+      "store": "project"
+     },
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "UPDATES_CLI_RUN",
+        "payload": {
+         "stage": "project",
+         "argv": [
+          "update"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-run-while-one-runs-is-refused",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_RUN",
+     "payload": {
+      "store": "global"
+     },
+     "entity": {
+      "id": "u",
+      "running": true,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "UPDATES_CLI_RUN"
+      ],
+      "emits": [
+       {
+        "event": "UPDATES_RUN_FAILED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "exit-zero-answers-ran-and-reads-again",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_CLI_DONE",
+     "payload": {
+      "stage": "global",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "u",
+      "running": true,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "UPDATES_RAN",
+        "payload": {
+         "store": "global"
+        }
+       },
+       {
+        "event": "UPDATES_LOAD"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-non-zero-exit-answers-the-stderr",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_CLI_DONE",
+     "payload": {
+      "stage": "global",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "boom\n"
+     },
+     "entity": {
+      "id": "u",
+      "running": true,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "UPDATES_RUN_FAILED",
+        "payload": {
+         "store": "global",
+         "error": "boom"
+        }
+       },
+       {
+        "event": "UPDATES_LOAD"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

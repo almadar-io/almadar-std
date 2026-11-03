@@ -4,7 +4,7 @@ app std-orb-release [
   exec: ["git", "pnpm", "npm"],
   env: ["PATH", "HOME", "SSH_AUTH_SOCK", "GITHUB_TOKEN"],
   fs: { cwd: "**": [read, write] },
-  description: "std-orb-release — the `orb release [--publish] [--major|--minor|--patch]` command (spec/cli/orb-release.lolo): the release publisher for the packages listed in release.json at the working directory. release.json is an ordered list of { repo, package, file, tag, registry }: repo is a git directory under the working directory, package the npm name, file the version file inside repo (a package.json, or a Cargo.toml whose release version is the first key of [workspace.package] or, for a single crate, of [package], with an optional orb compiler range as the first key of [package.metadata.orb]), tag the prefix of the tag whose push publishes it (the repo's own workflow publishes on that tag) and registry npmjs or github. Without --publish nothing is written: each entry's version file is read, its next version is std-semver's bump of that version (patch unless --major or --minor is given), and the plan lists the entries in order with the @almadar dependency ranges that would be rewritten to ^<new>, and with a package.json orb.compiler (or orbVocabulary.compiler, or orbLanguage.compiler) range that would be rewritten to >=<new> of @almadar/orb when the run releases orb. The run plans every entry first without writing anything, so an entry listed before @almadar/orb still reads orb's planned version; with --publish the second pass writes. An entry needs a release when a file other than package.json, Cargo.toml, Cargo.lock or pnpm-lock.yaml changed under its directory since the tag <tag><version> (std-git diffNames; a tag that does not exist counts as changed) or when one of its @almadar dependency ranges differs from ^<version> of an entry earlier in the list; otherwise it is released, or pending when its version is not yet on the registry. With --publish, for each entry in order: the repo's tree must be clean and on main, the version and the dependents' ranges are written, pnpm updates the lockfile of a package whose ranges changed, then git add, commit, tag <tag><new>, push main and the tag, and the registry is polled (`npm view <package> versions` through std-cli under std-retry, waitAttempts every pollIntervalMs, with GITHUB_TOKEN passed through for GitHub Packages, which needs `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}` in ~/.npmrc) until <package>@<new> is listed before the next entry starts. A released entry is skipped and a pending one only pushes its tag and waits, so a re-run resumes. The first failure stops the run with its repo and reason. Usage errors answer status 400; a stopped run answers status 500 with the plan so far."
+  description: "std-orb-release — the `orb release [--publish] [--major|--minor|--patch]` command (spec/cli/orb-release.lolo): the release publisher for the packages listed in release.json at the working directory. release.json is an ordered list of { repo, package, file, tag, registry }: repo is a git directory under the working directory, package the npm name, file the version file inside repo (a package.json, or a Cargo.toml whose release version is the first key of [workspace.package] or, for a single crate, of [package]), tag the prefix of the tag whose push publishes it (the repo's own workflow publishes on that tag) and registry npmjs or github. Without --publish nothing is written: each entry's version file is read, its next version is std-semver's bump of that version (patch unless --major or --minor is given), and the plan lists the entries in order with the @almadar dependency ranges that would be rewritten to ^<new>. A release never touches a package's language range (orb.language, orbLanguage.language, orbVocabulary.language, orbProgram.language): it is a compatibility declaration the package author owns. The run plans every entry first without writing anything, so an entry listed before another still reads that entry's planned version; with --publish the second pass writes. An entry needs a release when a file other than package.json, Cargo.toml, Cargo.lock or pnpm-lock.yaml changed under its directory since the tag <tag><version> (std-git diffNames; a tag that does not exist counts as changed) or when one of its @almadar dependency ranges differs from ^<version> of an entry earlier in the list; otherwise it is released, or pending when its version is not yet on the registry. With --publish, for each entry in order: the repo's tree must be clean and on main, the version and the dependents' ranges are written, pnpm updates the lockfile of a package whose ranges changed, then git add, commit, tag <tag><new>, push main and the tag, and the registry is polled (`npm view <package> versions` through std-cli under std-retry, waitAttempts every pollIntervalMs, with GITHUB_TOKEN passed through for GitHub Packages, which needs `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}` in ~/.npmrc) until <package>@<new> is listed before the next entry starts. A released entry is skipped and a pending one only pushes its tag and waits, so a re-run resumes. The first failure stops the run with its repo and reason. Every package.json the run writes also gets a top-level orbRelease block, written in the same write as the new version: `orbRelease: { severity: security|critical|normal, advisory, fixes }` where advisory (one line) and fixes (a semver range of that package's earlier versions the release fixes) are present for security and critical only. The run takes --severity (default normal), --advisory and --fixes; security or critical without both advisory and fixes, normal with either, or an unknown severity is a usage error answered before anything is read or written. The block is one line, an existing one-line block is replaced, and a package.json whose orbRelease block spans several lines stops the run. A Cargo.toml entry (the orb crate) gets no orbRelease: the orb binary's npm packages are produced elsewhere. The plan shows the orbRelease each released package.json would carry. Usage errors answer status 400; a stopped run answers status 500 with the plan so far."
 ]
 uses Spec from "almadar-std/orb-release"
 uses Args from "std/behaviors/std-args"
@@ -16,8 +16,7 @@ uses Pnpm from "std/behaviors/std-cli"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type ReleaseEntry = { repo : string!, package : string!, file : string!, tag : string!, registry : string! }
-type PkgOrb = { compiler : string }
-type PkgFile = { name : string, version : string, orb : PkgOrb, orbVocabulary : PkgOrb, orbLanguage : PkgOrb, dependencies : Map string string, devDependencies : Map string string, peerDependencies : Map string string, optionalDependencies : Map string string }
+type PkgFile = { name : string, version : string, dependencies : Map string string, devDependencies : Map string string, peerDependencies : Map string string, optionalDependencies : Map string string }
 type ReleaseList = [ReleaseEntry]
 type VersionList = [string]
 type RelDep = { dep : string!, range : string! }
@@ -76,18 +75,20 @@ orbital OrbReleaseOrbital {
     next : string = ""
     target : string = ""
     deps : [RelDep] = []
-    compiler : string = ""
     vhead : string = "[workspace.package]\nversion = \""
     planning : boolean = false
     writing : boolean = false
     releasing : Map string string = {}
-    planned : Map string string = {}
     rewrites : [RelRewrite] = []
     changed : boolean = false
     onReg : boolean = false
     mode : string = ""
     news : Map string string = {}
     lines : [string] = []
+    severity : string = "normal"
+    advisory : string = ""
+    fixes : string = ""
+    block : string = "\"orbRelease\": { \"severity\": \"normal\" }"
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -165,16 +166,18 @@ orbital OrbReleaseOrbital {
         (emit RELEASE_ANSWERED { status: 500, body: "", stderr: "Error: orb release: the command arguments could not be read" })
       RELEASE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.root (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") ""))
-        (emit REL_ARGS_PARSE { stage: "release" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "publish" aliases: [] takesValue: false repeatable: false } { name: "major" aliases: [] takesValue: false repeatable: false } { name: "minor" aliases: [] takesValue: false repeatable: false } { name: "patch" aliases: [] takesValue: false repeatable: false }] })
+        (emit REL_ARGS_PARSE { stage: "release" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "publish" aliases: [] takesValue: false repeatable: false } { name: "major" aliases: [] takesValue: false repeatable: false } { name: "minor" aliases: [] takesValue: false repeatable: false } { name: "patch" aliases: [] takesValue: false repeatable: false } { name: "severity" aliases: [] takesValue: true repeatable: false } { name: "advisory" aliases: [] takesValue: true repeatable: false } { name: "fixes" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
       REL_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
-        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (default (array/first @payload.errors) "") "\n\nUsage: orb release [--publish] [--major|--minor|--patch]\n\nFor more information, try '--help'.") })
+        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (default (array/first @payload.errors) "") "\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'.") })
       REL_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (or (> (array/len @payload.positionals) 0) (> (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1)))
-        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch]\n\nFor more information, try '--help'." })
-      REL_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (<= (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1))
+        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: "error: expected no paths and at most one of --major, --minor, --patch\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'." })
+      REL_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (<= (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1) (!= (let ((sev (default (array/first (default (object/get @payload.flags "severity") [])) "normal")) (adv (default (array/first (default (object/get @payload.flags "advisory") [])) "")) (fix (default (array/first (default (object/get @payload.flags "fixes") [])) ""))) (if (not (array/includes ["security" "critical" "normal"] @sev)) "--severity takes security, critical or normal" (if (and (!= @sev "normal") (or (= @adv "") (= @fix ""))) "--severity security or critical needs both --advisory and --fixes" (if (and (= @sev "normal") (or (object/has @payload.flags "advisory") (object/has @payload.flags "fixes"))) "--advisory and --fixes are only for --severity security or critical" "")))) ""))
+        (emit RELEASE_ANSWERED { status: 400, body: "", stderr: (str/concat "error: " (let ((sev (default (array/first (default (object/get @payload.flags "severity") [])) "normal")) (adv (default (array/first (default (object/get @payload.flags "advisory") [])) "")) (fix (default (array/first (default (object/get @payload.flags "fixes") [])) ""))) (if (not (array/includes ["security" "critical" "normal"] @sev)) "--severity takes security, critical or normal" (if (and (!= @sev "normal") (or (= @adv "") (= @fix ""))) "--severity security or critical needs both --advisory and --fixes" (if (and (= @sev "normal") (or (object/has @payload.flags "advisory") (object/has @payload.flags "fixes"))) "--advisory and --fixes are only for --severity security or critical" "")))) "\n\nUsage: orb release [--publish] [--major|--minor|--patch] [--severity security|critical|normal] [--advisory <text>] [--fixes <range>]\n\nFor more information, try '--help'.") })
+      REL_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (<= (array/len (array/filter ["major" "minor" "patch"] (fn k (object/has @payload.flags @k)))) 1) (= (let ((sev (default (array/first (default (object/get @payload.flags "severity") [])) "normal")) (adv (default (array/first (default (object/get @payload.flags "advisory") [])) "")) (fix (default (array/first (default (object/get @payload.flags "fixes") [])) ""))) (if (not (array/includes ["security" "critical" "normal"] @sev)) "--severity takes security, critical or normal" (if (and (!= @sev "normal") (or (= @adv "") (= @fix ""))) "--severity security or critical needs both --advisory and --fixes" (if (and (= @sev "normal") (or (object/has @payload.flags "advisory") (object/has @payload.flags "fixes"))) "--advisory and --fixes are only for --severity security or critical" "")))) ""))
         (set @entity.writing (object/has @payload.flags "publish"))
         (set @entity.publish false)
         (set @entity.planning true)
@@ -183,6 +186,10 @@ orbital OrbReleaseOrbital {
         (set @entity.lines [])
         (set @entity.news {})
         (set @entity.cursor 0)
+        (set @entity.severity (default (array/first (default (object/get @payload.flags "severity") [])) "normal"))
+        (set @entity.advisory (default (array/first (default (object/get @payload.flags "advisory") [])) ""))
+        (set @entity.fixes (default (array/first (default (object/get @payload.flags "fixes") [])) ""))
+        (set @entity.block (let ((sev (default (array/first (default (object/get @payload.flags "severity") [])) "normal"))) (str/concat "\"orbRelease\": { \"severity\": " (json/stringify @sev) (if (= @sev "normal") "" (str/concat ", \"advisory\": " (json/stringify (default (array/first (default (object/get @payload.flags "advisory") [])) "")) ", \"fixes\": " (json/stringify (default (array/first (default (object/get @payload.flags "fixes") [])) "")))) " }")))
         (os/read-file { anchor: "cwd" path: "release.json" } { key: "list", emit: { success: REL_LIST_READ, failure: REL_FAILED } })
     }
 
@@ -195,7 +202,6 @@ orbital OrbReleaseOrbital {
         (emit REL_ENTRY { })
 
       REL_ENTRY -> running when (and @entity.planning (>= @entity.cursor (array/len @entity.entries)))
-        (set @entity.planned @entity.releasing)
         (set @entity.planning false)
         (set @entity.publish @entity.writing)
         (set @entity.cursor 0)
@@ -221,7 +227,6 @@ orbital OrbReleaseOrbital {
         (set @entity.next "")
         (set @entity.target "")
         (set @entity.deps [])
-        (set @entity.compiler "")
         (set @entity.rewrites [])
         (set @entity.changed false)
         (set @entity.onReg false)
@@ -232,7 +237,6 @@ orbital OrbReleaseOrbital {
         (set @entity.text (default (bytes/to-string @payload.data) ""))
         (set @entity.vhead (if (str/includes (default (bytes/to-string @payload.data) "") "[workspace.package]\nversion = \"") "[workspace.package]\nversion = \"" "[package]\nversion = \""))
         (set @entity.version (default (array/nth (str/split (default (array/nth (str/split (default (bytes/to-string @payload.data) "") @entity.vhead) 1) "") "\"") 0) ""))
-        (set @entity.compiler (default (array/nth (str/split (default (array/nth (str/split (default (bytes/to-string @payload.data) "") "[package.metadata.orb]\ncompiler = \"") 1) "") "\"") 0) ""))
         (emit REL_PARSED { })
       REL_FILE_READ -> running when (not (str/endsWith @entity.file "Cargo.toml"))
         (set @entity.text (default (bytes/to-string @payload.data) ""))
@@ -243,7 +247,6 @@ orbital OrbReleaseOrbital {
       REL_PARSED -> running when (and (not (str/endsWith @entity.file "Cargo.toml")) (!= @entity.pkg null) (= (default (object/get @entity.pkg "name") "") @entity.name) (!= (default (object/get @entity.pkg "version") "") ""))
         (set @entity.version (default (object/get @entity.pkg "version") ""))
         (set @entity.deps (array/filter (array/map (array/concat (array/concat (object/entries (default (object/get @entity.pkg "dependencies") {})) (object/entries (default (object/get @entity.pkg "devDependencies") {}))) (array/concat (object/entries (default (object/get @entity.pkg "peerDependencies") {})) (object/entries (default (object/get @entity.pkg "optionalDependencies") {})))) (fn e { dep: (default (array/nth @e 0) ""), range: (default (array/nth @e 1) "") })) (fn d (str/startsWith (object/get @d "dep") (quote "@almadar")))))
-        (set @entity.compiler (default (object/get (default (object/get @entity.pkg "orb") (default (object/get @entity.pkg "orbVocabulary") (default (object/get @entity.pkg "orbLanguage") { compiler: "" }))) "compiler") ""))
         (emit REL_CHECK { })
       REL_PARSED -> running when (or (and (str/endsWith @entity.file "Cargo.toml") (= @entity.version "")) (and (not (str/endsWith @entity.file "Cargo.toml")) (or (= @entity.pkg null) (!= (default (object/get @entity.pkg "name") "") @entity.name) (= (default (object/get @entity.pkg "version") "") ""))))
         (emit REL_FAIL { why: (str/concat @entity.file " has no readable version for " @entity.name) })
@@ -294,7 +297,7 @@ orbital OrbReleaseOrbital {
         (emit REL_RETRY_FAILED { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey), error: @payload.error })
 
       REL_DECIDE -> running
-        (set @entity.rewrites (array/concat (array/map (array/filter @entity.deps (fn d (and (object/has @entity.news (object/get @d "dep")) (!= (object/get @d "range") (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")))))) (fn d { dep: (object/get @d "dep"), old: (object/get @d "range"), new: (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")) })) (if (and (!= @entity.compiler "") (object/has @entity.planned (quote "@almadar/orb")) (!= @entity.compiler (str/concat ">=" (default (object/get @entity.planned (quote "@almadar/orb")) "")))) [{ dep: "compiler", old: @entity.compiler, new: (str/concat ">=" (default (object/get @entity.planned (quote "@almadar/orb")) "")) }] [])))
+        (set @entity.rewrites (array/map (array/filter @entity.deps (fn d (and (object/has @entity.news (object/get @d "dep")) (!= (object/get @d "range") (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")))))) (fn d { dep: (object/get @d "dep"), old: (object/get @d "range"), new: (str/concat "^" (default (object/get @entity.news (object/get @d "dep")) "")) })))
         (emit REL_DECIDED { })
       REL_DECIDED -> running when (or @entity.changed (> (array/len @entity.rewrites) 0))
         (emit REL_SEMVER_BUMP { requestId: "bump", version: @entity.version, kind: @entity.bump })
@@ -319,7 +322,7 @@ orbital OrbReleaseOrbital {
         (emit REL_FAIL { why: (str/concat "cannot bump " @entity.version " (" @payload.reason ")") })
 
       REL_ROW -> running
-        (set @entity.lines (array/concat @entity.lines (array/concat [(str/concat (+ @entity.cursor 1) ". " @entity.repo "  " @entity.name "  " @entity.version (if (= @entity.mode "release") (str/concat " -> " @entity.target) "") "  tag " @entity.tagPrefix @entity.target "  " @entity.registry "  [" @entity.mode "]")] (array/map @entity.rewrites (fn r (str/concat "     " (object/get @r "dep") " " (object/get @r "old") " -> " (object/get @r "new")))))))
+        (set @entity.lines (array/concat @entity.lines (array/concat [(str/concat (+ @entity.cursor 1) ". " @entity.repo "  " @entity.name "  " @entity.version (if (= @entity.mode "release") (str/concat " -> " @entity.target) "") "  tag " @entity.tagPrefix @entity.target "  " @entity.registry "  [" @entity.mode "]")] (array/concat (if (and (= @entity.mode "release") (not (str/endsWith @entity.file "Cargo.toml"))) [(str/concat "     " @entity.block)] []) (array/map @entity.rewrites (fn r (str/concat "     " (object/get @r "dep") " " (object/get @r "old") " -> " (object/get @r "new"))))))))
         (emit REL_ROWN { })
       REL_ROWN -> running when (or (not @entity.publish) (= @entity.mode "released"))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -331,8 +334,10 @@ orbital OrbReleaseOrbital {
 
       REL_WRITE -> running when (not (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\""))))
         (emit REL_FAIL { why: (str/concat @entity.file " does not spell its version the way the writer replaces it") })
-      REL_WRITE -> running when (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\"")))
-        (emit REL_WRITE_TEXT { text: (array/reduce @entity.rewrites (if (str/endsWith @entity.file "Cargo.toml") (str/replace @entity.text (str/concat @entity.vhead @entity.version "\"") (str/concat @entity.vhead @entity.next "\"")) (str/replace @entity.text (str/concat "\"version\": \"" @entity.version "\"") (str/concat "\"version\": \"" @entity.next "\""))) (fn (acc r) (if (str/endsWith @entity.file "Cargo.toml") (str/replace @acc (str/concat "[package.metadata.orb]\ncompiler = \"" (object/get @r "old") "\"") (str/concat "[package.metadata.orb]\ncompiler = \"" (object/get @r "new") "\"")) (str/replaceAll @acc (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "old") "\"") (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "new") "\""))))) })
+      REL_WRITE -> running when (and (not (str/endsWith @entity.file "Cargo.toml")) (array/some (str/split @entity.text "\n") (fn l (and (str/startsWith (str/trim @l) "\"orbRelease\":") (not (str/endsWith (str/trim @l) "}")) (not (str/endsWith (str/trim @l) "},"))))))
+        (emit REL_FAIL { why: (str/concat @entity.file " has an orbRelease block that is not on one line") })
+      REL_WRITE -> running when (and (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\""))) (or (str/endsWith @entity.file "Cargo.toml") (not (array/some (str/split @entity.text "\n") (fn l (and (str/startsWith (str/trim @l) "\"orbRelease\":") (not (str/endsWith (str/trim @l) "}")) (not (str/endsWith (str/trim @l) "},"))))))))
+        (emit REL_WRITE_TEXT { text: (array/reduce @entity.rewrites (if (str/endsWith @entity.file "Cargo.toml") (str/replace @entity.text (str/concat @entity.vhead @entity.version "\"") (str/concat @entity.vhead @entity.next "\"")) (str/replace (str/join (array/filter (str/split @entity.text "\n") (fn l (not (str/startsWith (str/trim @l) "\"orbRelease\":")))) "\n") (str/concat "\"version\": \"" @entity.version "\"") (str/concat "\"version\": \"" @entity.next "\",\n  " @entity.block))) (fn (acc r) (str/replaceAll @acc (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "old") "\"") (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "new") "\"")))) })
       REL_WRITE_TEXT -> running
         (os/write-file { anchor: "cwd" path: (os/path-join @entity.repo @entity.file) } (bytes/from-string @payload.text) { key: "write", emit: { success: REL_WRITTEN, failure: REL_FAILED } })
       REL_WRITTEN -> running when (and (> (array/len @entity.rewrites) 0) (not (str/endsWith @entity.file "Cargo.toml")))
