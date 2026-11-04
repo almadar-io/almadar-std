@@ -159,6 +159,8 @@ export type OsGrantNeed =
   /** A host at `host` and a port at `port` (absent: port 0, any), covered by a net grant of one of the `access` kinds. */
   | { kind: 'net'; access: ('tcp' | 'udp' | 'listen')[]; host: number; port?: number }
   | { kind: 'sys'; access: 'cpu' | 'memory' | 'disk' | 'network' | 'power-state' | 'identity' }
+  /** A signal sent to the process id at `pid`. The program's own process needs `sys: [self-signal]` (EXEC-CONC-6); a spawned child needs no grant. Never a requirement: the grant analysis counts `sys self-signal` possibly used by any call whose `pid` is not a literal number. */
+  | { kind: 'self-signal'; pid: number }
   | { kind: 'desktop'; access: 'notify' | 'speak' | 'brightness' | 'volume' | 'power' }
   /** A store name at `store`. */
   | { kind: 'kv'; access: 'read' | 'write'; store: number }

@@ -735,6 +735,101 @@
       }
     },
     {
+      "id": "a-non-nullable-map-samples-as-an-empty-map: an object with items and nullable false is {}, never null",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "arguments",
+              "nullable": false,
+              "items": {
+                "type": "string"
+              }
+            },
+            "name": "arguments",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "arguments",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [],
+                      "kids": []
+                    }
+                  ],
+                  "value": {}
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "a-non-nullable-optional-bare-object-is-omitted: no properties, nullable false, not required is left out, never null",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "meta",
+              "nullable": false
+            },
+            "name": "meta",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "meta",
+                      "kind": "absent",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
       "id": "parity-bareObject-row2",
       "steps": [
         {
@@ -11298,6 +11393,1431 @@
                         "updatedAt": "2025-08-08T13:56:38.907Z"
                       }
                     ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "an-intrinsic-relation-is-never-linked: a modal seedRow stash (intrinsic, one Doc) gets no row id; the other links are unchanged",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "CORPUS_ASK",
+                "payload": {}
+              },
+              {
+                "event": "CORPUS_IS",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "DATASET_START",
+          "payload": {
+            "source": "program.lolo",
+            "count": 3,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": ""
+          }
+        },
+        {
+          "event": "DS_OWNS_ENV",
+          "payload": {}
+        },
+        {
+          "event": "DS_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "owner",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "one"
+                        }
+                      },
+                      {
+                        "name": "peers",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Tag",
+                          "cardinality": "many"
+                        }
+                      },
+                      {
+                        "name": "seedRow",
+                        "type": "relation",
+                        "intrinsic": true,
+                        "relation": {
+                          "entity": "Doc",
+                          "cardinality": "one"
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Tag",
+                      "persistence": "persistent",
+                      "collection": "tags",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT",
+                "payload": {
+                  "at": 1
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_DONE"
+            ]
+          }
+        },
+        {
+          "event": "DS_WRITE_CHUNK",
+          "payload": {
+            "ops": [
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 1",
+                  "peers": [
+                    "Tag Id 1",
+                    "Tag Id 2"
+                  ],
+                  "id": "Doc Id 1",
+                  "createdAt": "2026-02-28T21:27:22.569Z",
+                  "updatedAt": "2026-03-02T21:27:22.569Z"
+                }
+              ],
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 2",
+                  "peers": [
+                    "Tag Id 2",
+                    "Tag Id 3",
+                    "Tag Id 1"
+                  ],
+                  "id": "Doc Id 2",
+                  "createdAt": "2025-11-02T07:01:00.133Z",
+                  "updatedAt": "2025-11-08T07:01:00.133Z"
+                }
+              ],
+              [
+                "create",
+                "Doc",
+                {
+                  "owner": "Tag Id 3",
+                  "peers": [
+                    "Tag Id 3",
+                    "Tag Id 1"
+                  ],
+                  "id": "Doc Id 3",
+                  "createdAt": "2026-01-14T21:13:00.024Z",
+                  "updatedAt": "2026-01-14T21:13:00.024Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 1",
+                  "createdAt": "2025-12-19T17:48:57.369Z",
+                  "updatedAt": "2025-12-22T17:48:57.369Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 2",
+                  "createdAt": "2025-07-17T01:23:30.976Z",
+                  "updatedAt": "2025-08-16T01:23:30.976Z"
+                }
+              ],
+              [
+                "create",
+                "Tag",
+                {
+                  "id": "Tag Id 3",
+                  "createdAt": "2025-07-24T13:56:38.907Z",
+                  "updatedAt": "2025-08-08T13:56:38.907Z"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DS_CHUNK_WRITTEN"
+              }
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "doc": [
+                      {
+                        "owner": "Tag Id 1",
+                        "peers": [
+                          "Tag Id 1",
+                          "Tag Id 2"
+                        ],
+                        "id": "Doc Id 1",
+                        "createdAt": "2026-02-28T21:27:22.569Z",
+                        "updatedAt": "2026-03-02T21:27:22.569Z"
+                      },
+                      {
+                        "owner": "Tag Id 2",
+                        "peers": [
+                          "Tag Id 2",
+                          "Tag Id 3",
+                          "Tag Id 1"
+                        ],
+                        "id": "Doc Id 2",
+                        "createdAt": "2025-11-02T07:01:00.133Z",
+                        "updatedAt": "2025-11-08T07:01:00.133Z"
+                      },
+                      {
+                        "owner": "Tag Id 3",
+                        "peers": [
+                          "Tag Id 3",
+                          "Tag Id 1"
+                        ],
+                        "id": "Doc Id 3",
+                        "createdAt": "2026-01-14T21:13:00.024Z",
+                        "updatedAt": "2026-01-14T21:13:00.024Z"
+                      }
+                    ],
+                    "tags": [
+                      {
+                        "id": "Tag Id 1",
+                        "createdAt": "2025-12-19T17:48:57.369Z",
+                        "updatedAt": "2025-12-22T17:48:57.369Z"
+                      },
+                      {
+                        "id": "Tag Id 2",
+                        "createdAt": "2025-07-17T01:23:30.976Z",
+                        "updatedAt": "2025-08-16T01:23:30.976Z"
+                      },
+                      {
+                        "id": "Tag Id 3",
+                        "createdAt": "2025-07-24T13:56:38.907Z",
+                        "updatedAt": "2025-08-08T13:56:38.907Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "non-nullable array at the depth cap is [] not null",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "array",
+                          "name": "d",
+                          "nullable": false,
+                          "items": {
+                            "type": "string",
+                            "nullable": false
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "array",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": []
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "nullable array at the depth cap stays [] (control)",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "array",
+                          "name": "d",
+                          "nullable": true,
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "array",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": []
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "non-nullable union at the depth cap samples its first member smallest value",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "union",
+                          "name": "d",
+                          "nullable": false,
+                          "values": [
+                            "A"
+                          ],
+                          "properties": {
+                            "A": {
+                              "type": "array",
+                              "name": "A",
+                              "nullable": false,
+                              "items": {
+                                "type": "string",
+                                "nullable": false
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "array",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": []
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "nullable union at the depth cap is still null (control)",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "union",
+                          "name": "d",
+                          "nullable": true,
+                          "values": [
+                            "A"
+                          ],
+                          "properties": {
+                            "A": {
+                              "type": "array",
+                              "name": "A",
+                              "nullable": false,
+                              "items": {
+                                "type": "string",
+                                "nullable": false
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "omit",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "undeclared-nullable union at the depth cap is still null (control)",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "union",
+                          "name": "d",
+                          "values": [
+                            "A"
+                          ],
+                          "properties": {
+                            "A": {
+                              "type": "array",
+                              "name": "A",
+                              "nullable": false,
+                              "items": {
+                                "type": "string",
+                                "nullable": false
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "omit",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "non-nullable required object without properties at the depth cap is {}",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "object",
+                          "name": "d",
+                          "nullable": false,
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [],
+                      "kids": []
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": {}
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "nullable required object without properties at the depth cap is still null (control)",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "root",
+              "nullable": false,
+              "properties": {
+                "p1": {
+                  "type": "object",
+                  "name": "p1",
+                  "nullable": false,
+                  "properties": {
+                    "p2": {
+                      "type": "object",
+                      "name": "p2",
+                      "nullable": false,
+                      "properties": {
+                        "d": {
+                          "type": "object",
+                          "name": "d",
+                          "nullable": true,
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "root",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "root",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p1"
+                      ],
+                      "kids": [
+                        "root.p1"
+                      ]
+                    },
+                    {
+                      "path": "root.p1",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "p2"
+                      ],
+                      "kids": [
+                        "root.p1.p2"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "d"
+                      ],
+                      "kids": [
+                        "root.p1.p2.d"
+                      ]
+                    },
+                    {
+                      "path": "root.p1.p2.d",
+                      "kind": "null",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "p1": {
+                      "p2": {
+                        "d": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "non-nullable optional union with an unresolvable member is omitted from its object",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "parameters",
+              "nullable": false,
+              "properties": {
+                "items": {
+                  "type": "union",
+                  "name": "items",
+                  "nullable": false,
+                  "required": false,
+                  "values": [
+                    "Ext::LlmSchema"
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "name": "type",
+                  "nullable": false,
+                  "required": false
+                }
+              }
+            },
+            "name": "parameters",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "parameters",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "items",
+                        "type"
+                      ],
+                      "kids": [
+                        "parameters.items",
+                        "parameters.type"
+                      ]
+                    },
+                    {
+                      "path": "parameters.items",
+                      "kind": "absent",
+                      "text": "",
+                      "num": 0
+                    },
+                    {
+                      "path": "parameters.type",
+                      "kind": "string",
+                      "text": "Type 1",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "type": "Type 1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "nullable union with an unresolvable member stays null in its object (control)",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "parameters",
+              "nullable": false,
+              "properties": {
+                "items": {
+                  "type": "union",
+                  "name": "items",
+                  "nullable": true,
+                  "values": [
+                    "Ext::LlmSchema"
+                  ]
+                }
+              }
+            },
+            "name": "parameters",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "parameters",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "items"
+                      ],
+                      "kids": [
+                        "parameters.items"
+                      ]
+                    },
+                    {
+                      "path": "parameters.items",
+                      "kind": "omit",
+                      "text": "",
+                      "num": 0
+                    }
+                  ],
+                  "value": {
+                    "items": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "std-accounting-binding-parameters-items: a non-nullable optional union with an unresolvable member is omitted, the non-nullable map is {}, the array is [], never null",
+      "steps": [
+        {
+          "event": "WALK_START",
+          "payload": {
+            "spec": {
+              "type": "object",
+              "name": "binding",
+              "nullable": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "name": "kind",
+                  "nullable": false,
+                  "required": true,
+                  "values": [
+                    "input",
+                    "read"
+                  ]
+                },
+                "parameters": {
+                  "type": "object",
+                  "name": "parameters",
+                  "nullable": false,
+                  "required": true,
+                  "properties": {
+                    "items": {
+                      "type": "union",
+                      "name": "items",
+                      "nullable": false,
+                      "projectedFrom": {
+                        "type": "std-agent-tool-loop::LlmSchema"
+                      },
+                      "required": false,
+                      "values": [
+                        "std-agent-tool-loop::LlmSchema"
+                      ]
+                    },
+                    "properties": {
+                      "type": "object",
+                      "name": "properties",
+                      "nullable": false,
+                      "required": false,
+                      "items": {
+                        "type": "union",
+                        "name": "items",
+                        "nullable": false,
+                        "projectedFrom": {
+                          "type": "std-agent-tool-loop::LlmSchema"
+                        },
+                        "values": [
+                          "std-agent-tool-loop::LlmSchema"
+                        ]
+                      }
+                    },
+                    "enum": {
+                      "type": "array",
+                      "name": "enum",
+                      "nullable": false,
+                      "required": false,
+                      "items": {
+                        "type": "string",
+                        "nullable": false
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "name": "binding",
+            "entityName": "E",
+            "index": 1,
+            "seeded": false,
+            "runtime": false,
+            "nowMs": "2023-11-14T22:13:20.000Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALKED",
+                "payload": {
+                  "cells": [
+                    {
+                      "path": "binding",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "kind",
+                        "parameters"
+                      ],
+                      "kids": [
+                        "binding.kind",
+                        "binding.parameters"
+                      ]
+                    },
+                    {
+                      "path": "binding.kind",
+                      "kind": "string",
+                      "text": "input",
+                      "num": 0
+                    },
+                    {
+                      "path": "binding.parameters",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [
+                        "enum",
+                        "items",
+                        "properties"
+                      ],
+                      "kids": [
+                        "binding.parameters.enum",
+                        "binding.parameters.items",
+                        "binding.parameters.properties"
+                      ]
+                    },
+                    {
+                      "path": "binding.parameters.enum",
+                      "kind": "array",
+                      "text": "",
+                      "num": 3,
+                      "kids": [
+                        "binding.parameters.enum[0]",
+                        "binding.parameters.enum[1]",
+                        "binding.parameters.enum[2]"
+                      ]
+                    },
+                    {
+                      "path": "binding.parameters.enum[0]",
+                      "kind": "string",
+                      "text": "Enum[0] 10",
+                      "num": 0
+                    },
+                    {
+                      "path": "binding.parameters.enum[1]",
+                      "kind": "string",
+                      "text": "Enum[1] 11",
+                      "num": 0
+                    },
+                    {
+                      "path": "binding.parameters.enum[2]",
+                      "kind": "string",
+                      "text": "Enum[2] 12",
+                      "num": 0
+                    },
+                    {
+                      "path": "binding.parameters.items",
+                      "kind": "absent",
+                      "text": "",
+                      "num": 0
+                    },
+                    {
+                      "path": "binding.parameters.properties",
+                      "kind": "object",
+                      "text": "",
+                      "num": 0,
+                      "keys": [],
+                      "kids": []
+                    }
+                  ],
+                  "value": {
+                    "kind": "input",
+                    "parameters": {
+                      "enum": [
+                        "Enum[0] 10",
+                        "Enum[1] 11",
+                        "Enum[2] 12"
+                      ],
+                      "properties": {}
+                    }
                   }
                 }
               }

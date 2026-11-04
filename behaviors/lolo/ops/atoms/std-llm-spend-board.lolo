@@ -204,7 +204,7 @@ orbital LlmSpendBoardOrbital {
                 (tokens (+ (default @u.inputTokens 0) (default @u.outputTokens 0))))
             (emit LS_BOARD_SHOW { note: (default @u.error ""), fetchedAt: @entity.cachedAt, error: "",
               tiles: [{ label: "Priced usage cost", value: (if (== @u.totalCost null) "unpriced" (str/concat @u.totalCost)), tone: "neutral", icon: "coins" },
-                { label: "Tokens", value: (str/concat @tokens), tone: "neutral", icon: "hash" },
+                { label: "Tokens", value: (if (= (default @u.error "") "") (str/concat @tokens) "not read"), tone: (if (= (default @u.error "") "") "neutral" "warning"), icon: "hash" },
                 { label: "Top provider", value: (let ((top (array/nth @spenders 0))) (if (== @top null) "no spend read" (str/concat (default @top.name "") " " (default @top.spend 0) " " (default @top.currency "")))), tone: "neutral", icon: "trophy" },
                 (if (> @failing 0) { label: "Providers with errors", value: (str/concat @failing), tone: "danger", icon: "alert-triangle" } { label: "Providers with errors", value: "0", tone: "success", icon: "check-circle" })],
               sections: [{ key: "providers", label: "Providers" }, { key: "models", label: "Models" }],

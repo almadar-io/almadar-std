@@ -16,9 +16,10 @@
      },
      "expect": {
       "fired": true,
-      "effects": [
+      "exactEmits": [
        {
-        "type": "os/read-file"
+        "event": "UPDATES_RECORD_READ",
+        "payload": {}
        }
       ]
      }
@@ -30,11 +31,8 @@
    "steps": [
     {
      "trait": "UpdatesStore",
-     "event": "UPDATES_READ_FAILED",
-     "payload": {
-      "error": "x",
-      "kind": "not-found"
-     },
+     "event": "UPDATES_READ_ABSENT",
+     "payload": {},
      "entity": {
       "id": "u",
       "running": false,
@@ -56,14 +54,98 @@
    ]
   },
   {
+   "id": "a-good-record-answers-its-rows",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_READ",
+     "payload": {
+      "checkedAt": 99000,
+      "available": [
+       [
+        "@almadar/std",
+        "1.0.0",
+        "1.1.0",
+        "global"
+       ]
+      ],
+      "urgent": [
+       [
+        "global",
+        "failed",
+        "boom"
+       ]
+      ]
+     },
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "UPDATES_LOADED",
+        "payload": {
+         "available": [
+          [
+           "@almadar/std",
+           "1.0.0",
+           "1.1.0",
+           "global"
+          ]
+         ],
+         "urgent": [
+          [
+           "global",
+           "failed",
+           "boom"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-record-in-another-shape-is-unchecked-not-failed",
+   "steps": [
+    {
+     "trait": "UpdatesStore",
+     "event": "UPDATES_READ_UNREADABLE",
+     "payload": {},
+     "entity": {
+      "id": "u",
+      "running": false,
+      "stage": ""
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "UPDATES_FAILED",
+       "UPDATES_LOADED"
+      ],
+      "exactEmits": [
+       {
+        "event": "UPDATES_UNCHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "control-another-read-failure-is-reported",
    "steps": [
     {
      "trait": "UpdatesStore",
      "event": "UPDATES_READ_FAILED",
      "payload": {
-      "error": "denied",
-      "kind": "permission"
+      "error": "denied"
      },
      "entity": {
       "id": "u",
@@ -205,6 +287,10 @@
        },
        {
         "event": "UPDATES_LOAD"
+       },
+       {
+        "event": "UPDATES_RECORD_READ",
+        "payload": {}
        }
       ]
      }
@@ -242,6 +328,10 @@
        },
        {
         "event": "UPDATES_LOAD"
+       },
+       {
+        "event": "UPDATES_RECORD_READ",
+        "payload": {}
        }
       ]
      }

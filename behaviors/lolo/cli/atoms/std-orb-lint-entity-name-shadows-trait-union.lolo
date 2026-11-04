@@ -46,7 +46,7 @@ orbital OrbLintEntityNameShadowsTraitUnionOrbital {
                           (let ((ae (array/nth (object/get @orb "auxiliaryEntities" []) @j)))
                             (if (validate/object @ae) [{ e: @ae, p: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @j "]") }] []))))))))
                   (array/flatten (array/map @slots (fn sl
-                    (let ((en (object/get (object/get @sl "e") "name" "")) (pth (object/get @sl "p")))
+                    (let ((en (object/get (default (object/get @sl "e") {}) "name" "")) (pth (object/get @sl "p")))
                       (array/flatten (array/map (object/get @orb "traits" []) (fn t
                         (let ((tref (if (validate/object @t) (object/get @t "ref" null) null)) (tnm (if (validate/object @t) (object/get @t "name" null) null)))
                           (let ((tn (if (and (validate/object @t) (or (!= @tref null) (= (object/get @t "stateMachine" null) null))) (if (!= @tref null) @tref @tnm) @tnm)))

@@ -257,6 +257,18 @@ orbital GuestSessionOrbital {
       pendingRows : number = 2
         @label "Placeholder rows"
         @tier "presentation"
+      unpaintedTitle : string = "Nothing to show here on its own"
+        @label "Unpainted title"
+        @description "The title shown when the opened guest painted nothing into the configured slot."
+        @tier "presentation"
+      unpaintedNothing : string = "The behavior painted nothing when it opened; it draws in answer to an event a host sends it."
+        @label "Nothing painted"
+        @description "The message when the opened guest painted no slot at all."
+        @tier "presentation"
+      unpaintedOthers : string = "It paints only into these slots, which a host page opens: "
+        @label "Other slots painted"
+        @description "The message before the list of slots the opened guest did paint."
+        @tier "presentation"
     }
     initial: idle
 
@@ -287,7 +299,9 @@ orbital GuestSessionOrbital {
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
             (let ((paint (array/find @entity.guestPaints (fn p (= @p.slot @config.slot)))))
               (if (= @paint null)
-                { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
+                (if (= @entity.guestHandle "")
+                  { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
+                  { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.unpaintedTitle, message: (if (= (array/len @entity.guestPaints) 0) @config.unpaintedNothing (str/concat @config.unpaintedOthers (str/join (array/map @entity.guestPaints (fn p @p.slot)) ", "))) }] })
                 { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, children: [@paint.content] })))
         ] })
     }

@@ -9,7 +9,6 @@ app std-orb-update-notice [
 ]
 uses Spec from "almadar-std/orb-update-notice"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type NoticeCache = { checkedAt : number!, available : [[string]]!, urgent : [[string]]? }
 type NoticeLockEntry = { name : string!, version : string! }
 type NoticeLock = { packages : [NoticeLockEntry]! }
 type NoticeManifest = { dependencies : Map string string! }
@@ -20,6 +19,7 @@ orbital OrbUpdateNoticeOrbital {
   uses Npm from "std/behaviors/std-npm-lookup"
   uses Semver from "std/behaviors/std-semver"
   uses Cli from "std/behaviors/std-cli"
+  uses Record from "std/behaviors/std-orb-update-record"
 
   entity UpdateNoticeRun [runtime] {
     id : string!
@@ -81,6 +81,13 @@ orbital OrbUpdateNoticeOrbital {
     }
   }
 
+  trait UpdateRecord = Record.traits.UpdateRecordStore {
+    listens {
+      OrbUpdateNotice.UN_RECORD_READ -> UPDATE_RECORD_READ
+      OrbUpdateNotice.UN_RECORD_WRITE -> UPDATE_RECORD_WRITE
+    }
+  }
+
   trait OrbCli = Cli.traits.CliRunner {
     listens {
       OrbUpdateNotice.UN_CLI_RUN -> CLI_RUN
@@ -130,20 +137,15 @@ orbital OrbUpdateNoticeOrbital {
       UN_TTY -> ready when (not @payload.ok)
         (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
       UN_TTY -> reading when @payload.ok
-        (os/read-file "~/.orb/.update-check.json" { key: "cache" emit: { success: UN_CACHE_READ, failure: UN_CACHE_ABSENT } })
+        (emit UN_RECORD_READ { })
     }
 
     state reading {
       INIT -> reading
-      UN_CACHE_READ -> reading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0))
-        (set @entity.checkedAt (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt"))
-        (set @entity.cached (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "available"))
-        (set @entity.cachedUrgent (default (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "urgent") []))
-        (emit UN_DUE { })
-      UN_CACHE_READ -> reading when (not (and (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null) (>= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt") 0)))
-        (set @entity.checkedAt 0)
-        (set @entity.cached [])
-        (set @entity.cachedUrgent [])
+      UN_CACHE_READ -> reading when (>= ?checkedAt 0)
+        (set @entity.checkedAt ?checkedAt)
+        (set @entity.cached ?available)
+        (set @entity.cachedUrgent ?urgent)
         (emit UN_DUE { })
       UN_CACHE_ABSENT -> reading
         (set @entity.checkedAt 0)
@@ -281,9 +283,7 @@ orbital OrbUpdateNoticeOrbital {
     state writing {
       INIT -> writing
       UN_WRITE -> writing
-        (os/mkdir "~/.orb" true { key: "dir" emit: { success: UN_DIR, failure: UN_DIR } })
-      UN_DIR -> writing
-        (os/write-file "~/.orb/.update-check.json" (bytes/from-string (json/stringify { checkedAt: (if @entity.keepStamp @entity.checkedAt @entity.nowSec), available: @entity.found, urgent: @entity.urgentRows })) { key: "cache" emit: { success: UN_WRITTEN, failure: UN_WRITTEN } })
+        (emit UN_RECORD_WRITE { checkedAt: (if @entity.keepStamp @entity.checkedAt @entity.nowSec), available: @entity.found, urgent: @entity.urgentRows })
       UN_WRITTEN -> ready
         (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (if (= @entity.mode "record") "" (str/join (array/filter [(let ((g (array/flatten (array/map (array/filter @entity.found (fn t (= (default (array/nth @t 3) "global") "global"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] [])))))) (q (array/flatten (array/map (array/filter @entity.found (fn t (= (default (array/nth @t 3) "global") "project"))) (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (str/join (array/filter [(if (= (array/len @g) 0) "" (str/concat "orb: updates available (" (str/join @g ", ") "); run `orb update --global`")), (if (= (array/len @q) 0) "" (str/concat "orb: updates available in this project (" (str/join @q ", ") "); run `orb update`"))] (fn x (!= @x ""))) "\n")), (str/join (array/concat (array/map (array/filter @entity.urgentRows (fn r (= (default (array/nth @r 1) "") "applied"))) (fn r (str/concat "orb: applied urgent " (default (array/nth @r 2) "") " (" (default (array/nth @r 0) "") " store)"))) (array/map (array/filter @entity.urgentRows (fn r (= (default (array/nth @r 1) "") "failed"))) (fn r (str/concat "orb: URGENT UPDATE FAILED for the " (default (array/nth @r 0) "") " packages: " (default (array/nth @r 2) "") "\norb: the vulnerable version is still installed; fix the cause and run `orb update --urgent" (if (= (default (array/nth @r 0) "") "global") " --global" "") "`")))) "\n")] (fn x (!= @x ""))) "\n")) })
     }
@@ -328,11 +328,11 @@ orbital OrbUpdateNoticeOrbital {
       UN_TTY { ok : boolean! }
         @description "Internal: whether stderr is a terminal."
         @tier "internal"
-      UN_CACHE_READ { data : bytes! }
-        @description "Internal: the cache file."
+      UN_RECORD_READ { }
+        @description "Internal: ask the update record owner to read the cache."
         @tier "internal"
-      UN_CACHE_ABSENT { error : string  kind : string }
-        @description "Internal: no cache file."
+      UN_RECORD_WRITE { checkedAt : number!  available : [[string]]!  urgent : [[string]]! }
+        @description "Internal: ask the update record owner to write the cache."
         @tier "internal"
       UN_MANIFEST_READ { data : bytes! }
         @description "Internal: the user store manifest."
@@ -345,12 +345,6 @@ orbital OrbUpdateNoticeOrbital {
         @tier "internal"
       UN_PKG_ABSENT { error : string  kind : string }
         @description "Internal: the package is not installed."
-        @tier "internal"
-      UN_DIR { }
-        @description "Internal: the store directory exists."
-        @tier "internal"
-      UN_WRITTEN { }
-        @description "Internal: the cache write finished or failed (ignored)."
         @tier "internal"
       UN_END_PHASE { }
         @description "Internal: the current store's packages are all judged; go to the next store or to the urgent updates."
@@ -382,6 +376,18 @@ orbital OrbUpdateNoticeOrbital {
       }
         @description "Run the daily updates-available notice, or `record` after orb update."
         @synonyms "update check, new version available, outdated packages"
+      UN_CACHE_READ { checkedAt : number!  available : [[string]]!  urgent : [[string]]! }
+        @description "Internal: the cache, read."
+      UN_CACHE_ABSENT { }
+        @description "Internal: no usable cache: absent, in another shape, or unreadable."
+      UN_WRITTEN { }
+        @description "Internal: the cache write finished or failed (ignored)."
+      UpdateRecord.UPDATE_RECORD_LOADED -> UN_CACHE_READ
+      UpdateRecord.UPDATE_RECORD_ABSENT -> UN_CACHE_ABSENT
+      UpdateRecord.UPDATE_RECORD_UNREADABLE -> UN_CACHE_ABSENT
+      UpdateRecord.UPDATE_RECORD_FAILED -> UN_CACHE_ABSENT
+      UpdateRecord.UPDATE_RECORD_WRITTEN -> UN_WRITTEN
+      UpdateRecord.UPDATE_RECORD_WRITE_FAILED -> UN_WRITTEN
       UN_CLI_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
         @description "std-cli's CLI_DONE for an orb update --urgent run."
       UN_CLI_FAILED { stage : string!  error : string!  code : string! }
@@ -406,5 +412,5 @@ orbital OrbUpdateNoticeOrbital {
     }
   }
 
-  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, Registry, RegistryHttp, RegistryTimeout, Versions, OrbCli
+  page boot as OrbUpdateNoticePage -> OrbUpdateNotice, UpdateRecord, Registry, RegistryHttp, RegistryTimeout, Versions, OrbCli
 }

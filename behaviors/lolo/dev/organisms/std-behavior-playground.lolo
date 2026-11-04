@@ -20,7 +20,6 @@ type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
-type PlaygroundFinding = { code : string!, message : string! }
 
 orbital BehaviorPlayground {
   entity PlaygroundView [runtime] {
@@ -29,6 +28,7 @@ orbital BehaviorPlayground {
     leaves : [PlaygroundLeaf] = []
     leafSelected : string = ""
     expanded : [string] @description "The topics opened in the tree, by `<package> <topic>`." = []
+    routePending : boolean @description "On a route page, the tree waits for the route's behavior instead of opening the start topic." = false
     routeBehavior : string @description "The behavior the route names; empty when the page has none or it was opened." = ""
     topicPackage : string = ""
     topic : string = ""
@@ -38,15 +38,6 @@ orbital BehaviorPlayground {
     machineBehavior : string @description "The behavior whose traits the dock lists." = ""
     machineTraits : [string] @description "The opened behavior's trait names, as its loader describes them." = []
     machinePick : number @description "The listed trait the dock draws." = 0
-    tab : "live" | "source" = live
-    programJson : string = ""
-    sourceJson : string = ""
-    sourceText : string = ""
-    check : "pending" | "valid" | "invalid" = pending
-    renderHeads : number @description "How many render-ui effects the opened program holds." = 0
-    renderOverlays : number @description "How many of those draw into the modal, drawer, overlay or toast slot." = 0
-    renders : "inline" | "overlay" | "none" @description "Where the opened program draws: in the page, only in overlay slots, or nowhere." = inline
-    findings : [PlaygroundFinding] = []
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
   }
@@ -73,16 +64,35 @@ orbital BehaviorPlayground {
       mainTrait: @trait.PlaygroundStage
       showSidebar: true
       sidebarTrait: @trait.PlaygroundTopics
+      sidebarWidth: 18
       sidebarMinSize: 220
       showSecondarySidebar: true
       secondarySidebarTrait: @trait.PlaygroundMachine
       secondarySidebarLabel: "State machine"
-      secondarySidebarWidth: 760
+      secondarySidebarWidth: 55
+      secondarySidebarMinSize: 360
       showBottomPanel: false
       showStatusBar: true
       statusBarTrait: @trait.PlaygroundStatus
       showTopBar: true
       topBarTrait: @trait.PlaygroundTopBar
+    }
+    listens {
+      PlaygroundTopics.LEAF_PICKED -> SIDEBAR_DOCK
+      PlaygroundRoute.ROUTE_OPEN -> SIDEBAR_DOCK
+      SIDEBAR_TOGGLED {
+        collapsed : boolean!
+      }
+      SIDEBAR_DOCK { }
+      SIDEBAR_RESIZED {
+        width : number!
+      }
+      SECONDARY_RESIZED {
+        width : number!
+      }
+      SECONDARY_TOGGLED {
+        collapsed : boolean!
+      }
     }
   }
 
@@ -198,8 +208,12 @@ orbital BehaviorPlayground {
 
     state idle {
       INIT -> idle
+        (set @entity.routePending (validate/required ?name))
         (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: skeleton, variant: list, rows: 8 }] })
-      TOPICS_LOADED -> idle
+      TOPICS_LOADED -> idle when @entity.routePending
+        (set @entity.topics ?topics)
+        (emit TOPICS_SHOWN {})
+      TOPICS_LOADED -> idle when (not @entity.routePending)
         (set @entity.expanded (array/unique (array/append @entity.expanded (str/concat (if (= @entity.topic "") @config.openPackage @entity.topicPackage) " " (if (= @entity.topic "") @config.openTopic @entity.topic)))))
         (set @entity.topics ?topics)
         (set @entity.topicPackage (if (= @entity.topic "") @config.openPackage @entity.topicPackage))
@@ -208,12 +222,13 @@ orbital BehaviorPlayground {
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
-          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) @entity.expanded), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
+          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) (array/unique (array/flatten (array/map @entity.expanded (fn e (let ((pkg (default (array/first (str/split @e " ")) "")) (segs (str/split (default (array/last (str/split @e " ")) "") "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @pkg " " (str/join (array/slice @segs 0 (+ @i 1)) "/")))))))))) (array/unique (array/map (array/filter @entity.leaves (fn l (array/includes @entity.expanded (str/concat @l.package " " @l.topic)))) (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s"))))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat (array/concat
             (array/concat
               (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
               (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
-            (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder })))
-            (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @l.package " " @l.topic), icon: (let ((ic (array/find @config.leafIcons (fn i (= @i.kind @l.kind))))) (if (= @ic null) "file" (object/get @ic "icon" "file"))) })) [])) }
+            (array/map (array/unique (array/flatten (array/map (array/sort @entity.topics "topic" "asc") (fn t (let ((segs (str/split @t.topic "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @t.package " " (str/join (array/slice @segs 0 (+ @i 1)) "/"))))))))) (fn key (let ((pkg (default (array/first (str/split @key " ")) "")) (segs (str/split (default (array/last (str/split @key " ")) "") "/")) (topic (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) @key))))) { id: @key, label: (if (= @topic null) (default (array/last @segs) "") (str/concat (default (array/last @segs) "") "  ·  " (object/get @topic "count" 0))), parentId: (if (= (array/len @segs) 1) @pkg (str/concat @pkg " " (str/join (array/slice @segs 0 (- (array/len @segs) 1)) "/"))), icon: folder }))))
+            (if @config.leaves (array/map (array/unique (array/map (array/sort @entity.leaves "topic" "asc") (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s")))) (fn key { id: @key, label: (default (array/last (str/split @key "/")) ""), parentId: (str/join (array/slice (str/split @key "/") 0 (- (array/len (str/split @key "/")) 1)) "/"), icon: folder })) []))
+            (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @l.package " " @l.topic "/" @l.kind "s"), icon: (let ((ic (array/find @config.leafIcons (fn i (= @i.kind @l.kind))))) (if (= @ic null) "file" (object/get @ic "icon" "file"))) })) [])) }
         ] })
       NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
         (let ((picked (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))))
@@ -234,6 +249,7 @@ orbital BehaviorPlayground {
         (set @entity.leaves ?data)
         (emit TOPICS_SHOWN {})
       ROUTE_OPENED -> idle
+        (set @entity.routePending false)
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
         (set @entity.leafSelected ?behavior)
@@ -260,6 +276,10 @@ orbital BehaviorPlayground {
       BehaviorCatalogData.CATALOG_TOPICS -> TOPICS_LOADED
       BehaviorCatalogData.CATALOG_TREE -> TREE_LOADED
       PlaygroundRoute.ROUTE_OPEN -> ROUTE_OPENED
+      INIT {
+        name : string
+      }
+        @description "The page's mount; on a behavior route it carries the route's name."
       TOPICS_LOADED {
         topics : [PlaygroundTopic]!
       }
@@ -355,7 +375,6 @@ orbital BehaviorPlayground {
         (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
-        (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
@@ -371,20 +390,11 @@ orbital BehaviorPlayground {
         (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
-        (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
       BEHAVIOR_LOADED -> open when (= ?behavior @entity.behavior)
-        (set @entity.programJson ?programJson)
-        (set @entity.sourceJson ?sourceJson)
-        (set @entity.sourceText ?sourceText)
-        (set @entity.check (if ?valid valid invalid))
-        (set @entity.findings ?findings)
-        (set @entity.renderHeads (- (array/len (str/split ?programJson "[\"render-ui\",")) 1))
-        (set @entity.renderOverlays (array/count (array/slice (str/split ?programJson "[\"render-ui\",") 1) (fn p (array/some ["\"modal\"", "\"drawer\"", "\"overlay\"", "\"toast\""] (fn s (str/startsWith @p @s))))))
         (set @entity.status open)
-        (emit LIVE_CLASSIFY {})
         (emit STAGE_SHOWN {})
       BEHAVIOR_LOADED -> opening when (!= ?behavior @entity.behavior)
       BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
@@ -404,12 +414,6 @@ orbital BehaviorPlayground {
     state open {
       INIT -> browsing
         (emit STAGE_SHOWN {})
-      LIVE_CLASSIFY -> open when (= @entity.renderHeads 0)
-        (set @entity.renders none)
-      LIVE_CLASSIFY -> open when (and (> @entity.renderHeads 0) (= @entity.renderOverlays @entity.renderHeads))
-        (set @entity.renders overlay)
-      LIVE_CLASSIFY -> open when (and (> @entity.renderHeads 0) (< @entity.renderOverlays @entity.renderHeads))
-        (set @entity.renders inline)
       STAGE_SHOWN -> open
         (when (validate/required @entity.value)
         (render-ui main { type: stack, direction: vertical, gap: none, className: "h-full min-h-0", children: [
@@ -418,24 +422,13 @@ orbital BehaviorPlayground {
             { type: stack, direction: vertical, gap: none, children: [
               { type: typography, content: (array/last (str/split @entity.behavior "/")), variant: h3, weight: semibold },
               { type: typography, content: @entity.behavior, variant: caption, color: muted }
-            ] },
-            { type: tabs, activeTab: @entity.tab, tabChangeEvent: TAB_SELECTED, items: [{ id: "live", label: "Live" }, { id: "source", label: "Source" }] }
+            ] }
           ] },
           { type: box, className: "flex-1 min-h-0 overflow-auto", children: [
-            (if (= @entity.tab live)
-              (if (= @entity.check valid)
-                (if (= @entity.renders inline)
-                  @trait.GuestStage
-                  { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: "Nothing to show on its own", message: (if (= @entity.renders overlay) "This behavior draws only into overlay slots (modal, drawer, overlay or toast), which appear over a page that opens them, so it has no page of its own to show here. Its state machines and source are in the other tabs." "This behavior draws nothing: none of its traits renders a UI. Its state machines and source are in the other tabs.") }] })
-                { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: alert, variant: warning, title: "This behavior does not run on its own", message: "It does not validate alone (it expects a host that provides what it needs); its state machines and source are in the other tabs." }] (array/map @entity.findings (fn f { type: typography, content: (str/concat @f.code ": " @f.message), variant: caption }))) }] })
-              { type: code-block, code: @entity.sourceText, language: "lolo", showLineNumbers: true, maxHeight: "100%" })
+              @trait.GuestStage
           ] }
         ] }))
         (emit STATUS { behavior: @entity.behavior, topic: @entity.topic })
-      TAB_SELECTED -> open when (array/includes ["live", "source"] ?tabId)
-        (set @entity.tab ?tabId)
-        (emit STAGE_SHOWN {})
-      TAB_SELECTED -> open when (not (array/includes ["live", "source"] ?tabId))
       BACK -> browsing
         (emit GUEST_RESET {})
         (set @entity.behavior "")
@@ -457,7 +450,6 @@ orbital BehaviorPlayground {
         (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
-        (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
@@ -473,7 +465,6 @@ orbital BehaviorPlayground {
         (set @entity.topic (default ?topic @entity.topic))
         (set @entity.description (default ?description ""))
         (set @entity.value ?value)
-        (set @entity.tab live)
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
@@ -492,7 +483,6 @@ orbital BehaviorPlayground {
 
     emits {
       STAGE_SHOWN
-      LIVE_CLASSIFY { }
         @description "Internal: decide from the opened program's render-ui effects whether it draws in the page, only in overlay slots, or nowhere."
         @tier "internal"
       LOAD_BEHAVIOR -> external {
@@ -515,7 +505,6 @@ orbital BehaviorPlayground {
       PlaygroundRoute.ROUTE_OPEN -> OPEN
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
-      LIVE_CLASSIFY { }
       OPEN {
         behavior : string!
         description : string
@@ -531,19 +520,12 @@ orbital BehaviorPlayground {
       }
       BEHAVIOR_LOADED {
         behavior : string!
-        programJson : string!
-        sourceJson : string!
-        sourceText : string!
+        program : PlaygroundProgram!
         knobs : [PlaygroundKnob]!
-        valid : boolean!
-        findings : [PlaygroundFinding]!
       }
       BEHAVIOR_FAILED {
         behavior : string!
         error : string!
-      }
-      TAB_SELECTED {
-        tabId : string!
       }
       BACK
     }
@@ -561,7 +543,7 @@ orbital BehaviorPlayground {
     state idle {
       INIT -> idle
       BEHAVIOR_LOADED -> idle
-        (let ((shown (json/parse ?programJson PlaygroundProgram))) (if (== @shown null) (emit GUEST_FAIL { message: "The opened behavior could not be read to run." }) (emit GUEST_OPEN { program: @shown })))
+        (emit GUEST_OPEN { program: ?program })
     }
 
     emits {
@@ -569,17 +551,13 @@ orbital BehaviorPlayground {
         program : PlaygroundProgram!
       }
         @description "The opened behavior's resolved program, for the guest session to run."
-      GUEST_FAIL -> external {
-        message : string!
-      }
-        @description "The opened behavior's program could not be read."
     }
 
     listens {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       BEHAVIOR_LOADED {
         behavior : string!
-        programJson : string!
+        program : PlaygroundProgram!
       }
     }
   }
@@ -587,7 +565,6 @@ orbital BehaviorPlayground {
   trait GuestSession = Guest.traits.GuestSession {
     listens {
       PlaygroundOpen.GUEST_OPEN -> GUEST_OPEN
-      PlaygroundOpen.GUEST_FAIL -> GUEST_FAIL
       PlaygroundStage.GUEST_RESET -> GUEST_RESET
       GuestStage.GUEST_SEND -> GUEST_SEND
       MockSeed.DATASET_PLANNED -> DATASET_PLANNED

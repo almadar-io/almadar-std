@@ -1,0 +1,105 @@
+app std-orb-update-record [
+  version: "1.0.0",
+  fs: { "~/.orb/.update-check.json": [read, write, create], "~/.orb": [create] },
+  description: "std-orb-update-record — the one owner of the update record orb keeps in ~/.orb/.update-check.json: { checkedAt (seconds, 0 or more), available [[name, installed, newest, store]], urgent [[store, status applied|failed, text]]? }. UPDATE_RECORD_READ reads the file once and answers exactly one of UPDATE_RECORD_LOADED { checkedAt, available, urgent } (urgent is empty when the record has none), UPDATE_RECORD_ABSENT (the file does not exist: os/read-file's not-found failure, and only that one), UPDATE_RECORD_UNREADABLE (the file exists but is not a record in that shape, a negative checkedAt included, as when another writer left it in another shape) or UPDATE_RECORD_FAILED { error } (any other read failure). UPDATE_RECORD_WRITE { checkedAt, available, urgent } creates ~/.orb and writes the record, then answers UPDATE_RECORD_WRITTEN, or UPDATE_RECORD_WRITE_FAILED { error } when the directory or the file could not be written. Subject-agnostic: the notice that rescans and the launchpad that shows the record compose it and never read or write the file themselves.",
+  egress: []
+]
+;; @capabilities "read and write the orb update record in ~/.orb/.update-check.json"
+
+type UpdateRecord = { checkedAt : number!, available : [[string]]!, urgent : [[string]]? }
+
+orbital UpdateRecordOrbital {
+  entity UpdateRecordRun [runtime] {
+    id : string!
+    checkedAt : number = 0
+    available : [[string]] = []
+    urgent : [[string]] = []
+  }
+
+  trait UpdateRecordStore -> @rebindable UpdateRecordRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      UPDATE_RECORD_READ -> ready
+        (os/read-file "~/.orb/.update-check.json" { key: "record" emit: { success: UPDATE_RECORD_BYTES, failure: UPDATE_RECORD_READ_FAILED } })
+      UPDATE_RECORD_BYTES -> ready when (not (and (!= (json/parse (default (bytes/to-string ?data) "") UpdateRecord) null) (>= (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "checkedAt") 0)))
+        (emit UPDATE_RECORD_UNREADABLE {})
+      UPDATE_RECORD_BYTES -> ready when (and (!= (json/parse (default (bytes/to-string ?data) "") UpdateRecord) null) (>= (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "checkedAt") 0))
+        (emit UPDATE_RECORD_LOADED { checkedAt: (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "checkedAt"), available: (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "available"), urgent: (default (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "urgent") []) })
+      UPDATE_RECORD_READ_FAILED -> ready when (= ?kind "not-found")
+        (emit UPDATE_RECORD_ABSENT {})
+      UPDATE_RECORD_READ_FAILED -> ready when (!= ?kind "not-found")
+        (emit UPDATE_RECORD_FAILED { error: ?error })
+      UPDATE_RECORD_WRITE -> ready
+        (set @entity.checkedAt ?checkedAt)
+        (set @entity.available ?available)
+        (set @entity.urgent ?urgent)
+        (os/mkdir "~/.orb" true { key: "dir" emit: { success: UPDATE_RECORD_DIR, failure: UPDATE_RECORD_WRITE_FAILED } })
+      UPDATE_RECORD_DIR -> ready
+        (os/write-file "~/.orb/.update-check.json" (bytes/from-string (json/stringify { checkedAt: @entity.checkedAt, available: @entity.available, urgent: @entity.urgent })) { key: "record" emit: { success: UPDATE_RECORD_WRITTEN, failure: UPDATE_RECORD_WRITE_FAILED } })
+    }
+
+    emits {
+      UPDATE_RECORD_LOADED -> external {
+        checkedAt : number!
+        available : [[string]]!
+        urgent : [[string]]!
+      }
+        @description "The record was read: when it was written, the available updates and the urgent rows."
+        @tier "domain"
+      UPDATE_RECORD_ABSENT -> external { }
+        @description "No update record exists yet."
+        @tier "domain"
+      UPDATE_RECORD_UNREADABLE -> external { }
+        @description "The file exists but is not an update record in this shape."
+        @tier "domain"
+      UPDATE_RECORD_FAILED -> external {
+        error : string!
+      }
+        @description "The record could not be read."
+        @tier "domain"
+      UPDATE_RECORD_WRITTEN -> external { }
+        @description "The record was written."
+        @tier "domain"
+      UPDATE_RECORD_WRITE_FAILED -> external {
+        error : string!
+      }
+        @description "The record could not be written."
+        @tier "domain"
+      UPDATE_RECORD_BYTES { }
+        @description "Internal: os/read-file's success."
+        @tier "internal"
+      UPDATE_RECORD_READ_FAILED { }
+        @description "Internal: os/read-file's failure."
+        @tier "internal"
+      UPDATE_RECORD_DIR { }
+        @description "Internal: the store directory exists."
+        @tier "internal"
+    }
+
+    listens {
+      UPDATE_RECORD_READ { }
+        @description "Read the update record."
+      UPDATE_RECORD_WRITE {
+        checkedAt : number!
+        available : [[string]]!
+        urgent : [[string]]!
+      }
+        @description "Write the update record."
+      UPDATE_RECORD_BYTES {
+        data : bytes!
+      }
+        @description "os/read-file's success."
+      UPDATE_RECORD_READ_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/read-file's failure."
+      UPDATE_RECORD_DIR { }
+        @description "os/mkdir's success."
+    }
+  }
+
+  page boot as UpdateRecordPage -> UpdateRecordStore
+}

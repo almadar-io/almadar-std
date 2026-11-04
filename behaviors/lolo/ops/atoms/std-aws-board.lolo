@@ -57,6 +57,7 @@ orbital AwsBoardOrbital {
     quotas : [AwsQuota] = []
     costExplorer : [AwsServiceCost] = []
     history : [AwsTypeUsage] = []
+    failures : [string] @description "One line per read of the one in flight that failed: which read and why." = []
     cursor : number @description "Index of the bucket or quota being read." = 0
     details : [StatusBoardDetail] @description "The detail of every row last answered to the board." = []
   }
@@ -95,6 +96,7 @@ orbital AwsBoardOrbital {
       idleDescription: "Load the board to read the region's instances, cost and quotas."
       emptyTitle: "Nothing in this region"
       emptyDescription: "The read answered no instances, quotas or cost."
+      errorTitle: "Some reads failed"
       searchPlaceholder: "Search instances, quotas and services"
     }
   }
@@ -124,6 +126,7 @@ orbital AwsBoardOrbital {
         (set @entity.quotas [])
         (set @entity.costExplorer [])
         (set @entity.history [])
+        (set @entity.failures [])
         (set @entity.cursor 0)
         (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_REFRESH -> reading
@@ -141,13 +144,16 @@ orbital AwsBoardOrbital {
         (set @entity.quotas [])
         (set @entity.costExplorer [])
         (set @entity.history [])
+        (set @entity.failures [])
         (set @entity.cursor 0)
         (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
-      AWS_SHOW -> idle
+      AWS_SHOW -> idle when (= (array/len @entity.failures) (+ (+ 9 (array/len @entity.buckets)) (array/len @config.quotas)))
+        (emit AWS_BOARD_FAILED { error: (str/concat "Every aws read failed. " (str/join @entity.failures "; ")) })
+      AWS_SHOW -> idle when (not (= (array/len @entity.failures) (+ (+ 9 (array/len @entity.buckets)) (array/len @config.quotas))))
         (let ((irows (array/map @entity.board.instances (fn i (let ((st @i.state)) (let ((r : StatusBoardRow { id: @i.instanceId, section: (if (= @st "running") "running" (if (or (= @st "stopped") (= @st "terminated")) "stopped" "changing")), title: (if (= @i.name "") @i.instanceId @i.name), subtitle: (str/concat @i.instanceType " · " @i.az), tone: (if (= @st "running") "success" (if (= @st "terminated") "danger" (if (= @st "stopped") "neutral" "info"))), statusLabel: (if (= @st "running") "Running" (if (= @st "pending") "Pending" (if (= @st "stopping") "Stopping" (if (= @st "shutting-down") "Shutting down" (if (= @st "stopped") "Stopped" (if (= @st "terminated") "Terminated" @st)))))), icon: "", meta: (array/concat (if (== @i.gpu null) [] [(str/concat @i.gpuCount " × " (default @i.gpu ""))]) [(if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd "/h"))]), at: (let ((t (time/parse @i.launchTime))) (if (== @t null) null (as @t instant))), url: "" })) @r))))) (qrows (array/map @entity.board.quotas (fn q (let ((r : StatusBoardRow { id: (str/concat "quota:" @q.name), section: "quotas", title: @q.name, subtitle: (str/concat @q.used " of " @q.value (if @q.usedComplete "" " · some instances are not in the catalog")), tone: (if (>= @q.used @q.value) "danger" (if (>= (* @q.used 100) (* @q.value @config.quotaWarnPercent)) "warning" "success")), statusLabel: (if (>= @q.used @q.value) "At limit" (if (>= (* @q.used 100) (* @q.value @config.quotaWarnPercent)) "Near limit" "OK")), icon: "", meta: [(if (>= @q.used @q.value) "0 left" (str/concat (- @q.value @q.used) " left"))], at: null, url: "" })) @r)))) (crows (array/map @entity.board.costExplorer (fn c (let ((r : StatusBoardRow { id: (str/concat "cost:" @c.service), section: "cost", title: @c.service, subtitle: (str/concat "Billed " @entity.board.costExplorerPeriod " to date"), tone: "neutral", statusLabel: (str/concat "$" @c.cost), icon: "dollar-sign", meta: [@c.unit], at: null, url: "" })) @r)))))
           (do
             (set @entity.details (array/concat (array/concat (array/map @entity.board.instances (fn i (let ((d : StatusBoardDetail { rowId: @i.instanceId, phase: "ready", items: (array/map (array/concat (array/concat (array/concat (array/concat (array/concat (array/concat [["ID", @i.instanceId], ["Type", @i.instanceType], ["State", @i.state], ["Zone", @i.az], ["Launched", @i.launchTime]] (if (== @i.publicIp null) [] [["Public IP", (default @i.publicIp "")]])) (if (== @i.vcpus null) [] [["vCPUs", (str/concat @i.vcpus)]])) (if (== @i.memoryGb null) [] [["Memory", (str/concat @i.memoryGb " GB")]])) (if (== @i.gpu null) [] [["GPU", (str/concat @i.gpuCount " × " (default @i.gpu ""))], ["GPU memory", (str/concat @i.gpuMemoryGb " GB")]])) (if (== @i.hourlyUsd null) [["Price", "unpriced"]] [["Hourly", (str/concat "$" @i.hourlyUsd)], ["Daily", (str/concat "$" (default @i.dailyUsd 0))], ["Monthly", (str/concat "$" (default @i.monthlyUsd 0))]])) []) (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d))) (array/map @entity.board.quotas (fn q (let ((d : StatusBoardDetail { rowId: (str/concat "quota:" @q.name), phase: "ready", items: (array/map [["Quota", @q.name], ["Used", (str/concat @q.used)], ["Limit", (str/concat @q.value)], ["Used counted from", (if @q.usedComplete "every running instance" "only instances in the catalog")]] (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d)))) (array/map @entity.board.costExplorer (fn c (let ((d : StatusBoardDetail { rowId: (str/concat "cost:" @c.service), phase: "ready", items: (array/map [["Service", @c.service], ["Cost", (str/concat "$" @c.cost)], ["Unit", @c.unit], ["Period", @entity.board.costExplorerPeriod]] (fn p { label: (default (array/nth @p 1) ""), tone: "neutral", statusLabel: (default (array/nth @p 0) ""), meta: "" })), code: "", codeTitle: "", errorLines: [], error: "" })) @d)))))
-            (emit AWS_BOARD_SHOW { note: @config.region, tiles: [{ label: "Running instances", value: (str/concat (array/count @entity.board.instances (fn i (= @i.state "running")))), tone: "neutral", icon: "server" }, { label: "Month to date", value: (str/concat "$" @entity.board.costExplorerTotal), tone: "neutral", icon: "dollar-sign" }, { label: "Running spend", value: (str/concat "$" @entity.board.runningHourlyCost "/h"), tone: "neutral", icon: "activity" }, { label: "Estimated monthly", value: (str/concat "$" @entity.board.estimatedMonthlyCost), tone: "neutral", icon: "trending-up" }, { label: "Quota headroom", value: (let ((tight (array/nth (array/sort (array/map @entity.board.quotas (fn q { left: (- @q.value @q.used) })) "left" "asc") 0))) (if (== @tight null) "none" (if (<= @tight.left 0) "0 left" (str/concat @tight.left " left")))), tone: (if (array/some @qrows (fn r (= @r.tone "danger"))) "danger" (if (array/some @qrows (fn r (= @r.tone "warning"))) "warning" "neutral")), icon: "gauge" }], sections: [{ key: "running", label: "Running" }, { key: "changing", label: "Changing" }, { key: "stopped", label: "Stopped" }, { key: "quotas", label: "Quotas" }, { key: "cost", label: "Cost" }], rows: (array/concat (array/concat @irows @qrows) @crows), fetchedAt: (let ((t (time/parse @entity.board.fetchedAt))) (if (== @t null) @now (default (as @t instant) @now))), error: "" })))
+            (emit AWS_BOARD_SHOW { note: @config.region, tiles: [{ label: "Running instances", value: (str/concat (array/count @entity.board.instances (fn i (= @i.state "running")))), tone: "neutral", icon: "server" }, { label: "Month to date", value: (str/concat "$" @entity.board.costExplorerTotal), tone: "neutral", icon: "dollar-sign" }, { label: "Running spend", value: (str/concat "$" @entity.board.runningHourlyCost "/h"), tone: "neutral", icon: "activity" }, { label: "Estimated monthly", value: (str/concat "$" @entity.board.estimatedMonthlyCost), tone: "neutral", icon: "trending-up" }, { label: "Quota headroom", value: (let ((tight (array/nth (array/sort (array/map @entity.board.quotas (fn q { left: (- @q.value @q.used) })) "left" "asc") 0))) (if (== @tight null) "none" (if (<= @tight.left 0) "0 left" (str/concat @tight.left " left")))), tone: (if (array/some @qrows (fn r (= @r.tone "danger"))) "danger" (if (array/some @qrows (fn r (= @r.tone "warning"))) "warning" "neutral")), icon: "gauge" }], sections: [{ key: "running", label: "Running" }, { key: "changing", label: "Changing" }, { key: "stopped", label: "Stopped" }, { key: "quotas", label: "Quotas" }, { key: "cost", label: "Cost" }], rows: (array/concat (array/concat @irows @qrows) @crows), fetchedAt: (let ((t (time/parse @entity.board.fetchedAt))) (if (== @t null) @now (default (as @t instant) @now))), error: (if (= (array/len @entity.failures) 0) "" (str/concat "Could not read: " (str/join @entity.failures "; "))) })))
       AWS_ROW_OPENED -> idle
         (let ((gone : StatusBoardDetail { rowId: @payload.rowId, phase: "failed", items: [], code: "", codeTitle: "", errorLines: [], error: "That row is no longer on the board." }))
           (emit AWS_BOARD_DETAIL { detail: (default (array/find @entity.details (fn x (= @x.rowId @payload.rowId))) @gone) }))
@@ -162,28 +168,35 @@ orbital AwsBoardOrbital {
       AWS_REFRESH -> reading
 
       AWS_RAN -> reading when (= @payload.stage "instances")
-        (when (!= @payload.exitCode 0) (notify error (str/concat "aws failed reading instances (exit " @payload.exitCode "): " (if (= (str/trim @payload.stderr) "") "no error text" (str/trim @payload.stderr)))))
+        (when (!= @payload.exitCode 0) (do (notify error (str/concat "aws failed reading instances (exit " @payload.exitCode "): " (if (= (str/trim @payload.stderr) "") "no error text" (str/trim @payload.stderr)))) (set @entity.failures (array/append @entity.failures (str/concat "instances: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr))))))))
         (set @entity.instances (let ((rows (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout AwsInstanceRows) null))) (if (== @rows null) [] (array/map (array/flatten @rows) (fn i (let ((t (default (array/nth @i 1) "")) (spec (object/get @config.catalog (default (array/nth @i 1) "") null))) { instanceId: (default (array/nth @i 0) ""), instanceType: @t, state: (default (array/nth @i 2) ""), name: (default (array/nth @i 3) ""), launchTime: (default (array/nth @i 4) ""), publicIp: (array/nth @i 5), az: (default (array/nth @i 6) ""), vcpus: (if (== @spec null) null @spec.vcpus), memoryGb: (if (== @spec null) null @spec.memoryGb), gpu: (if (== @spec null) null @spec.gpu), gpuCount: (if (== @spec null) 0 @spec.gpuCount), gpuMemoryGb: (if (== @spec null) 0 @spec.gpuMemoryGb), hourlyUsd: (if (== @spec null) null @spec.hourlyUsd), dailyUsd: (if (== @spec null) null (math/round (* @spec.hourlyUsd 24) 2)), monthlyUsd: (if (== @spec null) null (math/round (* @spec.hourlyUsd @config.hoursPerMonth) 2)) }))))))
         (emit AWS_RUN { stage: "volumes", argv: ["ec2", "describe-volumes", "--query", "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> idle when (= @payload.stage "instances")
+        (set @entity.failures (array/append @entity.failures (str/concat "instances: could not run: " @payload.error)))
         (set @entity.loading false)
         (emit AWS_BOARD_FAILED { error: (str/concat "aws is not installed or could not run: " @payload.error) })
       AWS_RAN -> reading when (= @payload.stage "volumes")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "volumes: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.volumes (let ((rows (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout AwsCells) null))) (if (or (== @rows null) (not (array/every @rows (fn v (!= (str/to-number (str/concat (default (array/nth @v 1) 0))) null))))) [] (array/map @rows (fn v (let ((size (default (str/to-number (str/concat (default (array/nth @v 1) 0))) 0))) { volumeId: (str/concat (default (array/nth @v 0) "")), size: @size, state: (str/concat (default (array/nth @v 2) "")), volumeType: (str/concat (default (array/nth @v 3) "")), az: (str/concat (default (array/nth @v 4) "")), name: (str/concat (default (array/nth @v 5) "")), attachedTo: (let ((at (array/nth @v 6))) (if (validate/string @at) @at null)), iops: (let ((io (array/nth @v 7))) (if (validate/number @io) @io 0)), monthlyCost: (math/round (* @size @config.ebsPerGbMonth) 2) }))))))
         (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "volumes")
+        (set @entity.failures (array/append @entity.failures (str/concat "volumes: could not run: " @payload.error)))
         (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> reading when (= @payload.stage "images")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "images: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.amis (let ((rows (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout AwsCells) null))) (if (or (== @rows null) (not (array/every @rows (fn a (!= (str/to-number (str/concat (default (array/nth @a 4) 0))) null))))) [] (array/map @rows (fn a (let ((size (default (str/to-number (str/concat (default (array/nth @a 4) 0))) 0))) { imageId: (str/concat (default (array/nth @a 0) "")), name: (str/concat (default (array/nth @a 1) "")), state: (str/concat (default (array/nth @a 2) "")), created: (str/concat (default (array/nth @a 3) "")), sizeGb: @size, monthlyCost: (math/round (* @size @config.snapshotPerGbMonth) 2) }))))))
         (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "images")
+        (set @entity.failures (array/append @entity.failures (str/concat "images: could not run: " @payload.error)))
         (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
       ;; the nth defaults never fire: each line is non-blank, so it has at least one part
       AWS_RAN -> reading when (= @payload.stage "s3")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "s3: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.buckets (if (= @payload.exitCode 0) (array/filter (array/map (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= (str/trim @l) ""))) (fn l (let ((parts (array/filter (str/split (str/trim @l) " ") (fn p (!= @p ""))))) (default (array/nth @parts (- (array/len @parts) 1)) "")))) (fn b (array/some @config.bucketNameContains (fn m (str/includes @b @m))))) []))
         (set @entity.cursor 0)
         (emit AWS_BUCKET_NEXT { })
       AWS_CLI_FAILED -> reading when (= @payload.stage "s3")
+        (set @entity.failures (array/append @entity.failures (str/concat "s3: could not run: " @payload.error)))
         (set @entity.cursor 0)
         (emit AWS_BUCKET_NEXT { })
       ;; the bucket default never fires: the cursor is below the bucket count
@@ -196,27 +209,35 @@ orbital AwsBoardOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_BUCKET_NEXT { })
       AWS_RAN -> reading when (and (= @payload.stage "bucket") (or (== (str/to-number (str/trim (default (array/nth (str/split (default (array/find (let ((ls (str/split @payload.stdout "\n"))) (let ((ls2 (if (= (array/nth @ls (- (array/len @ls) 1)) "") (array/take @ls (- (array/len @ls) 1)) @ls))) (array/takeLast @ls2 2))) (fn l (str/includes @l "Total Objects:"))) "") "Total Objects:") 1) ""))) null) (== (str/to-number (str/trim (default (array/nth (str/split (default (array/find (let ((ls (str/split @payload.stdout "\n"))) (let ((ls2 (if (= (array/nth @ls (- (array/len @ls) 1)) "") (array/take @ls (- (array/len @ls) 1)) @ls))) (array/takeLast @ls2 2))) (fn l (str/includes @l "Total Size:"))) "") "Total Size:") 1) ""))) null)))
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "bucket: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (notify warning "aws answered a bucket summary whose Total Objects or Total Size is not a number; the bucket is left out")
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_BUCKET_NEXT { })
       AWS_CLI_FAILED -> reading when (= @payload.stage "bucket")
+        (set @entity.failures (array/append @entity.failures (str/concat "bucket: could not run: " @payload.error)))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_BUCKET_NEXT { })
       AWS_RAN -> reading when (= @payload.stage "security-groups")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "security-groups: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.securityGroups (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsStringRows) (fn g { groupId: (default (array/nth @g 0) ""), groupName: (default (array/nth @g 1) ""), description: (default (array/nth @g 2) "") })) []))
         (emit AWS_RUN { stage: "key-pairs", argv: ["ec2", "describe-key-pairs", "--query", "KeyPairs[*].[KeyName,KeyPairId,CreateTime]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "security-groups")
+        (set @entity.failures (array/append @entity.failures (str/concat "security-groups: could not run: " @payload.error)))
         (emit AWS_RUN { stage: "key-pairs", argv: ["ec2", "describe-key-pairs", "--query", "KeyPairs[*].[KeyName,KeyPairId,CreateTime]", "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> reading when (= @payload.stage "key-pairs")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "key-pairs: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.keyPairs (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsStringRows) (fn k { keyName: (default (array/nth @k 0) ""), keyId: (default (array/nth @k 1) ""), created: (default (array/nth @k 2) "") })) []))
         (emit AWS_RUN { stage: "roles", argv: ["iam", "list-roles", "--query", (str/concat "Roles[?contains(RoleName, `" @config.roleNameContains "`)].{RoleName:RoleName,CreateDate:CreateDate}"), "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "key-pairs")
+        (set @entity.failures (array/append @entity.failures (str/concat "key-pairs: could not run: " @payload.error)))
         (emit AWS_RUN { stage: "roles", argv: ["iam", "list-roles", "--query", (str/concat "Roles[?contains(RoleName, `" @config.roleNameContains "`)].{RoleName:RoleName,CreateDate:CreateDate}"), "--output", "json", "--region", @config.region, "--output", "json"] })
       AWS_RAN -> reading when (= @payload.stage "roles")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "roles: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.iamRoles (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsRoleRows) (fn r { roleName: @r.RoleName, created: @r.CreateDate })) []))
         (set @entity.cursor 0)
         (emit AWS_QUOTA_NEXT { })
       AWS_CLI_FAILED -> reading when (= @payload.stage "roles")
+        (set @entity.failures (array/append @entity.failures (str/concat "roles: could not run: " @payload.error)))
         (set @entity.cursor 0)
         (emit AWS_QUOTA_NEXT { })
       ;; the code default never fires: the cursor is below the quota count
@@ -230,19 +251,24 @@ orbital AwsBoardOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_QUOTA_NEXT { })
       AWS_RAN -> reading when (and (= @payload.stage "quota") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "quota: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_QUOTA_NEXT { })
       AWS_CLI_FAILED -> reading when (= @payload.stage "quota")
+        (set @entity.failures (array/append @entity.failures (str/concat "quota: could not run: " @payload.error)))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AWS_QUOTA_NEXT { })
       AWS_RAN -> reading when (= @payload.stage "cost")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "cost: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (when (and (= @payload.exitCode 0) (== (json/parse @payload.stdout AwsCostReply) null)) (notify warning "aws answered the cost explorer read with something that is not a cost report"))
         (set @entity.costExplorer (if (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout AwsCostReply) null) (array/every (default (array/nth (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b @b.Groups)) 0) []) (fn g (!= (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) null)))) (array/sort (array/map (default (array/nth (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b @b.Groups)) 0) []) (fn g { service: (default (array/nth (default @g.Keys []) 0) "Unknown"), cost: (math/round (default (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) 0) 2), unit: (object/get @g "Metrics.UnblendedCost.Unit" "USD") })) "cost" "desc") []))
         (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (time/subtract @entity.startedAt (* @config.historyDays 86400000) "ms") "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       AWS_CLI_FAILED -> reading when (= @payload.stage "cost")
+        (set @entity.failures (array/append @entity.failures (str/concat "cost: could not run: " @payload.error)))
         (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (time/subtract @entity.startedAt (* @config.historyDays 86400000) "ms") "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
       ;; the Keys defaults never fire: groups with an empty first key are filtered out first
       AWS_RAN -> idle when (= @payload.stage "history")
+        (when (!= @payload.exitCode 0) (set @entity.failures (array/append @entity.failures (str/concat "history: " (if (= (str/trim @payload.stderr) "") (str/concat "exit " @payload.exitCode) (str/concat "exit " @payload.exitCode ": " (str/trim @payload.stderr)))))))
         (when (and (= @payload.exitCode 0) (== (json/parse @payload.stdout AwsCostReply) null)) (notify warning "aws answered the instance-type history read with something that is not a cost report"))
         (set @entity.history (if (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout AwsCostReply) null) (array/every (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (default @b.Groups [])))) (fn g (and (!= (str/to-number (object/get @g "Metrics.UsageQuantity.Amount" "0")) null) (!= (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) null))))) (let ((groups (array/filter (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (default @b.Groups [])))) (fn g (and (!= (default (array/nth (default @g.Keys []) 0) "") "") (!= (default (array/nth (default @g.Keys []) 0) "") "NoInstanceType"))))))
           (array/sort (array/filter (array/map (array/unique (array/map @groups (fn g (default (array/nth (default @g.Keys []) 0) "")))) (fn t (let ((gs (array/filter @groups (fn g (= (default (array/nth (default @g.Keys []) 0) "") @t)))) (spec (object/get @config.catalog @t null)))
@@ -260,11 +286,12 @@ orbital AwsBoardOrbital {
             instanceTypeHistoryDays: @config.historyDays,
             fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z") }))
         (set @entity.cachedAt @now)
-        (set @entity.hasCache true)
+        (set @entity.hasCache (= (array/len @entity.failures) 0))
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
         (emit AWS_SHOW { })
       AWS_CLI_FAILED -> idle when (= @payload.stage "history")
+        (set @entity.failures (array/append @entity.failures (str/concat "history: could not run: " @payload.error)))
         (set @entity.history [])
         (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (default @i.hourlyUsd 0)))) 2)))
           (set @entity.board {
@@ -279,7 +306,7 @@ orbital AwsBoardOrbital {
             instanceTypeHistoryDays: @config.historyDays,
             fetchedAt: (str/concat (default (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (time/diff @entity.startedAt (time/startOf @entity.startedAt "second"))) 3 "0") "Z") }))
         (set @entity.cachedAt @now)
-        (set @entity.hasCache true)
+        (set @entity.hasCache (= (array/len @entity.failures) 0))
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
         (notify error (str/concat "The aws CLI could not run: " @payload.error))

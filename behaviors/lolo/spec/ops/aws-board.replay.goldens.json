@@ -421,6 +421,137 @@
    "defaults": [
     "AwsCli"
    ]
+  },
+  {
+   "id": "every-read-failed-ends-in-the-failed-view",
+   "now": 1760531445678,
+   "config": {
+    "quotas": []
+   },
+   "steps": [
+    {
+     "event": "AWS_SHOW",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "a",
+      "failures": [
+       "instances: exit 253: Unable to locate credentials (NoCredentials)",
+       "volumes: exit 253: Unable to locate credentials (NoCredentials)",
+       "images: exit 253: Unable to locate credentials (NoCredentials)",
+       "s3: exit 253: Unable to locate credentials (NoCredentials)",
+       "security-groups: exit 253: Unable to locate credentials (NoCredentials)",
+       "key-pairs: exit 253: Unable to locate credentials (NoCredentials)",
+       "roles: exit 253: Unable to locate credentials (NoCredentials)",
+       "cost: exit 253: Unable to locate credentials (NoCredentials)",
+       "history: exit 253: Unable to locate credentials (NoCredentials)"
+      ],
+      "buckets": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AWS_BOARD_FAILED",
+        "payload": {
+         "error": "Every aws read failed. instances: exit 253: Unable to locate credentials (NoCredentials); volumes: exit 253: Unable to locate credentials (NoCredentials); images: exit 253: Unable to locate credentials (NoCredentials); s3: exit 253: Unable to locate credentials (NoCredentials); security-groups: exit 253: Unable to locate credentials (NoCredentials); key-pairs: exit 253: Unable to locate credentials (NoCredentials); roles: exit 253: Unable to locate credentials (NoCredentials); cost: exit 253: Unable to locate credentials (NoCredentials); history: exit 253: Unable to locate credentials (NoCredentials)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failed-read-among-good-ones-shows-the-failed-read-note",
+   "now": 1760531445678,
+   "config": {
+    "quotas": []
+   },
+   "steps": [
+    {
+     "event": "AWS_SHOW",
+     "payload": {},
+     "from": "idle",
+     "entity": {
+      "id": "a",
+      "failures": [
+       "instances: exit 253: Unable to locate credentials (NoCredentials)"
+      ],
+      "buckets": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AWS_BOARD_SHOW",
+        "payload": {
+         "error": "Could not read: instances: exit 253: Unable to locate credentials (NoCredentials)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-history-read-that-could-not-run-is-recorded-and-the-board-shows",
+   "now": 1760531445678,
+   "config": {
+    "quotas": []
+   },
+   "steps": [
+    {
+     "event": "AWS_CLI_FAILED",
+     "payload": {
+      "stage": "history",
+      "error": "spawn failed",
+      "kind": "spawn",
+      "code": "spawn"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "a",
+      "failures": [
+       "instances: exit 253: NoCredentials"
+      ],
+      "startedAt": 1760531445000,
+      "instances": [],
+      "volumes": [],
+      "amis": [],
+      "s3Buckets": [],
+      "securityGroups": [],
+      "keyPairs": [],
+      "iamRoles": [],
+      "quotas": [],
+      "costExplorer": [],
+      "history": [],
+      "buckets": [],
+      "board": {
+       "instances": [],
+       "volumes": [],
+       "amis": [],
+       "s3Buckets": [],
+       "securityGroups": [],
+       "keyPairs": [],
+       "iamRoles": [],
+       "quotas": [],
+       "costExplorer": [],
+       "costExplorerTotal": 0,
+       "costExplorerPeriod": "",
+       "estimatedMonthlyCost": 0,
+       "runningHourlyCost": 0,
+       "instanceTypeHistory": [],
+       "instanceTypeHistoryDays": 0,
+       "fetchedAt": ""
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle"
+     }
+    }
+   ]
   }
  ]
 }

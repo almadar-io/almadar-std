@@ -28,8 +28,8 @@ export const OS_PROCESS_OPERATORS: Record<string, StdOperatorMeta> = {
   }),
   'os/kill': osEffect({
     answer: shape({}),
-    grant: [],
-    description: 'Send a signal to a child process (grant exec). Success payload: {}.',
+    grant: [{ kind: 'self-signal', pid: 0 }],
+    description: 'Send a signal to a child process this program spawned, or to its own process (os/pid) under the grant sys self-signal. Success payload: {}.',
     params: [arg('pid', OS_HANDLE, 'Process id'), arg('signal', OS_SIGNAL, 'Signal name: TERM, KILL, INT, HUP, QUIT, USR1, USR2, STOP or CONT')],
     example: '["os/kill", "@payload.pid", "TERM", { "emit": { "success": "PROC_SIGNALLED", "failure": "PROC_FAILED" } }]',
   }),

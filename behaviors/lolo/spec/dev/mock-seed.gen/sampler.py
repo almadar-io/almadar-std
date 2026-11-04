@@ -77,13 +77,15 @@ def sampler_step(P):
     keys=f'(array/sort (object/keys {props}))'
     obj_cell=C(qs('object'),'""','0',f', keys: {keys}, kids: (array/map {keys} (fn n (str/concat @pa "." @n)))')
     obj_push=f'(array/flatten (array/map {keys} (fn n (let ((sub (object/get {props} @n))) (if (= @sub null) [] [{{ spec: @sub, name: @n, index: @ix, depth: (+ @dp 1), path: (str/concat @pa "." @n) }}])))))'
-    obj=f'(if (or (not (object/has @sp "properties")) (>= @dp 3)) {res(C(qs("null")))} {res(obj_cell,obj_push)})'
+    obj_empty=res(C(qs('object'),'""','0',', keys: [], kids: []'))
+    obj=(f'(if (or (not (object/has @sp "properties")) (>= @dp 3)) (if (object/get @sp "nullable" true) {res(C(qs("null")))} '
+         f'(if (or (object/has @sp "items") (object/get @sp "required" false)) {obj_empty} {res(C(qs("omit")))})) {res(obj_cell,obj_push)})')
     slots='(object/get @sp "slots" [])'
     tup=res(C(qs('tuple'),'""',f'(array/len {slots})',f', kids: (array/map (array/range (array/len {slots})) (fn ki (str/concat @pa "[" @ki "]")))'),
             f'(array/flatten (array/map (array/range (array/len {slots})) (fn ki (let ((sl (array/nth {slots} @ki))) (if (= @sl null) [] [{{ spec: @sl, name: (object/get @sl "name" ""), index: @ix, depth: (+ @dp 1), path: (str/concat @pa "[" @ki "]") }}])))))')
     uni_cell_none=res(C(qs('omit')))
     uni_push=f'[{{ spec: @usub, name: @nm, index: @ix, depth: (+ @dp 1), path: @pa }}]'
-    uni=(f'(let ((v0 (array/nth (object/get @sp "values" []) 0))) (if (or (>= @dp 3) (= @v0 null)) {uni_cell_none} '
+    uni=(f'(let ((v0 (array/nth (object/get @sp "values" []) 0))) (if (or (and (>= @dp 3) (object/get @sp "nullable" true)) (= @v0 null)) {uni_cell_none} '
          f'(let ((usub (object/get {props} @v0))) (if (= @usub null) {uni_cell_none} {res(None,uni_push)}))))')
     sgx=slug('@nm')
     imgname=f'(array/includes {IMG} (str/lower @nm))'
@@ -158,7 +160,7 @@ def sampler_step(P):
            f'(if (> (array/len @vals) 0) {res(vocab)} {typed_dispatch})))))')
     body=(f'(let ((fr (array/first (object/get @acc "stack")))) (if (= @fr null) @acc (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
           f'(let ((ty (object/get @sp "type")) (o (if {RT} 1 @ix))) (let ((vals (if (= @ty "union") [] (object/get @sp "values" []))) (hasdef (object/has @sp "default")) (hasmock (object/has @sp "mock"))) '
-          f'(let ((rr : SampleStep {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }}))))))')
+          f'(let ((rr : SampleStep {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (array/map (object/get @rr "cells") (fn rc (if (and (= (object/get @rc "kind") "omit") (= (object/get @sp "nullable" true) false) (= (object/get @rc "path") @pa)) (object/set @rc "kind" "absent") @rc)))), s: (object/get @rr "s") }}))))))')
     return f'(fn acc kk {body})'
 
 def build_expr(cells_expr, root_path_expr='""', row_root=False):
@@ -169,11 +171,11 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
     kid=lambda x: f'(default (array/nth @ks {x}) "")'
     key=lambda x: f'(default (array/nth (object/get @cl "keys" []) {x}) "")'
     kind_at=lambda x: f'(let ((fc (array/find @allc (fn c (= (object/get @c "path") {kid(x)}))))) (if (= @fc null) "" (object/get @fc "kind")))'
-    row_value=f'(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= {kind_at("@i")} "omit"))) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'
+    row_value=f'(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (not (array/includes ["omit", "absent"] {kind_at("@i")})))) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'
     cases = [
         ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
         ('(= @kd "row")', row_value),
-        ('(= @kd "object")', f'(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'),
+        ('(= @kd "object")', f'(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= {kind_at("@i")} "absent"))) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'),
         ('(= @kd "default")', '(object/get @cl "val" null)'),
         ('(= @kd "behavior")', '{ behavior: (object/get @cl "text" "") }'),
         ('(= @kd "file")', '{ name: (object/get @cl "text" ""), url: (object/get @cl "url" ""), mimeType: (object/get @cl "mime" ""), sizeBytes: (object/get @cl "num" 0) }'),
@@ -181,7 +183,7 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
         ('(= @kd "boolean")', '(= (object/get @cl "text" "") "true")'),
         ('(= @kd "relation-one")', '""'),
         ('(= @kd "relation-many")', '[]'),
-        ('(or (= @kd "null") (= @kd "omit"))', 'null'),
+        ('(or (= @kd "null") (= @kd "omit") (= @kd "absent"))', 'null'),
     ]
     step = put('(object/get @cl "text" "")')
     for condition, value in reversed(cases):

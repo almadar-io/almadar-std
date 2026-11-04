@@ -251,11 +251,10 @@
       "found": []
      },
      "expect": {
-      "effects": [
+      "emits": [
        {
-        "type": "os/read-file",
-        "key": "cache",
-        "optionsAt": 1
+        "event": "UN_RECORD_READ",
+        "payload": {}
        }
       ]
      }
@@ -268,7 +267,20 @@
     {
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtbIkBhbG1hZGFyL2NvcmUiLCAiMS4yLjAiLCAiMS4xMC4wIl0sIFsiQGFsbWFkYXIvc3RkIiwgIjMuMC4wIiwgIjMuMS40Il1dfQ=="
+      "checkedAt": 99000,
+      "available": [
+       [
+        "@almadar/core",
+        "1.2.0",
+        "1.10.0"
+       ],
+       [
+        "@almadar/std",
+        "3.0.0",
+        "3.1.4"
+       ]
+      ],
+      "urgent": []
      },
      "from": "reading",
      "entity": {
@@ -312,7 +324,9 @@
     {
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdfQ=="
+      "checkedAt": 99000,
+      "available": [],
+      "urgent": []
      },
      "from": "reading",
      "entity": {
@@ -352,7 +366,15 @@
     {
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiAwLCAiYXZhaWxhYmxlIjogW1siQGFsbWFkYXIvY29yZSIsICIxLjAuMCIsICIxLjEuMCJdXX0="
+      "checkedAt": 0,
+      "available": [
+       [
+        "@almadar/core",
+        "1.0.0",
+        "1.1.0"
+       ]
+      ],
+      "urgent": []
      },
      "from": "reading",
      "entity": {
@@ -385,7 +407,9 @@
     {
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiAxMzYwMCwgImF2YWlsYWJsZSI6IFtdfQ=="
+      "checkedAt": 13600,
+      "available": [],
+      "urgent": []
      },
      "from": "reading",
      "entity": {
@@ -421,7 +445,9 @@
     {
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiAxMzYwMSwgImF2YWlsYWJsZSI6IFtdfQ=="
+      "checkedAt": 13601,
+      "available": [],
+      "urgent": []
      },
      "from": "reading",
      "entity": {
@@ -460,10 +486,7 @@
    "steps": [
     {
      "event": "UN_CACHE_ABSENT",
-     "payload": {
-      "error": "x",
-      "kind": "not-found"
-     },
+     "payload": {},
      "from": "reading",
      "entity": {
       "id": "run",
@@ -490,13 +513,11 @@
    ]
   },
   {
-   "id": "garbled-cache-is-stale",
+   "id": "unreadable-or-foreign-cache-is-stale",
    "steps": [
     {
-     "event": "UN_CACHE_READ",
-     "payload": {
-      "data": "bm90IGpzb24="
-     },
+     "event": "UN_CACHE_ABSENT",
+     "payload": {},
      "from": "reading",
      "entity": {
       "id": "run",
@@ -1444,7 +1465,7 @@
    ]
   },
   {
-   "id": "write-asks-for-the-orb-directory",
+   "id": "write-asks-the-record-owner",
    "steps": [
     {
      "event": "UN_WRITE",
@@ -1464,41 +1485,14 @@
       "found": []
      },
      "expect": {
-      "effects": [
+      "emits": [
        {
-        "type": "os/mkdir",
-        "key": "dir"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "directory-ready-writes-the-cache-file",
-   "steps": [
-    {
-     "event": "UN_DIR",
-     "payload": {},
-     "from": "writing",
-     "entity": {
-      "id": "run",
-      "mode": "check",
-      "nowSec": 100000,
-      "checkedAt": 0,
-      "cached": [],
-      "deps": [],
-      "cursor": 0,
-      "installed": "",
-      "cands": [],
-      "cc": 0,
-      "found": []
-     },
-     "expect": {
-      "effects": [
-       {
-        "type": "os/write-file",
-        "key": "cache"
+        "event": "UN_RECORD_WRITE",
+        "payload": {
+         "checkedAt": 100000,
+         "available": [],
+         "urgent": []
+        }
        }
       ]
      }
@@ -1525,47 +1519,6 @@
          "status": 500,
          "body": "",
          "stderr": "Error: orb update-notice: the command arguments could not be read"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "negative-checked-at-cache-is-stale-not-fresh",
-   "steps": [
-    {
-     "event": "UN_CACHE_READ",
-     "payload": {
-      "data": "eyJjaGVja2VkQXQiOiAtMSwgImF2YWlsYWJsZSI6IFtbIkBhbG1hZGFyL2NvcmUiLCAiMS4wLjAiLCAiMS4xLjAiXV19"
-     },
-     "from": "reading",
-     "entity": {
-      "id": "run",
-      "mode": "check",
-      "nowSec": 50000,
-      "checkedAt": 0,
-      "cached": [],
-      "deps": [],
-      "cursor": 0,
-      "installed": "",
-      "cands": [],
-      "cc": 0,
-      "found": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "UN_DUE",
-        "payload": {}
-       },
-       {
-        "event": "UPDATE_NOTICE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": ""
         }
        }
       ]
@@ -2054,7 +2007,15 @@
      "from": "reading",
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImZhaWxlZCIsICJib29tIl1dfQ=="
+      "checkedAt": 99000,
+      "available": [],
+      "urgent": [
+       [
+        "global",
+        "failed",
+        "boom"
+       ]
+      ]
      },
      "entity": {
       "id": "run",
@@ -2098,7 +2059,15 @@
      "from": "reading",
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImFwcGxpZWQiLCAic2VjdXJpdHkgdXBkYXRlOiBAYWxtYWRhci9jb3JlIDEuMC4wIFx1MjE5MiAxLjAuMTogbG9hZGVyIHJlbW90ZSBjb2RlIGV4ZWN1dGlvbiJdXX0="
+      "checkedAt": 99000,
+      "available": [],
+      "urgent": [
+       [
+        "global",
+        "applied",
+        "security update: @almadar/core 1.0.0 → 1.0.1: loader remote code execution"
+       ]
+      ]
      },
      "entity": {
       "id": "run",
@@ -2139,7 +2108,15 @@
      "from": "reading",
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImZhaWxlZCIsICJib29tIl1dfQ=="
+      "checkedAt": 99000,
+      "available": [],
+      "urgent": [
+       [
+        "global",
+        "failed",
+        "boom"
+       ]
+      ]
      },
      "entity": {
       "id": "run",
@@ -2181,7 +2158,15 @@
      "from": "reading",
      "event": "UN_CACHE_READ",
      "payload": {
-      "data": "eyJjaGVja2VkQXQiOiA5OTAwMCwgImF2YWlsYWJsZSI6IFtdLCAidXJnZW50IjogW1siZ2xvYmFsIiwgImFwcGxpZWQiLCAic2VjdXJpdHkgdXBkYXRlOiBAYWxtYWRhci9jb3JlIDEuMC4wIFx1MjE5MiAxLjAuMTogbG9hZGVyIHJlbW90ZSBjb2RlIGV4ZWN1dGlvbiJdXX0="
+      "checkedAt": 99000,
+      "available": [],
+      "urgent": [
+       [
+        "global",
+        "applied",
+        "security update: @almadar/core 1.0.0 → 1.0.1: loader remote code execution"
+       ]
+      ]
      },
      "entity": {
       "id": "run",

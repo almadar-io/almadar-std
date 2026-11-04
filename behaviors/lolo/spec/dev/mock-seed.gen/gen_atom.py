@@ -118,7 +118,7 @@ def store_of_entity(ename):
 card='(object/get (object/get @fd "relation" {}) "cardinality" "")'
 REL_ENT='(object/get (object/get @fd "relation" {}) "entity" "")'
 links_expr=(f'(array/flatten (array/map (array/unique (array/map {seedregs} (fn r (object/get @r "store")))) (fn st '
-   f'(let ((flds (array/filter (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "fields")))) (fn f (and (= (object/get @f "type" "") "relation") (object/has @f "relation"))))) '
+   f'(let ((flds (array/filter (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "fields")))) (fn f (and (= (object/get @f "type" "") "relation") (object/has @f "relation") (not (object/get @f "intrinsic" false)))))) '
    f'(owners (array/flatten (array/map (array/filter {seedregs} (fn r (= (object/get @r "store") @st))) (fn r (object/get @r "ownerCols")))))) '
    f'(array/flatten (array/map (array/unique (array/map @flds (fn f (object/get @f "name" "")))) (fn nm (let ((fd (array/find @flds (fn f (= (object/get @f "name" "") @nm))))) (if (= @fd null) [] '
    f'[{{ store: @st, field: @nm, target: {store_of_entity(REL_ENT)}, scalar: (array/includes ["one", "many-to-one"] {card}), isOwner: (array/includes @owners @nm) }}])))))))))')
@@ -335,7 +335,7 @@ def reg_total(storex): return f'(default {reg_of(storex)} {NOREG})'
 NOROW='{ }'
 def row_at(rows,k): return f'(default (array/nth {rows} {k}) {NOROW})'
 G_=lambda o,k: f'(object/get {o} "{k}")'
-OLINK_KEY='(let ((lk (array/first @entity.dsOlinks))) (str/concat (object/get @lk "store") "." (object/get @lk "field")))'
+OLINK_KEY='(let ((lk (array/first @entity.dsOlinks))) (str/concat (object/get @lk "store") "|" (object/get @lk "field")))'
 OLINK_SHARED=('(let ((lk (array/first @entity.dsOlinks))) (let ((reg '+reg_of('(object/get @lk "store")')+')) '
               '(and (!= @reg null) (= (array/len (array/filter (object/get @reg "policyRefs") (fn c (!= @c (object/get @lk "field"))))) 0))))')
 stamp_context=(f'(let ((st (array/first @entity.dsStamps))) (let ((reg {reg_total(G_("@st","store"))}) (col {G_("@st","col")})) '
@@ -891,7 +891,7 @@ fields='''    id : string!
     dsProjs : [DatasetProj] @description "The projected fields to fill." = []
     dsStores : Map string [Map string MockValue?] @description "The rows of each store key." = {}
     dsOut : DsBatch @description "The last store batch: the registrations run in one step until one produced owner stamps; emptied once read." = { stores: {}, s: 0, minted: 0, stamps: [], used: 0, halt: false }
-    dsOlinkCache : Map string AcOut @description "Owner-link verdicts by store and field, kept only where the read and create policies read no row field but that one and no binding but @user." = {}
+    dsOlinkCache : Map string AcOut @description "Owner-link verdicts keyed `<store>|<field>`, kept only where the read and create policies read no row field but that one and no binding but @user." = {}
     dsActive : boolean @description "A boot seed is running: every page mount runs INIT, and a second run started before the first writes its marker would race it." = false
     dsWork : number @description "Cascade steps the seed has spent since it last continued in a dispatch of its own." = 0
     dsNext : string @description "Where the seed continues after its resume dispatch answers: stamp or olink." = ""

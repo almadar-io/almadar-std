@@ -3,14 +3,12 @@ app std-launchpad-updates [
   exec: ["orb"],
   env: ["PATH", "HOME"],
   sys: [self-signal],
-  fs: { "~/.orb/.update-check.json": [read] },
-  description: "std-launchpad-updates — the launchpad's view of the update record orb's update notice keeps in ~/.orb/.update-check.json ({ checkedAt, available [[name, installed, newest, store]], urgent [[store, applied|failed, text]] }) and the button that runs the update. UPDATES_LOAD reads the record: a file that does not exist (os/read-file's not-found failure, and only that one) is no update, a record that is not in that shape or any other failure answers UPDATES_FAILED { error }, and a good record answers UPDATES_LOADED { available, urgent } (urgent is empty when the record has none). UPDATES_RUN { store } runs `orb update --global` for the global store and `orb update` for any other store through std-cli (the orb on PATH) and, when the run ends, answers UPDATES_RAN { store } on exit 0 or UPDATES_RUN_FAILED { store, error } (the child's stderr, or its exit code, or why orb could not start), then reads the record again either way; The banner (UpdatesBanner) reads the record at INIT and on UPDATES_REFRESH and draws, as core patterns, an info alert with an Update button per store that has available updates, a success alert per applied urgent row (advisory text and the restart text), an error alert per failed urgent row (the vulnerable version is still installed) with a Retry button, a success alert after a finished run that says the launchpad restarts if a service manager runs it, each applied alert with a Restart button (UPDATES_RESTART_PRESSED, listened as UPDATES_RESTART, the store reads os/pid and sends os/kill TERM to its own pid, so the process exits and its service manager starts it again on the new orb), and an error alert for a failed run or an unreadable record; no record draws nothing. A run asked while another is in flight answers UPDATES_RUN_FAILED at once.",
+  description: "std-launchpad-updates — the launchpad's view of the update record orb's update notice keeps in ~/.orb/.update-check.json ({ checkedAt, available [[name, installed, newest, store]], urgent [[store, applied|failed, text]] }) and the button that runs the update. UPDATES_LOAD reads the record: the record is read through std-orb-update-record, its one owner: a file that does not exist is no update (UPDATES_LOADED with nothing), a file that is not a record in that shape (another writer's, garbled) answers UPDATES_UNCHECKED, any other read failure answers UPDATES_FAILED { error }, and a good record answers UPDATES_LOADED { available, urgent } (urgent is empty when the record has none). The banner draws UPDATES_UNCHECKED as an info alert titled No update check yet, saying the record is not readable and the next due update check writes it again, never as a failed update. UPDATES_RUN { store } runs `orb update --global` for the global store and `orb update` for any other store through std-cli (the orb on PATH) and, when the run ends, answers UPDATES_RAN { store } on exit 0 or UPDATES_RUN_FAILED { store, error } (the child's stderr, or its exit code, or why orb could not start), then reads the record again either way; The banner (UpdatesBanner) reads the record at INIT and on UPDATES_REFRESH and draws, as core patterns, an info alert with an Update button per store that has available updates, a success alert per applied urgent row (advisory text and the restart text), an error alert per failed urgent row (the vulnerable version is still installed) with a Retry button, a success alert after a finished run that says the launchpad restarts if a service manager runs it, each applied alert with a Restart button (UPDATES_RESTART_PRESSED, listened as UPDATES_RESTART, the store reads os/pid and sends os/kill TERM to its own pid, so the process exits and its service manager starts it again on the new orb), and an error alert for a failed run or a failed read; no record draws nothing. A run asked while another is in flight answers UPDATES_RUN_FAILED at once.",
   egress: []
 ]
 ;; @capabilities "show the available and urgent orb updates, run orb update for the global or the project store"
 uses Cli from "std/behaviors/std-cli"
-
-type UpdateRecord = { checkedAt : number!, available : [[string]]!, urgent : [[string]]? }
+uses Record from "std/behaviors/std-orb-update-record"
 
 orbital LaunchpadUpdatesOrbital {
   entity UpdatesRun [runtime] {
@@ -26,6 +24,7 @@ orbital LaunchpadUpdatesOrbital {
     updApplied : boolean = false
     updRunning : boolean = false
     updError : string = ""
+    updUnchecked : boolean = false
   }
 
   trait UpdatesStore -> UpdatesRun {
@@ -34,14 +33,14 @@ orbital LaunchpadUpdatesOrbital {
     state ready {
       INIT -> ready
       UPDATES_LOAD -> ready
-        (os/read-file "~/.orb/.update-check.json" { key: "record" emit: { success: UPDATES_READ, failure: UPDATES_READ_FAILED } })
-      UPDATES_READ -> ready when (= (json/parse (default (bytes/to-string ?data) "") UpdateRecord) null)
-        (emit UPDATES_FAILED { error: "the update record is not readable" })
-      UPDATES_READ -> ready when (!= (json/parse (default (bytes/to-string ?data) "") UpdateRecord) null)
-        (emit UPDATES_LOADED { available: (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "available"), urgent: (default (object/get (json/parse (default (bytes/to-string ?data) "") UpdateRecord) "urgent") []) })
-      UPDATES_READ_FAILED -> ready when (= ?kind "not-found")
+        (emit UPDATES_RECORD_READ {})
+      UPDATES_READ -> ready
+        (emit UPDATES_LOADED { available: ?available, urgent: ?urgent })
+      UPDATES_READ_ABSENT -> ready
         (emit UPDATES_LOADED { available: [], urgent: [] })
-      UPDATES_READ_FAILED -> ready when (!= ?kind "not-found")
+      UPDATES_READ_UNREADABLE -> ready
+        (emit UPDATES_UNCHECKED {})
+      UPDATES_READ_FAILED -> ready
         (emit UPDATES_FAILED { error: ?error })
       UPDATES_RUN -> ready when @entity.running
         (emit UPDATES_RUN_FAILED { store: ?store, error: "an update is already running" })
@@ -78,11 +77,17 @@ orbital LaunchpadUpdatesOrbital {
       }
         @description "The update record: the available updates and the urgent ones."
         @tier "domain"
+      UPDATES_UNCHECKED -> external { }
+        @description "The update record is not in the shape orb's update notice writes: no check has run that this record can show."
+        @tier "domain"
       UPDATES_FAILED -> external {
         error : string!
       }
         @description "The update record could not be read."
         @tier "domain"
+      UPDATES_RECORD_READ -> external { }
+        @description "Internal: ask the update record owner to read the record."
+        @tier "internal"
       UPDATES_RAN -> external {
         store : string!
       }
@@ -111,17 +116,6 @@ orbital LaunchpadUpdatesOrbital {
       UPDATES_LOAD { }
         @description "Internal: read the record again after a run."
         @tier "internal"
-      UPDATES_READ {
-        data : bytes!
-      }
-        @description "Internal: os/read-file's success."
-        @tier "internal"
-      UPDATES_READ_FAILED {
-        error : string!
-        kind : string
-      }
-        @description "Internal: os/read-file's failure."
-        @tier "internal"
     }
 
     listens {
@@ -143,14 +137,23 @@ orbital LaunchpadUpdatesOrbital {
       UpdatesCli.CLI_DONE -> UPDATES_CLI_DONE
       UpdatesCli.CLI_FAILED -> UPDATES_CLI_FAILED
       UPDATES_READ {
-        data : bytes!
+        checkedAt : number!
+        available : [[string]]!
+        urgent : [[string]]!
       }
-        @description "os/read-file's success."
+        @description "The update record owner's read of the record."
+      UPDATES_READ_ABSENT { }
+        @description "The update record owner found no record."
+      UPDATES_READ_UNREADABLE { }
+        @description "The update record owner found a file that is not a record."
       UPDATES_READ_FAILED {
         error : string!
-        kind : string
       }
-        @description "os/read-file's failure."
+        @description "The update record owner could not read the record."
+      UpdateRecord.UPDATE_RECORD_LOADED -> UPDATES_READ
+      UpdateRecord.UPDATE_RECORD_ABSENT -> UPDATES_READ_ABSENT
+      UpdateRecord.UPDATE_RECORD_UNREADABLE -> UPDATES_READ_UNREADABLE
+      UpdateRecord.UPDATE_RECORD_FAILED -> UPDATES_READ_FAILED
       UPDATES_CLI_DONE {
         stage : string!
         exitCode : number!
@@ -176,6 +179,12 @@ orbital LaunchpadUpdatesOrbital {
     }
     listens {
       UpdatesStore.UPDATES_CLI_RUN -> CLI_RUN
+    }
+  }
+
+  trait UpdateRecord = Record.traits.UpdateRecordStore {
+    listens {
+      UpdatesStore.UPDATES_RECORD_READ -> UPDATE_RECORD_READ
     }
   }
 
@@ -208,10 +217,17 @@ orbital LaunchpadUpdatesOrbital {
             { type: alert, variant: success, title: "Update applied", message: "The launchpad restarts if a service manager runs it." },
             { type: button, label: "Restart", icon: refresh-cw, variant: primary, size: sm, action: RESTART_PRESSED }
           ] }] [])
+          (if @entity.updUnchecked [{ type: alert, variant: info, title: "No update check yet", message: "The update record is not readable; the next due update check writes it again." }] [])
           (if (= @entity.updError "") [] [{ type: alert, variant: error, title: "Update failed", message: @entity.updError }])) })
       UPDATES_LOADED -> ready
         (set @entity.updAvailable ?available)
         (set @entity.updUrgent ?urgent)
+        (set @entity.updUnchecked false)
+        (emit UPDATES_SHOWN {})
+      UPDATES_UNCHECKED -> ready
+        (set @entity.updAvailable [])
+        (set @entity.updUrgent [])
+        (set @entity.updUnchecked true)
         (emit UPDATES_SHOWN {})
       UPDATES_FAILED -> ready
         (set @entity.updError (str/concat "Update record: " ?error))
@@ -253,6 +269,7 @@ orbital LaunchpadUpdatesOrbital {
 
     listens {
       UpdatesStore.UPDATES_LOADED -> UPDATES_LOADED
+      UpdatesStore.UPDATES_UNCHECKED -> UPDATES_UNCHECKED
       UpdatesStore.UPDATES_FAILED -> UPDATES_FAILED
       UpdatesStore.UPDATES_RAN -> UPDATES_RAN
       UpdatesStore.UPDATES_RUN_FAILED -> UPDATES_RUN_FAILED
@@ -265,6 +282,7 @@ orbital LaunchpadUpdatesOrbital {
         available : [[string]]!
         urgent : [[string]]!
       }
+      UPDATES_UNCHECKED { }
       UPDATES_FAILED {
         error : string!
       }
@@ -280,5 +298,5 @@ orbital LaunchpadUpdatesOrbital {
     }
   }
 
-  page "/" as LaunchpadUpdatesPage -> UpdatesStore, UpdatesCli, UpdatesBanner
+  page "/" as LaunchpadUpdatesPage -> UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner
 }

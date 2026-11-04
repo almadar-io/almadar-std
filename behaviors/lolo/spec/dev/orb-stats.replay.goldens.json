@@ -25,6 +25,9 @@
        },
        {
         "type": "program/inputs"
+       },
+       {
+        "type": "os/pid"
        }
       ],
       "emits": [
@@ -62,6 +65,9 @@
        },
        {
         "type": "program/inputs"
+       },
+       {
+        "type": "os/pid"
        }
       ],
       "emits": [
@@ -98,8 +104,7 @@
      "entity": {
       "id": "o",
       "version": "",
-      "versionAsked": false,
-      "startedAt": "2025-10-15T12:30:00.000Z"
+      "versionAsked": false
      },
      "expect": {
       "fired": true,
@@ -110,15 +115,13 @@
          "registeredSchemas": 3,
          "registeredTraits": 41,
          "activeInstances": 17,
-         "cachedEntities": 5,
-         "uptimeMs": 45678
+         "cachedEntities": 5
         }
        }
       ]
      }
     }
-   ],
-   "now": 1760531445678
+   ]
   },
   {
    "id": "refused-kernel-read-is-named",
@@ -267,6 +270,9 @@
       "effects": [
        {
         "type": "program/inputs"
+       },
+       {
+        "type": "os/pid"
        }
       ],
       "neverEmits": [
@@ -278,8 +284,7 @@
    ]
   },
   {
-   "id": "the-first-ask-starts-the-uptime-clock",
-   "now": 1760531445678,
+   "id": "an-ask-reads-the-process-id",
    "steps": [
     {
      "trait": "OrbStatsReader",
@@ -287,24 +292,412 @@
      "payload": {},
      "entity": {
       "id": "o",
-      "version": "",
-      "versionAsked": false,
-      "startedAt": null
+      "version": "orb 1.2.3",
+      "versionAsked": true
      },
      "expect": {
       "fired": true,
       "effects": [
        {
-        "type": "set"
-       },
-       {
-        "type": "set"
-       },
-       {
         "type": "emit"
        },
        {
         "type": "program/inputs"
+       },
+       {
+        "type": "os/pid"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-pid-asks-ps-for-its-elapsed-time",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_PID",
+     "payload": {
+      "pid": 46666
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_UPTIME_RUN",
+        "payload": {
+         "stage": "uptime",
+         "argv": [
+          "-o",
+          "etime=",
+          "-p",
+          "46666"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-pid-is-named",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_PID_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "denied",
+         "error": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hours-minutes-seconds-are-the-process-uptime",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "  07:48:12\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_UPTIME_READ",
+        "payload": {
+         "uptimeMs": 28092000
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_STATS_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "days-are-counted",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "1-02:03:04\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_UPTIME_READ",
+        "payload": {
+         "uptimeMs": 93784000
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_STATS_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "minutes-and-seconds-alone-are-counted",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "05:09\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_UPTIME_READ",
+        "payload": {
+         "uptimeMs": 309000
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_STATS_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-seconds-alone-are-not-an-elapsed-time",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "07\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "unparsable",
+         "error": "the elapsed time ps printed is not [[dd-]hh:]mm:ss"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_UPTIME_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-four-fields-are-not-an-elapsed-time",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "01:02:03:04\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "unparsable",
+         "error": "the elapsed time ps printed is not [[dd-]hh:]mm:ss"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_UPTIME_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-text-is-not-an-elapsed-time",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "abc\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "unparsable",
+         "error": "the elapsed time ps printed is not [[dd-]hh:]mm:ss"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_UPTIME_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-answer-is-not-an-elapsed-time",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "unparsable",
+         "error": "the elapsed time ps printed is not [[dd-]hh:]mm:ss"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_UPTIME_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-ps-exit-is-named",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_DONE",
+     "payload": {
+      "stage": "uptime",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "boom"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "ps_exit",
+         "error": "ps exited with code 1: boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-ps-spawn-failure-passes-its-code-through",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_UPTIME_FAILED",
+     "payload": {
+      "stage": "uptime",
+      "error": "ps could not start",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "process-uptime",
+         "code": "cli_spawn_failed",
+         "error": "ps could not start"
+        }
        }
       ]
      }

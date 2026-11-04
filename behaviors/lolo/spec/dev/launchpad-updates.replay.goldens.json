@@ -140,7 +140,7 @@
        [
         "global",
         "applied",
-        "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1)"
+        "@almadar/std 1.0.0 → 1.0.1 (CVE-1)"
        ]
       ],
       "updApplied": false,
@@ -155,7 +155,7 @@
         "props": {
          "children.0.children.0.type": "alert",
          "children.0.children.0.variant": "success",
-         "children.0.children.0.message": "@almadar/std 1.0.0 \u2192 1.0.1 (CVE-1). The launchpad restarts if a service manager runs it.",
+         "children.0.children.0.message": "@almadar/std 1.0.0 → 1.0.1 (CVE-1). The launchpad restarts if a service manager runs it.",
          "children.0.children.1.type": "button",
          "children.0.children.1.label": "Restart",
          "children.0.children.1.action": "RESTART_PRESSED"
@@ -479,6 +479,81 @@
         "event": "UPDATES_RESTART"
        }
       ]
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "an-unreadable-record-is-an-info-alert-not-a-failure",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_UNCHECKED",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.type": "alert",
+         "children.0.variant": "info",
+         "children.0.title": "No update check yet"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "from": "ready"
+    }
+   ]
+  },
+  {
+   "id": "control-a-failed-read-is-still-update-failed",
+   "steps": [
+    {
+     "trait": "UpdatesBanner",
+     "event": "UPDATES_FAILED",
+     "payload": {
+      "error": "denied"
+     },
+     "entity": {
+      "id": "l",
+      "updAvailable": [],
+      "updUrgent": [],
+      "updApplied": false,
+      "updRunning": false,
+      "updError": ""
+     },
+     "expect": {
+      "fired": true,
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.type": "alert",
+         "children.0.variant": "error",
+         "children.0.title": "Update failed",
+         "children.0.message": "Update record: denied"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
      },
      "from": "ready"
     }

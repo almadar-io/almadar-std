@@ -1,0 +1,292 @@
+{
+ "atom": "cli/atoms/std-orb-update-record.lolo",
+ "trait": "UpdateRecordStore",
+ "note": "Each step seeds its entity; the replay kernel answers every os call with an unsupported failure, so file answers are fed as seeded steps. Byte payloads (data) are standard base64 of the file text.",
+ "cases": [
+  {
+   "id": "read-reads-the-record-file",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_READ",
+     "payload": {},
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "record",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-record-in-the-record-shape-is-loaded",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_BYTES",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOjk5MDAwLCJhdmFpbGFibGUiOltbIkBhbG1hZGFyL3N0ZCIsIjMuMC4wIiwiMy4xLjQiLCJnbG9iYWwiXV0sInVyZ2VudCI6W1siZ2xvYmFsIiwiZmFpbGVkIiwiYm9vbSJdXX0="
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_LOADED",
+        "payload": {
+         "checkedAt": 99000,
+         "available": [
+          [
+           "@almadar/std",
+           "3.0.0",
+           "3.1.4",
+           "global"
+          ]
+         ],
+         "urgent": [
+          [
+           "global",
+           "failed",
+           "boom"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-record-without-urgent-rows-loads-them-empty",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_BYTES",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOjUsImF2YWlsYWJsZSI6W119"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_LOADED",
+        "payload": {
+         "checkedAt": 5,
+         "available": [],
+         "urgent": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-snake-case-record-from-another-writer-is-unreadable",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_BYTES",
+     "payload": {
+      "data": "eyJjaGVja2VkX2F0IjoxNzkzNzM1NTgwLCJhdmFpbGFibGUiOltdfQ=="
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_UNREADABLE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-garbled-text-is-unreadable",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_BYTES",
+     "payload": {
+      "data": "bm90IGpzb24="
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_UNREADABLE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-negative-checked-at-is-unreadable",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_BYTES",
+     "payload": {
+      "data": "eyJjaGVja2VkQXQiOi0xLCJhdmFpbGFibGUiOltdfQ=="
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_UNREADABLE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-missing-file-is-absent",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_READ_FAILED",
+     "payload": {
+      "error": "x",
+      "kind": "not-found"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_ABSENT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-read-failure-is-a-failure",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_READ_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "denied"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "UPDATE_RECORD_FAILED",
+        "payload": {
+         "error": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "write-creates-the-orb-directory-first",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_WRITE",
+     "payload": {
+      "checkedAt": 100000,
+      "available": [],
+      "urgent": []
+     },
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 0,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/mkdir",
+        "key": "dir"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "directory-ready-writes-the-record-file",
+   "steps": [
+    {
+     "event": "UPDATE_RECORD_DIR",
+     "payload": {},
+     "from": "ready",
+     "entity": {
+      "id": "r",
+      "checkedAt": 100000,
+      "available": [],
+      "urgent": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "record",
+        "optionsAt": 2
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
