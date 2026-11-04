@@ -1,0 +1,1154 @@
+{
+  "atom": "cli/atoms/std-orb-lint-map-path-key.lolo",
+  "trait": "OrbLintMapPathKey",
+  "note": "object/set, object/get and object/has read their key as a dot path. A key built with str/concat from a string literal containing \".\" aimed at an entity field declared as a Map nests the value instead of naming one entry; literal path keys, record targets, non-field targets and other separators are clean.",
+  "cases": [
+    {
+      "id": "object-set-on-a-map-field-with-a-dotted-concat-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.cache",
+                                [
+                                  "object/set",
+                                  "@entity.cache",
+                                  [
+                                    "str/concat",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "store"
+                                    ],
+                                    ".",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "field"
+                                    ]
+                                  ],
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_MAP_KEY_DOT_PATH",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0]",
+                      "message": "object/set reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under 'cache' instead of naming one map entry",
+                      "suggestion": "Join the key parts with a separator other than \".\", such as \"|\".",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "object-get-on-a-map-field-with-a-dotted-concat-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.cache",
+                                [
+                                  "object/get",
+                                  "@entity.cache",
+                                  [
+                                    "str/concat",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "store"
+                                    ],
+                                    ".",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "field"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_MAP_KEY_DOT_PATH",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0]",
+                      "message": "object/get reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under 'cache' instead of naming one map entry",
+                      "suggestion": "Join the key parts with a separator other than \".\", such as \"|\".",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "object-has-in-a-guard-on-a-map-field-with-a-dotted-concat-key",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [],
+                            "guard": [
+                              "object/has",
+                              "@entity.cache",
+                              [
+                                "str/concat",
+                                [
+                                  "object/get",
+                                  "@payload.row",
+                                  "store"
+                                ],
+                                ".",
+                                [
+                                  "object/get",
+                                  "@payload.row",
+                                  "field"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_MAP_KEY_DOT_PATH",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0]",
+                      "message": "object/has reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under 'cache' instead of naming one map entry",
+                      "suggestion": "Join the key parts with a separator other than \".\", such as \"|\".",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "object-set-in-a-tick-on-a-map-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.cache",
+                              [
+                                "object/set",
+                                "@entity.cache",
+                                [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@payload.row",
+                                    "store"
+                                  ],
+                                  ".",
+                                  [
+                                    "object/get",
+                                    "@payload.row",
+                                    "field"
+                                  ]
+                                ],
+                                1
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_MAP_KEY_DOT_PATH",
+                      "path": "orbitals[0 (O)].traits[0 (T)].ticks[0]",
+                      "message": "object/set reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under 'cache' instead of naming one map entry",
+                      "suggestion": "Join the key parts with a separator other than \".\", such as \"|\".",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-dotted-concat-key-wrapped-in-a-let-is-found",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.cache",
+                                [
+                                  "object/set",
+                                  "@entity.cache",
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "lk",
+                                        [
+                                          "array/first",
+                                          "@entity.items"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        "@lk",
+                                        "store"
+                                      ],
+                                      ".",
+                                      [
+                                        "object/get",
+                                        "@lk",
+                                        "field"
+                                      ]
+                                    ]
+                                  ],
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_MAP_KEY_DOT_PATH",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0]",
+                      "message": "object/set reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under 'cache' instead of naming one map entry",
+                      "suggestion": "Join the key parts with a separator other than \".\", such as \"|\".",
+                      "severity": "warning"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-pipe-separator-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.cache",
+                                [
+                                  "object/set",
+                                  "@entity.cache",
+                                  [
+                                    "str/concat",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "store"
+                                    ],
+                                    "|",
+                                    [
+                                      "object/get",
+                                      "@payload.row",
+                                      "field"
+                                    ]
+                                  ],
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-literal-path-key-on-a-record-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.rec",
+                                [
+                                  "object/get",
+                                  "@entity.rec",
+                                  "profile.name"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-literal-dotted-key-on-a-map-is-not-a-concat-and-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.cache",
+                                [
+                                  "object/set",
+                                  "@entity.cache",
+                                  "a.b",
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-dotted-concat-key-on-a-record-target-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.rec",
+                                [
+                                  "object/get",
+                                  "@entity.rec",
+                                  [
+                                    "str/concat",
+                                    "operators.",
+                                    "@payload.n",
+                                    ".",
+                                    "f"
+                                  ],
+                                  null
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    },
+    {
+      "id": "a-dotted-concat-key-on-a-non-entity-target-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "cache",
+                        "type": "object",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "name": "rec",
+                        "type": "object",
+                        "properties": {
+                          "a": {
+                            "name": "a",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.rec",
+                                [
+                                  "object/get",
+                                  "@payload.doc",
+                                  [
+                                    "str/concat",
+                                    "operators.",
+                                    "@payload.n"
+                                  ],
+                                  null
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "trait": "OrbLintMapPathKey"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "map-path-key",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintMapPathKey"
+        }
+      ]
+    }
+  ]
+}
