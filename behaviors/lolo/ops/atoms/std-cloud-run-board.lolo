@@ -1,6 +1,6 @@
 app std-cloud-run-board [
   version: "1.0.0",
-  description: "std-cloud-run-board — a Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs (std-cli, with the host's PATH and HOME passed through so they find their login) and Cloud Monitoring. CLOUD_RUN_LOAD answers CLOUD_RUN_BOARD from the cache within cacheTtlMs; CLOUD_RUN_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: sums each service's billable instance seconds and request count for the UTC month to date from Cloud Monitoring (Monitoring is read over std-http-client with the accessToken credential held by the host, GCLOUD_ACCESS_TOKEN, which std-gcloud-token makes from gcloud's stored Application Default Credentials before the first read and the store renews; usage unavailable, with a not-configured warning naming the missing credential, when the token cannot be made, or when Monitoring is unreachable; a refused metric reads as none); when resourceLevelExport is on, reads each Cloud Run service's gross and net (credits included) cost from the billingExportTable billing export; lists the project's Cloud Run services and describes each one (cpu, memory, min and max instances, concurrency, GPU; an unset value is Cloud Run's documented default from the default knobs; a service that cannot be described has hasResourceData false and zero resources and price); lists the enabled Google Cloud APIs the trackedServices knob names, then replaces them with the month's cost per service from the billing export when it answers rows (each rounded to cents, sorted by cost, highest first, then by name). Per service: hourlyIfUp is one instance's list price for an hour at the rate knobs, activeInstanceHours the billed hours, avgInstances those over the hours elapsed, projectedMonthlyUsd the net cost scaled to hoursPerMonth. actualBilledUsd is the Cloud Run row of the rollup.",
+  description: "std-cloud-run-board — a Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs (std-cli, with the host's PATH and HOME passed through so they find their login) and Cloud Monitoring. CLOUD_RUN_LOAD answers CLOUD_RUN_BOARD from the cache within cacheTtlMs; CLOUD_RUN_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: sums each service's billable instance seconds and request count for the UTC month to date from Cloud Monitoring (Monitoring is read over std-http-client with the accessToken credential held by the host, GCLOUD_ACCESS_TOKEN, which std-gcloud-token makes from gcloud's stored Application Default Credentials before the first read and the store renews; usage unavailable, with a not-configured warning naming the missing credential, when the token cannot be made, or when Monitoring is unreachable; a refused metric reads as none); when resourceLevelExport is on, reads each Cloud Run service's gross and net (credits included) cost from the billingExportTable billing export; lists the project's Cloud Run services with each one's template from the same list read (cpu, memory, min and max instances, concurrency, GPU; an unset value is Cloud Run's documented default from the default knobs; a service whose template does not parse has hasResourceData false and zero resources and price); lists the enabled Google Cloud APIs the trackedServices knob names, then replaces them with the month's cost per service from the billing export when it answers rows (each rounded to cents, sorted by cost, highest first, then by name). Per service: hourlyIfUp is one instance's list price for an hour at the rate knobs, activeInstanceHours the billed hours, avgInstances those over the hours elapsed, projectedMonthlyUsd the net cost scaled to hoursPerMonth. actualBilledUsd is the Cloud Run row of the rollup.",
   exec: ["gcloud", "bq"],
   env: ["PATH", "HOME"],
   egress: ["https://oauth2.googleapis.com"],
@@ -18,14 +18,13 @@ type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "faile
 type CrCondition = { type : string, status : string }
 type CrStatus = { url : string, conditions : [CrCondition], latestReadyRevisionName : string, latestCreatedRevisionName : string }
 type CrMeta = { name : string, creationTimestamp : string, annotations : Map string string, labels : Map string string }
-type CrService = { metadata : CrMeta, status : CrStatus }
+type CrService = { metadata : CrMeta, status : CrStatus, spec : CrSpec }
 type CrLimits = { limits : Map string string }
 type CrContainer = { resources : CrLimits }
 type CrTemplateSpec = { containerConcurrency : number, nodeSelector : Map string string, containers : [CrContainer] }
 type CrTemplateMeta = { annotations : Map string string }
 type CrTemplate = { metadata : CrTemplateMeta, spec : CrTemplateSpec }
 type CrSpec = { template : CrTemplate }
-type CrDescribe = { spec : CrSpec }
 type CrResources = { known : boolean!, cpu : number!, memoryGb : number!, minInstances : number!, maxInstances : number!, concurrency : number!, gpuCount : number!, gpu : string, zonal : boolean! }
 type CrMonValue = { doubleValue : number, int64Value : string }
 type CrMonPoint = { value : CrMonValue }
@@ -70,7 +69,6 @@ orbital CloudRunBoardOrbital {
     costRows : [CrCost] = []
     services : [CrService] = []
     resources : [CrResources] = []
-    cursor : number @description "Index of the service being described." = 0
     entries : [CrEntry] = []
     currency : string = "USD"
     noMap : Map string string @description "An empty map, read where a part of a reply is absent." = {}
@@ -190,7 +188,6 @@ orbital CloudRunBoardOrbital {
         (set @entity.costRows [])
         (set @entity.services [])
         (set @entity.resources [])
-        (set @entity.cursor 0)
         (set @entity.entries [])
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
         (emit CR_TOKEN_ENSURE { })
@@ -205,7 +202,6 @@ orbital CloudRunBoardOrbital {
         (set @entity.costRows [])
         (set @entity.services [])
         (set @entity.resources [])
-        (set @entity.cursor 0)
         (set @entity.entries [])
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
         (emit CR_TOKEN_ENSURE { })
@@ -279,22 +275,7 @@ orbital CloudRunBoardOrbital {
 
       CR_RAN -> reading when (and (= @payload.stage "services") (= @payload.exitCode 0) (!= (json/parse @payload.stdout CrServices) null))
         (set @entity.services (json/parse @payload.stdout CrServices))
-        (set @entity.cursor 0)
-        (emit CR_DESCRIBE_NEXT { })
-      CR_RAN -> reading when (and (= @payload.stage "services") (not (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout CrServices) null))))
-        (notify warning (str/concat "Cloud Run services could not be read: " @payload.stderr))
-        (set @entity.services [])
-        (emit CR_DESCRIBE_NEXT { })
-      ;; the svc null check never fires: the cursor is below the service count
-      CR_DESCRIBE_NEXT -> reading when (< @entity.cursor (array/len @entity.services))
-        (let ((svc (array/nth @entity.services @entity.cursor)))
-          (when (!= @svc null) (emit CR_GCLOUD { stage: "describe", argv: ["run", "services", "describe", (object/get @svc "metadata.name" ""), (str/concat "--region=" (default (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) "")), (str/concat "--project=" @config.project), "--format=json"] })))
-      CR_DESCRIBE_NEXT -> reading when (>= @entity.cursor (array/len @entity.services))
-        (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
-      CR_RAN -> reading when (and (= @payload.stage "describe") (= @payload.exitCode 0) (json/valid @payload.stdout))
-        (set @entity.resources (array/append @entity.resources (let ((d (json/parse @payload.stdout CrDescribe)))
-          (if (= @d null) { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }
-            (let ((limits (object/get @d "spec.template.spec.containers.0.resources.limits" @entity.noMap))
+        (set @entity.resources (array/map @entity.services (fn d (let ((limits (object/get @d "spec.template.spec.containers.0.resources.limits" @entity.noMap))
                   (ann (object/get @d "spec.template.metadata.annotations" @entity.noMap))
                   (selector (object/get @d "spec.template.spec.nodeSelector" @entity.noMap)))
               (let ((cpuRaw (array/nth (object/values (object/pick @limits [(str/concat "cpu")])) 0)) (memRaw (array/nth (object/values (object/pick @limits [(str/concat "memory")])) 0)) (gpuRaw (array/nth (object/values (object/pick @limits [(str/concat "nvidia.com/gpu")])) 0)) (minRaw (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0)) (maxRaw (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0)))
@@ -312,14 +293,12 @@ orbital CloudRunBoardOrbital {
                       concurrency: (object/get @d "spec.template.spec.containerConcurrency" @config.defaultConcurrency),
                       gpuCount: @gpuCount,
                       gpu: (if (> @gpuCount 0) (array/nth (object/values (object/pick @selector [(str/concat "run.googleapis.com/accelerator")])) 0) (array/nth (object/values (object/pick @entity.noMap [(str/concat "gpu")])) 0)),
-                      zonal: (!= (array/nth (object/values (object/pick @ann [(str/concat "run.googleapis.com/gpu-zonal-redundancy-disabled")])) 0) "true") }))))))))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit CR_DESCRIBE_NEXT { })
-      CR_RAN -> reading when (and (= @payload.stage "describe") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
-        (set @entity.resources (array/append @entity.resources { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit CR_DESCRIBE_NEXT { })
-
+                      zonal: (!= (array/nth (object/values (object/pick @ann [(str/concat "run.googleapis.com/gpu-zonal-redundancy-disabled")])) 0) "true") })))))))
+        (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
+      CR_RAN -> reading when (and (= @payload.stage "services") (not (and (= @payload.exitCode 0) (!= (json/parse @payload.stdout CrServices) null))))
+        (notify warning (str/concat "Cloud Run services could not be read: " @payload.stderr))
+        (set @entity.services [])
+        (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
       CR_RAN -> reading when (= @payload.stage "enabled")
         (let ((apis (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout CrApis) null)))
           (set @entity.entries (if (= @apis null) [] (array/map (array/filter @apis (fn a (!= (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0) null))) (fn a { service: (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0), cost: 0, currency: "USD" })))))
@@ -375,11 +354,7 @@ orbital CloudRunBoardOrbital {
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
       CR_CLI_FAILED -> reading when (= @payload.stage "services")
         (set @entity.services [])
-        (emit CR_DESCRIBE_NEXT { })
-      CR_CLI_FAILED -> reading when (= @payload.stage "describe")
-        (set @entity.resources (array/append @entity.resources { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit CR_DESCRIBE_NEXT { })
+        (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
       CR_CLI_FAILED -> reading when (= @payload.stage "enabled")
         (set @entity.entries [])
         (emit CR_ROLLUP { })
@@ -437,9 +412,6 @@ orbital CloudRunBoardOrbital {
         @tier "internal"
       CR_COST -> internal { }
         @description "Internal: read the per-service cost."
-        @tier "internal"
-      CR_DESCRIBE_NEXT -> internal { }
-        @description "Internal: describe the next service, or move on."
         @tier "internal"
       CR_ROLLUP -> internal { }
         @description "Internal: read the month's cost per service."
