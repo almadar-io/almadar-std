@@ -116,7 +116,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Exponentiation (base^exp)',
     hasSideEffects: false,
-    failable: {},
+    failable: { unlessNonNegative: [0] },
     returnType: nullable('number'),
     params: [
       { name: 'base', type: 'number', description: 'The base' },
