@@ -11,6 +11,7 @@ app std-launchpad [
   egress: ["https://oauth2.googleapis.com"],
   net: { "api.github.com:443": [tcp], "api.deepseek.com:443": [tcp], "api.moonshot.ai:443": [tcp], "127.0.0.1:3000": [tcp], "openrouter.ai:443": [tcp], "firebaseapphosting.googleapis.com:443": [tcp], "monitoring.googleapis.com:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
 ]
+uses NotFound from "std/behaviors/std-not-found"
 ;; @capabilities "open an orb operations board or the behavior playground and run it live, search the programs, switch between open apps from the rail, close an app, see the memory and cpu of this machine, see the orb's version and kernel counters, remember recent opens"
 
 uses Shell from "std/behaviors/std-app-layout"
@@ -941,4 +942,8 @@ orbital Launchpad {
   page "/:query" as LaunchpadFindPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, LaunchpadFind, FindMatch, MatchGate, FindSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
   page "/:package/:name" as LaunchpadBehaviorPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, UpdatesStore, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, PlaygroundRoute, LaunchpadBehaviorRoute
   page boot as LaunchpadSeed -> MockStream, MockSeed
+}
+
+orbital NotFound = NotFound.orbitals.NotFoundOrbital {
+  config { primaryHref: "/" }
 }

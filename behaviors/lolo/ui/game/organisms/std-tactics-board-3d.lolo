@@ -1,8 +1,10 @@
 app std-tactics-board-3d [
+  locales: [en, ar, sl],
   version: "1.0.0",
   description: "3D player-controlled grid-tactics board FRAME: composes grid-tactics (units authority) + fx-particles + round-flow + a player-intent/render trait onto one shared GameState. Games consume this molecule and supply only theme/assets/units via config."
   egress: ["https://almadar-kflow-assets.web.app"]
 ]
+uses NotFound from "std/behaviors/std-not-found"
 orbital TacticsBoard3DOrbital {
   type SceneLight = {
     intensity : number
@@ -239,7 +241,7 @@ orbital TacticsBoard3DOrbital {
           hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, lighting: @config.lighting, post: @config.post, drawables: (array/concat (let ((layers1 : [node] [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain)))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain)))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/get @config.assetManifest terrains {}) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
           ])) @layers1) (array/concat
             (array/map (array/filter @entity.tiles (fn t (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain))))) (fn t { type: draw-group, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, items: (object/get (default (object/get @entity.meshAssetArt (default (object/get @t terrain) "")) {}) "idle") }))
           (array/concat (let ((layers2 : [node] [
@@ -313,7 +315,7 @@ orbital TacticsBoard3DOrbital {
           hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, lighting: @config.lighting, post: @config.post, drawables: (array/concat (let ((layers5 : [node] [
-            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain)))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map (array/filter @entity.tiles (fn t (not (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain)))))) (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/get @config.assetManifest terrains {}) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
           ])) @layers5) (array/concat
             (array/map (array/filter @entity.tiles (fn t (and (validate/required (object/get @t terrain)) (object/has @entity.meshAssetArt (object/get @t terrain))))) (fn t { type: draw-group, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, items: (object/get (default (object/get @entity.meshAssetArt (default (object/get @t terrain) "")) {}) "idle") }))
           (array/concat (let ((layers6 : [node] [
@@ -445,4 +447,8 @@ orbital TacticsBoard3DOrbital {
   }
 
   page "/tactics-board-3d" as TacticsBoard3DPage -> TacticsAuthority, FxDecay, RoundLogic, VolumetricArt, PlayerIntent, AssetPack, AssetPackFetch
+}
+
+orbital NotFound = NotFound.orbitals.NotFoundOrbital {
+  config { primaryHref: "/tactics-board-3d" }
 }

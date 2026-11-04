@@ -3,7 +3,7 @@ app std-calendar [
   description: "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. `config.calendarLook` switches the body between the default month-grid ('month'), a day-grouped agenda list ('agenda-list'), and a 7-column week timeline ('week-timeline') while inheriting the same trait, state machine, emits, and listens."
 ]
 type CalendarInstant = instant
-type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
+type ItemAction = { label : string!, event : event, navigatesTo : string | SExpr, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type FilterSpec = { field : string!, label : string, options : [string] }
 type CalendarFieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
 type CalendarEventRelatedRow = { id : string! }
@@ -24,7 +24,7 @@ orbital CalendarEventOrbital {
     time : string @description "event start time of day" @synonyms "start, scheduled time, begins, when, start time" = ""
     duration : number @description "event length in minutes" @synonyms "minutes, length, span, duration" = 60
     selectedRange : string @intrinsic = month
-    weekAnchor : instant! @intrinsic
+    weekAnchor : instant @intrinsic
   }
 
   trait CalendarEventCalendar -> @rebindable CalendarEvent {
@@ -601,7 +601,7 @@ orbital CalendarEventOrbital {
               variant: ghost
             }, {
               color: muted
-              content: (time/format @entity.weekAnchor "MMM D, YYYY")
+              content: (if (= @entity.weekAnchor null) "" (time/format @entity.weekAnchor "MMM D, YYYY"))
               type: typography
               variant: caption
             }, {

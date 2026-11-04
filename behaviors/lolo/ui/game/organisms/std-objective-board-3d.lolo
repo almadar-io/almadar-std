@@ -1,8 +1,10 @@
 app std-objective-board-3d [
+  locales: [en, ar, sl],
   version: "1.0.0",
   description: "3D single-hero objective board FRAME: composes hero-nav (units + move budget) + objective-reach (targets) + fx-particles + objective-flow (win/lose) onto one shared GameState with a single render authority. Games consume this molecule and supply only theme/assets/units/targets via config."
   egress: ["https://almadar-kflow-assets.web.app"]
 ]
+uses NotFound from "std/behaviors/std-not-found"
 orbital ObjectiveBoard3DOrbital {
   uses Nav from "std/behaviors/std-hero-nav"
   uses Objective from "std/behaviors/std-objective-reach"
@@ -250,7 +252,7 @@ orbital ObjectiveBoard3DOrbital {
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, children: [
-            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/merge (object/get @config.assetManifest terrains) (default (object/get @entity.assetManifest terrains) {})) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/merge (object/get @config.assetManifest terrains {}) (default (object/get @entity.assetManifest terrains {}) {})) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
             { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
             { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
@@ -293,7 +295,7 @@ orbital ObjectiveBoard3DOrbital {
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, children: [
-            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/merge (object/get @config.assetManifest terrains) (default (object/get @entity.assetManifest terrains) {})) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
+            { type: draw-sprite-layer, items: (array/filter (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (if (and (validate/required (object/get @t modelUrl)) (validate/required (object/get (object/get @t modelUrl) url))) (object/get @t modelUrl) (if (and (validate/required (object/get @t assetKey)) (object/has @entity.assetByKey (object/get @t assetKey))) (object/get @entity.assetByKey (object/get @t assetKey)) (if (validate/required (object/get @t terrain)) (object/get (object/merge (object/get @config.assetManifest terrains {}) (default (object/get @entity.assetManifest terrains {}) {})) (object/get @t terrain)) null))) })) (fn s (and (validate/required (object/get @s asset)) (validate/required (object/get (object/get @s asset) url))))) }
             { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
             { type: draw-shape-layer, items: (array/map @entity.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m z) }, fill: "rgba(74,222,128,0.4)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @entity.units (fn u (== (object/get @u id) @entity.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: (object/get @u position), radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
@@ -401,4 +403,8 @@ orbital ObjectiveBoard3DOrbital {
   }
 
   page "/objective-board-3d" as ObjectiveBoard3DPage -> HeroAuthority, Collector, FxDecay, RoundGate, HeroIntent, AssetPack, AssetPackFetch
+}
+
+orbital NotFound = NotFound.orbitals.NotFoundOrbital {
+  config { primaryHref: "/objective-board-3d" }
 }

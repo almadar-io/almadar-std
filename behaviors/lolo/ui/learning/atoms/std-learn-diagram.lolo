@@ -171,8 +171,8 @@ orbital LearnDiagramOrbital {
 
       SELECT_PART -> idle when (== @entity.active true)
         (let (
-            (idx (default (array/first (array/filter (array/range (array/len @entity.parts)) (fn i (== (object/get (default (array/nth @entity.parts @i) { id: "", label: "", x: 0, y: 0 }) id) ?partId)))) -1))
-            (part (array/nth @entity.parts @idx))
+            (idx (array/findIndex @entity.parts (fn p (== @p.id ?partId))))
+            (part (array/find @entity.parts (fn p (== @p.id ?partId))))
           )
           (if (!= @part null)
             (do
