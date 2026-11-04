@@ -1,1317 +1,1317 @@
 {
- "atom": "cli/atoms/std-orb-serve.lolo",
- "trait": "ServeEngine",
- "cases": [
-  {
-   "id": "the call asks std-args to parse with the serve flag table",
-   "steps": [
+  "atom": "cli/atoms/std-orb-serve.lolo",
+  "trait": "ServeEngine",
+  "cases": [
     {
-     "trait": "OrbServe",
-     "from": "ready",
-     "event": "SERVE_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "parsing",
-      "emits": [
-       {
-        "event": "SERVE_ARGS_PARSE",
-        "payload": {
-         "stage": "serve",
-         "argv": [
-          "a.lolo"
-         ],
-         "flags": [
-          {
-           "name": "port",
-           "aliases": [
-            "-p"
-           ],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "host",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "client-dir",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "no-mock",
-           "aliases": [],
-           "takesValue": false,
-           "repeatable": false
-          },
-          {
-           "name": "open",
-           "aliases": [],
-           "takesValue": false,
-           "repeatable": false
-          },
-          {
-           "name": "no-emulators",
-           "aliases": [],
-           "takesValue": false,
-           "repeatable": false
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "no file answers the usage",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "parsing",
-     "event": "SERVE_ARGS_DONE",
-     "payload": {
-      "stage": "serve",
-      "flags": {},
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a second file answers the usage",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "parsing",
-     "event": "SERVE_ARGS_DONE",
-     "payload": {
-      "stage": "serve",
-      "flags": {},
-      "positionals": [
-       "a.lolo",
-       "b.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "one file with no flags starts with the defaults",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "parsing",
-     "event": "SERVE_ARGS_DONE",
-     "payload": {
-      "stage": "serve",
-      "flags": {},
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "SERVE_START",
-        "payload": {
-         "cwd": "/w",
-         "path": "/w/a.lolo",
-         "portText": "3030",
-         "portOk": true,
-         "host": "127.0.0.1",
-         "hasClient": false,
-         "clientDir": "",
-         "clientGiven": "",
-         "clientInside": true,
-         "mock": true,
-         "open": false,
-         "noEmulators": false,
-         "flagged": false
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "/w"
-   }
-  },
-  {
-   "id": "--port, --host and --no-mock reach the request",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "parsing",
-     "event": "SERVE_ARGS_DONE",
-     "payload": {
-      "stage": "serve",
-      "flags": {
-       "port": [
-        "4100"
-       ],
-       "host": [
-        "0.0.0.0"
-       ],
-       "no-mock": [
-        "true"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "SERVE_START",
-        "payload": {
-         "cwd": "/w",
-         "path": "/w/a.lolo",
-         "portText": "4100",
-         "portOk": true,
-         "host": "0.0.0.0",
-         "hasClient": false,
-         "clientDir": "",
-         "clientGiven": "",
-         "clientInside": true,
-         "mock": false,
-         "open": false,
-         "noEmulators": false,
-         "flagged": true
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "/w"
-   }
-  },
-  {
-   "id": "a port above 65535 is not ok",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "parsing",
-     "event": "SERVE_ARGS_DONE",
-     "payload": {
-      "stage": "serve",
-      "flags": {
-       "port": [
-        "70000"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "SERVE_START",
-        "payload": {
-         "cwd": "/w",
-         "path": "/w/a.lolo",
-         "portText": "70000",
-         "portOk": false,
-         "host": "127.0.0.1",
-         "hasClient": false,
-         "clientDir": "",
-         "clientGiven": "",
-         "clientInside": true,
-         "mock": true,
-         "open": false,
-         "noEmulators": false,
-         "flagged": true
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "/w"
-   }
-  },
-  {
-   "id": "--open is refused",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "idle",
-     "event": "SERVE_START",
-     "payload": {
-      "cwd": "/w",
-      "path": "/w/a.lolo",
-      "portText": "3030",
-      "portOk": true,
-      "host": "127.0.0.1",
-      "hasClient": false,
-      "clientDir": "",
-      "clientGiven": "",
-      "clientInside": true,
-      "mock": true,
-      "open": true,
-      "noEmulators": false,
-      "flagged": false
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb serve --open has no declared counterpart in std-http-server: open the browser yourself"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--no-emulators is refused",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "idle",
-     "event": "SERVE_START",
-     "payload": {
-      "cwd": "/w",
-      "path": "/w/a.lolo",
-      "portText": "3030",
-      "portOk": true,
-      "host": "127.0.0.1",
-      "hasClient": false,
-      "clientDir": "",
-      "clientGiven": "",
-      "clientInside": true,
-      "mock": true,
-      "open": false,
-      "noEmulators": true,
-      "flagged": false
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb serve --no-emulators has no declared counterpart in std-http-server: sign-in is selected by AUTH_PROVIDER in the environment"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a bad port answers 400",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "idle",
-     "event": "SERVE_START",
-     "payload": {
-      "cwd": "/w",
-      "path": "/w/a.lolo",
-      "portText": "abc",
-      "portOk": false,
-      "host": "127.0.0.1",
-      "hasClient": false,
-      "clientDir": "",
-      "clientGiven": "",
-      "clientInside": true,
-      "mock": true,
-      "open": false,
-      "noEmulators": false,
-      "flagged": true
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "error: invalid value 'abc' for '--port <PORT>': not an integer from 0 to 65535"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a client dir outside the working directory is refused",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "idle",
-     "event": "SERVE_START",
-     "payload": {
-      "cwd": "/w",
-      "path": "/w/a.lolo",
-      "portText": "3030",
-      "portOk": true,
-      "host": "127.0.0.1",
-      "hasClient": true,
-      "clientDir": "/x/dist",
-      "clientGiven": "/x/dist",
-      "clientInside": false,
-      "mock": true,
-      "open": false,
-      "noEmulators": false,
-      "flagged": true
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: --client-dir /x/dist is outside the working directory /w; the server reads its client under it"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a refused read answers 500 with the reason",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_REFUSED",
-     "payload": {
-      "error": "program/read: no such file"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: program/read: no such file"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a refused composition answers 500 with the reason",
-   "steps": [
-    {
-     "trait": "ServeHandoff",
-     "from": "composing",
-     "event": "SERVE_COMPOSE_REFUSED",
-     "payload": {
-      "error": "program/compose: bad override"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: program/compose: bad override"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an app that declares an http endpoint is served by its own server orbital, with no std-http-server composed beside it",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Api",
-            "protocol": "http"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": false,
-       "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emitCounts": {
-       "SERVE_DECLARED_READY": 1,
-       "SERVE_COMPOSE_READY": 0
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "a resolved .orb is served in place: the path served is the source the read answered, with no copy under ~/.almadar/serve",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Api",
-            "protocol": "http"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": true,
-       "programPath": "/work/dist/app.orb"
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emitCounts": {
-       "SERVE_DECLARED_READY": 1,
-       "SERVE_COMPOSE_READY": 0
-      },
-      "emits": [
-       {
-        "event": "SERVE_DECLARED_READY",
-        "payload": {
-         "path": "/work/dist/app.orb"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: an authored source is served from the copy the read wrote under ~/.almadar/serve",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Api",
-            "protocol": "http"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": false,
-       "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emitCounts": {
-       "SERVE_DECLARED_READY": 1,
-       "SERVE_COMPOSE_READY": 0
-      },
-      "emits": [
-       {
-        "event": "SERVE_DECLARED_READY",
-        "payload": {
-         "path": "/home/u/.almadar/serve/_work_app.lolo.orb"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an app that declares an http endpoint refuses --port, --host and --client-dir",
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Api",
-            "protocol": "http"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": false,
-       "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "Error: app declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir"
-        }
-       }
-      ],
-      "emitCounts": {
-       "SERVE_DECLARED_READY": 0
-      }
-     }
-    }
-   ],
-   "entity": {
-    "flagged": true
-   }
-  },
-  {
-   "id": "control: an app with routes only and a --client-dir writes the server program with no client to prepare",
-   "entity": {
-    "cwd": "/work",
-    "path": "/work/app.lolo",
-    "hasClient": true,
-    "rel": "dist/client"
-   },
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Home",
-            "path": "/"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": false,
-       "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
-      }
-     },
-     "expect": {
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_WRITE_SERVER",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the written server program is resolved and composed beside the app inside std-http-server, keeping its header",
-   "entity": {
-    "appName": "app",
-    "app": {
-     "name": "app",
-     "orbitals": [
-      {
-       "name": "O",
-       "pages": [
+      "id": "the call asks std-args to parse with the serve flag table",
+      "steps": [
         {
-         "name": "Home",
-         "path": "/"
-        }
-       ]
-      }
-     ]
-    },
-    "host": "0.0.0.0",
-    "port": 4100
-   },
-   "steps": [
-    {
-     "event": "SERVE_SERVER_WRITTEN",
-     "from": "resolving",
-     "payload": {
-      "bytes": 10
-     },
-     "expect": {
-      "fired": true,
-      "state": "resolving",
-      "emitCounts": {
-       "SERVE_COMPOSE_READY": 0
-      }
-     }
-    },
-    {
-     "event": "SERVE_SERVER_READ",
-     "from": "resolving",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "orb-served-server",
-        "orbitals": [
-         {
-          "name": "HttpServerOrbital",
-          "pages": [
-           {
-            "name": "Api",
-            "protocol": "http"
-           }
-          ]
-         }
-        ]
-       },
-       "text": ""
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "resolving",
-      "emitCounts": {
-       "SERVE_COMPOSE_READY": 0
-      }
-     }
-    },
-    {
-     "event": "SERVE_SERVER_RESOLVED",
-     "from": "resolving",
-     "payload": {
-      "result": {
-       "name": "std-http-server",
-       "orbitals": [
-        {
-         "name": "HttpServerOrbital",
-         "pages": []
-        }
-       ]
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_COMPOSE_READY",
-        "payload": {
-         "programs": [
-          {
-           "name": "app",
-           "orbitals": [
-            {
-             "name": "O",
-             "pages": [
+          "trait": "OrbServe",
+          "from": "ready",
+          "event": "SERVE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "parsing",
+            "emits": [
               {
-               "name": "Home",
-               "path": "/"
+                "event": "SERVE_ARGS_PARSE",
+                "payload": {
+                  "stage": "serve",
+                  "argv": [
+                    "a.lolo"
+                  ],
+                  "flags": [
+                    {
+                      "name": "port",
+                      "aliases": [
+                        "-p"
+                      ],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "host",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "client-dir",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "no-mock",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "open",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "no-emulators",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    }
+                  ]
+                }
               }
-             ]
-            }
-           ]
-          },
-          {
-           "name": "std-http-server",
-           "orbitals": [
-            {
-             "name": "HttpServerOrbital",
-             "pages": [
-              {
-               "name": "Api",
-               "protocol": "http"
-              }
-             ]
-            }
-           ]
+            ]
           }
-         ],
-         "appName": "app",
-         "host": "0.0.0.0",
-         "port": 4100
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an args body that does not parse is the usage error",
-   "steps": [
-    {
-     "trait": "OrbServe",
-     "from": "ready",
-     "event": "SERVE_CALLED",
-     "payload": {
-      "rawBody": "not json"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an app with routes only and no --client-dir marks the client for preparation and serves it from .orbital/serve/<app>/web-client",
-   "entity": {
-    "cwd": "/work",
-    "path": "/work/app.lolo",
-    "hasClient": false
-   },
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "reading",
-     "event": "SERVE_APP_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "app",
-        "orbitals": [
-         {
-          "name": "O",
-          "pages": [
-           {
-            "name": "Home",
-            "path": "/"
-           }
-          ]
-         }
-        ]
-       },
-       "loadedResolved": false,
-       "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
-      }
-     },
-     "expect": {
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_WRITE_SERVER",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the composed program, not the bare app, is compiled client-mode so the client learns its server; the app file is the source of its locales",
-   "entity": {
-    "prepare": true,
-    "cwd": "/work",
-    "appName": "app",
-    "rel": ".orbital/serve/app/web-client",
-    "source": "/work/app.lolo",
-    "path": "/home/u/.almadar/serve/x.orb"
-   },
-   "steps": [
-    {
-     "trait": "ServeHandoff",
-     "from": "composing",
-     "event": "SERVE_COMPOSED",
-     "payload": {
-      "result": {
-       "behavior": "app"
-      }
-     },
-     "expect": {
-      "state": "preparing",
-      "emitCounts": {
-       "SERVE_ANSWERED": 0
-      }
-     }
     },
     {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_PREP_DIR",
-     "payload": {},
-     "expect": {
-      "state": "preparing",
-      "emitCounts": {
-       "SERVE_ANSWERED": 0
-      }
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_PROGRAM_WRITTEN",
-     "payload": {
-      "bytes": 10
-     },
-     "expect": {
-      "fired": true
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_CLIENT_BUILT",
-     "payload": {
-      "result": {
-       "webClient": "/work/.orbital/serve/app/web-client"
-      }
-     },
-     "expect": {
-      "state": "preparing",
-      "emitCounts": {
-       "SERVE_ANSWERED": 0
-      }
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_EMU_HOST",
-     "payload": {
-      "value": "127.0.0.1:9099"
-     },
-     "expect": {
-      "state": "preparing"
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_EMU_PROJECT",
-     "payload": {
-      "value": "demo-x"
-     },
-     "expect": {
-      "state": "preparing"
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_HOSTING_DIR",
-     "payload": {},
-     "expect": {
-      "state": "preparing"
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_HOSTING_WRITTEN",
-     "payload": {
-      "bytes": 80
-     },
-     "expect": {
-      "state": "preparing",
-      "emits": [
-       {
-        "event": "SERVE_CLIENT_READY",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_CLIENT_READY",
-     "payload": {},
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "headers": {
-          "orb-run": "server",
-          "orb-app": "/home/u/.almadar/serve/x.orb"
-         }
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: without the Auth emulator the client is ready with no init.json",
-   "entity": {
-    "prepare": true
-   },
-   "steps": [
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_EMU_HOST",
-     "payload": {
-      "value": ""
-     },
-     "expect": {
-      "state": "preparing",
-      "emits": [
-       {
-        "event": "SERVE_CLIENT_READY",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a served app with its own --client-dir answers at once, preparing nothing",
-   "entity": {
-    "prepare": false,
-    "path": "/p.orb"
-   },
-   "steps": [
-    {
-     "trait": "ServeHandoff",
-     "from": "composing",
-     "event": "SERVE_COMPOSED",
-     "payload": {
-      "result": {
-       "behavior": "app"
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "headers": {
-          "orb-run": "server",
-          "orb-app": "/p.orb"
-         }
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a client-mode compile that fails answers 500 with the reason",
-   "steps": [
-    {
-     "trait": "ServeHandoff",
-     "from": "preparing",
-     "event": "SERVE_GENERATE_FAILED",
-     "payload": {
-      "error": "program/eval: the typescript shell ships no prebuilt web client"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SERVE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "stderr": "Error: the web client could not be prepared: program/eval: the typescript shell ships no prebuilt web client"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "mock on: the served server program also composes std-mock-seed, seeding on start",
-   "entity": {
-    "mock": true,
-    "app": {
-     "name": "app",
-     "orbitals": [
-      {
-       "name": "O",
-       "pages": [
+      "id": "no file answers the usage",
+      "steps": [
         {
-         "name": "Home",
-         "path": "/"
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {},
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                }
+              }
+            ]
+          }
         }
-       ]
-      }
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "writing",
-     "event": "SERVE_WRITE_SERVER",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_SEED_DECIDED",
-        "payload": {
-         "seed": "uses Seed from \"std/behaviors/std-mock-seed\"\norbital MockData = Seed.orbitals.MockSeedOrbital {\n  traits {\n    MockSeed {\n      config {\n        seedOnInit: true\n        seedOrbital: MockData\n        seedTrait: MockDataMockSeed\n      }\n    }\n  }\n}\n"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--no-mock: the served server program composes nothing extra",
-   "entity": {
-    "mock": false,
-    "app": {
-     "name": "app",
-     "orbitals": [
-      {
-       "name": "O",
-       "pages": [
-        {
-         "name": "Home",
-         "path": "/"
-        }
-       ]
-      }
-     ]
-    }
-   },
-   "steps": [
+    },
     {
-     "trait": "ServeEngine",
-     "from": "writing",
-     "event": "SERVE_WRITE_SERVER",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_SEED_DECIDED",
-        "payload": {
-         "seed": ""
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an app that already composes std-mock-seed is not seeded a second time",
-   "entity": {
-    "mock": true,
-    "app": {
-     "name": "app",
-     "orbitals": [
-      {
-       "name": "O",
-       "pages": [
+      "id": "control: a second file answers the usage",
+      "steps": [
         {
-         "name": "Home",
-         "path": "/"
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {},
+            "positionals": [
+              "a.lolo",
+              "b.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                }
+              }
+            ]
+          }
         }
-       ]
+      ]
+    },
+    {
+      "id": "one file with no flags starts with the defaults",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {},
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "cwd": "/w",
+                  "path": "/w/a.lolo",
+                  "portText": "3030",
+                  "portOk": true,
+                  "host": "127.0.0.1",
+                  "hasClient": false,
+                  "clientDir": "",
+                  "clientGiven": "",
+                  "clientInside": true,
+                  "mock": true,
+                  "open": false,
+                  "noEmulators": false,
+                  "flagged": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "--port, --host and --no-mock reach the request",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {
+              "port": [
+                "4100"
+              ],
+              "host": [
+                "0.0.0.0"
+              ],
+              "no-mock": [
+                "true"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "cwd": "/w",
+                  "path": "/w/a.lolo",
+                  "portText": "4100",
+                  "portOk": true,
+                  "host": "0.0.0.0",
+                  "hasClient": false,
+                  "clientDir": "",
+                  "clientGiven": "",
+                  "clientInside": true,
+                  "mock": false,
+                  "open": false,
+                  "noEmulators": false,
+                  "flagged": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "a port above 65535 is not ok",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "parsing",
+          "event": "SERVE_ARGS_DONE",
+          "payload": {
+            "stage": "serve",
+            "flags": {
+              "port": [
+                "70000"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "cwd": "/w",
+                  "path": "/w/a.lolo",
+                  "portText": "70000",
+                  "portOk": false,
+                  "host": "127.0.0.1",
+                  "hasClient": false,
+                  "clientDir": "",
+                  "clientGiven": "",
+                  "clientInside": true,
+                  "mock": true,
+                  "open": false,
+                  "noEmulators": false,
+                  "flagged": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w"
+      }
+    },
+    {
+      "id": "--open is refused",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "idle",
+          "event": "SERVE_START",
+          "payload": {
+            "cwd": "/w",
+            "path": "/w/a.lolo",
+            "portText": "3030",
+            "portOk": true,
+            "host": "127.0.0.1",
+            "hasClient": false,
+            "clientDir": "",
+            "clientGiven": "",
+            "clientInside": true,
+            "mock": true,
+            "open": true,
+            "noEmulators": false,
+            "flagged": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb serve --open has no declared counterpart in std-http-server: open the browser yourself"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--no-emulators is refused",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "idle",
+          "event": "SERVE_START",
+          "payload": {
+            "cwd": "/w",
+            "path": "/w/a.lolo",
+            "portText": "3030",
+            "portOk": true,
+            "host": "127.0.0.1",
+            "hasClient": false,
+            "clientDir": "",
+            "clientGiven": "",
+            "clientInside": true,
+            "mock": true,
+            "open": false,
+            "noEmulators": true,
+            "flagged": false
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb serve --no-emulators has no declared counterpart in std-http-server: sign-in is selected by AUTH_PROVIDER in the environment"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a bad port answers 400",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "idle",
+          "event": "SERVE_START",
+          "payload": {
+            "cwd": "/w",
+            "path": "/w/a.lolo",
+            "portText": "abc",
+            "portOk": false,
+            "host": "127.0.0.1",
+            "hasClient": false,
+            "clientDir": "",
+            "clientGiven": "",
+            "clientInside": true,
+            "mock": true,
+            "open": false,
+            "noEmulators": false,
+            "flagged": true
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "error: invalid value 'abc' for '--port <PORT>': not an integer from 0 to 65535"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a client dir outside the working directory is refused",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "idle",
+          "event": "SERVE_START",
+          "payload": {
+            "cwd": "/w",
+            "path": "/w/a.lolo",
+            "portText": "3030",
+            "portOk": true,
+            "host": "127.0.0.1",
+            "hasClient": true,
+            "clientDir": "/x/dist",
+            "clientGiven": "/x/dist",
+            "clientInside": false,
+            "mock": true,
+            "open": false,
+            "noEmulators": false,
+            "flagged": true
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: --client-dir /x/dist is outside the working directory /w; the server reads its client under it"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a refused read answers 500 with the reason",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_REFUSED",
+          "payload": {
+            "error": "program/read: no such file"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: program/read: no such file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a refused composition answers 500 with the reason",
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "composing",
+          "event": "SERVE_COMPOSE_REFUSED",
+          "payload": {
+            "error": "program/compose: bad override"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: program/compose: bad override"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app that declares an http endpoint is served by its own server orbital, with no std-http-server composed beside it",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1,
+              "SERVE_COMPOSE_READY": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a resolved .orb is served in place: the path served is the source the read answered, with no copy under ~/.almadar/serve",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": true,
+              "programPath": "/work/dist/app.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1,
+              "SERVE_COMPOSE_READY": 0
+            },
+            "emits": [
+              {
+                "event": "SERVE_DECLARED_READY",
+                "payload": {
+                  "path": "/work/dist/app.orb"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an authored source is served from the copy the read wrote under ~/.almadar/serve",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 1,
+              "SERVE_COMPOSE_READY": 0
+            },
+            "emits": [
+              {
+                "event": "SERVE_DECLARED_READY",
+                "payload": {
+                  "path": "/home/u/.almadar/serve/_work_app.lolo.orb"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app that declares an http endpoint refuses --port, --host and --client-dir",
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "Error: app declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir"
+                }
+              }
+            ],
+            "emitCounts": {
+              "SERVE_DECLARED_READY": 0
+            }
+          }
+        }
+      ],
+      "entity": {
+        "flagged": true
+      }
+    },
+    {
+      "id": "control: an app with routes only and a --client-dir writes the server program with no client to prepare",
+      "entity": {
+        "cwd": "/work",
+        "path": "/work/app.lolo",
+        "hasClient": true,
+        "rel": "dist/client"
       },
-      {
-       "name": "MockData",
-       "pages": [],
-       "auxiliaryEntities": [
+      "steps": [
         {
-         "collection": "mock_seed_marks"
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Home",
+                        "path": "/"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_WRITE_SERVER",
+                "payload": {}
+              }
+            ]
+          }
         }
-       ]
-      }
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "writing",
-     "event": "SERVE_WRITE_SERVER",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_SEED_DECIDED",
-        "payload": {
-         "seed": ""
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "mock on: a trait that answers PERSONA_ACT_AS is the seed's persona sign-in",
-   "entity": {
-    "mock": true,
-    "app": {
-     "name": "app",
-     "orbitals": [
-      {
-       "name": "O",
-       "pages": [
-        {
-         "name": "Home",
-         "path": "/"
-        }
-       ]
-      },
-      {
-       "name": "CO",
-       "pages": [],
-       "traits": [
-        {
-         "name": "COPersonas",
-         "stateMachine": {
-          "transitions": [
-           {
-            "event": "INIT"
-           },
-           {
-            "event": "PERSONA_ACT_AS"
-           }
+    },
+    {
+      "id": "the written server program is resolved and composed beside the app inside std-http-server, keeping its header",
+      "entity": {
+        "appName": "app",
+        "app": {
+          "name": "app",
+          "orbitals": [
+            {
+              "name": "O",
+              "pages": [
+                {
+                  "name": "Home",
+                  "path": "/"
+                }
+              ]
+            }
           ]
-         }
+        },
+        "host": "0.0.0.0",
+        "port": 4100
+      },
+      "steps": [
+        {
+          "event": "SERVE_SERVER_WRITTEN",
+          "from": "resolving",
+          "payload": {
+            "bytes": 10
+          },
+          "expect": {
+            "fired": true,
+            "state": "resolving",
+            "emitCounts": {
+              "SERVE_COMPOSE_READY": 0
+            }
+          }
+        },
+        {
+          "event": "SERVE_SERVER_READ",
+          "from": "resolving",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "orb-served-server",
+                "orbitals": [
+                  {
+                    "name": "HttpServerOrbital",
+                    "pages": [
+                      {
+                        "name": "Api",
+                        "protocol": "http"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "text": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "resolving",
+            "emitCounts": {
+              "SERVE_COMPOSE_READY": 0
+            }
+          }
+        },
+        {
+          "event": "SERVE_SERVER_RESOLVED",
+          "from": "resolving",
+          "payload": {
+            "result": {
+              "name": "std-http-server",
+              "orbitals": [
+                {
+                  "name": "HttpServerOrbital",
+                  "pages": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_COMPOSE_READY",
+                "payload": {
+                  "programs": [
+                    {
+                      "name": "app",
+                      "orbitals": [
+                        {
+                          "name": "O",
+                          "pages": [
+                            {
+                              "name": "Home",
+                              "path": "/"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "std-http-server",
+                      "orbitals": [
+                        {
+                          "name": "HttpServerOrbital",
+                          "pages": [
+                            {
+                              "name": "Api",
+                              "protocol": "http"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "appName": "app",
+                  "host": "0.0.0.0",
+                  "port": 4100
+                }
+              }
+            ]
+          }
         }
-       ]
-      }
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ServeEngine",
-     "from": "writing",
-     "event": "SERVE_WRITE_SERVER",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "state": "writing",
-      "emits": [
-       {
-        "event": "SERVE_SEED_DECIDED",
-        "payload": {
-         "seed": "uses Seed from \"std/behaviors/std-mock-seed\"\norbital MockData = Seed.orbitals.MockSeedOrbital {\n  traits {\n    MockSeed {\n      config {\n        seedOnInit: true\n        seedOrbital: MockData\n        seedTrait: MockDataMockSeed\n        personaOrbital: CO\n        personaTrait: COPersonas\n      }\n    }\n  }\n}\n"
-        }
-       }
       ]
-     }
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbServe",
+          "from": "ready",
+          "event": "SERVE_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app with routes only and no --client-dir marks the client for preparation and serves it from .orbital/serve/<app>/web-client",
+      "entity": {
+        "cwd": "/work",
+        "path": "/work/app.lolo",
+        "hasClient": false
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "reading",
+          "event": "SERVE_APP_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "app",
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "pages": [
+                      {
+                        "name": "Home",
+                        "path": "/"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "loadedResolved": false,
+              "programPath": "/home/u/.almadar/serve/_work_app.lolo.orb"
+            }
+          },
+          "expect": {
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_WRITE_SERVER",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the composed program, not the bare app, is compiled client-mode so the client learns its server; the app file is the source of its locales",
+      "entity": {
+        "prepare": true,
+        "cwd": "/work",
+        "appName": "app",
+        "rel": ".orbital/serve/app/web-client",
+        "source": "/work/app.lolo",
+        "path": "/home/u/.almadar/serve/x.orb"
+      },
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "composing",
+          "event": "SERVE_COMPOSED",
+          "payload": {
+            "result": {
+              "behavior": "app"
+            }
+          },
+          "expect": {
+            "state": "preparing",
+            "emitCounts": {
+              "SERVE_ANSWERED": 0
+            }
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_PREP_DIR",
+          "payload": {},
+          "expect": {
+            "state": "preparing",
+            "emitCounts": {
+              "SERVE_ANSWERED": 0
+            }
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_PROGRAM_WRITTEN",
+          "payload": {
+            "bytes": 10
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_CLIENT_BUILT",
+          "payload": {
+            "result": {
+              "webClient": "/work/.orbital/serve/app/web-client"
+            }
+          },
+          "expect": {
+            "state": "preparing",
+            "emitCounts": {
+              "SERVE_ANSWERED": 0
+            }
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_EMU_HOST",
+          "payload": {
+            "value": "127.0.0.1:9099"
+          },
+          "expect": {
+            "state": "preparing"
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_EMU_PROJECT",
+          "payload": {
+            "value": "demo-x"
+          },
+          "expect": {
+            "state": "preparing"
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_HOSTING_DIR",
+          "payload": {},
+          "expect": {
+            "state": "preparing"
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_HOSTING_WRITTEN",
+          "payload": {
+            "bytes": 80
+          },
+          "expect": {
+            "state": "preparing",
+            "emits": [
+              {
+                "event": "SERVE_CLIENT_READY",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_CLIENT_READY",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "headers": {
+                    "orb-run": "server",
+                    "orb-app": "/home/u/.almadar/serve/x.orb"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: without the Auth emulator the client is ready with no init.json",
+      "entity": {
+        "prepare": true
+      },
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_EMU_HOST",
+          "payload": {
+            "value": ""
+          },
+          "expect": {
+            "state": "preparing",
+            "emits": [
+              {
+                "event": "SERVE_CLIENT_READY",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a served app with its own --client-dir answers at once, preparing nothing",
+      "entity": {
+        "prepare": false,
+        "path": "/p.orb"
+      },
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "composing",
+          "event": "SERVE_COMPOSED",
+          "payload": {
+            "result": {
+              "behavior": "app"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "headers": {
+                    "orb-run": "server",
+                    "orb-app": "/p.orb"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a client-mode compile that fails answers 500 with the reason",
+      "steps": [
+        {
+          "trait": "ServeHandoff",
+          "from": "preparing",
+          "event": "SERVE_GENERATE_FAILED",
+          "payload": {
+            "error": "program/eval: the typescript shell ships no prebuilt web client"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SERVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "stderr": "Error: the web client could not be prepared: program/eval: the typescript shell ships no prebuilt web client"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mock on: the served server program also composes std-mock-page-seed, which seeds each routed page on its $MOUNT",
+      "entity": {
+        "mock": true,
+        "app": {
+          "name": "app",
+          "orbitals": [
+            {
+              "name": "O",
+              "pages": [
+                {
+                  "name": "Home",
+                  "path": "/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "writing",
+          "event": "SERVE_WRITE_SERVER",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_SEED_DECIDED",
+                "payload": {
+                  "seed": "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--no-mock: the served server program composes nothing extra",
+      "entity": {
+        "mock": false,
+        "app": {
+          "name": "app",
+          "orbitals": [
+            {
+              "name": "O",
+              "pages": [
+                {
+                  "name": "Home",
+                  "path": "/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "writing",
+          "event": "SERVE_WRITE_SERVER",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_SEED_DECIDED",
+                "payload": {
+                  "seed": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an app that already composes std-mock-seed is not seeded a second time",
+      "entity": {
+        "mock": true,
+        "app": {
+          "name": "app",
+          "orbitals": [
+            {
+              "name": "O",
+              "pages": [
+                {
+                  "name": "Home",
+                  "path": "/"
+                }
+              ]
+            },
+            {
+              "name": "MockData",
+              "pages": [],
+              "auxiliaryEntities": [
+                {
+                  "collection": "mock_seed_marks"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "writing",
+          "event": "SERVE_WRITE_SERVER",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_SEED_DECIDED",
+                "payload": {
+                  "seed": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mock on: a trait that answers PERSONA_ACT_AS is the seed's persona sign-in",
+      "entity": {
+        "mock": true,
+        "app": {
+          "name": "app",
+          "orbitals": [
+            {
+              "name": "O",
+              "pages": [
+                {
+                  "name": "Home",
+                  "path": "/"
+                }
+              ]
+            },
+            {
+              "name": "CO",
+              "pages": [],
+              "traits": [
+                {
+                  "name": "COPersonas",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "event": "INIT"
+                      },
+                      {
+                        "event": "PERSONA_ACT_AS"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ServeEngine",
+          "from": "writing",
+          "event": "SERVE_WRITE_SERVER",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "writing",
+            "emits": [
+              {
+                "event": "SERVE_SEED_DECIDED",
+                "payload": {
+                  "seed": "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData {\n  traits {\n    MockDataMockSeed {\n      config {\n        personaOrbital: CO\n        personaTrait: COPersonas\n      }\n    }\n  }\n}\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

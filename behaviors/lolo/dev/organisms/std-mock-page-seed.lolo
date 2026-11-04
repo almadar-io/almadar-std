@@ -1,0 +1,24 @@
+app std-mock-page-seed [
+  version: "1.0.0",
+  env: ["ALMADAR_PERSONA_OWNS"],
+  description: "std-mock-page-seed — std-mock-seed composed to seed mock rows per page: it listens for the route mount's $MOUNT (EXEC-SEED-7) and seeds only the entities that page names and no earlier mount has seeded, marking each seeded entity in mock_seed_marks. Compose its orbital MockData into an app (orb serve) or into a guest program (the catalog) and every routed page seeds on its first visit and never again.",
+  egress: []
+]
+;; @capabilities "seed mock rows for the entities of each routed page on its first visit, once per entity"
+
+uses Seed from "std/behaviors/std-mock-seed"
+
+orbital MockData = Seed.orbitals.MockSeedOrbital {
+  traits {
+    MockSeed {
+      config {
+        seedOrbital: MockData
+        seedTrait: MockDataMockSeed
+      }
+      listens {
+        $MOUNT -> SEED_PAGE
+        MockDataMockStream.CORPUS_IS -> CORPUS_IS
+      }
+    }
+  }
+}

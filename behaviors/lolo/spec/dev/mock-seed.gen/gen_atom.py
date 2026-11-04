@@ -26,7 +26,6 @@ nx=S.nxt
 NEW=f'''      CORPUS_IS -> ready
         (set @entity.words ?words)
         (when (!= @entity.dsHeld null) (do (emit DS_PROGRAM_READ {{ result: (default @entity.dsHeld {{ orbitals: [] }}) }}) (set @entity.dsHeld null)))
-        (when @entity.dsBoot (do (set @entity.dsBoot false) (fetch MockSeedMark {{ id: "seeded", emit: {{ success: DS_MARK_FOUND, failure: DS_MARK_ABSENT }} }})))
       WALK_START -> ready
         (let ((sampled {run_start}))
           (do
@@ -454,14 +453,8 @@ def _rel_targets(rv):
 def _idl(all_):
     return f'(let ((ir (array/find {all_} (fn q (object/get @q "identity"))))) (if (= @ir null) "" (object/get @ir "label")))'
 def scoped_regs(regs):
-    allr='@allr'
-    closure=(f'(let ((idl {_idl(allr)}) (req (array/unique @entity.dsEntities))) (let ((init : DsClose {{ seen: @req, front: @req }})) (object/get '
-             f'(array/reduce (array/range (array/len {allr})) @init (fn acc k (if (= (array/len (object/get @acc "front")) 0) @acc '
-             f'(let ((fresh (array/filter (array/unique (array/flatten (array/map (array/filter {allr} (fn r (array/includes (object/get @acc "front") (object/get @r "label")))) (fn r {_rel_targets("@r")})))) '
-             f'(fn n (and (!= @n "") (not (array/includes (object/get @acc "seen") @n))))))) '
-             f'{{ seen: (array/concat (object/get @acc "seen") @fresh), front: @fresh }})))) "seen")))')
     return (f'(let ((allr {regs})) (if (= (array/len @entity.dsEntities) 0) @allr '
-            f'(let ((keep {closure})) (array/filter @allr (fn r (array/includes @keep (object/get @r "label")))))))')
+            f'(array/filter @allr (fn r (array/includes @entity.dsEntities (object/get @r "label"))))))')
 SCOPED_REGS=scoped_regs(regs_expr)
 MARKED='(array/includes @entity.dsMarked (object/get @r "label"))'
 TRIM=(f'(let ((idl {_idl("@entity.dsRegsAll")}) (need (array/flatten (array/map (array/filter @entity.dsRegsAll (fn r (not {MARKED}))) (fn r {_rel_targets("@r")}))))) '
@@ -658,7 +651,6 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
       DS_WRITE_FAILED -> ready
         (emit DATASET_FAILED {{ error: (str/concat "Seeding the mock store failed: " (default ?error "")) }})
       DS_WRITTEN -> ready
-        (when @entity.dsSelf (persist upsert MockSeedMark {{ id: "seeded", seededAt: {NOWE_} }}))
         (if (> (array/len @entity.dsToMark) 0) (persist batch (array/map @entity.dsToMark (fn n ["create" "MockSeedMark" {{ id: @n, seededAt: {NOWE_} }}])) {{ emit: {{ success: DS_MARKED, failure: DS_WRITE_FAILED }} }}) (emit DS_MARKED {{ }}))
       DS_MARKED -> ready
         (emit DATASET_DONE {{ stores: @entity.dsStores, journal: {journal}, defaultPersona: @config.defaultPersona }})
@@ -669,7 +661,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
       RESTAMP_INPUT -> ready when (or (= ?firstOwner true) @config.restampOnPersona)
         (set @entity.dsMode "restamp")
         (set @entity.dsRuntime false)
-        (set @entity.dsSelf false)
 {SCOPE_RESET}        (set @entity.dsOwnerPairs [])
         (set @entity.dsLocale "")
         (set @entity.dsViewerRecord {{ id: "", claims: [] }})
@@ -682,34 +673,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.rsChanges [])
         (set @entity.dsStamps (if (or (= @entity.dsViewer "") (= @entity.dsViewer (object/get ?journal "viewerId"))) [] {restamp_queue}))
         (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
-      DS_MARK_FOUND -> ready
-      DS_MARK_ABSENT -> ready when (and (= ?code "not-found") @entity.dsActive)
-      DS_MARK_ABSENT -> ready when (and (= ?code "not-found") (not @entity.dsActive))
-        (program/self {{ emit: {{ success: DS_SELF_READ, failure: DS_PROGRAM_FAILED }} }})
-      DS_MARK_ABSENT -> ready when (!= ?code "not-found")
-        (emit DATASET_FAILED {{ error: (str/concat "Reading the seed marker failed: " (default ?error "")) }})
-      DS_SELF_READ -> ready when @entity.dsActive
-      DS_SELF_READ -> ready when (not @entity.dsActive)
-        (set @entity.dsActive true)
-        (set @entity.dsSelf true)
-{SCOPE_RESET}        (set @entity.dsMode "seed")
-        (set @entity.dsRuntime false)
-        (set @entity.dsHasViewerRecord false)
-        (set @entity.dsViewer "")
-        (set @entity.dsCount @config.count)
-        (set @entity.dsSource "")
-        (set @entity.dsOwns "")
-        (set @entity.dsOwnerPairs [])
-        (set @entity.dsLocale "")
-        (set @entity.nowMs @now)
-        (set @entity.dsNowIso {iso("@now")})
-        (set @entity.rng (math/mod @config.seed 4294967296))
-        (set @entity.dsMinted 0)
-        (set @entity.dsStores {{}})
-        (set @entity.dsStamped [])
-        (set @entity.dsWork 0)
-        (set @entity.dsDeferred [])
-        (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?result }}) (do (set @entity.dsHeld ?result) (emit CORPUS_ASK {{ }})))
       SEED_PAGE -> ready when (or @entity.dsActive (= (array/len ?entities) 0))
       SEED_PAGE -> ready when (and (not @entity.dsActive) (> (array/len ?entities) 0))
         (set @entity.dsActive true)
@@ -730,7 +693,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsStamped [])
         (set @entity.dsWork 0)
         (set @entity.dsDeferred [])
-        (set @entity.dsSelf false)
         (set @entity.dsEntities ?entities)
         (set @entity.dsScoped true)
         (set @entity.dsMarked [])
@@ -738,7 +700,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
       PAGE_SELF_READ -> ready
         (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?result }}) (do (set @entity.dsHeld ?result) (emit CORPUS_ASK {{ }})))
       DATASET_INPUT -> ready
-        (set @entity.dsSelf false)
 {SCOPE_REQ}        (set @entity.dsMode "seed")
         (set @entity.dsRuntime false)
         (set @entity.dsHasViewerRecord false)
@@ -758,7 +719,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsDeferred [])
         (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
       DATASET_PLAN -> ready
-        (set @entity.dsSelf false)
 {SCOPE_REQ}        (set @entity.dsMode "plan")
         (set @entity.dsRuntime (default ?runtime false))
         (set @entity.dsHasViewerRecord false)
@@ -778,7 +738,6 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsDeferred [])
         (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
       DATASET_START -> ready
-        (set @entity.dsSelf false)
 {SCOPE_RESET}        (set @entity.dsMode "seed")
         (set @entity.dsRuntime false)
         (set @entity.dsHasViewerRecord false)
@@ -853,7 +812,7 @@ for line in DATASET.splitlines():
     dataset_lines.append(line)
 DATASET='\n'.join(dataset_lines)+'\n'
 body=NEW.replace('@@DATASET@@',DATASET+DERIVE.replace('@@REGS@@',regs_expr))
-body=body.replace('      CORPUS_IS -> ready','      INIT -> ready\n        (set @entity.dsBoot @config.seedOnInit)\n        (emit CORPUS_ASK { })\n      CORPUS_IS -> ready',1)
+body=body.replace('      CORPUS_IS -> ready','      INIT -> ready\n        (emit CORPUS_ASK { })\n      CORPUS_IS -> ready',1)
 # ---- assemble the file
 w=lambda n,f,d,syn: f'      {n} {{ {f} }}\n        @description "{d}"\n        @synonyms "{syn}"\n'
 L=''
@@ -889,8 +848,6 @@ L+=w('DS_CHUNK_WRITTEN','','Internal: the owner chunk was written; the asking di
 L+=w('DS_CHUNK_REFUSED','error : string','Internal: the owner chunk was refused; the asking dispatch reads the error from the dispatch answer.','seed chunk refused')
 L+=w('DS_WRITE_CHUNK','ops : [[MockValue?]]!','Write one owner chunk of seeded rows, dispatched as that owner.','seed chunk')
 L+=w('DS_RESTAMPED','','The owner changes were written through the kernel.','restamp written')
-L+=w('DS_MARK_FOUND','data : MockSeedMark!','The seed marker exists: the app was seeded before.','seed marker found')
-L+=w('DS_MARK_ABSENT','error : string  code : string','No seed marker (not-found), or the store failed.','seed marker absent')
 L+=w('DS_MARKS_READ','data : [MockSeedMark]!','The seed marks read before planning: the entities already seeded.','seed marks read')
 L+=w('DS_MARKS_RECHECK','data : [MockSeedMark]!','The seed marks read again just before writing, so an entity marked meanwhile is not written twice.','seed marks recheck')
 L+=w('DS_MARKS_FAILED','error : string','The seed marks could not be read.','seed marks failed')
@@ -899,7 +856,6 @@ L+=w('DS_WRITE_BEGIN','','The marks are final: drop the marked stores and write 
 L+=w('DS_MARKED','','The seeded entities were marked.','entities marked')
 L+=w('PAGE_SELF_READ','result : SeedProgram!','The running app program, read by program/self for a page seed.','page program read')
 L+=w('SEED_PAGE','page : string!  route : string!  traits : [string]!  entities : [string]!','A route mount named its page and the entities that page needs (the $MOUNT payload): seed those that no earlier mount seeded, reading the running app program with program/self. Compose it with listens { $MOUNT -> SEED_PAGE }.','seed page, per-page mock rows')
-L+=w('DS_SELF_READ','result : SeedProgram!','The running app program, read by program/self.','self program read')
 L+=w('DS_WRITE_FAILED','error : string','Writing the seeded rows or owner changes failed.','seed write failed')
 L+=w('AC_ASK','at : number','Ask the next access check.','access ask')
 L+=w('AC_FAILED','error : string','An access check could not be evaluated, which counts as denied and is reported.','access failed')
@@ -918,7 +874,7 @@ E+=ext('RESTAMP_DONE',['journal : SeedOwnerJournal!', 'changes : [SeedOwnerChang
 E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]', 'journal : SeedOwnerJournal!', 'defaultPersona : string'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
 E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of each entity, by lower-case entity name.')
 E+=ext('OWNERS_FAILED',['error : string'],'The owner columns could not be keyed by entity name.')
-E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('DS_WRITTEN','','the seeded rows were written'),('DS_RESTAMPED','','the owner changes were written'),('DS_WRITE_FAILED','error : string','a seed write failed'),('DS_WRITE_NEXT','at : number','the next owner chunk'),('DS_CHUNK_WRITTEN','','an owner chunk was written'),('DS_CHUNK_REFUSED','error : string','an owner chunk was refused'),('DS_WRITER','at : number','the next row writer'),('DS_SELF_READ','result : SeedProgram!','the running app program was read'),('PAGE_SELF_READ','result : SeedProgram!','the running app program was read for a page seed'),('DS_MARK_FOUND','data : MockSeedMark!','the seed marker exists'),('DS_MARK_ABSENT','error : string  code : string','no seed marker, or the store failed'),('DS_MARKS_READ','data : [MockSeedMark]!','the seed marks were read'),('DS_MARKS_RECHECK','data : [MockSeedMark]!','the seed marks were read again before writing'),('DS_MARKS_FAILED','error : string','the seed marks could not be read'),('DS_REGS_READY','','the registrations are final'),('DS_WRITE_BEGIN','','the marks are final'),('DS_MARKED','','the entities were marked'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
+E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('DS_WRITTEN','','the seeded rows were written'),('DS_RESTAMPED','','the owner changes were written'),('DS_WRITE_FAILED','error : string','a seed write failed'),('DS_WRITE_NEXT','at : number','the next owner chunk'),('DS_CHUNK_WRITTEN','','an owner chunk was written'),('DS_CHUNK_REFUSED','error : string','an owner chunk was refused'),('DS_WRITER','at : number','the next row writer'),('PAGE_SELF_READ','result : SeedProgram!','the running app program was read for a page seed'),('DS_MARKS_READ','data : [MockSeedMark]!','the seed marks were read'),('DS_MARKS_RECHECK','data : [MockSeedMark]!','the seed marks were read again before writing'),('DS_MARKS_FAILED','error : string','the seed marks could not be read'),('DS_REGS_READY','','the registrations are final'),('DS_WRITE_BEGIN','','the marks are final'),('DS_MARKED','','the entities were marked'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
 E+=ext('ACCESS_CHECK_FAILED',['error : string'],'An owner access check failed; it was counted as a denial and the seed carried on.')
 E+=ext('DATASET_PLANNED',['rows : [SeedRows]!'],'The sampled rows of each seeded entity in store order, complete as DATASET_INPUT would write them, with owner columns as sampled; nothing was written.')
 E+=ext('DATASET_FAILED',['error : string'],'The program could not be read or a consumed identity ID was not a primitive; the request stops without a success journal.')
@@ -946,8 +902,6 @@ fields='''    id : string!
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
-    dsSelf : boolean @description "The running seed was started by seedOnInit, so its write leaves the seed marker." = false
-    dsBoot : boolean @description "seedOnInit asked for the word corpus at INIT; its answer starts the seed, so the boot seed draws text from the corpus." = false
     dsEntities : [string] @description "The entities this request seeds (a page's $MOUNT entities); empty seeds every entity." = []
     dsScoped : boolean @description "The request named entities, so seed marks decide which of them are still unseeded." = false
     dsMarked : [string] @description "The entities already marked seeded, read before planning and again before writing." = []
@@ -985,7 +939,7 @@ fields='''    id : string!
     dsStores : Map string [Map string MockValue?] @description "The rows of each store key." = {}
     dsOut : DsBatch @description "The last store batch: the registrations run in one step until one produced owner stamps; emptied once read." = { stores: {}, s: 0, minted: 0, stamps: [], used: 0, halt: false }
     dsOlinkCache : Map string AcOut @description "Owner-link verdicts keyed `<store>|<field>`, kept only where the read and create policies read no row field but that one and no binding but @user." = {}
-    dsActive : boolean @description "A boot or page seed is running: every page mount runs INIT, and a second run started before the first finishes would race it." = false
+    dsActive : boolean @description "A page seed is running; a page seed asked for meanwhile is ignored rather than raced." = false
     dsWork : number @description "Cascade steps the seed has spent since it last continued in a dispatch of its own." = 0
     dsNext : string @description "Where the seed continues after its resume dispatch answers: stamp or olink." = ""
     dsResumes : number @description "How many resume dispatches the seed has made." = 0
@@ -1045,7 +999,6 @@ type DsOlink = { store : string!, field : string!, i : number!, target : string!
 type AccessReq = { entity : string!, action : string!, row : (Map string MockValue?)!, identity : (Viewer | (Map string MockValue?))? }
 type AcPlan = { queue : [AccessReq]!, planned : number, n : number!, read : boolean!, rel : boolean!, ids : [string]!, viewer : boolean! }
 type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
-type DsClose = { seen : [string]!, front : [string]! }
 type DsBatch = { stores : Map string [Map string MockValue?]!, s : number!, minted : number!, stamps : [DsStamp]!, used : number!, halt : boolean! }
 type DatasetReg = { label : string!, store : string!, fields : [SeedField]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, hasCreate : boolean!, policyRefs : [string]!, instances : [Map string MockValue?]! }
 type StorePolicy = { name : string!, hasRead : boolean!, hasCreate : boolean!, refs : [string]! }
@@ -1056,7 +1009,7 @@ type DatasetProj = { store : string!, field : string!, target : string!, targetF
 atom=(head+types+'orbital MockSeedOrbital {\n  entity MockCell [runtime] {\n'+fields+'  }\n\n'
  '  entity MockSeedMark [persistent: mock_seed_marks] {\n    id : string!\n    seededAt : instant @description "When the composed seed wrote its dataset."\n  }\n\n'
  '  trait MockStream = Rand.traits.MockRandom -> MockCell {\n    listens {\n      MockSeed.CORPUS_ASK -> CORPUS_ASK\n    }\n  }\n\n'
- '  trait MockSeed -> @rebindable MockCell [optimistic] {\n    initial: ready\n\n    config {\n      base : instant = \"2026-06-15T00:00:00.000Z\"\n        @label \"Relative-date base\"\n        @description \"The instant a relative mock date such as +3d resolves against when the walk is unseeded, and the clock a seeded walk falls back to when its event names none.\"\n        @tier \"policy\"\n      count : number = 6\n        @label "Rows per entity"\n        @description \"Rows the dataset samples for each generated entity; a DATASET_INPUT that names no count uses it.\"\n        @tier \"policy\"\n      seed : number = 1\n        @label \"Sampler seed\"\n        @description \"The sampler stream seed; a DATASET_INPUT that names no seed uses it.\"\n        @tier \"policy\"\n      defaultPersona : string = \"\"\n        @label \"Default persona\"\n        @description \"The identity row id the viewer is when the host names none, answered with DATASET_DONE; empty means anonymous until a persona is picked.\"\n        @tier \"policy\"\n      seedOrbital : string\n        @label \"Seeding orbital\"\n        @description \"The orbital that holds the seeding traits; every owner session is opened on it with a clientId seed-<ownerId>, and a resume runs in a fresh anonymous seed-resume-<n> session.\"\n        @tier \"policy\"\n      seedTrait : string\n        @label \"Seeding trait\"\n        @description \"The trait in that orbital that holds the seeding arms; with the orbital it spells the dispatch address Orbital.Trait.EVENT and names the target trait, so the host skips discovery.\"\n        @tier \"policy\"\n      personaOrbital : string\n        @label \"Persona orbital\"\n        @description \"The orbital that holds std-dev-personas, whose trait signs an owner session in as that persona.\"\n        @tier \"policy\"\n      personaTrait : string\n        @label \"Persona trait\"\n        @description \"The std-dev-personas trait in that orbital; PERSONA_ACT_AS { persona } dispatched into the session seed-<ownerId> signs that session in and answers PERSONA_SIGNED_IN { subject } or PERSONA_SIGN_IN_REFUSED { error, kind }.\"\n        @tier \"policy\"\n      seedOnInit : boolean = false\n        @label "Seed on start"\n        @description "When true, the composed atom reads the app it runs in (program/self) at INIT and seeds all its stores once, guarded by the seeded marker; false leaves seeding to an explicit DATASET_INPUT, DATASET_START or a SEED_PAGE."\n        @tier "policy"\n      stepsPerDispatch : number = 1000\n        @label \"Steps per dispatch\"\n        @description \"The cascade steps a seed spends before it continues in a dispatch of its own (a self program/dispatch), so a large dataset stays under the per-dispatch step cap of the kernel.\"\n        @tier \"policy\"\n      writeChunk : number = 100\n        @label \"Rows per write\"\n        @description \"The most rows one owner write carries; each write is a dispatch of its own, run as the owner of its rows.\"\n        @tier \"policy\"\n      restampOnPersona : boolean = false\n        @label "Restamp on persona switch"\n        @description "When true, a persona switch re-points the seeded owner cells at the new viewer; when false only the first owner stamp after seeding runs and a switch leaves rows as they are."\n        @synonyms "follow persona, my rows follow me"\n        @tier "policy"\n    }\n\n    state ready {\n'+body+'    }\n\n    emits {\n'+E+'    }\n\n    listens {\n'+L+'      MockStream.CORPUS_IS -> CORPUS_IS\n    }\n  }\n\n  page boot as MockSeedBoot -> MockSeed, MockStream\n}\n')
+ '  trait MockSeed -> @rebindable MockCell [optimistic] {\n    initial: ready\n\n    config {\n      base : instant = \"2026-06-15T00:00:00.000Z\"\n        @label \"Relative-date base\"\n        @description \"The instant a relative mock date such as +3d resolves against when the walk is unseeded, and the clock a seeded walk falls back to when its event names none.\"\n        @tier \"policy\"\n      count : number = 6\n        @label "Rows per entity"\n        @description \"Rows the dataset samples for each generated entity; a DATASET_INPUT that names no count uses it.\"\n        @tier \"policy\"\n      seed : number = 1\n        @label \"Sampler seed\"\n        @description \"The sampler stream seed; a DATASET_INPUT that names no seed uses it.\"\n        @tier \"policy\"\n      defaultPersona : string = \"\"\n        @label \"Default persona\"\n        @description \"The identity row id the viewer is when the host names none, answered with DATASET_DONE; empty means anonymous until a persona is picked.\"\n        @tier \"policy\"\n      seedOrbital : string\n        @label \"Seeding orbital\"\n        @description \"The orbital that holds the seeding traits; every owner session is opened on it with a clientId seed-<ownerId>, and a resume runs in a fresh anonymous seed-resume-<n> session.\"\n        @tier \"policy\"\n      seedTrait : string\n        @label \"Seeding trait\"\n        @description \"The trait in that orbital that holds the seeding arms; with the orbital it spells the dispatch address Orbital.Trait.EVENT and names the target trait, so the host skips discovery.\"\n        @tier \"policy\"\n      personaOrbital : string\n        @label \"Persona orbital\"\n        @description \"The orbital that holds std-dev-personas, whose trait signs an owner session in as that persona.\"\n        @tier \"policy\"\n      personaTrait : string\n        @label \"Persona trait\"\n        @description \"The std-dev-personas trait in that orbital; PERSONA_ACT_AS { persona } dispatched into the session seed-<ownerId> signs that session in and answers PERSONA_SIGNED_IN { subject } or PERSONA_SIGN_IN_REFUSED { error, kind }.\"\n        @tier \"policy\"\n      stepsPerDispatch : number = 1000\n        @label \"Steps per dispatch\"\n        @description \"The cascade steps a seed spends before it continues in a dispatch of its own (a self program/dispatch), so a large dataset stays under the per-dispatch step cap of the kernel.\"\n        @tier \"policy\"\n      writeChunk : number = 100\n        @label \"Rows per write\"\n        @description \"The most rows one owner write carries; each write is a dispatch of its own, run as the owner of its rows.\"\n        @tier \"policy\"\n      restampOnPersona : boolean = false\n        @label "Restamp on persona switch"\n        @description "When true, a persona switch re-points the seeded owner cells at the new viewer; when false only the first owner stamp after seeding runs and a switch leaves rows as they are."\n        @synonyms "follow persona, my rows follow me"\n        @tier "policy"\n    }\n\n    state ready {\n'+body+'    }\n\n    emits {\n'+E+'    }\n\n    listens {\n'+L+'      MockStream.CORPUS_IS -> CORPUS_IS\n    }\n  }\n\n  page boot as MockSeedBoot -> MockSeed, MockStream\n}\n')
 FIRST_STAMP='(default (array/first @entity.dsStamps) { store: "", i: 0, col: "" })'
 FIRST_OLINK='(default (array/first @entity.dsOlinks) { store: "", field: "", i: 0, target: "", scalar: false })'
 WRITE_AT='(array/nth @entity.dsWriteAll @entity.dsWriteAt)'

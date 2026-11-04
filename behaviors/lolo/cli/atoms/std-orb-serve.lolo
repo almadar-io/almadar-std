@@ -223,7 +223,7 @@ orbital OrbServeOrbital {
     state writing {
       INIT -> writing
       SERVE_WRITE_SERVER -> writing
-        (emit SERVE_SEED_DECIDED { seed: (if (and @entity.mock (not (array/some (object/get @entity.app "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))) (let ((po (array/find (object/get @entity.app "orbitals" []) (fn o (array/some (object/get @o "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" []) (fn tr (= (object/get @tr "event" "") "PERSONA_ACT_AS"))))))))) (str/concat "uses Seed from \"std/behaviors/std-mock-seed\"\norbital MockData = Seed.orbitals.MockSeedOrbital {\n  traits {\n    MockSeed {\n      config {\n        seedOnInit: true\n        seedOrbital: MockData\n        seedTrait: MockDataMockSeed\n" (if (= @po null) "" (str/concat "        personaOrbital: " (object/get @po "name") "\n        personaTrait: " (object/get (default (array/find (object/get @po "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" []) (fn tr (= (object/get @tr "event" "") "PERSONA_ACT_AS"))))) { name: "", stateMachine: { transitions: [] } }) "name") "\n")) "      }\n    }\n  }\n}\n")) "") })
+        (emit SERVE_SEED_DECIDED { seed: (if (and @entity.mock (not (array/some (object/get @entity.app "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))) (let ((po (array/find (object/get @entity.app "orbitals" []) (fn o (array/some (object/get @o "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" []) (fn tr (= (object/get @tr "event" "") "PERSONA_ACT_AS"))))))))) (if (= @po null) "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData\n" (str/concat "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData {\n  traits {\n    MockDataMockSeed {\n      config {\n        personaOrbital: " (object/get @po "name") "\n        personaTrait: " (object/get (default (array/find (object/get @po "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" []) (fn tr (= (object/get @tr "event" "") "PERSONA_ACT_AS"))))) { name: "", stateMachine: { transitions: [] } }) "name") "\n" "      }\n    }\n  }\n}\n"))) "") })
       SERVE_SEED_DECIDED -> resolving
         (os/write-file (str/concat "~/.almadar/serve/" @entity.serverName) (bytes/from-string (str/concat
           "app orb-served-server [version: \"1.0.0\"]\n"
@@ -289,7 +289,7 @@ orbital OrbServeOrbital {
       SERVE_SEED_DECIDED {
         seed : string!
       }
-        @description "The .lolo that composes std-mock-seed as MockData, seeding on start: non-empty only when mock is on and the resolved app declares no MockSeedMark store (it does not already compose std-mock-seed)."
+        @description "The .lolo that composes std-mock-page-seed as MockData, seeding each routed page on its first visit: non-empty only when mock is on and the resolved app declares no MockSeedMark store (it does not already compose std-mock-seed)."
         @tier "internal"
       SERVE_SERVER_WRITTEN { bytes : number }
         @description "os/write-file: the server program, std-http-server imported with the serve options as its call-site config, is written."

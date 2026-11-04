@@ -39,7 +39,6 @@ type DsOlink = { store : string!, field : string!, i : number!, target : string!
 type AccessReq = { entity : string!, action : string!, row : (Map string MockValue?)!, identity : (Viewer | (Map string MockValue?))? }
 type AcPlan = { queue : [AccessReq]!, planned : number, n : number!, read : boolean!, rel : boolean!, ids : [string]!, viewer : boolean! }
 type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
-type DsClose = { seen : [string]!, front : [string]! }
 type DsBatch = { stores : Map string [Map string MockValue?]!, s : number!, minted : number!, stamps : [DsStamp]!, used : number!, halt : boolean! }
 type DatasetReg = { label : string!, store : string!, fields : [SeedField]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, hasCreate : boolean!, policyRefs : [string]!, instances : [Map string MockValue?]! }
 type StorePolicy = { name : string!, hasRead : boolean!, hasCreate : boolean!, refs : [string]! }
@@ -69,8 +68,6 @@ orbital MockSeedHostOrbital {
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
-    dsSelf : boolean @description "The running seed was started by seedOnInit, so its write leaves the seed marker." = false
-    dsBoot : boolean @description "seedOnInit asked for the word corpus at INIT; its answer starts the seed, so the boot seed draws text from the corpus." = false
     dsEntities : [string] @description "The entities this request seeds (a page's $MOUNT entities); empty seeds every entity." = []
     dsScoped : boolean @description "The request named entities, so seed marks decide which of them are still unseeded." = false
     dsMarked : [string] @description "The entities already marked seeded, read before planning and again before writing." = []
@@ -108,7 +105,7 @@ orbital MockSeedHostOrbital {
     dsStores : Map string [Map string MockValue?] @description "The rows of each store key." = {}
     dsOut : DsBatch @description "The last store batch: the registrations run in one step until one produced owner stamps; emptied once read." = { stores: {}, s: 0, minted: 0, stamps: [], used: 0, halt: false }
     dsOlinkCache : Map string AcOut @description "Owner-link verdicts keyed `<store>|<field>`, kept only where the read and create policies read no row field but that one and no binding but @user." = {}
-    dsActive : boolean @description "A boot or page seed is running: every page mount runs INIT, and a second run started before the first finishes would race it." = false
+    dsActive : boolean @description "A page seed is running; a page seed asked for meanwhile is ignored rather than raced." = false
     dsWork : number @description "Cascade steps the seed has spent since it last continued in a dispatch of its own." = 0
     dsNext : string @description "Where the seed continues after its resume dispatch answers: stamp or olink." = ""
     dsResumes : number @description "How many resume dispatches the seed has made." = 0
