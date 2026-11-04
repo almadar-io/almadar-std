@@ -1,7 +1,7 @@
 app std-live-machine [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's .lolo source (the lines of the transition that fired are highlighted) next to its state machine (active state, fired transition, visited states). A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
 ]
 ;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
 uses Spec from "almadar-std/live-machine"
@@ -168,18 +168,9 @@ orbital LiveMachineOrbital {
         ratio: "1:1"
         gap: md
         stackBreakpoint: sm
-        leftClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.codeShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
-        rightClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.diagramShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
+        leftClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.diagramShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
+        rightClassName: (str/concat "min-w-0 @sm:w-auto @sm:basis-0 transition-[flex-grow] duration-500 ease-out motion-reduce:transition-none @sm:grow-[" @config.codeShare "] @sm:hover:grow-[" @config.focusShare "] @sm:focus-within:grow-[" @config.focusShare "]")
         children: [{
-        type: code-block
-        className: "p-0"
-        code: @entity.sourceText
-        language: "lolo"
-        title: (str/concat @entity.title ".lolo")
-        highlightLines: @entity.highlight
-        maxHeight: "26rem"
-        showCopyButton: true
-        }, {
         type: state-machine-view
         description: (as @entity.subject SubjectExpr)
         showHeader: @config.showHeader
@@ -190,6 +181,15 @@ orbital LiveMachineOrbital {
         followActive: true
         direction: (if (== @locale "ar") "rtl" "ltr")
         aria-label: (str/concat @entity.title " — " (i18n/t "diagram.label"))
+        }, {
+        type: code-block
+        className: "p-0"
+        code: @entity.sourceText
+        language: "lolo"
+        title: (str/concat @entity.title ".lolo")
+        highlightLines: @entity.highlight
+        maxHeight: "26rem"
+        showCopyButton: true
         }]
       }
         @label "Diagram view"

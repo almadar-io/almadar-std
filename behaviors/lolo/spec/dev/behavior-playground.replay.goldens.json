@@ -415,25 +415,80 @@
       ]
     },
     {
-      "id": "dock-a-loaded-behavior-draws-its-first-trait-by-name-without-asking-the-catalog",
+      "id": "dock-a-loaded-behavior-remembers-its-name-and-clears-the-drawn-trait",
       "steps": [
         {
           "trait": "PlaygroundMachine",
           "event": "BEHAVIOR_LOADED",
           "payload": {
-            "behavior": "almadar-std/std-browse",
-            "knobs": [],
-            "traits": [
-              "BrowseItemBrowse",
-              "MasterListView"
-            ],
-            "program": {}
+            "behavior": "almadar-std/std-browse"
           },
           "entity": {
             "id": "p",
-            "machineBehavior": "",
-            "machineTraits": [],
-            "machinePick": 0
+            "machineBehavior": "x",
+            "machineTrait": "Old"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.machineBehavior"
+              },
+              {
+                "type": "set",
+                "arg0": "@entity.machineTrait"
+              }
+            ],
+            "neverEmits": [
+              "SUBJECT"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-a-paint-set-draws-only-the-page-root-trait",
+      "steps": [
+        {
+          "trait": "PlaygroundMachine",
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "BrowseChild",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "OtherChild",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-browse",
+            "machineTrait": ""
           },
           "from": "idle",
           "expect": {
@@ -444,12 +499,9 @@
                 "event": "SUBJECT",
                 "payload": {
                   "behavior": "almadar-std/std-browse",
-                  "trait": "BrowseItemBrowse"
+                  "trait": "BrowseRoot"
                 }
               }
-            ],
-            "neverEmits": [
-              "CATALOG_TRAITS"
             ]
           }
         }
@@ -457,22 +509,28 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-edge-a-behavior-with-no-traits-draws-nothing",
+      "id": "dock-control-embedded-traits-never-appear",
       "steps": [
         {
           "trait": "PlaygroundMachine",
-          "event": "BEHAVIOR_LOADED",
+          "event": "GUEST_PAINTS",
           "payload": {
-            "behavior": "almadar-std/std-browse",
-            "knobs": [],
-            "traits": [],
-            "program": {}
+            "guest": "g1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseChild",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
           },
           "entity": {
             "id": "p",
-            "machineBehavior": "",
-            "machineTraits": [],
-            "machinePick": 0
+            "machineBehavior": "almadar-std/std-browse",
+            "machineTrait": ""
           },
           "from": "idle",
           "expect": {
@@ -487,22 +545,28 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-a-picked-trait-is-drawn-by-name",
+      "id": "dock-a-new-root-after-navigation-redraws",
       "steps": [
         {
           "trait": "PlaygroundMachine",
-          "event": "MACHINE_PICK",
+          "event": "GUEST_PAINTS",
           "payload": {
-            "index": 1
+            "guest": "g1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "DetailRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
           },
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTraits": [
-              "BrowseItemBrowse",
-              "MasterListView"
-            ],
-            "machinePick": 0
+            "machineTrait": "BrowseRoot"
           },
           "from": "idle",
           "expect": {
@@ -513,7 +577,7 @@
                 "event": "SUBJECT",
                 "payload": {
                   "behavior": "almadar-std/std-browse",
-                  "trait": "MasterListView"
+                  "trait": "DetailRoot"
                 }
               }
             ]
@@ -523,28 +587,69 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-edge-a-pick-out-of-range-draws-nothing",
+      "id": "dock-edge-the-same-root-repainted-does-not-reset-the-view",
       "steps": [
         {
           "trait": "PlaygroundMachine",
-          "event": "MACHINE_PICK",
+          "event": "GUEST_PAINTS",
           "payload": {
-            "index": 2
+            "guest": "g1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
           },
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTraits": [
-              "BrowseItemBrowse",
-              "MasterListView"
-            ],
-            "machinePick": 0
+            "machineTrait": "BrowseRoot"
           },
           "from": "idle",
           "expect": {
             "fired": true,
             "state": "idle",
-            "effects": [],
+            "neverEmits": [
+              "SUBJECT"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-edge-a-paint-before-any-behavior-loaded-draws-nothing",
+      "steps": [
+        {
+          "trait": "PlaygroundMachine",
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "",
+            "machineTrait": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
             "neverEmits": [
               "SUBJECT"
             ]

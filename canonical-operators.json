@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-04T12:31:15.629Z",
+  "generated": "2026-11-04T16:02:48.066Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -25161,6 +25161,20 @@
         "fields": {
           "ok": "boolean",
           "error": "string",
+          "rendered": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "slot": "string",
+                "trait": "string",
+                "embedded": "boolean",
+                "content": {
+                  "kind": "sexpr"
+                }
+              }
+            }
+          },
           "emitted": {
             "kind": "array",
             "of": {
@@ -25720,10 +25734,10 @@
       ],
       "docsSource": "generated"
     },
-    "program/open": {
+    "program/navigate": {
       "category": "std-program",
       "minArity": 1,
-      "maxArity": 3,
+      "maxArity": 2,
       "returnType": {
         "kind": "object",
         "fields": {
@@ -25740,6 +25754,7 @@
               "fields": {
                 "slot": "string",
                 "trait": "string",
+                "embedded": "boolean",
                 "content": {
                   "kind": "sexpr"
                 }
@@ -25785,7 +25800,148 @@
         },
         "open": true
       },
-      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, content }`), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). The options take `grants` (an os grants object in IR form) and `arenas` (a list of the opener's shared Arenas). Without either the guest has no host ports: its `os/*`, `http` and service asks fail. With them the opening orbital needs the grant `kernel: { \"guest\": [spawn] }` and must hold every grant it passes (a grant not covered is refused, the missing grants named); the guest's asks are then answered by a host holding only those grants, and each listed arena is shared with it (only those arenas may later cross in a dispatch payload). A failure carries `{ error, errors? }`. Runs on the server.",
+      "description": "Open a route in a guest session `program/open` answered: load the lazy program that serves `route` (one the opened program value carried in `lazyPrograms`), write `rows` (`[{ entity, rows }]`, each row checked against its entity, an undeclared entity or a misfit row refuses the call) into the guest's store, then mount the traits of the page `route` resolves to (the `[notFound]` page for an unmatched route) that the guest has not mounted yet, each once; navigating to a route already mounted mounts nothing. The rows are written before the mount, so the traits' INIT fetches read them. Success carries the record `program/open` answers: `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`, covering only what this call mounted, with `embedded` following the route navigated to. A failure carries `{ error }` (an unknown guest, a lazy page the opened program did not carry, a bad row). Runs on the server, inside the asking dispatch.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "guest": "string",
+              "route": "string",
+              "rows": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "entity": "string",
+                    "rows": {
+                      "kind": "array",
+                      "of": {
+                        "kind": "map",
+                        "key": "string",
+                        "value": {
+                          "kind": "sexpr"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "optional": [
+              "rows"
+            ]
+          },
+          "description": "The session id `program/open` answered (`guest`), the path to open (`route`) and the optional `rows` to seed before its traits mount"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/navigate {\"guest\":\"@entity.guest\",\"route\":\"/list\",\"rows\":[]} {\"emit\":{\"success\":\"NAVIGATED\",\"failure\":\"NAVIGATE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/open": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "guest": "string",
+          "states": {
+            "kind": "map",
+            "key": "string",
+            "value": "string"
+          },
+          "rendered": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "slot": "string",
+                "trait": "string",
+                "embedded": "boolean",
+                "content": {
+                  "kind": "sexpr"
+                }
+              }
+            }
+          },
+          "emitted": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "event": "string"
+              },
+              "open": true
+            }
+          },
+          "outcomes": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "event": "string",
+                "from": "string",
+                "to": "string",
+                "fired": "boolean"
+              },
+              "optional": [
+                "event"
+              ]
+            }
+          },
+          "rejections": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "code": "string"
+              },
+              "open": true
+            }
+          }
+        },
+        "open": true
+      },
+      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, embedded, content }`, `embedded` true when the painting trait is embedded (`@trait.X`) on the page of the guest rather than mounted by it), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). What mounts: the traits of the program's `boot` endpoints and of the routed page only, the page `options.route` names, else the `[initial]` page, else the first route page (a trait on another page mounts on `program/navigate`); `embedded` follows the routed page. The program value may carry `lazyPrograms: { <orbRef>: <resolved program> }`, the programs of its `uses lazy` pages, which load only when `program/navigate` reaches their route (the guest reads no files). The options take `route`, `rows`, `grants` (an os grants object in IR form) and `arenas` (a list of the opener's shared Arenas). Without either the guest has no host ports: its `os/*`, `http` and service asks fail. With them the opening orbital needs the grant `kernel: { \"guest\": [spawn] }` and must hold every grant it passes (a grant not covered is refused, the missing grants named); the guest's asks are then answered by a host holding only those grants, and each listed arena is shared with it (only those arenas may later cross in a dispatch payload). A failure carries `{ error, errors? }`. Runs on the server.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -25806,6 +25962,7 @@
           "type": {
             "kind": "object",
             "fields": {
+              "route": "string",
               "grants": {
                 "kind": "object",
                 "fields": {
@@ -25947,12 +26104,13 @@
               }
             },
             "optional": [
+              "route",
               "grants",
               "arenas",
               "rows"
             ]
           },
-          "description": "The guest options: `grants` (the os grants the guest's asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest's store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open); all optional",
+          "description": "The guest options: `route` (the path of the page to mount besides the boot traits; absent: the `[initial]` page, else the first route page), `grants` (the os grants the guest's asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest's store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open); all optional",
           "optional": true
         },
         {

@@ -912,7 +912,6 @@
     "appName": "app",
     "rel": ".orbital/serve/app/web-client",
     "source": "/work/app.lolo",
-    "mock": true,
     "path": "/home/u/.almadar/serve/x.orb"
    },
    "steps": [
@@ -1033,7 +1032,6 @@
          "status": 200,
          "headers": {
           "orb-run": "server",
-          "orb-mock": "on",
           "orb-app": "/home/u/.almadar/serve/x.orb"
          }
         }
@@ -1072,7 +1070,6 @@
    "id": "control: a served app with its own --client-dir answers at once, preparing nothing",
    "entity": {
     "prepare": false,
-    "mock": false,
     "path": "/p.orb"
    },
    "steps": [
@@ -1094,7 +1091,6 @@
          "status": 200,
          "headers": {
           "orb-run": "server",
-          "orb-mock": "off",
           "orb-app": "/p.orb"
          }
         }
@@ -1122,6 +1118,194 @@
         "payload": {
          "status": 500,
          "stderr": "Error: the web client could not be prepared: program/eval: the typescript shell ships no prebuilt web client"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mock on: the served server program also composes std-mock-seed, seeding on start",
+   "entity": {
+    "mock": true,
+    "app": {
+     "name": "app",
+     "orbitals": [
+      {
+       "name": "O",
+       "pages": [
+        {
+         "name": "Home",
+         "path": "/"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "writing",
+     "event": "SERVE_WRITE_SERVER",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_SEED_DECIDED",
+        "payload": {
+         "seed": "uses Seed from \"std/behaviors/std-mock-seed\"\norbital MockData = Seed.orbitals.MockSeedOrbital {\n  traits {\n    MockSeed {\n      config {\n        seedOnInit: true\n        seedOrbital: MockData\n        seedTrait: MockDataMockSeed\n      }\n    }\n  }\n}\n"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--no-mock: the served server program composes nothing extra",
+   "entity": {
+    "mock": false,
+    "app": {
+     "name": "app",
+     "orbitals": [
+      {
+       "name": "O",
+       "pages": [
+        {
+         "name": "Home",
+         "path": "/"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "writing",
+     "event": "SERVE_WRITE_SERVER",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_SEED_DECIDED",
+        "payload": {
+         "seed": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an app that already composes std-mock-seed is not seeded a second time",
+   "entity": {
+    "mock": true,
+    "app": {
+     "name": "app",
+     "orbitals": [
+      {
+       "name": "O",
+       "pages": [
+        {
+         "name": "Home",
+         "path": "/"
+        }
+       ]
+      },
+      {
+       "name": "MockData",
+       "pages": [],
+       "auxiliaryEntities": [
+        {
+         "collection": "mock_seed_marks"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "writing",
+     "event": "SERVE_WRITE_SERVER",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_SEED_DECIDED",
+        "payload": {
+         "seed": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mock on: a trait that answers PERSONA_ACT_AS is the seed's persona sign-in",
+   "entity": {
+    "mock": true,
+    "app": {
+     "name": "app",
+     "orbitals": [
+      {
+       "name": "O",
+       "pages": [
+        {
+         "name": "Home",
+         "path": "/"
+        }
+       ]
+      },
+      {
+       "name": "CO",
+       "pages": [],
+       "traits": [
+        {
+         "name": "COPersonas",
+         "stateMachine": {
+          "transitions": [
+           {
+            "event": "INIT"
+           },
+           {
+            "event": "PERSONA_ACT_AS"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "writing",
+     "event": "SERVE_WRITE_SERVER",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "emits": [
+       {
+        "event": "SERVE_SEED_DECIDED",
+        "payload": {
+         "seed": "uses Seed from \"std/behaviors/std-mock-seed\"\norbital MockData = Seed.orbitals.MockSeedOrbital {\n  traits {\n    MockSeed {\n      config {\n        seedOnInit: true\n        seedOrbital: MockData\n        seedTrait: MockDataMockSeed\n        personaOrbital: CO\n        personaTrait: COPersonas\n      }\n    }\n  }\n}\n"
         }
        }
       ]

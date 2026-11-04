@@ -2,7 +2,7 @@ app std-orb-serve-handoff [
   version: "1.0.0",
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
   fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create] },
-  description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server, orb-mock: on or off and orb-app: the resolved app beside its catalogs, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
+  description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server and orb-app: the resolved app beside its catalogs, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
   egress: []
 ]
 type HandoffPage = { protocol : string }
@@ -15,7 +15,6 @@ orbital ServeHandoffOrbital {
     id : string!
     path : string = ""
     rel : string = ""
-    mock : boolean = true
     prepare : boolean @description "The client is prepared here (no --client-dir), from the composed program." = false
     appName : string = ""
     cwd : string = ""
@@ -31,12 +30,10 @@ orbital ServeHandoffOrbital {
     state idle {
       INIT -> idle
       SERVE_DECLARED_READY -> composing
-        (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
         (set @entity.prepare false)
         (program/compose [@payload.program] { appName: @payload.appName } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
       SERVE_COMPOSE_READY -> composing when @payload.hasClient
-        (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
         (set @entity.prepare @payload.prepare)
         (set @entity.cwd @payload.cwd)
@@ -45,7 +42,6 @@ orbital ServeHandoffOrbital {
         (set @entity.appName @payload.appName)
         (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
       SERVE_COMPOSE_READY -> composing when (not @payload.hasClient)
-        (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
         (set @entity.prepare false)
         (program/compose @payload.programs { appName: @payload.appName overrides: { grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: {} } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
@@ -55,10 +51,8 @@ orbital ServeHandoffOrbital {
       INIT -> composing
       SERVE_COMPOSE_REFUSED -> idle
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "")) })
-      SERVE_COMPOSED -> idle when (and @entity.mock (not @entity.prepare))
-        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
-      SERVE_COMPOSED -> idle when (and (not @entity.mock) (not @entity.prepare))
-        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
+      SERVE_COMPOSED -> idle when (not @entity.prepare)
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @payload.result), headers: { "orb-run": "server", "orb-app": @entity.path } })
       SERVE_COMPOSED -> preparing when @entity.prepare
         (set @entity.composed @payload.result)
         (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName) } true { key: "prepDir" emit: { success: SERVE_PREP_DIR, failure: SERVE_PREP_FAILED } })
@@ -92,10 +86,8 @@ orbital ServeHandoffOrbital {
         (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_WRITTEN -> preparing
         (emit SERVE_CLIENT_READY { })
-      SERVE_CLIENT_READY -> idle when @entity.mock
-        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "on", "orb-app": @entity.path } })
-      SERVE_CLIENT_READY -> idle when (not @entity.mock)
-        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-mock": "off", "orb-app": @entity.path } })
+      SERVE_CLIENT_READY -> idle
+        (emit SERVE_ANSWERED { status: 200, body: (json/stringify @entity.composed), headers: { "orb-run": "server", "orb-app": @entity.path } })
     }
 
     emits {
@@ -175,7 +167,6 @@ orbital ServeHandoffOrbital {
         port : number!
         rel : string!
         hasClient : boolean!
-        mock : boolean!
         path : string!
       }
         @description "The app declares its own http endpoint: composed alone, with the serve options set on that orbital."
@@ -186,7 +177,6 @@ orbital ServeHandoffOrbital {
         port : number!
         rel : string!
         hasClient : boolean!
-        mock : boolean!
         path : string!
         prepare : boolean!
         cwd : string!

@@ -2,6 +2,8 @@ app ui-guest-view [
   version: "1.0.0",
   description: "GuestView — UI factory (1:1 with the @almadar/ui guest-view pattern)."
 ]
+type GuestViewPaint = { slot : string!, trait : string!, embedded : boolean!, content : node! }
+
 ;; @pattern "guest-view"
 orbital GuestViewOrbital {
   entity GuestViewItem [runtime] {
@@ -17,6 +19,7 @@ orbital GuestViewOrbital {
           guest: @config.guest
           source: @config.source
           deliver: @config.deliver
+          paints: @config.paints
           children: @config.children
           type: guest-view
         })
@@ -34,6 +37,10 @@ orbital GuestViewOrbital {
       deliver : event
         @label "Deliver"
         @description "The opener trait's declared event a click inside this view is delivered as. The kernel emits it, never the renderer."
+        @tier "presentation"
+      paints : [GuestViewPaint]
+        @label "Paints"
+        @description "Every paint the guest made (`rendered` entries, the latest per trait and slot). An `@trait.X` inside the content resolves to the guest's trait X from these."
         @tier "presentation"
       children : node
         @label "Children"
