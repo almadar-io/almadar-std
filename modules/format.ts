@@ -7,7 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER, PRIMITIVE_VALUE, STRING, list, shape, nullable } from '../signature.js';
+import { NUMBER, PRIMITIVE_VALUE, STRING, list, nullable } from '../signature.js';
 
 /**
  * Format module operators.
@@ -25,7 +25,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: nullable('string'),
     params: [
       { name: 'n', type: 'number', description: 'Number to format' },
-      { name: 'opts', type: shape({ locale: STRING, decimals: NUMBER, minimumFractionDigits: NUMBER, maximumFractionDigits: NUMBER }), description: 'Format options: locale; decimals (both bounds at once) or minimumFractionDigits / maximumFractionDigits', optional: true },
+      { name: 'opts', type: { kind: 'object', fields: { locale: STRING, decimals: NUMBER, minimumFractionDigits: NUMBER, maximumFractionDigits: NUMBER }, optional: ['locale', 'decimals', 'minimumFractionDigits', 'maximumFractionDigits'] }, description: 'Format options: locale; decimals (both bounds at once) or minimumFractionDigits / maximumFractionDigits', optional: true },
     ],
     example: '["format/number", 1234567.89] // => "1,234,567.89"',
   },
