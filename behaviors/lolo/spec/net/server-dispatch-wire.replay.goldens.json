@@ -1,866 +1,868 @@
 {
- "atom": "net/atoms/std-http-dispatch.lolo",
- "trait": "ServerDispatch",
- "note": "EventResponse route parity; keyed program/dispatch wire answers preserve status/code and the ordered stream items supplied by the host.",
- "cases": [
-  {
-   "id": "targeted-init-answers-200",
-   "note": "events_wire.rs init_request_shape_round_trips_as_event_response",
-   "steps": [
+  "atom": "net/atoms/std-http-dispatch.lolo",
+  "trait": "ServerDispatch",
+  "note": "EventResponse route parity; keyed program/dispatch wire answers preserve status/code and the ordered stream items supplied by the host.",
+  "cases": [
     {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "eyJldmVudCI6IklOSVQiLCJ0YXJnZXRUcmFpdCI6IkxheW91dCJ9",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "DISPATCH_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "transitioned": true,
-       "states": {
-        "Layout": "ready",
-        "Modal": "closed"
-       },
-       "emittedEvents": [],
-       "clientEffectsByTrait": [
+      "id": "targeted-init-answers-200",
+      "note": "events_wire.rs init_request_shape_round_trips_as_event_response",
+      "steps": [
         {
-         "traitName": "Layout",
-         "effect": [
-          "render-ui",
-          "main",
-          {
-           "type": "stack"
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJldmVudCI6IklOSVQiLCJ0YXJnZXRUcmFpdCI6IkxheW91dCJ9",
+            "peer": "127.0.0.1:5000"
           }
-         ]
-        }
-       ],
-       "rejections": []
-      },
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200
-        }
-       }
-      ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "events",
-        "stream": false,
-        "responseHeaders": [],
-        "dispatchKey": "dispatch-7"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "cascade-carries-emitted-event",
-   "note": "events_wire.rs cascade_emits_and_bubble_to_listening_trait",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "DISPATCH_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "transitioned": true,
-       "states": {
-        "Layout": "ready",
-        "Modal": "open"
-       },
-       "emittedEvents": [
-        {
-         "event": "DRAFT_OPENED",
-         "source": {
-          "trait": "Modal"
-         }
-        }
-       ],
-       "clientEffectsByTrait": [
-        {
-         "traitName": "Modal",
-         "effect": [
-          "render-ui",
-          "modal",
-          {
-           "type": "form"
-          }
-         ]
-        }
-       ],
-       "rejections": []
-      },
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200
-        }
-       }
-      ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "events",
-        "stream": false,
-        "responseHeaders": [],
-        "dispatchKey": "dispatch-7"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "guard-rejection-is-200-with-guard-failed",
-   "note": "events_wire.rs guard_rejection_on_the_seed_trait_reports_guard_failed",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "eyJldmVudCI6IkNMT1NFIiwidGFyZ2V0VHJhaXQiOiJNb2RhbCJ9",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "DISPATCH_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "transitioned": false,
-       "states": {
-        "Layout": "idle",
-        "Modal": "closed"
-       },
-       "emittedEvents": [],
-       "clientEffectsByTrait": [],
-       "rejections": [
-        {
-         "code": "no-matching-transition",
-         "trait": "Modal",
-         "event": "CLOSE"
-        }
-       ],
-       "guardFailed": "Modal.CLOSE"
-      },
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200
-        }
-       }
-      ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "events",
-        "stream": false,
-        "responseHeaders": [],
-        "dispatchKey": "dispatch-7"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "undeclared-input-is-403",
-   "note": "external_inputs_route.rs; the host refuses, the atom maps the rejection to 403",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/inputs",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "eyJ0YXJnZXRUcmFpdCI6Ik1vZGFsIiwiZXZlbnQiOiJDTE9TRSJ9",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "DISPATCH_ANSWERED",
-     "payload": {
-      "result": {
-       "success": false,
-       "transitioned": false,
-       "states": {},
-       "emittedEvents": [],
-       "clientEffectsByTrait": [],
-       "rejections": [
-        {
-         "code": "not-an-external-input",
-         "trait": "Modal",
-         "event": "CLOSE"
-        }
-       ],
-       "error": "Modal.CLOSE is not a declared external input"
-      },
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 403
-        }
-       }
-      ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "events",
-        "stream": false,
-        "responseHeaders": [],
-        "dispatchKey": "dispatch-7"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "stream-true-opens-the-event-stream",
-   "note": "An effect before an event stays before it, with host timestamps preserved and exactly one terminal complete frame.",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "stream=true",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "DISPATCH_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "transitioned": true,
-       "states": {
-        "Layout": "ready",
-        "Modal": "open"
-       },
-       "emittedEvents": [
-        {
-         "event": "DRAFT_OPENED"
-        }
-       ],
-       "clientEffectsByTrait": [
-        {
-         "traitName": "Modal",
-         "effect": [
-          "render-ui",
-          "modal",
-          {
-           "type": "form"
-          }
-         ]
-        }
-       ],
-       "rejections": [],
-       "items": [
-        {
-         "type": "effect",
-         "data": [
-          "render-ui",
-          "modal",
-          {
-           "type": "form"
-          }
-         ],
-         "timestamp": 123
         },
         {
-         "type": "event",
-         "data": {
-          "event": "DRAFT_OPENED"
-         },
-         "timestamp": 124
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
         },
         {
-         "type": "complete",
-         "data": {
-          "success": true,
-          "transitioned": true,
-          "states": {
-           "Layout": "ready",
-           "Modal": "open"
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "transitioned": true,
+              "states": {
+                "Layout": "ready",
+                "Modal": "closed"
+              },
+              "emittedEvents": [],
+              "clientEffectsByTrait": [
+                {
+                  "traitName": "Layout",
+                  "effect": [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack"
+                    }
+                  ]
+                }
+              ],
+              "rejections": []
+            },
+            "key": "dispatch-7"
           },
-          "emittedEvents": [
-           {
-            "event": "DRAFT_OPENED"
-           }
-          ],
-          "clientEffectsByTrait": [
-           {
-            "traitName": "Modal",
-            "effect": [
-             "render-ui",
-             "modal",
-             {
-              "type": "form"
-             }
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200
+                }
+              }
             ]
-           }
-          ],
-          "rejections": []
-         },
-         "timestamp": 125
-        }
-       ]
-      },
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "SSE_OPEN",
-        "payload": {
-         "requestId": 7
-        }
-       },
-       {
-        "event": "SSE_SEND",
-        "payload": {
-         "requestId": 7,
-         "data": "{\"type\":\"effect\",\"data\":[\"render-ui\",\"modal\",{\"type\":\"form\"}],\"timestamp\":123}"
-        }
-       },
-       {
-        "event": "SSE_SEND",
-        "payload": {
-         "requestId": 7,
-         "data": "{\"type\":\"event\",\"data\":{\"event\":\"DRAFT_OPENED\"},\"timestamp\":124}"
-        }
-       },
-       {
-        "event": "SSE_SEND",
-        "payload": {
-         "requestId": 7,
-         "data": "{\"type\":\"complete\",\"data\":{\"success\":true,\"transitioned\":true,\"states\":{\"Layout\":\"ready\",\"Modal\":\"open\"},\"emittedEvents\":[{\"event\":\"DRAFT_OPENED\"}],\"clientEffectsByTrait\":[{\"traitName\":\"Modal\",\"effect\":[\"render-ui\",\"modal\",{\"type\":\"form\"}]}],\"rejections\":[]},\"timestamp\":125}"
-        }
-       },
-       {
-        "event": "SSE_CLOSE",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ],
-      "emitCounts": {
-       "SSE_SEND": 3,
-       "SSE_CLOSE": 1
-      }
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "events",
-        "stream": true,
-        "responseHeaders": [],
-        "dispatchKey": "dispatch-7"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "trace-is-answered-200-as-the-recorded-array",
-   "note": "events.rs:115 Json(runtime.trace()) -> 200 JSON array of TraceEntry (host/runtime.rs TraceEntry, camelCase)",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/trace",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
-      },
-      "body": "",
-      "peer": "127.0.0.1:5000"
-     }
-    },
-    {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "TRACE_ANSWERED",
-     "payload": {
-      "result": [
-       {
-        "seq": 1
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "content-type",
-           "value": "application/json"
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "events",
+                "stream": false,
+                "responseHeaders": [],
+                "dispatchKey": "dispatch-7"
+              }
+            ]
           }
-         ],
-         "body": "W3sic2VxIjoxfV0="
         }
-       }
       ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "trace",
-        "stream": false,
-        "responseHeaders": []
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "empty-trace-is-an-empty-array",
-   "note": "control: no dispatch traced yet",
-   "steps": [
+    },
     {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/trace",
-      "query": "",
-      "headers": {
-       "content-type": "application/json"
+      "id": "cascade-carries-emitted-event",
+      "note": "events_wire.rs cascade_emits_and_bubble_to_listening_trait",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "transitioned": true,
+              "states": {
+                "Layout": "ready",
+                "Modal": "open"
+              },
+              "emittedEvents": [
+                {
+                  "event": "DRAFT_OPENED",
+                  "source": {
+                    "trait": "Modal"
+                  }
+                }
+              ],
+              "clientEffectsByTrait": [
+                {
+                  "traitName": "Modal",
+                  "effect": [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "form"
+                    }
+                  ]
+                }
+              ],
+              "rejections": []
+            },
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200
+                }
+              }
+            ]
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "events",
+                "stream": false,
+                "responseHeaders": [],
+                "dispatchKey": "dispatch-7"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "guard-rejection-is-200-with-guard-failed",
+      "note": "events_wire.rs guard_rejection_on_the_seed_trait_reports_guard_failed",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJldmVudCI6IkNMT1NFIiwidGFyZ2V0VHJhaXQiOiJNb2RhbCJ9",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "transitioned": false,
+              "states": {
+                "Layout": "idle",
+                "Modal": "closed"
+              },
+              "emittedEvents": [],
+              "clientEffectsByTrait": [],
+              "rejections": [
+                {
+                  "code": "no-matching-transition",
+                  "trait": "Modal",
+                  "event": "CLOSE"
+                }
+              ],
+              "guardFailed": "Modal.CLOSE"
+            },
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200
+                }
+              }
+            ]
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "events",
+                "stream": false,
+                "responseHeaders": [],
+                "dispatchKey": "dispatch-7"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "undeclared-input-is-403",
+      "note": "external_inputs_route.rs; the host refuses, the atom maps the rejection to 403",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/inputs",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJ0YXJnZXRUcmFpdCI6Ik1vZGFsIiwiZXZlbnQiOiJDTE9TRSJ9",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": false,
+              "transitioned": false,
+              "states": {},
+              "emittedEvents": [],
+              "clientEffectsByTrait": [],
+              "rejections": [
+                {
+                  "code": "not-an-external-input",
+                  "trait": "Modal",
+                  "event": "CLOSE"
+                }
+              ],
+              "error": "Modal.CLOSE is not a declared external input"
+            },
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 403
+                }
+              }
+            ]
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "events",
+                "stream": false,
+                "responseHeaders": [],
+                "dispatchKey": "dispatch-7"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream-true-opens-the-event-stream",
+      "note": "An effect before an event stays before it, with host timestamps preserved and exactly one terminal complete frame.",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "stream=true",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "DISPATCH_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "transitioned": true,
+              "states": {
+                "Layout": "ready",
+                "Modal": "open"
+              },
+              "emittedEvents": [
+                {
+                  "event": "DRAFT_OPENED"
+                }
+              ],
+              "clientEffectsByTrait": [
+                {
+                  "traitName": "Modal",
+                  "effect": [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "form"
+                    }
+                  ]
+                }
+              ],
+              "rejections": [],
+              "items": [
+                {
+                  "type": "effect",
+                  "data": [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "form"
+                    }
+                  ],
+                  "timestamp": 123
+                },
+                {
+                  "type": "event",
+                  "data": {
+                    "event": "DRAFT_OPENED"
+                  },
+                  "timestamp": 124
+                },
+                {
+                  "type": "complete",
+                  "data": {
+                    "success": true,
+                    "transitioned": true,
+                    "states": {
+                      "Layout": "ready",
+                      "Modal": "open"
+                    },
+                    "emittedEvents": [
+                      {
+                        "event": "DRAFT_OPENED"
+                      }
+                    ],
+                    "clientEffectsByTrait": [
+                      {
+                        "traitName": "Modal",
+                        "effect": [
+                          "render-ui",
+                          "modal",
+                          {
+                            "type": "form"
+                          }
+                        ]
+                      }
+                    ],
+                    "rejections": []
+                  },
+                  "timestamp": 125
+                }
+              ]
+            },
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SSE_OPEN",
+                "payload": {
+                  "requestId": 7
+                }
+              },
+              {
+                "event": "SSE_SEND",
+                "payload": {
+                  "requestId": 7,
+                  "data": "{\"type\":\"effect\",\"data\":[\"render-ui\",\"modal\",{\"type\":\"form\"}],\"timestamp\":123}"
+                }
+              },
+              {
+                "event": "SSE_SEND",
+                "payload": {
+                  "requestId": 7,
+                  "data": "{\"type\":\"event\",\"data\":{\"event\":\"DRAFT_OPENED\"},\"timestamp\":124}"
+                }
+              },
+              {
+                "event": "SSE_SEND",
+                "payload": {
+                  "requestId": 7,
+                  "data": "{\"type\":\"complete\",\"data\":{\"success\":true,\"transitioned\":true,\"states\":{\"Layout\":\"ready\",\"Modal\":\"open\"},\"emittedEvents\":[{\"event\":\"DRAFT_OPENED\"}],\"clientEffectsByTrait\":[{\"traitName\":\"Modal\",\"effect\":[\"render-ui\",\"modal\",{\"type\":\"form\"}]}],\"rejections\":[]},\"timestamp\":125}"
+                }
+              },
+              {
+                "event": "SSE_CLOSE",
+                "payload": {
+                  "requestId": 7
+                }
+              }
+            ],
+            "emitCounts": {
+              "SSE_SEND": 3,
+              "SSE_CLOSE": 1
+            }
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "events",
+                "stream": true,
+                "responseHeaders": [],
+                "dispatchKey": "dispatch-7"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "trace-is-answered-200-as-the-recorded-array",
+      "note": "events.rs:115 Json(runtime.trace()) -> 200 JSON array of TraceEntry (host/runtime.rs TraceEntry, camelCase)",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/trace",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "TRACE_ANSWERED",
+          "payload": {
+            "result": [
+              {
+                "seq": 1
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "W3sic2VxIjoxfV0="
+                }
+              }
+            ]
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "trace",
+                "stream": false,
+                "responseHeaders": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-trace-is-an-empty-array",
+      "note": "control: no dispatch traced yet",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/trace",
+            "query": "",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          }
+        },
+        {
+          "event": "TRACE_ANSWERED",
+          "payload": {
+            "result": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "W10="
+                }
+              }
+            ]
+          },
+          "entity": {
+            "inflight": 7,
+            "pending": [
+              {
+                "requestId": 7,
+                "kind": "trace",
+                "stream": false,
+                "responseHeaders": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-dispatch-answers-the-hosts-status-orbital-not-found",
+      "note": "G-ORB-446 d: the host's errors[0] { status, code } is the answer: 404 ORBITAL_NOT_FOUND.",
+      "entity": {
+        "inflight": 7,
+        "waiting": [],
+        "frames": [],
+        "pending": [
+          {
+            "requestId": 7,
+            "kind": "events",
+            "orbital": "Notes",
+            "traitName": "",
+            "entityId": "",
+            "stream": false,
+            "authorization": "",
+            "body": "eyJldmVudCI6IklOSVQifQ==",
+            "hookName": "",
+            "dispatchKey": "dispatch-7",
+            "responseHeaders": []
+          }
+        ]
       },
-      "body": "",
-      "peer": "127.0.0.1:5000"
-     }
+      "steps": [
+        {
+          "event": "DISPATCH_FAILED",
+          "payload": {
+            "error": "dispatch failed",
+            "key": "dispatch-7",
+            "errors": [
+              {
+                "code": "ORBITAL_NOT_FOUND",
+                "status": 404
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 404,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJPUkJJVEFMX05PVF9GT1VORCJ9"
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     }
-    },
-    {
-     "event": "TRACE_ANSWERED",
-     "payload": {
-      "result": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
+      "id": "a-failed-dispatch-answers-the-hosts-status-locale-not-declared",
+      "note": "400 LOCALE_NOT_DECLARED, as the host answered it.",
+      "entity": {
+        "inflight": 7,
+        "waiting": [],
+        "frames": [],
+        "pending": [
           {
-           "name": "content-type",
-           "value": "application/json"
+            "requestId": 7,
+            "kind": "events",
+            "orbital": "Notes",
+            "traitName": "",
+            "entityId": "",
+            "stream": false,
+            "authorization": "",
+            "body": "eyJldmVudCI6IklOSVQifQ==",
+            "hookName": "",
+            "dispatchKey": "dispatch-7",
+            "responseHeaders": []
           }
-         ],
-         "body": "W10="
-        }
-       }
-      ]
-     },
-     "entity": {
-      "inflight": 7,
-      "pending": [
-       {
-        "requestId": 7,
-        "kind": "trace",
-        "stream": false,
-        "responseHeaders": []
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-failed-dispatch-answers-the-hosts-status-orbital-not-found",
-   "note": "G-ORB-446 d: the host's errors[0] { status, code } is the answer: 404 ORBITAL_NOT_FOUND.",
-   "entity": {
-    "inflight": 7,
-    "waiting": [],
-    "frames": [],
-    "pending": [
-     {
-      "requestId": 7,
-      "kind": "events",
-      "orbital": "Notes",
-      "traitName": "",
-      "entityId": "",
-      "stream": false,
-      "authorization": "",
-      "body": "eyJldmVudCI6IklOSVQifQ==",
-      "hookName": "",
-      "dispatchKey": "dispatch-7",
-      "responseHeaders": []
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "DISPATCH_FAILED",
-     "payload": {
-      "error": "dispatch failed",
-      "key": "dispatch-7",
-      "errors": [
-       {
-        "code": "ORBITAL_NOT_FOUND",
-        "status": 404
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 404,
-         "headers": [
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJPUkJJVEFMX05PVF9GT1VORCJ9"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-failed-dispatch-answers-the-hosts-status-locale-not-declared",
-   "note": "400 LOCALE_NOT_DECLARED, as the host answered it.",
-   "entity": {
-    "inflight": 7,
-    "waiting": [],
-    "frames": [],
-    "pending": [
-     {
-      "requestId": 7,
-      "kind": "events",
-      "orbital": "Notes",
-      "traitName": "",
-      "entityId": "",
-      "stream": false,
-      "authorization": "",
-      "body": "eyJldmVudCI6IklOSVQifQ==",
-      "hookName": "",
-      "dispatchKey": "dispatch-7",
-      "responseHeaders": []
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "DISPATCH_FAILED",
-     "payload": {
-      "error": "dispatch failed",
-      "key": "dispatch-7",
-      "errors": [
-       {
-        "code": "LOCALE_NOT_DECLARED",
-        "status": 400
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 400,
-         "headers": [
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJMT0NBTEVfTk9UX0RFQ0xBUkVEIn0="
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-failure-carrying-no-errors-is-500",
-   "note": "A failure with no errors entry is 500 EVENT_PROCESSING_ERROR.",
-   "entity": {
-    "inflight": 7,
-    "waiting": [],
-    "frames": [],
-    "pending": [
-     {
-      "requestId": 7,
-      "kind": "events",
-      "orbital": "Notes",
-      "traitName": "",
-      "entityId": "",
-      "stream": false,
-      "authorization": "",
-      "body": "eyJldmVudCI6IklOSVQifQ==",
-      "hookName": "",
-      "dispatchKey": "dispatch-7",
-      "responseHeaders": []
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "DISPATCH_FAILED",
-     "payload": {
-      "error": "dispatch failed",
-      "key": "dispatch-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 500,
-         "headers": [
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJFVkVOVF9QUk9DRVNTSU5HX0VSUk9SIn0="
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "query-requests-ordered-stream-items",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "stream=true",
-      "headers": {
-       "content-type": "application/json"
+        ]
       },
-      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
-      "peer": "127.0.0.1:5000"
-     }
+      "steps": [
+        {
+          "event": "DISPATCH_FAILED",
+          "payload": {
+            "error": "dispatch failed",
+            "key": "dispatch-7",
+            "errors": [
+              {
+                "code": "LOCALE_NOT_DECLARED",
+                "status": 400
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 400,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJMT0NBTEVfTk9UX0RFQ0xBUkVEIn0="
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "DISPATCH_PREPARED",
-        "payload": {
-         "requestId": 7,
-         "options": {
-          "wire": true,
-          "stream": true,
-          "input": false,
-          "orbital": "Notes",
-          "targetTrait": "Layout",
-          "entityId": "",
-          "event": "CREATE",
-          "traits": null,
-          "mount": [],
-          "clientId": "",
-          "locale": "",
-          "delivery": {},
-          "dispatchLog": {},
-          "framesSince": null
-         }
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "accept-header-requests-ordered-stream-items",
-   "steps": [
-    {
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/orbitals/Notes/events",
-      "query": "",
-      "headers": {
-       "content-type": "application/json",
-       "accept": "text/event-stream"
+      "id": "control-a-failure-carrying-no-errors-is-500",
+      "note": "A failure with no errors entry is 500 EVENT_PROCESSING_ERROR.",
+      "entity": {
+        "inflight": 7,
+        "waiting": [],
+        "frames": [],
+        "pending": [
+          {
+            "requestId": 7,
+            "kind": "events",
+            "orbital": "Notes",
+            "traitName": "",
+            "entityId": "",
+            "stream": false,
+            "authorization": "",
+            "body": "eyJldmVudCI6IklOSVQifQ==",
+            "hookName": "",
+            "dispatchKey": "dispatch-7",
+            "responseHeaders": []
+          }
+        ]
       },
-      "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
-      "peer": "127.0.0.1:5000"
-     }
+      "steps": [
+        {
+          "event": "DISPATCH_FAILED",
+          "payload": {
+            "error": "dispatch failed",
+            "key": "dispatch-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 500,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJlcnJvciI6ImRpc3BhdGNoIGZhaWxlZCIsImNvZGUiOiJFVkVOVF9QUk9DRVNTSU5HX0VSUk9SIn0="
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
-     "event": "DISPATCH_QUEUED",
-     "payload": {
-      "requestId": 7
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "DISPATCH_PREPARED",
-        "payload": {
-         "requestId": 7,
-         "options": {
-          "wire": true,
-          "stream": true,
-          "input": false,
-          "orbital": "Notes",
-          "targetTrait": "Layout",
-          "entityId": "",
-          "event": "CREATE",
-          "traits": null,
-          "mount": [],
-          "clientId": "",
-          "locale": "",
-          "delivery": {},
-          "dispatchLog": {},
-          "framesSince": null
-         }
+      "id": "query-requests-ordered-stream-items",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "stream=true",
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DISPATCH_PREPARED",
+                "payload": {
+                  "requestId": 7,
+                  "options": {
+                    "wire": true,
+                    "stream": true,
+                    "input": false,
+                    "orbital": "Notes",
+                    "targetTrait": "Layout",
+                    "entityId": "",
+                    "event": "CREATE",
+                    "traits": null,
+                    "mount": [],
+                    "route": "",
+                    "clientId": "",
+                    "locale": "",
+                    "delivery": {},
+                    "dispatchLog": {},
+                    "framesSince": null
+                  }
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "accept-header-requests-ordered-stream-items",
+      "steps": [
+        {
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/orbitals/Notes/events",
+            "query": "",
+            "headers": {
+              "content-type": "application/json",
+              "accept": "text/event-stream"
+            },
+            "body": "eyJldmVudCI6IkNSRUFURSIsInRhcmdldFRyYWl0IjoiTGF5b3V0In0=",
+            "peer": "127.0.0.1:5000"
+          }
+        },
+        {
+          "event": "DISPATCH_QUEUED",
+          "payload": {
+            "requestId": 7
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DISPATCH_PREPARED",
+                "payload": {
+                  "requestId": 7,
+                  "options": {
+                    "wire": true,
+                    "stream": true,
+                    "input": false,
+                    "orbital": "Notes",
+                    "targetTrait": "Layout",
+                    "entityId": "",
+                    "event": "CREATE",
+                    "traits": null,
+                    "mount": [],
+                    "route": "",
+                    "clientId": "",
+                    "locale": "",
+                    "delivery": {},
+                    "dispatchLog": {},
+                    "framesSince": null
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }
