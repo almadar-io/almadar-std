@@ -1,7 +1,9 @@
 app std-guest-session [
   version: "1.0.0",
-  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), samples rows for its entities with std-mock-seed (DATASET_PLAN, [runtime] entities included, seedRows each) and opens it with program/open { rows } so they are in its store before it mounts, keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot, the paint of the page's own trait (never an embedded child's), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
-  egress: []
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
+  egress: [],
+  kernel: { "guest": [spawn] },
+  env: ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"]
 ]
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
 
@@ -11,47 +13,28 @@ type GuestMove = { trait : string!, event : string!, from : string!, to : string
 type GuestOpened = { guest : string!, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
-type GuestSeedRows = { entity : string!, rows : [Map string MockValue?]! }
-type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
-type GuestSeedRelation = { entity : string, cardinality : string }
-type GuestSeedField = { name : string!, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : GuestSeedRelation }
-type GuestSeedEntity = { name : string!, persistence : string, collection : string, identity : boolean, browser : boolean, seedMock : boolean, fields : [GuestSeedField], instances : [Map string MockValue?] }
-type GuestSeedOrbital = { entity : GuestSeedEntity!, auxiliaryEntities : [GuestSeedEntity] }
-type GuestSeedProgram = { orbitals : [GuestSeedOrbital] }
+type GuestMarkEntity = { collection : string }
+type GuestMarkOrbital = { auxiliaryEntities : [GuestMarkEntity] }
+type GuestMarkProgram = { orbitals : [GuestMarkOrbital] }
 
 orbital GuestSessionOrbital {
-  uses Seed from "std/behaviors/std-mock-seed"
-
   entity GuestRun [runtime] {
     id : string!
     guestHandle : string = ""
     guestPaints : [GuestPaint] = []
     guestError : string = ""
     guestProgram : GuestProgram?
-  }
-
-  trait MockSeed = Seed.traits.MockSeed {
-    config {
-      seedOrbital: "GuestSessionOrbital"
-      seedTrait: "MockSeed"
-    }
-
-    listens {
-      MockStream.CORPUS_IS -> CORPUS_IS
-      GuestSession.DATASET_PLAN -> DATASET_PLAN
-    }
-  }
-
-  trait MockStream = Seed.traits.MockStream {
+    guestSeed : behavior?
   }
 
   trait GuestSession -> GuestRun {
     config {
-      seedRows : number = 8
-        @label "Sample rows"
-        @description "Rows sampled for each entity of the guest, [runtime] entities included, written into its store before it mounts."
+      guestEnv : [string] = ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"]
+        @label "Guest environment"
+        @description "The environment variables a guest may read, passed as its env grant at program/open: the Auth emulator host its persona sign-in checks and the persona-owns list its seeder reads. The orbital's own env grant covers them."
         @tier "policy"
     }
+
     initial: idle
 
     state idle {
@@ -60,12 +43,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
-        (let ((seedable (as ?program GuestSeedProgram)))
-          (if (= @seedable null)
-            (do
-              (emit GUEST_NOTICE { message: "Sample rows could not be made for this program, so it opens empty." })
-              (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } }))
-            (emit DATASET_PLAN { program: @seedable, count: @config.seedRows, runtime: true, nowMs: (time/now) })))
+        (emit GUEST_PREPARE {})
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -73,10 +51,11 @@ orbital GuestSessionOrbital {
       GUEST_OPENED -> idle
         (program/close ?result.guest { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
       GUEST_FAILED -> idle
-      DATASET_PLANNED -> idle
-      DATASET_FAILED -> idle
       GUEST_CLOSED -> idle
       GUEST_CLOSE_FAILED -> idle
+      GUEST_PREPARE -> idle
+      GUEST_SEED_RESOLVED -> idle
+      GUEST_COMPOSED -> idle
     }
 
     state opening {
@@ -84,12 +63,7 @@ orbital GuestSessionOrbital {
       GUEST_OPEN -> opening
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
-        (let ((seedable (as ?program GuestSeedProgram)))
-          (if (= @seedable null)
-            (do
-              (emit GUEST_NOTICE { message: "Sample rows could not be made for this program, so it opens empty." })
-              (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } }))
-            (emit DATASET_PLAN { program: @seedable, count: @config.seedRows, runtime: true, nowMs: (time/now) })))
+        (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
         (set @entity.guestHandle ?result.guest)
         (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
@@ -97,11 +71,17 @@ orbital GuestSessionOrbital {
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
-      DATASET_PLANNED -> opening
-        (program/open @entity.guestProgram { rows: ?rows } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
-      DATASET_FAILED -> opening
-        (emit GUEST_NOTICE { message: (str/concat "Sample rows could not be made, so the guest opens empty: " ?error) })
-        (program/open @entity.guestProgram {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_PREPARE -> opening when (= @entity.guestSeed null)
+        (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
+      GUEST_SEED_RESOLVED -> opening
+        (set @entity.guestSeed ?result)
+        (emit GUEST_PREPARE {})
+      GUEST_PREPARE -> opening when (and (!= @entity.guestSeed null) (let ((marked (as @entity.guestProgram GuestMarkProgram))) (and (!= @marked null) (array/some (object/get @marked "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))))
+        (program/open @entity.guestProgram { grants: { env: @config.guestEnv } } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+      GUEST_PREPARE -> opening when (and (!= @entity.guestSeed null) (not (let ((marked (as @entity.guestProgram GuestMarkProgram))) (and (!= @marked null) (array/some (object/get @marked "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))))))
+        (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
+      GUEST_COMPOSED -> opening
+        (program/open ?result { grants: { env: @config.guestEnv } } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -118,12 +98,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
-        (let ((seedable (as ?program GuestSeedProgram)))
-          (if (= @seedable null)
-            (do
-              (emit GUEST_NOTICE { message: "Sample rows could not be made for this program, so it opens empty." })
-              (program/open ?program {} { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } }))
-            (emit DATASET_PLAN { program: @seedable, count: @config.seedRows, runtime: true, nowMs: (time/now) })))
+        (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
         (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
         (set @entity.guestHandle ?result.guest)
@@ -132,8 +107,9 @@ orbital GuestSessionOrbital {
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
-      DATASET_PLANNED -> live
-      DATASET_FAILED -> live
+      GUEST_PREPARE -> live
+      GUEST_SEED_RESOLVED -> live
+      GUEST_COMPOSED -> live
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
@@ -144,7 +120,7 @@ orbital GuestSessionOrbital {
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
-        (program/navigate { guest: ?guest, route: ?route, rows: [] } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+        (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
       GUEST_NAVIGATED -> live
         (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
@@ -212,13 +188,13 @@ orbital GuestSessionOrbital {
       GUEST_CLOSE_FAILED {
         error : string!
       }
-      DATASET_PLAN -> external {
-        program : GuestSeedProgram!
-        count : number
-        runtime : boolean
-        nowMs : instant!
+      GUEST_PREPARE { }
+      GUEST_SEED_RESOLVED {
+        result : behavior!
       }
-        @description "Sample rows for every entity of the program about to open, writing nothing."
+      GUEST_COMPOSED {
+        result : behavior!
+      }
     }
 
     listens {
@@ -245,14 +221,6 @@ orbital GuestSessionOrbital {
       }
       GUEST_RESET { }
         @description "Close the open guest and clear the paint."
-      MockSeed.DATASET_PLANNED -> DATASET_PLANNED
-      MockSeed.DATASET_FAILED -> DATASET_FAILED
-      DATASET_PLANNED {
-        rows : [GuestSeedRows]!
-      }
-      DATASET_FAILED {
-        error : string!
-      }
     }
   }
 
@@ -320,12 +288,12 @@ orbital GuestSessionOrbital {
         (render-ui main { type: box, className: @config.className, children: [
           (if (!= @entity.guestError "")
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
-            (let ((paint (array/find @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false))))))
+            (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false)))))))
               (if (= @paint null)
                 (if (= @entity.guestHandle "")
                   { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.unpaintedTitle, message: (let ((roots (array/filter @entity.guestPaints (fn p (= @p.embedded false))))) (if (= (array/len @roots) 0) @config.unpaintedNothing (str/concat @config.unpaintedOthers (str/join (array/map @roots (fn p @p.slot)) ", ")))) }] })
-                { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, paints: @entity.guestPaints, children: [@paint.content] })))
+                { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, paints: @entity.guestPaints, children: (array/map @slotRoots (fn p @p.content)) })))
         ] })
     }
 
@@ -375,5 +343,4 @@ orbital GuestSessionOrbital {
   }
 
   page "/" as GuestSessionPage -> GuestSession, GuestStage
-  page boot as GuestSessionSeed -> MockStream, MockSeed
 }

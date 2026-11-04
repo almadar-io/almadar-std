@@ -3,177 +3,6 @@
   "trait": "GuestSession",
   "cases": [
     {
-      "id": "open-from-idle-plans-sample-rows-and-clears-the-painter",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_OPEN",
-          "payload": {
-            "program": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": ""
-          },
-          "from": "idle",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "emits": [
-              {
-                "event": "GUEST_CLEARED",
-                "payload": {}
-              },
-              {
-                "event": "DATASET_PLAN"
-              }
-            ],
-            "effects": [
-              {
-                "type": "set"
-              },
-              {
-                "type": "emit"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "let"
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678,
-      "defaults": [
-        "MockSeed"
-      ]
-    },
-    {
-      "id": "open-while-live-closes-the-previous-guest",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_OPEN",
-          "payload": {
-            "program": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "guest-1",
-            "guestPaints": [
-              {
-                "slot": "main",
-                "trait": "A.T",
-                "embedded": false,
-                "content": {
-                  "type": "stack"
-                }
-              }
-            ],
-            "guestError": ""
-          },
-          "from": "live",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "emits": [
-              {
-                "event": "GUEST_CLEARED",
-                "payload": {}
-              },
-              {
-                "event": "DATASET_PLAN"
-              }
-            ],
-            "effects": [
-              {
-                "type": "program/close"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "emit"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "let"
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678,
-      "defaults": [
-        "MockSeed"
-      ]
-    },
-    {
-      "id": "control-an-open-while-opening-plans-again-without-closing",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_OPEN",
-          "payload": {
-            "program": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": ""
-          },
-          "from": "opening",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "effects": [
-              {
-                "type": "emit"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "let"
-              }
-            ],
-            "emits": [
-              {
-                "event": "GUEST_CLEARED",
-                "payload": {}
-              },
-              {
-                "event": "DATASET_PLAN"
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678,
-      "defaults": [
-        "MockSeed"
-      ]
-    },
-    {
       "id": "the-opened-guest-paints-its-slots",
       "steps": [
         {
@@ -975,183 +804,6 @@
       "now": 1760531445678
     },
     {
-      "id": "planned-rows-open-the-guest-with-them",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "DATASET_PLANNED",
-          "payload": {
-            "rows": [
-              {
-                "entity": "Item",
-                "rows": [
-                  {
-                    "id": "Item Id 1",
-                    "name": "a"
-                  }
-                ]
-              }
-            ]
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": "",
-            "guestProgram": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "from": "opening",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "effects": [
-              {
-                "type": "program/open"
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-a-failed-plan-opens-the-guest-empty-and-says-so",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "DATASET_FAILED",
-          "payload": {
-            "error": "boom"
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": "",
-            "guestProgram": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "from": "opening",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "emits": [
-              {
-                "event": "GUEST_NOTICE",
-                "payload": {
-                  "message": "Sample rows could not be made, so the guest opens empty: boom"
-                }
-              }
-            ],
-            "effects": [
-              {
-                "type": "emit"
-              },
-              {
-                "type": "program/open"
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "edge-a-plan-answer-after-the-guest-is-live-is-ignored",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "DATASET_PLANNED",
-          "payload": {
-            "rows": [
-              {
-                "entity": "Item",
-                "rows": [
-                  {
-                    "id": "Item Id 1",
-                    "name": "a"
-                  }
-                ]
-              }
-            ]
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "guest-1",
-            "guestPaints": [],
-            "guestError": "",
-            "guestProgram": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "from": "live",
-          "expect": {
-            "fired": true,
-            "state": "live",
-            "effects": []
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "edge-a-program-the-sampler-cannot-read-opens-empty-and-says-so",
-      "defaults": [
-        "MockSeed"
-      ],
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_OPEN",
-          "payload": {
-            "program": {
-              "name": "x",
-              "orbitals": [
-                {
-                  "entity": {
-                    "persistence": "runtime"
-                  }
-                }
-              ]
-            }
-          },
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": ""
-          },
-          "from": "idle",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "emits": [
-              {
-                "event": "GUEST_CLEARED",
-                "payload": {}
-              },
-              {
-                "event": "GUEST_NOTICE",
-                "payload": {
-                  "message": "Sample rows could not be made for this program, so it opens empty."
-                }
-              }
-            ],
-            "neverEmits": [
-              "DATASET_PLAN"
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
       "id": "an-embedded-child-painting-main-after-the-root-does-not-replace-the-root",
       "steps": [
         {
@@ -1595,6 +1247,564 @@
             "neverEmits": [
               "GUEST_NAVIGATE"
             ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "open-from-idle-clears-the-painter-and-prepares",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "GUEST_PREPARE"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "open-while-live-closes-the-previous-guest",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.T",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "GUEST_PREPARE"
+              }
+            ],
+            "effects": [
+              {
+                "type": "program/close"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-an-open-while-opening-prepares-again-without-closing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_OPEN",
+          "payload": {
+            "program": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "neverEmits": [
+              "DATASET_PLAN"
+            ],
+            "emits": [
+              {
+                "event": "GUEST_CLEARED",
+                "payload": {}
+              },
+              {
+                "event": "GUEST_PREPARE"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "prepare-without-the-seed-program-resolves-std-mock-page-seed",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PREPARE",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "behavior/resolve"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-resolved-seed-program-is-cached-and-prepare-runs-again",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEED_RESOLVED",
+          "payload": {
+            "result": {
+              "name": "std-mock-page-seed",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GUEST_PREPARE"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "prepare-composes-the-program-with-the-cached-seed",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PREPARE",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestSeed": {
+              "name": "std-mock-page-seed",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/compose"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-program-that-declares-the-marks-store-is-opened-as-is-not-composed",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PREPARE",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "auxiliaryEntities": [
+                    {
+                      "collection": "mock_seed_marks"
+                    }
+                  ]
+                }
+              ]
+            },
+            "guestSeed": {
+              "name": "std-mock-page-seed",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/open"
+              }
+            ],
+            "emits": [
+              {
+                "event": "GUEST_FAILED",
+                "payload": {
+                  "error": "program/open: the program is not a resolved program: missing field `name`"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-composed-program-opens-the-guest",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_COMPOSED",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestSeed": {
+              "name": "std-mock-page-seed",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/open"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-a-prepare-after-the-guest-is-live-is-ignored",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PREPARE",
+          "payload": {},
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-a-composed-answer-after-the-guest-is-live-is-ignored",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_COMPOSED",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-shows-every-page-root-of-the-slot-in-paint-order",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_SHOWN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.One",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "A.Two",
+                "embedded": false,
+                "content": {
+                  "type": "grid"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "A.Child",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main"
+              }
+            ],
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "type": "box",
+                  "className": "",
+                  "children": [
+                    {
+                      "type": "guest-view",
+                      "guest": "guest-1",
+                      "source": "A.One",
+                      "deliver": "GUEST_CONTROL",
+                      "navigate": "GUEST_ROUTE",
+                      "paints": [
+                        {
+                          "slot": "main",
+                          "trait": "A.One",
+                          "embedded": false,
+                          "content": {
+                            "type": "stack"
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "trait": "A.Two",
+                          "embedded": false,
+                          "content": {
+                            "type": "grid"
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "trait": "A.Child",
+                          "embedded": true,
+                          "content": {
+                            "type": "box"
+                          }
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack"
+                        },
+                        {
+                          "type": "grid"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-an-embedded-paint-is-never-shown-as-a-root",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_SHOWN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Child",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "type": "box",
+                  "className": "",
+                  "children": [
+                    {
+                      "type": "container",
+                      "size": "md",
+                      "padding": "lg",
+                      "children": [
+                        {
+                          "type": "alert",
+                          "variant": "info",
+                          "title": "Nothing to show here on its own",
+                          "message": "The behavior painted nothing when it opened; it draws in answer to an event a host sends it."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
           }
         }
       ],
