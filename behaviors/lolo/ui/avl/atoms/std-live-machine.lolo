@@ -1,7 +1,7 @@
 app std-live-machine [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code."
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code. LiveMachineOrbit draws the running page whole instead: ORBITAL_SUBJECT { behavior } to LiveMachineTrace reads the asking session's mounted orbital (program/self { mounted: true }), and every trait is drawn as a box nested in the trait that embeds it, starting from its current state. LiveMachineTrace opens one trace subscription for the traits that step in the browser and one for those on the server (EXEC-DIST-14), leaving out the observer traits (itself and the views it feeds) so it never traces its own work. Each move lights its fired transition, and LiveMachineSource describes the trait that moved last for the source column. ORBITAL_CLOSE closes the subscriptions."
 ]
 ;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
 uses Spec from "almadar-std/live-machine"
@@ -19,6 +19,18 @@ type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource!
 type CodeHighlight = { start : number!, end : number! }
 type DiagramNote = { title : string, body : string! }
 type DiagramNotes = { states : Map string DiagramNote, transitions : Map string DiagramNote, effects : Map string DiagramNote }
+type MountedState = { name : string!, isInitial : boolean!, isTerminal : boolean! }
+type MountedTransition = { index : number!, from : [string]!, to : string!, event : string!, guarded : boolean!, emits : [string]! }
+type MountedListen = { event : string!, triggers : string? }
+type MountedInstance = { entityId : string!, state : string! }
+type MountedTrait = { trait : string!, orbital : string?, parent : string?, depth : number!, embeddedIn : [string]!, renders : boolean!, observer : boolean!, stepsIn : string!, linkedEntity : string?, instances : [MountedInstance]!, states : [MountedState]!, transitions : [MountedTransition]!, emits : [string]!, listens : [MountedListen]! }
+type MountedOrbital = { page : string!, traits : [MountedTrait]! }
+type TraitState = { trait : string!, state : string! }
+type FiredMove = { trait : string!, index : number! }
+type TraceMove = { trait : string!, from : string!, to : string!, event : string?, executed : boolean! }
+type TraceDispatch = { seq : number!, outcomes : [TraceMove]! }
+type DescribedValue = { behavior : string, trait : string! }
+type DescribedSourceOf = { value : DescribedValue!, source : DescribedSource! }
 
 orbital LiveMachineOrbital {
   entity LiveMachineView [runtime] {
@@ -34,6 +46,31 @@ orbital LiveMachineOrbital {
     fired : number
     visited : [string] = []
   }
+
+  entity LiveMachineOrbitView [runtime] {
+    id : string!
+    behavior : string = ""
+    tree : MountedOrbital?
+    actives : [TraitState] = []
+    firedMove : FiredMove?
+    title : string = ""
+    sourceText : string = ""
+    sourceLines : [TransitionLines] = []
+    highlight : CodeHighlight?
+  }
+
+  entity LiveMachineSourceView [runtime] {
+    id : string!
+  }
+
+  entity LiveMachineTraceView [runtime] {
+    id : string!
+    behavior : string = ""
+    sourceTrait : string = ""
+    browser : [string] = []
+    server : [string] = []
+  }
+
 
   trait LiveMachine -> @rebindable LiveMachineView [optimistic] {
     initial: describing
@@ -197,5 +234,316 @@ orbital LiveMachineOrbital {
     }
   }
 
+  ;; the whole-page view runs in the browser, so its state is always the client's (EXEC-DIST-4)
+  trait LiveMachineOrbit -> @rebindable LiveMachineOrbitView [client] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (render-ui main { type: state-machine-view, isLoading: true })
+      ORBIT -> showing
+        (set @entity.tree ?tree)
+        (set @entity.behavior ?behavior)
+        (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
+        (set @entity.firedMove null)
+        (set @entity.title "")
+        (set @entity.sourceText "")
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (render-ui main @config.view)
+      ORBIT_FAILED -> waiting
+        (set @entity.behavior ?behavior)
+        (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
+      ORBIT_RETRY -> waiting
+        (emit ORBIT_AGAIN { behavior: @entity.behavior })
+      MOVES -> waiting
+      SOURCE -> waiting
+      SOURCE_FAILED -> waiting
+    }
+
+    state showing {
+      INIT -> showing
+        (render-ui main @config.view)
+      ORBIT -> showing
+        (set @entity.tree ?tree)
+        (set @entity.behavior ?behavior)
+        (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
+        (set @entity.firedMove null)
+        (render-ui main @config.view)
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (== (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title))
+        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+          (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [] }) traits) (fn t (== @t.trait @last.trait)))))
+            (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
+              (do
+                (set @entity.actives (array/reduce (array/filter ?moves (fn m @m.fired)) @entity.actives (fn (acc m) (if (array/some @acc (fn a (and (== @a.trait @m.trait) (== @a.state @m.from)))) (array/map @acc (fn a (if (and (== @a.trait @m.trait) (== @a.state @m.from)) { trait: @m.trait, state: @m.to } @a))) (array/append @acc { trait: @m.trait, state: @m.to })))))
+                (set @entity.firedMove { trait: @last.trait, index: @index })
+                (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @index))))) (if (== @at null) null { start: @at.start, end: @at.end })))))))
+        (render-ui main @config.view)
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title))
+        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+          (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [] }) traits) (fn t (== @t.trait @last.trait)))))
+            (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
+              (do
+                (set @entity.actives (array/reduce (array/filter ?moves (fn m @m.fired)) @entity.actives (fn (acc m) (if (array/some @acc (fn a (and (== @a.trait @m.trait) (== @a.state @m.from)))) (array/map @acc (fn a (if (and (== @a.trait @m.trait) (== @a.state @m.from)) { trait: @m.trait, state: @m.to } @a))) (array/append @acc { trait: @m.trait, state: @m.to })))))
+                (set @entity.firedMove { trait: @last.trait, index: @index })
+                (do (set @entity.title @last.trait) (set @entity.sourceText "") (set @entity.sourceLines []) (set @entity.highlight null))))))
+        (render-ui main @config.view)
+      MOVES -> showing when (== (array/len (array/filter ?moves (fn m @m.fired))) 0)
+      SOURCE -> showing when (== ?trait @entity.title)
+        (set @entity.sourceText ?text)
+        (set @entity.sourceLines ?lines)
+        (set @entity.highlight (let ((at (array/find ?lines (fn l (== @l.index (object/get (default @entity.firedMove { trait: "", index: -1 }) index)))))) (if (== @at null) null { start: @at.start, end: @at.end })))
+        (render-ui main @config.view)
+      SOURCE -> showing when (!= ?trait @entity.title)
+      SOURCE_FAILED -> showing
+        (set @entity.sourceText (str/concat ";; " ?error))
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (render-ui main @config.view)
+      ORBIT_FAILED -> waiting
+        (set @entity.behavior ?behavior)
+        (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
+      ORBIT_RETRY -> showing
+    }
+
+    emits {
+      ORBIT_AGAIN {
+        behavior : string!
+      }
+        @description "Read the page again for its whole-page view."
+        @tier "internal"
+    }
+
+    listens {
+      LiveMachineTrace.ORBIT -> ORBIT
+      LiveMachineTrace.ORBIT_MOVES -> MOVES
+      LiveMachineTrace.ORBIT_FAILED -> ORBIT_FAILED
+      LiveMachineSource.SOURCE -> SOURCE
+      LiveMachineSource.SOURCE_FAILED -> SOURCE_FAILED
+      ORBIT {
+        behavior : string!
+        tree : MountedOrbital!
+      }
+        @description "The asking session's mounted orbital arrived: draw every trait of it, nested by where it is embedded, from its current state."
+        @tier "internal"
+      MOVES {
+        moves : [MachineMove]!
+      }
+        @description "Transitions the page took, in order; the fired ones light their transition and move their trait's active state."
+        @tier "internal"
+      ORBIT_FAILED {
+        behavior : string!
+        error : string!
+      }
+        @tier "internal"
+      ORBIT_RETRY
+        @description "Try reading the page again."
+        @tier "internal"
+      SOURCE {
+        trait : string!
+        text : string!
+        lines : [TransitionLines]!
+      }
+        @tier "internal"
+      SOURCE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    config {
+      expandDepth : number = 2
+        @label "Expand depth"
+        @description "Traits shallower than this show their machine inline; deeper ones show as a box whose machine opens on hover or focus."
+      view : render-ui = {
+        type: split
+        ratio: "3:2"
+        gap: md
+        stackBreakpoint: md
+        leftClassName: "min-w-0"
+        rightClassName: "min-w-0"
+        children: [{
+        type: state-machine-view
+        orbital: @entity.tree
+        activeStates: @entity.actives
+        firedTransition: @entity.firedMove
+        expandDepth: @config.expandDepth
+        direction: (if (== @locale "ar") "rtl" "ltr")
+        aria-label: (i18n/t "diagram.orbitLabel")
+        }, {
+        type: code-block
+        className: "p-0"
+        code: @entity.sourceText
+        language: "lolo"
+        title: (if (== @entity.title "") (i18n/t "diagram.orbitNoSource") (str/concat @entity.title ".lolo"))
+        highlightLines: @entity.highlight
+        maxHeight: "40rem"
+        showCopyButton: true
+        }]
+      }
+        @label "Whole-page view"
+        @tier "internal"
+    }
+  }
+
+  ;; one state, so its server copy always takes DESCRIBE whatever the client-run view has seen
+  trait LiveMachineSource -> LiveMachineSourceView [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DESCRIBE -> idle
+        (behavior/describe { behavior: ?behavior, trait: ?trait } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+      DESCRIBED -> idle
+        (emit SOURCE { trait: ?result.value.trait, text: ?result.source.text, lines: ?result.source.transitions })
+      DESCRIBE_FAILED -> idle
+        (emit SOURCE_FAILED { error: ?error })
+    }
+
+    emits {
+      SOURCE {
+        trait : string!
+        text : string!
+        lines : [TransitionLines]!
+      }
+        @tier "internal"
+      SOURCE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      LiveMachineTrace.SOURCE_WANTED -> DESCRIBE
+      DESCRIBE {
+        behavior : string!
+        trait : string!
+      }
+        @tier "internal"
+      DESCRIBED {
+        result : DescribedSourceOf!
+      }
+        @tier "internal"
+      DESCRIBE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+  }
+
+
+  ;; one trace subscription per site: a trace of browser and server traits together is refused (EXEC-DIST-14)
+  trait LiveMachineTrace -> LiveMachineTraceView [client] {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+      ORBITAL_SUBJECT -> reading
+        (set @entity.behavior ?behavior)
+        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
+      ORBITAL_CLOSE -> closed
+    }
+
+    state reading {
+      INIT -> closed
+      MOUNTED -> live
+        (set @entity.sourceTrait "")
+        (set @entity.browser (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "browser") (not @t.observer)))) (fn t @t.trait)))
+        (set @entity.server (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "server") (not @t.observer)))) (fn t @t.trait)))
+        (if (> (array/len @entity.browser) 0) (program/live { kind: "trace", traits: @entity.browser } { key: "live-machine-browser", emit: { onMessage: TRACE, failure: TRACE_FAILED } }) null)
+        (if (> (array/len @entity.server) 0) (program/live { kind: "trace", traits: @entity.server } { key: "live-machine-server", emit: { onMessage: TRACE, failure: TRACE_FAILED } }) null)
+        (emit ORBIT { behavior: @entity.behavior, tree: ?result })
+      MOUNT_FAILED -> closed
+        (emit ORBIT_FAILED { behavior: @entity.behavior, error: ?error })
+      ORBITAL_SUBJECT -> reading
+        (set @entity.behavior ?behavior)
+        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
+      ORBITAL_CLOSE -> closed
+    }
+
+    state live {
+      INIT -> closed
+      TRACE -> live when (and (array/some (default ?dispatch.outcomes []) (fn o @o.executed)) (!= (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait) @entity.sourceTrait))
+        (set @entity.sourceTrait (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait))
+        (emit ORBIT_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
+        (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.sourceTrait })
+      TRACE -> live when (not (and (array/some (default ?dispatch.outcomes []) (fn o @o.executed)) (!= (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait) @entity.sourceTrait)))
+        (emit ORBIT_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
+      TRACE_FAILED -> closed
+        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
+        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
+        (emit ORBIT_FAILED { behavior: @entity.behavior, error: ?error })
+      ORBITAL_CLOSE -> closed
+        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
+        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
+      ORBITAL_SUBJECT -> reading
+        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
+        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
+        (set @entity.behavior ?behavior)
+        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
+    }
+
+    emits {
+      ORBIT {
+        behavior : string!
+        tree : MountedOrbital!
+      }
+        @tier "internal"
+      ORBIT_MOVES {
+        moves : [MachineMove]!
+      }
+        @tier "internal"
+      SOURCE_WANTED {
+        behavior : string!
+        trait : string!
+      }
+        @description "The whole-page view needs the source of this trait, the one that moved last."
+        @tier "internal"
+      ORBIT_FAILED {
+        behavior : string!
+        error : string!
+      }
+        @tier "internal"
+      MOUNTED -> internal {
+        result : MountedOrbital!
+      }
+        @tier "internal"
+      MOUNT_FAILED -> internal {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      LiveMachineOrbit.ORBIT_AGAIN -> ORBITAL_SUBJECT
+      ORBITAL_SUBJECT {
+        behavior : string!
+      }
+        @description "Draw the running page of this behavior whole and follow it: read the asking session's mounted orbital, then trace every trait in it."
+        @synonyms "show the whole page machine, trace the page"
+      ORBITAL_CLOSE
+        @description "Stop following the page: close its trace subscriptions."
+      MOUNTED {
+        result : MountedOrbital!
+      }
+        @tier "internal"
+      MOUNT_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      TRACE {
+        dispatch : TraceDispatch!
+      }
+        @description "One dispatch of the page, with each trait's move."
+        @tier "internal"
+      TRACE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+  }
+
+
   page "/live-machine" as LiveMachinePage -> LiveMachine
+  page "/live-machine/:view" as LiveOrbitPage -> LiveMachineOrbit, LiveMachineTrace, LiveMachineSource
 }

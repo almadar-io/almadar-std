@@ -48,6 +48,50 @@ orbital StateMachineViewOrbital {
     type : string!
     args : [SExpr]!
   }
+  type StateMachineViewMountedState = {
+    name : string!
+    isInitial : boolean!
+    isTerminal : boolean!
+  }
+  type StateMachineViewMountedTransition = {
+    index : number!
+    from : [string]!
+    to : string!
+    event : string!
+    guarded : boolean!
+    emits : [string]!
+  }
+  type StateMachineViewMountedListen = {
+    event : string!
+    triggers : string?
+  }
+  type StateMachineViewMountedTrait = {
+    trait : string!
+    orbital : string?
+    parent : string?
+    depth : number!
+    embeddedIn : [string]!
+    renders : boolean!
+    observer : boolean!
+    stepsIn : string!
+    linkedEntity : string?
+    states : [StateMachineViewMountedState]!
+    transitions : [StateMachineViewMountedTransition]!
+    emits : [string]!
+    listens : [StateMachineViewMountedListen]!
+  }
+  type StateMachineViewOrbital = {
+    page : string!
+    traits : [StateMachineViewMountedTrait]!
+  }
+  type StateMachineViewTraitState = {
+    trait : string!
+    state : string!
+  }
+  type StateMachineViewFiredTransition = {
+    trait : string!
+    index : number!
+  }
   type StateMachineViewError = {
     message : string!
     name : string
@@ -88,6 +132,10 @@ orbital StateMachineViewOrbital {
           className: @config.className
           trait: @config.traitProp
           description: @config.description
+          orbital: @config.orbitalProp
+          activeStates: @config.activeStates
+          firedTransition: @config.firedTransition
+          expandDepth: @config.expandDepth
           isLoading: @config.isLoading
           error: @config.error
           enter: @config.enter
@@ -197,6 +245,23 @@ orbital StateMachineViewOrbital {
       description : SExpr
         @label "Description"
         @description "A described trait (`behavior/describe`), drawn from its machine when no `trait` is given."
+        @tier "presentation"
+      orbitalProp : StateMachineViewOrbital
+        @label "Orbital"
+        @description "A mounted orbital (`program/self { mounted: true }`): every trait drawn as a box nested in the trait that embeds it, in tree order; non-rendering traits in a background lane, listen wiring as arrows."
+        @synonyms "orbital"
+        @tier "presentation"
+      activeStates : [StateMachineViewTraitState] = []
+        @label "Active States"
+        @description "The current state of each trait of the orbital."
+        @tier "presentation"
+      firedTransition : StateMachineViewFiredTransition
+        @label "Fired Transition"
+        @description "The transition of the orbital that fired last, by trait and index."
+        @tier "presentation"
+      expandDepth : number = 2
+        @label "Expand Depth"
+        @description "Traits shallower than this depth with more than one state show their machine; deeper ones show as a box whose machine opens on hover or focus."
         @tier "presentation"
       isLoading : boolean = false
         @label "Is Loading"

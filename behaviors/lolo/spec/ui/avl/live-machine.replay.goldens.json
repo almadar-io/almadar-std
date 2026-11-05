@@ -6,8 +6,8 @@
       "id": "described-renders-the-split-at-the-initial-state",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -97,8 +97,8 @@
       "id": "advance-with-a-matching-transition-lights-it-and-moves-the-active-state",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -234,8 +234,8 @@
       "note": "control: BACK leaves b only; the active state is a",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -363,8 +363,8 @@
       "note": "control: GO leaves a only towards b, never towards c",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -493,8 +493,8 @@
       "note": "b has GO towards c and BACK towards a; to names the target and lights that arm",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -635,8 +635,8 @@
       "id": "subject-re-describes-another-trait-and-resets-the-view",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -770,8 +770,8 @@
       "note": "control: no described machine yet, so ADVANCE has no arm in describing",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -806,8 +806,8 @@
       "note": "two fired moves of CheckoutRules; the view lands on the last one's target",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -963,8 +963,8 @@
       "note": "a move of a sibling trait leaves the drawn machine as it is",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -1106,8 +1106,8 @@
       "note": "an outcome the kernel reports as not fired moves nothing",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -1249,8 +1249,8 @@
       "note": "the machine is still being read",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -1391,8 +1391,8 @@
       "id": "described-accepts-states-that-carry-no-initial-flag",
       "config": {
         "subject": {
-          "behavior": "std-checkout",
-          "trait": "CheckoutRules"
+          "behavior": "std/behaviors/std-live-machine",
+          "trait": "LiveMachine"
         }
       },
       "steps": [
@@ -1476,6 +1476,1389 @@
         }
       ],
       "note": "behavior/describe marks only the initial state; the others carry no isInitial"
+    },
+    {
+      "id": "trace-maps-each-outcome-to-a-move",
+      "note": "a trace item becomes ORBIT_MOVES, an outcome with no event as an empty event; the trait that moved last is new, so its source is asked for",
+      "steps": [
+        {
+          "trait": "LiveMachineTrace",
+          "from": "live",
+          "entity": {
+            "id": "t",
+            "behavior": "almadar-std/demo",
+            "browser": [
+              "Frame"
+            ],
+            "server": [
+              "Board"
+            ]
+          },
+          "event": "TRACE",
+          "payload": {
+            "dispatch": {
+              "seq": 3,
+              "outcomes": [
+                {
+                  "trait": "Board",
+                  "from": "idle",
+                  "to": "loading",
+                  "event": "LOAD",
+                  "executed": true
+                },
+                {
+                  "trait": "Frame",
+                  "from": "idle",
+                  "to": "idle",
+                  "event": null,
+                  "executed": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "ORBIT_MOVES",
+                "payload": {
+                  "moves": [
+                    {
+                      "trait": "Board",
+                      "event": "LOAD",
+                      "from": "idle",
+                      "to": "loading",
+                      "fired": true
+                    },
+                    {
+                      "trait": "Frame",
+                      "event": "",
+                      "from": "idle",
+                      "to": "idle",
+                      "fired": false
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "SOURCE_WANTED",
+                "payload": {
+                  "behavior": "almadar-std/demo",
+                  "trait": "Board"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mounted-hands-the-tree-on-and-traces-each-site",
+      "note": "the tree goes to LiveMachine and one subscription opens per site",
+      "steps": [
+        {
+          "trait": "LiveMachineTrace",
+          "from": "reading",
+          "entity": {
+            "id": "t",
+            "behavior": "almadar-std/demo"
+          },
+          "event": "MOUNTED",
+          "payload": {
+            "result": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "if"
+              },
+              {
+                "type": "if"
+              },
+              {
+                "type": "emit"
+              }
+            ],
+            "emits": [
+              {
+                "event": "ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/demo",
+                  "tree": {
+                    "page": "Home",
+                    "traits": [
+                      {
+                        "trait": "Frame",
+                        "orbital": "Main",
+                        "parent": null,
+                        "depth": 0,
+                        "embeddedIn": [],
+                        "renders": true,
+                        "stepsIn": "browser",
+                        "linkedEntity": null,
+                        "instances": [
+                          {
+                            "entityId": "singleton",
+                            "state": "idle"
+                          }
+                        ],
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true,
+                            "isTerminal": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "index": 0,
+                            "from": [
+                              "idle"
+                            ],
+                            "to": "idle",
+                            "event": "INIT",
+                            "guarded": false,
+                            "emits": []
+                          }
+                        ],
+                        "emits": [],
+                        "listens": [],
+                        "observer": false
+                      },
+                      {
+                        "trait": "Board",
+                        "orbital": "Main",
+                        "parent": null,
+                        "depth": 0,
+                        "embeddedIn": [],
+                        "renders": false,
+                        "stepsIn": "server",
+                        "linkedEntity": null,
+                        "instances": [
+                          {
+                            "entityId": "singleton",
+                            "state": "idle"
+                          }
+                        ],
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true,
+                            "isTerminal": false
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false,
+                            "isTerminal": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "index": 0,
+                            "from": [
+                              "idle"
+                            ],
+                            "to": "loading",
+                            "event": "LOAD",
+                            "guarded": false,
+                            "emits": []
+                          },
+                          {
+                            "index": 1,
+                            "from": [
+                              "loading"
+                            ],
+                            "to": "idle",
+                            "event": "LOADED",
+                            "guarded": false,
+                            "emits": []
+                          }
+                        ],
+                        "emits": [],
+                        "listens": [],
+                        "observer": false
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-describes-the-trait-it-is-asked-for",
+      "steps": [
+        {
+          "trait": "LiveMachineSource",
+          "from": "idle",
+          "entity": {
+            "id": "s"
+          },
+          "event": "DESCRIBE",
+          "payload": {
+            "behavior": "almadar-std/demo",
+            "trait": "Board"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "behavior/describe"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-hands-the-described-text-back",
+      "steps": [
+        {
+          "trait": "LiveMachineSource",
+          "from": "idle",
+          "entity": {
+            "id": "s"
+          },
+          "event": "DESCRIBED",
+          "payload": {
+            "result": {
+              "value": {
+                "behavior": "almadar-std/demo",
+                "trait": "Board"
+              },
+              "source": {
+                "text": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+                "transitions": [
+                  {
+                    "index": 0,
+                    "start": 2,
+                    "end": 2
+                  },
+                  {
+                    "index": 1,
+                    "start": 3,
+                    "end": 3
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SOURCE",
+                "payload": {
+                  "trait": "Board",
+                  "text": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+                  "lines": [
+                    {
+                      "index": 0,
+                      "start": 2,
+                      "end": 2
+                    },
+                    {
+                      "index": 1,
+                      "start": 3,
+                      "end": 3
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-trace-of-the-trait-already-shown-asks-for-no-source",
+      "steps": [
+        {
+          "trait": "LiveMachineTrace",
+          "from": "live",
+          "entity": {
+            "id": "t",
+            "behavior": "almadar-std/demo",
+            "sourceTrait": "Board",
+            "browser": [
+              "Frame"
+            ],
+            "server": [
+              "Board"
+            ]
+          },
+          "event": "TRACE",
+          "payload": {
+            "dispatch": {
+              "seq": 4,
+              "outcomes": [
+                {
+                  "trait": "Board",
+                  "from": "loading",
+                  "to": "idle",
+                  "event": "LOADED",
+                  "executed": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "SOURCE_WANTED"
+            ],
+            "emits": [
+              {
+                "event": "ORBIT_MOVES",
+                "payload": {
+                  "moves": [
+                    {
+                      "trait": "Board",
+                      "event": "LOADED",
+                      "from": "loading",
+                      "to": "idle",
+                      "fired": true
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbit-draws-the-page-from-each-traits-current-state",
+      "note": "ORBIT holds the mounted tree and starts every trait at its running instance's state",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "waiting",
+          "entity": {
+            "id": "o"
+          },
+          "event": "ORBIT",
+          "payload": {
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-moves-of-the-shown-trait-light-its-transition",
+      "note": "Board's source is shown; its fired move lights the transition and its lines",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "from": "idle",
+                "to": "loading",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-moves-of-another-trait-wait-for-its-source",
+      "note": "Frame moved while Board's source is shown: the view lights the move and waits for Frame's source",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "Frame",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-orbital-moves-that-did-not-fire-change-nothing",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "from": "idle",
+                "to": "loading",
+                "fired": false
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-of-the-trait-that-moved-last-fills-the-code-column",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "SOURCE",
+          "payload": {
+            "trait": "Board",
+            "text": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "lines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-stale-source-is-ignored",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "SOURCE",
+          "payload": {
+            "trait": "Frame",
+            "text": "old",
+            "lines": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": []
+          }
+        }
+      ]
     }
   ]
 }

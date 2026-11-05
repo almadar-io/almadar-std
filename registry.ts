@@ -353,7 +353,7 @@ export function effectSiteFor(
 ): RunsOn | undefined {
   const meta = STD_OPERATORS[operator];
   const site = meta?.runsOn;
-  if ((operator === 'program/live' && isTraceSubscription(args[0])) || operator === 'cancel-call') return 'any';
+  if ((operator === 'program/live' && isTraceSubscription(args[0])) || (operator === 'program/self' && isMountedReflection(args[0])) || operator === 'cancel-call') return 'any';
   if (operator === 'call-service' && site === 'server') {
     const service = args[0];
     return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
@@ -366,6 +366,11 @@ export function effectSiteFor(
 /** A `program/live` options object naming `kind: "trace"`: it runs where its traits run (EXEC-DIST-14), placed at run time. */
 function isTraceSubscription(options: unknown): boolean {
   return typeof options === 'object' && options !== null && !Array.isArray(options) && 'kind' in options && options.kind === 'trace';
+}
+
+/** A `program/self` options object naming `mounted: true`: the kernel the step runs on answers it (EXEC-DIST-15). */
+function isMountedReflection(options: unknown): boolean {
+  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'mounted' in options && options.mounted === true;
 }
 
 /** Effect operators whose declared execution site is `site`, sorted. */

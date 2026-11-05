@@ -8,7 +8,7 @@ app std-launchpad [
   env: ["PATH", "HOME", "FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS", "ALMADAR_VECTORS_DIR", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   sys: [memory, cpu, self-signal],
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create], "~/.orb/.update-check.json": [read], cwd: "node_modules/**": [read], "~/.almadar/sidecars/**": [read], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
-  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status (with std-ci-run-logs reading the failing logs its rows open), std-aws-board, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. The frame is std-app-layout in its drawer mode (the navigation behind a menu button): its header carries a State machine button and the theme picker (std-theme-picker over the app's themes list); the button opens a drawer with std-live-machine on the page-root trait of the app in front (each board's machineTrait, homeMachine on Home), described from the launchpad itself and moved live by a program/live trace of that trait (EXEC-DIST-14, streamed by whichever kernel runs it), and while it is open it follows the app brought to the front; closing it cancels the trace, and its drawer lists Home and every program of the boards knob under its section's heading, the one in front highlighted and each open app with its own Close button. Picking a program in the drawer opens it (or brings its view to the front) and shows the board's own view in the stage, with `@trait.X` embedding; picking a sidebar item switches the view and every open board keeps its state; closing an app removes its sidebar item (its trait keeps its state, as any trait does when its view is not shown). Every board is drawn by std-status-board and reads the first time its app is brought to the front (the stage sends APP_SHOWN, which each board view takes as BOARD_OPEN), so opening the launchpad itself reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home is centred at a readable width: the Orb view card beside two stat cards, (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open app, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its app) and the stat cards This machine (memory, CPU, load and uptime, std-system-stats) and Orb runtime (the orb's own version, uptime and kernel counters, std-orb-stats), each with its own note of what it could not read. Home opens with the update banner (std-launchpad-updates: the update record orb keeps in ~/.orb/.update-check.json, read when the launchpad opens and each time Home is shown; Update and Retry run `orb update`). The launchpad has no sign-in and composes no boot gate. Opening a CI row shows its jobs and the failing job's log inline. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version), ps (the orb process's uptime, which std-orb-stats reads with its pid) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is PATH and HOME for the CLIs; egress is the Google OAuth token endpoint the Google boards connect through (std-gcloud-token); net lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. A path names an app by meaning: /<words> (local.almadar.io/ci, /launch, /cloud-run) mounts the same launchpad with std-vector-match, which matches the words against each board's label, synonyms and description and the homeTexts (the launchpad itself) through the vector store; a confident board opens as its tab, and the launchpad itself, no confident match or a failed match (named in a toast) leaves Home in front. The embedding grants (env, the vector store and package folders, the OpenAI and LM Studio hosts, kill) are std-vector-match's. Serve it with `orb launchpad`.",
+  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status (with std-ci-run-logs reading the failing logs its rows open), std-aws-board, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. The frame is std-app-layout in its drawer mode (the navigation behind a menu button): its header carries a State machine button and the theme picker (std-theme-picker over the app's themes list); the button opens a drawer with std-live-machine's whole-page view: every trait mounted on this page (program/self { mounted: true }, EXEC-DIST-15) drawn as a box nested in the trait that embeds it, the non-rendering ones in a background lane, each from its current state and moved live by program/live traces of the page (one per site, EXEC-DIST-14), with the source of the trait that moved last beside it; closing it closes the traces. The frame's drawer lists Home and every program of the boards knob under its section's heading, the one in front highlighted and each open app with its own Close button. Picking a program in the drawer opens it (or brings its view to the front) and shows the board's own view in the stage, with `@trait.X` embedding; picking a sidebar item switches the view and every open board keeps its state; closing an app removes its sidebar item (its trait keeps its state, as any trait does when its view is not shown). Every board is drawn by std-status-board and reads the first time its app is brought to the front (the stage sends APP_SHOWN, which each board view takes as BOARD_OPEN), so opening the launchpad itself reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home is centred at a readable width: the Orb view card beside two stat cards, (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open app, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its app) and the stat cards This machine (memory, CPU, load and uptime, std-system-stats) and Orb runtime (the orb's own version, uptime and kernel counters, std-orb-stats), each with its own note of what it could not read. Home opens with the update banner (std-launchpad-updates: the update record orb keeps in ~/.orb/.update-check.json, read when the launchpad opens and each time Home is shown; Update and Retry run `orb update`). The launchpad has no sign-in and composes no boot gate. Opening a CI row shows its jobs and the failing job's log inline. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version), ps (the orb process's uptime, which std-orb-stats reads with its pid) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is PATH and HOME for the CLIs; egress is the Google OAuth token endpoint the Google boards connect through (std-gcloud-token); net lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. A path names an app by meaning: /<words> (local.almadar.io/ci, /launch, /cloud-run) mounts the same launchpad with std-vector-match, which matches the words against each board's label, synonyms and description and the homeTexts (the launchpad itself) through the vector store; a confident board opens as its tab, and the launchpad itself, no confident match or a failed match (named in a toast) leaves Home in front. The embedding grants (env, the vector store and package folders, the OpenAI and LM Studio hosts, kill) are std-vector-match's. Serve it with `orb launchpad`.",
   egress: ["https://oauth2.googleapis.com"],
   net: { "api.github.com:443": [tcp], "api.deepseek.com:443": [tcp], "api.moonshot.ai:443": [tcp], "127.0.0.1:3000": [tcp], "openrouter.ai:443": [tcp], "firebaseapphosting.googleapis.com:443": [tcp], "monitoring.googleapis.com:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:1234": [tcp] },
 ]
@@ -33,10 +33,7 @@ uses Match from "std/behaviors/std-vector-match"
 uses Live from "std/behaviors/std-live-machine"
 
 type LaunchpadSection = { topic : string!, title : string!, run : string! }
-type LaunchpadBoard = { id : string!, label : string!, icon : string!, topic : string!, description : string!, synonyms : [string]!, machineTrait : string! }
-type TraceMove = { trait : string!, from : string!, to : string!, event : string?, executed : boolean! }
-type TraceDispatch = { seq : number!, outcomes : [TraceMove]! }
-type LaunchpadMove = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
+type LaunchpadBoard = { id : string!, label : string!, icon : string!, topic : string!, description : string!, synonyms : [string]! }
 type LaunchpadTab = { id : string!, label : string!, icon : string!, topic : string! }
 type LaunchpadProcess = { pid : number!, rssKb : number! }
 type LaunchpadRecent = { behavior : string!, label : string!, kind : string!, command : string!, route : string!, at : instant! }
@@ -68,26 +65,15 @@ orbital Launchpad {
     registeredTraits : number = 0
     activeInstances : number = 0
     cachedEntities : number = 0
-    machineTrait : string @description "The trait the State machine view draws and traces." = ""
-  }
-
-  entity LaunchpadMachineView [runtime] {
-    id : string!
-    active : string
-    fired : number
-    visited : [string] = []
   }
 
   config {
-    boards : [LaunchpadBoard] = [{ id: "almadar-std/std-ci-status", machineTrait: "CiStatus", label: "CI status", icon: "activity", topic: "ops", description: "The CI of the active repositories as one board, failing first; open a row for its jobs and the failing log.", synonyms: ["ci", "continuous integration", "builds", "pipelines", "github actions", "workflows", "tests"] }, { id: "almadar-std/std-aws-board", machineTrait: "AwsStatus", label: "AWS", icon: "cloud", topic: "ops", description: "One AWS region at a glance: instances, volumes, buckets, quotas and cost, read through the aws CLI.", synonyms: ["aws", "amazon web services", "ec2", "s3", "instances", "buckets"] }, { id: "almadar-std/std-app-hosting-board", machineTrait: "AppHostingStatus", label: "App Hosting", icon: "rocket", topic: "ops", description: "A Firebase App Hosting project's backends, rollouts and logs, read through the App Hosting API and the gcloud CLI.", synonyms: ["app hosting", "firebase", "rollouts", "backends", "deploys"] }, { id: "almadar-std/std-cloud-run-board", machineTrait: "CloudRunStatus", label: "Cloud Run", icon: "server", topic: "ops", description: "A Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs.", synonyms: ["cloud run", "gcp", "google cloud", "services", "containers"] }, { id: "almadar-std/std-training-board", machineTrait: "TrainingStatus", label: "Training", icon: "brain", topic: "ops", description: "The model-training instances of one AWS region, read through the aws and ssh CLIs.", synonyms: ["training", "model training", "gpu", "machine learning", "fine tuning"] }, { id: "almadar-std/std-llm-spend-board", machineTrait: "LlmSpend", label: "LLM spend", icon: "wallet", topic: "ops", description: "What LLM providers cost: the OpenRouter key's usage and limit, the DeepSeek and Moonshot balances, and the token spend a kernel server reports.", synonyms: ["llm spend", "llm cost", "openrouter", "tokens", "usage", "billing"] }, { id: "almadar-std/std-behavior-playground", machineTrait: "PlaygroundFrame", label: "Behavior playground", icon: "flask-conical", topic: "dev", description: "Browse every installed behavior by package and topic, run one live, explore its state machines and read its source.", synonyms: ["playground", "behaviors", "catalog", "behavior catalog", "try a behavior"] }]
+    boards : [LaunchpadBoard] = [{ id: "almadar-std/std-ci-status", label: "CI status", icon: "activity", topic: "ops", description: "The CI of the active repositories as one board, failing first; open a row for its jobs and the failing log.", synonyms: ["ci", "continuous integration", "builds", "pipelines", "github actions", "workflows", "tests"] }, { id: "almadar-std/std-aws-board", label: "AWS", icon: "cloud", topic: "ops", description: "One AWS region at a glance: instances, volumes, buckets, quotas and cost, read through the aws CLI.", synonyms: ["aws", "amazon web services", "ec2", "s3", "instances", "buckets"] }, { id: "almadar-std/std-app-hosting-board", label: "App Hosting", icon: "rocket", topic: "ops", description: "A Firebase App Hosting project's backends, rollouts and logs, read through the App Hosting API and the gcloud CLI.", synonyms: ["app hosting", "firebase", "rollouts", "backends", "deploys"] }, { id: "almadar-std/std-cloud-run-board", label: "Cloud Run", icon: "server", topic: "ops", description: "A Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs.", synonyms: ["cloud run", "gcp", "google cloud", "services", "containers"] }, { id: "almadar-std/std-training-board", label: "Training", icon: "brain", topic: "ops", description: "The model-training instances of one AWS region, read through the aws and ssh CLIs.", synonyms: ["training", "model training", "gpu", "machine learning", "fine tuning"] }, { id: "almadar-std/std-llm-spend-board", label: "LLM spend", icon: "wallet", topic: "ops", description: "What LLM providers cost: the OpenRouter key's usage and limit, the DeepSeek and Moonshot balances, and the token spend a kernel server reports.", synonyms: ["llm spend", "llm cost", "openrouter", "tokens", "usage", "billing"] }, { id: "almadar-std/std-behavior-playground", label: "Behavior playground", icon: "flask-conical", topic: "dev", description: "Browse every installed behavior by package and topic, run one live, explore its state machines and read its source.", synonyms: ["playground", "behaviors", "catalog", "behavior catalog", "try a behavior"] }]
       @label "Boards"
-      @description "The composed apps the launchpad offers, in order: id (the behavior name), label, icon name, topic, a one-line description and machineTrait (the app's page-root trait, whose state machine the header's State machine view draws while it is in front). Each id must be one of the apps the launchpad composes; an id not composed has no view to show."
+      @description "The composed apps the launchpad offers, in order: id (the behavior name), label, icon name, topic, a one-line description. Each id must be one of the apps the launchpad composes; an id not composed has no view to show."
     sections : [LaunchpadSection] = [{ topic: "ops", title: "Ops", run: "Open" }, { topic: "dev", title: "Tools", run: "Open" }]
       @label "Sections"
       @description "The topics the menu groups its programs under, in order, with each group's heading."
-    homeMachine : string = "LaunchpadHome"
-      @label "Home machine"
-      @description "The trait whose state machine the header's State machine view draws while Home is in front; each board names its own in machineTrait."
     title : string = "Launchpad"
       @label "Title"
     homeTexts : [string] = ["launchpad", "launch", "home", "dashboard", "start"]
@@ -129,14 +115,6 @@ orbital Launchpad {
     }
   }
   trait LaunchpadHeader -> LaunchpadView [client] {
-    config {
-      boardList : [LaunchpadBoard] = @config.boards
-        @label "Boards"
-        @tier "domain"
-      homeTrait : string = @config.homeMachine
-        @label "Home machine"
-        @tier "domain"
-    }
     initial: closed
 
     state closed {
@@ -145,103 +123,74 @@ orbital Launchpad {
           { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme
         ] })
-      TABS_CHANGED -> closed
-        (set @entity.active ?active)
       MACHINE_TOGGLE -> open
-        (set @entity.machineTrait (default (array/nth (array/concat (array/map (array/filter @config.boardList (fn b (= @b.id @entity.active))) (fn b @b.machineTrait)) [@config.homeTrait]) 0) @config.homeTrait))
         (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
           { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme,
-          { type: drawer, isOpen: true, title: (str/concat "State machine · " @entity.machineTrait), position: right, width: "min(1100px, 92vw)", closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
+          { type: drawer, isOpen: true, modal: false, title: "State machine · this page", position: right, width: "min(1100px, 62vw)", closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
         ] })
-        (emit MACHINE_SUBJECT { behavior: "almadar-std/std-launchpad", trait: @entity.machineTrait })
-        (program/live { kind: "trace", traits: [@entity.machineTrait] } { key: (str/concat "machine-" @entity.machineTrait), emit: { onMessage: MACHINE_TRACE, failure: MACHINE_TRACE_FAILED } })
+        (emit MACHINE_OPEN { behavior: "almadar-std/std-launchpad" })
     }
 
     state open {
       INIT -> closed
-        (cancel-call (str/concat "machine-" @entity.machineTrait))
         (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
           { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme
         ] })
       MACHINE_TOGGLE -> closed
-        (cancel-call (str/concat "machine-" @entity.machineTrait))
+        (emit MACHINE_CLOSE { })
         (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
           { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme
         ] })
       CLOSE -> closed
-        (cancel-call (str/concat "machine-" @entity.machineTrait))
+        (emit MACHINE_CLOSE { })
         (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
           { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme
         ] })
-      TABS_CHANGED -> open when (= (default (array/nth (array/concat (array/map (array/filter @config.boardList (fn b (= @b.id ?active))) (fn b @b.machineTrait)) [@config.homeTrait]) 0) @config.homeTrait) @entity.machineTrait)
-        (set @entity.active ?active)
-      TABS_CHANGED -> open when (!= (default (array/nth (array/concat (array/map (array/filter @config.boardList (fn b (= @b.id ?active))) (fn b @b.machineTrait)) [@config.homeTrait]) 0) @config.homeTrait) @entity.machineTrait)
-        (cancel-call (str/concat "machine-" @entity.machineTrait))
-        (set @entity.active ?active)
-        (set @entity.machineTrait (default (array/nth (array/concat (array/map (array/filter @config.boardList (fn b (= @b.id ?active))) (fn b @b.machineTrait)) [@config.homeTrait]) 0) @config.homeTrait))
-        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
-          { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
-          @trait.LaunchpadTheme,
-          { type: drawer, isOpen: true, title: (str/concat "State machine · " @entity.machineTrait), position: right, width: "min(1100px, 92vw)", closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
-        ] })
-        (emit MACHINE_SUBJECT { behavior: "almadar-std/std-launchpad", trait: @entity.machineTrait })
-        (program/live { kind: "trace", traits: [@entity.machineTrait] } { key: (str/concat "machine-" @entity.machineTrait), emit: { onMessage: MACHINE_TRACE, failure: MACHINE_TRACE_FAILED } })
-      MACHINE_TRACE -> open when (and (= ?type "trace") (= ?key (str/concat "machine-" @entity.machineTrait)))
-        (emit MACHINE_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
-      MACHINE_TRACE -> open when (not (and (= ?type "trace") (= ?key (str/concat "machine-" @entity.machineTrait))))
-      MACHINE_TRACE_FAILED -> open
-        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
-          { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
-          @trait.LaunchpadTheme,
-          { type: drawer, isOpen: true, title: (str/concat "State machine · " @entity.machineTrait), position: right, width: "min(1100px, 92vw)", closeEvent: CLOSE, children: [{ type: alert, variant: error, message: (str/concat "The live trace could not open: " ?error) }, @trait.LaunchpadLive] }
-        ] })
     }
 
     emits {
-      MACHINE_SUBJECT -> external {
+      MACHINE_OPEN -> external {
         behavior : string!
-        trait : string!
       }
-        @description "The trait the State machine view now draws: the main trait of the app in front."
-      MACHINE_MOVES -> external {
-        moves : [LaunchpadMove]!
-      }
-        @description "The transitions one dispatch took, for the State machine view to follow."
+        @description "The State machine view opened: draw this page whole and follow it."
+      MACHINE_CLOSE -> external { }
+        @description "The State machine view closed: stop following the page."
     }
 
     listens {
-      LaunchpadStage.TABS_CHANGED -> TABS_CHANGED
-      TABS_CHANGED {
-        tabs : [LaunchpadTab]!
-        active : string!
-      }
       MACHINE_TOGGLE { }
-        @description "The header's State machine button: open the view of the app in front, or close it."
+        @description "The header's State machine button: open the view of this page, or close it."
       CLOSE { }
         @description "The drawer was closed."
-      MACHINE_TRACE {
-        type : string!
-        dispatch : TraceDispatch
-        key : string!
-      }
-        @description "One dispatch of the traced trait, from the kernel's trace stream (EXEC-DIST-14)."
-        @tier "internal"
-      MACHINE_TRACE_FAILED {
-        error : string!
-        key : string!
-      }
-        @tier "internal"
     }
   }
 
-  trait LaunchpadLive = Live.traits.LiveMachine -> LaunchpadMachineView {
+  trait LaunchpadLive = Live.traits.LiveMachineOrbit {
+    config {
+      expandDepth: 4
+    }
     listens {
-      LaunchpadHeader.MACHINE_SUBJECT -> SUBJECT
-      LaunchpadHeader.MACHINE_MOVES -> MOVES
+      LaunchpadTrace.ORBIT -> ORBIT
+      LaunchpadTrace.ORBIT_MOVES -> MOVES
+      LaunchpadTrace.ORBIT_FAILED -> ORBIT_FAILED
+      LaunchpadSource.SOURCE -> SOURCE
+      LaunchpadSource.SOURCE_FAILED -> SOURCE_FAILED
+    }
+  }
+  trait LaunchpadSource = Live.traits.LiveMachineSource {
+    listens {
+      LaunchpadTrace.SOURCE_WANTED -> DESCRIBE
+    }
+  }
+  trait LaunchpadTrace = Live.traits.LiveMachineTrace {
+    listens {
+      LaunchpadHeader.MACHINE_OPEN -> ORBITAL_SUBJECT
+      LaunchpadHeader.MACHINE_CLOSE -> ORBITAL_CLOSE
+      LaunchpadLive.ORBIT_AGAIN -> ORBITAL_SUBJECT
     }
   }
   trait CiStatus = Ci.traits.CiStatus {
@@ -1086,9 +1035,9 @@ orbital Launchpad {
   trait ResolveLmRequest = Match.traits.ResolveLmRequest {}
   trait ResolveLmHttp = Match.traits.ResolveLmHttp {}
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring
-  page "/:query" as LaunchpadFindPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, LaunchpadFind, FindMatch, MatchGate, FindSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
-  page "/:package/:name" as LaunchpadBehaviorPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, PlaygroundRoute, LaunchpadBehaviorRoute
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadTrace, LaunchpadSource, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring
+  page "/:query" as LaunchpadFindPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadTrace, LaunchpadSource, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, LaunchpadFind, FindMatch, MatchGate, FindSources, VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+  page "/:package/:name" as LaunchpadBehaviorPage -> LaunchpadFrame, LaunchpadTheme, LaunchpadHeader, LaunchpadLive, LaunchpadTrace, LaunchpadSource, LaunchpadRail, LaunchpadStage, LaunchpadHome, RecentsStore, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, OrbUptimeRunner, UpdatesStore, UpdateRecord, UpdatesCli, UpdatesBanner, CiStatus, CiBoard, CiDetail, CiGithub, CiGhHttp, CiGhTimeout, CiRetry, AwsStatus, AwsCli, AwsView, CiRunLogs, CiLogsGh, AppHostingStatus, AhToken, AhGcloud, AhView, CloudRunStatus, CrToken, CrGcloud, CrBq, CloudRunView, TrainingStatus, TrAws, TrSsh, TrainingView, LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, AhApi, CrMonitoring, PlaygroundRoute, LaunchpadBehaviorRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {
