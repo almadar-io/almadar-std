@@ -99,6 +99,12 @@
            "aliases": [],
            "takesValue": false,
            "repeatable": false
+          },
+          {
+           "name": "skip-lint",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
           }
          ]
         }
@@ -244,7 +250,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client]"
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client] [--skip-lint]"
         }
        }
       ]
@@ -289,7 +295,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client]"
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client] [--skip-lint]"
         }
        }
       ]
@@ -335,7 +341,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client]"
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client] [--skip-lint]"
         }
        }
       ]
@@ -834,7 +840,7 @@
         "payload": {
          "status": 400,
          "body": "",
-         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client]"
+         "stderr": "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH] [--web-client] [--skip-lint]"
         }
        }
       ]
@@ -861,6 +867,128 @@
         "event": "COMPILE_ANSWERED",
         "payload": {
          "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--skip-lint skips the std validate program and asks the host to generate at once",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\", \"--skip-lint\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {
+       "skip-lint": []
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "generating",
+      "effects": [
+       {
+        "type": "program/eval"
+       }
+      ],
+      "neverEmits": [
+       "VALIDATE_START"
+      ]
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "generating",
+     "event": "COMPILE_GENERATED",
+     "payload": {
+      "result": {
+       "lines": [
+        "Compiling schema: /w/a.lolo"
+       ],
+       "files": 1,
+       "warnings": [],
+       "nextSteps": []
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPILE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Compiling schema: /w/a.lolo"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --skip-lint the source is linted before anything is generated",
+   "steps": [
+    {
+     "trait": "OrbCompile",
+     "from": "ready",
+     "event": "COMPILE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing"
+     }
+    },
+    {
+     "trait": "OrbCompile",
+     "from": "parsing",
+     "event": "COMPILE_ARGS_DONE",
+     "payload": {
+      "stage": "compile",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "validating",
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": true,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
         }
        }
       ]
