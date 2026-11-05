@@ -1,0 +1,25 @@
+app get-past-end [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    s : string = ""
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.s (default (object/get ?m ?k) "none"))
+        (emit DONE { s: @entity.s })
+    }
+    emits {
+      DONE -> external { s : string! }
+    }
+    listens {
+      GO { m : Map string string!  k : string! }
+    }
+  }
+  page boot as FxStart -> T
+}

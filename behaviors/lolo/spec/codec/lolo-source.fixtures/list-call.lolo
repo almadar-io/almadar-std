@@ -1,0 +1,25 @@
+app list-call [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    t : string = ""
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.t (str/upper "b"))
+        (emit DONE { t: @entity.t })
+    }
+    emits {
+      DONE -> external { t : string! }
+    }
+    listens {
+      GO { x : number }
+    }
+  }
+  page boot as FxStart -> T
+}

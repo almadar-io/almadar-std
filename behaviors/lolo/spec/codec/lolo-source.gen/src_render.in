@@ -1,0 +1,31 @@
+        (set @entity.typeRenders (if @config.renderModels (array/map @entity.containers (fn c (array/map (object/get @c "fields") (fn f
+          (default (tree/fold @f
+            (fn (n k)
+              (let ((vals (default (object/get @n "values") []))
+                    (kit : SrcTypeRender? (object/get @k "items" null))
+                    (ref : SrcRef? (object/get @n "projectedFrom" null))
+                    (ty : string (object/get @n "type"))
+                    (mapped (object/get @config.typeMap @ty ""))
+                    (inner : string (if (= @kit null) "" (object/get @kit "text")))
+                    (innerUses : [string] (if (= @kit null) [] (object/get @kit "uses"))))
+                (let ((base (if (> (array/len @vals) 0)
+                               FILL{@config.typeLiteral ## "*" => (str/join (array/map @vals (fn v (json/stringify @v))) ", ")}
+                               (if (!= @ref null)
+                                 (object/get @ref "type")
+                                 (if (= @ty "array")
+                                   (if (= @kit null) @config.typeListBare FILL{@config.typeList ## "0" => @inner})
+                                   (if (= @ty "object")
+                                     (if (= @kit null) @config.typeDictBare FILL{@config.typeDict ## "0" => @inner})
+                                     (if (!= @mapped "") @mapped @config.typeAny)))))))
+                  { text: (if (= (object/get @n "nullable" false) true) FILL{@config.typeNullable ## "0" => @base} @base),
+                    uses: (array/concat @innerUses
+                      (if (> (array/len @vals) 0) ["Literal"] [])
+                      (if (and (= (array/len @vals) 0) (= @ref null) (!= @ty "array") (!= @ty "object") (= @mapped "")) ["Any"] [])) })))
+            "SrcField") { text: @config.typeAny, uses: ["Any"] }))))) []))
+        (set @entity.renders (array/map (array/range 0 (array/len @entity.groups)) (fn gi
+          (let ((g (default (array/nth @entity.groups @gi) []))
+                (ctx : SrcCtx (default (array/nth @entity.groupCtx @gi) { emitTypes: {}, defaults: {} })))
+            (array/map @g (fn j
+              (default (tree/fold @j
+@@FOLD@@
+                "SrcExpr") RECL{ expr => @config.nullLit ## stmt => [@config.nullLit] ## body => @config.nullLit ## params => [] ## items => [] ## keys => [] ## stmts => [] ## pairVals => [] ## warns => [] ## uses => [] })))))))

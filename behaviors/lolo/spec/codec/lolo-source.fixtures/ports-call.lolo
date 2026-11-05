@@ -1,0 +1,30 @@
+app ports-call [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    n : number = 0
+    tags : [string] = []
+    label : string = "x"
+  }
+  trait T -> Rec [server] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (persist upsert Rec { id: "r1" })
+        (set @entity.label "y")
+        (set @entity.n (+ @entity.n 1))
+        (set @entity.tags (array/map ?items (fn (x i) (str/concat @x "-" @i))))
+        (emit DONE { n: @entity.n, label: @entity.label })
+    }
+    emits {
+      DONE -> external { n : number!  label : string! }
+    }
+    listens {
+      GO { items : [string]! }
+    }
+  }
+  page boot as FxStart -> T
+}

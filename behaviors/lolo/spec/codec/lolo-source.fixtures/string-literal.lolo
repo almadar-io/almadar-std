@@ -1,0 +1,27 @@
+app string-literal [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    s : string = ""
+    o : Map string string = {}
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.s (str/concat "{{0}} {{type}} \"q\" \\ é\n" ?x))
+        (set @entity.o { "a-b": "v", c: ?x })
+        (emit DONE { s: @entity.s })
+    }
+    emits {
+      DONE -> external { s : string! }
+    }
+    listens {
+      GO { x : string! }
+    }
+  }
+  page boot as FxStart -> T
+}

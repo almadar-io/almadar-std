@@ -1,0 +1,94 @@
+        (set @entity.warnings (let ((nC (if @config.renderModels (array/len @entity.containers) 0))
+                                    (nullR : SrcRender RECL{ expr => @config.nullLit ## stmt => [@config.nullLit] ## body => @config.nullLit }))
+          (array/unique (array/concat
+            (if @config.renderModels
+              (array/flatten (array/map (array/range 0 (array/len @entity.containers)) (fn ci
+                (array/flatten (array/map (default (array/nth @entity.renders @ci) []) (fn r (array/map (object/get @r "warns") (fn w (str/concat (object/get (default (array/nth @entity.containers @ci) { name: "" }) "name") ": " @w)))))))))
+              [])
+            (array/flatten (array/map (array/range 0 (array/len @entity.traits)) (fn ti
+              (let ((t (default (array/nth @entity.traits @ti) { name: "", transitions: [] }))
+                    (rs (default (array/nth @entity.renders (+ @nC @ti)) [])))
+                (array/flatten (array/map (array/range 0 (array/len @rs)) (fn ji
+                  (let ((site (if (= @ji 0) (str/concat (object/get @t "name") " config") (str/concat (object/get @t "name") "." (object/get (default (array/nth (object/get @t "transitions") (- @ji 1)) { from: "", to: "", event: "" }) "event")))))
+                    (array/map (object/get (default (array/nth @rs @ji) @nullR) "warns") (fn w (str/concat @site ": " @w)))))))))))
+            (array/map (array/filter @entity.traits (fn t (not (object/get @t "hasMachine")))) (fn t (str/concat "trait " (object/get @t "name") " has no state machine, so it renders as an empty class")))))))
+        (set @entity.blocks (let ((nC (if @config.renderModels (array/len @entity.containers) 0))
+                                  (at (str/slice "x@" 1 2))
+                                  (ind : string @config.indent)
+                                  (nullR : SrcRender RECL{ expr => @config.nullLit ## stmt => [@config.nullLit] ## body => @config.nullLit ## params => [] ## items => [] ## keys => [] ## stmts => [] ## pairVals => [] ## warns => [] ## uses => [] }))
+          (array/concat
+            (if @config.renderModels
+              (array/map (array/range 0 (array/len @entity.containers)) (fn ci
+                (let ((c (default (array/nth @entity.containers @ci) { name: "", alias: false, fields: [] }))
+                      (tz (default (array/nth @entity.typeRenders @ci) []))
+                      (jz (default (array/nth @entity.renders @ci) [])))
+                  (let ((fs (array/map (array/range 0 (array/len (object/get @c "fields"))) (fn fi
+                          (let ((f (default (array/nth (object/get @c "fields") @fi) { type: "" }))
+                                (tt (object/get (default (array/nth @tz @fi) { text: "", uses: [] }) "text"))
+                                (jr (default (array/nth @jz @fi) @nullR)))
+                            (let ((dflt (object/get @f "default" null)))
+                              (let ((hasDef (!= @dflt null))
+                                    (defE (default (array/nth (object/get @jr "items") 1) @config.nullLit))
+                                    (coll (or (validate/array @dflt) (validate/object @dflt)))
+                                    (isNullable (= (object/get @f "nullable" false) true))
+                                    (optional (and (!= (object/get @f "required" false) true) (= @dflt null) (!= (object/get @f "nullable" false) true))))
+                                (let ((ty (if @optional FILL{@config.typeNullable ## "0" => @tt} @tt))
+                                      (dpart (if @hasDef (if @coll FILL{@config.modelFactory ## value => @defE} FILL{@config.modelDefault ## value => @defE}) (if (or @optional @isNullable) FILL{@config.modelDefault ## value => @config.nullLit} ""))))
+                                  { line: FILL{@config.modelField ## i => @ind ## name => CASE{(default (object/get @f "name") "") ## @config.fieldCase} ## type => @ty ## default => @dpart}, plain: (= @dpart ""), typeText: @tt }))))))))
+                    (if (object/get @c "alias")
+                      [FILL{@config.modelAlias ## name => (object/get @c "name") ## type => (object/get (default (array/first @fs) { line: "", plain: true, typeText: @config.typeAny }) "typeText")}]
+                      (array/concat
+                        (if (!= @config.modelAnnotation "") [FILL{@config.modelAnnotation ## at => @at}] [])
+                        [FILL{@config.modelClassOpen ## name => (object/get @c "name")}]
+                        (if (= (array/len @fs) 0)
+                          (if (!= @config.modelEmpty "") [FILL{@config.modelEmpty ## i => @ind}] [])
+                          (array/map (array/concat (array/filter @fs (fn x (object/get @x "plain"))) (array/filter @fs (fn x (not (object/get @x "plain"))))) (fn x (object/get @x "line"))))
+                        (if (!= @config.modelClassClose "") [@config.modelClassClose] [])))))))
+              [])
+            (array/map (array/range 0 (array/len @entity.traits)) (fn ti
+              (let ((t (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {} }))
+                    (rs (default (array/nth @entity.renders (+ @nC @ti)) []))
+                    (cn : string CASE{(default (object/get (default (array/nth @entity.traits @ti) { name: "" }) "name") "") ## @config.classCase}))
+                (if (not (object/get @t "hasMachine"))
+                  (array/concat [FILL{@config.classOpen ## class => @cn ## i => @ind}]
+                    (if (!= @config.classEmpty "") [FILL{@config.classEmpty ## i => @ind}] [])
+                    (if (!= @config.classClose "") [FILL{@config.classClose ## i => @ind}] []))
+                  (let ((cfgR (default (array/first @rs) @nullR))
+                        (trs (object/get @t "transitions"))
+                        (cfgLit (str/concat @config.mapOpen
+                                  (str/join (array/map (object/get @t "knobs") (fn kb ki FILL{@config.mapPair ## key => FILL{@config.stringForm ## json => (json/stringify (object/get @kb "key"))} ## value => (default (array/nth (object/get @cfgR "items") (+ @ki 1)) @config.nullLit)})) @config.mapSep)
+                                  @config.mapClose)))
+                    (array/concat
+                      [FILL{@config.classOpen ## class => @cn ## i => @ind}]
+                      (array/map @config.constructor (fn l FILL{@l ## i => @ind ## class => @cn ## entity => (object/get @t "entity") ## initial => FILL{@config.stringForm ## json => (json/stringify (object/get @t "initial"))} ## config => @cfgLit}))
+                      [""]
+                      (array/map @config.emitMethod (fn l FILL{@l ## i => @ind}))
+                      (array/flatten (array/map (object/get @t "events") (fn ev
+                        (let ((mine (array/filter (array/range 0 (array/len @trs)) (fn mi (= (object/get (default (array/nth @trs @mi) { from: "", to: "", event: "" }) "event") @ev))))
+                              (ptype LOOKUP{(object/get @t "listenTypes") ## @ev})
+                              (mname FILL{@config.methodName ## event => CASE{@ev ## @config.methodCase}}))
+                          (array/concat
+                            ["" FILL{(if (!= @ptype "") @config.methodOpen @config.methodOpenPlain) ## i => @ind ## method => @mname ## payloadType => @ptype}]
+                            (array/flatten (array/map (array/range 0 (array/len @mine)) (fn bi
+                              (let ((mi (default (array/nth @mine @bi) 0)))
+                                (let ((tr (default (array/nth @trs @mi) { from: "", to: "", event: "" }))
+                                      (jr (default (array/nth @rs (+ @mi 1)) @nullR))
+                                      (base (str/concat (object/get @t "path") ".stateMachine.transitions[" @mi "]")))
+                                  (let ((st FILL{@config.stateTest ## state => FILL{@config.stringForm ## json => (json/stringify (object/get @tr "from"))}})
+                                        (pre FILL{@config.bodyPrefix ## i => @ind}))
+                                    (let ((test (if (!= (object/get @tr "guard" null) null) FILL{@config.branchTest ## stateTest => @st ## guard => (default (array/nth (object/get @jr "items") 1) @config.nullLit)} FILL{@config.branchTestPlain ## stateTest => @st})))
+                                      (array/map
+                                        (array/concat
+                                          [FILL{(if (= @bi 0) @config.branchFirst @config.branchNext) ## i => @ind ## test => @test}]
+                                          (array/map (array/flatten (array/drop (object/get @jr "stmts") 2)) (fn l (str/concat @pre @l)))
+                                          [(str/concat @pre FILL{@config.stateAssign ## state => FILL{@config.stringForm ## json => (json/stringify (object/get @tr "to"))}} @config.terminator)])
+                                        (fn l RESOLVE{@l ## @base})))))))))
+                            (if (!= @config.branchClose "") [FILL{@config.branchClose ## i => @ind}] [])
+                            (if (!= @config.methodClose "") [FILL{@config.methodClose ## i => @ind}] []))))))
+                      (if (!= @config.classClose "") [FILL{@config.classClose ## i => @ind}] []))))))))))
+        (set @entity.tokens (array/concat
+          (array/flatten (array/flatten (array/map @entity.renders (fn g (array/map @g (fn r (object/get @r "uses")))))))
+          (array/flatten (array/flatten (array/map @entity.typeRenders (fn g (array/map @g (fn r (object/get @r "uses")))))))
+          (if (and @config.renderModels (array/some @entity.containers (fn c (not (object/get @c "alias"))))) ["dataclass"] [])
+          (if (and @config.renderModels (array/some @entity.containers (fn c (array/some (object/get @c "fields") (fn f (and (!= (object/get @f "default" null) null) (or (validate/array (object/get @f "default" null)) (validate/object (object/get @f "default" null))))))))) ["field"] [])))
+        (set @entity.helperTexts (array/sort (array/unique (array/flatten (array/map (array/unique @entity.tokens) (fn tk (object/get @config.helpers @tk [])))))))

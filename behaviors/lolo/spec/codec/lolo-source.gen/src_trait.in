@@ -1,0 +1,133 @@
+
+  trait LoloSource -> LoloSourceRun [optimistic] {
+    initial: ready
+
+    config {
+@@KNOBS@@
+    }
+
+    state ready {
+      INIT -> ready
+
+      LOLO_TO_SOURCE -> ready when (and @config.requiresTypes (= (default @payload.path "") ""))
+        (emit SOURCE_RENDER_FAILED { error: "this target needs the checker's types, so the request must carry the absolute path of the .lolo file" })
+
+      LOLO_TO_SOURCE -> std when (or (not @config.requiresTypes) (!= (default @payload.path "") ""))
+        (set @entity.source @payload.source)
+        (set @entity.path (default @payload.path ""))
+        (set @entity.typed (!= (default @payload.path "") ""))
+        (set @entity.types {})
+        (os/read-file { anchor: "cwd" path: "node_modules/@almadar/std/package.json" } { key: "std" emit: { success: SRC_STD, failure: SRC_TABLE_FAILED } })
+    }
+
+    state std {
+      INIT -> std
+      LOLO_TO_SOURCE -> std
+        (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
+      SRC_TABLE_FAILED -> ready
+        (emit SOURCE_RENDER_FAILED { error: (str/concat "the operator table is not readable: " (default @payload.error "")) })
+      SRC_STD -> ready when (= (let ((man (json/parse (default (bytes/to-string @payload.data) "") SrcManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") ""))))) "")
+        (emit SOURCE_RENDER_FAILED { error: "the installed @almadar/std declares no orbLanguage operators" })
+      SRC_STD -> table when (!= (let ((man (json/parse (default (bytes/to-string @payload.data) "") SrcManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") ""))))) "")
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/std/" (let ((man (json/parse (default (bytes/to-string @payload.data) "") SrcManifest))) (if (= @man null) "" (let ((lang (object/get @man "orbLanguage"))) (if (= @lang null) "" (default (object/get @lang "operators") "")))))) } { key: "operators" emit: { success: SRC_OPERATORS, failure: SRC_TABLE_FAILED } })
+    }
+
+    state table {
+      INIT -> table
+      LOLO_TO_SOURCE -> table
+        (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
+      SRC_TABLE_FAILED -> ready
+        (emit SOURCE_RENDER_FAILED { error: (str/concat "the operator table is not readable: " (default @payload.error "")) })
+      SRC_OPERATORS -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") SrcOperatorTable) null)
+        (emit SOURCE_RENDER_FAILED { error: "the operator table is not valid JSON" })
+      SRC_OPERATORS -> reading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SrcOperatorTable) null) @entity.typed)
+        (set @entity.operatorNames (let ((tbl (json/parse (default (bytes/to-string @payload.data) "") SrcOperatorTable))) (default (object/keys (object/get @tbl "operators")) [])))
+        (program/read @entity.source { inspect: true, path: @entity.path } { emit: { success: LOLO_INSPECTED, failure: LOLO_READ_FAILED } })
+      SRC_OPERATORS -> reading when (and (!= (json/parse (default (bytes/to-string @payload.data) "") SrcOperatorTable) null) (not @entity.typed))
+        (set @entity.operatorNames (let ((tbl (json/parse (default (bytes/to-string @payload.data) "") SrcOperatorTable))) (default (object/keys (object/get @tbl "operators")) [])))
+        (program/read @entity.source { emit: { success: LOLO_READ, failure: LOLO_READ_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      LOLO_TO_SOURCE -> reading
+        (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
+      LOLO_READ_FAILED -> ready
+        (emit SOURCE_RENDER_FAILED { error: (default @payload.error "the source could not be read") })
+      LOLO_READ -> rendering
+        (set @entity.program @payload.result)
+        (emit SRC_PREPARE { })
+      LOLO_INSPECTED -> rendering
+        (set @entity.program @payload.result.program)
+        (set @entity.types @payload.result.types)
+        (emit SRC_PREPARE { })
+    }
+
+    state rendering {
+      INIT -> rendering
+      LOLO_TO_SOURCE -> rendering
+        (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
+
+      SRC_PREPARE -> rendering
+@@PREPARE@@
+        (emit SRC_RENDER { })
+
+      SRC_RENDER -> rendering
+@@RENDER@@
+        (emit SRC_ASSEMBLE { })
+
+      SRC_ASSEMBLE -> rendering
+@@ASSEMBLE@@
+        (emit SRC_FINISH { })
+
+      SRC_FINISH -> ready
+@@FINISH@@
+        (emit SOURCE_RENDERED { text: @entity.text, warnings: @entity.warnings })
+    }
+
+    emits {
+      SOURCE_RENDERED -> external { text : string!  warnings : [string]! }
+        @description "The .lolo source rendered as native code, with one warning per operator that had no template and per effect that goes through the ports object."
+      SOURCE_RENDER_FAILED -> external { error : string! }
+        @description "The .lolo source could not be rendered, with the reason."
+      SRC_PREPARE { }
+        @description "Internal: collect the containers, traits and expression jobs."
+        @tier "internal"
+      SRC_RENDER { }
+        @description "Internal: render the type and expression trees."
+        @tier "internal"
+      SRC_ASSEMBLE { }
+        @description "Internal: assemble the class blocks from the rendered trees."
+        @tier "internal"
+      SRC_FINISH { }
+        @description "Internal: write the imports and the text."
+        @tier "internal"
+    }
+
+    listens {
+      LOLO_TO_SOURCE -> input { source : string!  path : string? }
+        @description "Render this .lolo program text as native code. With the absolute path of the file the reader also answers the checker's type of every node, which typed targets need."
+        @synonyms "lolo to source, show as code"
+      SRC_STD { data : bytes! }
+        @description "Internal: the installed @almadar/std manifest."
+        @tier "internal"
+      SRC_OPERATORS { data : bytes! }
+        @description "Internal: the installed operator table."
+        @tier "internal"
+      SRC_TABLE_FAILED { error : string }
+        @description "Internal: a table file could not be read."
+        @tier "internal"
+      LOLO_READ { result : SrcProgram! }
+        @description "Internal: the program read by program/read."
+        @tier "internal"
+      LOLO_INSPECTED { result : SrcInspect! }
+        @description "Internal: the program and its types read by program/read with inspect."
+        @tier "internal"
+      LOLO_READ_FAILED { error : string }
+        @description "Internal: program/read could not read the source."
+        @tier "internal"
+    }
+  }
+
+  page boot as LoloSourceStart -> LoloSource
+}

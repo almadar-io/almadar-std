@@ -1,0 +1,11 @@
+        (set @entity.text (let ((importLines (array/sort (array/unique (array/filter (array/map @entity.tokens (fn tk (object/get @config.imports @tk ""))) (fn l (!= @l ""))))))
+                                (ents (array/sort (array/unique (array/filter (array/map @entity.traits (fn t (object/get @t "entity"))) (fn x (!= @x ""))))))
+                                (pls (array/sort (array/unique (array/flatten (array/map @entity.traits (fn t (array/concat (object/values (object/get @t "listenTypes")) (object/values (object/get @t "emitTypes"))))))))))
+          (let ((entLines (let ((tpl (object/get @config.modelImports "entity" ""))) (if (or (= @tpl "") (= (array/len @ents) 0)) [] (if @config.modelImportEach (array/map @ents (fn nm FILL{@tpl ## name => @nm})) [FILL{@tpl ## names => (str/join @ents @config.modelImportSep)}]))))
+                (plLines (let ((tpl (object/get @config.modelImports "payload" ""))) (if (or (= @tpl "") (= (array/len @pls) 0)) [] (if @config.modelImportEach (array/map @pls (fn nm FILL{@tpl ## name => @nm})) [FILL{@tpl ## names => (str/join @pls @config.modelImportSep)}])))))
+            (let ((sections (array/filter (array/concat
+                                [(str/join (array/concat @importLines (if @config.renderModels [] (array/concat @entLines @plLines))) "\n")]
+                                [(str/join @entity.helperTexts @config.helperGap)]
+                                (array/map @entity.blocks (fn b (str/join @b "\n"))))
+                              (fn s (!= @s "")))))
+              (str/concat (str/join @sections @config.sectionGap) "\n")))))

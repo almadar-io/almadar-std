@@ -1,0 +1,25 @@
+app nested-let [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    v : number = 0
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.v (let ((a (+ ?x 1))) (let ((b (* @a 2)) (c (- @a 1))) (+ @b @c))))
+        (emit DONE { v: @entity.v })
+    }
+    emits {
+      DONE -> external { v : number! }
+    }
+    listens {
+      GO { x : number! }
+    }
+  }
+  page boot as FxStart -> T
+}

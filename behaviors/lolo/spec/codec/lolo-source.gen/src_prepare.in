@@ -1,0 +1,45 @@
+        (set @entity.containers (let ((prog (default @entity.program { orbitals: [] })))
+          (array/concat
+            (array/map (object/entries (default (object/get @prog "types") {})) (fn en
+              { name: (default (array/nth @en 0) ""), alias: (array/some (array/take (default (array/nth @en 1) []) 1) (fn f (= (default (object/get @f "name") "x") ""))), fields: (default (array/nth @en 1) []) }))
+            (array/map (array/filter (object/get @prog "orbitals") (fn o (validate/object (object/get @o "entity" null)))) (fn o
+              { name: (object/get (default (object/get @o "entity") { name: "", fields: [] }) "name"), alias: false, fields: (object/get (default (object/get @o "entity") { name: "", fields: [] }) "fields") })))))
+        (set @entity.traits (let ((orbs : [SrcOrbital] (default (object/get (default @entity.program { orbitals: [] }) "orbitals") [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+            (let ((o (default (array/nth @orbs @oi) { name: "", traits: [] })))
+              (array/map (array/range 0 (array/len (object/get @o "traits"))) (fn ti
+                (let ((t (default (array/nth (object/get @o "traits") @ti) { name: "" }))
+                      (tn : string (default (object/get (default (array/nth (object/get @o "traits") @ti) { name: "" }) "name") "")))
+                  (let ((machine (default (object/get @t "stateMachine") { states: [], transitions: [] }))
+                        (initials (array/filter (object/get (default (object/get @t "stateMachine") { states: [], transitions: [] }) "states") (fn s (= (object/get @s "isInitial" false) true))))
+                        (evs (default (object/get (default (object/get @t "stateMachine") { states: [], transitions: [] }) "events") []))
+                        (ems (default (object/get @t "emits") [])))
+                    { name: @tn,
+                      path: (str/concat "orbitals[" @oi "].traits[" @ti "]"),
+                      entity: (default (object/get @t "linkedEntity") ""),
+                      initial: (default (object/get (default (array/first @initials) { name: "" }) "name") ""),
+                      hasMachine: (> (array/len (object/get @machine "states")) 0),
+                      knobs: (array/map (object/entries (default (object/get @t "config") {})) (fn en { key: (default (array/nth @en 0) ""), default: (object/get (default (array/nth @en 1) {}) "default" null) })),
+                      transitions: (object/get @machine "transitions"),
+                      events: (array/unique (array/map (object/get @machine "transitions") (fn tr (object/get @tr "event")))),
+                      listenTypes: (object/fromEntries (array/map (array/filter @evs (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "key") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "key") ## "keep"}}]))),
+                      emitTypes: (object/fromEntries (array/map (array/filter @ems (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "event") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "event") ## "keep"}}]))) }))))))))))
+        (set @entity.groups (array/concat
+          (if @config.renderModels (array/map @entity.containers (fn c (array/map (object/get @c "fields") (fn f [0, (object/get @f "default" null)])))) [])
+          (array/map @entity.traits (fn t
+            (array/concat
+              [(array/concat [0] (array/map (object/get @t "knobs") (fn kb (object/get @kb "default" null))))]
+              (array/map (object/get @t "transitions") (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) [])))))))))
+        (set @entity.groupCtx (array/concat
+          (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, defaults: {} })) [])
+          (array/map @entity.traits (fn t
+            { emitTypes: (object/get @t "emitTypes"),
+              defaults: (let ((en (default (array/find @entity.containers (fn c (and (= (object/get @c "name") (object/get @t "entity")) (not (object/get @c "alias"))))) { name: "", alias: true, fields: [] })))
+                (object/fromEntries (array/filter (array/map (object/get @en "fields") (fn f [(default (object/get @f "name") "")
+                  (let ((d (object/get @f "default" null)))
+                    (if (= @d null) ""
+                      (if (validate/string @d) (let ((sv : string @d)) FILL{@config.stringForm ## json => (json/stringify @sv)})
+                        (if (validate/boolean @d) (if (= @d true) @config.trueLit @config.falseLit)
+                          (if (validate/number @d) (json/stringify @d)
+                            (if (and (validate/array @d) (= (array/len (default (as @d SrcList) [])) 0)) FILL{@config.listForm ## "*" => ""}
+                              (if (and (validate/object @d) (= (array/len (object/keys @d)) 0)) (str/concat @config.mapOpen @config.mapClose) "")))))))])) (fn p (!= (default (array/nth @p 1) "") ""))))) }))))

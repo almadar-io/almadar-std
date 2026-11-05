@@ -1,0 +1,25 @@
+app divide-default [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    v : number = 0
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.v (default (/ ?a ?b) 0))
+        (emit DONE { v: @entity.v })
+    }
+    emits {
+      DONE -> external { v : number! }
+    }
+    listens {
+      GO { a : number!  b : number! }
+    }
+  }
+  page boot as FxStart -> T
+}

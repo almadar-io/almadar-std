@@ -1,437 +1,118 @@
 app std-lolo-python [
-  version: "1.0.0",
-  description: "std-lolo-python — renders .lolo source as readable Python text, so a learner who reads an exercise written in .lolo can see the same program as Python. LOLO_TO_PYTHON { source } reads the source with program/read and answers PYTHON_RENDERED { text, warnings }, or PYTHON_RENDER_FAILED { error } when the source cannot be read. Each type alias and each entity becomes a typed @dataclass (a union of strings becomes a Literal, a list becomes list[T], an optional field becomes T | None). Each trait becomes a class holding state, entity and config, with one on_<event> method per event: an if/elif branch per transition (the from-state and the guard), the effects, then the new state. Expressions render through the config tables: operators are templates with {0}, {1}... and {*} placeholders, infix holds the variadic infix operators, lambdaOperators turn an operator taking an fn into a comprehension, namespaces maps a namespace to a Python module, and typeMap maps lolo field types to Python types. let becomes assignments (a lambda call inside an expression), if a conditional expression (an if statement in statement position), fn a lambda, set an assignment, emit a self.emit call, render-ui a comment, and do the statements in order. @entity.x is self.entity.x, @payload.x is payload[\"x\"] and @config.x is self.config[\"x\"]. An operator that no table covers renders as a call ns_name(args) and adds a warning that names it. A list whose first item is a string is a call when that string is a known form, is in a table, is in config.calls or contains a slash; any other list is a list literal. The output starts with `from dataclasses import dataclass`, adds the imports the text needs (config.imports, keyed by operator, namespace or type word) and indents with four spaces. Pure circuit logic: str/*, array/*, object/*, json/* and tree/fold only."
+  version: "2.0.0",
+  description: "std-lolo-python \u{2014} renders .lolo source as Python text, so a learner who reads an exercise written in .lolo can see the same program as Python that runs and gives the kernel's answers. It is std-lolo-source with the Python vocabulary in config and nothing else: LOLO_TO_PYTHON { source } answers PYTHON_RENDERED { text, warnings }, or PYTHON_RENDER_FAILED { error } when the source cannot be read. Each trait becomes a class holding state, entity, ports and config, with one on_<event> method per event: an if/elif branch per transition (the from-state and the guard), the effects, then the new state; an emit records (event, payload) in self.emitted with the payload built as the shell's generated payload type. The entity and payload types are imported from orbital_app.generated.entities and orbital_app.generated.events, the modules the Python shell generates. Kernel answers that are null (a division by zero, nth past the end, a missing key) come from small helper functions written once, and only the ones the output uses. An operator with no Python template is a named warning and a stub that raises when run. persist, fetch, notify, navigate and call-service are called on the injected ports object and each is listed in warnings; render-ui is a comment. See std-lolo-source for the config knobs and the type placeholders."
 ]
 uses Spec from "almadar-std/lolo-python"
-
-type PyExpr = string | number | boolean | [PyExpr?] | Map string PyExpr?
-type PyJob = [PyExpr?]
-type PyList = [PyExpr]
-type PyLists = [PyList]
-type PyRef = { type : string! }
-type PyField = { name : string?, type : string!, required : boolean?, nullable : boolean?, values : [string]?, items : PyField?, properties : Map string PyField?, projectedFrom : PyRef?, default : PyExpr? }
-type PyKnobDecl = { default : PyExpr? }
-type PyState = { name : string!, isInitial : boolean? }
-type PyTransition = { from : string!, to : string!, event : string!, guard : PyExpr?, effects : [PyExpr?]? }
-type PyMachine = { states : [PyState]!, transitions : [PyTransition]! }
-type PyTraitDecl = { name : string!, linkedEntity : string?, config : Map string PyKnobDecl?, stateMachine : PyMachine? }
-type PyEntityDecl = { name : string!, fields : [PyField]! }
-type PyOrbital = { name : string!, entity : PyEntityDecl?, traits : [PyTraitDecl]! }
-type PyProgram = { types : Map string [PyField]?, orbitals : [PyOrbital]! }
-type PyContainer = { name : string!, alias : boolean!, fields : [PyField]! }
-type PyKnob = { key : string!, default : PyExpr? }
-type PyTraitInfo = { name : string!, entity : string!, initial : string!, hasMachine : boolean!, knobs : [PyKnob]!, transitions : [PyTransition]! }
-type PyRender = { expr : string!, stmt : [string]!, params : [string]!, body : string!, items : [string]!, stmts : [[string]]!, pairVals : [string]!, warns : [string]!, uses : [string]! }
-type PyTypeRender = { text : string!, uses : [string]! }
+uses Src from "std/behaviors/std-lolo-source"
 
 orbital LoloPythonOrbital {
   entity LoloPythonRun [runtime] {
     id : string!
-    program : PyProgram?
-    containers : [PyContainer] = []
-    traits : [PyTraitInfo] = []
-    groups : [[PyJob]] = []
-    renders : [[PyRender]] = []
-    typeRenders : [[PyTypeRender]] = []
-    blocks : [[string]] = []
-    tokens : [string] = []
-    warnings : [string] = []
-    text : string = ""
   }
 
-  trait LoloPython -> LoloPythonRun [optimistic] {
-    initial: ready
-
+  trait LoloPython = Src.traits.LoloSource {
+    events {
+      LOLO_TO_SOURCE: LOLO_TO_PYTHON
+      SOURCE_RENDERED: PYTHON_RENDERED
+      SOURCE_RENDER_FAILED: PYTHON_RENDER_FAILED
+    }
     config {
-      operators : Map string string = {
-        "-": "(-{0})",
-        "not": "(not {0})",
-        "str/concat": "(\"\".join(str(v) for v in [{*}]))",
-        "str/len": "len({0})",
-        "str/upper": "{0}.upper()",
-        "str/lower": "{0}.lower()",
-        "str/trim": "{0}.strip()",
-        "str/split": "{0}.split({1})",
-        "str/join": "{1}.join({0})",
-        "str/includes": "({1} in {0})",
-        "str/startsWith": "{0}.startswith({1})",
-        "str/endsWith": "{0}.endswith({1})",
-        "str/replaceAll": "{0}.replace({1}, {2})",
-        "str/slice": "{0}[{1}:{2}]",
-        "array/len": "len({0})",
-        "array/sum": "sum({0})",
-        "array/first": "({0}[0] if {0} else None)",
-        "array/nth": "{0}[{1}]",
-        "array/range": "list(range({0}, {1}))",
-        "array/append": "({0} + [{1}])",
-        "array/concat": "({0} + {1})",
-        "array/includes": "({1} in {0})",
-        "array/reverse": "list(reversed({0}))",
-        "array/unique": "list(dict.fromkeys({0}))",
-        "array/reduce": "reduce({2}, {0}, {1})",
-        "list": "[{*}]",
-        "object/get": "{0}.get({1}, {2})",
-        "object/keys": "list({0}.keys())",
-        "object/has": "({1} in {0})",
-        "object/set": "({0} | {{1}: {2}})",
-        "json/parse": "json.loads({0})",
-        "json/stringify": "json.dumps({0})",
-        "math/max": "max({*})",
-        "math/min": "min({*})",
-        "math/abs": "abs({0})",
-        "math/round": "round({0})",
-        "math/mod": "({0} % {1})",
-        "default": "({0} if {0} is not None else {1})",
-        "validate/required": "({0} is not None)",
-        "validate/string": "isinstance({0}, str)",
-        "validate/array": "isinstance({0}, list)",
-        "validate/object": "isinstance({0}, dict)"
-      }
-        @label "Operator templates"
-        @description "Python template per operator name; {0}, {1}... are the rendered arguments and {*} all of them joined by a comma"
-        @tier "domain"
-      infix : Map string string = {
-        "+": "+",
-        "-": "-",
-        "*": "*",
-        "/": "/",
-        "%": "%",
-        "=": "==",
-        "==": "==",
-        "!=": "!=",
-        "<": "<",
-        "<=": "<=",
-        ">": ">",
-        ">=": ">=",
-        "and": "and",
-        "or": "or"
-      }
-        @label "Infix operators"
-        @description "Python symbol per variadic infix operator; the rendered arguments are joined by it inside parentheses"
-        @tier "domain"
-      lambdaOperators : Map string string = {
-        "array/map": "[{body} for {vars} in {src}]",
-        "array/filter": "[{item} for {vars} in {src} if {body}]",
-        "array/some": "any({body} for {vars} in {src})",
-        "array/every": "all({body} for {vars} in {src})"
-      }
-        @label "Lambda operators"
-        @description "Python comprehension per operator whose second argument is an fn; {src} is the collection (enumerate(...) when the fn takes an index), {vars} the loop target, {item} the item name and {body} the fn body"
-        @tier "domain"
-      namespaces : Map string string = { "math": "math" }
-        @label "Namespaces"
-        @description "Namespace of an operator without a template mapped to the Python module it renders as: math/floor becomes math.floor(...)"
-        @tier "domain"
-      calls : [string] = ["as", "default", "fetch", "fetch-stream", "log", "navigate", "navigate-back", "notify", "persist", "send-server", "call-service", "spawn", "despawn", "path", "random-bytes", "access-check"]
-        @label "Operator names without a slash"
-        @description "Operator names that carry no namespace slash; a list that starts with one of these is a call, not a list literal"
-        @tier "domain"
-      attributeRoots : Map string string = { "entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event" }
-        @label "Attribute roots"
-        @description "Python expression per sigil whose path reads as attributes (@entity.x is self.entity.x)"
-        @tier "domain"
-      itemRoots : Map string string = { "payload": "payload", "config": "self.config" }
-        @label "Item roots"
-        @description "Python expression per sigil whose path reads as dictionary items (@payload.x is payload[\"x\"])"
-        @tier "domain"
-      typeMap : Map string string = { "string": "str", "number": "float", "float": "float", "int": "int", "integer": "int", "boolean": "bool", "bool": "bool", "date": "str", "datetime": "str", "timestamp": "str", "instant": "str", "duration": "float", "email": "str", "url": "str", "uuid": "str", "bytes": "bytes" }
-        @label "Type map"
-        @description "Python type per lolo field type; a type missing here renders as Any"
-        @tier "domain"
-      imports : Map string string = {
-        "Literal": "from typing import Literal",
-        "Any": "from typing import Any",
-        "field": "from dataclasses import field",
-        "math": "import math",
-        "json/parse": "import json",
-        "json/stringify": "import json",
-        "array/reduce": "from functools import reduce"
-      }
-        @label "Imports"
-        @description "Import line per used operator, namespace or type word; the dataclass import is always written"
-        @tier "domain"
-    }
-
-    state ready {
-      INIT -> ready
-
-      LOLO_TO_PYTHON -> ready
-        (program/read ?source { emit: { success: LOLO_READ, failure: LOLO_READ_FAILED } })
-
-      LOLO_READ_FAILED -> ready
-        (emit PYTHON_RENDER_FAILED { error: (default ?error "the source could not be read") })
-
-      LOLO_READ -> ready
-        (set @entity.program @payload.result)
-        (set @entity.containers (let ((prog (default @entity.program { orbitals: [] })))
-          (array/concat
-            (array/map (object/entries (default (object/get @prog "types") {})) (fn en
-              { name: (default (array/nth @en 0) ""), alias: (array/some (array/take (default (array/nth @en 1) []) 1) (fn f (= (default (object/get @f "name") "x") ""))), fields: (default (array/nth @en 1) []) }))
-            (array/map (array/filter (object/get @prog "orbitals") (fn o (validate/object (object/get @o "entity" null)))) (fn o
-              { name: (object/get (default (object/get @o "entity") { name: "", fields: [] }) "name"), alias: false, fields: (object/get (default (object/get @o "entity") { name: "", fields: [] }) "fields") })))))
-        (set @entity.traits (array/flatten (array/map (default (object/get (default @entity.program { orbitals: [] }) "orbitals") []) (fn o
-          (array/map (object/get @o "traits") (fn t
-            (let ((machine (default (object/get @t "stateMachine") { states: [], transitions: [] }))
-                  (initials (array/filter (object/get @machine "states") (fn s (= (object/get @s "isInitial" false) true)))))
-              { name: (object/get @t "name"),
-                entity: (default (object/get @t "linkedEntity") ""),
-                initial: (default (object/get (default (array/first @initials) { name: "" }) "name") ""),
-                hasMachine: (validate/object (object/get @t "stateMachine" null)),
-                knobs: (array/map (object/entries (default (object/get @t "config") {})) (fn en { key: (default (array/nth @en 0) ""), default: (object/get (default (array/nth @en 1) {}) "default" null) })),
-                transitions: (object/get @machine "transitions") })))))))
-        (set @entity.groups (array/concat
-          (array/map @entity.containers (fn c (array/map @c.fields (fn f [0, (object/get @f "default" null)]))))
-          (array/map @entity.traits (fn t
-            (array/concat
-              [(array/concat [0] (array/map @t.knobs (fn kb (object/get @kb "default" null))))]
-              (array/map @t.transitions (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) [])))))))))
-        (emit PY_RENDER { })
-
-      PY_RENDER -> ready
-        (set @entity.typeRenders (array/map @entity.containers (fn c (array/map @c.fields (fn f
-          (default (tree/fold @f
-            (fn (n k)
-              (let ((vals (default (object/get @n "values") []))
-                    (kit : PyTypeRender? (object/get @k "items" null))
-                    (ref : PyRef? (object/get @n "projectedFrom" null))
-                    (ty : string (object/get @n "type"))
-                    (mapped (object/get @config.typeMap @ty ""))
-                    (inner : string (if (= @kit null) "" (object/get @kit "text")))
-                    (innerUses : [string] (if (= @kit null) [] (object/get @kit "uses"))))
-                (let ((base (if (> (array/len @vals) 0)
-                               (str/concat "Literal[" (str/join (array/map @vals (fn v (json/stringify @v))) ", ") "]")
-                               (if (!= @ref null)
-                                 (object/get @ref "type")
-                                 (if (= @ty "array")
-                                   (if (= @kit null) "list" (str/concat "list[" @inner "]"))
-                                   (if (= @ty "object")
-                                     (if (= @kit null) "dict" (str/concat "dict[str, " @inner "]"))
-                                     (if (!= @mapped "") @mapped "Any")))))))
-                  { text: (if (= (object/get @n "nullable" false) true) (str/concat @base " | None") @base),
-                    uses: (array/concat @innerUses
-                      (if (> (array/len @vals) 0) ["Literal"] [])
-                      (if (and (= (array/len @vals) 0) (= @ref null) (!= @ty "array") (!= @ty "object") (= @mapped "")) ["Any"] [])) })))
-            "PyField") { text: "Any", uses: ["Any"] }))))))
-        (set @entity.renders (array/map @entity.groups (fn g (array/map @g (fn j
-          (default (tree/fold @j
-            (fn (n k)
-              (let ((nullR : PyRender { expr: "None", stmt: ["None"], params: [], body: "None", items: [], stmts: [], pairVals: [], warns: [], uses: [] })
-                    (none : [string] [])
-                    (noneL : [[string]] [])
-                    (at (str/slice "x@" 1 2))
-                    (forms : [string] (str/split "fn,let,if,do,set,emit,render-ui,when" ",")))
-                (if (validate/array @n)
-                  (let ((h0 (array/nth @n 0))
-                        (argc (- (array/len @n) 1))
-                        (rs (array/map (array/range 0 (array/len @n)) (fn i (default (array/nth @k @i) @nullR))))
-                        (ex (array/map (array/range 0 (array/len @n)) (fn i (object/get (default (array/nth @k @i) @nullR) "expr"))))
-                        (ws (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (object/get (default (array/nth @k @i) @nullR) "warns")))))
-                        (us (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (object/get (default (array/nth @k @i) @nullR) "uses"))))))
-                    (let ((hd : string (if (validate/string @h0) @h0 "")))
-                    (let ((isCall (and (!= @hd "")
-                                    (or (array/includes @forms @hd) (object/has @config.operators @hd) (object/has @config.infix @hd) (object/has @config.lambdaOperators @hd) (array/includes @config.calls @hd) (str/includes @hd "/")))))
-                      (if (not @isCall)
-                        { expr: (str/concat "[" (str/join @ex ", ") "]"),
-                          stmt: [(str/concat "[" (str/join @ex ", ") "]")],
-                          params: [], body: "",
-                          items: @ex,
-                          stmts: (array/map @rs (fn r (object/get @r "stmt"))),
-                          pairVals: (array/map @rs (fn r (default (array/nth (object/get @r "items") 1) ""))),
-                          warns: @ws, uses: @us }
-                        (if (= @hd "fn")
-                          (let ((names (array/map (if (validate/string (array/nth @n 1)) [(array/nth @n 1)] (default (as (array/nth @n 1) PyList) [])) (fn x (str/replaceAll (if (validate/string @x) @x "") "-" "_"))))
-                                (bodyE (object/get (default (array/nth @rs (- (array/len @rs) 1)) @nullR) "expr")))
-                            (let ((txt (str/concat "lambda" (if (> (array/len @names) 0) (str/concat " " (str/join @names ", ")) "") ": " @bodyE)))
-                              { expr: @txt, stmt: [@txt], params: @names, body: @bodyE, items: [], stmts: [], pairVals: [], warns: @ws, uses: @us }))
-                          (if (= @hd "let")
-                            (let ((pairs (array/map (default (as (array/nth @n 1) PyLists) []) (fn pr (str/replaceAll (let ((nm (array/nth @pr 0))) (if (validate/string @nm) @nm "")) "-" "_"))))
-                                  (vals (object/get (default (array/nth @rs 1) @nullR) "pairVals"))
-                                  (bodyRs (array/drop @rs 2)))
-                              (let ((lastE (object/get (default (array/nth @bodyRs (- (array/len @bodyRs) 1)) @nullR) "expr")))
-                                { expr: (if (= (array/len @pairs) 0) @lastE (str/concat "(lambda " (str/join @pairs ", ") ": " @lastE ")(" (str/join @vals ", ") ")")),
-                                  stmt: (array/concat
-                                    (array/map (array/range 0 (array/len @pairs)) (fn i (str/concat (array/nth @pairs @i) " = " (default (array/nth @vals @i) "None"))))
-                                    (array/flatten (array/map @bodyRs (fn r (object/get @r "stmt"))))),
-                                  params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us }))
-                            (if (= @hd "if")
-                              (let ((a (default (array/nth @rs 2) @nullR))
-                                    (b (default (array/nth @rs 3) @nullR))
-                                    (hasB (> @argc 2))
-                                    (c (default (array/nth @ex 1) "None")))
-                                { expr: (str/concat "(" (object/get @a "expr") " if " @c " else " (if @hasB (object/get @b "expr") "None") ")"),
-                                  stmt: (array/concat
-                                    [(str/concat "if " @c ":")]
-                                    (array/map (object/get @a "stmt") (fn l (str/concat "    " @l)))
-                                    (if @hasB (array/concat ["else:"] (array/map (object/get @b "stmt") (fn l (str/concat "    " @l)))) [])),
-                                  params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us })
-                              (if (= @hd "when")
-                                (let ((bodyRs (array/drop @rs 2))
-                                      (c (default (array/nth @ex 1) "None")))
-                                  (let ((lines (array/flatten (array/map @bodyRs (fn r (object/get @r "stmt"))))))
-                                    { expr: (str/concat "(" (object/get (default (array/nth @bodyRs (- (array/len @bodyRs) 1)) @nullR) "expr") " if " @c " else None)"),
-                                      stmt: (array/concat [(str/concat "if " @c ":")] (if (= (array/len @lines) 0) ["    pass"] (array/map @lines (fn l (str/concat "    " @l))))),
-                                      params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us }))
-                                (if (= @hd "do")
-                                  (let ((bodyRs (array/drop @rs 1)))
-                                    { expr: (object/get (default (array/nth @bodyRs (- (array/len @bodyRs) 1)) @nullR) "expr"),
-                                      stmt: (array/flatten (array/map @bodyRs (fn r (object/get @r "stmt")))),
-                                      params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us })
-                                  (if (= @hd "set")
-                                    { expr: "None", stmt: [(str/concat (default (array/nth @ex 1) "None") " = " (default (array/nth @ex 2) "None"))],
-                                      params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us }
-                                    (if (= @hd "emit")
-                                      (let ((call (str/concat "self.emit(" (json/stringify (array/nth @n 1)) ", " (if (> @argc 1) (default (array/nth @ex 2) "{}") "{}") ")")))
-                                        { expr: @call, stmt: [@call], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us })
-                                      (if (= @hd "render-ui")
-                                        (let ((kind : string (let ((pr (if (> @argc 1) (array/nth @n 2) null))) (if (validate/object @pr) (let ((tv (object/get @pr "type" "ui"))) (if (validate/string @tv) @tv "ui")) "ui"))))
-                                          { expr: "None", stmt: [(str/concat "# render: " @kind)], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: @ws, uses: @us })
-                                        (let ((args (array/drop @ex 1))
-                                              (tmpl (object/get @config.operators @hd ""))
-                                              (sym (object/get @config.infix @hd ""))
-                                              (lamT (object/get @config.lambdaOperators @hd ""))
-                                              (nsName (default (array/nth (str/split @hd "/") 0) ""))
-                                              (nsPy (if (str/includes @hd "/") (object/get @config.namespaces @nsName "") ""))
-                                              (fnArg (default (array/nth @rs 2) @nullR)))
-                                          (let ((hasFn (and (!= @lamT "") (> (array/len (object/get @fnArg "params")) 0)))
-                                                (fnVars (object/get @fnArg "params"))
-                                                (viaTmpl (!= @tmpl ""))
-                                                (viaInfix (!= @sym ""))
-                                                (viaNs (!= @nsPy "")))
-                                            (let ((plain (str/replaceAll (array/reduce (array/range 0 @argc) @tmpl (fn acc i (str/replaceAll @acc (str/concat "{" @i "}") (default (array/nth @args @i) "None")))) "{*}" (str/join @args ", ")))
-                                                  (looped (let ((vs (if (> (array/len @fnVars) 1) (str/concat (default (array/nth @fnVars 1) "_") ", " (default (array/nth @fnVars 0) "_")) (default (array/nth @fnVars 0) "_"))) (src (if (> (array/len @fnVars) 1) (str/concat "enumerate(" (default (array/nth @args 0) "None") ")") (default (array/nth @args 0) "None"))))
-                                                    (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @lamT "{body}" (object/get @fnArg "body")) "{vars}" @vs) "{src}" @src) "{item}" (default (array/nth @fnVars 0) "_")))))
-                                              (let ((txt (if @hasFn @looped
-                                                           (if @viaTmpl @plain
-                                                             (if @viaInfix
-                                                               (if (= @argc 1) (str/concat "(" @sym (default (array/nth @args 0) "None") ")") (str/concat "(" (str/join @args (str/concat " " @sym " ")) ")"))
-                                                               (str/concat (if @viaNs (str/concat @nsPy "." (str/join (array/drop (str/split @hd "/") 1) "_")) (str/replaceAll (str/replaceAll @hd "/" "_") "-" "_")) "(" (str/join @args ", ") ")"))))))
-                                                { expr: @txt, stmt: [@txt], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none,
-                                                  warns: (if (or @hasFn @viaTmpl @viaInfix @viaNs) @ws (array/append @ws (str/concat "no Python template for operator " @hd))),
-                                                  uses: (array/concat @us [@hd] (if (and @viaNs (not @viaTmpl)) [@nsName] [])) }))))))))))))))))
-                  (if (validate/object @n)
-                    (let ((es (object/entries @k)))
-                      (let ((txt (str/concat "{" (str/join (array/map @es (fn e (str/concat (json/stringify (array/nth @e 0)) ": " (object/get (default (array/nth @e 1) @nullR) "expr")))) ", ") "}")))
-                        { expr: @txt, stmt: [@txt], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none,
-                          warns: (array/flatten (array/map @es (fn e (object/get (default (array/nth @e 1) @nullR) "warns")))),
-                          uses: (array/flatten (array/map @es (fn e (object/get (default (array/nth @e 1) @nullR) "uses")))) }))
-                    (if (validate/string @n)
-                      (let ((sv : string @n))
-                        (if (str/startsWith @sv @at)
-                          (let ((path (str/split (str/slice @sv 1 (str/len @sv)) ".")))
-                            (let ((root (default (array/nth @path 0) ""))
-                                  (rest (array/drop @path 1)))
-                              (let ((attrBase (object/get @config.attributeRoots @root ""))
-                                    (itemBase (object/get @config.itemRoots @root ""))
-                                    (keys (str/join (array/map @rest (fn x (str/concat "[" (if (and (> (str/len @x) 0) (= (str/replace-pattern @x "[0-9]" "") "")) @x (json/stringify @x)) "]"))) "")))
-                                (let ((txt (if (!= @attrBase "")
-                                             (str/concat @attrBase (if (> (array/len @rest) 0) (str/concat "." (str/join @rest ".")) ""))
-                                             (if (!= @itemBase "")
-                                               (str/concat @itemBase @keys)
-                                               (str/concat (str/replaceAll @root "-" "_") @keys)))))
-                                  { expr: @txt, stmt: [@txt], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: [], uses: [] }))))
-                          { expr: (json/stringify @sv), stmt: [(json/stringify @sv)], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: [], uses: [] }))
-                      (let ((txt (if (validate/boolean @n) (if @n "True" "False") (json/stringify @n))))
-                        { expr: @txt, stmt: [@txt], params: @none, body: "", items: @none, stmts: @noneL, pairVals: @none, warns: [], uses: [] }))))))
-            "PyExpr") { expr: "None", stmt: ["None"], params: [], body: "None", items: [], stmts: [], pairVals: [], warns: [], uses: [] }))))))
-        (emit PY_ASSEMBLE { })
-
-      PY_ASSEMBLE -> ready
-        (set @entity.warnings (array/unique (array/concat
-          (array/flatten (array/flatten (array/map @entity.renders (fn g (array/map @g (fn r (object/get @r "warns")))))))
-          (array/map (array/filter @entity.traits (fn t (not (object/get @t "hasMachine")))) (fn t (str/concat "trait " (object/get @t "name") " has no inline state machine, so it renders as an empty class"))))))
-        (set @entity.blocks (let ((nC (array/len @entity.containers))
-                                  (at (str/slice "x@" 1 2))
-                                  (nullR : PyRender { expr: "None", stmt: ["None"], params: [], body: "None", items: [], stmts: [], pairVals: [], warns: [], uses: [] }))
-          (array/concat
-            (array/map (array/zip @entity.containers (array/zip @entity.typeRenders (array/take @entity.renders @nC))) (fn ce
-              (let ((c (array/nth @ce 0)) (tz (array/nth @ce 1)))
-                (let ((fs (array/map (array/zip (object/get @c "fields") (array/zip (array/nth @tz 0) (array/nth @tz 1))) (fn fe
-                        (let ((f (array/nth @fe 0))
-                              (tt (object/get (array/nth (array/nth @fe 1) 0) "text"))
-                              (jr (array/nth (array/nth @fe 1) 1)))
-                          (let ((dflt (object/get @f "default" null)))
-                            (let ((hasDef (!= @dflt null))
-                                  (defE (default (array/nth (object/get @jr "items") 1) "None"))
-                                  (coll (or (validate/array @dflt) (validate/object @dflt)))
-                                  (isNullable (= (object/get @f "nullable" false) true))
-                                  (optional (and (!= (object/get @f "required" false) true) (= @dflt null) (!= (object/get @f "nullable" false) true))))
-                              (let ((rhs (if @hasDef (if @coll (str/concat "field(default_factory=lambda: " (if (!= (object/get @f "projectedFrom" null) null) (str/concat (object/get (default (object/get @f "projectedFrom") { type: "dict" }) "type") "(**" @defE ")") @defE) ")") @defE) (if (or @optional @isNullable) "None" ""))))
-                                { line: (str/concat (default (object/get @f "name") "") ": " @tt (if @optional " | None" "") (if (!= @rhs "") (str/concat " = " @rhs) "")), plain: (= @rhs ""), typeText: @tt }))))))))
-                  (if (object/get @c "alias")
-                    [(str/concat (object/get @c "name") " = " (object/get (default (array/first @fs) { line: "", plain: true, typeText: "Any" }) "typeText"))]
-                    (array/concat [(str/concat @at "dataclass") (str/concat "class " (object/get @c "name") ":")]
-                      (if (= (array/len @fs) 0)
-                        ["    pass"]
-                        (array/map (array/concat (array/filter @fs (fn x (object/get @x "plain"))) (array/filter @fs (fn x (not (object/get @x "plain"))))) (fn x (str/concat "    " (object/get @x "line")))))))))))
-            (array/map (array/zip @entity.traits (array/drop @entity.renders @nC)) (fn te
-              (let ((t (array/nth @te 0))
-                    (rs (array/nth @te 1)))
-                (if (not (object/get @t "hasMachine"))
-                  [(str/concat "class " (object/get @t "name") ":") "    pass"]
-                  (let ((cfgR (default (array/first @rs) @nullR))
-                        (pairs (array/zip (object/get @t "transitions") (array/drop @rs 1)))
-                        (events (array/unique (array/map (object/get @t "transitions") (fn tr (object/get @tr "event"))))))
-                    (array/concat
-                      [(str/concat "class " (object/get @t "name") ":")
-                       (str/concat "    def __init__(self, entity" (if (!= (object/get @t "entity") "") (str/concat ": " (object/get @t "entity")) "") ", config: dict | None = None):")
-                       (str/concat "        self.state = " (json/stringify (object/get @t "initial")))
-                       "        self.entity = entity"
-                       (str/concat "        self.config = {" (str/join (array/map (object/get @t "knobs") (fn kb ki (str/concat (json/stringify (object/get @kb "key")) ": " (default (array/nth (object/get @cfgR "items") (+ @ki 1)) "None")))) ", ") "} | (config or {})")
-                       "        self.emitted = []"
-                       ""
-                       "    def emit(self, event, payload):"
-                       "        self.emitted.append((event, payload))"]
-                      (array/flatten (array/map @events (fn ev
-                        (let ((mine (array/filter @pairs (fn pr (= (object/get (array/nth @pr 0) "event") @ev)))))
-                          (array/concat
-                            ["" (str/concat "    def on_" (str/lower (str/replaceAll (str/replaceAll @ev "-" "_") "." "_")) "(self, payload):")]
-                            (array/flatten (array/map @mine (fn pr bi
-                              (let ((tr (array/nth @pr 0))
-                                    (jr (array/nth @pr 1)))
-                                (array/concat
-                                  [(str/concat "        " (if (= @bi 0) "if" "elif") " self.state == " (json/stringify (object/get @tr "from")) (if (!= (object/get @tr "guard" null) null) (str/concat " and " (default (array/nth (object/get @jr "items") 1) "True")) "") ":")]
-                                  (array/map (array/flatten (array/drop (object/get @jr "stmts") 2)) (fn l (str/concat "            " @l)))
-                                  [(str/concat "            self.state = " (json/stringify (object/get @tr "to")))])))))))))))))))))))
-        (set @entity.tokens (array/concat
-          (array/flatten (array/flatten (array/map @entity.renders (fn g (array/map @g (fn r (object/get @r "uses")))))))
-          (array/flatten (array/flatten (array/map @entity.typeRenders (fn g (array/map @g (fn r (object/get @r "uses")))))))
-          (if (array/some @entity.containers (fn c (array/some (object/get @c "fields") (fn f (and (!= (object/get @f "default" null) null) (or (validate/array (object/get @f "default" null)) (validate/object (object/get @f "default" null)))))))) ["field"] [])))
-        (emit PY_FINISH { })
-
-      PY_FINISH -> ready
-        (set @entity.text (let ((lines (array/unique (array/filter (array/map @entity.tokens (fn tk (object/get @config.imports @tk ""))) (fn l (!= @l ""))))))
-          (str/concat (str/join (array/concat ["from dataclasses import dataclass"] (array/sort @lines)) "\n")
-            (if (= (array/len @entity.blocks) 0) "" (str/concat "\n\n\n" (str/join (array/map @entity.blocks (fn b (str/join @b "\n"))) "\n\n\n")))
-            "\n")))
-        (emit PYTHON_RENDERED { text: @entity.text, warnings: @entity.warnings })
-    }
-
-    emits {
-      PYTHON_RENDERED -> external { text : string!  warnings : [string]! }
-        @description "The .lolo source rendered as Python text, with one warning per operator that had no Python template."
-      PYTHON_RENDER_FAILED -> external { error : string! }
-        @description "The .lolo source could not be read, with the reason."
-      PY_RENDER { }
-        @description "Internal: render the type and expression trees."
-        @tier "internal"
-      PY_ASSEMBLE { }
-        @description "Internal: assemble the class blocks from the rendered trees."
-        @tier "internal"
-      PY_FINISH { }
-        @description "Internal: write the imports and the Python text."
-        @tier "internal"
-    }
-
-    listens {
-      LOLO_TO_PYTHON { source : string! }
-        @description "Render this .lolo program text as Python."
-        @synonyms "lolo to python, show as python"
-      LOLO_READ { result : PyProgram! }
-        @description "Internal: the program read by program/read."
-        @tier "internal"
-      LOLO_READ_FAILED { error : string }
-        @description "Internal: program/read could not read the source."
-        @tier "internal"
+      language: "Python"
+      requiresTypes: false
+      operators: { "/": "_div({{0}}, {{1}})", "%": "_mod({{0}}, {{1}})", "math/mod": "_mod({{0}}, {{1}})", "str/len": "len({{0}})", "str/upper": "{{0}}.upper()", "str/lower": "{{0}}.lower()", "str/trim": "{{0}}.strip()", "str/trimStart": "{{0}}.lstrip()", "str/trimEnd": "{{0}}.rstrip()", "str/capitalize": "{{0}}.capitalize()", "str/split": "_split({{0}}, {{1}})", "str/join": "_join({{0}}, {{1}})", "str/concat": "\"\".join(_text(v_) for v_ in [{{*}}])", "str/includes": "({{1}} in {{0}})", "str/startsWith": "{{0}}.startswith({{1}})", "str/endsWith": "{{0}}.endswith({{1}})", "str/replace": "{{0}}.replace({{1}}, {{2}}, 1)", "str/replaceAll": "{{0}}.replace({{1}}, {{2}})", "str/repeat": "({{0}} * {{1}})", "str/reverse": "{{0}}[::-1]", "str/slice#2": "_str_slice({{0}}, {{1}})", "str/slice#3": "_str_slice({{0}}, {{1}}, {{2}})", "str/padStart#2": "_pad_start({{0}}, {{1}})", "str/padStart#3": "_pad_start({{0}}, {{1}}, {{2}})", "str/padEnd#2": "_pad_end({{0}}, {{1}})", "str/padEnd#3": "_pad_end({{0}}, {{1}}, {{2}})", "str/truncate#2": "_truncate({{0}}, {{1}})", "str/truncate#3": "_truncate({{0}}, {{1}}, {{2}})", "str/to-int": "_to_int({{0}})", "array/len": "len({{0}})", "array/sum#2": "_sum({{0}}, {{1}})", "array/avg#1": "_avg({{0}})", "array/avg#2": "_avg({{0}}, {{1}})", "array/max#1": "_amax({{0}})", "array/max#2": "_amax({{0}}, {{1}})", "array/min#1": "_amin({{0}})", "array/min#2": "_amin({{0}}, {{1}})", "array/first": "_first({{0}})", "array/last": "_last({{0}})", "array/nth": "_nth({{0}}, {{1}})", "array/range#2": "_range({{0}}, {{1}})", "array/range#3": "_range({{0}}, {{1}}, {{2}})", "array/slice#2": "_slice({{0}}, {{1}})", "array/slice#3": "_slice({{0}}, {{1}}, {{2}})", "array/take": "_take({{0}}, {{1}})", "array/drop": "_drop({{0}}, {{1}})", "array/takeLast": "_take_last({{0}}, {{1}})", "array/dropLast": "_drop_last({{0}}, {{1}})", "array/append": "({{0}} + [{{1}}])", "array/prepend": "([{{1}}] + {{0}})", "array/includes": "({{1}} in {{0}})", "array/indexOf": "_index_of({{0}}, {{1}})", "array/reverse": "list(reversed({{0}}))", "array/unique": "_unique({{0}})", "array/flatten": "[y_ for x_ in {{0}} for y_ in x_]", "array/zip": "[list(p_) for p_ in zip({{0}}, {{1}})]", "array/sort#1": "_sort({{0}})", "array/sort#2": "_sort({{0}}, {{1}})", "array/sort#3": "_sort({{0}}, {{1}}, {{2}})", "array/reduce": "functools.reduce({{2}}, {{0}}, {{1}})", "list": "[{{*}}]", "object/get#2": "_get({{0}}, {{1}})", "object/get#3": "_get({{0}}, {{1}}, {{2}})", "object/has": "_has({{0}}, {{1}})", "object/set": "_set({{0}}, {{1}}, {{2}})", "object/keys": "list({{0}}.keys())", "object/values": "list({{0}}.values())", "object/entries": "[[k_, v_] for k_, v_ in {{0}}.items()]", "object/fromEntries": "{p_[0]: p_[1] for p_ in {{0}}}", "object/merge#2": "{**{{0}}, **{{1}}}", "object/pick": "_pick({{0}}, {{1}})", "object/omit": "_omit({{0}}, {{1}})", "json/parse": "_json_parse({{0}})", "json/stringify#1": "_json_dumps({{0}})", "math/abs": "abs({{0}})", "math/max": "max({{*}})", "math/min": "min({{*}})", "math/round#1": "_round({{0}})", "math/round#2": "_round({{0}}, {{1}})", "math/sqrt": "_sqrt({{0}})", "math/ln": "_ln({{0}})", "math/log10": "_log10({{0}})", "math/pow": "_pow({{0}}, {{1}})", "math/sign": "_sign({{0}})", "math/clamp": "_clamp({{0}}, {{1}}, {{2}})", "default": "_default({{0}}, {{1}})", "as": "{{0}}", "validate/required": "_required({{0}})", "validate/string": "isinstance({{0}}, str)", "validate/number": "_is_number({{0}})", "validate/array": "isinstance({{0}}, list)", "validate/object": "isinstance({{0}}, dict)", "validate/boolean": "isinstance({{0}}, bool)", "validate/length": "(len({{0}}) == {{1}})", "validate/minLength": "(len({{0}}) >= {{1}})", "validate/maxLength": "(len({{0}}) <= {{1}})", "validate/min": "({{0}} >= {{1}})", "validate/max": "({{0}} <= {{1}})", "validate/range": "({{1}} <= {{0}} <= {{2}})", "validate/oneOf": "({{0}} in {{1}})", "validate/equals": "({{0}} == {{1}})" }
+      unary: { "-": "(-{{0}})", "not": "(not {{0}})", "array/range": "_range({{0}})", "array/sum": "_sum({{0}})", "array/count": "len({{0}})", "array/sort": "_sort({{0}})", "json/stringify": "_json_dumps({{0}})", "math/round": "_round({{0}})", "array/concat": "{{0}}", "object/merge": "{{0}}" }
+      infix: { "+": "+", "-": "-", "*": "*", "=": "==", "==": "==", "!=": "!=", "<": "<", "<=": "<=", ">": ">", ">=": ">=", "and": "and", "or": "or", "array/concat": "+" }
+      infixForm: "({{*}})"
+      lambdaOperators: { "array/map": "[{{body}} for {{vars}} in {{src}}]", "array/filter": "[{{item}} for {{vars}} in {{src}} if {{body}}]", "array/reject": "[{{item}} for {{vars}} in {{src}} if not ({{body}})]", "array/some": "any({{body}} for {{vars}} in {{src}})", "array/every": "all({{body}} for {{vars}} in {{src}})", "array/count": "sum(1 for {{vars}} in {{src}} if {{body}})", "array/find": "next(({{item}} for {{vars}} in {{src}} if {{body}}), None)", "array/findIndex": "next((i_ for i_, {{item}} in enumerate({{src}}) if {{body}}), -1)" }
+      lambdaForm: "lambda {{params}}: {{body}}"
+      indexedSource: "enumerate({{src}})"
+      indexedVars: "{{index}}, {{item}}"
+      callees: { "math/ceil": "math.ceil", "math/floor": "math.floor", "math/sin": "math.sin", "math/cos": "math.cos", "math/tan": "math.tan", "math/atan": "math.atan", "math/atan2": "math.atan2", "math/hypot": "math.hypot" }
+      calleeForm: "{{callee}}({{*}})"
+      unsupportedForm: "_unsupported({{op}})"
+      unsupportedWarn: "no {{language}} template for operator {{op}}"
+      helpers: { "/": ["def _div(a, b): return None if b == 0 else a / b"], "%": ["def _mod(a, b): return None if b == 0 else math.fmod(a, b)"], "math/mod": ["def _mod(a, b): return None if b == 0 else math.fmod(a, b)"], "default": ["def _default(v, d): return d if v is None else v"], "str/split": ["def _split(s, d): return list(s) if d == '' else s.split(d)"], "str/join": ["def _join(a, d): return d.join(_text(v) for v in a)", "def _text(v):\n    if isinstance(v, bool): return 'true' if v else 'false'\n    if isinstance(v, float) and v - v == 0 and v == int(v): return str(int(v))\n    if isinstance(v, (int, float, str)): return str(v)\n    raise TypeError('expected string, number or boolean')"], "str/concat": ["def _text(v):\n    if isinstance(v, bool): return 'true' if v else 'false'\n    if isinstance(v, float) and v - v == 0 and v == int(v): return str(int(v))\n    if isinstance(v, (int, float, str)): return str(v)\n    raise TypeError('expected string, number or boolean')"], "str/slice": ["def _str_slice(s, a, b=None):\n    if a != int(a) or (b is not None and b != int(b)): raise ValueError('slice: not a whole number')\n    return s[int(a):None if b is None else int(b)]"], "str/padStart": ["def _pad_start(s, n, p=' '):\n    if len(p) != 1: raise ValueError('expected a single padding character')\n    return s.rjust(int(n), p)"], "str/padEnd": ["def _pad_end(s, n, p=' '):\n    if len(p) != 1: raise ValueError('expected a single padding character')\n    return s.ljust(int(n), p)"], "str/truncate": ["def _truncate(s, n, suffix='...'): return s if len(s) <= n else s[:int(n)] + suffix"], "str/to-int": ["def _to_int(s):\n    t = s[1:] if s[:1] in ('+', '-') else s\n    return int(s) if t.isascii() and t.isdigit() and -2 ** 63 <= int(s) < 2 ** 63 else None"], "array/sum": ["def _sum(a, k=None): return sum(a) if k is None else sum(x[k] for x in a)"], "array/avg": ["def _avg(a, k=None):\n    v = a if k is None else [x[k] for x in a]\n    return sum(v) / len(v) if v else None"], "array/max": ["def _amax(a, k=None):\n    v = a if k is None else [x[k] for x in a]\n    return max(v) if v else None"], "array/min": ["def _amin(a, k=None):\n    v = a if k is None else [x[k] for x in a]\n    return min(v) if v else None"], "array/first": ["def _first(a): return a[0] if a else None"], "array/last": ["def _last(a): return a[-1] if a else None"], "array/nth": ["def _nth(a, i):\n    if i != int(i) or i < 0: raise ValueError('nth: index is not a whole number from 0')\n    return a[int(i)] if i < len(a) else None"], "array/range": ["def _range(a, b=None, step=1):\n    start, end = (0, a) if b is None else (a, b)\n    if step == 0: raise ValueError('range: step 0 must be a non-zero finite number')\n    out = []\n    x = start\n    while (x < end) if step > 0 else (x > end):\n        out.append(x)\n        x += step\n    return out"], "array/slice": ["def _slice(a, s, e=None):\n    if s != int(s) or s < 0 or (e is not None and (e != int(e) or e < 0)): raise ValueError('slice: not a whole number from 0')\n    return a[int(s):None if e is None else int(e)]"], "array/take": ["def _take(a, n):\n    if n != int(n) or n < 0: raise ValueError('count is not a whole number from 0')\n    return a[:int(n)]"], "array/drop": ["def _drop(a, n):\n    if n != int(n) or n < 0: raise ValueError('count is not a whole number from 0')\n    return a[int(n):]"], "array/takeLast": ["def _take_last(a, n):\n    if n != int(n) or n < 0: raise ValueError('count is not a whole number from 0')\n    return a[len(a) - int(n):] if n < len(a) else a[:]"], "array/dropLast": ["def _drop_last(a, n):\n    if n != int(n) or n < 0: raise ValueError('count is not a whole number from 0')\n    return a[:len(a) - int(n)] if n < len(a) else []"], "array/indexOf": ["def _index_of(a, x): return a.index(x) if x in a else -1"], "array/unique": ["def _unique(a):\n    out = []\n    for x in a:\n        if x not in out: out.append(x)\n    return out"], "array/sort": ["def _sort(a, k=None, o='asc'): return sorted(a, key=None if k is None else (lambda x: x[k]), reverse=(o == 'desc'))"], "object/get": ["def _get(o, p, d=None):\n    for s in p.replace(chr(92) + '.', chr(0)).split('.'):\n        s = s.replace(chr(0), '.')\n        if isinstance(o, dict) and s in o: o = o[s]\n        elif isinstance(o, list) and s.isdigit() and int(s) < len(o): o = o[int(s)]\n        else: return d\n    return o"], "object/has": ["def _has(o, p):\n    for s in p.replace(chr(92) + '.', chr(0)).split('.'):\n        s = s.replace(chr(0), '.')\n        if isinstance(o, dict) and s in o: o = o[s]\n        elif isinstance(o, list) and s.isdigit() and int(s) < len(o): o = o[int(s)]\n        else: return False\n    return True"], "object/set": ["def _set(o, p, v):\n    out = dict(o)\n    cur = out\n    parts = [s.replace(chr(0), '.') for s in p.replace(chr(92) + '.', chr(0)).split('.')]\n    for s in parts[:-1]:\n        cur[s] = dict(cur[s]) if isinstance(cur.get(s), dict) else {}\n        cur = cur[s]\n    cur[parts[-1]] = v\n    return out"], "object/pick": ["def _pick(o, ks): return {k: o[k] for k in ks if k in o}"], "object/omit": ["def _omit(o, ks): return {k: v for k, v in o.items() if k not in ks}"], "json/parse": ["def _json_parse(t):\n    try: return json.loads(t)\n    except ValueError: return None"], "json/stringify": ["def _json_dumps(v):\n    def n(x):\n        if isinstance(x, float) and x - x == 0 and x == int(x): return int(x)\n        if isinstance(x, list): return [n(y) for y in x]\n        if isinstance(x, dict): return {k: n(y) for k, y in x.items()}\n        return x\n    return json.dumps(n(v), separators=(',', ':'), ensure_ascii=False)"], "math/round": ["def _round(x, d=0):\n    m = 10 ** d\n    return math.copysign(math.floor(abs(x) * m + 0.5) / m, x)"], "math/sqrt": ["def _sqrt(x): return None if x < 0 else math.sqrt(x)"], "math/ln": ["def _ln(x): return None if x <= 0 else math.log(x)"], "math/log10": ["def _log10(x): return None if x <= 0 else math.log10(x)"], "math/pow": ["def _pow(a, b):\n    try: return math.pow(a, b)\n    except (ValueError, OverflowError, ZeroDivisionError): return None"], "math/sign": ["def _sign(x): return (x > 0) - (x < 0)"], "math/clamp": ["def _clamp(v, lo, hi): return min(max(v, lo), hi)"], "validate/required": ["def _required(v): return v is not None and v != ''"], "validate/number": ["def _is_number(v): return isinstance(v, (int, float)) and not isinstance(v, bool)"], "unsupported": ["def _unsupported(name): raise NotImplementedError('no native template for operator ' + name)"] }
+      helperGap: "\n"
+      imports: { "Literal": "from typing import Literal", "Any": "from typing import Any", "field": "from dataclasses import field", "dataclass": "from dataclasses import dataclass", "%": "import math", "math/mod": "import math", "math/ceil": "import math", "math/floor": "import math", "math/sin": "import math", "math/cos": "import math", "math/tan": "import math", "math/atan": "import math", "math/atan2": "import math", "math/hypot": "import math", "math/round": "import math", "math/sqrt": "import math", "math/ln": "import math", "math/log10": "import math", "math/pow": "import math", "array/reduce": "import functools", "json/parse": "import json", "json/stringify": "import json" }
+      portEffects: ["persist", "fetch", "fetch-stream", "notify", "navigate", "navigate-back", "call-service", "cancel-call", "send-server", "spawn", "despawn", "log"]
+      portCall: "self.ports.{{name}}({{*}})"
+      portCase: "lower"
+      portWarn: "{{op}} is called on the ports object"
+      attributeRoots: { "entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload" }
+      itemRoots: { "config": "self.config" }
+      attrAccess: ".{{name}}"
+      itemAccess: "[{{key}}]"
+      indexAccess: "[{{0}}]"
+      localAccess: "item"
+      entityReadDefault: ""
+      nullLit: "None"
+      trueLit: "True"
+      falseLit: "False"
+      stringForm: "{{json}}"
+      listForm: "[{{*}}]"
+      mapOpen: "{"
+      mapClose: "}"
+      mapPair: "{{key}}: {{value}}"
+      mapSep: ", "
+      letStmt: "{{name}} = {{value}}"
+      letExpr: "(lambda {{name}}: {{body}})({{value}})"
+      condExpr: "({{then}} if {{cond}} else {{else}})"
+      ifOpen: "if {{cond}}:"
+      elseOpen: "else:"
+      blockClose: ""
+      emptyBody: "pass"
+      setStyle: "assign"
+      setAssign: "{{target}} = {{value}}"
+      emitForm: "self.emit({{event}}, {{payload}})"
+      payloadType: "{{trait}}{{event}}Payload"
+      payloadCtor: "{{type}}({{fields}})"
+      payloadField: "{{name}}={{value}}"
+      payloadSep: ", "
+      commentForm: "# {{text}}"
+      indent: "    "
+      terminator: ""
+      classCase: "keep"
+      fieldCase: "keep"
+      localCase: "keep"
+      methodCase: "lower"
+      methodName: "on_{{event}}"
+      modelImports: { "entity": "from orbital_app.generated.entities import {{names}}", "payload": "from orbital_app.generated.events import {{names}}" }
+      modelImportEach: false
+      modelImportSep: ", "
+      sectionGap: "\n\n\n"
+      classOpen: "class {{class}}:"
+      classClose: ""
+      classEmpty: "{{i}}pass"
+      constructor: ["{{i}}def __init__(self, entity: {{entity}}, ports=None, config: dict | None = None):", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}{{i}}self.config = {{config}} | (config or {})", "{{i}}{{i}}self.emitted: list[tuple[str, object]] = []"]
+      emitMethod: ["{{i}}def emit(self, event, payload):", "{{i}}{{i}}self.emitted.append((event, payload))"]
+      methodOpen: "{{i}}def {{method}}(self, payload: {{payloadType}}) -> None:"
+      methodOpenPlain: "{{i}}def {{method}}(self, payload=None) -> None:"
+      methodClose: ""
+      branchFirst: "{{i}}{{i}}if {{test}}:"
+      branchNext: "{{i}}{{i}}elif {{test}}:"
+      branchClose: ""
+      branchTest: "{{stateTest}} and {{guard}}"
+      branchTestPlain: "{{stateTest}}"
+      stateTest: "self.state == {{state}}"
+      stateAssign: "self.state = {{state}}"
+      bodyPrefix: "{{i}}{{i}}{{i}}"
+      renderModels: false
+      modelAnnotation: "{{at}}dataclass"
+      modelClassOpen: "class {{name}}:"
+      modelClassClose: ""
+      modelField: "{{i}}{{name}}: {{type}}{{default}}"
+      modelDefault: " = {{value}}"
+      modelFactory: " = field(default_factory=lambda: {{value}})"
+      modelEmpty: "{{i}}pass"
+      modelAlias: "{{name}} = {{type}}"
+      typeMap: { "string": "str", "number": "float", "float": "float", "int": "int", "integer": "int", "boolean": "bool", "bool": "bool", "date": "str", "datetime": "str", "timestamp": "str", "instant": "str", "duration": "float", "email": "str", "url": "str", "uuid": "str", "bytes": "bytes" }
+      typeList: "list[{{0}}]"
+      typeListBare: "list"
+      typeDict: "dict[str, {{0}}]"
+      typeDictBare: "dict"
+      typeLiteral: "Literal[{{*}}]"
+      typeNullable: "{{0}} | None"
+      typeAny: "Any"
     }
   }
 

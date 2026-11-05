@@ -1,0 +1,33 @@
+app lolo-source-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as native code in any target language. LOLO_TO_SOURCE { source, path? } answers SOURCE_RENDERED { text, warnings }: per trait one class that holds the state and the entity and has one method per event (an if/else-if branch per transition: the from-state and the guard, then the effects, then the new state), the helpers the output uses, and the imports of the shell's generated models. The output never calls the kernel and gives the kernel's answers: an operator with no template in the target's vocabulary renders as a named warning and a stub that raises, never as a call to a name the output does not define. SOURCE_RENDER_FAILED { error } when the source cannot be read, when the operator table is not readable, or when the target needs the checker's types and the request carries no path."
+]
+
+orbital LoloSourceSpec {
+  expects entity LoloSourceRun [runtime] {
+    id : string!
+  }
+  expects trait LoloSource {
+    state ready {
+      LOLO_TO_SOURCE -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
+    }
+    emits {
+      SOURCE_RENDERED { text : string!  warnings : [string]! }
+      SOURCE_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloSource
+}

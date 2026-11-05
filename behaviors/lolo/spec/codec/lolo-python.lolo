@@ -1,6 +1,6 @@
 app lolo-python-spec [
   version: "1.0.0",
-  description: "Design contract for rendering .lolo source as readable Python text, so a learner who reads an exercise written in .lolo can see the same program as Python. LOLO_TO_PYTHON { source } answers PYTHON_RENDERED { text, warnings }, the dataclasses for every type alias and entity, one class per trait with an on_<event> method per event, and a warning for each operator that had no Python template, or PYTHON_RENDER_FAILED { error } when the source cannot be read."
+  description: "Design contract for rendering .lolo source as Python that runs and gives the kernel's answers, so a learner who reads an exercise written in .lolo can see the same program as Python. LOLO_TO_PYTHON { source, path? } answers PYTHON_RENDERED { text, warnings }: the imports of the Python shell's generated entity and payload models, the helpers the code uses, and one class per trait with an on_<event> method per event (an if/elif per transition, then the new state), with a warning for each operator that had no Python template and for each effect called on the ports object; or PYTHON_RENDER_FAILED { error } when the source cannot be read or the operator table is not readable. It is std-lolo-source with the Python vocabulary in config."
 ]
 
 orbital LoloPythonSpec {
@@ -9,7 +9,20 @@ orbital LoloPythonSpec {
   }
   expects trait LoloPython {
     state ready {
-      LOLO_TO_PYTHON -> ready
+      LOLO_TO_PYTHON -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
     }
     emits {
       PYTHON_RENDERED { text : string!  warnings : [string]! }

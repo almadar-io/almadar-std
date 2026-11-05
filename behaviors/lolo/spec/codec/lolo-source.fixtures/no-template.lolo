@@ -1,0 +1,25 @@
+app no-template [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    t : string = ""
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.t (format/phone ?p))
+        (emit DONE { t: @entity.t })
+    }
+    emits {
+      DONE -> external { t : string! }
+    }
+    listens {
+      GO { p : string! }
+    }
+  }
+  page boot as FxStart -> T
+}

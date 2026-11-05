@@ -1,0 +1,25 @@
+app nth-past-end [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    v : number = 0
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.v (default (array/nth ?xs ?i) -1))
+        (emit DONE { v: @entity.v })
+    }
+    emits {
+      DONE -> external { v : number! }
+    }
+    listens {
+      GO { xs : [number]!  i : number! }
+    }
+  }
+  page boot as FxStart -> T
+}

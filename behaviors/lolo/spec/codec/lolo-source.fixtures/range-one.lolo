@@ -1,0 +1,25 @@
+app range-one [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    r : [number] = []
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle
+        (set @entity.r (array/range ?n))
+        (emit DONE { n: (array/len @entity.r) })
+    }
+    emits {
+      DONE -> external { n : number! }
+    }
+    listens {
+      GO { n : number! }
+    }
+  }
+  page boot as FxStart -> T
+}
