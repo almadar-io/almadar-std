@@ -58,6 +58,7 @@ orbital LiveMachineOrbital {
     sourceLines : [TransitionLines] = []
     highlight : CodeHighlight?
     guest : string = ""
+    pinned : boolean = false
   }
 
   entity LiveMachineSourceView [runtime] {
@@ -246,10 +247,12 @@ orbital LiveMachineOrbital {
         (set @entity.behavior ?behavior)
         (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
         (set @entity.firedMove null)
-        (set @entity.title "")
+        (set @entity.title (default (array/nth (array/map (array/filter ?tree.traits (fn t (== @t.parent null))) (fn t @t.trait)) 0) ""))
+        (set @entity.pinned false)
         (set @entity.sourceText "")
         (set @entity.sourceLines [])
         (set @entity.highlight null)
+        (if (!= @entity.title "") (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title }) null)
         (render-ui main @config.view)
       ORBIT_FAILED -> waiting
         (set @entity.behavior ?behavior)
@@ -265,6 +268,7 @@ orbital LiveMachineOrbital {
         (set @entity.actives [])
         (set @entity.firedMove null)
         (set @entity.title "")
+        (set @entity.pinned false)
         (set @entity.sourceText "")
         (set @entity.sourceLines [])
         (set @entity.highlight null)
@@ -274,9 +278,12 @@ orbital LiveMachineOrbital {
         (set @entity.tree ?tree)
         (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
         (set @entity.firedMove null)
+        (set @entity.title (default (array/nth (array/map (array/filter ?tree.traits (fn t (== @t.parent null))) (fn t @t.trait)) 0) ""))
+        (if (!= @entity.title "") (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title }) null)
         (render-ui main @config.view)
       TREE_FAILED -> waiting
         (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
+      SELECT_TRAIT -> waiting
       MOVES -> waiting
       SOURCE -> waiting
       SOURCE_FAILED -> waiting
@@ -300,7 +307,7 @@ orbital LiveMachineOrbital {
                 (set @entity.firedMove { trait: @last.trait, index: @index })
                 (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @index))))) (if (== @at null) null { start: @at.start, end: @at.end })))))))
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title))
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (not @entity.pinned))
         (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
@@ -310,13 +317,33 @@ orbital LiveMachineOrbital {
                 (do (set @entity.title @last.trait) (set @entity.sourceText "") (set @entity.sourceLines []) (set @entity.highlight null))))))
         (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title })
         (render-ui main @config.view)
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) @entity.pinned)
+        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+          (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [] }) traits) (fn t (== @t.trait @last.trait)))))
+            (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
+              (do
+                (set @entity.actives (array/reduce (array/filter ?moves (fn m @m.fired)) @entity.actives (fn (acc m) (if (array/some @acc (fn a (and (== @a.trait @m.trait) (== @a.state @m.from)))) (array/map @acc (fn a (if (and (== @a.trait @m.trait) (== @a.state @m.from)) { trait: @m.trait, state: @m.to } @a))) (array/append @acc { trait: @m.trait, state: @m.to })))))
+                (set @entity.firedMove { trait: @last.trait, index: @index })
+                (set @entity.highlight null)))))
+        (render-ui main @config.view)
       MOVES -> showing when (== (array/len (array/filter ?moves (fn m @m.fired))) 0)
       SOURCE -> showing when (== ?trait @entity.title)
         (set @entity.sourceText ?text)
         (set @entity.sourceLines ?lines)
-        (set @entity.highlight (let ((at (array/find ?lines (fn l (== @l.index (object/get (default @entity.firedMove { trait: "", index: -1 }) index)))))) (if (== @at null) null { start: @at.start, end: @at.end })))
+        (set @entity.highlight (let ((move (default @entity.firedMove { trait: "", index: -1 }))) (if (!= @move.trait ?trait) null (let ((at (array/find ?lines (fn l (== @l.index @move.index))))) (if (== @at null) null { start: @at.start, end: @at.end })))))
         (render-ui main @config.view)
       SOURCE -> showing when (!= ?trait @entity.title)
+      SELECT_TRAIT -> showing when (and @entity.pinned (== ?trait @entity.title))
+        (set @entity.pinned false)
+        (render-ui main @config.view)
+      SELECT_TRAIT -> showing when (or (not @entity.pinned) (!= ?trait @entity.title))
+        (set @entity.pinned true)
+        (set @entity.title ?trait)
+        (set @entity.sourceText "")
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (emit SOURCE_WANTED { behavior: @entity.behavior, trait: ?trait })
+        (render-ui main @config.view)
       SOURCE_FAILED -> showing
         (set @entity.sourceText (str/concat ";; " ?error))
         (set @entity.sourceLines [])
@@ -333,6 +360,7 @@ orbital LiveMachineOrbital {
         (set @entity.actives [])
         (set @entity.firedMove null)
         (set @entity.title "")
+        (set @entity.pinned false)
         (set @entity.sourceText "")
         (set @entity.sourceLines [])
         (set @entity.highlight null)
@@ -357,7 +385,7 @@ orbital LiveMachineOrbital {
         behavior : string!
         trait : string!
       }
-        @description "The whole-page view needs the source of this trait, the one that moved last."
+        @description "The whole-page view needs the source of this trait: the page's root at first, then the chosen one or the one that moved last."
         @tier "internal"
       TREE_WANTED {
         guest : string!
@@ -407,6 +435,11 @@ orbital LiveMachineOrbital {
       ORBIT_RETRY
         @description "Try reading the page again."
         @tier "internal"
+      SELECT_TRAIT {
+        trait : string!
+      }
+        @description "Show this trait's source and keep it while other traits move; choosing it again lets the source follow the trait that moves."
+        @synonyms "pin a trait's code, show this trait's source"
       SOURCE {
         trait : string!
         text : string!
@@ -420,9 +453,15 @@ orbital LiveMachineOrbital {
     }
 
     config {
-      expandDepth : number = 2
+      expandDepth : number = 1
         @label "Expand depth"
-        @description "Traits shallower than this show their machine inline; deeper ones show as a box whose machine opens on hover or focus."
+        @description "Traits shallower than this show their machine; deeper ones show as a box that opens in place."
+      diagramHeight : string = "50vh"
+        @label "Diagram height"
+        @description "The diagram scrolls inside this height."
+      codeHeight : string = "40vh"
+        @label "Code height"
+        @description "The source scrolls inside this height."
       view : render-ui = {
         type: split
         ratio: "3:2"
@@ -436,6 +475,9 @@ orbital LiveMachineOrbital {
         activeStates: @entity.actives
         firedTransition: @entity.firedMove
         expandDepth: @config.expandDepth
+        selectedTrait: @entity.title
+        selectEvent: SELECT_TRAIT
+        maxHeight: @config.diagramHeight
         direction: (if (== @locale "ar") "rtl" "ltr")
         aria-label: (i18n/t "diagram.orbitLabel")
         }, {
@@ -445,7 +487,7 @@ orbital LiveMachineOrbital {
         language: "lolo"
         title: (if (== @entity.title "") (i18n/t "diagram.orbitNoSource") (str/concat @entity.title ".lolo"))
         highlightLines: @entity.highlight
-        maxHeight: "40rem"
+        maxHeight: @config.codeHeight
         showCopyButton: true
         }]
       }
