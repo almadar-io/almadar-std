@@ -1,7 +1,7 @@
 app std-orb-serve-handoff [
   version: "1.0.0",
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
-  fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create] },
+  fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create], "/**": [read] },
   description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server and orb-app: the resolved app beside its catalogs, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
   egress: []
 ]
@@ -22,6 +22,9 @@ orbital ServeHandoffOrbital {
     emulatorProject : string = ""
     composed : behavior?
     source : string @description "The app file itself, whose folder holds its locales/ and public/." = ""
+    locales : [string] @description "The composed program's declared locales, whose catalogs, as the app file's folder holds them, are copied beside program.orb." = []
+    localeCursor : number = 0
+    catalog : bytes?
   }
 
   trait ServeHandoff -> HandoffRun [optimistic] {
@@ -67,6 +70,27 @@ orbital ServeHandoffOrbital {
       SERVE_PREP_DIR -> preparing
         (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/program.orb") } (bytes/from-string (json/stringify @entity.composed)) { key: "prepProgram" emit: { success: SERVE_PROGRAM_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_PROGRAM_WRITTEN -> preparing
+        (set @entity.locales (if (= @entity.composed null) [] (object/get @entity.composed "locales" [])))
+        (set @entity.localeCursor 0)
+        (emit SERVE_CATALOG_NEXT { })
+      SERVE_CATALOG_NEXT -> preparing when (< @entity.localeCursor (array/len @entity.locales))
+        (os/read-file (str/concat "/" (str/slice (os/path-join (os/path-dir @entity.source) "locales" (default (array/nth @entity.locales @entity.localeCursor) "") (str/concat @entity.appName ".json")) 1 (str/len (os/path-join (os/path-dir @entity.source) "locales" (default (array/nth @entity.locales @entity.localeCursor) "") (str/concat @entity.appName ".json"))))) { key: "catalog" emit: { success: SERVE_CATALOG_READ, failure: SERVE_CATALOG_ABSENT } })
+      SERVE_CATALOG_READ -> preparing
+        (set @entity.catalog @payload.data)
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (array/nth @entity.locales @entity.localeCursor) "")) } true { key: "catalogDir" emit: { success: SERVE_CATALOG_DIR, failure: SERVE_PREP_FAILED } })
+      SERVE_CATALOG_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (array/nth @entity.locales @entity.localeCursor) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "catalogCopy" emit: { success: SERVE_CATALOG_COPIED, failure: SERVE_PREP_FAILED } })
+      SERVE_CATALOG_ABSENT -> preparing
+        (set @entity.localeCursor (+ @entity.localeCursor 1))
+        (emit SERVE_CATALOG_NEXT { })
+      SERVE_CATALOG_COPIED -> preparing
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (array/nth @entity.locales @entity.localeCursor) "")) } true { key: "clientCatalogDir" emit: { success: SERVE_CATALOG_CLIENT_DIR, failure: SERVE_PREP_FAILED } })
+      SERVE_CATALOG_CLIENT_DIR -> preparing
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (array/nth @entity.locales @entity.localeCursor) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "clientCatalogCopy" emit: { success: SERVE_CATALOG_CLIENT_COPIED, failure: SERVE_PREP_FAILED } })
+      SERVE_CATALOG_CLIENT_COPIED -> preparing
+        (set @entity.localeCursor (+ @entity.localeCursor 1))
+        (emit SERVE_CATALOG_NEXT { })
+      SERVE_CATALOG_NEXT -> preparing when (>= @entity.localeCursor (array/len @entity.locales))
         (program/eval null { generate: { path: (os/path-join @entity.cwd ".orbital/serve" @entity.appName "program.orb"), output: (os/path-join @entity.cwd ".orbital/serve" @entity.appName), shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
       SERVE_CLIENT_BUILT -> preparing
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
@@ -136,6 +160,30 @@ orbital ServeHandoffOrbital {
         @tier "internal"
       SERVE_PROGRAM_WRITTEN { bytes : number }
         @description "os/write-file: the composed program is written for the client-mode compile, so the client learns its server from the http endpoint."
+        @tier "internal"
+      SERVE_CATALOG_NEXT { }
+        @description "Copy the next declared locale's catalog beside program.orb, or compile when none is left."
+        @tier "internal"
+      SERVE_CATALOG_READ { data : bytes! }
+        @description "os/read-file: a locale catalog beside the resolved app."
+        @tier "internal"
+      SERVE_CATALOG_ABSENT {
+        error : string
+        kind : string
+      }
+        @description "os/read-file: the app ships no catalog for this locale, so none is copied."
+        @tier "internal"
+      SERVE_CATALOG_DIR { }
+        @description "os/mkdir: the locale folder under program.orb exists."
+        @tier "internal"
+      SERVE_CATALOG_CLIENT_DIR { }
+        @description "os/mkdir: the locale folder under the generated client's public folder exists."
+        @tier "internal"
+      SERVE_CATALOG_CLIENT_COPIED { bytes : number }
+        @description "os/write-file: the locale catalog beside the generated program.client.orb, which generate validates there."
+        @tier "internal"
+      SERVE_CATALOG_COPIED { bytes : number }
+        @description "os/write-file: the locale catalog under locales/<lang>/ beside program.orb, where validate looks for it."
         @tier "internal"
       SERVE_PREP_FAILED {
         error : string
