@@ -375,11 +375,11 @@ orbital AgentToolLoopOrbital {
             (set @entity.binding @b)
             (persist/read-named (object/get (default (as @entity.current.arguments AgentReadArguments) {}) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
       DISPATCHED -> running when @payload.result.ok
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCHED -> running when (not @payload.result.ok)
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCH_FAILED -> running
@@ -387,7 +387,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       READ_DONE -> running
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @payload.result.entity, kind: read, success: true, rows: @payload.result.count, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @payload.result.entity, kind: read, success: true, rows: @payload.result.count, content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       READ_FAILED -> running when (> (array/count (default ?errors []) (fn e (= @e.code "unknown-entity"))) 0)
@@ -407,7 +407,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.status idle)
       AWAIT_DISPATCHED -> awaitingResult when @payload.result.ok
       AWAIT_DISPATCHED -> running when (not @payload.result.ok)
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       AWAIT_DISPATCH_FAILED -> running
@@ -475,7 +475,6 @@ orbital AgentToolLoopOrbital {
         @tier "domain"
       AWAIT_DISPATCHED {
         result : AgentDispatchAnswer!
-        text : string!
       }
       AWAIT_DISPATCH_FAILED {
         error : string!
@@ -483,7 +482,6 @@ orbital AgentToolLoopOrbital {
       }
       INPUTS_KNOWN {
         result : AgentReflection!
-        text : string!
       }
       INPUTS_FAILED {
         error : string!
@@ -492,7 +490,6 @@ orbital AgentToolLoopOrbital {
       CALL_BEGIN
       DISPATCHED {
         result : AgentDispatchAnswer!
-        text : string!
       }
       DISPATCH_FAILED {
         error : string!
@@ -500,7 +497,6 @@ orbital AgentToolLoopOrbital {
       }
       READ_DONE {
         result : AgentReadAnswer!
-        text : string!
       }
       READ_FAILED {
         error : string!
