@@ -8,9 +8,10 @@ app std-guest-session [
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
 
 type GuestProgram = { name : string, orbitals : [orbital] }
-type GuestPaint = { slot : string!, trait : string!, embedded : boolean!, content : node! }
+type GuestPaint = { slot : string!, trait : string!, embedded : boolean!, content : node? }
 type GuestMove = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
-type GuestOpened = { guest : string!, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
 type GuestMarkEntity = { collection : string }
@@ -22,6 +23,8 @@ orbital GuestSessionOrbital {
     id : string!
     guestHandle : string = ""
     guestPaints : [GuestPaint] = []
+    guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
+    guestPage : [string] @description "The traits of the page the guest shows: its page-root paints are the ones drawn." = []
     guestError : string = ""
     guestProgram : GuestProgram?
     guestSeed : behavior?
@@ -66,8 +69,10 @@ orbital GuestSessionOrbital {
         (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
         (set @entity.guestHandle ?result.guest)
-        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
@@ -102,8 +107,10 @@ orbital GuestSessionOrbital {
       GUEST_OPENED -> live
         (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
         (set @entity.guestHandle ?result.guest)
-        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -114,8 +121,8 @@ orbital GuestSessionOrbital {
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
       GUEST_STEPPED -> live
-        (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+        (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -123,8 +130,10 @@ orbital GuestSessionOrbital {
         (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
       GUEST_NAVIGATED -> live
-        (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) [@p]))))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, paints: @entity.guestPaints })
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_NAVIGATE_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -146,6 +155,8 @@ orbital GuestSessionOrbital {
     emits {
       GUEST_PAINTS -> external {
         guest : string!
+        route : string!
+        page : [string]!
         paints : [GuestPaint]!
       }
         @description "The guest's current paint of every trait for every slot it draws into, each saying whether its trait is embedded on the guest's page."
@@ -177,7 +188,7 @@ orbital GuestSessionOrbital {
         error : string!
       }
       GUEST_NAVIGATED {
-        result : GuestStepped!
+        result : GuestNavigated!
       }
       GUEST_NAVIGATE_FAILED {
         error : string!
@@ -266,6 +277,8 @@ orbital GuestSessionOrbital {
       GUEST_PAINTS -> idle
         (set @entity.guestHandle ?guest)
         (set @entity.guestError "")
+        (set @entity.guestPage ?page)
+        (set @entity.guestRoute ?route)
         (set @entity.guestPaints ?paints)
         (emit GUEST_SHOWN {})
       GUEST_ERROR -> idle
@@ -276,6 +289,8 @@ orbital GuestSessionOrbital {
       GUEST_CLEARED -> idle
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
+        (set @entity.guestPage [])
+        (set @entity.guestRoute "")
         (set @entity.guestError "")
         (emit GUEST_SHOWN {})
       GUEST_CONTROL -> idle when (= ?guest @entity.guestHandle)
@@ -288,12 +303,12 @@ orbital GuestSessionOrbital {
         (render-ui main { type: box, className: @config.className, children: [
           (if (!= @entity.guestError "")
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
-            (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false)))))))
+            (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
               (if (= @paint null)
                 (if (= @entity.guestHandle "")
                   { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.unpaintedTitle, message: (let ((roots (array/filter @entity.guestPaints (fn p (= @p.embedded false))))) (if (= (array/len @roots) 0) @config.unpaintedNothing (str/concat @config.unpaintedOthers (str/join (array/map @roots (fn p @p.slot)) ", ")))) }] })
-                { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, paints: @entity.guestPaints, children: (array/map @slotRoots (fn p @p.content)) })))
+                { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, paints: @entity.guestPaints, children: (array/map @slotRoots (fn p @p.content)) })))
         ] })
     }
 
@@ -320,6 +335,8 @@ orbital GuestSessionOrbital {
       GuestSession.GUEST_CLEARED -> GUEST_CLEARED
       GUEST_PAINTS {
         guest : string!
+        route : string!
+        page : [string]!
         paints : [GuestPaint]!
       }
       GUEST_ERROR {

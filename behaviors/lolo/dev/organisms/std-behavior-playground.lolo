@@ -149,10 +149,10 @@ orbital BehaviorPlayground {
       BEHAVIOR_LOADED -> idle
         (set @entity.machineBehavior ?behavior)
         (set @entity.machineTrait "")
-      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false)))) { trait: "" }) trait) ""))) (and (!= @entity.machineBehavior "") (!= @root "") (!= @root @entity.machineTrait)))
-        (set @entity.machineTrait (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false)))) { trait: "" }) trait) ""))
+      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))) (and (!= @entity.machineBehavior "") (!= @root "") (!= @root @entity.machineTrait)))
+        (set @entity.machineTrait (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))
         (emit SUBJECT { behavior: @entity.machineBehavior, trait: @entity.machineTrait })
-      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false)))) { trait: "" }) trait) ""))) (or (= @entity.machineBehavior "") (= @root "") (= @root @entity.machineTrait)))
+      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))) (or (= @entity.machineBehavior "") (= @root "") (= @root @entity.machineTrait)))
     }
 
     emits {
@@ -171,9 +171,11 @@ orbital BehaviorPlayground {
       }
       GUEST_PAINTS {
         guest : string!
+        route : string!
+        page : [string]!
         paints : [PlaygroundPaint]!
       }
-        @description "The guest's paints; the first non-embedded one of the configured slot names the page-root trait the dock draws, and a later paint set (the guest navigated) redraws."
+        @description "The guest's paints and the traits of the page it shows; the first non-embedded paint of the configured slot from a trait on that page names the page-root trait the dock draws, and a later paint set (the guest navigated) redraws."
     }
   }
   trait PlaygroundTopics -> PlaygroundView [client] {
