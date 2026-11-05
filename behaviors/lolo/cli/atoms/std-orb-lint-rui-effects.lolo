@@ -25,7 +25,7 @@ type EfPatternShapeRE = { props : Map string EfPropShapeRE? }
 type EfHit = { p : string!, s : string!, open : boolean!, m : string!, g : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintRuiEffectsCodes = { lintUiVocabUnread : LintCodeDecl , ruiInvalidSlot : LintCodeDecl , bindingTraitInvalidPosition : LintCodeDecl , effMissingFetchForEntity : LintCodeDecl }
+type LintRuiEffectsCodes = { lintIndexMissing : LintCodeDecl , lintUiVocabUnread : LintCodeDecl , ruiInvalidSlot : LintCodeDecl , bindingTraitInvalidPosition : LintCodeDecl , effMissingFetchForEntity : LintCodeDecl }
 
 orbital OrbLintRuiEffectsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -36,6 +36,9 @@ orbital OrbLintRuiEffectsOrbital {
     findings : [OrbFinding] = []
     nodeProps : Map string [string] = {}
     validSlots : [string] = []
+    roots : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
     vocabUnread : boolean = false
   }
 
@@ -44,6 +47,10 @@ orbital OrbLintRuiEffectsOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
       LINT_PATTERNS_HEARD -> ready
         (set @entity.nodeProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes (object/get (object/get @ps @pn {}) "types" []) "node")))))))
       UI_VOCAB_HEARD -> ready
@@ -54,10 +61,12 @@ orbital OrbLintRuiEffectsOrbital {
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
         (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the valid slots are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals : [EfOrbitalRE] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @entity.validSlots))
+        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
+(let ((orbitals : [EfOrbitalRE] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (roots @entity.roots) (validSlots @entity.validSlots))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (let ((trs (object/get @orb "traits" [])))
@@ -85,7 +94,7 @@ orbital OrbLintRuiEffectsOrbital {
                                                                     (slotF (if (and (validate/string @sres) (not (array/includes @validSlots @sres)) (not (str/startsWith @sres (quote "@config."))))
                                                                       [{ code: @config.codes.ruiInvalidSlot.code, path: @ep, message: (str/concat "Invalid slot: '" @sres "'"), suggestion: "", severity: "error" }]
                                                                       []))
-                                                                    (posF (if (and @aRui (!= @pat null))
+                                                                    (posF (if (and @aRui (!= @pat null) (array/some (object/get @roots (str/concat @oi "-" @tj) []) (fn r (str/startsWith @r (quote "@trait")))))
                                                                       (let ((hits (let ((h0 (tree/fold @pat (fn (n k)
                                                                           (if (validate/string @n)
                                                                             (if (str/startsWith @n (quote "@trait.")) [{ p: "", s: @n, open: true, m: "", g: "" }] [])
@@ -127,7 +136,9 @@ orbital OrbLintRuiEffectsOrbital {
                                                       message: (str/concat "render-ui references entity '" (object/get @r "re") "' but no [\"fetch\", \"" (object/get @r "re") "\"] effect exists in this or any predecessor transition"),
                                                       suggestion: (str/concat "Add [\"fetch\", \"" (object/get @r "re") "\"] before the render-ui effect so the pattern has data to display"), severity: "error" })))))))))))
                                 (array/flatten (array/map (array/zip @info @fetchF) (fn pr
-                                  (array/concat (object/get (array/nth @pr 0) "fs") (if @anyRend (array/nth @pr 1) [])))))))))))))))))))))
+                                  (array/concat (object/get (array/nth @pr 0) "fs") (if @anyRend (array/nth @pr 1) []))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "rui-effects", scope: @entity.scope, findings: @entity.findings })
@@ -146,6 +157,9 @@ orbital OrbLintRuiEffectsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRE!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a render-ui pattern is searched for @trait references only when a root of its trait starts with @trait."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShapeRE! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
@@ -157,7 +171,7 @@ orbital OrbLintRuiEffectsOrbital {
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
     config {
-      codes : LintRuiEffectsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" }, ruiInvalidSlot: { code: "ORB_RUI_INVALID_SLOT", category: "render_ui", description: "A render-ui effect targets an invalid slot" }, bindingTraitInvalidPosition: { code: "ORB_BINDING_TRAIT_INVALID_POSITION", category: "binding", description: "A @trait binding appears in a position other than a children array or a node-typed prop" }, effMissingFetchForEntity: { code: "ORB_EFF_MISSING_FETCH_FOR_ENTITY", category: "effect", description: "A render-ui references an entity but no fetch effect for it exists in this or any predecessor transition" } }
+      codes : LintRuiEffectsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" }, ruiInvalidSlot: { code: "ORB_RUI_INVALID_SLOT", category: "render_ui", description: "A render-ui effect targets an invalid slot" }, bindingTraitInvalidPosition: { code: "ORB_BINDING_TRAIT_INVALID_POSITION", category: "binding", description: "A @trait binding appears in a position other than a children array or a node-typed prop" }, effMissingFetchForEntity: { code: "ORB_EFF_MISSING_FETCH_FOR_ENTITY", category: "effect", description: "A render-ui references an entity but no fetch effect for it exists in this or any predecessor transition" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

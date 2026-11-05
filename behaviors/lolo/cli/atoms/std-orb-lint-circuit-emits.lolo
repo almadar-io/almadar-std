@@ -62,10 +62,10 @@ orbital OrbLintCircuitEmitsOrbital {
                       (let ((tl : [CeTr] (array/map @trs (fn x (let ((fr (object/get @x "from" ""))) { e: (object/get @x "event" ""), f: (if (validate/string @fr) (array/append @nos @fr) @fr), fs: (if (validate/string @fr) @fr (str/concat "[" (str/join @fr ", ") "]")), to: (object/get @x "to" "") }))))
                             (hs (object/fromEntries (array/map @tl (fn t2 [(str/replaceAll (str/replaceAll (object/get @t2 "e") "~" "~t") "." "~d"), true])))))
                         (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-                          (let ((x (default (array/nth @tl @tj) {})) (effs (object/get (default (array/nth @trs @tj) {}) "effects" [])))
+                          (let ((x (default (array/nth @tl @tj) {})) (effs (object/get (default (array/nth @trs @tj) {}) "effects" []))) (let ((emIx : [CeIndex] (array/map @effs (fn e (default (as (tree/index (if (validate/array @e) @e []) ["emit"]) CeIndex) {}))))) 
                             (let ((ep (str/concat @tp ".stateMachine.transitions[" @tj "].effects[")))
                              (let ((own : [OrbFinding] (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ek
-                                 (array/flatten (array/map (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ek))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c
+                                 (array/flatten (array/map (array/filter (object/get (default (array/nth @emIx @ek) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c
                                    (let ((n (object/get @c "node")))
                                      (if (and (validate/array @n) (>= (array/len @n) 2))
                                        (let ((ev (array/nth @n 1)))
@@ -76,7 +76,7 @@ orbital OrbLintCircuitEmitsOrbital {
                               (array/concat @own (array/concat
                                 (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                                    (let ((evs (array/flatten (array/map (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
+                                    (let ((evs (array/flatten (array/map (array/filter (object/get (default (array/nth @emIx @ej) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
  (array/map @evs (fn ev
                                         { code: @config.codes.circuitLifecycleEmitUndelivered.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
@@ -104,7 +104,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                 (if (not (array/some @tl (fn t2 (and (= (object/get @t2 "e") (object/get @x "e")) (array/includes (object/get @t2 "f") (object/get @x "to")))))) @nof
                                   (let ((mut (array/some (array/filter (object/get (default (as (tree/index (if (validate/array @effs) @effs []) ["set"]) CeIndex) {}) "set" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (>= (array/len @n) 2) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))))))))
                                     (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-(let ((cnt (array/reduce (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) 0 (fn (acc c) (+ @acc (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
+(let ((cnt (array/reduce (array/filter (object/get (default (array/nth @emIx @ej) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) 0 (fn (acc c) (+ @acc (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
                                                             (if (< (array/len @n) 3) 1
                                                               (let ((pl (array/nth @n 2)))
                                                                 (let ((pf (object/get (let ((q3 (tree/fold @pl (fn (n2 k2)
@@ -126,7 +126,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                                                   (if (or @pf (and @mut @ef)) 0 1))))
  0)))))))
                                         (array/map (array/range 0 @cnt) (fn z
-                                          { code: @config.codes.circuitSelfEmitLoop.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" }))))))))))))))))))))))))))))
+                                          { code: @config.codes.circuitSelfEmitLoop.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" })))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       PROPS_HEARD -> ready
         (set @entity.names @payload.names)

@@ -18,13 +18,17 @@ type UfTrait = { name : string, stateMachine : UfShape?, sourceBehavior : UfShap
 type UfOrbital = { name : string, expects : [UfExpect], entity : UfEntityRef, auxiliaryEntities : [UfEntity], traits : [UfTrait] }
 type UfProgram = { orbitals : [UfOrbital]! }
 type UfProgType = { properties : Map string UfProgType? }
+type UfStr = string
+type UfForm = [UfShape?]
+type UfCHit = { path : string!, at : number!, node : UfShape! }
+type UfIdx = Map string [UfCHit]
 type UfHit = { rel : string, f : string, b : string }
 type UfEnv = { kind : string, names : [string], idName : string, expName : string, skip : boolean }
 type UfPol = { s : string, p : UfShape? }
 type UfLine = { path : string, hit : UfHit, env : UfEnv, orb : string }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintUserFieldExistsCodes = { sExpectationFieldUndeclared : LintCodeDecl , sUnknownIdentityField : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
+type LintUserFieldExistsCodes = { lintIndexMissing : LintCodeDecl , sExpectationFieldUndeclared : LintCodeDecl , sUnknownIdentityField : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
 
 orbital OrbLintUserFieldExistsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -35,6 +39,9 @@ orbital OrbLintUserFieldExistsOrbital {
     findings : [OrbFinding] = []
     viewerNames : [string] = []
     factsUnread : boolean = false
+    roots : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
   }
 
   trait OrbLintUserFieldExists -> OrbLintUserFieldExistsRun [optimistic] {
@@ -42,6 +49,10 @@ orbital OrbLintUserFieldExistsOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
       FACTS_HEARD -> ready
         (set @entity.factsUnread false)
         (set @entity.viewerNames (array/sort (object/keys (object/get (object/get @payload.programTypes "Viewer" { properties: {} }) "properties" {}))))
@@ -49,7 +60,8 @@ orbital OrbLintUserFieldExistsOrbital {
         (set @entity.factsUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if @entity.factsUnread
+        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
+(if @entity.factsUnread
   [{ code: @config.codes.lintLanguageFactsUnread.code, path: "programTypes", message: "the installed @almadar/core language facts could not be read, so the members of Viewer are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares programTypes, bindingRules and vocabulary", severity: "error" }]
   (let ((nohits : [UfHit] []) (nof : [OrbFinding] []) (noenvs : [UfEnv] []) (noents : [UfEntity] []) (nostr : [string] []) (viewer : [string] @entity.viewerNames) (orbs : [UfOrbital] (object/get @payload.program "orbitals" [])))
     (let ((primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] [])))))) (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
@@ -78,28 +90,7 @@ orbital OrbLintUserFieldExistsOrbital {
                     (fn ti
                       (let ((td (array/nth @trlist @ti)))
                         (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (not (and (object/get @env "skip" false) (object/has @td "sourceBehavior"))))
-                          (let ((tp (str/concat "orbitals[" @oi " (" @orbName ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (hs (default (tree/fold @td (fn (n k) (if (validate/string @n)
-  (let ((rest (str/slice @n 6)))
-    (if (and (str/startsWith @n (quote "@user.")) (> (str/len @n) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")))
-      [{ rel: "", f: @rest, b: @n }]
-      @nohits))
-  (if (validate/array @n)
-    (array/flatten
-      (array/map (array/range 0 (array/len @k))
-        (fn i
-          (array/map
-            (let ((r : [UfHit]? (array/nth @k @i)))
-              (if (validate/array @r) @r @nohits))
-            (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (array/filter (object/keys @k) (fn key (!= @key "sourceEntityDefinition")))
-          (fn key
-            (array/map
-              (let ((r : [UfHit]? (object/get @k @key)))
-                (if (validate/array @r) @r @nohits))
-              (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) UfShape) @nohits)))
+                          (let ((tp (str/concat "orbitals[" @oi " (" @orbName ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (hs : [UfHit] (if (not (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nostr) (quote "@user"))) @nohits (array/map (array/filter (array/flatten (object/values (default (as (tree/index @td [] { prefixes: [(quote "@user.")] }) UfIdx) {}))) (fn c (let ((nd (default (as (object/get @c "node" null) UfStr) ""))) (let ((rest (str/slice @nd 6))) (and (> (str/len @nd) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")) (not (let ((q (str/concat "." (object/get @c "path" "") "#"))) (or (str/includes @q ".sourceEntityDefinition#") (str/includes @q ".sourceEntityDefinition.") (str/includes @q ".sourceEntityDefinition["))))))))) (fn c (let ((nd (default (as (object/get @c "node" null) UfStr) ""))) { rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), f: (str/slice @nd 6), b: @nd }))))))
                             (array/map (array/filter @hs (fn h (not (array/includes (object/get @env "names" @nostr) (object/get @h "f" "")))))
                               (fn h
                                 (let ((declared (str/join (object/get @env "names" @nostr) ", ")) (kind (object/get @env "kind" "")))
@@ -130,37 +121,13 @@ orbital OrbLintUserFieldExistsOrbital {
                         (let ((pol (object/get @sp "p" null)))
                           (if (= @pol null)
                             @nof
-                            (let ((hs (default (tree/fold @pol (fn (n k) (if (validate/string @n)
-  (let ((rest (str/slice @n 6)))
-    (if (and (str/startsWith @n (quote "@user.")) (> (str/len @n) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")))
-      [{ rel: "", f: @rest, b: @n }]
-      @nohits))
-  (if (validate/array @n)
-    (array/concat
-      (let ((fld (let ((x (if (>= (array/len @n) 3) (array/nth @n 2) ""))) (if (validate/string @x) @x ""))))
-        (if (and (>= (array/len @n) 3) (= (let ((o0 (array/nth @n 0))) (if (validate/string @o0) @o0 "")) "object/get") (= (array/nth @n 1) (quote "@user")) (validate/string (array/nth @n 2)))
-          [{ rel: "", f: @fld, b: (str/concat "(object/get " (quote "@user") " \"" @fld "\")") }]
-          @nohits))
-      (array/flatten
-        (array/map (array/range 0 (array/len @k))
-          (fn i
-            (array/map
-              (let ((r : [UfHit]? (array/nth @k @i)))
-                (if (validate/array @r) @r @nohits))
-              (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (array/filter (object/keys @k) (fn key (!= @key "sourceEntityDefinition")))
-          (fn key
-            (array/map
-              (let ((r : [UfHit]? (object/get @k @key)))
-                (if (validate/array @r) @r @nohits))
-              (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) UfShape) @nohits)))
+                            (let ((hs : [UfHit] (array/flatten (array/map (array/sort (array/flatten (object/values (default (as (tree/index @pol ["object/get"] { prefixes: [(quote "@user.")] }) UfIdx) {}))) "at") (fn c (let ((nd (object/get @c "node" null))) (if (validate/string @nd) (if (let ((nd (default (as (object/get @c "node" null) UfStr) ""))) (let ((rest (str/slice @nd 6))) (and (> (str/len @nd) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")) (not (let ((q (str/concat "." (object/get @c "path" "") "#"))) (or (str/includes @q ".sourceEntityDefinition#") (str/includes @q ".sourceEntityDefinition.") (str/includes @q ".sourceEntityDefinition["))))))) [{ rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), f: (str/slice (default (as @nd UfStr) "") 6), b: (default (as @nd UfStr) "") }] @nohits) (let ((fa : UfForm (default (as @nd UfForm) []))) (let ((fld (default (as (array/nth @fa 2) UfStr) ""))) (if (and (>= (array/len @fa) 3) (= (array/nth @fa 1) (quote "@user")) (validate/string (array/nth @fa 2)) (not (let ((q (str/concat "." (object/get @c "path" "") "#"))) (or (str/includes @q ".sourceEntityDefinition#") (str/includes @q ".sourceEntityDefinition.") (str/includes @q ".sourceEntityDefinition["))))) [{ rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), f: @fld, b: (str/concat "(object/get " (quote "@user") " \"" @fld "\")") }] @nohits))))))))))
                               (array/map (array/filter @hs (fn h (not (array/includes (object/get @env "names" @nostr) (object/get @h "f" "")))))
                                 (fn h
                                   (let ((declared (str/join (object/get @env "names" @nostr) ", ")) (kind (object/get @env "kind" "")))
-  { code: (if (= @kind "expectation") @config.codes.sExpectationFieldUndeclared.code @config.codes.sUnknownIdentityField.code), path: (str/concat (object/get @ent "name" "") ".@" (object/get @sp "s" "") (object/get @h "rel" "")), message: (if (= @kind "expectation") (str/concat "`" @orbName "` reads `" (object/get @h "b" "") "`, but its " (if (= (object/get @env "expName" "") "") "`expects entity [identity]`" (str/concat "`expects entity " (object/get @env "expName" "") " [identity]`")) " declaration only declares: " @declared ". The declaration is this orbital's own source of truth for the `" (quote "@user") "` fields it reads.") (if (= @kind "default") (str/concat "`" (object/get @h "b" "") "` is not a field of the [identity] entity `" (object/get @env "idName" "") "`. It resolves to null, so this access directive silently denies everyone.") (str/concat "`" (object/get @h "b" "") "` is not a field of the [identity] entity `" (object/get @env "idName" "") "`. It resolves to null, so this access directive silently denies everyone."))), suggestion: (if (= @kind "expectation") (str/concat "Add `" (object/get @h "f" "") "` to the expects shape, or read one of: " @declared) (if (= @kind "default") (str/concat "Declare `" (object/get @h "f" "") "` on entity " (object/get @env "idName" "") ", or read one of: " @declared) (str/concat "Declare `" (object/get @h "f" "") "` on entity " (object/get @env "idName" "") ", or read one of: " @declared))), severity: "error" }))))))))))))))))))))))))))
+  { code: (if (= @kind "expectation") @config.codes.sExpectationFieldUndeclared.code @config.codes.sUnknownIdentityField.code), path: (str/concat (object/get @ent "name" "") ".@" (object/get @sp "s" "") (object/get @h "rel" "")), message: (if (= @kind "expectation") (str/concat "`" @orbName "` reads `" (object/get @h "b" "") "`, but its " (if (= (object/get @env "expName" "") "") "`expects entity [identity]`" (str/concat "`expects entity " (object/get @env "expName" "") " [identity]`")) " declaration only declares: " @declared ". The declaration is this orbital's own source of truth for the `" (quote "@user") "` fields it reads.") (if (= @kind "default") (str/concat "`" (object/get @h "b" "") "` is not a field of the [identity] entity `" (object/get @env "idName" "") "`. It resolves to null, so this access directive silently denies everyone.") (str/concat "`" (object/get @h "b" "") "` is not a field of the [identity] entity `" (object/get @env "idName" "") "`. It resolves to null, so this access directive silently denies everyone."))), suggestion: (if (= @kind "expectation") (str/concat "Add `" (object/get @h "f" "") "` to the expects shape, or read one of: " @declared) (if (= @kind "default") (str/concat "Declare `" (object/get @h "f" "") "` on entity " (object/get @env "idName" "") ", or read one of: " @declared) (str/concat "Declare `" (object/get @h "f" "") "` on entity " (object/get @env "idName" "") ", or read one of: " @declared))), severity: "error" })))))))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "user-field-exists", scope: @entity.scope, findings: @entity.findings })
@@ -180,6 +147,9 @@ orbital OrbLintUserFieldExistsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UfProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @user reads only when its roots hold @user."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
       FACTS_HEARD { programTypes : Map string UfProgType!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]! }
         @description "std-orb-lint-input's LINT_LANGUAGE_FACTS: the program types; the Viewer members are the fields every @user carries."
       FACTS_UNREAD { error : string! }
@@ -188,7 +158,7 @@ orbital OrbLintUserFieldExistsOrbital {
       OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
     }
     config {
-      codes : LintUserFieldExistsCodes = { sExpectationFieldUndeclared: { code: "ORB_S_EXPECTATION_FIELD_UNDECLARED", category: "schema", description: "An effect persists a field that the orbital's expects entity shape does not declare" }, sUnknownIdentityField: { code: "ORB_S_UNKNOWN_IDENTITY_FIELD", category: "schema", description: "A read of a field of the signed-in user names a field the declared identity entity does not have" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
+      codes : LintUserFieldExistsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, sExpectationFieldUndeclared: { code: "ORB_S_EXPECTATION_FIELD_UNDECLARED", category: "schema", description: "An effect persists a field that the orbital's expects entity shape does not declare" }, sUnknownIdentityField: { code: "ORB_S_UNKNOWN_IDENTITY_FIELD", category: "schema", description: "A read of a field of the signed-in user names a field the declared identity entity does not have" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

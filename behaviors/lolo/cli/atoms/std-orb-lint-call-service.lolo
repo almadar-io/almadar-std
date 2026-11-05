@@ -42,7 +42,7 @@ type EmitResult = { id : string!, findings : [OrbFinding]! }
 
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintCallServiceCodes = { lintServiceRegistryUnread : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , effCallServiceMissingService : LintCodeDecl , effCallServiceUnknownService : LintCodeDecl , effCallServiceMissingAction : LintCodeDecl , effCallServiceUnknownParam : LintCodeDecl , effCallServiceMissingParam : LintCodeDecl , effCallServiceParamType : LintCodeDecl , callServiceResultHasKey : LintCodeDecl }
+type LintCallServiceCodes = { lintIndexMissing : LintCodeDecl , lintServiceRegistryUnread : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , effCallServiceMissingService : LintCodeDecl , effCallServiceUnknownService : LintCodeDecl , effCallServiceMissingAction : LintCodeDecl , effCallServiceUnknownParam : LintCodeDecl , effCallServiceMissingParam : LintCodeDecl , effCallServiceParamType : LintCodeDecl , callServiceResultHasKey : LintCodeDecl }
 
 orbital OrbLintCallServiceOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -55,6 +55,9 @@ orbital OrbLintCallServiceOrbital {
     scope : string = ""
     findings : [OrbFinding] = []
     tops : CsTops = []
+    heads : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
     known : [string] = []
     haveTops : boolean = false
     registry : Map string SrService = {}
@@ -71,9 +74,19 @@ orbital OrbLintCallServiceOrbital {
 
     state ready {
       INIT -> ready
-      LINT_INPUT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.heads @payload.heads)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
+      LINT_INPUT -> ready when (not (and @entity.indexed (= @entity.indexScope @payload.scope)))
         (set @entity.scope @payload.scope)
-        (set @entity.tops (let ((orbitals (object/get @payload.program "orbitals" [])) (nt : [CsTop] []))
+        (set @entity.findings [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }])
+        (set @entity.indexed false)
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (and @entity.indexed (= @entity.indexScope @payload.scope))
+        (set @entity.indexed false)
+        (set @entity.scope @payload.scope)
+        (set @entity.tops (let ((orbitals (object/get @payload.program "orbitals" [])) (heads @entity.heads) (nt : [CsTop] []))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (default (array/nth @orbitals @oi) {})))
               (let ((trs (object/get @o "traits" [])))
@@ -86,10 +99,10 @@ orbital OrbLintCallServiceOrbital {
                           (array/concat
                             (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                               (let ((effs (default (object/get (default (array/nth @trans @i) {}) "effects" null) [])))
-                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc }))))))
+                                (if (array/includes (object/get @heads (str/concat @oi "-" @ti "-" @i) []) "call-service") (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc })) @nt)))))
                             (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
                               (let ((effs (default (object/get (default (array/nth @ticks @i) {}) "effects" null) [])))
-                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".ticks[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc })))))))))))))))))))))
+                                (if (array/includes (object/get @heads (str/concat @oi "-" @ti) []) "call-service") (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".ticks[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc })) @nt))))))))))))))))))))
         (set @entity.known (let ((nsd : [CsServiceDef] [])) (array/map (default (object/get @payload.program "services" null) @nsd) (fn s (object/get @s "name")))))
         (set @entity.haveTops true)
         (emit CS_ASK { })
@@ -200,6 +213,9 @@ orbital OrbLintCallServiceOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CsProgramCS!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads each transition's effects and each trait use; an effect is walked for call-service sites only when its unit's heads hold call-service."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
       SERVICE_REGISTRY_HEARD { requestId : string!  unread : boolean!  services : Map string SrService! }
         @description "The services registry reader's answer."
       ServiceRegistry.SERVICE_REGISTRY_ANSWER -> SERVICE_REGISTRY_HEARD
@@ -214,7 +230,7 @@ orbital OrbLintCallServiceOrbital {
       OrbEmitConfig.EMIT_CONFIG_CHECKED -> EMIT_HEARD
     }
     config {
-      codes : LintCallServiceCodes = { lintServiceRegistryUnread: { code: "ORB_LINT_SERVICE_REGISTRY_UNREAD", category: "lint", description: "The installed services registry could not be read, so call-service services cannot be checked" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, effCallServiceMissingService: { code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", category: "effect", description: "A call_service effect is missing its service name or action" }, effCallServiceUnknownService: { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", category: "effect", description: "A call-service effect names a service that is not a registered integrator or declared service" }, effCallServiceMissingAction: { code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", category: "effect", description: "A call-service effect has no string action" }, effCallServiceUnknownParam: { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM", category: "effect", description: "A call-service passes a param that the service action does not declare" }, effCallServiceMissingParam: { code: "ORB_EFF_CALL_SERVICE_MISSING_PARAM", category: "effect", description: "A call-service effect omits a parameter the service action requires" }, effCallServiceParamType: { code: "ORB_EFF_CALL_SERVICE_PARAM_TYPE", category: "effect", description: "A call-service parameter has a value whose type does not match the type the service action declares" }, callServiceResultHasKey: { code: "ORB_CALL_SERVICE_RESULT_HAS_KEY", category: "effect", description: "A keyed call-service returns a record that already has a key field, so the call key would collide with it" } }
+      codes : LintCallServiceCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, lintServiceRegistryUnread: { code: "ORB_LINT_SERVICE_REGISTRY_UNREAD", category: "lint", description: "The installed services registry could not be read, so call-service services cannot be checked" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, effCallServiceMissingService: { code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", category: "effect", description: "A call_service effect is missing its service name or action" }, effCallServiceUnknownService: { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", category: "effect", description: "A call-service effect names a service that is not a registered integrator or declared service" }, effCallServiceMissingAction: { code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", category: "effect", description: "A call-service effect has no string action" }, effCallServiceUnknownParam: { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM", category: "effect", description: "A call-service passes a param that the service action does not declare" }, effCallServiceMissingParam: { code: "ORB_EFF_CALL_SERVICE_MISSING_PARAM", category: "effect", description: "A call-service effect omits a parameter the service action requires" }, effCallServiceParamType: { code: "ORB_EFF_CALL_SERVICE_PARAM_TYPE", category: "effect", description: "A call-service parameter has a value whose type does not match the type the service action declares" }, callServiceResultHasKey: { code: "ORB_CALL_SERVICE_RESULT_HAS_KEY", category: "effect", description: "A keyed call-service returns a record that already has a key field, so the call key would collide with it" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

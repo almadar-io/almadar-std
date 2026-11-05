@@ -1,2331 +1,3692 @@
 {
-  "atom": "cli/atoms/std-orb-lint-mem-handles.lolo",
-  "trait": "OrbLintMemHandles",
-  "cases": [
+ "atom": "cli/atoms/std-orb-lint-mem-handles.lolo",
+ "trait": "OrbLintMemHandles",
+ "cases": [
+  {
+   "id": "alloc-borrow-release-free-drop-is-clean-and-failure-routes-drop",
+   "steps": [
     {
-      "id": "alloc-borrow-release-free-drop-is-clean-and-failure-routes-drop",
-      "steps": [
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": []
+      },
+      "calls": {
+       "mem/arena-new": [
         {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "releasing",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ],
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
           }
+         ],
+         "at": 35
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 56
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 82
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[7].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 95
         },
         {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
           }
+         ],
+         "at": 127
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[13].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 155
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 171
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[16].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 183
         }
-      ]
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[9].effects[1]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 115
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 143
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
     },
     {
-      "id": "a-length-read-after-the-block-was-freed-is-a-use-after-free",
-      "steps": [
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
         {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
                 {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "releasing",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ],
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.len",
-                                [
-                                  "mem/length",
-                                  "@entity.block"
-                                ]
-                              ],
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
                 }
+               ]
               ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": [
-                    {
-                      "code": "ORB_MEM_USE_AFTER_FREE",
-                      "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[15]",
-                      "message": "`(mem/length @entity.block ...)` uses a handle that `mem/free`, `mem/arena-drop` or `mem/release` already ended on some path to this transition",
-                      "suggestion": "Stop using the handle after it is freed, dropped or released, or rebind the field from a fresh allocation first",
-                      "severity": "error"
-                    }
-                  ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
                 }
-              }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "releasing",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ],
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
             ]
+           }
           }
+         ]
         }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
       ]
+     }
     },
     {
-      "id": "a-second-free-of-the-same-block-is-a-double-free",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "releasing",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ],
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ],
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": [
-                    {
-                      "code": "ORB_MEM_DOUBLE_FREE",
-                      "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[15]",
-                      "message": "`(mem/free @entity.block)` ends a handle that `mem/free`, `mem/arena-drop` or `mem/release` already ended on some path to this transition",
-                      "suggestion": "End each handle once on every path, or set the field to a new handle between the two",
-                      "severity": "error"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
         }
+       }
       ]
-    },
-    {
-      "id": "a-shared-borrow-while-an-exclusive-one-is-live-is-an-alias",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "using"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "using",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "using",
-                            "to": "using",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "using",
-                            "to": "using",
-                            "event": "SHARED_GO",
-                            "effects": [
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "shared",
-                                {
-                                  "emit": {
-                                    "success": "SHARED_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "using",
-                            "to": "using",
-                            "event": "SHARED_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.spare",
-                                "@payload.borrow"
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "using",
-                            "to": "releasing",
-                            "event": "USE_DONE",
-                            "effects": [
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "using",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": [
-                    {
-                      "code": "ORB_MEM_ALIAS",
-                      "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[12]",
-                      "message": "`(mem/borrow @entity.block \"shared\")` borrows a block that another borrow of it (an exclusive one, or any when this one is exclusive) still holds on some path to this transition",
-                      "suggestion": "`mem/release` the earlier borrow before borrowing again",
-                      "severity": "error"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "a-failure-route-to-a-resting-state-without-a-drop-is-a-leak",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "releasing",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ],
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                "@entity.block",
-                                {
-                                  "emit": {
-                                    "success": "FREED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": [
-                    {
-                      "code": "ORB_MEM_LEAK",
-                      "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[3]",
-                      "message": "The arena stored in '@entity.arena' can reach the resting state(s) 'idle' without `mem/arena-drop`",
-                      "suggestion": "Drop the arena on every path to a resting state, including the failure routes",
-                      "severity": "error"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "an-arena-received-in-a-payload-is-not-this-traits-to-drop",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "adding"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "adding",
-                            "event": "GUEST_ADD",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@payload.arena",
-                                8,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "adding",
-                            "to": "adding",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "adding",
-                            "to": "idle",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/atomic-add",
-                                "@payload.block",
-                                0,
-                                1,
-                                {
-                                  "emit": {
-                                    "success": "ADDED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "adding",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-trait-without-mem-calls-is-clean",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "x",
-              "orbitals": [
-                {
-                  "name": "A",
-                  "traits": [
-                    {
-                      "name": "T",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "s",
-                            "isInitial": true
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "s",
-                            "to": "s",
-                            "event": "INIT"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-no-orbitals",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "x",
-              "orbitals": []
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-trait-without-state-machine",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "x",
-              "orbitals": [
-                {
-                  "name": "A",
-                  "traits": [
-                    {
-                      "name": "T"
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-a-computed-handle-is-skipped-without-a-finding",
-      "steps": [
-        {
-          "event": "LINT_INPUT",
-          "from": "ready",
-          "payload": {
-            "file": "a.lolo",
-            "raw": "",
-            "latin": true,
-            "program": {
-              "name": "mem",
-              "orbitals": [
-                {
-                  "name": "MemOrbital",
-                  "traits": [
-                    {
-                      "name": "MemUser",
-                      "stateMachine": {
-                        "states": [
-                          {
-                            "name": "idle",
-                            "isInitial": true
-                          },
-                          {
-                            "name": "allocating"
-                          },
-                          {
-                            "name": "borrowing"
-                          },
-                          {
-                            "name": "reading"
-                          },
-                          {
-                            "name": "releasing"
-                          },
-                          {
-                            "name": "freeing"
-                          },
-                          {
-                            "name": "cleanup"
-                          }
-                        ],
-                        "transitions": [
-                          {
-                            "from": "idle",
-                            "to": "idle",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "idle",
-                            "to": "allocating",
-                            "event": "GO",
-                            "effects": [
-                              [
-                                "mem/arena-new",
-                                "bump",
-                                4096,
-                                {
-                                  "emit": {
-                                    "success": "ARENA_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "allocating",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "borrowing",
-                            "event": "ARENA_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.arena",
-                                "@payload.arena"
-                              ],
-                              [
-                                "mem/alloc",
-                                "@entity.arena",
-                                64,
-                                8,
-                                {
-                                  "emit": {
-                                    "success": "BLOCK_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "allocating",
-                            "to": "idle",
-                            "event": "FAILED"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "borrowing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "reading",
-                            "event": "BLOCK_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.block",
-                                "@payload.block"
-                              ],
-                              [
-                                "mem/borrow",
-                                "@entity.block",
-                                "exclusive",
-                                {
-                                  "emit": {
-                                    "success": "BORROW_OK",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "borrowing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "reading",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "reading",
-                            "to": "releasing",
-                            "event": "BORROW_OK",
-                            "effects": [
-                              [
-                                "set",
-                                "@entity.borrow",
-                                "@payload.borrow"
-                              ],
-                              [
-                                "mem/release",
-                                "@entity.borrow",
-                                {
-                                  "emit": {
-                                    "success": "RELEASED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "reading",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "releasing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "freeing",
-                            "event": "RELEASED",
-                            "effects": [
-                              [
-                                "mem/free",
-                                [
-                                  "array/first",
-                                  [
-                                    "array/range",
-                                    0,
-                                    1
-                                  ]
-                                ]
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "releasing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "freeing",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FREED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "freeing",
-                            "to": "cleanup",
-                            "event": "FAILED",
-                            "effects": [
-                              [
-                                "mem/arena-drop",
-                                "@entity.arena",
-                                {
-                                  "emit": {
-                                    "success": "DROPPED",
-                                    "failure": "FAILED"
-                                  }
-                                }
-                              ]
-                            ]
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "cleanup",
-                            "event": "INIT"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "DROPPED"
-                          },
-                          {
-                            "from": "cleanup",
-                            "to": "idle",
-                            "event": "FAILED"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            "scope": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "LINT_FINISH",
-                "payload": {}
-              }
-            ]
-          }
-        },
-        {
-          "event": "LINT_FINISH",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_FOUND",
-                "payload": {
-                  "rule": "mem-handles",
-                  "scope": "",
-                  "findings": []
-                }
-              }
-            ]
-          }
-        }
-      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "a-length-read-after-the-block-was-freed-is-a-use-after-free",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": []
+      },
+      "calls": {
+       "mem/arena-new": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 35
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 56
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 82
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[7].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 95
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 127
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[13].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 155
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[1]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 177
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[16].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 189
+        }
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[9].effects[1]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 115
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 143
+        }
+       ],
+       "mem/length": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0][2]",
+         "node": [
+          "mem/length",
+          "@entity.block"
+         ],
+         "at": 174
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
+                {
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "releasing",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ],
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "set",
+                "@entity.len",
+                [
+                 "mem/length",
+                 "@entity.block"
+                ]
+               ],
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_MEM_USE_AFTER_FREE",
+           "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[15]",
+           "message": "`(mem/length @entity.block ...)` uses a handle that `mem/free`, `mem/arena-drop` or `mem/release` already ended on some path to this transition",
+           "suggestion": "Stop using the handle after it is freed, dropped or released, or rebind the field from a fresh allocation first",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-free-of-the-same-block-is-a-double-free",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": []
+      },
+      "calls": {
+       "mem/arena-new": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 35
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 56
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 82
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[7].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 95
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 127
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[13].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 155
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[1]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 178
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[16].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 190
+        }
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[9].effects[1]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 115
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 143
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 171
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
+                {
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "releasing",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ],
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ],
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_MEM_DOUBLE_FREE",
+           "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[15]",
+           "message": "`(mem/free @entity.block)` ends a handle that `mem/free`, `mem/arena-drop` or `mem/release` already ended on some path to this transition",
+           "suggestion": "End each handle once on every path, or set the field to a new handle between the two",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-shared-borrow-while-an-exclusive-one-is-live-is-an-alias",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": [],
+       "0-0-20": [],
+       "0-0-21": [],
+       "0-0-22": [],
+       "0-0-23": [],
+       "0-0-24": []
+      },
+      "calls": {
+       "mem/arena-new": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 37
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 58
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 84
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "shared",
+          {
+           "emit": {
+            "success": "SHARED_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 138
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[7].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 97
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 122
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 172
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[18].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 200
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[20].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 216
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[21].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 228
+        }
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[14].effects[0]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 160
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[17].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 188
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "using"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
+                {
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "using",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "using",
+              "to": "using",
+              "event": "INIT"
+             },
+             {
+              "from": "using",
+              "to": "using",
+              "event": "SHARED_GO",
+              "effects": [
+               [
+                "mem/borrow",
+                "@entity.block",
+                "shared",
+                {
+                 "emit": {
+                  "success": "SHARED_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "using",
+              "to": "using",
+              "event": "SHARED_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.spare",
+                "@payload.borrow"
+               ]
+              ]
+             },
+             {
+              "from": "using",
+              "to": "releasing",
+              "event": "USE_DONE",
+              "effects": [
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "using",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_MEM_ALIAS",
+           "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[12]",
+           "message": "`(mem/borrow @entity.block \"shared\")` borrows a block that another borrow of it (an exclusive one, or any when this one is exclusive) still holds on some path to this transition",
+           "suggestion": "`mem/release` the earlier borrow before borrowing again",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failure-route-to-a-resting-state-without-a-drop-is-a-leak",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": []
+      },
+      "calls": {
+       "mem/arena-new": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 35
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 56
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 82
+        }
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[9].effects[1]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 107
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 119
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[13].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 147
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 163
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[16].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 175
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/free",
+          "@entity.block",
+          {
+           "emit": {
+            "success": "FREED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 135
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
+                {
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "releasing",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ],
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                "@entity.block",
+                {
+                 "emit": {
+                  "success": "FREED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_MEM_LEAK",
+           "path": "orbitals[0 (MemOrbital)].traits[0 (MemUser)].stateMachine.transitions[3]",
+           "message": "The arena stored in '@entity.arena' can reach the resting state(s) 'idle' without `mem/arena-drop`",
+           "suggestion": "Drop the arena on every path to a resting state, including the failure routes",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-arena-received-in-a-payload-is-not-this-traits-to-drop",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": []
+      },
+      "calls": {
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@payload.arena",
+          8,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 29
+        }
+       ],
+       "mem/atomic-add": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/atomic-add",
+          "@payload.block",
+          0,
+          1,
+          {
+           "emit": {
+            "success": "ADDED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 51
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "adding"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "adding",
+              "event": "GUEST_ADD",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@payload.arena",
+                8,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "adding",
+              "to": "adding",
+              "event": "INIT"
+             },
+             {
+              "from": "adding",
+              "to": "idle",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/atomic-add",
+                "@payload.block",
+                0,
+                1,
+                {
+                 "emit": {
+                  "success": "ADDED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "adding",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-without-mem-calls-is-clean",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": []
+      },
+      "calls": {},
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "INIT"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-orbitals",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {},
+      "calls": {},
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "x",
+       "orbitals": []
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-state-machine",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {},
+      "calls": {},
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "x",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T"
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-computed-handle-is-skipped-without-a-finding",
+   "steps": [
+    {
+     "event": "SITES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "guardHeads": {},
+      "guardRoots": {
+       "0-0-0": [],
+       "0-0-1": [],
+       "0-0-2": [],
+       "0-0-3": [],
+       "0-0-4": [],
+       "0-0-5": [],
+       "0-0-6": [],
+       "0-0-7": [],
+       "0-0-8": [],
+       "0-0-9": [],
+       "0-0-10": [],
+       "0-0-11": [],
+       "0-0-12": [],
+       "0-0-13": [],
+       "0-0-14": [],
+       "0-0-15": [],
+       "0-0-16": [],
+       "0-0-17": [],
+       "0-0-18": [],
+       "0-0-19": []
+      },
+      "calls": {
+       "mem/arena-new": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+         "node": [
+          "mem/arena-new",
+          "bump",
+          4096,
+          {
+           "emit": {
+            "success": "ARENA_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 35
+        }
+       ],
+       "mem/alloc": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[3].effects[1]",
+         "node": [
+          "mem/alloc",
+          "@entity.arena",
+          64,
+          8,
+          {
+           "emit": {
+            "success": "BLOCK_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 56
+        }
+       ],
+       "mem/borrow": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[6].effects[1]",
+         "node": [
+          "mem/borrow",
+          "@entity.block",
+          "exclusive",
+          {
+           "emit": {
+            "success": "BORROW_OK",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 82
+        }
+       ],
+       "mem/arena-drop": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[7].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 95
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[10].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 127
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[13].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 156
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[15].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 172
+        },
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[16].effects[0]",
+         "node": [
+          "mem/arena-drop",
+          "@entity.arena",
+          {
+           "emit": {
+            "success": "DROPPED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 184
+        }
+       ],
+       "mem/release": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[9].effects[1]",
+         "node": [
+          "mem/release",
+          "@entity.borrow",
+          {
+           "emit": {
+            "success": "RELEASED",
+            "failure": "FAILED"
+           }
+          }
+         ],
+         "at": 115
+        }
+       ],
+       "mem/free": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[12].effects[0]",
+         "node": [
+          "mem/free",
+          [
+           "array/first",
+           [
+            "array/range",
+            0,
+            1
+           ]
+          ]
+         ],
+         "at": 143
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mem",
+       "orbitals": [
+        {
+         "name": "MemOrbital",
+         "traits": [
+          {
+           "name": "MemUser",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "allocating"
+             },
+             {
+              "name": "borrowing"
+             },
+             {
+              "name": "reading"
+             },
+             {
+              "name": "releasing"
+             },
+             {
+              "name": "freeing"
+             },
+             {
+              "name": "cleanup"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "allocating",
+              "event": "GO",
+              "effects": [
+               [
+                "mem/arena-new",
+                "bump",
+                4096,
+                {
+                 "emit": {
+                  "success": "ARENA_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "allocating",
+              "event": "INIT"
+             },
+             {
+              "from": "allocating",
+              "to": "borrowing",
+              "event": "ARENA_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.arena",
+                "@payload.arena"
+               ],
+               [
+                "mem/alloc",
+                "@entity.arena",
+                64,
+                8,
+                {
+                 "emit": {
+                  "success": "BLOCK_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "allocating",
+              "to": "idle",
+              "event": "FAILED"
+             },
+             {
+              "from": "borrowing",
+              "to": "borrowing",
+              "event": "INIT"
+             },
+             {
+              "from": "borrowing",
+              "to": "reading",
+              "event": "BLOCK_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.block",
+                "@payload.block"
+               ],
+               [
+                "mem/borrow",
+                "@entity.block",
+                "exclusive",
+                {
+                 "emit": {
+                  "success": "BORROW_OK",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "borrowing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "reading",
+              "event": "INIT"
+             },
+             {
+              "from": "reading",
+              "to": "releasing",
+              "event": "BORROW_OK",
+              "effects": [
+               [
+                "set",
+                "@entity.borrow",
+                "@payload.borrow"
+               ],
+               [
+                "mem/release",
+                "@entity.borrow",
+                {
+                 "emit": {
+                  "success": "RELEASED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "reading",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "releasing",
+              "event": "INIT"
+             },
+             {
+              "from": "releasing",
+              "to": "freeing",
+              "event": "RELEASED",
+              "effects": [
+               [
+                "mem/free",
+                [
+                 "array/first",
+                 [
+                  "array/range",
+                  0,
+                  1
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "releasing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "freeing",
+              "event": "INIT"
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FREED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "freeing",
+              "to": "cleanup",
+              "event": "FAILED",
+              "effects": [
+               [
+                "mem/arena-drop",
+                "@entity.arena",
+                {
+                 "emit": {
+                  "success": "DROPPED",
+                  "failure": "FAILED"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "cleanup",
+              "to": "cleanup",
+              "event": "INIT"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "DROPPED"
+             },
+             {
+              "from": "cleanup",
+              "to": "idle",
+              "event": "FAILED"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the lint input without LINT_SITES is one error finding",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": []
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "mem-handles",
+         "findings": [
+          {
+           "code": "ORB_LINT_INDEX_MISSING",
+           "path": "",
+           "message": "the lint input arrived without LINT_SITES, so this rule cannot check the program",
+           "suggestion": "std-orb-lint-input sends LINT_SITES before LINT_INPUT; this rule did not hear it",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

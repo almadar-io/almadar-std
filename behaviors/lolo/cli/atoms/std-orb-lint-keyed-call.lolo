@@ -17,6 +17,10 @@ type KcTrait = { name : string, stateMachine : KcMachine?, ticks : [KcTick]? }
 type KcOrbital = { name : string, traits : [KcVal] }
 type KcProgram = { orbitals : [KcOrbital]! }
 type KcHeads = [string]
+type KcStr = string
+type KcForm = [KcVal?]
+type KcCH = { path : string!, at : number!, node : KcVal! }
+type KcIdx = Map string [KcCH]
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintKeyedCallCodes = { effectOptionDropped : LintCodeDecl , callServiceKeyDuplicate : LintCodeDecl }
@@ -58,13 +62,7 @@ orbital OrbLintKeyedCallOrbital {
                               (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".ticks[" @i "].effects[" @j "]"), effect: (array/nth @effs @j) }))))))))))))))
               (array/concat
                 (array/flatten (array/map @places (fn pl
-                  (array/map (default (as (default (tree/fold (object/get @pl "effect") (fn (n k)
-                      (array/concat
-                        (if (and (validate/array @n) (> (array/len @n) 0) (validate/string (array/first @n)) (array/includes ["persist", "fetch"] (array/first @n))
-                              (array/some (array/slice @n 1 (array/len @n)) (fn a (and (validate/object @a) (object/has @a "emit") (object/has @a "key")))))
-                          [(array/first @n)]
-                          [])
-                        (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (default (object/get @k @key []) [])))) [])))) KcVal) []) KcHeads) []) (fn head
+                  (array/map (let ((ix : KcIdx (default (as (tree/index (object/get @pl "effect") ["persist" "fetch"]) KcIdx) {}))) (array/map (array/filter (array/sort (array/flatten (object/values @ix)) "at") (fn c (array/some (array/slice (default (as (object/get @c "node" null) KcForm) []) 1 (array/len (default (as (object/get @c "node" null) KcForm) []))) (fn a (and (validate/object @a) (object/has @a "emit") (object/has @a "key")))))) (fn c (default (as (array/first (default (as (object/get @c "node" null) KcForm) [])) KcStr) "")))) (fn head
                     { code: @config.codes.effectOptionDropped.code, path: (object/get @pl "path"), message: (str/concat "`" @head "` carries no `key`, so its completion would never echo the `key` its options declare"), suggestion: (str/concat "Remove `key` from the `" @head "` options, or tell the arm apart by its event"), severity: "error" })))))
                 (array/flatten (array/map @sites (fn s
                   (let ((sm (object/get (object/get @s "trait") "stateMachine")) (trans (if (= @sm null) [] (default (object/get @sm "transitions" []) []))))

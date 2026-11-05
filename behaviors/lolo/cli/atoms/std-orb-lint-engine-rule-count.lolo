@@ -8,6 +8,8 @@ uses Spec from "almadar-std/lint-engine-rule-count"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type RcVal = string | number | boolean | [RcVal?] | Map string RcVal?
+type RcCall = { path : string!, node : [RcVal?]! }
+type RcIdx = Map string [RcCall]
 type RcStrings = [string]
 type RcSource = { kind : string, trait : string }
 type RcListen = { event : string, triggers : string, source : RcSource? }
@@ -48,12 +50,7 @@ orbital OrbLintEngineRuleCountOrbital {
                     (marks : [string] []))
                 (let ((answers (array/map @routes (fn nm
                         (let ((d (array/find @decls (fn x (= (object/get @x "name" "") @nm)))))
-                          { trait: @nm, declared: (!= @d null), names: (if (= @d null) @marks (tree/fold (array/concat (array/reduce (object/get (default (object/get @d "stateMachine" null) {}) "transitions" []) [] (fn a tr (array/concat @a (object/get @tr "effects" [])))) (array/reduce (object/get @d "ticks" []) [] (fn a tk (array/concat @a (object/get @tk "effects" []))))) (fn (n k)
-                          (let ((none : [string] []))
-                            (let ((kids (if (validate/array @n) (array/concat (array/flatten (array/map @k (fn r (if (= @r null) @none @r)))) @none) (if (validate/object @n) (array/concat (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key null))) (if (= @r null) @none @r))))) @none) @none))))
-                              (if (and (validate/array @n) (= (array/nth @n 0) "emit") (= (array/nth @n 1) "LINT_FOUND"))
-                                (array/concat @kids [(let ((a (array/nth @n 2))) (if (validate/object @a) (let ((rl (object/get @a "rule" null))) (if (and (validate/string @rl) (!= @rl "") (not (str/startsWith @rl (quote "@")))) @rl "")) ""))])
-                                @kids)))) "RcVal")) })))))
+                          { trait: @nm, declared: (!= @d null), names: (if (= @d null) @marks (array/map (array/filter (object/get (default (as (tree/index (array/concat (array/reduce (object/get (default (object/get @d "stateMachine" null) {}) "transitions" []) [] (fn a tr (array/concat @a (object/get @tr "effects" [])))) (array/reduce (object/get @d "ticks" []) [] (fn a tk (array/concat @a (object/get @tk "effects" []))))) ["emit"]) RcIdx) {}) "emit" []) (fn c (= (array/nth (object/get @c "node" []) 1) "LINT_FOUND"))) (fn c (let ((a (array/nth (object/get @c "node" []) 2))) (if (validate/object @a) (let ((rl (object/get @a "rule" null))) (if (and (validate/string @rl) (!= @rl "") (not (str/startsWith @rl (quote "@")))) @rl "")) ""))))) })))))
                   (let ((routed (array/sort (array/unique (array/filter (array/flatten (array/map @answers (fn a (object/get @a "names")))) (fn x (!= @x "")))))))
                     (array/concat
                       (array/map (array/filter @answers (fn a (not (object/get @a "declared")))) (fn a

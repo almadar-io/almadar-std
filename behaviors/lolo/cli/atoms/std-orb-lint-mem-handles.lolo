@@ -9,8 +9,6 @@ app std-orb-lint-mem-handles [
 uses Spec from "almadar-std/lint-mem-handles"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type MhValue = string | number | boolean | [MhValue?] | Map string MhValue?
-type MhAt = { path : string!, node : string! }
-type MhIdx = Map string [MhAt]
 type MhCall = [MhValue?]
 type MhEmit = { success : string! }
 type MhOpts = { emit : MhEmit! }
@@ -28,13 +26,18 @@ type MhOrbital = { name : string, traits : [MhTrait] }
 type MhProgram = { orbitals : [MhOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type GtCallHit = { path : string, node : GtVal?, at : number }
+type GtVal = string | number | boolean | [GtVal?] | Map string GtVal?
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintMemHandlesCodes = { useAfterFree : LintCodeDecl, doubleFree : LintCodeDecl, alias : LintCodeDecl, leak : LintCodeDecl }
+type LintMemHandlesCodes = { useAfterFree : LintCodeDecl, doubleFree : LintCodeDecl, alias : LintCodeDecl, leak : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintMemHandlesOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintMemHandlesRun [runtime] {
+    sCalls : Map string [GtCallHit] = {}
+    sitesCallsHeard : boolean = false
+    sitesCallsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -45,9 +48,14 @@ orbital OrbLintMemHandlesOrbital {
 
     state ready {
       INIT -> ready
+      SITES_HEARD -> ready
+        (set @entity.sCalls @payload.calls)
+        (set @entity.sitesCallsHeard true)
+        (set @entity.sitesCallsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (memHits : [MhAt] (array/flatten (object/values (default (as (tree/index @payload.program [] { prefixes: [(quote "mem/")] }) MhIdx) {})))))
+        (set @entity.findings (if (and @entity.sitesCallsHeard (= @entity.sitesCallsScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (memHits : [GtCallHit] (array/flatten (array/map (array/filter (object/keys @entity.sCalls) (fn h (str/startsWith @h "mem/"))) (fn h (object/get @entity.sCalls @h []))))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (default (array/nth @orbitals @oi) {})))
               (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
@@ -149,7 +157,9 @@ orbital OrbLintMemHandlesOrbital {
                                           path: (str/concat @prefix ".transitions[" (default (array/nth @parts 2) "") "]"),
                                           message: (str/concat "The arena stored in '" @sig "entity." (default (array/nth @parts 1) "") "' can reach the resting state(s) '" (str/join (array/filter @resting (fn r (array/includes (object/get @inFinal @r []) @fact))) "', '") "' without `mem/arena-drop`"),
                                           suggestion: "Drop the arena on every path to a resting state, including the failure routes",
-                                          severity: "error" })))))))))))))))))))))))
+                                          severity: "error" }))))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_SITES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_SITES before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.sitesCallsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "mem-handles", scope: @entity.scope, findings: @entity.findings })
@@ -168,9 +178,12 @@ orbital OrbLintMemHandlesOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : MhProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SITES_HEARD { scope : string!  guardHeads : Map string [string]!  guardRoots : Map string [string]!  calls : Map string [GtCallHit]!  trait : [GtCallHit]!  entity : [GtCallHit]! }
+        @description "std-orb-lint-input's LINT_SITES: guard heads and roots, the call hits by head and the @trait. and @entity. leaves."
+      OrbLintInput.LINT_SITES -> SITES_HEARD
     }
     config {
-      codes : LintMemHandlesCodes = { useAfterFree: { code: "ORB_MEM_USE_AFTER_FREE", category: "mem", description: "A mem/ call takes a handle after it was freed, dropped or released on some path" }, doubleFree: { code: "ORB_MEM_DOUBLE_FREE", category: "mem", description: "A handle is freed, dropped or released a second time on some path" }, alias: { code: "ORB_MEM_ALIAS", category: "mem", description: "An exclusive borrow of a block while another borrow of it is live, or a borrow while an exclusive one is live" }, leak: { code: "ORB_MEM_LEAK", category: "mem", description: "An arena reaches a resting state on some path without being dropped" } }
+      codes : LintMemHandlesCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, useAfterFree: { code: "ORB_MEM_USE_AFTER_FREE", category: "mem", description: "A mem/ call takes a handle after it was freed, dropped or released on some path" }, doubleFree: { code: "ORB_MEM_DOUBLE_FREE", category: "mem", description: "A handle is freed, dropped or released a second time on some path" }, alias: { code: "ORB_MEM_ALIAS", category: "mem", description: "An exclusive borrow of a block while another borrow of it is live, or a borrow while an exclusive one is live" }, leak: { code: "ORB_MEM_LEAK", category: "mem", description: "An arena reaches a resting state on some path without being dropped" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

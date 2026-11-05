@@ -42,10 +42,8 @@ orbital OrbLintEventIdUniquenessOrbital {
                               (array/map (array/unique (array/concat
                                 (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (object/has @e "id"))) (fn e (object/get @e "id")))
                                 (array/map (array/filter (object/get @t "emits" []) (fn e (object/has @e "eventId"))) (fn e (object/get @e "eventId")))))
-                                (fn i { id: @i, name: (object/get @t "name" "") })))))))
-                (array/map (array/filter (array/sort (array/map (array/unique (array/map @owners (fn w (object/get @w "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id"))))) 1)))
-                  (fn r (let ((who (array/map (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id")))) (fn w (object/get @w "name")))))
-                    { code: @config.codes.idDuplicateEventId.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]"), message: (str/concat "event id `" (object/get @r "id") "` is declared by " (array/len @who) " different traits (" (str/join @who ", ") ") — ids must be document-unique; every id→name resolution over this schema is ambiguous."), suggestion: "", severity: "error" }))))))))))
+                                (fn i { id: @i, ek: (str/replaceAll (str/replaceAll @i "~" "~t") "." "~d"), name: (object/get @t "name" "") })))))))
+                (let ((og (array/groupBy @owners "ek"))) (array/map (array/filter (array/sort (array/unique (array/map @owners (fn w (object/get @w "id"))))) (fn id (> (array/len (object/get @og (str/replaceAll (str/replaceAll @id "~" "~t") "." "~d") [])) 1))) (fn id (let ((who (array/map (object/get @og (str/replaceAll (str/replaceAll @id "~" "~t") "." "~d") []) (fn w (object/get @w "name"))))) { code: @config.codes.idDuplicateEventId.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]"), message: (str/concat "event id `" @id "` is declared by " (array/len @who) " different traits (" (str/join @who ", ") ") — ids must be document-unique; every id→name resolution over this schema is ambiguous."), suggestion: "", severity: "error" })))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "event-id-uniqueness", scope: @entity.scope, findings: @entity.findings })

@@ -28,13 +28,17 @@ type NtRt = Map string NtVal?
 type NtHit = { k : string, p : string }
 type NtScope = { loc : string, cfgs : [Map string NtField], roots : [NtVal?] }
 
+
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintNavTargetCodes = { navTargetUndeclared : LintCodeDecl }
+type LintNavTargetCodes = { navTargetUndeclared : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintNavTargetOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintNavTargetRun [runtime] {
+    uKeys : Map string [string] = {}
+    unitsHeard : boolean = false
+    unitsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -45,9 +49,14 @@ orbital OrbLintNavTargetOrbital {
 
     state ready {
       INIT -> ready
+      UNITS_HEARD -> ready
+        (set @entity.uKeys @payload.keys)
+        (set @entity.unitsHeard true)
+        (set @entity.unitsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (!= @payload.scope "") [] (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")) (lzs (object/get @payload.program "lazyPages" [])))
+        (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope))
+(if (!= @payload.scope "") [] (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")) (lzs (object/get @payload.program "lazyPages" [])))
           (let ((patterns (array/concat
                             (array/concat
                               (array/flatten (array/map @orbitals (fn o (array/filter (array/map (object/get @o "pages" []) (fn pg (object/get @pg "path" ""))) (fn p (!= @p ""))))))
@@ -65,9 +74,11 @@ orbital OrbLintNavTargetOrbital {
                                   (array/map (array/range 0 (array/len @trs)) (fn tj
                                     (let ((tr (array/nth @trs @tj)))
                                       (let ((tc (object/get @tr "config" {}))
-                                            (rows (array/concat
+                                            (units (array/concat [(str/concat @oi "-" @tj "-c")] (array/map (array/range 0 (array/len (object/get (object/get @tr "stateMachine" {}) "transitions" []))) (fn n (str/concat @oi "-" @tj "-" @n))) (array/map (array/range 0 (array/len (object/get @tr "ticks" []))) (fn n (str/concat @oi "-" @tj "-k" @n)))))
+                                            (linkless (and (!= (object/get @tr "stateMachine" null) null) (not (array/some @units (fn u (array/some ["href", "navigatesTo"] (fn kk (array/includes (object/get @entity.uKeys @u []) @kk))))))))
+                                            (rows (if @linkless [] (array/concat
                                                     (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))))))
-                                                    (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r))))))))))
+                                                    (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r)))))))))))
                                         (let ((idxs (array/map @rows (fn r (default (as (tree/index { w: @r } ["render-ui"]) NtIndex) {})))))
                                           { loc: (str/concat "orbitals[" @oi "].traits[" @tj "]"), cfgs: [@appCfg @oc @tc], roots: (array/concat
                                               (array/filter (array/map (object/values @tc) (fn f (object/get @f "default" null))) (fn v (!= @v null)))
@@ -99,7 +110,9 @@ orbital OrbLintNavTargetOrbital {
                                       (and (= (array/len @pp) (array/len @qq))
                                            (array/every (array/zip @qq @pp) (fn z (or (str/startsWith (array/nth @z 0) ":") (= (array/nth @z 0) (array/nth @z 1))))))))))
                             []
-                            [{ code: @config.codes.navTargetUndeclared.code, path: (object/get @sc "loc"), message: (str/concat "the " (object/get @h "k") " '" @p "' names no page the program declares"), suggestion: (str/concat "declare a page at '" @p "', or point the " (object/get @h "k") " at a page that exists"), severity: "error" }])))))))))))))))))
+                            [{ code: @config.codes.navTargetUndeclared.code, path: (object/get @sc "loc"), message: (str/concat "the " (object/get @h "k") " '" @p "' names no page the program declares"), suggestion: (str/concat "declare a page at '" @p "', or point the " (object/get @h "k") " at a page that exists"), severity: "error" }]))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.unitsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "nav-target-final", scope: @entity.scope, findings: @entity.findings })
@@ -118,9 +131,12 @@ orbital OrbLintNavTargetOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : NtProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
+      OrbLintInput.LINT_UNITS -> UNITS_HEARD
     }
     config {
-      codes : LintNavTargetCodes = { navTargetUndeclared: { code: "ORB_NAV_TARGET_UNDECLARED", category: "page", description: "A navigation target stated as a literal path (a navigate effect, a navItems or link href, a navigatesTo) names no page the finished program declares" } }
+      codes : LintNavTargetCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, navTargetUndeclared: { code: "ORB_NAV_TARGET_UNDECLARED", category: "page", description: "A navigation target stated as a literal path (a navigate effect, a navItems or link href, a navigatesTo) names no page the finished program declares" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

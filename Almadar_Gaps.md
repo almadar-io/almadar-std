@@ -21,7 +21,9 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-272`
+Next code: `G-STD-273`
+
+- **G-STD-272** [mechanical] — The lint engine's composed `OrbLintCallService` rebind listed its own `listens` without `OrbLintInput.LINT_INDEX -> INDEX_HEARD`, so once the call-service atom gated on the index every `orb validate` on the machine answered ORB_LINT_INDEX_MISSING (2026-11-05, wave 2 of G-CROSS-330; fixed by restating the route in std-orb-lint-engine.lolo). `orb validate` stayed 0/0 on the engine itself: nothing flags a composed trait whose rebind drops a listen route that a transition of the atom's machine needs. Owner: std lint rules (a std-orb-lint rule over composed rebinds). Reproduce: remove the INDEX_HEARD line from the engine's OrbLintCallService listens and validate any program. Prevention rung: (2) `orb validate` (a rebind that leaves an atom transition's event with no route is an error). Root cause: one-off.
 
 - **G-STD-261** [mechanical] — std-eval-harness re-applies std-ml-exact-check's normalisation inline (case and trim knobs, no numericTolerance) and computes its Beta intervals with `prob/*` directly instead of composing std-ml-posterior; two copies of each mechanism. Its interval step also cannot replay in `orb goldens` (host random), so no goldens file covers the report. Owner: ml/atoms/std-eval-harness.lolo. Prevention rung: (3) the verifiers. Root cause: one-off.
 

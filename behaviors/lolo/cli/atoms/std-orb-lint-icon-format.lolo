@@ -19,13 +19,17 @@ type IcTrait = { name : string, stateMachine : IcMachine }
 type IcOrbital = { name : string, traits : [IcTrait] }
 type IcProgram = { orbitals : [IcOrbital] }
 
+
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintIconFormatCodes = { uiIconInvalidFormat : LintCodeDecl , uiIconEmpty : LintCodeDecl }
+type LintIconFormatCodes = { uiIconInvalidFormat : LintCodeDecl , uiIconEmpty : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintIconFormatOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintIconFormatRun [runtime] {
+    uKeys : Map string [string] = {}
+    unitsHeard : boolean = false
+    unitsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -36,9 +40,14 @@ orbital OrbLintIconFormatOrbital {
 
     state ready {
       INIT -> ready
+      UNITS_HEARD -> ready
+        (set @entity.uKeys @payload.keys)
+        (set @entity.unitsHeard true)
+        (set @entity.unitsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (let ((trs (object/get @orb "traits" [])))
@@ -47,7 +56,7 @@ orbital OrbLintIconFormatOrbital {
                     (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
                         (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
-                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                          (if (array/some ["icon", "actions", "itemActions"] (fn kk (array/includes (object/get @entity.uKeys (str/concat @oi "-" @tj "-" @ti) []) @kk))) (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                             (let ((e (array/nth @effs @ej)))
                               (if (and (validate/array @e) (> (array/len @e) 2) (let ((hd (array/nth @e 0))) (and (validate/string @hd) (= @hd "render-ui"))) (validate/object (array/nth @e 2)))
                                 (let ((fr (tree/fold (array/nth @e 2) (fn (n k)
@@ -77,7 +86,9 @@ orbital OrbLintIconFormatOrbital {
                                             @nr)))) IcVal)))
                                   (if (= @fr null) []
                                     (array/map (object/get @fr "f") (fn h { code: (object/get @h "code"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "].pattern" (object/get @h "p")), message: (object/get @h "msg"), suggestion: "", severity: "error" }))))
-                                [])))))))))))))))))))))
+                                []))))) []))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.unitsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "icon-format", scope: @entity.scope, findings: @entity.findings })
@@ -96,9 +107,12 @@ orbital OrbLintIconFormatOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IcProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
+      OrbLintInput.LINT_UNITS -> UNITS_HEARD
     }
     config {
-      codes : LintIconFormatCodes = { uiIconInvalidFormat: { code: "ORB_UI_ICON_INVALID_FORMAT", category: "icon", description: "An icon name has an invalid format" }, uiIconEmpty: { code: "ORB_UI_ICON_EMPTY", category: "icon", description: "An icon name is empty" } }
+      codes : LintIconFormatCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, uiIconInvalidFormat: { code: "ORB_UI_ICON_INVALID_FORMAT", category: "icon", description: "An icon name has an invalid format" }, uiIconEmpty: { code: "ORB_UI_ICON_EMPTY", category: "icon", description: "An icon name is empty" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

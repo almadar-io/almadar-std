@@ -16,6 +16,8 @@ type DeadKnobOrbital = { name : string, config : Map string DeadKnobField?, trai
 type DeadKnobProgram = { config : Map string DeadKnobField?, orbitals : [DeadKnobOrbital] }
 type DeadKnobLink = { name : string!, src : string! }
 
+type DeadKnobAt = { path : string!, node : string! }
+type DeadKnobAtIdx = Map string [DeadKnobAt]
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintOrbitalConfigDeadKnobCodes = { oConfigDeadKnob : LintCodeDecl }
 
@@ -42,17 +44,7 @@ orbital OrbLintOrbitalConfigDeadKnobOrbital {
                 (links : [DeadKnobLink] (array/flatten (array/map @orbitals (fn orb (array/map (object/keys (object/get @orb "config" {})) (fn k { name: @k, src: (let ((fd (object/get (object/get @orb "config" {}) @k))) (if (= @fd null) "" (object/get @fd "forwardedFrom" ""))) })))))))
             (let ((declared (array/unique (array/concat (object/keys @appCfg) @orbNames)))
                   (orbLinks : [DeadKnobLink] (array/filter @links (fn o (and (str/startsWith (object/get @o "src") (quote "@config.")) (> (str/len (object/get @o "src")) 8) (not (str/includes (str/slice (object/get @o "src") 8) ".")))))))
-              (let ((direct (array/filter @declared (fn k
-                              (let ((tok (str/concat (quote "@config.") @k)))
-                                (array/some @fields (fn f
-                                  (or (= (object/get @f "forwardedFrom" "") @tok)
-                                      (array/includes (object/get @f "nestedForwardedFrom" []) @tok)
-                                      (= (tree/fold (object/get @f "default" null) (fn (n kids)
-                                            (if (validate/string @n)
-                                              (= @n @tok)
-                                              (if (validate/array @n)
-                                                (array/some @kids (fn r (= @r true)))
-                                                (if (validate/object @n) (array/some (object/values @kids) (fn r (= @r true))) false)))) DeadKnobVal) true)))))))))
+              (let ((toks (array/unique (array/flatten (array/map @fields (fn f (array/concat [(object/get @f "forwardedFrom" "")] (object/get @f "nestedForwardedFrom" []) (array/map (array/flatten (object/values (default (as (tree/index (object/get @f "default" null) [] { prefixes: [(quote "@config.")] }) DeadKnobAtIdx) {}))) (fn h (object/get @h "node" ""))))))))) (direct (array/filter @declared (fn k (array/includes @toks (str/concat (quote "@config.") @k))))))
                 (let ((published (array/reduce (array/range 0 (+ 1 (array/len @orbLinks))) @direct (fn (acc i)
                                     (array/unique (array/concat @acc (array/map (array/filter @orbLinks (fn o (array/includes @acc (object/get @o "name")))) (fn o (str/slice (object/get @o "src") 8)))))))))
                   (array/concat

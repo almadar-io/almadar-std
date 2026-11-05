@@ -22,12 +22,15 @@ type BfEntity = { name : string!, fields : [BfName]?, invariants : [BfShape] }
 type BfOrbital = { name : string, entity : BfEntity!, auxiliaryEntities : [BfEntity]?, traits : [BfTrait] }
 type BfProgram = { orbitals : [BfOrbital] }
 type BfDef = { name : string!, fields : [string] }
-type BfHit = { rel : string, s : string }
+type BfS = string
+type BfCH = { path : string!, node : BfShape! }
+type BfHits = Map string [BfCH]
+type BfHit = { rel : string!, s : string! }
 type BfRoot = { x : BfShape?, w : string!, c : string!, ev : string!, pk : string!, lk : string! }
 type BfAcc = { lv : [BfField], miss : string, stop : boolean }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintBindingFieldsCodes = { bindingPayloadFieldUndeclared : LintCodeDecl , bindingEntityFieldNotFound : LintCodeDecl }
+type LintBindingFieldsCodes = { lintIndexMissing : LintCodeDecl , bindingPayloadFieldUndeclared : LintCodeDecl , bindingEntityFieldNotFound : LintCodeDecl }
 
 orbital OrbLintBindingFieldsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -35,6 +38,9 @@ orbital OrbLintBindingFieldsOrbital {
   entity OrbLintBindingFieldsRun [runtime] {
     id : string!
     scope : string = ""
+    roots : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
     findings : [OrbFinding] = []
 
   }
@@ -44,10 +50,14 @@ orbital OrbLintBindingFieldsOrbital {
 
     state ready {
       INIT -> ready
-
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BfHit] []) (noroots : [BfRoot] []) (nof : [OrbFinding] []) (pP : string (str/concat (quote "@") "payload.")) (fP : string (str/concat (quote "@") "fromEntity.")) (eP : string (str/concat (quote "@") "entity.")) (orbitals : [BfOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
+(let ((nohits : [BfHit] []) (noroots : [BfRoot] []) (nof : [OrbFinding] []) (pP : string (str/concat (quote "@") "payload.")) (fP : string (str/concat (quote "@") "fromEntity.")) (eP : string (str/concat (quote "@") "entity.")) (orbitals : [BfOrbital] (object/get @payload.program "orbitals" [])))
   (let ((defIdx : Map string BfDef (default (object/fromEntries
   (array/flatten (array/map @orbitals (fn o
     (array/map
@@ -70,7 +80,7 @@ orbital OrbLintBindingFieldsOrbital {
             (array/map (array/range 0 (array/len @trts))
               (fn ti
                 (let ((t (default (array/nth @trts @ti) {})))
-                  (if (not (object/has @t "stateMachine"))
+                  (if (or (not (object/has @t "stateMachine")) (= (array/len (object/get @entity.roots (str/concat @oi "-" @ti) [])) 0))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (lk (object/get @t "linkedEntity" "")) (trs : [BfTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [BfState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [BfTick] (object/get @t "ticks" [])))
                       (array/concat
@@ -114,23 +124,11 @@ orbital OrbLintBindingFieldsOrbital {
                   (if (validate/object (array/nth @auxs @ai))
                     (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en }))
                     @noroots)))))))))))))
-    (let ((nroot : BfRoot { x: null, w: "", c: "", ev: "", pk: "", lk: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null)))))))) (let ((firstIdx (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {}))) (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
-  (if (str/startsWith @n (quote "@")) [{ rel: "", s: @n }] @nohits)
-  (if (validate/array @n)
-    (array/flatten
-      (array/map (array/range 0 (array/len @n))
-        (fn i
-          (array/map (let ((r : [BfHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (object/keys @k)
-          (fn key
-            (array/map (let ((r : [BfHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) BfShape) @nohits)]))) {})))
+    (let ((nroot : BfRoot { x: null, w: "", c: "", ev: "", pk: "", lk: "" })) 
             (array/flatten
               (array/map (array/range 0 (array/len @roots))
                 (fn xi
-                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (object/get @foldD (default (array/nth @keys @xi) "")) @nohits)))
+                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (array/map (array/flatten (object/values (default (as (tree/index (object/get @x "x" null) [] { prefixes: [(quote "@")] }) BfHits) {}))) (fn c { rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), s: (default (as (object/get @c "node" null) BfS) "") }))))
             (array/flatten
               (array/map @hs
                 (fn h
@@ -173,7 +171,9 @@ orbital OrbLintBindingFieldsOrbital {
           (let ((pent (object/get @rootIdx @root null)))
             (if (or (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
-              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))))))
+              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }]))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-fields", scope: @entity.scope, findings: @entity.findings })
@@ -193,10 +193,13 @@ orbital OrbLintBindingFieldsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BfProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait's roots are searched for bindings only when it uses some."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
 
     }
     config {
-      codes : LintBindingFieldsCodes = { bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" }, bindingEntityFieldNotFound: { code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", category: "binding", description: "An @entity binding names a field that the linked entity does not declare" } }
+      codes : LintBindingFieldsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" }, bindingEntityFieldNotFound: { code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", category: "binding", description: "An @entity binding names a field that the linked entity does not declare" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -35,11 +35,12 @@ type CbKid = { n : string!, ch : [string]! }
 type CbKidMap = Map string [CbKid]
 type CbCall = { path : string!, node : [CbNode?]! }
 type CbHit = { path : string!, node : CbNode? }
+type CbEmbeds = Map string [string]
 type CbHits = Map string [CbHit]
 type CbIndex = Map string [CbCall]
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintCircuitClientBoundCodes = { tTraitUnmounted : LintCodeDecl , circuitFailureArmMissing : LintCodeDecl , circuitFailureArmRendersNothing : LintCodeDecl , circuitSelfOverlayInShell : LintCodeDecl , circuitModalShellCloseDeaf : LintCodeDecl , circuitDeadBodilessAction : LintCodeDecl }
+type LintCircuitClientBoundCodes = { tTraitUnmounted : LintCodeDecl , circuitFailureArmMissing : LintCodeDecl , circuitFailureArmRendersNothing : LintCodeDecl , circuitSelfOverlayInShell : LintCodeDecl , circuitModalShellCloseDeaf : LintCodeDecl , circuitDeadBodilessAction : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintCircuitClientBoundOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -49,7 +50,9 @@ orbital OrbLintCircuitClientBoundOrbital {
     id : string!
     scope : string = ""
     program : CbProgram = {}
-    roots : Map string [string] = {}
+    embeds : CbEmbeds = {}
+    embedsScope : string = ""
+    embedded : boolean = false
     patterns : Map string CbPattern = {}
     findings : [OrbFinding] = []
   }
@@ -59,13 +62,21 @@ orbital OrbLintCircuitClientBoundOrbital {
 
     state ready {
       INIT -> ready
-      INDEX_HEARD -> ready
-        (set @entity.roots @payload.roots)
       PATTERNS_HEARD -> ready
         (set @entity.patterns @payload.patterns)
-      LINT_INPUT -> ready
+      EMBEDS_HEARD -> ready
+        (set @entity.embeds @payload.all)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
+      LINT_INPUT -> ready when (not (and @entity.embedded (= @entity.embedsScope @payload.scope)))
+        (set @entity.scope @payload.scope)
+        (set @entity.embedded false)
+        (set @entity.findings [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (and @entity.embedded (= @entity.embedsScope @payload.scope))
         (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
+        (set @entity.embedded false)
         (set @entity.findings (let ((nos : [string] [])
                 (nof : [OrbFinding] [])
                 (nop : [CbPay] [])
@@ -85,15 +96,9 @@ orbital OrbLintCircuitClientBoundOrbital {
               (let ((trs0 : [CbTrait] (object/get @o "traits" @notd)))
                 (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (default (array/nth @trs0 @i) {}) "stateMachine")))))
                   (let ((kids : [CbKid] (array/map @inlK (fn ti
-                          (let ((t (default (array/nth @trs0 @ti) {})) (gt (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nos) (quote "@trait"))))
+                          (let ((t (default (array/nth @trs0 @ti) {})))
                             { n: (object/get @t "name" ""),
-                              ch: (if (not @gt) @nos
-                                    (array/unique (array/filter
-                                      (array/concat (array/concat
-                                        (array/flatten (array/map (array/flatten (object/values (default (as (tree/index (array/map (object/values (object/get @t "config" {})) (fn f (object/get (default @f {}) "default" null))) [] { prefixes: [(quote "@trait.")] }) CbHits) {}))) (fn nd (let ((st (default (as (object/get @nd "node" null) LStr) ""))) (if (str/startsWith @st (quote "@trait.")) (array/flatten (array/map (array/take (str/split (str/slice @st 7 (str/len @st)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))
-                                        (array/flatten (array/map (array/flatten (object/values (default (as (tree/index (array/map (object/get @t "stateMachine.transitions" @notr) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])) [] { prefixes: [(quote "@trait.")] }) CbHits) {}))) (fn nd (let ((st (default (as (object/get @nd "node" null) LStr) ""))) (if (str/startsWith @st (quote "@trait.")) (array/flatten (array/map (array/take (str/split (str/slice @st 7 (str/len @st)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) []))))))
-                                        (array/flatten (array/map (array/flatten (object/values (default (as (tree/index (array/map (object/get @t "ticks" @notk) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])) [] { prefixes: [(quote "@trait.")] }) CbHits) {}))) (fn nd (let ((st (default (as (object/get @nd "node" null) LStr) ""))) (if (str/startsWith @st (quote "@trait.")) (array/flatten (array/map (array/take (str/split (str/slice @st 7 (str/len @st)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) []))))))
-                                      (fn c (and (!= @c "") (!= @c (object/get @t "name" ""))))))) }))))
+                              ch: (array/unique (array/filter (object/get @entity.embeds (str/concat @oi "-" @ti) @nos) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) }))))
                         (seeds (array/flatten (array/map (array/filter (object/get @o "pages" @nopg) (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" "")))))))))
                     (let ((bound (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
                           (mounted (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn o2 (array/flatten (array/map (object/get @o2 "pages" @nopg) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))))) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
@@ -155,16 +160,16 @@ orbital OrbLintCircuitClientBoundOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CbProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
-        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @trait references only when its roots hold @trait."
+      EMBEDS_HEARD { scope : string!  all : CbEmbeds!  config : CbEmbeds!  guards : CbEmbeds!  effects : CbEmbeds! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds, by `<orbital index>-<trait index>`."
       PATTERNS_HEARD { patterns : Map string CbPattern! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry's props, each with its types."
-      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
       OrbLintInput.LINT_PATTERNS -> PATTERNS_HEARD
     }
 
     config {
-      codes : LintCircuitClientBoundCodes = { tTraitUnmounted: { code: "ORB_T_TRAIT_UNMOUNTED", category: "trait", description: "A trait owns a state machine but is listed on no page and reached by no embed" }, circuitFailureArmMissing: { code: "ORB_CIRCUIT_FAILURE_ARM_MISSING", category: "circuit", description: "A transition starting an asynchronous client call has no failure arm to handle its error" }, circuitFailureArmRendersNothing: { code: "ORB_CIRCUIT_FAILURE_ARM_RENDERS_NOTHING", category: "circuit", description: "A state handles a failure event but its arm neither renders nor emits a declared event, so the failure reaches no one" }, circuitSelfOverlayInShell: { code: "ORB_CIRCUIT_SELF_OVERLAY_IN_SHELL", category: "circuit", description: "A self-overlaying pattern is rendered inside an overlay slot payload, stacking two overlay chromes" }, circuitModalShellCloseDeaf: { code: "ORB_CIRCUIT_MODAL_SHELL_CLOSE_DEAF", category: "circuit", description: "A state mounting an overlay-slot pattern has no CLOSE or CANCEL transition to dismiss it" }, circuitDeadBodilessAction: { code: "ORB_CIRCUIT_DEAD_BODILESS_ACTION", category: "circuit", description: "A transition changes state but carries no effects, so the screen keeps its paint and affordances routed to it are dead" } }
+      codes : LintCircuitClientBoundCodes = { tTraitUnmounted: { code: "ORB_T_TRAIT_UNMOUNTED", category: "trait", description: "A trait owns a state machine but is listed on no page and reached by no embed" }, circuitFailureArmMissing: { code: "ORB_CIRCUIT_FAILURE_ARM_MISSING", category: "circuit", description: "A transition starting an asynchronous client call has no failure arm to handle its error" }, circuitFailureArmRendersNothing: { code: "ORB_CIRCUIT_FAILURE_ARM_RENDERS_NOTHING", category: "circuit", description: "A state handles a failure event but its arm neither renders nor emits a declared event, so the failure reaches no one" }, circuitSelfOverlayInShell: { code: "ORB_CIRCUIT_SELF_OVERLAY_IN_SHELL", category: "circuit", description: "A self-overlaying pattern is rendered inside an overlay slot payload, stacking two overlay chromes" }, circuitModalShellCloseDeaf: { code: "ORB_CIRCUIT_MODAL_SHELL_CLOSE_DEAF", category: "circuit", description: "A state mounting an overlay-slot pattern has no CLOSE or CANCEL transition to dismiss it" }, circuitDeadBodilessAction: { code: "ORB_CIRCUIT_DEAD_BODILESS_ACTION", category: "circuit", description: "A transition changes state but carries no effects, so the screen keeps its paint and affordances routed to it are dead" }, lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]

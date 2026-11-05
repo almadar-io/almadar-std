@@ -19,13 +19,15 @@ type BtMachine = { transitions : [BtTransition] }
 type BtTrait = { name : string?, stateMachine : BtMachine, ticks : [BtTick], config : Map string BtCfg }
 type BtOrbital = { name : string, traits : [BtTrait] }
 type BtProgram = { orbitals : [BtOrbital]! }
-type BtHit = { rel : string, s : string, rd : boolean }
+type BtCH = { path : string!, node : BtShape! }
+type BtHits = Map string [BtCH]
+type BtHit = { rel : string!, s : string!, rd : boolean! }
 type BtRoot = { x : BtShape?, w : string!, allow : boolean!, tn : string!, oi : number!, only : boolean!, kn : [string]! }
 type BtIdx = { ti : number!, t : BtTrait!, nm : string! }
 type BtWalk = { st : [string], ix : [number], col : Map string number, done : boolean, res : [string] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintBindingTraitsCodes = { bindingTraitOutsideRenderUi : LintCodeDecl , bindingTraitInvalidFormat : LintCodeDecl , bindingTraitMissingName : LintCodeDecl , bindingTraitSelfReference : LintCodeDecl , bindingTraitUnknown : LintCodeDecl , bindingTraitCycle : LintCodeDecl }
+type LintBindingTraitsCodes = { lintIndexMissing : LintCodeDecl , bindingTraitOutsideRenderUi : LintCodeDecl , bindingTraitInvalidFormat : LintCodeDecl , bindingTraitMissingName : LintCodeDecl , bindingTraitSelfReference : LintCodeDecl , bindingTraitUnknown : LintCodeDecl , bindingTraitCycle : LintCodeDecl }
 
 orbital OrbLintBindingTraitsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -33,6 +35,9 @@ orbital OrbLintBindingTraitsOrbital {
   entity OrbLintBindingTraitsRun [runtime] {
     id : string!
     scope : string = ""
+    roots : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
     findings : [OrbFinding] = []
 
   }
@@ -42,16 +47,20 @@ orbital OrbLintBindingTraitsOrbital {
 
     state ready {
       INIT -> ready
-
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (noidx : [BtIdx] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
+(let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (noidx : [BtIdx] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
   (let ((roots : [BtRoot] (object/get (array/reduce @orbitals { i: 0, out: @noroots } (fn (oa o)
           (let ((oi : number (object/get @oa "i")) (trts : [BtTrait] (object/get @o "traits" [])) (tkn : [string] (object/get (array/reduce @trts { i: 0, out: @nostr } (fn (ka t) (let ((nmv (object/get @t "name" null))) (if (= @nmv null) @ka { i: 0, out: (array/append (object/get @ka "out") @nmv) }))))  "out")))
             { i: (+ @oi 1), out: (array/concat (object/get @oa "out") (object/get (array/reduce @trts { i: 0, out: @noroots } (fn (ta t)
               (let ((ti : number (object/get @ta "i")))
                 { i: (+ @ti 1), out: (array/concat (object/get @ta "out")
-                  (if (not (object/has @t "stateMachine"))
+                  (if (or (not (object/has @t "stateMachine")) (not (array/some (object/get @entity.roots (str/concat @oi "-" @ti) @nostr) (fn r (str/startsWith @r @tP)))))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
                       (array/concat
@@ -90,20 +99,7 @@ orbital OrbLintBindingTraitsOrbital {
       (array/flatten
         (array/map @roots
           (fn x
-            (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
-  (if (and (str/startsWith @n @tP) (>= (str/len @n) 6)) [{ rel: "", s: @n, rd: false }] @nohits)
-  (if (validate/array @n)
-    (let ((op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
-      (array/flatten
-        (array/map (array/range 0 (array/len @n))
-          (fn i
-            (array/map (let ((r : [BtHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")), rd: (or (object/get @h "rd" false) (= @op "render-ui")) })))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (object/keys @k)
-          (fn key
-            (array/map (let ((r : [BtHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) BtShape) @nohits)))
+            (let ((hs : [BtHit] (let ((ix : BtHits (default (as (tree/index (object/get @x "x" null) ["render-ui"] { prefixes: [@tP] }) BtHits) {}))) (let ((rds : [string] (array/map (object/get @ix "render-ui" []) (fn c (object/get @c "path" ""))))) (array/map (array/filter (array/flatten (object/values @ix)) (fn c (let ((nd (object/get @c "node" null))) (and (validate/string @nd) (>= (str/len (default (as @nd BtS) "")) 6))))) (fn c (let ((lp (object/get @c "path" ""))) { rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), s: (default (as (object/get @c "node" null) BtS) ""), rd: (array/some @rds (fn rp (or (= @rp "") (= @lp @rp) (str/startsWith @lp (str/concat @rp "[")) (str/startsWith @lp (str/concat @rp "."))))) })))))))
               (array/flatten
                 (array/map @hs
                   (fn h
@@ -134,11 +130,7 @@ orbital OrbLintBindingTraitsOrbital {
                 (let ((adj : Map string [string] (object/fromEntries (array/map @inl (fn e
                         (let ((t : BtTrait (object/get @e "t")))
                           [(object/get @e "nm"),
-                           (array/unique (array/flatten (array/map
-                         (array/concat
-                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
-                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
-                         (fn e (array/map (array/filter (array/map (array/filter (default (as (json/nodes @e) BtNodes) []) (fn y (validate/string @y))) (fn y (default (as @y BtS) ""))) (fn y (and (str/startsWith @y @tP2) (!= (str/replace-pattern (str/slice @y 7) "[.\\[].*$" "") "")))) (fn y (str/replace-pattern (str/slice @y 7) "\\..*$" "")))))))]))))))
+                           (if (not (array/some (object/get @entity.roots (str/concat @oi "-" (object/get @e "ti")) @nostr) (fn r (str/startsWith @r @tP)))) @nostr (let ((srcl : [BtShape?] [0 (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))))) (array/map (object/get @t "ticks" []) (fn tk (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r))))))])) (array/unique (array/map (array/filter (array/map (array/flatten (object/values (default (as (tree/index @srcl [] { prefixes: [@tP2] }) BtHits) {}))) (fn c (default (as (object/get @c "node" null) BtS) ""))) (fn y (!= (str/replace-pattern (str/slice @y 7) "[.\\[].*$" "") ""))) (fn y (str/replace-pattern (str/slice @y 7) "\\..*$" ""))))))]))))))
                   (if (= (array/len (array/flatten (object/values @adj))) 0)
                     @nof
                     (let ((w (array/reduce (array/range 0 (+ (* 3 (array/len @names)) (array/len (array/flatten (object/values @adj))) 2)) { stack: @nostr, idx: @nonum, vis: @nostr, found: @nostr }
@@ -174,7 +166,9 @@ orbital OrbLintBindingTraitsOrbital {
                             (let ((ent (array/find @inl (fn e (= (object/get @e "nm") @c0)))))
                               (if (= @ent null)
                                 @nof
-                                [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (object/get @ent "ti") " (" @c0 ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]))))))))))) }))) "out")))))
+                                [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (object/get @ent "ti") " (" @c0 ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]))))))))))) }))) "out"))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-traits", scope: @entity.scope, findings: @entity.findings })
@@ -194,10 +188,13 @@ orbital OrbLintBindingTraitsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BtProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @trait references only when a root starts with @trait."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
 
     }
     config {
-      codes : LintBindingTraitsCodes = { bindingTraitOutsideRenderUi: { code: "ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI", category: "binding", description: "An @trait binding appears outside a render-ui effect, where it is the only place trait references are allowed" }, bindingTraitInvalidFormat: { code: "ORB_BINDING_TRAIT_INVALID_FORMAT", category: "binding", description: "A trait binding or trait-typed config default is not a valid trait reference" }, bindingTraitMissingName: { code: "ORB_BINDING_TRAIT_MISSING_NAME", category: "binding", description: "A @trait binding does not name the trait it refers to" }, bindingTraitSelfReference: { code: "ORB_BINDING_TRAIT_SELF_REFERENCE", category: "binding", description: "A trait references itself through a trait binding" }, bindingTraitUnknown: { code: "ORB_BINDING_TRAIT_UNKNOWN", category: "binding", description: "A @trait binding references a trait that is not declared in this orbital" }, bindingTraitCycle: { code: "ORB_BINDING_TRAIT_CYCLE", category: "binding", description: "A cycle exists in @trait references" } }
+      codes : LintBindingTraitsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, bindingTraitOutsideRenderUi: { code: "ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI", category: "binding", description: "An @trait binding appears outside a render-ui effect, where it is the only place trait references are allowed" }, bindingTraitInvalidFormat: { code: "ORB_BINDING_TRAIT_INVALID_FORMAT", category: "binding", description: "A trait binding or trait-typed config default is not a valid trait reference" }, bindingTraitMissingName: { code: "ORB_BINDING_TRAIT_MISSING_NAME", category: "binding", description: "A @trait binding does not name the trait it refers to" }, bindingTraitSelfReference: { code: "ORB_BINDING_TRAIT_SELF_REFERENCE", category: "binding", description: "A trait references itself through a trait binding" }, bindingTraitUnknown: { code: "ORB_BINDING_TRAIT_UNKNOWN", category: "binding", description: "A @trait binding references a trait that is not declared in this orbital" }, bindingTraitCycle: { code: "ORB_BINDING_TRAIT_CYCLE", category: "binding", description: "A cycle exists in @trait references" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -17,6 +17,7 @@ type AssetListen = { event : string, source : AssetListenSource }
 type AssetTrait = { name : string, ref : string, config : Map string AssetKnob, listens : [AssetListen] }
 type AssetOrbital = { name : string, traits : [AssetTrait], uses : [AssetUse], entity : AssetEntity }
 type AssetProgram = { orbitals : [AssetOrbital] }
+type AiUrlStr = string
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type AssetInlineUrlCodes = { assetInlineUrl : LintCodeDecl }
@@ -60,7 +61,7 @@ orbital OrbLintAssetInlineUrlOrbital {
                               []))))
                       (array/flatten (array/map @units (fn u
                         (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity" {}) "instances" null) (let ((cf (object/get (default (array/nth @trs (object/get @u "ti")) {}) "config" {}))) (object/get (object/get @cf (object/get @u "kn") {}) "default" null)))) (p (object/get @u "path")))
-(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: @config.codes.assetInlineUrl.code, path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (default (as @y AssetUrl) "") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
+(array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((ys (as @y AiUrlStr))) (and (!= @ys null) (or (str/startsWith @ys "https://") (str/startsWith @ys "http://")))))) (fn y { code: @config.codes.assetInlineUrl.code, path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (default (as @y AssetUrl) "") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" }))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "asset-inline-url", scope: @entity.scope, findings: @entity.findings })

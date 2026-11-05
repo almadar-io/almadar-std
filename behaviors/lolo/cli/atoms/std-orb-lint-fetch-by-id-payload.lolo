@@ -19,6 +19,7 @@ type FbTransition = { effects : [FbVal] }
 type FbMachine = { events : [FbEvent], transitions : [FbTransition] }
 type FbTrait = { name : string, emits : [FbEmit], stateMachine : FbMachine }
 type FbHit = { i : number!, e : string!, id : boolean! }
+type FbItem = { ord : string!, oi : number!, ti : number!, i : number!, e : string!, id : boolean! }
 type FbOrbital = { name : string, traits : [FbVal] }
 type FbProgram = { orbitals : [FbOrbital] }
 type FbFound = { e : string, id : boolean }
@@ -45,41 +46,44 @@ orbital OrbLintFetchByIdPayloadOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (fetches (object/get (default (as (tree/index @payload.program ["fetch"]) FbIndex) {}) "fetch" [])))
-          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-            (let ((o (default (array/nth @orbitals @oi) {})))
-              (let ((trs (object/get @o "traits" [])))
-                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (as (array/nth @trs @ti) FbTrait)))
-                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
-                      []
-                      (let ((sm (default (object/get @t "stateMachine") {})))
-                        (let ((trans (object/get @sm "transitions" [])))
-                          (let ((found : [FbHit] (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
-                                  (let ((pre (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @i "].effects[")))
-                                    (array/flatten (array/map (array/filter @fetches (fn c (and (str/startsWith (object/get @c "path" "") @pre) (not (str/includes (str/slice (object/get @c "path" "") (str/len @pre)) "."))))) (fn c
-                                      (let ((n (object/get @c "node" null)))
-                                        (if (validate/array @n)
-                                          (array/flatten (array/map (array/slice @n 2 (array/len @n)) (fn a
-                                            (if (validate/object @a)
-                                              (let ((em (object/get @a "emit" null)))
-                                                (if (and (validate/object @em) (validate/string (object/get @em "success" null)) (!= (object/get @em "success" "") ""))
-                                                  (let ((hit (as { i: @i, e: (object/get @em "success"), id: (object/has @a "id") } FbHit))) (if (= @hit null) [] [@hit]))
-                                                  []))
-                                              []))))
-                                          [])))))))))))
-                            (let ((ids  (array/filter @found (fn p (object/get @p "id")))))
-                              (let ((lists  (array/map (array/filter @found (fn p (not (object/get @p "id")))) (fn p (object/get @p "e")))))
-                                (let ((evs  (array/unique (array/map @ids (fn p (object/get @p "e"))))))
-                                  (array/flatten (array/map @evs (fn ev
-                                    (if (array/includes @lists @ev)
-                                      []
-                                      (let ((fields  (array/concat
-                                              (array/flatten (array/map (array/filter (object/get @t "emits" []) (fn e (= (object/get @e "event" "") @ev))) (fn e (object/get @e "payloadSchema" []))))
-                                              (array/flatten (array/map (array/filter (object/get @sm "events" []) (fn e (= (object/get @e "key" "") @ev))) (fn e (object/get @e "payloadSchema" [])))))))
-                                        (let ((field  (array/find @fields (fn f (= (object/get @f "name" "") "data")))) (ih (array/find @ids (fn p (= (object/get @p "e") @ev)))))
-                                          (if (or (= @field null) (= @ih null) (not (str/startsWith (object/get @field "type" "") "[")))
-                                            []
-                                            [{ code: @config.codes.effFetchByIdPayloadList.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @ih "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))))
+          (let ((items : [FbItem] (array/flatten (array/map @fetches (fn c
+                  (let ((path (object/get @c "path" "")) (parts (str/split (object/get @c "path" "") "[")))
+                    (let ((oi (default (str/to-int (default (array/first (str/split (default (array/nth @parts 1) "") "]")) "")) 0)) (ti (default (str/to-int (default (array/first (str/split (default (array/nth @parts 2) "") "]")) "")) 0)) (i (default (str/to-int (default (array/first (str/split (default (array/nth @parts 3) "") "]")) "")) 0)))
+                      (let ((pre (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @i "].effects[")))
+                        (if (and (str/startsWith @path @pre) (not (str/includes (str/slice @path (str/len @pre)) ".")))
+                          (let ((n (object/get @c "node" null)))
+                            (if (validate/array @n)
+                              (array/flatten (array/map (array/slice @n 2 (array/len @n)) (fn a
+                                (if (validate/object @a)
+                                  (let ((em (object/get @a "emit" null)))
+                                    (if (and (validate/object @em) (validate/string (object/get @em "success" null)) (!= (object/get @em "success" "") ""))
+                                      (let ((hit (as { ord: (str/concat (str/padStart (str/concat "" @oi) 8 "0") "x" (str/padStart (str/concat "" @ti) 8 "0")), oi: @oi, ti: @ti, i: @i, e: (object/get @em "success"), id: (object/has @a "id") } FbItem))) (if (= @hit null) [] [@hit]))
+                                      []))
+                                  []))))
+                              []))
+                          []))))))))
+                (groups (array/groupBy @items "ord")))
+            (array/flatten (array/map (array/sort (object/keys @groups)) (fn gk
+              (let ((found : [FbItem] (object/get @groups @gk [])))
+                (let ((f0 (default (array/first @found) { ord: "", oi: 0, ti: 0, i: 0, e: "", id: false }))) (let ((oi (object/get @f0 "oi" 0)) (ti (object/get @f0 "ti" 0)))
+                  (let ((o (default (array/nth @orbitals @oi) {})))
+                    (let ((t (as (array/nth (object/get @o "traits" []) @ti) FbTrait)))
+                      (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                        []
+                        (let ((sm (default (object/get @t "stateMachine") {})))
+                          (let ((ids  (array/filter @found (fn p (object/get @p "id")))))
+                            (let ((lists  (array/map (array/filter @found (fn p (not (object/get @p "id")))) (fn p (object/get @p "e")))))
+                              (let ((evs  (array/unique (array/map @ids (fn p (object/get @p "e"))))))
+                                (array/flatten (array/map @evs (fn ev
+                                  (if (array/includes @lists @ev)
+                                    []
+                                    (let ((fields  (array/concat
+                                            (array/flatten (array/map (array/filter (object/get @t "emits" []) (fn e (= (object/get @e "event" "") @ev))) (fn e (object/get @e "payloadSchema" []))))
+                                            (array/flatten (array/map (array/filter (object/get @sm "events" []) (fn e (= (object/get @e "key" "") @ev))) (fn e (object/get @e "payloadSchema" [])))))))
+                                      (let ((field  (array/find @fields (fn f (= (object/get @f "name" "") "data")))) (ih (array/find @ids (fn p (= (object/get @p "e") @ev)))))
+                                        (if (or (= @field null) (= @ih null) (not (str/startsWith (object/get @field "type" "") "[")))
+                                          []
+                                          [{ code: @config.codes.effFetchByIdPayloadList.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @ih "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "fetch-by-id-payload", scope: @entity.scope, findings: @entity.findings })

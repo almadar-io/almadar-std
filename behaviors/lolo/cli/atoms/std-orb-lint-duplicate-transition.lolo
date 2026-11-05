@@ -53,7 +53,7 @@ orbital OrbLintDuplicateTransitionOrbital {
                                   []
                                   (if (< (array/len (array/filter @grp (fn j (object/has (default (array/nth @tx @j) {}) "guard")))) (- (array/len @grp) 1))
                                     [{ code: @config.codes.tDuplicateTransition.code, path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
-                                    (if (array/some @grp (fn a (and (object/has (default (array/nth @tx @a) {}) "guard") (array/some @grp (fn b (and (> @b @a) (= (json/stringify (object/get (default (array/nth @tx @a) {}) "guard")) (json/stringify (object/get (default (array/nth @tx @b) {}) "guard")))))))))
+                                    (if (array/some @grp (fn a (and (object/has (default (array/nth @tx @a) {}) "guard") (array/some @grp (fn b (and (> @b @a) (= (object/get (default (array/nth @tx @a) {}) "guard") (object/get (default (array/nth @tx @b) {}) "guard"))))))))
                                       [{ code: @config.codes.tDuplicateTransition.code, path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
                                       []))))))))))))))))))))))))
         (emit LINT_FINISH { })

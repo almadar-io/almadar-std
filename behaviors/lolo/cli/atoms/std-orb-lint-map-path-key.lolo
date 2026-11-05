@@ -12,6 +12,8 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type MkVal = string | number | boolean | [MkVal?] | Map string MkVal?
 type MkNodes = [MkVal?]
 type MkStr = string
+type MkCall = { path : string!, node : MkVal!, at : number! }
+type MkIdx = Map string [MkCall]
 type MkHit = { op : string!, f : string! }
 type MkHits = [MkHit]
 type MkField = { name : string, type : string, items : MkVal, properties : MkVal }
@@ -61,14 +63,12 @@ orbital OrbLintMapPathKeyOrbital {
                      (array/map (array/range 0 (array/len @ticks)) (fn ki { w: (str/concat @base ".ticks[" @ki "]"), e: (object/get (default (array/nth @ticks @ki) {}) "effects" []) })))))
         (if (= (array/len @maps) 0) []
          (array/flatten (array/map @roots (fn x
-          (let ((hits (default (as (default (tree/fold (object/get @x "e") (fn (n k)
-                 (if (validate/array @n)
-                  (let ((l (default (as @n MkNodes) [])))
+          (let ((hits (default (as (array/flatten (array/map (array/sort (array/flatten (object/values (default (as (tree/index (object/get @x "e") ["object/set" "object/get" "object/has"]) MkIdx) {}))) "at") (fn c
+                  (let ((l (default (as (object/get @c "node" []) MkNodes) [])))
                    (let ((h (if (> (array/len @l) 0) (default (as (array/nth @l 0) MkStr) "") ""))
                          (a1 (if (> (array/len @l) 1) (default (as (array/nth @l 1) MkStr) "") ""))
                          (a2 (if (> (array/len @l) 2) (array/nth @l 2) null)))
-                    (array/concat
-                     (if (and (array/includes ["object/set", "object/get", "object/has"] @h) (str/startsWith @a1 (quote "@entity.")) (array/includes @maps (str/slice @a1 8)) (validate/array @a2)
+                    (if (and (str/startsWith @a1 (quote "@entity.")) (array/includes @maps (str/slice @a1 8)) (validate/array @a2)
                           (= (tree/fold @a2 (fn (n2 k2)
                                (if (validate/array @n2)
                                 (let ((hd (if (> (array/len @n2) 0) (default (as (array/nth @n2 0) MkStr) "") "")))
@@ -81,9 +81,7 @@ orbital OrbLintMapPathKeyOrbital {
                                     false))))
                                 false)) MkVal) true))
                       [{ op: @h, f: (str/slice @a1 8) }]
-                      [])
-                     (array/flatten (array/filter @k (fn c (!= @c null)))))))
-                  [])) MkVal) []) MkHits) [])))
+                      [])))))) MkHits) [])))
            (array/map @hits (fn h { code: @config.codes.mapKeyDotPath.code, path: (object/get @x "w"), message: (str/concat (object/get @h "op") " reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under '" (object/get @h "f") "' instead of naming one map entry"), suggestion: "Join the key parts with a separator other than \".\", such as \"|\".", severity: "warning" }))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready

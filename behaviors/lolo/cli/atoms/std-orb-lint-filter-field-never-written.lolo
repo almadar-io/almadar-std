@@ -10,6 +10,7 @@ uses Spec from "almadar-std/lint-filter-field-never-written"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type FfEmbeds = Map string [string]
 type LNodes = [LNode?]
 type LStr = string
 type LObj = Map string LNode?
@@ -27,7 +28,7 @@ type FfAcc = { n : number!, rows : [FfRow]! }
 type FfProgram = { orbitals : [FfOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten : LintCodeDecl }
+type LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintFilterFieldNeverWrittenOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -38,6 +39,13 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
     findings : [OrbFinding] = []
     heads : Map string [string] = {}
     roots : Map string [string] = {}
+    embConfig : FfEmbeds = {}
+    embGuards : FfEmbeds = {}
+    embEffects : FfEmbeds = {}
+    indexScope : string = ""
+    embedsScope : string = ""
+    indexed : boolean = false
+    embedded : boolean = false
   }
 
   trait OrbLintFilterFieldNeverWritten -> OrbLintFilterFieldNeverWrittenRun [optimistic] {
@@ -48,8 +56,24 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
       INDEX_HEARD -> ready
         (set @entity.heads @payload.heads)
         (set @entity.roots @payload.roots)
-      LINT_INPUT -> ready
+        (set @entity.indexScope @payload.scope)
+        (set @entity.indexed true)
+      EMBEDS_HEARD -> ready
+        (set @entity.embConfig @payload.config)
+        (set @entity.embGuards @payload.guards)
+        (set @entity.embEffects @payload.effects)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
+      LINT_INPUT -> ready when (not (and @entity.indexed @entity.embedded (= @entity.indexScope @payload.scope) (= @entity.embedsScope @payload.scope)))
         (set @entity.scope @payload.scope)
+        (set @entity.indexed false)
+        (set @entity.embedded false)
+        (set @entity.findings [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX) and the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX and LINT_EMBEDS before LINT_INPUT; this rule did not hear them", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (and @entity.indexed @entity.embedded (= @entity.indexScope @payload.scope) (= @entity.embedsScope @payload.scope))
+        (set @entity.scope @payload.scope)
+        (set @entity.indexed false)
+        (set @entity.embedded false)
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
  (let ((ents (array/filter (array/flatten (array/map @orbs (fn o (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])))))  (fn e (!= (object/get @e "name" "") "")))))
   (let ((defs (object/fromEntries (array/map @ents (fn e [(object/get @e "name"), @e]))))
@@ -83,7 +107,7 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
       (let ((o (array/nth @orbs @oi)))
        (let ((trs0 (object/get @o "traits" [])))
        (let ((inlRows (let ((init : FfAcc { n: 0, rows: [] })) (object/get (array/reduce @trs0 @init (fn (a td) { n: (+ (object/get @a "n") 1), rows: (if (object/has @td "stateMachine") (array/append (object/get @a "rows") { i: (object/get @a "n"), t: @td }) (object/get @a "rows")) })) "rows"))))
-       (let ((kids (array/map @inlRows (fn rw (let ((t (object/get @rw "t")) (tix (str/concat @oi "-" (object/get @rw "i")))) { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/flatten (array/map (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/values (object/get @t "config" {})) (fn f (object/get (default @f {}) "default" null)))) LNodes))) (if (= @nn null) [] @nn)) []) (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get @t "stateMachine.transitions" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []) (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []))) (fn n (let ((s (default (as @n LStr) ""))) (if (str/startsWith @s (str/concat (quote "@") "trait.")) (array/flatten (array/map (array/take (str/split (str/slice @s 7 (str/len @s)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) []))))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))))
+       (let ((kids (array/map @inlRows (fn rw (let ((t (object/get @rw "t")) (tix (str/concat @oi "-" (object/get @rw "i")))) { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/concat (object/get @entity.embConfig @tix []) (object/get @entity.embGuards @tix []) (object/get @entity.embEffects @tix [])) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))))
         (let ((seeds (array/flatten (array/map (array/filter (object/get @o "pages" []) (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" []) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))) 
          (let ((bound (array/reduce (array/range 0 (+ (array/len @inlRows) 1)) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k (array/includes @acc (object/get @k "n")))) (fn k (object/get @k "ch")))))))))) 
           (array/flatten (array/map (array/filter @inlRows (fn rw (array/includes @bound (object/get (object/get @rw "t") "name" ""))))
@@ -149,9 +173,12 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
         @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses; the embed closure gates on a trait's roots holding @trait and the fetch scan on a transition's heads holding fetch."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      EMBEDS_HEARD { scope : string!  all : FfEmbeds!  config : FfEmbeds!  guards : FfEmbeds!  effects : FfEmbeds! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds, by `<orbital index>-<trait index>`; the embed closure is read from the config, guard and non-object effect sources."
+      OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
     }
     config {
-      codes : LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten: { code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", category: "cross", description: "A fetch filters on a field that no persist create or update of that entity supplies, so it always returns empty" } }
+      codes : LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten: { code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", category: "cross", description: "A fetch filters on a field that no persist create or update of that entity supplies, so it always returns empty" }, lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

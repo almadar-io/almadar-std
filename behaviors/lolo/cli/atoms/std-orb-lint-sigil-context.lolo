@@ -23,13 +23,25 @@ type SgProgType = { type : string }
 type SgHit = { rel : string, r : string }
 type SgRoot = { x : SgShape?, w : string!, c : string! }
 
+type GtCallHit = { path : string, node : GtVal?, at : number }
+type GtVal = string | number | boolean | [GtVal?] | Map string GtVal?
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintSigilContextCodes = { bindingPayloadInTick : LintCodeDecl , bindingUnknownRoot : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
+type LintSigilContextCodes = { bindingPayloadInTick : LintCodeDecl , bindingUnknownRoot : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 orbital OrbLintSigilContextOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintSigilContextRun [runtime] {
+    iRoots : Map string [string] = {}
+    indexHeard : boolean = false
+    indexScope : string = ""
+    sGuardRoots : Map string [string] = {}
+    sitesGuardHeard : boolean = false
+    sitesGuardScope : string = ""
+    uItem : Map string [string] = {}
+    uGuardItem : Map string [string] = {}
+    unitsHeard : boolean = false
+    unitsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -58,9 +70,23 @@ orbital OrbLintSigilContextOrbital {
         (set @entity.tickAllowed @payload.tickSigils)
       FACTS_UNREAD -> ready
         (set @entity.factsUnread true)
+      INDEX_HEARD -> ready
+        (set @entity.iRoots @payload.roots)
+        (set @entity.indexHeard true)
+        (set @entity.indexScope @payload.scope)
+      SITES_HEARD -> ready
+        (set @entity.sGuardRoots @payload.guardRoots)
+        (set @entity.sitesGuardHeard true)
+        (set @entity.sitesGuardScope @payload.scope)
+      UNITS_HEARD -> ready
+        (set @entity.uItem @payload.itemRoots)
+        (set @entity.uGuardItem @payload.guardItemRoots)
+        (set @entity.unitsHeard true)
+        (set @entity.unitsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.sitesGuardHeard (= @entity.sitesGuardScope @payload.scope) @entity.unitsHeard (= @entity.unitsScope @payload.scope))
+(let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])) (eAt : [string] (array/map @entity.effectAllowed (fn a (str/concat (quote "@") @a)))) (gAt : [string] (array/map @entity.guardAllowed (fn a (str/concat (quote "@") @a)))))
   (if (or @entity.shapesUnread @entity.factsUnread)
     (array/concat
       (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
@@ -82,12 +108,12 @@ orbital OrbLintSigilContextOrbital {
                         (array/flatten
                           (array/map @trs
                             (fn tr
-                              (let ((xp (str/concat @tp ".stateMachine.transitions[" @index "]")))
+                              (let ((xp (str/concat @tp ".stateMachine.transitions[" @index "]")) (uni (str/concat @oi "-" @ti "-" @index)))
                                 (let ((effs : [SgShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (array/concat
-                                      (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
-                                      (array/map @effs (fn e { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" })))
+                                      (if (and (!= @g null) (or (!= (object/get @entity.uGuardItem @uni null) null) (array/some (object/get @entity.sGuardRoots @uni @nostr) (fn r (not (array/includes @gAt @r)))))) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
+                                      (if (or (!= (object/get @entity.uItem @uni null) null) (array/some (object/get @entity.iRoots @uni @nostr) (fn r (not (array/includes @eAt @r))))) (array/map @effs (fn e { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" })) @noroots))
                                     (let ((ens : [SgShape] (object/get @tr "ensures" [])))
                                       (array/map @ens (fn e { x: @e, w: (str/concat @xp ".ensures[" @index "]"), c: "ensures" })))))))))
                         (array/concat
@@ -114,9 +140,11 @@ orbital OrbLintSigilContextOrbital {
                   (fn a
                     (let ((ai @index) (invs : [SgShape] (object/get @a "invariants" [])))
                       (let ((r : [SgRoot] (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "invariant" })))) @r)))))))))))))))
-      (let ((nroot : SgRoot { x: null, w: "", c: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null))))))))
-        (let ((firstIdx : Map string number (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {})))
-          (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
+      (let ((nroot : SgRoot { x: null, w: "", c: "" })) 
+            (array/flatten
+              (array/map (array/range 0 (array/len @roots))
+                (fn xi
+                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
   (if (and (str/startsWith @n (quote "@")) (>= (str/len @n) 2))
     (let ((root (str/replace-pattern (str/replaceAll (str/slice @n 1) "[" ".") "\\..*$" "")))
       (if (or (= @root "") (validate/pattern @root "^[A-Z]"))
@@ -162,17 +190,17 @@ orbital OrbLintSigilContextOrbital {
         (array/map (object/keys @k)
           (fn key
             (array/map (let ((r : [SgHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) SgShape) @nohits)]))) {})))
-            (array/flatten
-              (array/map (array/range 0 (array/len @roots))
-                (fn xi
-                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (object/get @foldD (default (array/nth @keys @xi) "")) @nohits)))
+      @nohits)))) SgShape) @nohits)))
               (let ((c (object/get @x "c" "")))
               (let ((allowed : [string] (if (= @c "effect") @entity.effectAllowed (if (= @c "tick") @entity.tickAllowed (if (= @c "ensures") (array/concat @entity.guardAllowed @config.ensuresSigils) @entity.guardAllowed)))))
   (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
     (fn h
       (let ((root (object/get @h "r" "")))
-        { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))))))))))))))
+        { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" })))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX and LINT_SITES and LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX and LINT_SITES and LINT_UNITS before LINT_INPUT; this rule did not hear them", severity: "error" }]))
+        (set @entity.indexHeard false)
+        (set @entity.sitesGuardHeard false)
+        (set @entity.unitsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "sigil-context", scope: @entity.scope, findings: @entity.findings })
@@ -192,6 +220,15 @@ orbital OrbLintSigilContextOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SgProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots of every trait and transition effect list."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      SITES_HEARD { scope : string!  guardHeads : Map string [string]!  guardRoots : Map string [string]!  calls : Map string [GtCallHit]!  trait : [GtCallHit]!  entity : [GtCallHit]! }
+        @description "std-orb-lint-input's LINT_SITES: guard heads and roots, the call hits by head and the @trait. and @entity. leaves."
+      OrbLintInput.LINT_SITES -> SITES_HEARD
+      UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
+      OrbLintInput.LINT_UNITS -> UNITS_HEARD
       SHAPES_HEARD { operators : Map string SgOpShape! }
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator with its category and arity; a collection or std-array operator of two or more arguments introduces @item and @index into its callback arguments."
       SHAPES_UNREAD { error : string! }
@@ -209,7 +246,7 @@ orbital OrbLintSigilContextOrbital {
       ensuresSigils : [string] = ["fromEntity"]
         @label "Ensures-only sigils"
         @description "The sigils an @ensures reads beyond the guard rule's: the entity row before the transition's effects."
-      codes : LintSigilContextCodes = { bindingPayloadInTick: { code: "ORB_BINDING_PAYLOAD_IN_TICK", category: "binding", description: "A binding reads @payload inside a tick, where a firing has no delivery" }, bindingUnknownRoot: { code: "ORB_BINDING_UNKNOWN_ROOT", category: "binding", description: "A binding names a root the context does not provide" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
+      codes : LintSigilContextCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, bindingPayloadInTick: { code: "ORB_BINDING_PAYLOAD_IN_TICK", category: "binding", description: "A binding reads @payload inside a tick, where a firing has no delivery" }, bindingUnknownRoot: { code: "ORB_BINDING_UNKNOWN_ROOT", category: "binding", description: "A binding names a root the context does not provide" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

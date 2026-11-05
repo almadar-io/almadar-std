@@ -33,6 +33,8 @@ type RlRfMap = Map string [string]
 type RlCfgMap = Map string RlShape?
 
 type WalkSlot = { kind : string!, args : [number] }
+type RlAt = { path : string!, node : string! }
+type RlAtIdx = Map string [RlAt]
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintConfigRoleListsCodes = { sRoleLiteralNotMember : LintCodeDecl }
 
@@ -118,7 +120,7 @@ orbital OrbLintConfigRoleListsOrbital {
           (if (validate/object @x)
             (array/map (object/keys @x)
               (fn key { x: (object/get @x @key), sc: @sc, t: @t }))
-            @nowork)))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hn) (array/includes @hk true) (if (validate/object @hn) (array/some (object/values @hk) (fn hv (= @hv true))) false)))) RlShape) true))) []) RlWorkList) @nowork)))
+            @nowork)))))) (fn c (array/some (array/flatten (object/values (default (as (tree/index (object/get @c "x") [] { prefixes: [(quote "array/includes")] }) RlAtIdx) {}))) (fn h (= (object/get @h "node" "") "array/includes"))))) []) RlWorkList) @nowork)))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       RL_STEP -> ready when (= (array/len @entity.frontier) 0)
         (set @entity.findings (let ((nof : [OrbFinding] []) (nostr : [string] []) (nox : [RlShape] []) (nosites : [RlSite] []) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
@@ -203,7 +205,7 @@ orbital OrbLintConfigRoleListsOrbital {
               (array/map (object/keys @pm)
                 (fn pk { x: (object/get @pm @pk), sc: @nosc, t: @t }))))))))
   (array/map (object/keys (object/get @cx "cfg" @nocfg))
-    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t }))))))))) (fn c (= (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hn) (array/includes @hk true) (if (validate/object @hn) (array/some (object/values @hk) (fn hv (= @hv true))) false)))) RlShape) true)))))
+    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t }))))))))) (fn c (array/some (array/flatten (object/values (default (as (tree/index (object/get @c "x") [] { prefixes: [(quote "array/includes")] }) RlAtIdx) {}))) (fn h (= (object/get @h "node" "") "array/includes")))))))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "config-role-lists", scope: @entity.scope, findings: @entity.findings })

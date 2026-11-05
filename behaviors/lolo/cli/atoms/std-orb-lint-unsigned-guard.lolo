@@ -48,7 +48,7 @@ orbital OrbLintUnsignedGuardOrbital {
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                   (let ((t (as (array/nth @trs @ti) UgTrait)))
-                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null) (not (array/some (object/get (default (as (tree/index (array/nth @trs @ti) ["jws/verify"]) UgIndex) {}) "jws/verify" []) (fn c (let ((n (object/get @c "node" null))) (if (validate/array @n) (let ((o2 (array/nth @n 3))) (if (validate/object @o2) (= (object/get @o2 "allowUnsigned" false) true) false)) false))))))
                       []
                       (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
                             (lst (array/map (object/get @t "listens" []) (fn l (let ((tg (object/get @l "triggers" ""))) (if (= @tg "") (object/get @l "event" "") @tg))))))

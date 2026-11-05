@@ -34,8 +34,8 @@ type VsPend = { e : VstrNode?, ll : VsLets }
 type VsLets = Map string VstrNode?
 type VsCand = Map string [VstrNode?]
 type VsFact = { key : string!, oi : number!, ti : number!, li : number!, src : string!, direct : boolean!, embeds : [string]! }
-type VsWay = { w : Map string boolean, rs : [VsFr] }
-type VsPoolSt = { pool : [VstrNode?]!, re : [string]!, rc : [string]!, rt : [string]! }
+type VsWay = { w : Map string boolean, rs : [VsFr], done : boolean }
+type VsPoolSt = { pool : [VstrNode?]!, re : [string]!, rc : [string]!, rt : [string]!, done : boolean! }
 type VsAffRow = { aff : [string], prod : [string] }
 type VsAff = Map string VsAffRow
 type VsOrbitals = [VsOrbital]
@@ -155,17 +155,17 @@ orbital OrbLintViewerStrandedOrbital {
         (let ((cfg (object/get @t "config" @nocfg)) (nodes0 (default (as (json/nodes @body) VstrNodes) @noe)))
           (let ((nk (+ (+ (array/len (object/keys @cand)) (array/len (object/keys @cfg))) 2))
                 (cshape (default (object/fromEntries (array/map (object/keys @cfg) (fn k [@k, (let ((dv (object/get (object/get @cfg @k @nofield) "default" null))) (let ((tsx @dv)) (array/every (array/reduce (array/range 0 (array/len (default (as (json/nodes @tsx) VstrNodes) @noe))) [@tsx] (fn (ta tr2) (array/flatten (array/map @ta (fn tq (let ((tqa (as @tq VstrNodes))) (if (!= @tqa null) @tqa [@tq])))))))  (fn tq (let ((tqo (as @tq VsObj))) (and (!= @tqo null) (object/has @tqo "type")))))))]))) {})))
-            (let ((st0 : VsPoolSt { pool: @nodes0, re: @nos, rc: @nos, rt: @nos }))
+            (let ((st0 : VsPoolSt { pool: @nodes0, re: @nos, rc: @nos, rt: @nos, done: false }))
               (let ((st (array/reduce (array/range 0 @nk) @st0
                   (fn (acc r)
-                    (let ((ss (array/filter (array/map (object/get @acc "pool") (fn q (default (as @q VsStr) ""))) (fn q (!= @q "")))))
+                    (if (object/get @acc "done") @acc (let ((ss (array/filter (array/map (object/get @acc "pool") (fn q (default (as @q VsStr) ""))) (fn q (!= @q "")))))
                       (let ((re (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@entity.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 8) ".")) "") "[")) "")))))
                             (rc (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@config.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 8) ".")) "") "[")) "")))))
                             (rt (array/unique (array/map (array/filter @ss (fn q (str/startsWith @q (quote "@trait.")))) (fn q (default (array/first (str/split (default (array/first (str/split (str/slice @q 7) ".")) "") "[")) ""))))))
-                        { re: @re, rc: @rc, rt: @rt,
+                        { re: @re, rc: @rc, rt: @rt, done: (and (= @re (object/get @acc "re")) (= @rc (object/get @acc "rc"))),
                           pool: (array/concat @nodes0
                             (array/flatten (array/map @re (fn f (array/flatten (array/map (object/get @cand @f @noe) (fn c (default (as (json/nodes @c) VstrNodes) @noe)))))))
-                            (array/flatten (array/map @rc (fn k (if (object/get @cshape @k false) (default (as (json/nodes (object/get (object/get @cfg @k @nofield) "default" null)) VstrNodes) @noe) @noe))))) }))))))
+                            (array/flatten (array/map @rc (fn k (if (object/get @cshape @k false) (default (as (json/nodes (object/get (object/get @cfg @k @nofield) "default" null)) VstrNodes) @noe) @noe))))) })))))))
                 { key: (str/concat @oi "|" (object/get @u "tn")), oi: @oi, ti: (object/get @u "ti" 0), li: (object/get @u "li" 0), src: (object/get @u "src" ""), direct: (or
                     (array/some (object/get @st "re") (fn f (and (!= @f "") (not (object/has @cand @f)))))
                     (array/some (object/get @st "rc") (fn k (and (!= @k "") (not (object/get @cshape @k false)))))
@@ -177,10 +177,10 @@ orbital OrbLintViewerStrandedOrbital {
                               (let ((vv (object/get @qo (object/get @o "prop" "") null)))
                                 (let ((vs (if (= (object/get @o "field" "") "") [@vv] (let ((vva (as @vv VstrNodes))) (if (!= @vva null) (array/map (array/filter @vva (fn d (!= (as @d VsObj) null))) (fn d (object/get (default (as @d VsObj) @noobj) (object/get @o "field" "") null))) @noe)))))
                                   (array/some @vs (fn w (array/some (default (as (json/nodes @w) VstrNodes) @noe) (fn z (let ((zs (as @z VsStr))) (and (!= @zs null) (or (str/startsWith @zs (quote "@")) (and (!= @zs "") (not (array/includes @entity.busExcluded @zs)))))))))))))))))))))),
-                  embeds: (array/filter (object/get @st "rt") (fn x (and (!= @x "") (object/has @inlines (str/concat @oi "|" @x))))) }))))))))))) (let ((wayOn : VsWay (array/reduce (array/range 0 (+ (array/len (array/unique (array/map @facts (fn r (object/get @r "key"))))) 2)) { w: @nobm, rs: @nofr }
+                  embeds: (array/filter (object/get @st "rt") (fn x (and (!= @x "") (object/has @inlines (str/concat @oi "|" @x))))) }))))))))))) (let ((wayOn : VsWay (array/reduce (array/range 0 (+ (array/len (array/unique (array/map @facts (fn r (object/get @r "key"))))) 2)) { w: @nobm, rs: @nofr, done: false }
   (fn (st r)
-    (let ((rs : [VsFr] (array/map @facts (fn f { key: (object/get @f "key"), ti: (object/get @f "ti"), li: (object/get @f "li"), src: (object/get @f "src"), open: (or (object/get @f "direct") (array/some (object/get @f "embeds") (fn x (object/has (object/get @st "w") (str/concat (object/get @f "oi") "|" @x))))) }))))
-      { rs: @rs, w: (default (object/fromEntries (array/map (array/filter @rs (fn q (object/get @q "open"))) (fn q [(object/get @q "key"), true]))) {}) })))))
+    (if (object/get @st "done") @st (let ((rs : [VsFr] (array/map @facts (fn f { key: (object/get @f "key"), ti: (object/get @f "ti"), li: (object/get @f "li"), src: (object/get @f "src"), open: (or (object/get @f "direct") (array/some (object/get @f "embeds") (fn x (object/has (object/get @st "w") (str/concat (object/get @f "oi") "|" @x))))) }))))
+      (let ((nw : Map string boolean (default (object/fromEntries (array/map (array/filter @rs (fn q (object/get @q "open"))) (fn q [(object/get @q "key"), true]))) {}))) { rs: @rs, w: @nw, done: (= @nw (object/get @st "w")) })))))))
   (let ((armOpen : Map string boolean (default (object/fromEntries (array/map (array/filter (object/get @wayOn "rs" @nofr) (fn q (and (= (object/get @q "src") "t") (not (object/get @q "open"))))) (fn q [(str/concat (object/get @q "key") "|" (object/get @q "ti") "|" (object/get @q "li")), true]))) {})))
 (let ((affs : Map string VsAffRow (default (object/fromEntries (array/map @strandOrbs (fn oi
   (let ((inl (array/filter (object/get (default (array/nth @orbs @oi) @noorb) "traits" []) (fn t (object/has @t "stateMachine")))))

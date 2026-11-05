@@ -21,6 +21,8 @@ type KkTypeNode = { kind : string, fields : Map string KkTypeRef? }
 type KkParam = { name : string, type : KkTypeRef }
 type KkShape = { params : [KkParam] }
 type KkOp = { emit : [number]!, keyOnly : [number]! }
+type KkCall = { path : string!, node : [KkVal?]!, at : number! }
+type KkIdx = Map string [KkCall]
 type KkRec = { rtype : string!, head : string!, hasKey : boolean!, key : KkVal?, cancelled : boolean!, text : string!, path : string!, place : string! }
 type KkRecs = [KkRec]
 
@@ -82,11 +84,7 @@ orbital OrbLintKeyedCallKeysOrbital {
                             (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
                               (let ((effs (default (object/get (array/nth @ticks @i) "effects" []) [])))
                                 (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), place: "e" }))))))))))))))
-                (let ((recs (array/flatten (array/map @places (fn pl
-                        (as (default (tree/fold (object/get @pl "node") (fn (n k)
-                            (array/concat
-                              (if (and (validate/array @n) (> (array/len @n) 0))
-                                (let ((h (array/first @n)))
+                (let ((recs (let ((idx (default (as (tree/index (array/map @places (fn pl { n: (object/get @pl "node") })) (array/append (object/keys @keyed) "as")) KkIdx) {}))) (default (as (array/flatten (array/map (array/sort (array/flatten (object/values @idx)) "at") (fn hit (let ((pl (default (array/nth @places (default (str/to-int (default (array/first (str/split (str/slice (object/get @hit "path" "") 1) "]")) "")) 0)) {})) (n (object/get @hit "node" []))) (let ((h (array/first @n)))
                                   (array/concat
                                     (if (and (validate/string @h) (object/has @keyed @h))
                                       (let ((spec (object/get @keyed @h)) (args (array/slice @n 1 (array/len @n))))
@@ -106,11 +104,7 @@ orbital OrbLintKeyedCallKeysOrbital {
                                     (let ((t1 (if (>= (array/len @n) 3) (array/nth @n 1) null)) (t2 (if (>= (array/len @n) 3) (array/nth @n 2) null)))
                                       (if (and (validate/string @h) (= @h "as") (validate/string @t1) (validate/string @t2) (= @t2 "CallKey") (not (str/startsWith @t1 (quote "@"))) (not (str/startsWith @t1 "?")))
                                         [{ rtype: "cast", head: "as", hasKey: false, key: "", cancelled: false, text: @t1, path: (object/get @pl "path"), place: (object/get @pl "place") }]
-                                        []))))
-                                [])
-                              (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (default (object/get @k @key []) [])))) []))))
-                          KkVal) []) KkRecs))))))
-                  (let ((texts (array/map (array/filter @recs (fn r (and (= (object/get @r "rtype") "call") (object/get @r "hasKey")))) (fn r
+                                        [])))))))) KkRecs) [])))) (let ((texts (array/map (array/filter @recs (fn r (and (= (object/get @r "rtype") "call") (object/get @r "hasKey")))) (fn r
                           (let ((k (object/get @r "key" null)))
                             (if (validate/string @k)
                               (if (or (str/startsWith @k (quote "@")) (str/startsWith @k "?")) null @k)
