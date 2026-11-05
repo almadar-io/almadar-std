@@ -3,6 +3,7 @@
 # compiles against each shell's real `orb compile` models and gives the kernel's answers.
 # Usage: lolo-source-parity.sh [lang...]    (default: all five)
 # Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`).
+# Runs locally at the checkpoint only (owner ruling 2026-11-05: not wired into CI).
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 STD=$(cd "$HERE/../.." && pwd)
