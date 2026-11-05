@@ -21,7 +21,9 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-290`
+Next code: `G-STD-291`
+
+- **G-STD-290** [mechanical] — `orb-serve`'s replay goldens recorded the generated server program text (`orbital MockData = Seed.orbitals.MockData`, no body) that the parser refuses, so every `orb serve` that added mock seeding failed on main until 2026-11-05. The spec checks the text, never that it parses. Fix: the orb-serve spec (or a shared spec helper) parses every generated .lolo it asserts. Rung (3): goldens that only compare text. Root cause: T4.
 
 - **G-STD-288** [mechanical] — ORB_PAGE_UNREACHABLE judges eager and lazy pages by different rules. An eager route page counts as reached by any href in the program, including one in its own nav. A `uses lazy` page is reached only from links outside it (the lazyPages fixed point). So five orb-site demo pages (/demo/compose, /demo/crm-page, /demo/helpdesk-page, /demo/invoices-page, /demo/people-page) pass while eager and fail once lazy. Nothing else on the site links to them; only their own navItems do. Owner: cli/atoms/std-orb-lint-page-unreachable.lolo. Reproduce: in std-almadar-orb.lolo change `uses DemoCompose` to `uses lazy DemoCompose` and run `orb validate`. Prevention rung: (2) one reachability rule for both page kinds (a page's own links never reach itself). Root cause: one-off.
 
