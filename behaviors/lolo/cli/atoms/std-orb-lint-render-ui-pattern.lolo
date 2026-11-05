@@ -17,6 +17,8 @@ type RuiMachine = { transitions : [RuiTransition] }
 type RuiTrait = { name : string, linkedEntity : string, stateMachine : RuiMachine? }
 type RuiOrbital = { name : string, entity : RuiEntity?, traits : [RuiTrait] }
 type RuiProgram = { orbitals : [RuiOrbital] }
+type RuiCall = { path : string!, node : [RuiVal?]! }
+type RuiIdx = Map string [RuiCall]
 type RuiWork = { node : string!, path : string!, ord : string!, linked : string! }
 type RuiKeyed = { key : string!, code : string!, path : string!, message : string!, suggestion : string! }
 type RuiStep = { f : [RuiKeyed]!, n : [RuiWork]! }
@@ -80,7 +82,18 @@ orbital OrbLintRenderUiPatternOrbital {
         (set @entity.found [])
         (set @entity.level 0)
         (set @entity.intr (array/map (array/filter (object/get @payload.program "orbitals" []) (fn o2 (!= (object/get (object/get @o2 "entity" {}) "name" "") ""))) (fn o3 { name: (object/get (object/get @o3 "entity" {}) "name" ""), fields: (array/map (array/filter (object/get (object/get @o3 "entity" {}) "fields" []) (fn f2 (object/get @f2 "intrinsic" false))) (fn f3 (object/get @f3 "name" ""))) })))
-        (set @entity.frontier (let ((orbitals (object/get @payload.program "orbitals" []))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((trs (object/get (array/nth @orbitals @oi) "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj (let ((tr0 (array/nth @trs @tj))) (if (not (object/has @tr0 "stateMachine")) [] (let ((trans (object/get (object/get @tr0 "stateMachine" {}) "transitions" [])) (base (str/concat "orbitals[" @oi " (" (object/get (array/nth @orbitals @oi) "name" "") ")].traits[" @tj " (" (object/get @tr0 "name" "") ")].stateMachine.transitions["))) (array/flatten (array/map (array/range 0 (array/len @trans)) (fn tk (let ((effs (object/get (array/nth @trans @tk) "effects" []))) (array/flatten (array/map (array/range 0 (array/len @effs)) (fn em (let ((e (array/nth @effs @em)) (ep (str/concat @base @tk "].effects[" @em "]"))) (let ((e_k (if (validate/object @e) "o" (if (validate/array @e) "a" (if (validate/string @e) "s" (if (validate/number @e) "n" (if (validate/boolean @e) "b" "z")))))) (e_s (if (validate/string @e) @e "")) (e_n (if (validate/number @e) @e 0)) (e_b (if (validate/boolean @e) @e false)) (e_a (if (validate/array @e) @e [])) (e_o (if (validate/object @e) @e {})) (e_len (array/len @e_a)) (e_h (let ((h0 (if (> @e_len 0) (array/nth @e_a 0) null))) (if (validate/string @h0) @h0 "")))) (if (and (= @e_k "a") (> @e_len 2) (= @e_h "render-ui")) [{ node: (json/stringify (array/nth @e_a 2)), path: (str/concat @ep "[2]"), ord: (str/concat (str/padStart (str/concat "" @oi) 6 "0") "x" (str/padStart (str/concat "" @tj) 6 "0") "x" (str/padStart (str/concat "" @tk) 6 "0") "x" (str/padStart (str/concat "" @em) 6 "0")), linked: (object/get @tr0 "linkedEntity" "") }] []))))))))))))))))))))))
+        (set @entity.frontier (let ((orbitals (object/get @payload.program "orbitals" [])) (rus : [RuiCall] (object/get (default (as (tree/index @payload.program ["render-ui"]) RuiIdx) {}) "render-ui" [])))
+          (array/flatten (array/map @rus (fn c
+            (let ((parts (str/split (object/get @c "path" "") "[")))
+              (if (!= (array/len @parts) 5)
+                []
+                (let ((oi (default (str/to-int (default (array/first (str/split (default (array/nth @parts 1) "") "]")) "")) 0)) (tj (default (str/to-int (default (array/first (str/split (default (array/nth @parts 2) "") "]")) "")) 0)) (tk (default (str/to-int (default (array/first (str/split (default (array/nth @parts 3) "") "]")) "")) 0)) (em (default (str/to-int (default (array/first (str/split (default (array/nth @parts 4) "") "]")) "")) 0)))
+                  (if (not (= (object/get @c "path" "") (str/concat "orbitals[" @oi "].traits[" @tj "].stateMachine.transitions[" @tk "].effects[" @em "]")))
+                    []
+                    (let ((nd (object/get @c "node" [])) (o (default (array/nth @orbitals @oi) {})) (tr0 (default (array/nth (object/get @o "traits" []) @tj) {})))
+                      (if (<= (array/len @nd) 2)
+                        []
+                        [{ node: (json/stringify (array/nth @nd 2)), path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @tj " (" (object/get @tr0 "name" "") ")].stateMachine.transitions[" @tk "].effects[" @em "][2]"), ord: (str/concat (str/padStart (str/concat "" @oi) 6 "0") "x" (str/padStart (str/concat "" @tj) 6 "0") "x" (str/padStart (str/concat "" @tk) 6 "0") "x" (str/padStart (str/concat "" @em) 6 "0")), linked: (object/get @tr0 "linkedEntity" "") }])))))))))))
         (emit LINT_STEP { level: @entity.level })
     }
 

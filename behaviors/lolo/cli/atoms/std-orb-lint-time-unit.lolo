@@ -26,6 +26,8 @@ type TimeOrbital = { name : string, traits : [TimeTrait] }
 type TimeProgram = { orbitals : [TimeOrbital] }
 type TimeUnitMap = Map string TimeUnitSpec
 type TimeUnitEntry = { op : string, idx : number, values : [string] }
+type TimeCall = { path : string!, node : TimeExpr!, at : number! }
+type TimeIndex = Map string [TimeCall]
 type TimeRoot = { x : TimeExpr?, w : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -66,7 +68,7 @@ orbital OrbLintTimeUnitOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (if @entity.shapesUnread
   [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the time operators' unit literals are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
-  (let ((units @entity.units) (nohits : [TimeHit] []) (noroots : [TimeRoot] []) (nostr : [string] []) (orbitals : [TimeOrbital] (object/get @payload.program "orbitals" [])))
+  (let ((units @entity.units) (heads (object/keys @entity.units)) (nohits : [TimeHit] []) (noroots : [TimeRoot] []) (nostr : [string] []) (orbitals : [TimeOrbital] (object/get @payload.program "orbitals" [])))
     (let ((roots : [TimeRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
@@ -96,33 +98,20 @@ orbital OrbLintTimeUnitOrbital {
       (array/flatten
         (array/map @roots
           (fn r
-            (let ((res (tree/fold (object/get @r "x" null) (fn (n k) (if (validate/array @n)
-  (array/concat
-    (let ((op (if (> (array/len @n) 0) (array/first @n) null)))
-      (let ((ops (if (validate/string @op) @op "")) (spec (if (validate/string @op) (object/get @units @op null) null)))
-        (if (= @spec null)
-          @nohits
-          (let ((idx (object/get @spec "idx" 0)) (vals : [string] (object/get @spec "values" [])))
-            (let ((u (if (< @idx (array/len @n)) (array/nth @n @idx) null)))
-              (if (and (validate/string @u) (not (array/includes @vals @u)))
-                [{ rel: (str/concat "[" @idx "]"), op: @ops, unit: @u, values: @vals }]
-                @nohits))))))
-    (array/flatten
-      (array/map (array/range 0 (array/len @k))
-        (fn i
-          (array/map
-            (let ((r : [TimeHit]? (array/nth @k @i)))
-              (if (validate/array @r) @r @nohits))
-            (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
-  (if (validate/object @n)
-    (array/flatten
-      (array/map (object/keys @k)
-        (fn key
-          (array/map
-            (let ((r : [TimeHit]? (object/get @k @key)))
-              (if (validate/array @r) @r @nohits))
-            (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-    @nohits))) TimeExpr)))
+            (let ((res (array/flatten (array/map (array/sort (array/flatten (object/values (default (as (tree/index (object/get @r "x" null) @heads) TimeIndex) {}))) "at")
+  (fn c
+    (let ((n (object/get @c "node" null)) (cp (object/get @c "path" "")))
+      (if (not (validate/array @n))
+        @nohits
+        (let ((op (array/first @n)))
+          (let ((spec (if (validate/string @op) (object/get @units @op null) null)))
+            (if (= @spec null)
+              @nohits
+              (let ((idx (object/get @spec "idx" 0)) (vals : [string] (object/get @spec "values" [])))
+                (let ((u (if (< @idx (array/len @n)) (array/nth @n @idx) null)))
+                  (if (and (validate/string @u) (not (array/includes @vals @u)))
+                    [{ rel: (str/concat (if (or (= @cp "") (str/startsWith @cp "[")) @cp (str/concat "." @cp)) "[" @idx "]"), op: (if (validate/string @op) @op ""), unit: @u, values: @vals }]
+                    @nohits)))))))))))))
               (if (= @res null)
                 @nohits
                 (array/map @res

@@ -33,6 +33,8 @@ type HcArmNodes = [HcArmNode]
 type HcStrs = [string]
 type HcValMap = Map string HcVal?
 type HcCalls = [[HcVal?]]
+type HcHit = { path : string, node : [HcVal?]!, at : number }
+type HcHitIdx = Map string [HcHit]
 type HcCallList = [HcCall]
 type HcRequest = { requestId : string!, orbitals : [HcOrbital]!, heads : [string]!, operators : [string]!, fields : [string]! }
 
@@ -139,11 +141,7 @@ orbital OrbLintHostCallsOrbital {
                                         (let ((effs (default (object/get @tk "effects" null) [])))
                                           (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false), guard: false })))))))))))
                             (array/flatten (array/map @places (fn pl
-                              (array/map (default (as (default (tree/fold (object/get @pl "node") (fn (nd kids)
-                                  (array/concat
-                                    (if (and (validate/array @nd) (> (array/len @nd) 0) (validate/string (array/first @nd)) (array/includes @heads (array/first @nd))) [@nd] [])
-                                    (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (default (object/get @kids @key []) [])))) [])))) HcVal) []) HcCalls) [])
-                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") })))))))))))))))))))))  HcCallList) []) })
+                              (array/map (array/sort (array/flatten (object/values (default (as (tree/index (object/get @pl "node") @heads) HcHitIdx) {}))) "at") (fn hit { head: (let ((hd (array/first (object/get @hit "node")))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: (object/get @hit "node"), tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") })))))))))))))))))))))  HcCallList) []) })
         (emit HC_DRAIN { })
     }
 

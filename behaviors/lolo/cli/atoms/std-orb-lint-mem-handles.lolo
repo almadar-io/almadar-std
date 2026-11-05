@@ -9,6 +9,8 @@ app std-orb-lint-mem-handles [
 uses Spec from "almadar-std/lint-mem-handles"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type MhValue = string | number | boolean | [MhValue?] | Map string MhValue?
+type MhAt = { path : string!, node : string! }
+type MhIdx = Map string [MhAt]
 type MhCall = [MhValue?]
 type MhEmit = { success : string! }
 type MhOpts = { emit : MhEmit! }
@@ -45,12 +47,12 @@ orbital OrbLintMemHandlesOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (memHits : [MhAt] (array/flatten (object/values (default (as (tree/index @payload.program [] { prefixes: [(quote "mem/")] }) MhIdx) {})))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (default (array/nth @orbitals @oi) {})))
               (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
                 (let ((td (default (array/nth (object/get @orb "traits" []) @ti) {})))
-                  (if (not (validate/object (object/get @td "stateMachine" null)))
+                  (if (or (not (validate/object (object/get @td "stateMachine" null))) (not (array/some @memHits (fn mh (str/startsWith (object/get @mh "path" "") (str/concat "orbitals[" @oi "].traits[" @ti "]"))))))
                     []
                     (let ((tx (object/get (object/get @td "stateMachine" {}) "transitions" []))
                           (stNames : [string] (array/map (object/get (object/get @td "stateMachine" {}) "states" []) (fn s (object/get @s "name" ""))))

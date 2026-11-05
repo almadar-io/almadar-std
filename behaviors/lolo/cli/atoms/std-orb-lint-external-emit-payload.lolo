@@ -17,6 +17,7 @@ type XepEmit = { event : string, scope : string, payloadSchema : [XepField] }
 type XepMachine = { events : [XepEvent] }
 type XepTrait = { name : string, emits : [XepEmit], listens : [XepListen], stateMachine : XepMachine }
 type XepOrbital = { name : string, traits : [XepTrait] }
+type XepCand = { orb : string!, tn : string!, en : string! }
 type XepProgram = { orbitals : [XepOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -39,27 +40,30 @@ orbital OrbLintExternalEmitPayloadOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((rows (array/flatten (array/map @orbitals (fn o
+          (let ((cands : [XepCand] (array/flatten (array/map @orbitals (fn o
                   (array/flatten (array/map (object/get @o "traits" []) (fn t
-                    (array/map (object/get @t "listens" []) (fn l
-                      (let ((trig (object/get @l "triggers" (object/get @l "event" ""))) (src (object/get @l "source" {})))
-                        (let ((ev (array/find (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (= (object/get @e "key" "") @trig)))))
-                          { orb: (object/get @o "name" ""),
-                            targeted: (or (= (object/get @src "kind" "") "trait") (= (object/get @src "kind" "") "orbital")),
-                            srcTrait: (object/get @src "trait" ""),
-                            event: (object/get @l "event" ""),
-                            expects: (if (= @ev null) false (array/some (object/get @ev "payloadSchema" []) (fn f (= (object/get @f "required" false) true)))) }))))))))))))
-            (array/flatten (array/map @orbitals (fn o
-              (array/flatten (array/map (object/get @o "traits" []) (fn t
-                (array/flatten (array/map (object/get @t "emits" []) (fn e
-                  (let ((tn (object/get @t "name" "")) (en (object/get @e "event" "")))
+                    (array/flatten (array/map (object/get @t "emits" []) (fn e
+                      (if (and (= (object/get @e "scope" "") "external") (= (array/len (object/get @e "payloadSchema" [])) 0))
+                        [{ orb: (object/get @o "name" ""), tn: (object/get @t "name" ""), en: (object/get @e "event" "") }]
+                        []))))))))))))
+            (if (= (array/len @cands) 0) []
+              (let ((rows (array/flatten (array/map @orbitals (fn o
+                      (array/flatten (array/map (object/get @o "traits" []) (fn t
+                        (array/map (object/get @t "listens" []) (fn l
+                          (let ((trig (object/get @l "triggers" (object/get @l "event" ""))) (src (object/get @l "source" {})))
+                            (let ((ev (array/find (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (= (object/get @e "key" "") @trig)))))
+                              { orb: (object/get @o "name" ""),
+                                targeted: (or (= (object/get @src "kind" "") "trait") (= (object/get @src "kind" "") "orbital")),
+                                srcTrait: (object/get @src "trait" ""),
+                                event: (object/get @l "event" ""),
+                                expects: (if (= @ev null) false (array/some (object/get @ev "payloadSchema" []) (fn f (= (object/get @f "required" false) true)))) }))))))))))))
+                (array/flatten (array/map @cands (fn c
+                  (let ((tn (object/get @c "tn" "")) (en (object/get @c "en" "")))
                     (let ((wired (array/filter @rows (fn r (and (= (object/get @r "event") @en) (or (not (object/get @r "targeted")) (= (object/get @r "srcTrait") @tn)))))))
-                      (if (and (= (object/get @e "scope" "") "external")
-                               (= (array/len (object/get @e "payloadSchema" [])) 0)
-                               (array/some @wired (fn r (!= (object/get @r "orb") (object/get @o "name" ""))))
+                      (if (and (array/some @wired (fn r (!= (object/get @r "orb") (object/get @c "orb" ""))))
                                (array/some @wired (fn r (object/get @r "expects"))))
                         [{ code: @config.codes.tEvtExternalMissingPayload.code, path: (str/concat "traits." @tn ".emits." @en), message: (str/concat "External event '" @en "' in trait '" @tn "' should have a payload definition with typed fields"), suggestion: "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }", severity: "error" }]
-                        [])))))))))))))))
+                        [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "external-emit-payload", scope: @entity.scope, findings: @entity.findings })

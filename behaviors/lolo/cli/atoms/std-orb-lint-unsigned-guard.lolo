@@ -42,6 +42,7 @@ orbital OrbLintUnsignedGuardOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (pv : string (str/concat (str/slice "a@b" 1 2) "payload.value")))
+          (if (not (array/some (object/get (default (as (tree/index @payload.program ["jws/verify"]) UgIndex) {}) "jws/verify" []) (fn c (let ((n (object/get @c "node" null))) (if (validate/array @n) (let ((o2 (array/nth @n 3))) (if (validate/object @o2) (= (object/get @o2 "allowUnsigned" false) true) false)) false))))) []
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (default (array/nth @orbitals @oi) {})))
               (let ((trs (object/get @o "traits" [])))
@@ -82,7 +83,7 @@ orbital OrbLintUnsignedGuardOrbital {
                                       (let ((guarded (array/filter @idx (fn i (or (array/includes @base @i) (and (array/includes @reached @i) (not (array/includes @tainted @i))))))))
                                         (array/flatten (array/map (array/filter @rows (fn r (not (array/includes @guarded (object/get @r "i" 0))))) (fn r
                                       (array/map (object/get @r "un" []) (fn up
-                                        { code: @config.codes.unsignedNotEnvGuarded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @r "i" 0) "].effects" @up), message: (str/concat "transition on '" (object/get @r "ev" "") "' passes `allowUnsigned: true` to jws/verify, which accepts an alg:none token, but it is not env-guarded"), suggestion: "reach this transition only from an os/getenv answer whose arm guards on `(= (default @payload.value \"\") <expected host>)`, directly or through emits that all start from such arms", severity: "error" }))))))))))))))))))))))))))
+                                        { code: @config.codes.unsignedNotEnvGuarded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @r "i" 0) "].effects" @up), message: (str/concat "transition on '" (object/get @r "ev" "") "' passes `allowUnsigned: true` to jws/verify, which accepts an alg:none token, but it is not env-guarded"), suggestion: "reach this transition only from an os/getenv answer whose arm guards on `(= (default @payload.value \"\") <expected host>)`, directly or through emits that all start from such arms", severity: "error" })))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "unsigned-guard", scope: @entity.scope, findings: @entity.findings })

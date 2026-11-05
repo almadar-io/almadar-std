@@ -24,6 +24,13 @@ type SbHit = { rel : string, s : string, b : [string] }
 type SbRoot = { x : SbShape?, w : string! }
 type SbFront = { f : SbField, w : string }
 type SbDepth = { d : number! }
+type SbCall = { path : string!, node : SbShape! }
+type SbIdx = Map string [SbCall]
+type SbAt = { path : string!, node : string! }
+type SbHitOut = { rel : string!, s : string!, b : [string]! }
+type SbAtIdx = Map string [SbAt]
+type SbPair = { pfx : string!, before : [string]! }
+type SbScope = { q : string!, kind : string!, names : [string]!, pairs : [SbPair]! }
 type SbLevel = { front : [SbFront], acc : [SbRoot] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -101,43 +108,34 @@ orbital OrbLintSexprBindingOrbital {
     (array/flatten
       (array/map (array/concat @tRoots @fieldRoots)
         (fn x
-          (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
-  (if (str/startsWith @n (quote "@"))
-    [{ rel: "", s: @n, b: @nostr }]
-    @nohits)
-  (if (validate/array @n)
-    (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
-      (if (and (= @len 3) (= @op "fn"))
-        (let ((p1 (array/nth @n 1)))
-          (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
-            (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @params) })))))
-        (if (and (= @len 3) (= @op "let"))
-          (let ((p1 (array/nth @n 1)))
-            (if (validate/array @p1)
-              (let ((k1 : [SbHit] (let ((r : [SbHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))) (allNames (array/flatten (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr))))))
-                (array/concat
-                  (array/flatten
-                    (array/map (array/range 0 (array/len @p1))
-                      (fn bi
-                        (let ((before (array/flatten (array/map (array/range 0 @bi) (fn bj (let ((pj (array/nth @p1 @bj))) (if (and (validate/array @pj) (> (array/len @pj) 0)) (let ((nm1 (array/nth @pj 0))) (if (validate/string @nm1) [@nm1] @nostr)) @nostr)))))) (pfx (str/concat "[" @bi "][1]")))
-                          (array/map (array/filter @k1 (fn h (str/startsWith (object/get @h "rel" "") @pfx))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @before) })))))))
-                  (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @allNames) })))))
-              (if (validate/object @p1)
-                (let ((names : [string] (object/keys @p1)) (k1 : [SbHit] (let ((r : [SbHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))))
-                  (array/concat
-                    (array/map @k1 (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @names) })))
-                    (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @names) })))))
-                (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
-          (array/flatten
-            (array/map (array/range (if (and (> @len 0) (str/includes @op "/")) 1 0) @len)
-              (fn i
-                (array/map (let ((r : [SbHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (object/keys @k)
-          (fn key
-            (array/map (let ((r : [SbHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) SbShape) @nohits)))
+          (let ((hs : [SbHitOut] (let ((raw (tree/index (object/get @x "x" null) ["fn" "let"] { prefixes: [(quote "@")] })) (ix (default (as (object/omit @raw [(quote "@")]) SbIdx) {})) (ats : [SbAt] (array/flatten (object/values (default (as (object/omit @raw ["fn" "let"]) SbAtIdx) {})))))
+            (let ((ss : [SbScope] (array/flatten (array/map (array/concat (object/get @ix "fn" []) (object/get @ix "let" [])) (fn c
+                    (let ((cn (object/get @c "node" null)) (q (object/get @c "path" "")))
+                      (if (not (and (validate/array @cn) (= (array/len @cn) 3)))
+                        []
+                        (let ((p1 (array/nth @cn 1)))
+                          (if (= (array/nth @cn 0) "fn")
+                            [{ q: @q, kind: "fn", names: (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr)), pairs: [] }]
+                            (if (validate/array @p1)
+                              (let ((nms (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr)))))
+                                [{ q: @q, kind: "la", names: (array/flatten @nms), pairs: (array/map (array/range 0 (array/len @p1)) (fn bi { pfx: (str/concat "[1][" @bi "][1]"), before: (array/flatten (array/slice @nms 0 @bi)) })) }])
+                              (if (validate/object @p1)
+                                [{ q: @q, kind: "lo", names: (object/keys @p1), pairs: [] }]
+                                [{ q: @q, kind: "l0", names: @nostr, pairs: [] }])))))))))))
+              (array/flatten (array/map @ats (fn hit
+                (let ((hp (object/get @hit "path" "")) (hn (object/get @hit "node" "")))
+                  (if (and (str/endsWith @hp "[0]") (str/includes @hn "/"))
+                    []
+                    (let ((res (array/reduce (array/filter @ss (fn s (str/startsWith @hp (str/concat (object/get @s "q") "[")))) { ok: true, b: @nostr }
+                          (fn (acc s)
+                            (let ((sfx (str/slice @hp (str/len (object/get @s "q")))) (kind (object/get @s "kind")))
+                              (let ((add (if (str/startsWith @sfx "[2]") (object/get @s "names") (if (= @kind "lo") (if (str/startsWith @sfx "[1]") (object/get @s "names") null) (if (= @kind "la") (let ((pf (array/find (object/get @s "pairs") (fn pq (str/startsWith @sfx (object/get @pq "pfx")))))) (if (= @pf null) null (object/get @pf "before"))) null)))))
+                                (if (or (not (object/get @acc "ok")) (= @add null))
+                                  { ok: false, b: @nostr }
+                                  { ok: true, b: (array/concat (object/get @acc "b") @add) })))))))
+                      (if (object/get @res "ok")
+                        [{ rel: (if (or (= @hp "") (str/startsWith @hp "[")) @hp (str/concat "." @hp)), s: @hn, b: (object/get @res "b") }]
+                        [])))))))))))
               (array/flatten
                 (array/map @hs
                   (fn h

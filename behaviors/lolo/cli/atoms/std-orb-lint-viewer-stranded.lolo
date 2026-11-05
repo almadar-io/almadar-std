@@ -33,12 +33,14 @@ type VsRes = { leaves : [VstrNode?]!, pend : [VsPend]! }
 type VsPend = { e : VstrNode?, ll : VsLets }
 type VsLets = Map string VstrNode?
 type VsCand = Map string [VstrNode?]
-type VsFact = { direct : boolean!, embeds : [string]! }
+type VsFact = { key : string!, oi : number!, ti : number!, li : number!, src : string!, direct : boolean!, embeds : [string]! }
+type VsWay = { w : Map string boolean, rs : [VsFr] }
 type VsPoolSt = { pool : [VstrNode?]!, re : [string]!, rc : [string]!, rt : [string]! }
-type VsWay = { w : Map string boolean, uw : [boolean] }
 type VsAffRow = { aff : [string], prod : [string] }
 type VsAff = Map string VsAffRow
 type VsOrbitals = [VsOrbital]
+type VsUc = { u : VsUnit!, c : VsCand! }
+type VsFr = { key : string!, ti : number!, li : number!, src : string!, open : boolean! }
 type VsOwner = { orbital : number, page : number, kind : string, names : [string] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -96,7 +98,7 @@ orbital OrbLintViewerStrandedOrbital {
         (set @entity.owners @payload.owners)
         (set @entity.haveOwners true)
       LINT_COMPUTE -> ready
-        (set @entity.findings (let ((noe : [VstrNode?] []) (nos : [string] []) (nob : [boolean] []) (nobm : Map string boolean {}) (nobp : VsByPattern {}) (noh : [VsHit] []) (noli : [VsListen] []) (noem : [VsEmit] []) (notrs : [VsTrans] []) (notks : [VsTick] []) (notraits : [VsTrait] []) (noorbs : [VsOrbital] []) (noorb : VsOrbital {}) (notrait : VsTrait {}) (notrans : VsTrans {}) (notick : VsTick {}) (nou1 : VsUnit { oi: 0, ti: 0, tn: "", src: "", li: 0, e: 0, event: "", body: null, pre: [] }) (nofact : VsFact { direct: false, embeds: [] }) (noobj : VsObj {}) (nolet : VsLets {}) (nocand : VsCand {}) (nopend : [VsPend] []) (nocfg : Map string VsField {}) (nofield : VsField {}) (noo : [VsOutlet] []) (noaff : VsAffRow { aff: [], prod: [] }) (nof : [OrbFinding] []) (nopat : VsPattern {}) (nopat2 : Map string VsPatProp {}) (nopp : VsPatProp {})) (let ((strandOrbs : [number] (array/unique (array/map (array/filter @entity.owners (fn w (array/includes ["channel", "sole"] (object/get @w "kind" "")))) (fn w (object/get @w "orbital" 0)))))) (let ((orbs : [VsOrbital] (default (as (object/get @entity.program "orbitals" null) VsOrbitals) @noorbs))) (let ((outlets : Map string [VsOutlet] (default (object/fromEntries (array/map (object/keys @entity.patterns) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), (array/flatten (array/map (object/keys (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2)) (fn pr
+        (set @entity.findings (let ((noe : [VstrNode?] []) (nos : [string] []) (nob : [boolean] []) (nobm : Map string boolean {}) (nobp : VsByPattern {}) (noh : [VsHit] []) (noli : [VsListen] []) (noem : [VsEmit] []) (notrs : [VsTrans] []) (notks : [VsTick] []) (notraits : [VsTrait] []) (noorbs : [VsOrbital] []) (noorb : VsOrbital {}) (notrait : VsTrait {}) (notrans : VsTrans {}) (notick : VsTick {}) (nou1 : VsUnit { oi: 0, ti: 0, tn: "", src: "", li: 0, e: 0, event: "", body: null, pre: [] }) (nofr : [VsFr] []) (noobj : VsObj {}) (nolet : VsLets {}) (nocand : VsCand {}) (nopend : [VsPend] []) (nocfg : Map string VsField {}) (nofield : VsField {}) (noo : [VsOutlet] []) (noaff : VsAffRow { aff: [], prod: [] }) (nof : [OrbFinding] []) (nopat : VsPattern {}) (nopat2 : Map string VsPatProp {}) (nopp : VsPatProp {})) (let ((strandOrbs : [number] (array/unique (array/map (array/filter @entity.owners (fn w (array/includes ["channel", "sole"] (object/get @w "kind" "")))) (fn w (object/get @w "orbital" 0)))))) (let ((orbs : [VsOrbital] (default (as (object/get @entity.program "orbitals" null) VsOrbitals) @noorbs))) (let ((outlets : Map string [VsOutlet] (default (object/fromEntries (array/map (object/keys @entity.patterns) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), (array/flatten (array/map (object/keys (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2)) (fn pr
   (let ((kd (object/get (object/get (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2) @pr @nopp) "kind" "")))
     (if (array/includes ["event", "event-ref", "event-listen", "callback", "event-map"] @kd) [{ prop: @pr, field: "" }]
       (if (= @kd "event-list") [{ prop: @pr, field: (object/get (default (array/find @entity.byPattern (fn bp (and (= (object/get @bp "pattern" "") @pn) (= (object/get @bp "prop" "") @pr)))) @nobp) "field" "event") }] @noo))))))]))) {}))) (let ((contentTypes : Map string boolean (default (object/fromEntries (array/map (array/filter (object/keys @entity.patterns) (fn pn (array/some (object/values (object/get (object/get @entity.patterns @pn @nopat) "props" @nopat2)) (fn pr (= (object/get (default @pr @nopp) "kind" "") "entity"))))) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), true]))) {}))) (let ((inlines : Map string boolean (default (object/fromEntries (array/flatten (array/map @strandOrbs (fn oi (array/map (array/filter (object/get (default (array/nth @orbs @oi) @noorb) "traits" @notraits) (fn t (object/has @t "stateMachine"))) (fn t [(str/concat @oi "|" (object/get @t "name" "")), true])))))) {}))) (let ((units : [VsUnit] (let ((nou : [VsUnit] []))
@@ -115,8 +117,7 @@ orbital OrbLintViewerStrandedOrbital {
                       (let ((x (array/nth @effs @e)))
                         (if (and (validate/array @x) (>= (array/len @x) 3) (= (array/nth @x 0) "render-ui") (validate/string (array/nth @x 1)) (array/includes @config.mainSlots (array/nth @x 1)) (!= (array/nth @x 2) null))
                           [{ oi: @oi, ti: @ti, tn: (object/get @t "name" ""), src: (object/get @l "src"), li: (object/get @l "li"), e: @e, event: (object/get @l "event"), body: (array/nth @x 2), pre: (array/slice @effs 0 @e) }]
-                          @nou))))))))))))))))))))))) (let ((cands : [VsCand] (array/map @units (fn u
-  (let ((body (object/get @u "body" null)))
+                          @nou))))))))))))))))))))))) (let ((ucs : [VsUc] (array/map @units (fn u { u: @u, c: (let ((body (object/get @u "body" null)))
     (if (not (array/some (array/flatten (object/values (tree/index @body ["let"] { prefixes: [(quote "@entity.")] }))) (fn hh (validate/string (object/get @hh "node" null))))) @nocand
       (let ((ix (tree/index (object/get @u "pre" @noe) ["let", "set"])))
         (let ((acc0 : VsAcc { lets: @nolet, fields: @nocand })) (object/get (array/reduce (array/sort (array/flatten (object/values @ix)) "at") @acc0
@@ -147,8 +148,8 @@ orbital OrbLintViewerStrandedOrbital {
                       (if (> (array/len @cs) 0)
                         { lets: (object/get @acc "lets"), fields: (object/merge (object/get @acc "fields") (default (default (object/fromEntries [[(str/slice @tg 8), @cs]]) {}) {})) }
                         @acc))
-                    @acc)))))) "fields"))))))))) (let ((facts : [VsFact] (array/map (array/range 0 (array/len @units)) (fn ui
-  (let ((u (default (array/nth @units @ui) @nou1)) (cand (default (array/nth @cands @ui) @nocand)))
+                    @acc)))))) "fields"))))) })))) (let ((facts : [VsFact] (array/map @ucs (fn uc
+  (let ((u (object/get @uc "u" @nou1)) (cand (object/get @uc "c" @nocand)))
     (let ((oi (object/get @u "oi" 0)) (ti (object/get @u "ti" 0)) (body (object/get @u "body" null)))
       (let ((t (default (array/nth (object/get (default (array/nth @orbs @oi) @noorb) "traits" @notraits) @ti) @notrait)))
         (let ((cfg (object/get @t "config" @nocfg)) (nodes0 (default (as (json/nodes @body) VstrNodes) @noe)))
@@ -165,7 +166,7 @@ orbital OrbLintViewerStrandedOrbital {
                           pool: (array/concat @nodes0
                             (array/flatten (array/map @re (fn f (array/flatten (array/map (object/get @cand @f @noe) (fn c (default (as (json/nodes @c) VstrNodes) @noe)))))))
                             (array/flatten (array/map @rc (fn k (if (object/get @cshape @k false) (default (as (json/nodes (object/get (object/get @cfg @k @nofield) "default" null)) VstrNodes) @noe) @noe))))) }))))))
-                { direct: (or
+                { key: (str/concat @oi "|" (object/get @u "tn")), oi: @oi, ti: (object/get @u "ti" 0), li: (object/get @u "li" 0), src: (object/get @u "src" ""), direct: (or
                     (array/some (object/get @st "re") (fn f (and (!= @f "") (not (object/has @cand @f)))))
                     (array/some (object/get @st "rc") (fn k (and (!= @k "") (not (object/get @cshape @k false)))))
                     (array/some (object/get @st "rt") (fn x (and (!= @x "") (not (object/has @inlines (str/concat @oi "|" @x))))))
@@ -176,12 +177,12 @@ orbital OrbLintViewerStrandedOrbital {
                               (let ((vv (object/get @qo (object/get @o "prop" "") null)))
                                 (let ((vs (if (= (object/get @o "field" "") "") [@vv] (let ((vva (as @vv VstrNodes))) (if (!= @vva null) (array/map (array/filter @vva (fn d (!= (as @d VsObj) null))) (fn d (object/get (default (as @d VsObj) @noobj) (object/get @o "field" "") null))) @noe)))))
                                   (array/some @vs (fn w (array/some (default (as (json/nodes @w) VstrNodes) @noe) (fn z (let ((zs (as @z VsStr))) (and (!= @zs null) (or (str/startsWith @zs (quote "@")) (and (!= @zs "") (not (array/includes @entity.busExcluded @zs)))))))))))))))))))))),
-                  embeds: (array/filter (object/get @st "rt") (fn x (and (!= @x "") (object/has @inlines (str/concat @oi "|" @x))))) }))))))))))) (let ((wayOn : VsWay (array/reduce (array/range 0 (+ (array/len @units) 2)) { w: @nobm, uw: @nob }
+                  embeds: (array/filter (object/get @st "rt") (fn x (and (!= @x "") (object/has @inlines (str/concat @oi "|" @x))))) }))))))))))) (let ((wayOn : VsWay (array/reduce (array/range 0 (+ (array/len (array/unique (array/map @facts (fn r (object/get @r "key"))))) 2)) { w: @nobm, rs: @nofr }
   (fn (st r)
-    (let ((uw (array/map (array/range 0 (array/len @units)) (fn ui
-        (let ((f (default (array/nth @facts @ui) @nofact)) (oi (object/get (default (array/nth @units @ui) @nou1) "oi")))
-          (or (object/get @f "direct") (array/some (object/get @f "embeds") (fn x (object/has (object/get @st "w") (str/concat @oi "|" @x))))))))))
-      { uw: @uw, w: (default (object/fromEntries (array/map (array/filter (array/range 0 (array/len @units)) (fn ui (= (default (array/nth @uw @ui) false) true))) (fn ui [(str/concat (object/get (default (array/nth @units @ui) @nou1) "oi") "|" (object/get (default (array/nth @units @ui) @nou1) "tn")), true]))) {}) }))))) (let ((affs : Map string VsAffRow (default (object/fromEntries (array/map @strandOrbs (fn oi
+    (let ((rs : [VsFr] (array/map @facts (fn f { key: (object/get @f "key"), ti: (object/get @f "ti"), li: (object/get @f "li"), src: (object/get @f "src"), open: (or (object/get @f "direct") (array/some (object/get @f "embeds") (fn x (object/has (object/get @st "w") (str/concat (object/get @f "oi") "|" @x))))) }))))
+      { rs: @rs, w: (default (object/fromEntries (array/map (array/filter @rs (fn q (object/get @q "open"))) (fn q [(object/get @q "key"), true]))) {}) })))))
+  (let ((armOpen : Map string boolean (default (object/fromEntries (array/map (array/filter (object/get @wayOn "rs" @nofr) (fn q (and (= (object/get @q "src") "t") (not (object/get @q "open"))))) (fn q [(str/concat (object/get @q "key") "|" (object/get @q "ti") "|" (object/get @q "li")), true]))) {})))
+(let ((affs : Map string VsAffRow (default (object/fromEntries (array/map @strandOrbs (fn oi
   (let ((inl (array/filter (object/get (default (array/nth @orbs @oi) @noorb) "traits" []) (fn t (object/has @t "stateMachine")))))
     (let ((asy (array/flatten (array/map (array/flatten (array/map @inl (fn t
                   (let ((effs (array/filter (array/concat (array/flatten (array/map (object/get @t "stateMachine.transitions" @notrs) (fn x (object/get @x "effects" @noe)))) (array/flatten (array/map (object/get @t "ticks" @notks) (fn x (object/get @x "effects" @noe))))) (fn r (validate/array @r)))))
@@ -210,15 +211,12 @@ orbital OrbLintViewerStrandedOrbital {
                                      (array/some @trans (fn q (and (!= (object/get @q "event" "") @ev) (not (array/includes @entity.busExcluded (object/get @q "event" ""))) (array/includes (object/get @fa "prod" @nos) (object/get @q "event" ""))
                                                                    (let ((qf (object/get @q "from" ""))) (if (validate/string @qf) (= @qf @to) (array/includes @qf @to)))))))
                               false
-                              (array/some (array/range 0 (array/len @units)) (fn ui
-                                (let ((u (default (array/nth @units @ui) @nou1)))
-                                  (and (= (object/get @u "oi") @oi) (= (object/get @u "ti") @ti) (= (object/get @u "src") "t") (= (object/get @u "li") @k)
-                                       (not (default (array/nth (object/get @wayOn "uw" @nob) @ui) false)))))))))))))))
+                              (object/has @armOpen (str/concat @oi "|" @on "|" @ti "|" @k)))))))))))
                   (array/flatten (array/map (array/range 0 (array/len @trans)) (fn k
                     (let ((ev (object/get (default (array/nth @trans @k) @notrans) "event" "")))
                       (if (and (default (array/nth @hits @k) false) (not (array/some (array/range 0 @k) (fn j (and (default (array/nth @hits @j) false) (= (object/get (default (array/nth @trans @j) @notrans) "event" "") @ev))))))
                         [{ code: @config.codes.circuitViewerStranded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" @on ")].stateMachine.transitions[" @k "]"), message: (str/concat "'" @on "' owns this page's content region, and '" @ev "' repaints it with a body that carries no data surface, no wired control and no sibling embed — the screen the viewer came from is gone and there is nothing to click"), suggestion: "render this OVER the page instead of replacing it: move the body into a dedicated overlay trait writing only 'modal' (a modal-close arm rendered from the trait that owns 'main' is rejected by CIRCUIT_MODAL_EXIT_INCOMPLETE, which is why it needs its own trait), or give the arm a wired control back to the state it came from", severity: "error" }]
-                        @nof))))))))))))))))))))))))))))
+                        @nof)))))))))))))))))))))))))))))
         (set @entity.haveFired false)
         (set @entity.haveOwners false)
         (emit LINT_FINISH { })
