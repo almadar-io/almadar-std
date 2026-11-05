@@ -76,7 +76,7 @@ orbital OrbLintItemActionEventOrbital {
                   (array/concat (let ((ia (object/get @n "itemActions" null)))
  (if (validate/array @ia)
   (array/map (array/filter (array/range 0 (array/len @ia)) (fn i (let ((a (array/nth @ia @i))) (and (validate/object @a) (not (object/has @a "event")) (not (object/has @a "navigatesTo"))))))
-    (fn i { p: (str/concat ".itemActions[" @i "]"), m: "itemAction must have 'event' or 'navigatesTo' property", s: "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: '/route/{{row.id}}' to navigate" }))
+    (fn i { p: (str/concat ".itemActions[" @i "]"), m: "itemAction must have 'event' or 'navigatesTo' property", s: "Add event: 'EVENT_NAME' to emit an event, or navigatesTo: (quote (fn row (str/concat \"/route/\" @row.id))) to navigate" }))
   []))
                     (if (= @ch null) (object/get @nr "nd")
                       (if (and (validate/array @ch) (= (array/len @ch) 3) (let ((hd (array/nth @ch 0))) (and (validate/string @hd) (= @hd "array/map"))) (let ((lam (array/nth @ch 2))) (and (validate/array @lam) (= (array/len @lam) 3) (let ((hd (array/nth @lam 0))) (and (validate/string @hd) (= @hd "fn"))) (let ((pr (array/nth @lam 1))) (or (validate/string @pr) (and (validate/array @pr) (array/some @pr (fn q (validate/string @q))))))))) (array/map (object/get @chk "mp") (fn h { p: (str/concat ".children" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") }))

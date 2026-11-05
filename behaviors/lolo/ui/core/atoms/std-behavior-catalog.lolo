@@ -228,6 +228,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.entries ?result)
         (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0, trait: (array/first (default @e.traits [])), value: @e.value })))
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (set @entity.topics (array/map (array/unique (array/map ?result (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count ?result (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })))
         (emit CATALOG_TOPICS { topics: @entity.topics })
         (when @config.prefetch (emit CATALOG_TREE { data: (array/map ?result (fn e { package: @e.package, topic: @e.topic, behavior: @e.behavior, kind: @e.level, value: @e.value })) }))
@@ -235,6 +236,7 @@ orbital BehaviorCatalogOrbital {
       LIST_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
+        (emit CATALOG_SETTLED {})
         (emit CATALOG_SHOWN {})
     }
 
@@ -311,6 +313,7 @@ orbital BehaviorCatalogOrbital {
       SEARCH_LISTED -> ready when (> (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
         (set @entity.error "The listed behaviors carry no embedding vectors: a plain behavior/catalog listing has none, and a search needs rows from std-catalog-vectors")
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the listed behaviors carry no embedding vectors." })
         (emit CATALOG_SHOWN {})
       SEARCH_LISTED -> searching when (= (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
@@ -319,6 +322,7 @@ orbital BehaviorCatalogOrbital {
       SEARCH_LIST_FAILED -> ready
         (set @entity.error ?error)
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?error) })
         (emit CATALOG_SHOWN {})
       INIT -> loading
@@ -331,15 +335,18 @@ orbital BehaviorCatalogOrbital {
       EMBEDDED -> ready when (> (array/len ?embeddings) 0)
         (set @entity.rows (array/sort (array/flatten (array/map @entity.searchHits (fn e (let ((c (let ((vs (default @e.vectors {}))) (if (object/has @vs description) (array/cosine (object/get @vs description) (array/first ?embeddings)) 0)))) (if (== @c null) [] (if (and (>= @c @config.minScore) (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic)))) [{ behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: (default @c 0), trait: (array/first (default @e.traits [])), value: @e.value }] [])))))) score desc))
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (emit CATALOG_SHOWN {})
       EMBEDDED -> ready when (= (array/len ?embeddings) 0)
         (set @entity.error "The model returned no embedding")
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the model returned no embedding." })
         (emit CATALOG_SHOWN {})
       SEARCH_FAILED -> ready
         (set @entity.error ?message)
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?message) })
         (emit CATALOG_SHOWN {})
     }
@@ -369,11 +376,13 @@ orbital BehaviorCatalogOrbital {
       DESCRIBED -> ready
         (set @entity.knobs (object/get ?result knobs []))
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (emit CATALOG_SHOWN {})
       DESCRIBE_FAILED -> ready
         (set @entity.error ?error)
         (set @entity.knobs [])
         (set @entity.status ready)
+        (emit CATALOG_SETTLED {})
         (render-ui toast { type: alert, variant: error, message: (str/concat "Details failed: " ?error) })
         (emit CATALOG_SHOWN {})
     }
@@ -418,6 +427,8 @@ orbital BehaviorCatalogOrbital {
         value : behavior
       }
       CATALOG_SHOWN
+      CATALOG_SETTLED
+        @tier "internal"
       CATALOG_TREE -> external {
         data : [BehaviorCatalogLeaf]!
       }
@@ -707,6 +718,7 @@ orbital BehaviorCatalogOrbital {
 
     listens {
       BehaviorCatalogData.CATALOG_SHOWN -> DRAW
+      BehaviorCatalogData.CATALOG_SETTLED -> DRAW
       DRAW { }
       SEARCH {
         searchTerm : string!

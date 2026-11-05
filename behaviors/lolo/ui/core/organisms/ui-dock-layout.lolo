@@ -1,6 +1,7 @@
 app ui-dock-layout [
   locales: [en, ar, sl],
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "DockLayout — UI factory (1:1 with the @almadar/ui dock-layout pattern)."
 ]
 uses NotFound from "std/behaviors/std-not-found"
@@ -39,9 +40,13 @@ orbital DockLayoutOrbital {
           secondarySidebarCollapsed: @config.secondarySidebarCollapsed
           onSecondarySidebarCollapsedChange: @config.onSecondarySidebarCollapsedChange
           compact: @config.compact
-          secondarySidebarLabel: @config.secondarySidebarLabel
+          openMenuLabel: (if (= @config.openMenuLabel "") (i18n/t "openMenu") @config.openMenuLabel)
+          backToMenuLabel: (if (= @config.backToMenuLabel "") (i18n/t "backToMenu") @config.backToMenuLabel)
+          menuLabel: (if (= @config.menuLabel "") (i18n/t "menu") @config.menuLabel)
+          closeDrawerLabel: (if (= @config.closeDrawerLabel "") (i18n/t "closeDrawer") @config.closeDrawerLabel)
+          secondarySidebarLabel: (if (= @config.secondarySidebarLabel "") (i18n/t "secondary") @config.secondarySidebarLabel)
           secondarySidebarIcon: @config.secondarySidebarIcon
-          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelLabel: (if (= @config.bottomPanelLabel "") (i18n/t "bottom") @config.bottomPanelLabel)
           bottomPanelIcon: @config.bottomPanelIcon
           topBarActions: @config.topBarActions
           className: @config.className
@@ -198,7 +203,23 @@ orbital DockLayoutOrbital {
         @label "Compact"
         @description "The mobile variant; decided by the viewport (narrower than 1024px) when omitted."
         @tier "presentation"
-      secondarySidebarLabel : string
+      openMenuLabel : string = ""
+        @label "Open Menu Label"
+        @description "Accessible name for the compact menu button."
+        @tier "presentation"
+      backToMenuLabel : string = ""
+        @label "Back To Menu Label"
+        @description "Accessible name for the compact back button."
+        @tier "presentation"
+      menuLabel : string = ""
+        @label "Menu Label"
+        @description "Title of the compact menu drawer."
+        @tier "presentation"
+      closeDrawerLabel : string = ""
+        @label "Close Drawer Label"
+        @description "Accessible name for the compact drawer close button."
+        @tier "presentation"
+      secondarySidebarLabel : string = ""
         @label "Secondary Sidebar Label"
         @description "Compact: the top-bar button that opens `secondarySidebar` (e.g. 'Inspector', 'Chat')."
         @tier "presentation"
@@ -206,7 +227,7 @@ orbital DockLayoutOrbital {
         @label "Secondary Sidebar Icon"
         @description "secondarySidebarIcon prop"
         @tier "presentation"
-      bottomPanelLabel : string
+      bottomPanelLabel : string = ""
         @label "Bottom Panel Label"
         @description "Compact: the top-bar button that opens `bottomPanel`."
         @tier "presentation"

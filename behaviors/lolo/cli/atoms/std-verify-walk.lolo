@@ -17,7 +17,7 @@ type WalkJudged = { verdicts : [WalkVerdict]! }
 type WalkFull = { orbitals : [orbital] }
 type WalkPayload = Map string WalkJson
 type WalkIssue = { code : string!, message : string }
-type WalkValidation = { valid : boolean!, errors : [WalkIssue]!, warnings : [WalkIssue] }
+type WalkValidation = { valid : boolean!, errors : [WalkIssue], warnings : [WalkIssue] }
 type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string!, reply : string! }
 type WalkEffect = { type : string!, args : [WalkJson?]!, status : string!, error : string }
 type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
@@ -25,7 +25,10 @@ type WalkSlot = { name : string!, type : string!, required : boolean!, values : 
 type WalkSent = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]! }
 type WalkStepped = { orbital : string, trait : string!, from : string!, event : string!, result : WalkResult! }
 type WalkPlayed = { trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, targets : [string]!, result : WalkResult! }
-type WalkResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string }
+type WalkNodeBinding = { kind : string!, entity : string, rows : number, readGated : boolean }
+type WalkRenderedNode = { pattern : string!, dynamic : boolean!, supported : boolean!, stub : boolean!, binding : WalkNodeBinding! }
+type WalkRenderedSlot = { slot : string!, sourceTrait : string!, ownerEntity : string!, nodes : [WalkRenderedNode]! }
+type WalkResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]? }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
 type WalkCreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [WalkHop] }
 type WalkCredit = { index : number!, stateBefore : string!, stateAfter : string! }
@@ -60,6 +63,9 @@ orbital VerifyWalkOrbital {
     credits : [WalkCredit] = []
     creditSteps : [WalkCreditStep] = []
     gaps : number! = 0
+    render : boolean = false
+    strict : boolean = false
+    path : string = ""
     viewer : (Map string WalkJson)?
     owners : Map string [string] = {}
   }
@@ -109,7 +115,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
         (emit VERIFY_WALK_ANSWERED { status: 400, body: "usage: orb verify-walk <program.lolo>" })
       VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit VERIFY_WALK_START { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) "") })
+        (emit VERIFY_WALK_START { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""), cwd: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") })
       WALK_ANSWERED -> ready
         (emit VERIFY_WALK_ANSWERED { status: @payload.status, body: @payload.body })
     }
@@ -118,7 +124,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_ANSWERED -> external { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      VERIFY_WALK_START { file : string!, viewer : (Map string WalkJson)?, owners : Map string [string] }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson)?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Internal: walk the program file."
         @tier "internal"
     }
@@ -143,8 +149,11 @@ orbital VerifyWalkOrbital {
     state ready {
       INIT -> ready
       VERIFY_WALK_START -> reading
+        (set @entity.path (if (os/path-is-absolute @payload.file) @payload.file (os/path-join (default (as @payload.cwd string) "") @payload.file)))
         (set @entity.viewer (object/get @payload "viewer" null))
         (set @entity.owners (object/get @payload "owners" {}))
+        (set @entity.render (object/get @payload "render" false))
+        (set @entity.strict (object/get @payload "strict" false))
         (os/read-file { anchor: "cwd" path: @payload.file } { key: "file" emit: { success: WALK_FILE_READ, failure: WALK_FAILED } })
     }
 
@@ -154,20 +163,20 @@ orbital VerifyWalkOrbital {
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
       WALK_PROGRAM -> validating
         (set @entity.program (as @payload.result WalkFull))
-        (program/validate @payload.result { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
+        (program/validate null { report: true, path: @entity.path } { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
 
     state validating {
       INIT -> validating
-      WALK_VALIDATED -> ready when (> (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0)
+      WALK_VALIDATED -> ready when (> (array/len (array/concat (object/get @payload.result "errors" []) (object/get @payload.result "warnings" []))) 0)
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/join (array/concat
-          (array/map (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" [])) (fn e (str/concat "fail  validate [" (object/get @e "code") "] " (default (object/get @e "message") ""))))
-          [(str/concat "0 passed, " (array/len (object/get @payload.result "errors")) " failed, 0 unplanned, 0 guard-blocked")]) "\n") })
-      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0) (!= @entity.program null))
+          (array/map (array/concat (object/get @payload.result "errors" []) (object/get @payload.result "warnings" [])) (fn e (str/concat "fail  validate [" (object/get @e "code") "] " (default (object/get @e "message") ""))))
+          [(str/concat "0 passed, " (array/len (object/get @payload.result "errors" [])) " failed, 0 unplanned, 0 guard-blocked")]) "\n") })
+      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors" []) (object/get @payload.result "warnings" []))) 0) (!= @entity.program null))
         (emit WALK_MACHINE_READ { program: @entity.program })
-      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors") (object/get @payload.result "warnings" []))) 0) (= @entity.program null))
+      WALK_VALIDATED -> machine when (and (= (array/len (array/concat (object/get @payload.result "errors" []) (object/get @payload.result "warnings" []))) 0) (= @entity.program null))
         (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
@@ -220,7 +229,7 @@ orbital VerifyWalkOrbital {
         (program/step @entity.program (array/map @payload.rows (fn r
           { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"),
             payload: (object/get @r "payload"), identity: @entity.viewer
-          })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
+          })) { render: @entity.render, renderProps: @entity.render } { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> stepping when (!= (array/len @payload.result) (array/len @entity.sent))
         (emit WALK_FAILED { error: "the step answer does not match the rows sent" })
       WALK_STEPPED -> judging when (= (array/len @payload.result) (array/len @entity.sent))
@@ -236,7 +245,8 @@ orbital VerifyWalkOrbital {
     state judging {
       INIT -> judging
       WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (!= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
-        (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @entity.program })
+        (let ((rendered (object/get (object/get (array/nth @entity.played (array/len @entity.judged)) "result") "rendered" null)))
+          (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @entity.program, rendered: (if (= @rendered null) null (array/reduce @rendered [] (fn (acc slot) (array/concat @acc (object/get @slot "nodes" []))))) }))
       WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (= @entity.program null))
         (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
@@ -277,7 +287,7 @@ orbital VerifyWalkOrbital {
         (set @entity.unplanned (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "unplanned")))))
         (set @entity.gaps (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "gap")))))
         (set @entity.guardBlocked (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "guard-blocked")))))
-        (emit VERIFY_WALK_ANSWERED { status: (if (= @entity.failed 0) 200 500), body: (str/join (array/concat
+        (emit VERIFY_WALK_ANSWERED { status: (if (and (= @entity.failed 0) (or (not @entity.strict) (and (= @entity.unplanned 0) (= @entity.guardBlocked 0) (= @entity.gaps 0)))) 200 500), body: (str/join (array/concat
           (array/map @entity.rows (fn r (str/concat (object/get @r "verdict") "  " (object/get @r "trait") " " (object/get @r "from") " --" (object/get @r "event") "--> " (object/get @r "to")
             (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (let ((nt (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))))) (if (= @nt null) "" (object/get @nt "missing"))))
               (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail" "")) "")))))
@@ -296,7 +306,7 @@ orbital VerifyWalkOrbital {
       WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson)?, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
-      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkResult!, program : SExpr! }
+      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkResult!, program : SExpr!, rendered : [WalkRenderedNode]? }
         @description "Ask std-verify-judge for the verdicts of one played step."
         @tier "internal"
       WALK_CREDIT_REQUEST -> external { steps : [WalkCreditStep]! }
@@ -326,7 +336,7 @@ orbital VerifyWalkOrbital {
     }
 
     listens {
-      VERIFY_WALK_START { file : string!, viewer : (Map string WalkJson)?, owners : Map string [string] }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson)?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Walk the program file."
       VerifyWalkCli.VERIFY_WALK_START -> VERIFY_WALK_START
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED

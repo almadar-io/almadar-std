@@ -1,5 +1,6 @@
 app ui-video-embed [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "Embedded video player: a YouTube video by id, or any player page by URL. Fires a ready event once it can play and an error event when it cannot. — UI factory (1:1 with the @almadar/ui video-embed pattern)."
 ]
 ;; @capabilities "embedded video, YouTube player, lesson video, video embed, play a video by id or URL, player ready and error events"
@@ -17,7 +18,13 @@ orbital VideoEmbedOrbital {
         (render-ui main {
           videoId: @config.videoId
           src: @config.src
-          title: @config.title
+          title: (if (= @config.title "") (i18n/t "title") @config.title)
+          noVideoLabel: (if (= @config.noVideoLabel "") (i18n/t "noVideo") @config.noVideoLabel)
+          apiUnavailableMessage: (if (= @config.apiUnavailableMessage "") (i18n/t "apiUnavailable") @config.apiUnavailableMessage)
+          invalidVideoMessage: (if (= @config.invalidVideoMessage "") (i18n/t "invalidVideo") @config.invalidVideoMessage)
+          playbackFailedMessage: (if (= @config.playbackFailedMessage "") (i18n/t "playbackFailed") @config.playbackFailedMessage)
+          notFoundMessage: (if (= @config.notFoundMessage "") (i18n/t "notFound") @config.notFoundMessage)
+          notEmbeddableMessage: (if (= @config.notEmbeddableMessage "") (i18n/t "notEmbeddable") @config.notEmbeddableMessage)
           autoplay: @config.autoplay
           controls: @config.controls
           start: @config.start
@@ -74,9 +81,33 @@ orbital VideoEmbedOrbital {
         @label "Src"
         @description "URL of any other embeddable player page; used when no `videoId` is set"
         @tier "presentation"
-      title : string
+      title : string = ""
         @label "Title"
         @description "Accessible name of the player"
+        @tier "presentation"
+      noVideoLabel : string = ""
+        @label "No Video Label"
+        @description "Text shown when no video id or URL is selected; empty uses the translated default."
+        @tier "presentation"
+      apiUnavailableMessage : string = ""
+        @label "API Unavailable Message"
+        @description "Error text when the YouTube player API cannot load; empty uses the translated default."
+        @tier "presentation"
+      invalidVideoMessage : string = ""
+        @label "Invalid Video Message"
+        @description "Error text for YouTube code 2; empty uses the translated default."
+        @tier "presentation"
+      playbackFailedMessage : string = ""
+        @label "Playback Failed Message"
+        @description "Error text for YouTube code 5 or an unknown code; empty uses the translated default."
+        @tier "presentation"
+      notFoundMessage : string = ""
+        @label "Not Found Message"
+        @description "Error text for YouTube code 100; empty uses the translated default."
+        @tier "presentation"
+      notEmbeddableMessage : string = ""
+        @label "Not Embeddable Message"
+        @description "Error text for YouTube code 101 or 150; empty uses the translated default."
         @tier "presentation"
       autoplay : boolean = false
         @label "Autoplay"
