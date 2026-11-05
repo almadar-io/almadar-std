@@ -415,7 +415,7 @@
       ]
     },
     {
-      "id": "dock-a-loaded-behavior-remembers-its-name-and-clears-the-drawn-trait",
+      "id": "dock-a-loaded-behavior-remembers-its-name-and-clears-the-drawn-guest",
       "steps": [
         {
           "trait": "PlaygroundMachine",
@@ -426,7 +426,8 @@
           "entity": {
             "id": "p",
             "machineBehavior": "x",
-            "machineTrait": "Old"
+            "machineGuest": "g0",
+            "machinePage": "Old"
           },
           "from": "idle",
           "expect": {
@@ -439,11 +440,15 @@
               },
               {
                 "type": "set",
-                "arg0": "@entity.machineTrait"
+                "arg0": "@entity.machineGuest"
+              },
+              {
+                "type": "set",
+                "arg0": "@entity.machinePage"
               }
             ],
             "neverEmits": [
-              "SUBJECT"
+              "GUEST_ORBIT"
             ]
           }
         }
@@ -451,7 +456,7 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-a-paint-set-draws-only-the-page-root-trait",
+      "id": "dock-a-page-root-paint-draws-the-guests-whole-page",
       "steps": [
         {
           "trait": "PlaygroundMachine",
@@ -492,7 +497,8 @@
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTrait": ""
+            "machineGuest": "",
+            "machinePage": ""
           },
           "from": "idle",
           "expect": {
@@ -500,10 +506,10 @@
             "state": "idle",
             "emits": [
               {
-                "event": "SUBJECT",
+                "event": "GUEST_ORBIT",
                 "payload": {
                   "behavior": "almadar-std/std-browse",
-                  "trait": "BrowseRoot"
+                  "guest": "g1"
                 }
               }
             ]
@@ -513,7 +519,7 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-control-embedded-traits-never-appear",
+      "id": "dock-control-only-embedded-paints-draw-nothing",
       "steps": [
         {
           "trait": "PlaygroundMachine",
@@ -536,14 +542,15 @@
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTrait": ""
+            "machineGuest": "",
+            "machinePage": ""
           },
           "from": "idle",
           "expect": {
             "fired": true,
             "state": "idle",
             "neverEmits": [
-              "SUBJECT"
+              "GUEST_ORBIT"
             ]
           }
         }
@@ -551,14 +558,14 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-a-new-root-after-navigation-redraws",
+      "id": "dock-a-new-page-after-navigation-redraws",
       "steps": [
         {
           "trait": "PlaygroundMachine",
           "event": "GUEST_PAINTS",
           "payload": {
             "guest": "g1",
-            "route": "/",
+            "route": "/detail",
             "page": [
               "DetailRoot"
             ],
@@ -576,7 +583,8 @@
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTrait": "BrowseRoot"
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
           },
           "from": "idle",
           "expect": {
@@ -584,10 +592,10 @@
             "state": "idle",
             "emits": [
               {
-                "event": "SUBJECT",
+                "event": "GUEST_ORBIT",
                 "payload": {
                   "behavior": "almadar-std/std-browse",
-                  "trait": "DetailRoot"
+                  "guest": "g1"
                 }
               }
             ]
@@ -597,7 +605,7 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-edge-the-same-root-repainted-does-not-reset-the-view",
+      "id": "dock-edge-the-same-page-repainted-does-not-reset-the-view",
       "steps": [
         {
           "trait": "PlaygroundMachine",
@@ -622,14 +630,15 @@
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTrait": "BrowseRoot"
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
           },
           "from": "idle",
           "expect": {
             "fired": true,
             "state": "idle",
             "neverEmits": [
-              "SUBJECT"
+              "GUEST_ORBIT"
             ]
           }
         }
@@ -662,14 +671,15 @@
           "entity": {
             "id": "p",
             "machineBehavior": "",
-            "machineTrait": ""
+            "machineGuest": "",
+            "machinePage": ""
           },
           "from": "idle",
           "expect": {
             "fired": true,
             "state": "idle",
             "neverEmits": [
-              "SUBJECT"
+              "GUEST_ORBIT"
             ]
           }
         }
@@ -677,29 +687,21 @@
       "now": 1760531445678
     },
     {
-      "id": "dock-the-root-of-the-shown-page-wins-over-an-earlier-page-root",
+      "id": "dock-a-new-guest-redraws-even-on-the-same-page",
       "steps": [
         {
           "trait": "PlaygroundMachine",
           "event": "GUEST_PAINTS",
           "payload": {
-            "guest": "g1",
+            "guest": "g2",
             "route": "/",
             "page": [
-              "DetailRoot"
+              "BrowseRoot"
             ],
             "paints": [
               {
                 "slot": "main",
                 "trait": "BrowseRoot",
-                "embedded": false,
-                "content": {
-                  "type": "stack"
-                }
-              },
-              {
-                "slot": "main",
-                "trait": "DetailRoot",
                 "embedded": false,
                 "content": {
                   "type": "box"
@@ -710,7 +712,8 @@
           "entity": {
             "id": "p",
             "machineBehavior": "almadar-std/std-browse",
-            "machineTrait": "BrowseRoot"
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
           },
           "from": "idle",
           "expect": {
@@ -718,10 +721,10 @@
             "state": "idle",
             "emits": [
               {
-                "event": "SUBJECT",
+                "event": "GUEST_ORBIT",
                 "payload": {
                   "behavior": "almadar-std/std-browse",
-                  "trait": "DetailRoot"
+                  "guest": "g2"
                 }
               }
             ]

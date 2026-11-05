@@ -45,6 +45,7 @@ describe('effectSiteFor', () => {
   it('a program/self mounted reflection is answered where it runs (EXEC-DIST-15); the whole program stays on the server', () => {
     expect(effectSiteFor('program/self', [{ mounted: true }], resident)).toBe('any');
     expect(effectSiteFor('program/self', [{ mounted: false }], resident)).toBe('server');
+    expect(effectSiteFor('program/self', [{ mounted: true, guest: '@entity.guest' }], resident)).toBe('server');
     expect(effectSiteFor('program/self', [], resident)).toBe('server');
   });
 

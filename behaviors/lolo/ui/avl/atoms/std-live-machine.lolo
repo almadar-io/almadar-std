@@ -1,7 +1,7 @@
 app std-live-machine [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code. LiveMachineOrbit draws the running page whole instead: ORBITAL_SUBJECT { behavior } to LiveMachineTrace reads the asking session's mounted orbital (program/self { mounted: true }), and every trait is drawn as a box nested in the trait that embeds it, starting from its current state. LiveMachineTrace opens one trace subscription for the traits that step in the browser and one for those on the server (EXEC-DIST-14), leaving out the observer traits (itself and the views it feeds) so it never traces its own work. Each move lights its fired transition, and LiveMachineSource describes the trait that moved last for the source column. ORBITAL_CLOSE closes the subscriptions."
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code. LiveMachineOrbit draws the running page whole instead: ORBITAL_SUBJECT { behavior } to LiveMachineTrace reads the asking session's mounted orbital (program/self { mounted: true }), and every trait is drawn as a box nested in the trait that embeds it, starting from its current state. LiveMachineTrace opens one trace subscription for the traits that step in the browser and one for those on the server (EXEC-DIST-14), leaving out the observer traits (itself and the views it feeds) so it never traces its own work. Each move lights its fired transition, and LiveMachineSource describes the trait that moved last for the source column. ORBITAL_CLOSE closes the subscriptions. GUEST_ORBIT { behavior, guest } to LiveMachineOrbit draws a guest session (program/open) the same way: LiveMachineSource reads the guest's mounted orbital on the server (program/self { mounted: true, guest }), and the composer routes the guest's moves to MOVES."
 ]
 ;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
 uses Spec from "almadar-std/live-machine"
@@ -57,6 +57,7 @@ orbital LiveMachineOrbital {
     sourceText : string = ""
     sourceLines : [TransitionLines] = []
     highlight : CodeHighlight?
+    guest : string = ""
   }
 
   entity LiveMachineSourceView [runtime] {
@@ -66,7 +67,6 @@ orbital LiveMachineOrbital {
   entity LiveMachineTraceView [runtime] {
     id : string!
     behavior : string = ""
-    sourceTrait : string = ""
     browser : [string] = []
     server : [string] = []
   }
@@ -254,8 +254,29 @@ orbital LiveMachineOrbital {
       ORBIT_FAILED -> waiting
         (set @entity.behavior ?behavior)
         (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
-      ORBIT_RETRY -> waiting
+      ORBIT_RETRY -> waiting when (== @entity.guest "")
         (emit ORBIT_AGAIN { behavior: @entity.behavior })
+      ORBIT_RETRY -> waiting when (!= @entity.guest "")
+        (emit TREE_WANTED { guest: @entity.guest })
+      GUEST_ORBIT -> waiting
+        (set @entity.behavior ?behavior)
+        (set @entity.guest ?guest)
+        (set @entity.tree null)
+        (set @entity.actives [])
+        (set @entity.firedMove null)
+        (set @entity.title "")
+        (set @entity.sourceText "")
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (emit TREE_WANTED { guest: ?guest })
+      GUEST_TREE -> showing
+        (set @entity.tree ?tree)
+        (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
+        (set @entity.firedMove null)
+        (render-ui main @config.view)
+      TREE_FAILED -> waiting
+        (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
       MOVES -> waiting
       SOURCE -> waiting
       SOURCE_FAILED -> waiting
@@ -287,6 +308,7 @@ orbital LiveMachineOrbital {
                 (set @entity.actives (array/reduce (array/filter ?moves (fn m @m.fired)) @entity.actives (fn (acc m) (if (array/some @acc (fn a (and (== @a.trait @m.trait) (== @a.state @m.from)))) (array/map @acc (fn a (if (and (== @a.trait @m.trait) (== @a.state @m.from)) { trait: @m.trait, state: @m.to } @a))) (array/append @acc { trait: @m.trait, state: @m.to })))))
                 (set @entity.firedMove { trait: @last.trait, index: @index })
                 (do (set @entity.title @last.trait) (set @entity.sourceText "") (set @entity.sourceLines []) (set @entity.highlight null))))))
+        (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title })
         (render-ui main @config.view)
       MOVES -> showing when (== (array/len (array/filter ?moves (fn m @m.fired))) 0)
       SOURCE -> showing when (== ?trait @entity.title)
@@ -304,6 +326,25 @@ orbital LiveMachineOrbital {
         (set @entity.behavior ?behavior)
         (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
       ORBIT_RETRY -> showing
+      GUEST_ORBIT -> waiting
+        (set @entity.behavior ?behavior)
+        (set @entity.guest ?guest)
+        (set @entity.tree null)
+        (set @entity.actives [])
+        (set @entity.firedMove null)
+        (set @entity.title "")
+        (set @entity.sourceText "")
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (render-ui main { type: state-machine-view, isLoading: true })
+        (emit TREE_WANTED { guest: ?guest })
+      GUEST_TREE -> showing
+        (set @entity.tree ?tree)
+        (set @entity.actives (array/flatten (array/map ?tree.traits (fn t (array/map @t.instances (fn i { trait: @t.trait, state: @i.state }))))))
+        (set @entity.firedMove null)
+        (render-ui main @config.view)
+      TREE_FAILED -> waiting
+        (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
     }
 
     emits {
@@ -311,6 +352,17 @@ orbital LiveMachineOrbital {
         behavior : string!
       }
         @description "Read the page again for its whole-page view."
+        @tier "internal"
+      SOURCE_WANTED {
+        behavior : string!
+        trait : string!
+      }
+        @description "The whole-page view needs the source of this trait, the one that moved last."
+        @tier "internal"
+      TREE_WANTED {
+        guest : string!
+      }
+        @description "The whole-page view needs the mounted orbital of this guest session."
         @tier "internal"
     }
 
@@ -320,6 +372,22 @@ orbital LiveMachineOrbital {
       LiveMachineTrace.ORBIT_FAILED -> ORBIT_FAILED
       LiveMachineSource.SOURCE -> SOURCE
       LiveMachineSource.SOURCE_FAILED -> SOURCE_FAILED
+      LiveMachineSource.GUEST_TREE -> GUEST_TREE
+      LiveMachineSource.TREE_FAILED -> TREE_FAILED
+      GUEST_ORBIT {
+        behavior : string!
+        guest : string!
+      }
+        @description "Draw a guest session (a handle program/open answered) whole and follow it: its mounted orbital is read on the server, and its moves arrive as MOVES."
+        @synonyms "show the guest's whole page machine"
+      GUEST_TREE {
+        tree : MountedOrbital!
+      }
+        @tier "internal"
+      TREE_FAILED {
+        error : string!
+      }
+        @tier "internal"
       ORBIT {
         behavior : string!
         tree : MountedOrbital!
@@ -398,6 +466,12 @@ orbital LiveMachineOrbital {
         (emit SOURCE { trait: ?result.value.trait, text: ?result.source.text, lines: ?result.source.transitions })
       DESCRIBE_FAILED -> idle
         (emit SOURCE_FAILED { error: ?error })
+      READ_TREE -> idle
+        (program/self { mounted: true, guest: ?guest, emit: { success: GUEST_MOUNTED, failure: GUEST_MOUNT_FAILED } })
+      GUEST_MOUNTED -> idle
+        (emit GUEST_TREE { tree: ?result })
+      GUEST_MOUNT_FAILED -> idle
+        (emit TREE_FAILED { error: ?error })
     }
 
     emits {
@@ -411,10 +485,27 @@ orbital LiveMachineOrbital {
         error : string!
       }
         @tier "internal"
+      GUEST_TREE {
+        tree : MountedOrbital!
+      }
+        @tier "internal"
+      TREE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      GUEST_MOUNTED -> internal {
+        result : MountedOrbital!
+      }
+        @tier "internal"
+      GUEST_MOUNT_FAILED -> internal {
+        error : string!
+      }
+        @tier "internal"
     }
 
     listens {
-      LiveMachineTrace.SOURCE_WANTED -> DESCRIBE
+      LiveMachineOrbit.SOURCE_WANTED -> DESCRIBE
+      LiveMachineOrbit.TREE_WANTED -> READ_TREE
       DESCRIBE {
         behavior : string!
         trait : string!
@@ -425,6 +516,18 @@ orbital LiveMachineOrbital {
       }
         @tier "internal"
       DESCRIBE_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      READ_TREE {
+        guest : string!
+      }
+        @tier "internal"
+      GUEST_MOUNTED {
+        result : MountedOrbital!
+      }
+        @tier "internal"
+      GUEST_MOUNT_FAILED {
         error : string!
       }
         @tier "internal"
@@ -447,7 +550,6 @@ orbital LiveMachineOrbital {
     state reading {
       INIT -> closed
       MOUNTED -> live
-        (set @entity.sourceTrait "")
         (set @entity.browser (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "browser") (not @t.observer)))) (fn t @t.trait)))
         (set @entity.server (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "server") (not @t.observer)))) (fn t @t.trait)))
         (if (> (array/len @entity.browser) 0) (program/live { kind: "trace", traits: @entity.browser } { key: "live-machine-browser", emit: { onMessage: TRACE, failure: TRACE_FAILED } }) null)
@@ -463,11 +565,7 @@ orbital LiveMachineOrbital {
 
     state live {
       INIT -> closed
-      TRACE -> live when (and (array/some (default ?dispatch.outcomes []) (fn o @o.executed)) (!= (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait) @entity.sourceTrait))
-        (set @entity.sourceTrait (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait))
-        (emit ORBIT_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
-        (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.sourceTrait })
-      TRACE -> live when (not (and (array/some (default ?dispatch.outcomes []) (fn o @o.executed)) (!= (object/get (default (array/nth (array/filter (default ?dispatch.outcomes []) (fn o @o.executed)) (- (array/len (array/filter (default ?dispatch.outcomes []) (fn o @o.executed))) 1)) { trait: "", from: "", to: "", event: "", executed: false }) trait) @entity.sourceTrait)))
+      TRACE -> live
         (emit ORBIT_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
       TRACE_FAILED -> closed
         (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
@@ -492,12 +590,6 @@ orbital LiveMachineOrbital {
       ORBIT_MOVES {
         moves : [MachineMove]!
       }
-        @tier "internal"
-      SOURCE_WANTED {
-        behavior : string!
-        trait : string!
-      }
-        @description "The whole-page view needs the source of this trait, the one that moved last."
         @tier "internal"
       ORBIT_FAILED {
         behavior : string!

@@ -368,9 +368,9 @@ function isTraceSubscription(options: unknown): boolean {
   return typeof options === 'object' && options !== null && !Array.isArray(options) && 'kind' in options && options.kind === 'trace';
 }
 
-/** A `program/self` options object naming `mounted: true`: the kernel the step runs on answers it (EXEC-DIST-15). */
+/** A `program/self` options object naming `mounted: true` and no `guest`: the kernel the step runs on answers it (EXEC-DIST-15); a guest's tree is the server's. */
 function isMountedReflection(options: unknown): boolean {
-  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'mounted' in options && options.mounted === true;
+  return typeof options === 'object' && options !== null && !Array.isArray(options) && 'mounted' in options && options.mounted === true && !('guest' in options);
 }
 
 /** Effect operators whose declared execution site is `site`, sorted. */

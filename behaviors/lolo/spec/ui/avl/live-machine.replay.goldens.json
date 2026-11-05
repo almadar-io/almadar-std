@@ -1479,7 +1479,7 @@
     },
     {
       "id": "trace-maps-each-outcome-to-a-move",
-      "note": "a trace item becomes ORBIT_MOVES, an outcome with no event as an empty event; the trait that moved last is new, so its source is asked for",
+      "note": "a trace item becomes ORBIT_MOVES, an outcome with no event as an empty event",
       "steps": [
         {
           "trait": "LiveMachineTrace",
@@ -1539,13 +1539,6 @@
                       "fired": false
                     }
                   ]
-                }
-              },
-              {
-                "event": "SOURCE_WANTED",
-                "payload": {
-                  "behavior": "almadar-std/demo",
-                  "trait": "Board"
                 }
               }
             ]
@@ -1879,64 +1872,6 @@
       ]
     },
     {
-      "id": "control-a-trace-of-the-trait-already-shown-asks-for-no-source",
-      "steps": [
-        {
-          "trait": "LiveMachineTrace",
-          "from": "live",
-          "entity": {
-            "id": "t",
-            "behavior": "almadar-std/demo",
-            "sourceTrait": "Board",
-            "browser": [
-              "Frame"
-            ],
-            "server": [
-              "Board"
-            ]
-          },
-          "event": "TRACE",
-          "payload": {
-            "dispatch": {
-              "seq": 4,
-              "outcomes": [
-                {
-                  "trait": "Board",
-                  "from": "loading",
-                  "to": "idle",
-                  "event": "LOADED",
-                  "executed": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "live",
-            "neverEmits": [
-              "SOURCE_WANTED"
-            ],
-            "emits": [
-              {
-                "event": "ORBIT_MOVES",
-                "payload": {
-                  "moves": [
-                    {
-                      "trait": "Board",
-                      "event": "LOADED",
-                      "from": "loading",
-                      "to": "idle",
-                      "fired": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "id": "orbit-draws-the-page-from-each-traits-current-state",
       "note": "ORBIT holds the mounted tree and starts every trait at its running instance's state",
       "steps": [
@@ -2235,14 +2170,17 @@
               {
                 "type": "render-ui"
               }
+            ],
+            "neverEmits": [
+              "SOURCE_WANTED"
             ]
           }
         }
       ]
     },
     {
-      "id": "orbital-moves-of-another-trait-wait-for-its-source",
-      "note": "Frame moved while Board's source is shown: the view lights the move and waits for Frame's source",
+      "id": "orbital-moves-of-another-trait-ask-for-its-source",
+      "note": "Frame moved while Board's source is shown: the view lights the move and asks for Frame's source",
       "steps": [
         {
           "trait": "LiveMachineOrbit",
@@ -2391,7 +2329,19 @@
                 "type": "let"
               },
               {
+                "type": "emit"
+              },
+              {
                 "type": "render-ui"
+              }
+            ],
+            "emits": [
+              {
+                "event": "SOURCE_WANTED",
+                "payload": {
+                  "behavior": "almadar-std/demo",
+                  "trait": "Frame"
+                }
               }
             ]
           }
@@ -2856,6 +2806,440 @@
             "fired": true,
             "state": "showing",
             "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-guest-orbit-asks-for-the-guests-tree",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "waiting",
+          "entity": {
+            "id": "o"
+          },
+          "event": "GUEST_ORBIT",
+          "payload": {
+            "behavior": "almadar-std/demo",
+            "guest": "g1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "TREE_WANTED",
+                "payload": {
+                  "guest": "g1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-guests-tree-draws-the-guest-page",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "waiting",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "guest": "g1"
+          },
+          "event": "GUEST_TREE",
+          "payload": {
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-reads-a-guest-tree-on-the-server",
+      "steps": [
+        {
+          "trait": "LiveMachineSource",
+          "from": "idle",
+          "entity": {
+            "id": "s"
+          },
+          "event": "READ_TREE",
+          "payload": {
+            "guest": "g1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "program/self"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-hands-the-guest-tree-back",
+      "steps": [
+        {
+          "trait": "LiveMachineSource",
+          "from": "idle",
+          "entity": {
+            "id": "s"
+          },
+          "event": "GUEST_MOUNTED",
+          "payload": {
+            "result": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_TREE",
+                "payload": {
+                  "tree": {
+                    "page": "Home",
+                    "traits": [
+                      {
+                        "trait": "Frame",
+                        "orbital": "Main",
+                        "parent": null,
+                        "depth": 0,
+                        "embeddedIn": [],
+                        "renders": true,
+                        "stepsIn": "browser",
+                        "linkedEntity": null,
+                        "instances": [
+                          {
+                            "entityId": "singleton",
+                            "state": "idle"
+                          }
+                        ],
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true,
+                            "isTerminal": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "index": 0,
+                            "from": [
+                              "idle"
+                            ],
+                            "to": "idle",
+                            "event": "INIT",
+                            "guarded": false,
+                            "emits": []
+                          }
+                        ],
+                        "emits": [],
+                        "listens": [],
+                        "observer": false
+                      },
+                      {
+                        "trait": "Board",
+                        "orbital": "Main",
+                        "parent": null,
+                        "depth": 0,
+                        "embeddedIn": [],
+                        "renders": false,
+                        "stepsIn": "server",
+                        "linkedEntity": null,
+                        "instances": [
+                          {
+                            "entityId": "singleton",
+                            "state": "idle"
+                          }
+                        ],
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true,
+                            "isTerminal": false
+                          },
+                          {
+                            "name": "loading",
+                            "isInitial": false,
+                            "isTerminal": false
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "index": 0,
+                            "from": [
+                              "idle"
+                            ],
+                            "to": "loading",
+                            "event": "LOAD",
+                            "guarded": false,
+                            "emits": []
+                          },
+                          {
+                            "index": 1,
+                            "from": [
+                              "loading"
+                            ],
+                            "to": "idle",
+                            "event": "LOADED",
+                            "guarded": false,
+                            "emits": []
+                          }
+                        ],
+                        "emits": [],
+                        "listens": [],
+                        "observer": false
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-retry-without-a-guest-reads-the-own-page-again",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "waiting",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "guest": ""
+          },
+          "event": "ORBIT_RETRY",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "neverEmits": [
+              "TREE_WANTED"
+            ],
+            "emits": [
+              {
+                "event": "ORBIT_AGAIN",
+                "payload": {
+                  "behavior": "almadar-std/demo"
+                }
+              }
+            ]
           }
         }
       ]

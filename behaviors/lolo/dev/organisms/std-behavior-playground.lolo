@@ -38,8 +38,9 @@ orbital BehaviorPlayground {
     behavior : string = ""
     description : string = ""
     value : behavior?
-    machineBehavior : string @description "The behavior whose page-root trait the dock draws." = ""
-    machineTrait : string @description "The guest's first page-root trait, which the dock draws." = ""
+    machineBehavior : string @description "The behavior whose running page the dock draws." = ""
+    machineGuest : string @description "The guest session the dock draws." = ""
+    machinePage : string @description "The traits of the guest page the dock last drew, joined by spaces." = ""
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
   }
@@ -127,10 +128,21 @@ orbital BehaviorPlayground {
   trait CatEmbedRequest = Catalog.traits.CatEmbedRequest {}
   trait CatEmbedHttp = Catalog.traits.CatEmbedHttp {}
 
-  trait PlaygroundLive = Live.traits.LiveMachine {
+  trait PlaygroundOrbit = Live.traits.LiveMachineOrbit {
     listens {
-      PlaygroundMachine.SUBJECT -> SUBJECT
+      PlaygroundMachine.GUEST_ORBIT -> GUEST_ORBIT
       GuestSession.GUEST_MOVED -> MOVES
+      PlaygroundSource.GUEST_TREE -> GUEST_TREE
+      PlaygroundSource.TREE_FAILED -> TREE_FAILED
+      PlaygroundSource.SOURCE -> SOURCE
+      PlaygroundSource.SOURCE_FAILED -> SOURCE_FAILED
+    }
+  }
+
+  trait PlaygroundSource = Live.traits.LiveMachineSource {
+    listens {
+      PlaygroundOrbit.SOURCE_WANTED -> DESCRIBE
+      PlaygroundOrbit.TREE_WANTED -> READ_TREE
     }
   }
 
@@ -138,29 +150,31 @@ orbital BehaviorPlayground {
     config {
       slot : string = "main"
         @label "Guest slot"
-        @description "The slot whose page-root paint names the trait the dock draws."
+        @description "The slot whose page-root paint shows the guest page is on screen."
     }
 
     initial: idle
 
     state idle {
       INIT -> idle
-        (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [@trait.PlaygroundLive] })
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [@trait.PlaygroundOrbit] })
       BEHAVIOR_LOADED -> idle
         (set @entity.machineBehavior ?behavior)
-        (set @entity.machineTrait "")
-      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))) (and (!= @entity.machineBehavior "") (!= @root "") (!= @root @entity.machineTrait)))
-        (set @entity.machineTrait (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))
-        (emit SUBJECT { behavior: @entity.machineBehavior, trait: @entity.machineTrait })
-      GUEST_PAINTS -> idle when (let ((root (default (object/get (default (array/find ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) { trait: "" }) trait) ""))) (or (= @entity.machineBehavior "") (= @root "") (= @root @entity.machineTrait)))
+        (set @entity.machineGuest "")
+        (set @entity.machinePage "")
+      GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
+        (set @entity.machineGuest ?guest)
+        (set @entity.machinePage (str/join ?page " "))
+        (emit GUEST_ORBIT { behavior: @entity.machineBehavior, guest: ?guest })
+      GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
     }
 
     emits {
-      SUBJECT -> external {
+      GUEST_ORBIT -> external {
         behavior : string!
-        trait : string!
+        guest : string!
       }
-        @description "The trait, by behavior and trait name, whose machine the dock draws."
+        @description "The guest session whose whole running page the dock draws, read again when the guest shows another page."
     }
 
     listens {
@@ -175,7 +189,7 @@ orbital BehaviorPlayground {
         page : [string]!
         paints : [PlaygroundPaint]!
       }
-        @description "The guest's paints and the traits of the page it shows; the first non-embedded paint of the configured slot from a trait on that page names the page-root trait the dock draws, and a later paint set (the guest navigated) redraws."
+        @description "The guest's paints and the traits of the page it shows; once a page-root paint of the configured slot is on screen the dock draws that guest's whole page, and a new guest or page (the guest navigated) redraws it."
     }
   }
   trait PlaygroundTopics -> PlaygroundView [client] {
@@ -593,8 +607,8 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus
-  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundLive, PlaygroundStatus, PlaygroundRoute
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {
