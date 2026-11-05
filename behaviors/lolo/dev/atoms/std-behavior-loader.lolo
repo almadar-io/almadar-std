@@ -1,6 +1,6 @@
 app std-behavior-loader [
   version: "1.0.0",
-  description: "std-behavior-loader — opens one installed behavior to run it live: LOAD_BEHAVIOR { behavior, value } asks the substrate for its resolved program (behavior/resolve) and its knobs and trait names (behavior/describe), and answers BEHAVIOR_LOADED { behavior, program, knobs, traits } once both have answered, or BEHAVIOR_FAILED { behavior, error } when the resolved program could not be read. A refused describe does not fail the load: the knobs and trait names are empty. Opening never validates: a behavior that cannot run on its own fails when the host opens it, with the kernel's own reason.",
+  description: "std-behavior-loader — opens one installed behavior to run it live: LOAD_BEHAVIOR { behavior, value } asks the substrate for its resolved program (behavior/resolve) and its knobs and trait names (behavior/describe), and answers BEHAVIOR_PROGRAM { behavior, program } (internal: the program never travels to the browser) then BEHAVIOR_LOADED { behavior, knobs, traits } once both have answered, or BEHAVIOR_FAILED { behavior, error } when the resolved program could not be read. A refused describe does not fail the load: the knobs and trait names are empty. Opening never validates: a behavior that cannot run on its own fails when the host opens it, with the kernel's own reason.",
   egress: []
 ]
 ;; @capabilities "load an installed behavior's resolved program and knobs so it can run live"
@@ -15,7 +15,7 @@ orbital BehaviorLoaderOrbital {
   entity BehaviorLoad [runtime] {
     id : string!
     behavior : string = ""
-    program : LoaderProgram? @description "The resolved program, as behavior/resolve answered it, held only until BEHAVIOR_LOADED hands it on: the entity rides every request a stateless host's client posts." = null
+    program : LoaderProgram? @description "The resolved program, as behavior/resolve answered it, held only until BEHAVIOR_PROGRAM hands it on: the entity rides every request a stateless host's client posts." = null
     knobs : [LoaderKnob] = []
     traits : [string] @description "The names of the behavior's traits, every orbital's in order, from behavior/describe." = []
     waiting : number @description "How many of the two answers (resolve, describe) are still to come." = 0
@@ -57,20 +57,24 @@ orbital BehaviorLoaderOrbital {
         (set @entity.waiting (- @entity.waiting 1))
       LOAD_STEP -> idle when (<= @entity.waiting 1)
         (set @entity.waiting 0)
-        (let ((resolved @entity.program)) (if (= @resolved null) (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: "The resolved program did not arrive." }) (emit BEHAVIOR_LOADED { behavior: @entity.behavior, program: @resolved, knobs: @entity.knobs, traits: @entity.traits })))
+        (let ((resolved @entity.program)) (if (= @resolved null) (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: "The resolved program did not arrive." }) (do (emit BEHAVIOR_PROGRAM { behavior: @entity.behavior, program: @resolved }) (emit BEHAVIOR_LOADED { behavior: @entity.behavior, knobs: @entity.knobs, traits: @entity.traits }))))
         (set @entity.program null)
       LOAD_FAILED -> idle
         (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
     }
 
     emits {
-      BEHAVIOR_LOADED -> external {
+      BEHAVIOR_PROGRAM -> internal {
         behavior : string!
         program : LoaderProgram!
+      }
+        @description "The opened behavior's resolved program, for a server trait of the same orbital that runs it; internal, so it never travels to the browser."
+      BEHAVIOR_LOADED -> external {
+        behavior : string!
         knobs : [LoaderKnob]!
         traits : [string]!
       }
-        @description "The opened behavior's resolved program, knobs and trait names."
+        @description "The opened behavior's knobs and trait names; its program goes only to BEHAVIOR_PROGRAM."
       BEHAVIOR_FAILED -> external {
         behavior : string!
         error : string!

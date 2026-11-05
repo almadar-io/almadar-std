@@ -490,7 +490,6 @@ orbital BehaviorPlayground {
       }
       BEHAVIOR_LOADED {
         behavior : string!
-        program : PlaygroundProgram!
         knobs : [PlaygroundKnob]!
       }
       BEHAVIOR_FAILED {
@@ -511,20 +510,20 @@ orbital BehaviorPlayground {
 
     state idle {
       INIT -> idle
-      BEHAVIOR_LOADED -> idle
+      BEHAVIOR_PROGRAM -> idle
         (emit GUEST_OPEN { program: ?program })
     }
 
     emits {
-      GUEST_OPEN -> external {
+      GUEST_OPEN -> internal {
         program : PlaygroundProgram!
       }
-        @description "The opened behavior's resolved program, for the guest session to run."
+        @description "The opened behavior's resolved program, for the guest session to run; internal, so the program stays on the server."
     }
 
     listens {
-      PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
-      BEHAVIOR_LOADED {
+      PlaygroundLoader.BEHAVIOR_PROGRAM -> BEHAVIOR_PROGRAM
+      BEHAVIOR_PROGRAM {
         behavior : string!
         program : PlaygroundProgram!
       }
