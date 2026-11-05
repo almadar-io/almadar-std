@@ -38,6 +38,9 @@ orbital OrbLintBindingTraitsOrbital {
     roots : Map string [string] = {}
     indexed : boolean = false
     indexScope : string = ""
+    embeds : Map string [string] = {}
+    embedded : boolean = false
+    embedsScope : string = ""
     findings : [OrbFinding] = []
 
   }
@@ -51,9 +54,13 @@ orbital OrbLintBindingTraitsOrbital {
         (set @entity.roots @payload.roots)
         (set @entity.indexed true)
         (set @entity.indexScope @payload.scope)
+      EMBEDS_HEARD -> ready
+        (set @entity.embeds @payload.effectsWalk)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
+        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope) @entity.embedded (= @entity.embedsScope @payload.scope))
 (let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (noidx : [BtIdx] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
   (let ((roots : [BtRoot] (object/get (array/reduce @orbitals { i: 0, out: @noroots } (fn (oa o)
           (let ((oi : number (object/get @oa "i")) (trts : [BtTrait] (object/get @o "traits" [])) (tkn : [string] (object/get (array/reduce @trts { i: 0, out: @nostr } (fn (ka t) (let ((nmv (object/get @t "name" null))) (if (= @nmv null) @ka { i: 0, out: (array/append (object/get @ka "out") @nmv) }))))  "out")))
@@ -127,10 +134,7 @@ orbital OrbLintBindingTraitsOrbital {
                     (let ((ti : number (object/get @ia "i")) (nmv (object/get @t "name" null)))
                       { i: (+ @ti 1), out: (if (= @nmv null) (object/get @ia "out") (if (object/has @t "stateMachine") (array/append (object/get @ia "out") { ti: @ti, t: @t, nm: @nmv }) (object/get @ia "out"))) }))) "out")))
               (let ((names : [string] (array/map @inl (fn e (object/get @e "nm")))))
-                (let ((adj : Map string [string] (object/fromEntries (array/map @inl (fn e
-                        (let ((t : BtTrait (object/get @e "t")))
-                          [(object/get @e "nm"),
-                           (if (not (array/some (object/get @entity.roots (str/concat @oi "-" (object/get @e "ti")) @nostr) (fn r (str/startsWith @r @tP)))) @nostr (let ((srcl : [BtShape?] [0 (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))))) (array/map (object/get @t "ticks" []) (fn tk (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r))))))])) (array/unique (array/map (array/filter (array/map (array/flatten (object/values (default (as (tree/index @srcl [] { prefixes: [@tP2] }) BtHits) {}))) (fn c (default (as (object/get @c "node" null) BtS) ""))) (fn y (!= (str/replace-pattern (str/slice @y 7) "[.\\[].*$" "") ""))) (fn y (str/replace-pattern (str/slice @y 7) "\\..*$" ""))))))]))))))
+                (let ((adj : Map string [string] (object/fromEntries (array/map @inl (fn e [(object/get @e "nm"), (object/get @entity.embeds (str/concat @oi "-" (object/get @e "ti")) @nostr)])))))
                   (if (= (array/len (array/flatten (object/values @adj))) 0)
                     @nof
                     (let ((w (array/reduce (array/range 0 (+ (* 3 (array/len @names)) (array/len (array/flatten (object/values @adj))) 2)) { stack: @nostr, idx: @nonum, vis: @nostr, found: @nostr }
@@ -167,8 +171,9 @@ orbital OrbLintBindingTraitsOrbital {
                               (if (= @ent null)
                                 @nof
                                 [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (object/get @ent "ti") " (" @c0 ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]))))))))))) }))) "out"))))
-[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX) and the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX and LINT_EMBEDS before LINT_INPUT; this rule did not hear both", severity: "error" }]))
         (set @entity.indexed false)
+        (set @entity.embedded false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-traits", scope: @entity.scope, findings: @entity.findings })
@@ -191,6 +196,9 @@ orbital OrbLintBindingTraitsOrbital {
       INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
         @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @trait references only when a root starts with @trait."
       OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      EMBEDS_HEARD { scope : string!  effectsWalk : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait's non-object effects embed, in walk order, by `<orbital index>-<trait index>`; the reference graph of the cycle check."
+      OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
 
     }
     config {

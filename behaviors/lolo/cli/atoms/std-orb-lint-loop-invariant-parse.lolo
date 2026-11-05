@@ -9,6 +9,8 @@ app std-orb-lint-loop-invariant-parse [
 uses Spec from "almadar-std/lint-loop-invariant-parse"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GtCallHit = { path : string, node : GtVal?, at : number }
+type GtVal = string | number | boolean | [GtVal?] | Map string GtVal?
 type LoopExpr = string | number | boolean | [LoopExpr?] | Map string LoopExpr?
 type LoopTransition = { guard : LoopExpr?, effects : [LoopExpr?] }
 type LoopMachine = { transitions : [LoopTransition] }
@@ -23,12 +25,15 @@ type RtIndex = Map string [RtCall]
 type RtWrite = { o : string!, f : string!, v : RtVal, w : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintLoopInvariantParseCodes = { lintNodeUnchecked : LintCodeDecl , wLoopInvariantParse : LintCodeDecl , jsonRoundtrip : LintCodeDecl }
+type LintLoopInvariantParseCodes = { lintIndexMissing : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , wLoopInvariantParse : LintCodeDecl , jsonRoundtrip : LintCodeDecl }
 
 orbital OrbLintLoopInvariantParseOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintLoopInvariantParseRun [runtime] {
+    sCalls : Map string [GtCallHit] = {}
+    sitesHeard : boolean = false
+    sitesScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -39,9 +44,14 @@ orbital OrbLintLoopInvariantParseOrbital {
 
     state ready {
       INIT -> ready
+      SITES_HEARD -> ready
+        (set @entity.sCalls @payload.calls)
+        (set @entity.sitesHeard true)
+        (set @entity.sitesScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (gate (default (as (object/fromEntries (array/map (array/flatten (object/values (default (as (tree/index @payload.program ["json/parse" "bytes/to-string"]) RtIndex) {}))) (fn c [(str/replaceAll (default (array/first (str/split (default (array/first (str/split (object/get @c "path" "") ".effects[")) "") ".guard")) "") "." "~"), true]))) RtGate) {})))
+        (set @entity.findings (if (and @entity.sitesHeard (= @entity.sitesScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (gate (default (as (object/fromEntries (array/map (array/concat (object/get @entity.sCalls "json/parse" []) (object/get @entity.sCalls "bytes/to-string" [])) (fn c [(str/replaceAll (default (array/first (str/split (default (array/first (str/split (object/get @c "path" "") ".effects[")) "") ".guard")) "") "." "~"), true]))) RtGate) {})))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
@@ -90,8 +100,9 @@ orbital OrbLintLoopInvariantParseOrbital {
                               (array/map
                                 (array/filter @fres (fn f (= (object/get @f "kind") "roundtrip")))
                                 (fn c
-                                  { code: @config.codes.jsonRoundtrip.code, path: (object/get @x "w"), message: "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker", suggestion: "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).", severity: "error" })))))))))))))))))))))))))
-        (set @entity.findings (array/concat @entity.findings (let ((idx (default (as (tree/index @payload.program ["set" "json/parse"]) RtIndex) {})) (ent (quote "@entity.")))
+                                  { code: @config.codes.jsonRoundtrip.code, path: (object/get @x "w"), message: "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker", suggestion: "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).", severity: "error" }))))))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_SITES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_SITES before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.findings (array/concat @entity.findings (let ((idx (if (and @entity.sitesHeard (= @entity.sitesScope @payload.scope)) @entity.sCalls {})) (ent (quote "@entity.")))
           (let ((writes (array/flatten (array/map (object/get @idx "set" []) (fn c
                   (let ((n (object/get @c "node" null)) (cp (object/get @c "path" "")))
                     (if (and (validate/array @n) (> (array/len @n) 2))
@@ -148,6 +159,7 @@ orbital OrbLintLoopInvariantParseOrbital {
                           (if (and (> (array/len @stringified) 0) (not (array/some @kinds (fn q (= (object/get @q "kind") "other")))))
                             [{ code: @config.codes.jsonRoundtrip.code, path: @pp, message: (str/concat "json/parse re-parses entity field '" @f (if (= @k "") "" (str/concat "." @k)) "' whose every write is a json/stringify (written in " (default (array/first (str/split (object/get (default (array/first @stringified) {}) "w" "") ".effects[")) "") "): this round trip launders the value's type past the checker"), suggestion: "Store the typed value in the field, or narrow it with `(as value T)`; keep json/parse for text that arrives as text (a body, a file, rawBody).", severity: "error" }]
                             []))))))))))))))))
+        (set @entity.sitesHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "loop-invariant-parse", scope: @entity.scope, findings: @entity.findings })
@@ -166,9 +178,12 @@ orbital OrbLintLoopInvariantParseOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LoopInvariantProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SITES_HEARD { scope : string!  guardHeads : Map string [string]!  guardRoots : Map string [string]!  calls : Map string [GtCallHit]!  trait : [GtCallHit]!  entity : [GtCallHit]! }
+        @description "std-orb-lint-input's LINT_SITES: guard heads and roots, the call hits by head and the @trait. and @entity. leaves."
+      OrbLintInput.LINT_SITES -> SITES_HEARD
     }
     config {
-      codes : LintLoopInvariantParseCodes = { lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, wLoopInvariantParse: { code: "ORB_W_LOOP_INVARIANT_PARSE", category: "lint", description: "A parse inside a lambda re-parses the same value for every element and should be bound once outside" } , jsonRoundtrip: { code: "ORB_JSON_ROUNDTRIP", category: "lint", description: "json/parse re-parses what json/stringify just serialized; a stringify→parse round trip launders a value's type past the checker (owner hard rule, CLAUDE.md). Narrow with `as`." } }
+      codes : LintLoopInvariantParseCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, wLoopInvariantParse: { code: "ORB_W_LOOP_INVARIANT_PARSE", category: "lint", description: "A parse inside a lambda re-parses the same value for every element and should be bound once outside" } , jsonRoundtrip: { code: "ORB_JSON_ROUNDTRIP", category: "lint", description: "json/parse re-parses what json/stringify just serialized; a stringify→parse round trip launders a value's type past the checker (owner hard rule, CLAUDE.md). Narrow with `as`." } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

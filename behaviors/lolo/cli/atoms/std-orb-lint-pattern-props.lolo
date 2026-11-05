@@ -24,12 +24,15 @@ type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames
 type PtPatternShape = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], props : Map string PtPropShape }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintPatternPropsCodes = { lintUiVocabUnread : LintCodeDecl }
+type LintPatternPropsCodes = { lintIndexMissing : LintCodeDecl , lintUiVocabUnread : LintCodeDecl }
 
 orbital OrbLintPatternPropsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintPatternPropsRun [runtime] {
+    iHeads : Map string [string] = {}
+    indexHeard : boolean = false
+    indexScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -60,13 +63,18 @@ orbital OrbLintPatternPropsOrbital {
         (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat @entity.itemBase @entity.itemPat)) (fn x [@x, true]))))
       UI_VOCAB_UNREAD -> ready
         (set @entity.vocabUnread true)
+      INDEX_HEARD -> ready
+        (set @entity.iHeads @payload.heads)
+        (set @entity.indexHeard true)
+        (set @entity.indexScope @payload.scope)
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
         (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the base item-action props are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nof : [OrbFinding] [])
+        (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nostrs : [string] []) (nof : [OrbFinding] [])
  (ops @entity.opSet) (itemSet @entity.itemSet) (fieldRefs @entity.fieldRefs) (reqFields @entity.reqFields)
  (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
       (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
@@ -82,7 +90,7 @@ orbital OrbLintPatternPropsOrbital {
                     (if (not (object/has @td "stateMachine")) @nof
                     (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])) (lnk (object/get @td "linkedEntity" "")))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
-                        (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
+                        (let ((effs (if (array/includes (object/get @entity.iHeads (str/concat @oi "-" @tj "-" @ti) @nostrs) "render-ui") (object/get (array/nth @trans @ti) "effects" []) @noh)))
                           (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                             (let ((e (array/nth @effs @ej)))
                               (let ((ea (if (validate/array @e) @e [])))
@@ -189,7 +197,9 @@ orbital OrbLintPatternPropsOrbital {
                 (let ((tv (array/concat @ownV @kidV)))
                   { v: @tv, e: [{ v: @tv, m: [], mp: false }], lb: [], mv: [], mp: false, op: false, cd: false, ar: false })))))))
         @nr)))) PtVal)))
-                                      (if (= @fr null) @nof (array/map (object/get @fr "v") (fn h { code: (object/get @h "c"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "]" @sfx (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" }))))))))))))))))))))))))))))))
+                                      (if (= @fr null) @nof (array/map (object/get @fr "v") (fn h { code: (object/get @h "c"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "]" @sfx (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" })))))))))))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "pattern-props", scope: @entity.scope, findings: @entity.findings })
@@ -208,6 +218,9 @@ orbital OrbLintPatternPropsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PtProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
       LINT_PATTERNS_HEARD { patterns : Map string PtPatternShape! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
@@ -222,7 +235,7 @@ orbital OrbLintPatternPropsOrbital {
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
     config {
-      codes : LintPatternPropsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" } }
+      codes : LintPatternPropsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

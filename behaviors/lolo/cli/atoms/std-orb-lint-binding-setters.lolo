@@ -9,6 +9,8 @@ app std-orb-lint-binding-setters [
 uses Spec from "almadar-std/lint-binding-setters"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GtCallHit = { path : string, node : GtVal?, at : number }
+type GtVal = string | number | boolean | [GtVal?] | Map string GtVal?
 type SsExpr = string | number | boolean | [SsExpr?] | Map string SsExpr?
 type SsField = { name : string, properties : [SsField]? }
 type SsEvent = { key : string, payloadSchema : [SsField]? }
@@ -40,12 +42,19 @@ type SsSiteC = { emb : [string], site : SsSite }
 type SsSets = { n : string, s : [string] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintBindingSettersCodes = { bindingPersistRowIdNeverSet : LintCodeDecl , bindingEntityFieldNeverSet : LintCodeDecl , bindingEmbedReadsArmWrite : LintCodeDecl , bindingPayloadFieldUndeclared : LintCodeDecl }
+type LintBindingSettersCodes = { lintIndexMissing : LintCodeDecl , bindingPersistRowIdNeverSet : LintCodeDecl , bindingEntityFieldNeverSet : LintCodeDecl , bindingEmbedReadsArmWrite : LintCodeDecl , bindingPayloadFieldUndeclared : LintCodeDecl }
 
 orbital OrbLintBindingSettersOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintBindingSettersRun [runtime] {
+    iRoots : Map string [string] = {}
+    gRoots : Map string [string] = {}
+    indexHeard : boolean = false
+    indexScope : string = ""
+    sitesHeard : boolean = false
+    sitesScope : string = ""
+    factsOk : boolean = false
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -65,10 +74,21 @@ orbital OrbLintBindingSettersOrbital {
       SEMANTICS_HEARD -> ready
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.semanticsHeard true)
+      INDEX_HEARD -> ready
+        (set @entity.iRoots @payload.roots)
+        (set @entity.indexHeard true)
+        (set @entity.indexScope @payload.scope)
+      SITES_HEARD -> ready
+        (set @entity.gRoots @payload.guardRoots)
+        (set @entity.sitesHeard true)
+        (set @entity.sitesScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.orbitals (object/get @payload.program "orbitals" []))
-        (emit BS_ASK { asks: (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nProg : SsProgram { orbitals: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nxs : [SsAsk] []))
+        (set @entity.factsOk (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.sitesHeard (= @entity.sitesScope @payload.scope)))
+        (set @entity.indexHeard false)
+        (set @entity.sitesHeard false)
+        (emit BS_ASK { asks: (let ((bsNo : [string] [])) (array/filter (let ((nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (nTrait : SsTrait { name: "", linkedEntity: "", stateMachine: { transitions: [], events: [] }, ticks: [], config: {} }) (nTr : SsTr { event: "", guard: "", effects: [] }) (nProg : SsProgram { orbitals: [] }) (nMach : SsMachine { transitions: [], events: [] }) (nxs : [SsAsk] []))
           (let ((orbitals : [SsOrbital] (object/get @payload.program "orbitals" [])))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((o : SsOrbital (default (array/nth @orbitals @oi) @nOrb)))
@@ -85,13 +105,13 @@ orbital OrbLintBindingSettersOrbital {
                                     (if (object/has @tr "guard") [{ oi: @oi, ti: @ti, w: "g", j: @j, x: (object/get @tr "guard") }] @nxs)
                                     (array/map @effs (fn ef { oi: @oi, ti: @ti, w: "e", j: @j, x: @ef }))))))))
                             (array/flatten (array/map @tks (fn tk (array/map (object/get @tk "effects" []) (fn ef { oi: @oi, ti: @ti, w: "t", j: 0, x: @ef }))))))
-                          (array/flatten (array/map (object/values @cfgm) (fn cf (if (object/has @cf "default") [{ oi: @oi, ti: @ti, w: "c", j: 0, x: (object/get @cf "default") }] @nxs))))))))))))))))) })
+                          (array/flatten (array/map (object/values @cfgm) (fn cf (if (object/has @cf "default") [{ oi: @oi, ti: @ti, w: "c", j: 0, x: (object/get @cf "default") }] @nxs))))))))))))))))) (fn a (let ((w (object/get @a "w")) (oi (object/get @a "oi")) (ti (object/get @a "ti")) (j (object/get @a "j"))) (array/some (if (= @w "g") (object/get @entity.gRoots (str/concat @oi "-" @ti "-" @j) @bsNo) (if (= @w "e") (object/get @entity.iRoots (str/concat @oi "-" @ti "-" @j) @bsNo) (object/get @entity.iRoots (str/concat @oi "-" @ti) @bsNo))) (fn rt (array/includes [(quote "@entity") (quote "@trait") (quote "@callsitePayload")] @rt))))))) })
       BS_ASK -> ready
         (set @entity.asks @payload.asks)
         (emit LINT_EXPR_ASK { requestId: (str/concat "binding-setters:" @entity.scope), items: (array/map @payload.asks (fn a { e: (object/get @a "x"), eff: (or (= (object/get @a "w") "e") (= (object/get @a "w") "t")) })) })
       LINT_EXPR_NODES -> ready when (= @payload.requestId (str/concat "binding-setters:" @entity.scope))
         (set @entity.toks (let ((nn : SsNode { k: "nil", ks: [], hd: "", nms: [], rt: "", nm: "", pa: [], bd: -1, wh: "", tx: "", pv: false, hs: false, sl: [], lb: [], lv: null }) (nostr : [string] []) (nofl : [SsNode] []) (nask : SsAsk { oi: 0, ti: 0, w: "", j: 0, x: null }))
-          (let ((keys : [string] (array/map @entity.asks (fn ka (str/concat (if (or (= (object/get @ka "w") "e") (= (object/get @ka "w") "t")) "e" "x") (bytes/to-base64 (bytes/from-string (json/stringify (object/get @ka "x")))))))))
+          (let ((xs : [SsExpr?] (array/map @entity.asks (fn ka (object/get @ka "x")))) (ux : [SsExpr?] (array/unique @xs)) (keys : [string] (array/map @entity.asks (fn ka (str/concat (if (or (= (object/get @ka "w") "e") (= (object/get @ka "w") "t")) "e" "x") (array/indexOf @ux (object/get @ka "x")))))))
             (let ((firstIdx : Map string number (default (object/fromEntries (array/map (array/range 0 (array/len @entity.asks)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {})))
               (let ((ids : [number] (object/values @firstIdx)))
                 (let ((ukeys : [string] (array/map @ids (fn xk (default (array/nth @keys @xk) "")))) (tl : [[string]] (array/map @ids (fn xi (let ((a : SsAsk (default (array/nth @entity.asks @xi) @nask)) (fl : [SsNode] (default (array/nth @payload.nodes @xi) @nofl))) (let ((toks : [string] (array/flatten (array/map (array/range 0 (array/len @fl)) (fn i
@@ -151,7 +171,8 @@ orbital OrbLintBindingSettersOrbital {
                             ro: (array/every @trs (fn tr (array/includes @busEx (object/get @tr "event" "")))) })) @r))))))))))))
         (emit BS_FIND { })
       BS_FIND -> ready
-        (set @entity.findings (let ((nof : [OrbFinding] []) (nosc : [SsSiteC] []) (nopairs : [SsPair] []) (npair : SsPair { f: "", ev: "" }) (nostr : [string] []) (nonum : [number] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nolinks : [SsLink] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nrow : SsT { oi: 0, n: "", l: "", tp: "", trs: [], tk: [], cfg: [], hasCfg: false, ro: false, pls: {} }) (ntr : SsRow { ev: "", g: [], e: [] }) (nsc : SsSiteC { emb: [], site: { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false } }) (nSets : SsSets { n: "", s: [] }) (nDef : SsDef { shared: false, persistent: false, exempt: [] }) (nPay : SsPay { schema: null }) (nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (ncl : SsLink { c: "", i: 0 }) (nf : SsField { name: "", properties: null }) (nfm : SsWalk { lv: [], miss: "", stop: false })
+        (set @entity.findings (if @entity.factsOk
+(let ((nof : [OrbFinding] []) (nosc : [SsSiteC] []) (nopairs : [SsPair] []) (npair : SsPair { f: "", ev: "" }) (nostr : [string] []) (nonum : [number] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nolinks : [SsLink] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nrow : SsT { oi: 0, n: "", l: "", tp: "", trs: [], tk: [], cfg: [], hasCfg: false, ro: false, pls: {} }) (ntr : SsRow { ev: "", g: [], e: [] }) (nsc : SsSiteC { emb: [], site: { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false } }) (nSets : SsSets { n: "", s: [] }) (nDef : SsDef { shared: false, persistent: false, exempt: [] }) (nPay : SsPay { schema: null }) (nOrb : SsOrbital { name: "", entity: { name: "", shared: false, persistence: "", fields: [] }, auxiliaryEntities: [], traits: [] }) (ncl : SsLink { c: "", i: 0 }) (nf : SsField { name: "", properties: null }) (nfm : SsWalk { lv: [], miss: "", stop: false })
               (busEx : [string] @entity.busExcluded) (eP : string (str/concat (quote "@") "entity.")) (eB : string (str/concat (quote "@") "entity")) (cpP : string (str/concat (quote "@") "callsitePayload."))
               (entIdx : Map string SsDef (default (object/fromEntries (array/flatten (array/map @entity.orbitals (fn o (array/map (array/concat [(object/get @o "entity")] (object/get @o "auxiliaryEntities" [])) (fn e [(object/get @e "name"), { shared: (object/get @e "shared" false), persistent: (= (object/get @e "persistence" "persistent") "persistent"), exempt: (array/map (array/filter (object/get @e "fields" []) (fn f (or (object/get @f "intrinsic" false) (object/has @f "default")))) (fn f (object/get @f "name"))) }])))))) {})))
           (array/flatten (array/map (array/range 0 (array/len @entity.orbitals)) (fn oi
@@ -255,7 +276,9 @@ orbital OrbLintBindingSettersOrbital {
                                             (let ((w0 : SsWalk { lv: (default @schema @nofields), miss: "", stop: false }))
                                               (let ((res : SsWalk (array/reduce @segs @w0 (fn (acc sg) (if (or (object/get @acc "stop" false) (!= (object/get @acc "miss" "") "")) @acc (let ((fm : SsField? (array/find (object/get @acc "lv" @nofields) (fn q (= (object/get @q "name") @sg))))) (if (= @fm null) (let ((w1 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: @sg, stop: false })) @w1) (let ((props : [SsField]? (object/get (default @fm @nf) "properties" null))) (if (= @props null) (let ((w2 : SsWalk { lv: (object/get @acc "lv" @nofields), miss: "", stop: true })) @w2) (let ((w3 : SsWalk { lv: (default @props @nofields), miss: "", stop: false })) @w3))))))))))
                                                 [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Payload field '" (object/get @res "miss" "") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss" "") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
-                                            [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add a payload schema to the '" @ev "' event definition, or bind a field the event declares")), severity: "error" }])))))))))))))))))))))))))))))))
+                                            [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add a payload schema to the '" @ev "' event definition, or bind a field the event declares")), severity: "error" }]))))))))))))))))))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX or LINT_SITES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX or LINT_SITES before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.factsOk false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-setters", scope: @entity.scope, findings: @entity.findings })
@@ -286,6 +309,12 @@ orbital OrbLintBindingSettersOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      SITES_HEARD { scope : string!  guardHeads : Map string [string]!  guardRoots : Map string [string]!  calls : Map string [GtCallHit]!  trait : [GtCallHit]!  entity : [GtCallHit]! }
+        @description "std-orb-lint-input's LINT_SITES: guard heads and roots, the call hits by head and the @trait. and @entity. leaves."
+      OrbLintInput.LINT_SITES -> SITES_HEARD
       SEMANTICS_HEARD { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the lifecycle events the bus never delivers (the emit operator's busExcluded list)."
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
@@ -294,7 +323,7 @@ orbital OrbLintBindingSettersOrbital {
       OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
     }
     config {
-      codes : LintBindingSettersCodes = { bindingPersistRowIdNeverSet: { code: "ORB_BINDING_PERSIST_ROW_ID_NEVER_SET", category: "binding", description: "A persist update or delete runs on an event but no transition sets the row id, so the write never touches a row" }, bindingEntityFieldNeverSet: { code: "ORB_BINDING_ENTITY_FIELD_NEVER_SET", category: "binding", description: "A trait reads an entity binding field but no transition ever sets it, so it stays undefined" }, bindingEmbedReadsArmWrite: { code: "ORB_BINDING_EMBED_READS_ARM_WRITE", category: "binding", description: "A transition writes a value and renders a child that reads it on mount, so the child shows the stale value" }, bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" } }
+      codes : LintBindingSettersCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, bindingPersistRowIdNeverSet: { code: "ORB_BINDING_PERSIST_ROW_ID_NEVER_SET", category: "binding", description: "A persist update or delete runs on an event but no transition sets the row id, so the write never touches a row" }, bindingEntityFieldNeverSet: { code: "ORB_BINDING_ENTITY_FIELD_NEVER_SET", category: "binding", description: "A trait reads an entity binding field but no transition ever sets it, so it stays undefined" }, bindingEmbedReadsArmWrite: { code: "ORB_BINDING_EMBED_READS_ARM_WRITE", category: "binding", description: "A transition writes a value and renders a child that reads it on mount, so the child shows the stale value" }, bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

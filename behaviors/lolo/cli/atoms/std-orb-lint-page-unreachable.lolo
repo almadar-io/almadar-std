@@ -26,12 +26,19 @@ type ReachLazy = { path : string, links : [string]? }
 type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital], lazyPages : [ReachLazy]? }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintPageUnreachableCodes = { pageUnreachable : LintCodeDecl }
+type LintPageUnreachableCodes = { lintIndexMissing : LintCodeDecl , pageUnreachable : LintCodeDecl }
 
 orbital OrbLintPageUnreachableOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   entity OrbLintPageUnreachableRun [runtime] {
+    iHeads : Map string [string] = {}
+    iRoots : Map string [string] = {}
+    uKeys : Map string [string] = {}
+    indexHeard : boolean = false
+    indexScope : string = ""
+    unitsHeard : boolean = false
+    unitsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -42,10 +49,20 @@ orbital OrbLintPageUnreachableOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.iHeads @payload.heads)
+        (set @entity.iRoots @payload.roots)
+        (set @entity.indexHeard true)
+        (set @entity.indexScope @payload.scope)
+      UNITS_HEARD -> ready
+        (set @entity.uKeys @payload.keys)
+        (set @entity.unitsHeard true)
+        (set @entity.unitsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")))
-          (let ((trs (array/flatten (array/map @orbitals (fn orb (object/get @orb "traits" []))))))
+        (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.unitsHeard (= @entity.unitsScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")) (nostr : [string] []) (hrefTr : Map string boolean (default (object/fromEntries (array/map (array/filter (object/keys @entity.uKeys) (fn uk (array/some ["href", "navigatesTo"] (fn h (array/includes (object/get @entity.uKeys @uk @nostr) @h))))) (fn uk [(str/join (array/take (str/split @uk "-") 2) "-"), true]))) {})))
+          (let ((trs (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((trl (object/get (array/nth @orbitals @oi) "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trl)) (fn ti (let ((tk (str/concat @oi "-" @ti)) (t (array/nth @trl @ti))) (if (or (not (object/has @t "stateMachine")) (array/includes (object/get @entity.iHeads @tk @nostr) "navigate") (array/includes (object/get @entity.iRoots @tk @nostr) (quote "@pages")) (object/get @hrefTr @tk false)) [@t] [])))))))))))
             (let ((effects (array/concat
                               (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))
                               (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
@@ -116,7 +133,10 @@ orbital OrbLintPageUnreachableOrbital {
                                         (array/includes @navs @lpth)
                                         (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lpth @tg)))))
                                   []
-                                  [{ code: @config.codes.pageUnreachable.code, path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }]))))))))))))))))
+                                  [{ code: @config.codes.pageUnreachable.code, path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }])))))))))))))))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX or LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX or LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.indexHeard false)
+        (set @entity.unitsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-unreachable", scope: @entity.scope, findings: @entity.findings })
@@ -135,9 +155,15 @@ orbital OrbLintPageUnreachableOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ReachProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
+      OrbLintInput.LINT_UNITS -> UNITS_HEARD
     }
     config {
-      codes : LintPageUnreachableCodes = { pageUnreachable: { code: "ORB_PAGE_UNREACHABLE", category: "page", description: "A page is declared but appears in no link, navItems entry or navigate effect" } }
+      codes : LintPageUnreachableCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, pageUnreachable: { code: "ORB_PAGE_UNREACHABLE", category: "page", description: "A page is declared but appears in no link, navItems entry or navigate effect" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -27,7 +27,7 @@ type EfPropShape = { kind : string? }
 type EfPatternShape = { props : Map string EfPropShape? }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintRuiBindingCodes = { xRenderUiEventLiteralStale : LintCodeDecl , ruiRenderableInGenericField : LintCodeDecl }
+type LintRuiBindingCodes = { lintIndexMissing : LintCodeDecl , xRenderUiEventLiteralStale : LintCodeDecl , ruiRenderableInGenericField : LintCodeDecl }
 
 orbital OrbLintRuiBindingOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -38,6 +38,9 @@ orbital OrbLintRuiBindingOrbital {
     findings : [OrbFinding] = []
     evProps : Map string [string] = {}
     propNames : Map string [string] = {}
+    heads : Map string [string] = {}
+    indexed : boolean = false
+    indexScope : string = ""
   }
 
   trait OrbLintRuiBinding -> OrbLintRuiBindingRun [optimistic] {
@@ -45,23 +48,25 @@ orbital OrbLintRuiBindingOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.heads @payload.heads)
+        (set @entity.indexed true)
+        (set @entity.indexScope @payload.scope)
       LINT_PATTERNS_HEARD -> ready
         (set @entity.propNames (object/mapValues @payload.patterns (fn e (object/keys (object/get @e "props" {})))))
         (set @entity.evProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes @config.eventKinds (object/get (object/get @ps @pn {}) "kind" ""))))))))
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals : [EfOrbitalRB] (object/get @payload.program "orbitals" [])) (evp @entity.evProps) (pnm @entity.propNames) (noe : [EfEntity] []) (noS : [string] []) (noSt : [EfStale] []) (noPat : [EfVal?] []) (noSh : [EfSetHit] []) (noL : [EfVal?] []) (noF : [OrbFinding] [])
+        (set @entity.findings (if (not (and @entity.indexed (= @entity.indexScope @payload.scope))) [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }] (let ((orbitals : [EfOrbitalRB] (object/get @payload.program "orbitals" [])) (evp @entity.evProps) (pnm @entity.propNames) (heads : Map string [string] @entity.heads) (noe : [EfEntity] []) (noS : [string] []) (noSt : [EfStale] []) (noPat : [EfVal?] []) (noSh : [EfSetHit] []) (noL : [EfVal?] []) (noF : [OrbFinding] [])
  (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
       (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
       (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
  (pnames (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [(object/get @en "name")] (array/take [""] 0)))))))
  (dups (array/filter @pnames (fn nm (> (array/len (array/filter @pnames (fn x (= @x @nm)))) 1))))
- (ents (array/reverse (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))))))
-  (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-    (let ((orb (array/nth @orbitals @oi)))
+ (entMap (default (object/fromEntries (array/map (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))) (fn e [(str/replaceAll (str/replaceAll (object/get @e "name" "") "~" "~t") "." "~d"), @e]))) {})))
+  (array/flatten (array/map @orbitals (fn (orb_e oi) (let ((orb @orb_e))
       (let ((trs (object/get @orb "traits" [])))
-        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-          (let ((td (array/nth @trs @tj)))
+        (array/flatten (array/map @trs (fn (td_e tj) (let ((td @td_e))
             (if (not (object/has @td "stateMachine")) @noF
               (let ((tpath (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")]"))
                     (sm (object/get @td "stateMachine" {})))
@@ -72,14 +77,13 @@ orbital OrbLintRuiBindingOrbital {
                             (array/map (object/get @sm "events" []) (fn x (object/get @x "key" "")))
                             (array/map (object/get @sm "transitions" []) (fn x (object/get @x "event" "")))) (fn s (!= @s "")))))
                       (linked (object/get @td "linkedEntity" "")))
-                  (let ((ent (array/find @ents (fn e (= (object/get @e "name") @linked)))))
+                  (let ((ent (object/get @entMap (str/replaceAll (str/replaceAll @linked "~" "~t") "." "~d") null)))
                     (let ((fields (if (= @ent null) [] (object/get @ent "fields" []))))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
                         (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
-                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                            (let ((e (array/nth @effs @ej)) (ep (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" @ej "]")))
+                          (array/flatten (array/map @effs (fn (e_e ej) (let ((e @e_e) (ep (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" @ej "]")))
   (array/concat
-    (if (= (array/len @dc) 0) @noF
+    (if (or (= (array/len @dc) 0) (not (array/includes (object/get @heads (str/concat @oi "-" @tj "-" @ti) []) "render-ui"))) @noF
       (array/map (array/flatten (array/map (let ((h1 (array/map (array/filter (object/get (default (as (tree/index @e ["render-ui"]) EfIndex) {}) "render-ui" []) (fn c (let ((nn (object/get @c "node" []))) (and (>= (array/len @nn) 3) (validate/object (array/nth @nn 2)))))) (fn c (array/nth (object/get @c "node" []) 2))))) (if (validate/array @h1) @h1 @noPat)) (fn p (if (validate/object @p) (let ((h0 (tree/fold @p (fn (n k)
   (if (validate/object @n)
     (let ((tyv (let ((t0 (object/get @n "type" null))) (if (validate/string @t0) @t0 ""))))
@@ -94,7 +98,7 @@ orbital OrbLintRuiBindingOrbital {
       @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) @noSt)))) (fn h { code: @config.codes.xRenderUiEventLiteralStale.code, path: @ep,
   message: (str/concat "Prop '" (object/get @h "prop") "' on '" (object/get @h "pat") "' references event '" (object/get @h "ev") "' but the trait's event set has no such key — literal is stale (likely missed by an `events: { OLD: NEW }` override rewrite, or an authoring rename that didn't reach this call site)"),
   suggestion: (str/concat "Either add '" (object/get @h "ev") "' to the trait's `emits` / `listens` / transition events, or rewrite the literal to match an existing event key"), severity: "error" })))
-    (array/flatten (array/map (let ((h2 (tree/fold @e (fn (n k)
+    (array/flatten (array/map (if (not (array/includes (object/get @heads (str/concat @oi "-" @tj "-" @ti) []) "set")) @noSh (let ((h2 (tree/fold @e (fn (n k)
   (if (validate/array @n)
     (let ((hd (array/nth @n 0)) (len (array/len @n)) (ks @k))
       (if (not (validate/string @hd)) @noSh
@@ -110,7 +114,7 @@ orbital OrbLintRuiBindingOrbital {
                       (if (= @hit null) @h
                         { f: (object/get @h "f"), v: (array/nth @hit 1), nm: "" })))))))
             (array/flatten (array/map (array/range 1 @len) (fn i (let ((r (array/nth @ks @i))) (if (= @r null) @noSh @r)))))))))
-    @noSh)) EfVal))) (if (validate/array @h2) @h2 @noSh)) (fn h
+    @noSh)) EfVal))) (if (validate/array @h2) @h2 @noSh))) (fn h
       (let ((fname (object/get @h "f")) (v (object/get @h "v")))
         (let ((fd (array/find @fields (fn f (= (object/get (if (validate/object @f) @f {}) "name" "") @fname)))))
           (let ((fdO (if (validate/object @fd) @fd {})) (sp (str/concat @ep ".set(@entity." @fname ")")))
@@ -154,7 +158,8 @@ orbital OrbLintRuiBindingOrbital {
                 [{ code: @config.codes.ruiRenderableInGenericField.code, path: @sp,
                    message: (str/concat "field '" @fname "' is not typed `node` but receives a render-ui pattern literal — renderable content in a generic/structured field escapes every render-ui check"),
                    suggestion: (str/concat "Type the field: `" @fname " : node` (or `[node]` for a fragment list)."), severity: "error" }]
-                @noF)))))))))))))))))))))))))))))))))
+                @noF))))))))))))))))))))))))))))))))))
+        (set @entity.indexed false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "rui-binding", scope: @entity.scope, findings: @entity.findings })
@@ -170,7 +175,7 @@ orbital OrbLintRuiBindingOrbital {
     }
 
     config {
-      codes : LintRuiBindingCodes = { xRenderUiEventLiteralStale: { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", category: "cross", description: "A render-ui prop references an event literal that no longer matches a declared event" }, ruiRenderableInGenericField: { code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", category: "render_ui", description: "A render-ui pattern literal is passed to a field not typed node, hiding renderable content from render-ui checks" } }
+      codes : LintRuiBindingCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, xRenderUiEventLiteralStale: { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", category: "cross", description: "A render-ui prop references an event literal that no longer matches a declared event" }, ruiRenderableInGenericField: { code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", category: "render_ui", description: "A render-ui pattern literal is passed to a field not typed node, hiding renderable content from render-ui checks" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       eventKinds : [string] = ["event", "event-ref", "event-listen", "callback"]
@@ -182,6 +187,9 @@ orbital OrbLintRuiBindingOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRB!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads each transition uses; the render-ui and set walks of an effect list run only when its heads hold them."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD

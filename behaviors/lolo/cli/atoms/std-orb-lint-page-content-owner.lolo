@@ -79,7 +79,7 @@ orbital OrbLintPageContentOwnerOrbital {
       LINT_INPUT -> ready
         (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
-        (set @entity.rows (if (and @entity.indexed @entity.embedded (= @entity.indexScope @payload.scope) (= @entity.embedsScope @payload.scope)) (let ((norows : [PoRow] []) (nos : [string] [])
+        (set @entity.rows (if (and @entity.indexed @entity.embedded (= @entity.indexScope @payload.scope) (= @entity.embedsScope @payload.scope)) (let ((norows : [PoRow] []) (nos : [string] []) (rootsM @entity.roots) (embC @entity.embConfig) (embG @entity.embGuards) (embE @entity.embEffects)
                 (nof : [OrbFinding] [])
                 (norecs : [PoRec] [])
                 (nopairs : [PoPair] [])
@@ -99,13 +99,13 @@ orbital OrbLintPageContentOwnerOrbital {
       (if (= (array/len @pgs) 0) @norows
         (let ((recs : [PoRec] (array/flatten (array/map @trs0 (fn (t ti)
                   (if (not (object/has @t "stateMachine")) @norecs
-                    (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nos) (quote "@trait"))) (cfg (object/get @t "config" {})) (tn (object/get @t "name" "")))
+                    (let ((gt (array/includes (object/get @rootsM (str/concat @oi "-" @ti) @nos) (quote "@trait"))) (cfg (object/get @t "config" {})) (tn (object/get @t "name" "")))
                       (let ((effs (array/concat (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (array/filter (object/get @x "effects" []) (fn r (validate/array @r)))))) (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (array/filter (object/get @x "effects" []) (fn r (validate/array @r)))))))))
                         (let ((pairs : [PoPair] (if @gt (array/flatten (array/map (array/filter (object/get (default (as (tree/index @effs ["render-ui"]) PoIdx) {}) "render-ui" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node" null))) (let ((h1 (as (array/nth @n 1) LStr))) (if (and (>= (array/len @n) 3) (!= @h1 null)) (let ((pl (array/nth @n 2)))
             (array/map (array/filter (array/concat (let ((nn1 (as (json/nodes @pl) LNodes))) (array/map (if (= @nn1 null) @lnone @nn1) (fn nd1 (let ((st1 (default (as @nd1 LStr) ""))) (if (str/startsWith @st1 (quote "@trait.")) (let ((hd (array/first (str/split (str/slice @st1 7 (str/len @st1)) ".")))) (if (= @hd null) "" (let ((nm (array/first (str/split @hd "[")))) (if (= @nm null) "" @nm)))) ""))))) (if (validate/string @pl) (if (str/startsWith @pl (quote "@config.")) (let ((dv (object/get (object/get @cfg (str/slice @pl 8) {}) "default" null))) (if (= @dv null) @nos (let ((nn2 (as (json/nodes @dv) LNodes))) (array/map (if (= @nn2 null) @lnone @nn2) (fn nd2 (let ((st2 (default (as @nd2 LStr) ""))) (if (str/startsWith @st2 (quote "@trait.")) (let ((hd (array/first (str/split (str/slice @st2 7 (str/len @st2)) ".")))) (if (= @hd null) "" (let ((nm (array/first (str/split @hd "[")))) (if (= @nm null) "" @nm)))) ""))))))) @nos) @nos)) (fn c (!= @c ""))) (fn c { c: @c, h: @h1 }))) @nopairs)))))) @nopairs)))
                           [{ n: @tn,
-                            cf: (object/get @entity.embConfig (str/concat @oi "-" @ti) @nos),
-                            ct: (array/concat (object/get @entity.embGuards (str/concat @oi "-" @ti) @nos) (object/get @entity.embEffects (str/concat @oi "-" @ti) @nos)),
+                            cf: (object/get @embC (str/concat @oi "-" @ti) @nos),
+                            ct: (array/concat (object/get @embG (str/concat @oi "-" @ti) @nos) (object/get @embE (str/concat @oi "-" @ti) @nos)),
                             ov: (array/filter (array/unique (array/map @pairs (fn pr (object/get @pr "c")))) (fn nm (not (array/some @pairs (fn pr (and (= (object/get @pr "c") @nm) (object/has @mainSet (object/get @pr "h")))))))),
                             w: (object/get (let ((q (tree/fold @effs (fn (n k)
   (if (validate/array @n)

@@ -10,6 +10,9 @@ type FiredB = { f : boolean!, t : boolean!, lit : boolean!, v : string! }
 type FiredLive = { ev : string!, site : string! }
 type FiredRec = { trait : string!, ev : [string]!, ctl : [string]!, lv : [FiredLive]! }
 type FiredScalar = string | number | boolean
+type FiredStr = string
+type FiredNum = number
+type FiredBool = boolean
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
 type FiredField = { default : FiredNode? }
 type FiredFrom = string | [string]
@@ -98,10 +101,11 @@ orbital OrbFiredEventsOrbital {
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
       (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
-          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
-            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
-              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode")) "f")))))))
+        (let ((sv (if @sub (object/get (default @kn {}) (str/slice @m 8) "") @m)))
+          (if (validate/string @sv) (let ((ss : FiredStr (default (as @sv FiredStr) ""))) { f: (= @ss ""), t: (and (!= @ss "") (not (str/startsWith @ss (quote "@")))), lit: (not (str/startsWith @ss (quote "@"))), v: (str/concat "s" @ss) })
+            (if (validate/boolean @sv) (let ((bb : FiredBool (default (as @sv FiredBool) false))) { f: (not @bb), t: @bb, lit: true, v: (if @bb "btrue" "bfalse") })
+              (if (validate/number @sv) (let ((nn : FiredNum (default (as @sv FiredNum) 0))) { f: (= @nn 0), t: (!= @nn 0), lit: true, v: (str/concat "n" @nn) })
+                { f: false, t: true, lit: true, v: "null" })))))))) "FiredNode")) "f")))))))
                     (let ((local (array/concat
                                    (if (and (>= @len 4) (= @op "program/dispatch"))
                                      (let ((r1 (let ((q1 (array/nth @k 1))) (if (= @q1 null) @nr @q1))) (opt (array/nth @n 3)))
@@ -157,10 +161,11 @@ orbital OrbFiredEventsOrbital {
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
       (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
-          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
-            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
-              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
+        (let ((sv (if @sub (object/get (default @kn {}) (str/slice @m 8) "") @m)))
+          (if (validate/string @sv) (let ((ss : FiredStr (default (as @sv FiredStr) ""))) { f: (= @ss ""), t: (and (!= @ss "") (not (str/startsWith @ss (quote "@")))), lit: (not (str/startsWith @ss (quote "@"))), v: (str/concat "s" @ss) })
+            (if (validate/boolean @sv) (let ((bb : FiredBool (default (as @sv FiredBool) false))) { f: (not @bb), t: @bb, lit: true, v: (if @bb "btrue" "bfalse") })
+              (if (validate/number @sv) (let ((nn : FiredNum (default (as @sv FiredNum) 0))) { f: (= @nn 0), t: (!= @nn 0), lit: true, v: (str/concat "n" @nn) })
+                { f: false, t: true, lit: true, v: "null" })))))))) "FiredNode"))) "f")))))
                   (let ((s (if (= @sm "branches")
                              (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
                              (if (= @sm "args")
@@ -206,10 +211,11 @@ orbital OrbFiredEventsOrbital {
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
       (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
-          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
-            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
-              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
+        (let ((sv (if @sub (object/get (default @kn {}) (str/slice @m 8) "") @m)))
+          (if (validate/string @sv) (let ((ss : FiredStr (default (as @sv FiredStr) ""))) { f: (= @ss ""), t: (and (!= @ss "") (not (str/startsWith @ss (quote "@")))), lit: (not (str/startsWith @ss (quote "@"))), v: (str/concat "s" @ss) })
+            (if (validate/boolean @sv) (let ((bb : FiredBool (default (as @sv FiredBool) false))) { f: (not @bb), t: @bb, lit: true, v: (if @bb "btrue" "bfalse") })
+              (if (validate/number @sv) (let ((nn : FiredNum (default (as @sv FiredNum) 0))) { f: (= @nn 0), t: (!= @nn 0), lit: true, v: (str/concat "n" @nn) })
+                { f: false, t: true, lit: true, v: "null" })))))))) "FiredNode"))) "f")))))
                   (let ((s (if (= @sm "branches")
                              (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
                              (if (= @sm "args")

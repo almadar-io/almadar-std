@@ -24,8 +24,7 @@ type StateShapeTrait = { name : string, id : string, stateMachine : StateShapeMa
 type StateShapeMount = { ref : string, name : string, refId : string }
 type StateShapePage = { protocol : string, traits : [StateShapeMount] }
 type StateShapeOrbital = { name : string, pages : [StateShapePage], traits : [StateShapeTrait] }
-type SsHit = { path : string!, node : SsStr! }
-type SsIdx = Map string [SsHit]
+type SsEmbeds = Map string [string]
 type SsRHit = { path : string!, node : StateShapeForm! }
 type SsRIdx = Map string [SsRHit]
 type StateShapeProgram = { orbitals : [StateShapeOrbital] }
@@ -39,9 +38,11 @@ orbital OrbLintStateShapeOrbital {
   entity OrbLintStateShapeRun [runtime] {
     id : string!
     scope : string = ""
-    roots : Map string [string] = {}
-    indexed : boolean = false
-    indexScope : string = ""
+    embConfig : SsEmbeds = {}
+    embGuards : SsEmbeds = {}
+    embEffects : SsEmbeds = {}
+    embedsScope : string = ""
+    embedded : boolean = false
     findings : [OrbFinding] = []
   }
 
@@ -50,14 +51,16 @@ orbital OrbLintStateShapeOrbital {
 
     state ready {
       INIT -> ready
-      INDEX_HEARD -> ready
-        (set @entity.roots @payload.roots)
-        (set @entity.indexed true)
-        (set @entity.indexScope @payload.scope)
+      EMBEDS_HEARD -> ready
+        (set @entity.embConfig @payload.config)
+        (set @entity.embGuards @payload.guards)
+        (set @entity.embEffects @payload.effects)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
-(let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if (and @entity.embedded (= @entity.embedsScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (embC @entity.embConfig) (embG @entity.embGuards) (embE @entity.embEffects))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trList (object/get @o "traits" []))
@@ -68,7 +71,7 @@ orbital OrbLintStateShapeOrbital {
                             (if (object/has @r "ref") [(object/get @r "ref")] [])
                             (if (object/has @r "name") [(object/get @r "name")] [])
                             (if (object/has @r "refId") [(object/get @r "refId")] [])))))))))))
-                (let ((embeds (array/map (array/range 0 (array/len @trList)) (fn ti (let ((t (array/nth @trList @ti))) { name: (object/get @t "name" ""), kids: (if (and (object/has @t "stateMachine") (not (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) []) (quote "@trait")))) [] (let ((srcl : [StateShapeExpr?] [0 (array/map (object/values (let ((cf (object/get @t "config" null))) (if (validate/object @cf) @cf {}))) (fn k (object/get @k "default" null))) (array/map (let ((trl (object/get (object/get @t "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (object/get @a "guard" null))) (array/map (let ((trl (object/get (object/get @t "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (array/filter (object/get @a "effects" []) (fn r (not (validate/object @r)))))) (array/map (let ((tkl (object/get @t "ticks" null))) (if (validate/array @tkl) @tkl [])) (fn k (object/get @k "guard" null))) (array/map (let ((tkl (object/get @t "ticks" null))) (if (validate/array @tkl) @tkl [])) (fn k (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r))))))])) (let ((hs : [SsHit] (array/flatten (object/values (default (as (tree/index @srcl [] { prefixes: [(quote "@trait.")] }) SsIdx) {}))))) (array/map @hs (fn h (let ((sn (object/get @h "node"))) (str/replace-pattern (str/slice @sn 7 (str/len @sn)) "[.\\[].*" ""))))))) }))))
+                (let ((embeds (array/map (array/range 0 (array/len @trList)) (fn ti (let ((t (array/nth @trList @ti))) { name: (object/get @t "name" ""), kids: (array/concat (object/get @embC (str/concat @oi "-" @ti) []) (object/get @embG (str/concat @oi "-" @ti) []) (object/get @embE (str/concat @oi "-" @ti) [])) }))))
                       )
                   (let ((routeSet (array/reduce (array/range 0 (array/len @trList)) (array/unique @roots)
                           (fn (cur i) (array/unique (array/concat @cur (array/flatten (array/map @embeds (fn e (if (array/includes @cur (object/get @e "name")) (object/get @e "kids") []))))))))))
@@ -101,15 +104,15 @@ orbital OrbLintStateShapeOrbital {
                                         [{ code: @config.codes.tExternalInputNotResting.code, path: (str/concat @where ".events[" @ei "]"), message: (str/concat "Input '" (object/get @ev "key" "") "' is not accepted from the initial state '" @init0 "'"), suggestion: "Declare as an input only a complete command the trait handles from its initial state (e.g. a persistor's DO_CREATE), or add that transition", severity: "error" }]
                                         []))))))
                                 [])])))))))))))))))))))
-[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the structural index (LINT_INDEX), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
-        (set @entity.indexed false)
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.embedded false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "state-shape", scope: @entity.scope, findings: @entity.findings })
     }
 
     config {
-      codes : LintStateShapeCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, tNoInitialState: { code: "ORB_T_NO_INITIAL_STATE", category: "trait", description: "A state machine declares no states and so has no initial state" }, tDuplicateState: { code: "ORB_T_DUPLICATE_STATE", category: "trait", description: "A trait declares the same state name more than once" }, tMultipleInitialStates: { code: "ORB_T_MULTIPLE_INITIAL_STATES", category: "trait", description: "A trait state machine declares more than one initial state" }, tMissingInitTransition: { code: "ORB_T_MISSING_INIT_TRANSITION", category: "trait", description: "A route trait has no INIT transition on its initial state" }, tExternalInputNotResting: { code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", category: "trait", description: "An external input is not accepted from the trait's initial state" } }
+      codes : LintStateShapeCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the trait embeds the rule reads, so the rule cannot check the program" }, tNoInitialState: { code: "ORB_T_NO_INITIAL_STATE", category: "trait", description: "A state machine declares no states and so has no initial state" }, tDuplicateState: { code: "ORB_T_DUPLICATE_STATE", category: "trait", description: "A trait declares the same state name more than once" }, tMultipleInitialStates: { code: "ORB_T_MULTIPLE_INITIAL_STATES", category: "trait", description: "A trait state machine declares more than one initial state" }, tMissingInitTransition: { code: "ORB_T_MISSING_INIT_TRANSITION", category: "trait", description: "A route trait has no INIT transition on its initial state" }, tExternalInputNotResting: { code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", category: "trait", description: "An external input is not accepted from the trait's initial state" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       renderOps : [string] = ["render-ui"]
@@ -133,9 +136,9 @@ orbital OrbLintStateShapeOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : StateShapeProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
-        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @trait references only when its roots hold @trait."
-      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      EMBEDS_HEARD { scope : string!  all : SsEmbeds!  config : SsEmbeds!  guards : SsEmbeds!  effects : SsEmbeds! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds, by `<orbital index>-<trait index>`."
+      OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
     }
   }
 
