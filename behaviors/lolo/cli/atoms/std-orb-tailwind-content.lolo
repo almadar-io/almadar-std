@@ -85,7 +85,7 @@ orbital OrbTailwindContentOrbital {
                         (let ((heads (array/flatten (array/map @ns (fn m (if (validate/array @m) (if (> (array/len @m) 0) (let ((h : TailwindDoc? (array/first @m))) (if (validate/string @h) [@h] [])) []) []))))))
                           (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) []))))))))
                   []))))
-              (fn t (and (!= @t "") (not (str/includes @t (quote "@")))))))))
+              (fn t (!= (str/replace-pattern @t "^@[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*$" "") ""))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit TAILWIND_NEXT { })
       TAILWIND_BUILT -> writing when (and (not @entity.check) (not (os/path-is-absolute @entity.out)))

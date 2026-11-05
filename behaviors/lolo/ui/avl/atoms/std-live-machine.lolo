@@ -456,12 +456,6 @@ orbital LiveMachineOrbital {
       expandDepth : number = 1
         @label "Expand depth"
         @description "Traits shallower than this show their machine; deeper ones show as a box that opens in place."
-      diagramHeight : string = "50vh"
-        @label "Diagram height"
-        @description "The diagram scrolls inside this height."
-      codeHeight : string = "40vh"
-        @label "Code height"
-        @description "The source scrolls inside this height."
       view : render-ui = {
         type: split
         ratio: "3:2"
@@ -477,17 +471,19 @@ orbital LiveMachineOrbital {
         expandDepth: @config.expandDepth
         selectedTrait: @entity.title
         selectEvent: SELECT_TRAIT
-        maxHeight: @config.diagramHeight
+        ;; side by side both columns fill the panel; stacked they share it (the code under its 2.875rem title bar)
+        className: "[--live-machine-diagram:45dvh] @md:[--live-machine-diagram:calc(100dvh_-_7rem)]"
+        maxHeight: "var(--live-machine-diagram)"
         direction: (if (== @locale "ar") "rtl" "ltr")
         aria-label: (i18n/t "diagram.orbitLabel")
         }, {
         type: code-block
-        className: "p-0"
+        className: "p-0 [--live-machine-code:calc(55dvh_-_11rem)] @md:[--live-machine-code:calc(100dvh_-_10rem)]"
         code: @entity.sourceText
         language: "lolo"
         title: (if (== @entity.title "") (i18n/t "diagram.orbitNoSource") (str/concat @entity.title ".lolo"))
         highlightLines: @entity.highlight
-        maxHeight: @config.codeHeight
+        maxHeight: "var(--live-machine-code)"
         showCopyButton: true
         }]
       }
