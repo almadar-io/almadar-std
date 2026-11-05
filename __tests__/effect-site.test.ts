@@ -35,6 +35,13 @@ describe('effectSiteFor', () => {
     expect(effectSiteFor('fetch', ['@config.entity', {}], resident)).toBe('server');
   });
 
+  it('a program/live trace subscription is placed at run time by its traits (EXEC-DIST-14); any other feed stays on the server', () => {
+    expect(effectSiteFor('program/live', [{ kind: 'trace', traits: ['Board'] }], resident)).toBe('any');
+    expect(effectSiteFor('program/live', [{ clientId: 'tab-a' }], resident)).toBe('server');
+    expect(effectSiteFor('program/live', [], resident)).toBe('server');
+    expect(effectSiteFor('cancel-call', ['machine-Board'], resident)).toBe('any');
+  });
+
   it('control: call-service never follows residence', () => {
     expect(effectSiteFor('call-service', ['llm', 'call', {}], resident)).toBe('server');
   });
