@@ -1,0 +1,1151 @@
+app std-learn-confusion [
+  version: "1.0.0",
+  description: "Generic classification-threshold instrument for teaching evaluation metrics. Config-declared scored items (a score in a range plus the true class) are drawn along a score axis with a draggable decision threshold; every slider move recomputes the confusion matrix (TP, FP, TN, FN) and precision, recall, F1, accuracy and false positive rate, with zero-division cases defined as 0 and shown. An optional precision-recall or ROC curve (with trapezoid-rule AUC) marks the current threshold, and an optional goal (a metric target plus precision and recall floors) is graded on Check. Class names and every label are config-declared. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+]
+orbital ConfusionOrbital {
+  type ConfusionItem = {
+    id : string!
+    score : number!
+    actual : "positive" | "negative"!
+  }
+  type ConfusionPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+    style : "closed" | "open"
+  }
+  type ConfusionCurve = {
+    label : string
+    color : string
+    samples : [ConfusionSample]!
+  }
+  type ConfusionSample = {
+    x : number!
+    y : number!
+  }
+  type ConfusionGuide = {
+    kind : "vline" | "hline"!
+    at : number!
+    color : string
+    dash : "solid" | "dashed" | "dotted"
+    label : string
+  }
+
+  entity ConfusionScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string = ""
+    items : [ConfusionItem] = []
+    threshold : number = 0
+    tp : number = 0
+    fp : number = 0
+    tn : number = 0
+    fn : number = 0
+    precision : number = 0
+    recall : number = 0
+    f1 : number = 0
+    accuracy : number = 0
+    fpr : number = 0
+    auc : number = 0
+    curvePoints : [ConfusionSample] = []
+    notes : string = ""
+    points : [ConfusionPoint] = []
+    markers : [ConfusionPoint] = []
+    curves : [ConfusionCurve] = []
+    guides : [ConfusionGuide] = []
+    attempts : number = 0
+    solved : boolean = false
+    feedback : string = ""
+  }
+
+  trait ConfusionSim -> @rebindable ConfusionScene [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (let (
+            (its @config.items)
+            (thr (math/clamp @config.thresholdDefault @config.thresholdMin @config.thresholdMax))
+            (n (array/len @its))
+            (nPos (array/count @its (fn (i) (== (object/get @i actual) "positive"))))
+            (nNeg (- @n @nPos))
+            (tp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @thr)))))
+            (fp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @thr)))))
+            (fneg (- @nPos @tp))
+            (tn (- @nNeg @fp))
+            (prec (if (== (+ @tp @fp) 0) 0 (/ @tp (+ @tp @fp))))
+            (rec (if (== @nPos 0) 0 (/ @tp @nPos)))
+            (f1 (if (== (+ @prec @rec) 0) 0 (/ (* 2 (* @prec @rec)) (+ @prec @rec))))
+            (acc (if (== @n 0) 0 (/ (+ @tp @tn) @n)))
+            (fprv (if (== @nNeg 0) 0 (/ @fp @nNeg)))
+            (notes (str/join (array/concat
+              (if (== (+ @tp @fp) 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.precisionLabel) "{reason}" @config.precisionZeroReason)] [])
+              (if (== @nPos 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.recallLabel) "{reason}" @config.recallZeroReason)] [])
+              (if (== @nNeg 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.fprLabel) "{reason}" @config.fprZeroReason)] [])
+              (if (and (> (+ @tp @fp) 0) (and (> @nPos 0) (== (+ @prec @rec) 0))) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.f1Label) "{reason}" @config.f1ZeroReason)] [])) " "))
+            (ds (array/unique (array/map (array/sort @its "score" "desc") (fn (i) (object/get @i score)))))
+            (sweep (array/map @ds (fn (d)
+              (let (
+                  (stp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @d)))))
+                  (sfp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @d)))))
+                )
+                { tpr: (if (== @nPos 0) 0 (/ @stp @nPos)), fpr: (if (== @nNeg 0) 0 (/ @sfp @nNeg)), prc: (if (== (+ @stp @sfp) 0) 0 (/ @stp (+ @stp @sfp))) }))))
+            (rocPts (array/concat [{ x: 0, y: 0 }] (array/map @sweep (fn (s) { x: (object/get @s fpr), y: (object/get @s tpr) }))))
+            (prPts (array/map @sweep (fn (s) { x: (object/get @s tpr), y: (object/get @s prc) })))
+            (aucv (if (or (== @nPos 0) (== @nNeg 0)) 0
+              (array/sum (array/map (array/range 1 (array/len @rocPts)) (fn (k)
+                (let (
+                    (a (default (array/nth @rocPts (- @k 1)) { x: 0, y: 0 }))
+                    (b (default (array/nth @rocPts @k) { x: 0, y: 0 }))
+                  )
+                  (/ (* (- (object/get @b x) (object/get @a x)) (+ (object/get @b y) (object/get @a y))) 2)))))))
+            (kind @config.curveKind)
+            (curvePts (if (== @kind "roc") @rocPts (if (== @kind "pr") @prPts [])))
+            (marker (if (== @kind "roc")
+              [{ x: @fprv, y: @rec, label: "", color: "highlight", radius: 6, style: "closed" }]
+              (if (== @kind "pr") [{ x: @rec, y: @prec, label: "", color: "highlight", radius: 6, style: "closed" }] [])))
+            (pts (array/map (array/range 0 @n) (fn (k)
+              (let (
+                  (it (default (array/nth @its @k) { id: "", score: 0, actual: "negative" }))
+                  (isPos (== (object/get @it actual) "positive"))
+                  (pred (>= (object/get @it score) @thr))
+                )
+                { x: (object/get @it score), y: (+ (if @isPos 0.72 0.28) (* 0.05 (- (math/mod @k 3) 1))), label: "", color: (if @isPos "series-1" "series-2"), radius: 5, style: (if (== @isPos @pred) "closed" "open") }))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.items @config.items)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.threshold @thr)
+            (set @entity.tp @tp)
+            (set @entity.fp @fp)
+            (set @entity.tn @tn)
+            (set @entity.fn @fneg)
+            (set @entity.precision @prec)
+            (set @entity.recall @rec)
+            (set @entity.f1 @f1)
+            (set @entity.accuracy @acc)
+            (set @entity.fpr @fprv)
+            (set @entity.auc @aucv)
+            (set @entity.curvePoints @curvePts)
+            (set @entity.notes @notes)
+            (set @entity.points @pts)
+            (set @entity.markers @marker)
+            (set @entity.curves (if (== (array/len @curvePts) 0) [] [{ label: @kind, color: "series-3", samples: @curvePts }]))
+            (set @entity.guides [{ kind: "vline", at: @thr, color: "highlight", dash: "dashed", label: @config.thresholdLabel }])
+))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (let (
+            (its @config.items)
+            (thr (math/clamp @config.thresholdDefault @config.thresholdMin @config.thresholdMax))
+            (n (array/len @its))
+            (nPos (array/count @its (fn (i) (== (object/get @i actual) "positive"))))
+            (nNeg (- @n @nPos))
+            (tp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @thr)))))
+            (fp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @thr)))))
+            (fneg (- @nPos @tp))
+            (tn (- @nNeg @fp))
+            (prec (if (== (+ @tp @fp) 0) 0 (/ @tp (+ @tp @fp))))
+            (rec (if (== @nPos 0) 0 (/ @tp @nPos)))
+            (f1 (if (== (+ @prec @rec) 0) 0 (/ (* 2 (* @prec @rec)) (+ @prec @rec))))
+            (acc (if (== @n 0) 0 (/ (+ @tp @tn) @n)))
+            (fprv (if (== @nNeg 0) 0 (/ @fp @nNeg)))
+            (notes (str/join (array/concat
+              (if (== (+ @tp @fp) 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.precisionLabel) "{reason}" @config.precisionZeroReason)] [])
+              (if (== @nPos 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.recallLabel) "{reason}" @config.recallZeroReason)] [])
+              (if (== @nNeg 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.fprLabel) "{reason}" @config.fprZeroReason)] [])
+              (if (and (> (+ @tp @fp) 0) (and (> @nPos 0) (== (+ @prec @rec) 0))) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.f1Label) "{reason}" @config.f1ZeroReason)] [])) " "))
+            (ds (array/unique (array/map (array/sort @its "score" "desc") (fn (i) (object/get @i score)))))
+            (sweep (array/map @ds (fn (d)
+              (let (
+                  (stp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @d)))))
+                  (sfp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @d)))))
+                )
+                { tpr: (if (== @nPos 0) 0 (/ @stp @nPos)), fpr: (if (== @nNeg 0) 0 (/ @sfp @nNeg)), prc: (if (== (+ @stp @sfp) 0) 0 (/ @stp (+ @stp @sfp))) }))))
+            (rocPts (array/concat [{ x: 0, y: 0 }] (array/map @sweep (fn (s) { x: (object/get @s fpr), y: (object/get @s tpr) }))))
+            (prPts (array/map @sweep (fn (s) { x: (object/get @s tpr), y: (object/get @s prc) })))
+            (aucv (if (or (== @nPos 0) (== @nNeg 0)) 0
+              (array/sum (array/map (array/range 1 (array/len @rocPts)) (fn (k)
+                (let (
+                    (a (default (array/nth @rocPts (- @k 1)) { x: 0, y: 0 }))
+                    (b (default (array/nth @rocPts @k) { x: 0, y: 0 }))
+                  )
+                  (/ (* (- (object/get @b x) (object/get @a x)) (+ (object/get @b y) (object/get @a y))) 2)))))))
+            (kind @config.curveKind)
+            (curvePts (if (== @kind "roc") @rocPts (if (== @kind "pr") @prPts [])))
+            (marker (if (== @kind "roc")
+              [{ x: @fprv, y: @rec, label: "", color: "highlight", radius: 6, style: "closed" }]
+              (if (== @kind "pr") [{ x: @rec, y: @prec, label: "", color: "highlight", radius: 6, style: "closed" }] [])))
+            (pts (array/map (array/range 0 @n) (fn (k)
+              (let (
+                  (it (default (array/nth @its @k) { id: "", score: 0, actual: "negative" }))
+                  (isPos (== (object/get @it actual) "positive"))
+                  (pred (>= (object/get @it score) @thr))
+                )
+                { x: (object/get @it score), y: (+ (if @isPos 0.72 0.28) (* 0.05 (- (math/mod @k 3) 1))), label: "", color: (if @isPos "series-1" "series-2"), radius: 5, style: (if (== @isPos @pred) "closed" "open") }))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.items @config.items)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.threshold @thr)
+            (set @entity.tp @tp)
+            (set @entity.fp @fp)
+            (set @entity.tn @tn)
+            (set @entity.fn @fneg)
+            (set @entity.precision @prec)
+            (set @entity.recall @rec)
+            (set @entity.f1 @f1)
+            (set @entity.accuracy @acc)
+            (set @entity.fpr @fprv)
+            (set @entity.auc @aucv)
+            (set @entity.curvePoints @curvePts)
+            (set @entity.notes @notes)
+            (set @entity.points @pts)
+            (set @entity.markers @marker)
+            (set @entity.curves (if (== (array/len @curvePts) 0) [] [{ label: @kind, color: "series-3", samples: @curvePts }]))
+            (set @entity.guides [{ kind: "vline", at: @thr, color: "highlight", dash: "dashed", label: @config.thresholdLabel }])
+))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (== ?mode @config.matchMode))
+        (let (
+            (its ?items)
+            (thr (math/clamp @config.thresholdDefault @config.thresholdMin @config.thresholdMax))
+            (n (array/len @its))
+            (nPos (array/count @its (fn (i) (== (object/get @i actual) "positive"))))
+            (nNeg (- @n @nPos))
+            (tp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @thr)))))
+            (fp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @thr)))))
+            (fneg (- @nPos @tp))
+            (tn (- @nNeg @fp))
+            (prec (if (== (+ @tp @fp) 0) 0 (/ @tp (+ @tp @fp))))
+            (rec (if (== @nPos 0) 0 (/ @tp @nPos)))
+            (f1 (if (== (+ @prec @rec) 0) 0 (/ (* 2 (* @prec @rec)) (+ @prec @rec))))
+            (acc (if (== @n 0) 0 (/ (+ @tp @tn) @n)))
+            (fprv (if (== @nNeg 0) 0 (/ @fp @nNeg)))
+            (notes (str/join (array/concat
+              (if (== (+ @tp @fp) 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.precisionLabel) "{reason}" @config.precisionZeroReason)] [])
+              (if (== @nPos 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.recallLabel) "{reason}" @config.recallZeroReason)] [])
+              (if (== @nNeg 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.fprLabel) "{reason}" @config.fprZeroReason)] [])
+              (if (and (> (+ @tp @fp) 0) (and (> @nPos 0) (== (+ @prec @rec) 0))) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.f1Label) "{reason}" @config.f1ZeroReason)] [])) " "))
+            (ds (array/unique (array/map (array/sort @its "score" "desc") (fn (i) (object/get @i score)))))
+            (sweep (array/map @ds (fn (d)
+              (let (
+                  (stp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @d)))))
+                  (sfp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @d)))))
+                )
+                { tpr: (if (== @nPos 0) 0 (/ @stp @nPos)), fpr: (if (== @nNeg 0) 0 (/ @sfp @nNeg)), prc: (if (== (+ @stp @sfp) 0) 0 (/ @stp (+ @stp @sfp))) }))))
+            (rocPts (array/concat [{ x: 0, y: 0 }] (array/map @sweep (fn (s) { x: (object/get @s fpr), y: (object/get @s tpr) }))))
+            (prPts (array/map @sweep (fn (s) { x: (object/get @s tpr), y: (object/get @s prc) })))
+            (aucv (if (or (== @nPos 0) (== @nNeg 0)) 0
+              (array/sum (array/map (array/range 1 (array/len @rocPts)) (fn (k)
+                (let (
+                    (a (default (array/nth @rocPts (- @k 1)) { x: 0, y: 0 }))
+                    (b (default (array/nth @rocPts @k) { x: 0, y: 0 }))
+                  )
+                  (/ (* (- (object/get @b x) (object/get @a x)) (+ (object/get @b y) (object/get @a y))) 2)))))))
+            (kind @config.curveKind)
+            (curvePts (if (== @kind "roc") @rocPts (if (== @kind "pr") @prPts [])))
+            (marker (if (== @kind "roc")
+              [{ x: @fprv, y: @rec, label: "", color: "highlight", radius: 6, style: "closed" }]
+              (if (== @kind "pr") [{ x: @rec, y: @prec, label: "", color: "highlight", radius: 6, style: "closed" }] [])))
+            (pts (array/map (array/range 0 @n) (fn (k)
+              (let (
+                  (it (default (array/nth @its @k) { id: "", score: 0, actual: "negative" }))
+                  (isPos (== (object/get @it actual) "positive"))
+                  (pred (>= (object/get @it score) @thr))
+                )
+                { x: (object/get @it score), y: (+ (if @isPos 0.72 0.28) (* 0.05 (- (math/mod @k 3) 1))), label: "", color: (if @isPos "series-1" "series-2"), radius: 5, style: (if (== @isPos @pred) "closed" "open") }))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.items ?items)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.threshold @thr)
+            (set @entity.tp @tp)
+            (set @entity.fp @fp)
+            (set @entity.tn @tn)
+            (set @entity.fn @fneg)
+            (set @entity.precision @prec)
+            (set @entity.recall @rec)
+            (set @entity.f1 @f1)
+            (set @entity.accuracy @acc)
+            (set @entity.fpr @fprv)
+            (set @entity.auc @aucv)
+            (set @entity.curvePoints @curvePts)
+            (set @entity.notes @notes)
+            (set @entity.points @pts)
+            (set @entity.markers @marker)
+            (set @entity.curves (if (== (array/len @curvePts) 0) [] [{ label: @kind, color: "series-3", samples: @curvePts }]))
+            (set @entity.guides [{ kind: "vline", at: @thr, color: "highlight", dash: "dashed", label: @config.thresholdLabel }])
+))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (set @entity.active false)
+        (render-ui main null)
+
+      SET_THRESHOLD -> idle when (and (== @entity.active true) (== @entity.solved false))
+        (let (
+            (its @entity.items)
+            (thr (math/round (math/clamp ?value @config.thresholdMin @config.thresholdMax) 4))
+            (n (array/len @its))
+            (nPos (array/count @its (fn (i) (== (object/get @i actual) "positive"))))
+            (nNeg (- @n @nPos))
+            (tp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @thr)))))
+            (fp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @thr)))))
+            (fneg (- @nPos @tp))
+            (tn (- @nNeg @fp))
+            (prec (if (== (+ @tp @fp) 0) 0 (/ @tp (+ @tp @fp))))
+            (rec (if (== @nPos 0) 0 (/ @tp @nPos)))
+            (f1 (if (== (+ @prec @rec) 0) 0 (/ (* 2 (* @prec @rec)) (+ @prec @rec))))
+            (acc (if (== @n 0) 0 (/ (+ @tp @tn) @n)))
+            (fprv (if (== @nNeg 0) 0 (/ @fp @nNeg)))
+            (notes (str/join (array/concat
+              (if (== (+ @tp @fp) 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.precisionLabel) "{reason}" @config.precisionZeroReason)] [])
+              (if (== @nPos 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.recallLabel) "{reason}" @config.recallZeroReason)] [])
+              (if (== @nNeg 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.fprLabel) "{reason}" @config.fprZeroReason)] [])
+              (if (and (> (+ @tp @fp) 0) (and (> @nPos 0) (== (+ @prec @rec) 0))) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.f1Label) "{reason}" @config.f1ZeroReason)] [])) " "))
+            (ds (array/unique (array/map (array/sort @its "score" "desc") (fn (i) (object/get @i score)))))
+            (sweep (array/map @ds (fn (d)
+              (let (
+                  (stp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @d)))))
+                  (sfp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @d)))))
+                )
+                { tpr: (if (== @nPos 0) 0 (/ @stp @nPos)), fpr: (if (== @nNeg 0) 0 (/ @sfp @nNeg)), prc: (if (== (+ @stp @sfp) 0) 0 (/ @stp (+ @stp @sfp))) }))))
+            (rocPts (array/concat [{ x: 0, y: 0 }] (array/map @sweep (fn (s) { x: (object/get @s fpr), y: (object/get @s tpr) }))))
+            (prPts (array/map @sweep (fn (s) { x: (object/get @s tpr), y: (object/get @s prc) })))
+            (aucv (if (or (== @nPos 0) (== @nNeg 0)) 0
+              (array/sum (array/map (array/range 1 (array/len @rocPts)) (fn (k)
+                (let (
+                    (a (default (array/nth @rocPts (- @k 1)) { x: 0, y: 0 }))
+                    (b (default (array/nth @rocPts @k) { x: 0, y: 0 }))
+                  )
+                  (/ (* (- (object/get @b x) (object/get @a x)) (+ (object/get @b y) (object/get @a y))) 2)))))))
+            (kind @config.curveKind)
+            (curvePts (if (== @kind "roc") @rocPts (if (== @kind "pr") @prPts [])))
+            (marker (if (== @kind "roc")
+              [{ x: @fprv, y: @rec, label: "", color: "highlight", radius: 6, style: "closed" }]
+              (if (== @kind "pr") [{ x: @rec, y: @prec, label: "", color: "highlight", radius: 6, style: "closed" }] [])))
+            (pts (array/map (array/range 0 @n) (fn (k)
+              (let (
+                  (it (default (array/nth @its @k) { id: "", score: 0, actual: "negative" }))
+                  (isPos (== (object/get @it actual) "positive"))
+                  (pred (>= (object/get @it score) @thr))
+                )
+                { x: (object/get @it score), y: (+ (if @isPos 0.72 0.28) (* 0.05 (- (math/mod @k 3) 1))), label: "", color: (if @isPos "series-1" "series-2"), radius: 5, style: (if (== @isPos @pred) "closed" "open") }))))
+          )
+          (do
+            (set @entity.threshold @thr)
+            (set @entity.tp @tp)
+            (set @entity.fp @fp)
+            (set @entity.tn @tn)
+            (set @entity.fn @fneg)
+            (set @entity.precision @prec)
+            (set @entity.recall @rec)
+            (set @entity.f1 @f1)
+            (set @entity.accuracy @acc)
+            (set @entity.fpr @fprv)
+            (set @entity.auc @aucv)
+            (set @entity.curvePoints @curvePts)
+            (set @entity.notes @notes)
+            (set @entity.points @pts)
+            (set @entity.markers @marker)
+            (set @entity.curves (if (== (array/len @curvePts) 0) [] [{ label: @kind, color: "series-3", samples: @curvePts }]))
+            (set @entity.guides [{ kind: "vline", at: @thr, color: "highlight", dash: "dashed", label: @config.thresholdLabel }])
+))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+        (emit THRESHOLD_CHANGED { threshold: @entity.threshold, tp: @entity.tp, fp: @entity.fp, tn: @entity.tn, fn: @entity.fn, precision: @entity.precision, recall: @entity.recall, f1: @entity.f1, accuracy: @entity.accuracy, fpr: @entity.fpr, auc: @entity.auc, curve: @entity.curvePoints })
+
+      CHECK -> idle when (and (== @entity.active true) (and (== @entity.solved false) (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.solved (and (or (== @config.goalMetric "none") (>= (if (== @config.goalMetric "precision") @entity.precision (if (== @config.goalMetric "recall") @entity.recall (if (== @config.goalMetric "f1") @entity.f1 (if (== @config.goalMetric "accuracy") @entity.accuracy 0)))) @config.goalValue)) (and (>= @entity.precision @config.minPrecision) (>= @entity.recall @config.minRecall))))
+        (set @entity.feedback (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (if @entity.solved @config.feedbackMet @config.feedbackMissed) "{threshold}" (str/concat "" (math/round @entity.threshold 3))) "{precision}" (str/concat "" (math/round @entity.precision 3))) "{recall}" (str/concat "" (math/round @entity.recall 3))) "{f1}" (str/concat "" (math/round @entity.f1 3))) "{accuracy}" (str/concat "" (math/round @entity.accuracy 3))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+        (emit CONFUSION_CHECKED { matched: @entity.solved, threshold: @entity.threshold, precision: @entity.precision, recall: @entity.recall, f1: @entity.f1, accuracy: @entity.accuracy, attempts: @entity.attempts })
+        (if @entity.solved (emit LEARN_ROUND_COMPLETE { score: 1, total: 1 }) null)
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (its @entity.items)
+            (thr (math/clamp @config.thresholdDefault @config.thresholdMin @config.thresholdMax))
+            (n (array/len @its))
+            (nPos (array/count @its (fn (i) (== (object/get @i actual) "positive"))))
+            (nNeg (- @n @nPos))
+            (tp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @thr)))))
+            (fp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @thr)))))
+            (fneg (- @nPos @tp))
+            (tn (- @nNeg @fp))
+            (prec (if (== (+ @tp @fp) 0) 0 (/ @tp (+ @tp @fp))))
+            (rec (if (== @nPos 0) 0 (/ @tp @nPos)))
+            (f1 (if (== (+ @prec @rec) 0) 0 (/ (* 2 (* @prec @rec)) (+ @prec @rec))))
+            (acc (if (== @n 0) 0 (/ (+ @tp @tn) @n)))
+            (fprv (if (== @nNeg 0) 0 (/ @fp @nNeg)))
+            (notes (str/join (array/concat
+              (if (== (+ @tp @fp) 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.precisionLabel) "{reason}" @config.precisionZeroReason)] [])
+              (if (== @nPos 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.recallLabel) "{reason}" @config.recallZeroReason)] [])
+              (if (== @nNeg 0) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.fprLabel) "{reason}" @config.fprZeroReason)] [])
+              (if (and (> (+ @tp @fp) 0) (and (> @nPos 0) (== (+ @prec @rec) 0))) [(str/replaceAll (str/replaceAll @config.zeroDivisionTemplate "{metric}" @config.f1Label) "{reason}" @config.f1ZeroReason)] [])) " "))
+            (ds (array/unique (array/map (array/sort @its "score" "desc") (fn (i) (object/get @i score)))))
+            (sweep (array/map @ds (fn (d)
+              (let (
+                  (stp (array/count @its (fn (i) (and (== (object/get @i actual) "positive") (>= (object/get @i score) @d)))))
+                  (sfp (array/count @its (fn (i) (and (== (object/get @i actual) "negative") (>= (object/get @i score) @d)))))
+                )
+                { tpr: (if (== @nPos 0) 0 (/ @stp @nPos)), fpr: (if (== @nNeg 0) 0 (/ @sfp @nNeg)), prc: (if (== (+ @stp @sfp) 0) 0 (/ @stp (+ @stp @sfp))) }))))
+            (rocPts (array/concat [{ x: 0, y: 0 }] (array/map @sweep (fn (s) { x: (object/get @s fpr), y: (object/get @s tpr) }))))
+            (prPts (array/map @sweep (fn (s) { x: (object/get @s tpr), y: (object/get @s prc) })))
+            (aucv (if (or (== @nPos 0) (== @nNeg 0)) 0
+              (array/sum (array/map (array/range 1 (array/len @rocPts)) (fn (k)
+                (let (
+                    (a (default (array/nth @rocPts (- @k 1)) { x: 0, y: 0 }))
+                    (b (default (array/nth @rocPts @k) { x: 0, y: 0 }))
+                  )
+                  (/ (* (- (object/get @b x) (object/get @a x)) (+ (object/get @b y) (object/get @a y))) 2)))))))
+            (kind @config.curveKind)
+            (curvePts (if (== @kind "roc") @rocPts (if (== @kind "pr") @prPts [])))
+            (marker (if (== @kind "roc")
+              [{ x: @fprv, y: @rec, label: "", color: "highlight", radius: 6, style: "closed" }]
+              (if (== @kind "pr") [{ x: @rec, y: @prec, label: "", color: "highlight", radius: 6, style: "closed" }] [])))
+            (pts (array/map (array/range 0 @n) (fn (k)
+              (let (
+                  (it (default (array/nth @its @k) { id: "", score: 0, actual: "negative" }))
+                  (isPos (== (object/get @it actual) "positive"))
+                  (pred (>= (object/get @it score) @thr))
+                )
+                { x: (object/get @it score), y: (+ (if @isPos 0.72 0.28) (* 0.05 (- (math/mod @k 3) 1))), label: "", color: (if @isPos "series-1" "series-2"), radius: 5, style: (if (== @isPos @pred) "closed" "open") }))))
+          )
+          (do
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.threshold @thr)
+            (set @entity.tp @tp)
+            (set @entity.fp @fp)
+            (set @entity.tn @tn)
+            (set @entity.fn @fneg)
+            (set @entity.precision @prec)
+            (set @entity.recall @rec)
+            (set @entity.f1 @f1)
+            (set @entity.accuracy @acc)
+            (set @entity.fpr @fprv)
+            (set @entity.auc @aucv)
+            (set @entity.curvePoints @curvePts)
+            (set @entity.notes @notes)
+            (set @entity.points @pts)
+            (set @entity.markers @marker)
+            (set @entity.curves (if (== (array/len @curvePts) 0) [] [{ label: @kind, color: "series-3", samples: @curvePts }]))
+            (set @entity.guides [{ kind: "vline", at: @thr, color: "highlight", dash: "dashed", label: @config.thresholdLabel }])
+))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: badge, label: (if @entity.solved @config.solvedLabel (if (> @entity.attempts 0) @config.retryLabel @config.tuningLabel)), variant: (if @entity.solved "success" (if (> @entity.attempts 0) "warning" "neutral")) }
+                      null)
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    (if (or (!= @config.goalMetric "none") (or (> @config.minPrecision 0) (> @config.minRecall 0)))
+                      { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) }
+                      null),
+                    { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
+                    (if (> @entity.attempts 0) { type: typography, variant: caption, color: muted, content: (str/concat @config.attemptsLabel ": " (str/concat "" @entity.attempts)) } null)
+                  ] },
+                { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.scoreMin, xMax: @config.scoreMax, yMin: 0, yMax: 1, showAxes: true, showGrid: false, gridStep: 0.1, curves: [], points: @entity.points, vectors: [], shapes: [], guides: @entity.guides, interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.positiveLabel @config.legendText) },
+                    { type: typography, variant: caption, color: muted, content: @config.negativeLabel }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.thresholdLabel ": " (math/round @entity.threshold 3)) },
+                    { type: range-slider, min: @config.thresholdMin, max: @config.thresholdMax, step: @config.thresholdStep, value: @entity.threshold, showTooltip: true, action: "SET_THRESHOLD" }
+                  ] },
+                { type: stack, direction: vertical, gap: sm, children: [
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.positiveLabel) },
+                        { type: typography, variant: caption, color: muted, content: (str/concat @config.predictedLabel " " @config.negativeLabel) }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.tpLabel) },
+                          { type: badge, label: (str/concat "" @entity.tp), variant: success }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.positiveLabel ": " @config.fnLabel) },
+                          { type: badge, label: (str/concat "" @entity.fn), variant: warning }
+                        ] } ] }
+                      ] },
+                    { type: stack, direction: horizontal, gap: sm, justify: center, children: [
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.fpLabel) },
+                          { type: badge, label: (str/concat "" @entity.fp), variant: warning }
+                        ] } ] },
+                        { type: box, padding: sm, children: [ { type: stack, direction: vertical, gap: xs, align: center, children: [
+                          { type: typography, variant: caption, color: muted, content: (str/concat @config.actualLabel " " @config.negativeLabel ": " @config.tnLabel) },
+                          { type: badge, label: (str/concat "" @entity.tn), variant: success }
+                        ] } ] }
+                      ] }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: body, content: (str/concat @config.precisionLabel " = " @config.precisionFormula " = " @entity.tp " / " (+ @entity.tp @entity.fp) " = " (math/round @entity.precision 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.recallLabel " = " @config.recallFormula " = " @entity.tp " / " (+ @entity.tp @entity.fn) " = " (math/round @entity.recall 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.f1Label " = " @config.f1Formula " = " (math/round @entity.f1 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.accuracyLabel " = " @config.accuracyFormula " = " (+ @entity.tp @entity.tn) " / " (+ (+ @entity.tp @entity.tn) (+ @entity.fp @entity.fn)) " = " (math/round @entity.accuracy 3)) },
+                    { type: typography, variant: body, content: (str/concat @config.fprLabel " = " @config.fprFormula " = " @entity.fp " / " (+ @entity.fp @entity.tn) " = " (math/round @entity.fpr 3)) },
+                    (if (== @entity.notes "") null { type: typography, variant: caption, color: muted, content: @entity.notes })
+                  ] },
+                (if (== @config.curveKind "none") null
+                  { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: caption, content: (if (== @config.curveKind "roc") (str/concat @config.rocCaption " " (math/round @entity.auc 3)) @config.prCaption) },
+                      { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: 0.25, curves: @entity.curves, points: @entity.markers, vectors: [], shapes: [], interactive: false, animate: false }
+                    ] }),
+                (if (== @entity.feedback "") null { type: typography, variant: caption, color: muted, content: @entity.feedback })
+              ] }
+          ]
+        })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        items : [ConfusionItem]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event: mode names the instrument it is for (the matchMode it carries, blank when standalone) and items is the scored example set; a matching instrument re-initialises from it exactly as INIT does from config, any other instrument hides."
+        @tier "domain"
+      SET_THRESHOLD {
+        value : number!
+      }
+        @description "Learner dragged the threshold slider: value is the new decision threshold; the confusion matrix, metrics, markers and curve recompute immediately."
+        @tier "domain"
+      CHECK {
+      }
+        @description "Learner asked to be graded: the goal metric and the precision and recall floors are compared against the current threshold's metrics and the attempt is counted."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the threshold to its default and cleared the attempt count; the items stay the same."
+        @tier "domain"
+    }
+
+    emits {
+      THRESHOLD_CHANGED -> external {
+        threshold : number
+        tp : number
+        fp : number
+        tn : number
+        fn : number
+        precision : number
+        recall : number
+        f1 : number
+        accuracy : number
+        fpr : number
+        auc : number
+        curve : [ConfusionSample]
+      }
+        @description "The decision threshold after a slider move with the confusion counts and metrics it produces (zero-division metrics are 0), the ROC AUC by the trapezoid rule, and the swept curve points for curveKind (empty for none); a composed listener (readout, coach) can subscribe, a harmless no-op when standalone."
+        @synonyms "threshold moved, confusion matrix, precision recall tradeoff, classification threshold"
+        @tier "domain"
+      CONFUSION_CHECKED -> external {
+        matched : boolean
+        threshold : number
+        precision : number
+        recall : number
+        f1 : number
+        accuracy : number
+        attempts : number
+      }
+        @description "The verdict of a Check press: whether the goal metric and the precision and recall floors are met at the current threshold, with the metrics and the attempt count."
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when a Check meets the goal: the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion, solved"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone: render immediately on INIT (or on ROSTER_LOADED when rosterSource is event)."
+        @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the scored items come from: config reads the items knob at INIT; event waits for ROSTER_LOADED and takes them from its payload."
+        @tier "domain"
+      title : string = "Classification Threshold"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at. Empty shows no line."
+        @tier "presentation"
+      items : [ConfusionItem] = [
+        { id: "i0", score: 0.95, actual: "positive" },
+        { id: "i1", score: 0.85, actual: "positive" },
+        { id: "i2", score: 0.8, actual: "negative" },
+        { id: "i3", score: 0.7, actual: "positive" },
+        { id: "i4", score: 0.55, actual: "negative" },
+        { id: "i5", score: 0.45, actual: "positive" },
+        { id: "i6", score: 0.3, actual: "negative" },
+        { id: "i7", score: 0.15, actual: "negative" }
+      ]
+        @label "Items"
+        @description "The scored examples: score is the model's score in [scoreMin, scoreMax], actual is the true class (positive or negative). An item is predicted positive when its score is at or above the threshold."
+        @tier "domain"
+      positiveLabel : string = "Positive"
+        @label "Positive Label"
+        @description "Display name for the positive class."
+        @tier "presentation"
+      negativeLabel : string = "Negative"
+        @label "Negative Label"
+        @description "Display name for the negative class."
+        @tier "presentation"
+      thresholdLabel : string = "Threshold"
+        @label "Threshold Label"
+        @description "Display name for the decision threshold."
+        @tier "presentation"
+      scoreMin : number = 0
+        @label "Score Min"
+        @description "Left end of the score axis."
+        @tier "presentation"
+      scoreMax : number = 1
+        @label "Score Max"
+        @description "Right end of the score axis."
+        @tier "presentation"
+      thresholdMin : number = 0
+        @label "Threshold Min"
+        @tier "domain"
+      thresholdMax : number = 1
+        @label "Threshold Max"
+        @tier "domain"
+      thresholdStep : number = 0.05
+        @label "Threshold Step"
+        @tier "presentation"
+      thresholdDefault : number = 0.5
+        @label "Threshold Default"
+        @description "Starting value of the decision threshold."
+        @tier "domain"
+      curveKind : "none" | "pr" | "roc" = "none"
+        @label "Curve Kind"
+        @description "Optional sweep over the distinct scores: pr draws the precision-recall curve, roc draws the ROC curve with its trapezoid-rule AUC, none draws neither. The current threshold is marked on the curve."
+        @tier "domain"
+      goalMetric : "none" | "precision" | "recall" | "f1" | "accuracy" = "none"
+        @label "Goal Metric"
+        @description "Metric the learner must reach at Check; none leaves the metric ungraded."
+        @tier "domain"
+      goalValue : number = 0
+        @label "Goal Value"
+        @description "Minimum value of the goal metric that counts as met."
+        @tier "domain"
+      minPrecision : number = 0
+        @label "Minimum Precision"
+        @description "Optional floor: Check also requires precision at least this. 0 means no floor."
+        @tier "domain"
+      minRecall : number = 0
+        @label "Minimum Recall"
+        @description "Optional floor: Check also requires recall at least this. 0 means no floor."
+        @tier "domain"
+      checkLabel : string = "Check"
+        @label "Check Label"
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Label"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 260
+        @label "Height"
+        @tier "presentation"
+      precisionLabel : string = "Precision"
+        @label "Precision Label"
+        @tier "presentation"
+      recallLabel : string = "Recall"
+        @label "Recall Label"
+        @tier "presentation"
+      f1Label : string = "F1"
+        @label "F1 Label"
+        @tier "presentation"
+      accuracyLabel : string = "Accuracy"
+        @label "Accuracy Label"
+        @tier "presentation"
+      fprLabel : string = "False positive rate"
+        @label "False Positive Rate Label"
+        @tier "presentation"
+      precisionFormula : string = "TP / (TP + FP)"
+        @label "Precision Formula"
+        @tier "presentation"
+      recallFormula : string = "TP / (TP + FN)"
+        @label "Recall Formula"
+        @tier "presentation"
+      f1Formula : string = "2PR / (P + R)"
+        @label "F1 Formula"
+        @tier "presentation"
+      accuracyFormula : string = "(TP + TN) / all"
+        @label "Accuracy Formula"
+        @tier "presentation"
+      fprFormula : string = "FP / (FP + TN)"
+        @label "False Positive Rate Formula"
+        @tier "presentation"
+      zeroDivisionTemplate : string = "{metric} has {reason}, so it is shown as 0."
+        @label "Zero Division Template"
+        @description "Sentence shown when a metric has a zero denominator; {metric} and {reason} are replaced by the metric label and its reason knob."
+        @tier "presentation"
+      precisionZeroReason : string = "no predicted positives"
+        @label "Precision Zero Reason"
+        @tier "presentation"
+      recallZeroReason : string = "no actual positives"
+        @label "Recall Zero Reason"
+        @tier "presentation"
+      fprZeroReason : string = "no actual negatives"
+        @label "False Positive Rate Zero Reason"
+        @tier "presentation"
+      f1ZeroReason : string = "precision and recall both 0"
+        @label "F1 Zero Reason"
+        @tier "presentation"
+      predictedLabel : string = "Predicted"
+        @label "Predicted Label"
+        @tier "presentation"
+      actualLabel : string = "Actual"
+        @label "Actual Label"
+        @tier "presentation"
+      tpLabel : string = "true positives"
+        @label "True Positives Label"
+        @tier "presentation"
+      fpLabel : string = "false positives"
+        @label "False Positives Label"
+        @tier "presentation"
+      tnLabel : string = "true negatives"
+        @label "True Negatives Label"
+        @tier "presentation"
+      fnLabel : string = "false negatives"
+        @label "False Negatives Label"
+        @tier "presentation"
+      legendText : string = " (filled = predicted correctly, open = missed)"
+        @label "Legend Text"
+        @tier "presentation"
+      solvedLabel : string = "Solved"
+        @label "Solved Label"
+        @tier "presentation"
+      retryLabel : string = "Try again"
+        @label "Retry Label"
+        @tier "presentation"
+      tuningLabel : string = "Tuning"
+        @label "Tuning Label"
+        @tier "presentation"
+      attemptsLabel : string = "Attempts"
+        @label "Attempts Label"
+        @tier "presentation"
+      rocCaption : string = "ROC curve (x = false positive rate, y = recall) · AUC ="
+        @label "ROC Caption"
+        @description "Caption above the ROC curve; the AUC value is appended."
+        @tier "presentation"
+      prCaption : string = "Precision-recall curve (x = recall, y = precision)"
+        @label "PR Caption"
+        @tier "presentation"
+      feedbackMet : string = "Goal met at threshold {threshold}: precision {precision}, recall {recall}."
+        @label "Feedback When Met"
+        @description "Placeholders: {threshold} {precision} {recall} {f1} {accuracy}."
+        @tier "presentation"
+      feedbackMissed : string = "Not yet at threshold {threshold}: precision {precision}, recall {recall}, F1 {f1}, accuracy {accuracy}. Move the threshold and check again."
+        @label "Feedback When Missed"
+        @description "Placeholders: {threshold} {precision} {recall} {f1} {accuracy}."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-confusion" as ConfusionPage -> ConfusionSim
+}

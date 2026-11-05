@@ -1,0 +1,20 @@
+app lolo-python-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as readable Python text, so a learner who reads an exercise written in .lolo can see the same program as Python. LOLO_TO_PYTHON { source } answers PYTHON_RENDERED { text, warnings }, the dataclasses for every type alias and entity, one class per trait with an on_<event> method per event, and a warning for each operator that had no Python template, or PYTHON_RENDER_FAILED { error } when the source cannot be read."
+]
+
+orbital LoloPythonSpec {
+  expects entity LoloPythonRun [runtime] {
+    id : string!
+  }
+  expects trait LoloPython {
+    state ready {
+      LOLO_TO_PYTHON -> ready
+    }
+    emits {
+      PYTHON_RENDERED { text : string!  warnings : [string]! }
+      PYTHON_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloPython
+}

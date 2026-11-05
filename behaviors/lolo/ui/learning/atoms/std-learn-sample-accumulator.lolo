@@ -50,6 +50,8 @@ orbital SampleAccumulatorOrbital {
     sampleCount : number! = 0
     mean : number! = 0
     proportion : number! = 0
+    temperature : number! = 1
+    probs : [number]! = []
     shapes : [SampleAccShape]
   }
 
@@ -62,6 +64,8 @@ orbital SampleAccumulatorOrbital {
         (set @entity.title @config.title)
         (set @entity.sourceKind @config.sourceKind)
         (set @entity.batchSize @config.batchSize)
+        (set @entity.temperature @config.temperature)
+        (set @entity.probs [])
         (set @entity.samples [])
         (set @entity.sampleCount 0)
         (set @entity.mean 0)
@@ -89,7 +93,11 @@ orbital SampleAccumulatorOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
                     { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
                   ] },
-                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
               ] }
           ]
         })
@@ -103,6 +111,8 @@ orbital SampleAccumulatorOrbital {
         (set @entity.title @config.title)
         (set @entity.sourceKind @config.sourceKind)
         (set @entity.batchSize @config.batchSize)
+        (set @entity.temperature @config.temperature)
+        (set @entity.probs [])
         (set @entity.samples [])
         (set @entity.sampleCount 0)
         (set @entity.mean 0)
@@ -130,7 +140,11 @@ orbital SampleAccumulatorOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
                     { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
                   ] },
-                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
               ] }
           ]
         })
@@ -140,15 +154,34 @@ orbital SampleAccumulatorOrbital {
             (kind @entity.sourceKind)
             (bias @config.bias)
             (n @entity.batchSize)
+            (catCount (array/len @config.logits))
+            (probs (let (
+                (mx (default (array/max @config.logits) 0))
+                (temp (math/max 0.01 @entity.temperature))
+                (ex (array/map @config.logits (fn l (default (math/pow 2.718281828459045 (/ (- @l @mx) @temp)) 0))))
+                (z (math/max 0.000001 (array/sum @ex)))
+                (raw (array/map @ex (fn e (/ @e @z))))
+                (kept (array/map (array/range (array/len @raw)) (fn i
+                  (let ((own (default (array/nth @raw @i) 0))
+                        (above (array/reduce (array/range (array/len @raw)) 0 (fn (acc j)
+                          (let ((other (default (array/nth @raw @j) 0)))
+                            (if (or (> @other @own) (and (== @other @own) (< @j @i))) (+ @acc @other) @acc))))))
+                    (if (< @above @config.topP) @own 0)))))
+                (kz (math/max 0.000001 (array/sum @kept))))
+              (array/map @kept (fn k (/ @k @kz)))))
+            (cums (array/reduce @probs [] (fn (acc p) (array/append @acc (+ (default (array/last @acc) 0) @p)))))
             (newSamples (array/map (array/range @n) (fn (i)
               (if (== @kind "coin")
                 (if (< (math/random) @bias) 1 0)
-                (math/random)))))
+                (if (== @kind "softmax")
+                  (let ((r (math/random)) (hit (array/findIndex @cums (fn c (>= @c @r)))))
+                    (/ (+ (if (< @hit 0) (- @catCount 1) @hit) 0.5) (math/max 1 @catCount)))
+                  (math/random))))))
             (allSamples (array/concat @entity.samples @newSamples))
             (countV (array/len @allSamples))
             (meanV (/ (array/reduce @allSamples 0 (fn (acc x) (+ @acc @x))) @countV))
             (proportionV (if (== @kind "coin") @meanV 0))
-            (binCountV @config.binCount)
+            (binCountV (if (== @kind "softmax") (math/max 1 @catCount) @config.binCount))
             (binW (default (/ 1 @binCountV) 0))
             (counts (array/map (array/range @binCountV) (fn b (array/len (array/filter @allSamples (fn v (if (== @b (- @binCountV 1)) (and (>= @v (* @b @binW)) (<= @v (* (+ @b 1) @binW))) (and (>= @v (* @b @binW)) (< @v (* (+ @b 1) @binW))))))))))
             (maxCount (math/max 1 (array/reduce @counts 0 (fn (acc c) (math/max @acc @c)))))
@@ -165,6 +198,7 @@ orbital SampleAccumulatorOrbital {
             (set @entity.sampleCount @countV)
             (set @entity.mean @meanV)
             (set @entity.proportion @proportionV)
+            (set @entity.probs (if (== @kind "softmax") @probs []))
             (set @entity.shapes @histShapes)
           )
         )
@@ -190,7 +224,11 @@ orbital SampleAccumulatorOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
                     { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
                   ] },
-                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
               ] }
           ]
         })
@@ -220,7 +258,49 @@ orbital SampleAccumulatorOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
                     { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
                   ] },
-                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
+              ] }
+          ]
+        })
+
+      SET_TEMPERATURE -> idle when (== @entity.active true)
+        (set @entity.temperature ?value)
+        (set @entity.samples [])
+        (set @entity.sampleCount 0)
+        (set @entity.mean 0)
+        (set @entity.probs [])
+        (set @entity.shapes [])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (> @entity.sampleCount 0) (str/concat @entity.sampleCount " samples") "No samples"), variant: (if (> @entity.sampleCount 0) "primary" "neutral") }
+                  ] },
+                { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
+                    { type: button, action: DRAW, label: "Draw", icon: "plus", variant: primary },
+                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch of " @entity.batchSize) }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false, keyMap: { Space: DRAW, KeyR: RESET } },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
+                    { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
+                  ] },
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
               ] }
           ]
         })
@@ -253,7 +333,11 @@ orbital SampleAccumulatorOrbital {
                     { type: typography, variant: caption, color: muted, content: (str/concat "Batch size: " @entity.batchSize) },
                     { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" }
                   ] },
-                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+                (if (== @entity.sourceKind "softmax") { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, color: muted, content: (str/concat @config.temperatureLabel ": " @entity.temperature) },
+                    { type: range-slider, min: @config.temperatureMin, max: @config.temperatureMax, step: @config.temperatureStep, value: @entity.temperature, showTooltip: true, action: "SET_TEMPERATURE" }
+                  ] } null),
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "softmax") (str/concat @entity.sampleCount " sample(s) drawn — " (str/join (array/map (array/range (array/len @entity.probs)) (fn k (str/concat (default (array/nth @config.categoryLabels @k) (str/concat "#" @k)) " " (math/round (* 100 (default (array/nth @entity.probs @k) 0)) 1) "%"))) ", ") " (top-p " @config.topP ")") (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3)))) }
               ] }
           ]
         })
@@ -270,6 +354,11 @@ orbital SampleAccumulatorOrbital {
         value : number!
       }
         @description "Learner dragged the batch-size slider — value is the new number of samples each Draw adds."
+        @tier "domain"
+      SET_TEMPERATURE {
+        value : number!
+      }
+        @description "Learner dragged the temperature slider (softmax source) — the next draws sample from logits divided by this temperature; the histogram restarts so it shows only the new distribution."
         @tier "domain"
     }
 
@@ -301,9 +390,40 @@ orbital SampleAccumulatorOrbital {
         @label "Concept"
         @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
         @tier "presentation"
+      logits : [number] = []
+        @label "Logits"
+        @description "Raw scores, one per category, for the softmax source; probabilities are softmax(logits / temperature) restricted to the top-p nucleus and renormalized."
+        @synonyms "logits, scores, next-token scores"
+        @tier "domain"
+      categoryLabels : [string] = []
+        @label "Category labels"
+        @description "One label per logit (e.g. candidate next tokens); a missing label shows as #index."
+        @tier "domain"
+      temperature : number = 1
+        @label "Temperature"
+        @description "Initial softmax temperature; lower sharpens toward the top category, higher flattens toward uniform."
+        @synonyms "temperature, sampling temperature"
+        @tier "domain"
+      temperatureMin : number = 0.1
+        @label "Temperature min"
+        @tier "presentation"
+      temperatureMax : number = 3
+        @label "Temperature max"
+        @tier "presentation"
+      temperatureStep : number = 0.1
+        @label "Temperature step"
+        @tier "presentation"
+      temperatureLabel : string = "Temperature"
+        @label "Temperature label"
+        @tier "presentation"
+      topP : number = 1
+        @label "Top-p"
+        @description "Nucleus mass: only the most probable categories whose cumulative probability stays below this before them are kept; 1 keeps every category."
+        @synonyms "top-p, nucleus sampling"
+        @tier "domain"
       sourceKind : string = "uniform"
         @label "Source Kind"
-        @description "Distribution each draw samples from: uniform (0..1) or coin (Bernoulli 0/1 weighted by bias)."
+        @description "Distribution each draw samples from: uniform (0..1), coin (Bernoulli 0/1 weighted by bias), or softmax (a category drawn from softmax(logits / temperature) with top-p, one histogram bar per category)."
         @synonyms "uniform distribution, coin flip, bernoulli trial, random sampling, source distribution"
         @tier "domain"
       batchSize : number = 25

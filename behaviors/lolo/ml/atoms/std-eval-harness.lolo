@@ -1,0 +1,466 @@
+app std-eval-harness [
+  version: "1.0.0",
+  description: "std-eval-harness — golden set in, metrics report out, for LLM and RAG systems. EVAL_RUN scores each prediction against its golden case: retrieval metrics (recall@k, precision@k, hit@k, MRR, per case and aggregated; a case with no relevantIds is reported as not scored for retrieval), optional normalized exact match of answer against reference, and LLM-as-judge verdicts (pass or fail with a reason) per configured criterion, one sequential std-llm call per case per criterion. Judge calibration compares one criterion's verdicts with the human labels, and every judge pass rate carries a Beta credible interval so a small golden set shows its uncertainty. Predictions whose caseId is not in the golden set are listed as unmatchedPredictions, never dropped. Vocabulary, criteria and judge instructions live in config.",
+  net: { "api.openai.com:443": [tcp] },
+]
+
+uses Llm from "std/behaviors/std-llm"
+
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+orbital EvalHarnessOrbital {
+
+  type GoldenCase = {
+    id          : string!
+    question    : string!
+    relevantIds : [string]!
+    reference   : string!
+    humanLabel  : "pass" | "fail" | ""
+  }
+
+  type Prediction = {
+    caseId       : string!
+    retrievedIds : [string]!
+    answer       : string!
+    contextTexts : [string]!
+  }
+
+  type JudgeCriterion = {
+    name         : string!
+    instructions : string!
+    useQuestion  : boolean!
+    useContext   : boolean!
+    useReference : boolean!
+  }
+
+  type JudgeJob = {
+    caseId    : string!
+    criterion : string!
+    text      : string!
+  }
+
+  type JudgeRow = {
+    caseId    : string!
+    criterion : string!
+    verdict   : string!
+    reason    : string!
+  }
+
+  type Interval = {
+    low  : float!
+    high : float!
+  }
+
+  type CaseRow = {
+    caseId         : string!
+    predicted      : boolean!
+    retrievalScored: boolean!
+    retrievalNote  : string!
+    recallAtK      : Map string number!
+    precisionAtK   : Map string number!
+    hitAtK         : Map string number!
+    mrr            : number!
+    exactChecked   : boolean!
+    exactMatch     : boolean!
+    verdicts       : Map string string!
+    reasons        : Map string string!
+    humanLabel     : string!
+  }
+
+  type Metrics = {
+    casesTotal          : number!
+    casesPredicted      : number!
+    retrievalScored     : number!
+    retrievalNotScored  : number!
+    recallAtK           : Map string number!
+    precisionAtK        : Map string number!
+    hitAtK              : Map string number!
+    mrr                 : number?
+    exactMatchChecked   : number!
+    exactMatchRate      : number?
+    judgeCounted        : Map string number!
+    judgeErrors         : Map string number!
+    judgePassRate       : Map string number!
+    judgeInterval       : Map string Interval!
+    calibrationCriterion: string!
+    calibratedCases     : number!
+    judgeAgreement      : number?
+    judgePassHumanFail  : number!
+    judgeFailHumanPass  : number!
+    disagreements       : [string]!
+  }
+
+  entity EvalRunView [runtime] {
+    cases        : [GoldenCase] = []
+    predictions  : [Prediction] = []
+    rows         : [CaseRow] = []
+    unmatched    : [Prediction] = []
+    missing      : [string] = []
+    queue        : [JudgeJob] = []
+    judged       : [JudgeRow] = []
+    metrics      : Metrics = {}
+    errorMessage : string = ""
+    status       : "idle" | "judging" | "done" | "failed" = idle
+  }
+
+  trait EvalLlm = Llm.traits.LlmClient {
+    listens {
+      EvalRun.LLM_CLASSIFY -> LLM_CLASSIFY
+      EvalChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      EvalChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      EvalChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      EvalChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait EvalChatRequest = Req.traits.HttpRequest {
+    listens {
+      EvalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      EvalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      EvalChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      EvalChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait EvalChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      EvalChatRequest.HTTP_SEND -> HTTP_SEND
+      EvalChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait EvalRun -> EvalRunView [client] {
+    initial: ready
+
+    config {
+      cases : [GoldenCase] = []
+        @label "Golden cases"
+        @description "Golden set used when no EVAL_CASES_LOADED has replaced it: id, question, relevantIds, reference answer and humanLabel (pass, fail or empty)"
+        @tier "domain"
+      ks : [number] = [1, 3, 5]
+        @label "Cutoffs k"
+        @description "Cutoffs for recall@k, precision@k and hit@k"
+        @tier "policy"
+      exactMatch : boolean = false
+        @label "Exact match"
+        @description "Compare each answer with its case reference under the normalization below and report the match rate"
+        @tier "policy"
+      caseSensitive : boolean = false
+        @label "Case sensitive"
+        @description "Compare answer and reference with case sensitivity; off lowercases both sides first"
+        @tier "policy"
+      trimWhitespace : boolean = true
+        @label "Trim whitespace"
+        @description "Strip leading and trailing whitespace from answer and reference before comparing"
+        @tier "policy"
+      judgeCriteria : [JudgeCriterion] = [
+          { name: "faithfulness", instructions: "Judge faithfulness. Reply pass only if every claim in the answer is supported by the context; reply fail if any claim is unsupported or contradicted. Give a one-sentence reason.", useQuestion: false, useContext: true, useReference: false },
+          { name: "answerRelevance", instructions: "Judge answer relevance. Reply pass only if the answer directly addresses the question; reply fail if it is off-topic, evasive or incomplete. Give a one-sentence reason.", useQuestion: true, useContext: false, useReference: false }
+        ]
+        @label "Judge criteria"
+        @description "One LLM-as-judge call per case per criterion. Each criterion names itself, carries its judge instructions, and declares which of question, context and reference the judge sees. An empty list turns judging off."
+        @tier "domain"
+      judgeModel : string = ""
+        @label "Judge model"
+        @description "Model override forwarded to every judge call; empty uses the composed std-llm default"
+        @tier "infra"
+      calibrationCriterion : string = "faithfulness"
+        @label "Calibration criterion"
+        @description "The judge criterion whose verdicts are compared with the human labels"
+        @tier "policy"
+      priorAlpha : float = 1
+        @label "Prior alpha"
+        @description "Beta prior pseudo-count of passes for each pass-rate interval"
+        @tier "policy"
+      priorBeta : float = 1
+        @label "Prior beta"
+        @description "Beta prior pseudo-count of fails for each pass-rate interval"
+        @tier "policy"
+      credibleMass : float = 0.95
+        @label "Credible mass"
+        @description "Probability mass inside each reported credible interval"
+        @tier "policy"
+      sampleCount : int = 2000
+        @label "Posterior sample count"
+        @description "Monte Carlo draws from each Beta posterior used to estimate its credible interval"
+        @tier "infra"
+      showReport : boolean = true
+        @label "Show report"
+        @description "Render the metrics and per-case rows when a run finishes"
+        @tier "presentation"
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.cases @config.cases)
+        (set @entity.predictions [])
+        (set @entity.rows [])
+        (set @entity.unmatched [])
+        (set @entity.missing [])
+        (set @entity.queue [])
+        (set @entity.judged [])
+        (set @entity.metrics {})
+        (set @entity.errorMessage "")
+        (set @entity.status idle)
+        (render-ui main { type: typography, variant: caption, role: status, content: "Evaluation harness ready: load a golden set and run predictions." })
+
+      EVAL_CASES_LOADED -> ready
+        (set @entity.cases ?cases)
+
+      EVAL_RUN -> ready when (= (array/len @entity.cases) 0)
+        (set @entity.errorMessage "No golden cases are loaded")
+        (set @entity.status failed)
+        (emit EVAL_FAILED { error: @entity.errorMessage })
+
+      EVAL_RUN -> ready when (and (> (array/len @entity.cases) 0) (!= (array/len (array/unique (array/map @entity.cases (fn g @g.id)))) (array/len @entity.cases)))
+        (set @entity.errorMessage "Golden case ids are not unique")
+        (set @entity.status failed)
+        (emit EVAL_FAILED { error: @entity.errorMessage })
+
+      EVAL_RUN -> ready when (and (> (array/len @entity.cases) 0) (= (array/len (array/unique (array/map @entity.cases (fn g @g.id)))) (array/len @entity.cases)) (!= (array/len (array/unique (array/map ?predictions (fn q @q.caseId)))) (array/len ?predictions)))
+        (set @entity.errorMessage "Prediction caseIds are not unique")
+        (set @entity.status failed)
+        (emit EVAL_FAILED { error: @entity.errorMessage })
+
+      EVAL_RUN -> working when (and (> (array/len @entity.cases) 0) (= (array/len (array/unique (array/map @entity.cases (fn g @g.id)))) (array/len @entity.cases)) (= (array/len (array/unique (array/map ?predictions (fn q @q.caseId)))) (array/len ?predictions)))
+        (set @entity.predictions ?predictions)
+        (set @entity.errorMessage "")
+        (set @entity.judged [])
+        (set @entity.metrics {})
+        (set @entity.unmatched (array/filter ?predictions (fn q (= (array/find @entity.cases (fn g (= @g.id @q.caseId))) null))))
+        (set @entity.rows
+          (array/map @entity.cases
+            (fn c
+              (let ((found (array/find ?predictions (fn q (= @q.caseId @c.id))))
+                    (p (default @found { caseId: "", retrievedIds: [], answer: "", contextTexts: [] }))
+                    (rel (array/unique @c.relevantIds))
+                    (scored (and (!= @found null) (> (array/len @rel) 0)))
+                    (exactChecked (and (!= @found null) @config.exactMatch (!= @c.reference "")))
+                    (ans (if @config.trimWhitespace (str/trim @p.answer) @p.answer))
+                    (ref (if @config.trimWhitespace (str/trim @c.reference) @c.reference))
+                    (ansNorm (if @config.caseSensitive @ans (str/lower @ans)))
+                    (refNorm (if @config.caseSensitive @ref (str/lower @ref))))
+                {
+                  caseId: @c.id,
+                  predicted: (!= @found null),
+                  retrievalScored: @scored,
+                  retrievalNote: (if @scored "" (if (= @found null) "not scored for retrieval: no prediction for this case" "not scored for retrieval: no relevantIds")),
+                  recallAtK: (if @scored (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (default (/ (array/len (array/filter @rel (fn r (array/includes (array/take @p.retrievedIds @k) @r)))) (array/len @rel)) 0)))) {}),
+                  precisionAtK: (if @scored (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (default (/ (array/len (array/filter (array/take @p.retrievedIds @k) (fn r (array/includes @rel @r)))) @k) 0)))) {}),
+                  hitAtK: (if @scored (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (if (> (array/len (array/filter (array/take @p.retrievedIds @k) (fn r (array/includes @rel @r)))) 0) 1 0)))) {}),
+                  mrr: (if @scored (array/reduce (array/range 0 (array/len @p.retrievedIds)) 0 (fn acc i (if (and (= @acc 0) (array/includes @rel (default (array/nth @p.retrievedIds @i) ""))) (/ 1 (+ @i 1)) @acc))) 0),
+                  exactChecked: @exactChecked,
+                  exactMatch: (and @exactChecked (== @ansNorm @refNorm)),
+                  verdicts: {},
+                  reasons: {},
+                  humanLabel: (default @c.humanLabel "")
+                }))))
+        (set @entity.missing (array/map (array/filter @entity.rows (fn r (not @r.predicted))) (fn r @r.caseId)))
+        (set @entity.queue
+          (array/flatten
+            (array/map @entity.cases
+              (fn c
+                (let ((found (array/find ?predictions (fn q (= @q.caseId @c.id)))))
+                  (if (= @found null)
+                    []
+                    (array/map @config.judgeCriteria
+                      (fn j
+                        {
+                          caseId: @c.id,
+                          criterion: @j.name,
+                          text: (str/concat @j.instructions
+                                  (if @j.useQuestion (str/concat "\n\nQuestion:\n" @c.question) "")
+                                  (if @j.useReference (str/concat "\n\nReference answer:\n" @c.reference) "")
+                                  (if @j.useContext (str/concat "\n\nContext:\n" (str/join @found.contextTexts "\n---\n")) "")
+                                  "\n\nAnswer:\n" @found.answer)
+                        }))))))))
+        (set @entity.status judging)
+        (if (> (array/len @entity.queue) 0)
+          (emit LLM_CLASSIFY { text: (object/get (default (array/nth @entity.queue 0) {}) text ""), categories: ["pass", "fail"], model: @config.judgeModel })
+          (emit EVAL_FINALIZE {}))
+    }
+
+    state working {
+      INIT -> ready
+        (set @entity.queue [])
+        (set @entity.judged [])
+        (set @entity.status idle)
+      JUDGE_RESULT -> working
+        (emit JUDGE_RECORD { verdict: ?category, reason: ?reasoning })
+
+      JUDGE_FAILED -> working
+        (emit JUDGE_RECORD { verdict: "error", reason: ?message })
+
+      JUDGE_RECORD -> working when (> (array/len @entity.queue) 1)
+        (set @entity.judged (array/append @entity.judged { caseId: (object/get (default (array/nth @entity.queue 0) {}) caseId ""), criterion: (object/get (default (array/nth @entity.queue 0) {}) criterion ""), verdict: ?verdict, reason: ?reason }))
+        (emit EVAL_CASE_JUDGED { caseId: (object/get (default (array/nth @entity.queue 0) {}) caseId ""), criterion: (object/get (default (array/nth @entity.queue 0) {}) criterion ""), verdict: ?verdict, reason: ?reason })
+        (set @entity.queue (array/drop @entity.queue 1))
+        (emit LLM_CLASSIFY { text: (object/get (default (array/nth @entity.queue 0) {}) text ""), categories: ["pass", "fail"], model: @config.judgeModel })
+
+      JUDGE_RECORD -> working when (= (array/len @entity.queue) 1)
+        (set @entity.judged (array/append @entity.judged { caseId: (object/get (default (array/nth @entity.queue 0) {}) caseId ""), criterion: (object/get (default (array/nth @entity.queue 0) {}) criterion ""), verdict: ?verdict, reason: ?reason }))
+        (emit EVAL_CASE_JUDGED { caseId: (object/get (default (array/nth @entity.queue 0) {}) caseId ""), criterion: (object/get (default (array/nth @entity.queue 0) {}) criterion ""), verdict: ?verdict, reason: ?reason })
+        (set @entity.queue [])
+        (emit EVAL_FINALIZE {})
+
+      EVAL_FINALIZE -> ready
+        (set @entity.rows
+          (array/map @entity.rows
+            (fn r
+              (object/merge @r {
+                verdicts: (array/reduce (array/filter @entity.judged (fn x (= @x.caseId @r.caseId))) {} (fn acc x (object/set @acc @x.criterion @x.verdict))),
+                reasons: (array/reduce (array/filter @entity.judged (fn x (= @x.caseId @r.caseId))) {} (fn acc x (object/set @acc @x.criterion @x.reason)))
+              }))))
+        (let ((scoredRows (array/filter @entity.rows (fn r @r.retrievalScored)))
+              (n (array/len @scoredRows))
+              (exactRows (array/filter @entity.rows (fn r @r.exactChecked)))
+              (stats (array/map @config.judgeCriteria
+                       (fn j
+                         (let ((mine (array/filter @entity.judged (fn x (= @x.criterion @j.name))))
+                               (pass (array/len (array/filter @mine (fn x (= @x.verdict "pass")))))
+                               (fail (array/len (array/filter @mine (fn x (= @x.verdict "fail"))))))
+                           { name: @j.name, pass: @pass, fail: @fail, errors: (- (array/len @mine) (+ @pass @fail)) }))))
+              (labeled (array/filter @entity.judged
+                         (fn x (and (= @x.criterion @config.calibrationCriterion)
+                                    (or (= @x.verdict "pass") (= @x.verdict "fail"))
+                                    (!= (object/get (default (array/find @entity.cases (fn g (= @g.id @x.caseId))) {}) humanLabel "") "")))))
+              (label (fn x (object/get (default (array/find @entity.cases (fn g (= @g.id @x.caseId))) {}) humanLabel "")))
+              (disagree (array/filter @labeled (fn x (!= @x.verdict (object/get (default (array/find @entity.cases (fn g (= @g.id @x.caseId))) {}) humanLabel ""))))))
+          (do
+            (set @entity.metrics {
+              casesTotal: (array/len @entity.cases),
+              casesPredicted: (- (array/len @entity.predictions) (array/len @entity.unmatched)),
+              retrievalScored: @n,
+              retrievalNotScored: (- (array/len @entity.cases) @n),
+              recallAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.recallAtK {}) (str/concat @k) 0)))) @n)))) {}),
+              precisionAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.precisionAtK {}) (str/concat @k) 0)))) @n)))) {}),
+              hitAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.hitAtK {}) (str/concat @k) 0)))) @n)))) {}),
+              mrr: (if (> @n 0) (/ (array/sum (array/map @scoredRows (fn r @r.mrr))) @n) null),
+              exactMatchChecked: (array/len @exactRows),
+              exactMatchRate: (if (> (array/len @exactRows) 0) (/ (array/len (array/filter @exactRows (fn r @r.exactMatch))) (array/len @exactRows)) null),
+              judgeCounted: (array/reduce @stats {} (fn acc s (object/set @acc @s.name (+ @s.pass @s.fail)))),
+              judgeErrors: (array/reduce @stats {} (fn acc s (object/set @acc @s.name @s.errors))),
+              judgePassRate: (array/reduce @stats {} (fn acc s (if (> (+ @s.pass @s.fail) 0) (object/set @acc @s.name (/ @s.pass (+ @s.pass @s.fail))) @acc))),
+              judgeInterval: (array/reduce @stats {} (fn acc s
+                (if (> (+ @s.pass @s.fail) 0)
+                  (let ((iv (prob/credible-interval (prob/sample @config.sampleCount (prob/beta (+ @config.priorAlpha @s.pass) (+ @config.priorBeta @s.fail))) (- 1 @config.credibleMass))))
+                    (if (= @iv null)
+                      @acc
+                      (object/set @acc @s.name { low: (default (array/nth @iv 0) 0), high: (default (array/nth @iv 1) 0) })))
+                  @acc))),
+              calibrationCriterion: @config.calibrationCriterion,
+              calibratedCases: (array/len @labeled),
+              judgeAgreement: (if (> (array/len @labeled) 0) (/ (- (array/len @labeled) (array/len @disagree)) (array/len @labeled)) null),
+              judgePassHumanFail: (array/len (array/filter @disagree (fn x (= @x.verdict "pass")))),
+              judgeFailHumanPass: (array/len (array/filter @disagree (fn x (= @x.verdict "fail")))),
+              disagreements: (array/map @disagree (fn x @x.caseId))
+            })
+            (set @entity.status done)
+            (emit EVAL_REPORTED { cases: @entity.rows, unmatchedPredictions: @entity.unmatched, missingPredictions: @entity.missing, metrics: @entity.metrics })
+            (if @config.showReport
+              (render-ui main {
+                type: stack, direction: vertical, gap: sm,
+                children: (array/concat
+                  [
+                    { type: typography, variant: h3, content: "Evaluation report" },
+                    { type: typography, variant: body, content: (str/concat "Cases " @entity.metrics.casesTotal ", predicted " @entity.metrics.casesPredicted ", scored for retrieval " @entity.metrics.retrievalScored ", not scored " @entity.metrics.retrievalNotScored) },
+                    { type: typography, variant: body, content: (str/concat "recall@k " (json/stringify @entity.metrics.recallAtK) "  precision@k " (json/stringify @entity.metrics.precisionAtK) "  hit@k " (json/stringify @entity.metrics.hitAtK) "  MRR " (json/stringify @entity.metrics.mrr)) },
+                    { type: typography, variant: body, content: (str/concat "Exact match " (json/stringify @entity.metrics.exactMatchRate) " over " @entity.metrics.exactMatchChecked " cases") },
+                    { type: typography, variant: body, content: (str/concat "Judge pass rate " (json/stringify @entity.metrics.judgePassRate) "  interval " (json/stringify @entity.metrics.judgeInterval)) },
+                    { type: typography, variant: body, content: (str/concat "Calibration on " @config.calibrationCriterion ": agreement " (json/stringify @entity.metrics.judgeAgreement) " over " @entity.metrics.calibratedCases " labeled cases, judge-pass/human-fail " @entity.metrics.judgePassHumanFail ", judge-fail/human-pass " @entity.metrics.judgeFailHumanPass) },
+                    { type: typography, variant: body, content: (str/concat "Unmatched predictions " (json/stringify (array/map @entity.unmatched (fn q @q.caseId))) ", cases without a prediction " (json/stringify @entity.missing)) }
+                  ]
+                  (array/map @entity.rows
+                    (fn r { type: typography, variant: caption, content: (str/concat @r.caseId " | " (if @r.retrievalScored (str/concat "MRR " @r.mrr " recall " (json/stringify @r.recallAtK)) @r.retrievalNote) " | exact " (if @r.exactChecked (if @r.exactMatch "match" "miss") "n/a") " | judge " (json/stringify @r.verdicts) " | human " (if (= @r.humanLabel "") "none" @r.humanLabel)) })))
+              })
+              (render-ui main { type: typography, variant: caption, role: status, content: "Evaluation finished." }))))
+    }
+
+    emits {
+      LLM_CLASSIFY -> external {
+        text : string!
+        categories : [string]!
+        model : string
+      }
+        @description "Ask std-llm for one judge verdict, pass or fail with a reason, on the assembled judge prompt"
+        @tier "secondary"
+
+      EVAL_CASE_JUDGED -> external {
+        caseId : string!
+        criterion : string!
+        verdict : string!
+        reason : string!
+      }
+        @description "Progress: one judge call finished for a case and criterion; verdict is pass, fail, or error when the call failed"
+        @tier "primary"
+
+      EVAL_REPORTED -> external {
+        cases : [CaseRow]!
+        unmatchedPredictions : [Prediction]!
+        missingPredictions : [string]!
+        metrics : Metrics!
+      }
+        @description "The finished report: per-case rows, predictions whose caseId is not in the golden set, golden cases without a prediction, and the aggregated retrieval, exact-match, judge and calibration metrics"
+        @tier "primary"
+
+      EVAL_FAILED -> external {
+        error : string!
+      }
+        @description "The run was refused before scoring: no golden cases, or duplicate case ids or prediction caseIds"
+        @tier "primary"
+
+      JUDGE_RECORD -> internal {
+        verdict : string!
+        reason : string!
+      }
+        @description "Internal: fold one judge outcome, a verdict or a failed call, into the judged list and advance the queue"
+        @tier "internal"
+
+      EVAL_FINALIZE -> internal {}
+        @description "Internal: aggregate the rows, judge verdicts and calibration into the report"
+        @tier "internal"
+    }
+
+    listens {
+      EvalLlm.LLM_CLASSIFY_RESULT -> JUDGE_RESULT
+      EvalLlm.LLM_FAILED -> JUDGE_FAILED
+      EVAL_CASES_LOADED {
+        cases : [GoldenCase]!
+      }
+        @description "Replace the golden set with these cases"
+      EVAL_RUN {
+        predictions : [Prediction]!
+      }
+        @description "Score these predictions against the golden set and emit the report"
+      JUDGE_RESULT {
+        category : string!
+        confidence : number!
+        reasoning : string!
+      }
+        @description "The judge's verdict for the case at the head of the queue"
+      JUDGE_FAILED {
+        code : string
+        message : string!
+      }
+        @description "The judge call for the case at the head of the queue failed; recorded as an error verdict"
+      JUDGE_RECORD {
+        verdict : string!
+        reason : string!
+      }
+      EVAL_FINALIZE {}
+    }
+  }
+
+  page "/eval-harness" as EvalHarnessPage -> EvalRun, EvalLlm, EvalChatRequest, EvalChatHttp
+}

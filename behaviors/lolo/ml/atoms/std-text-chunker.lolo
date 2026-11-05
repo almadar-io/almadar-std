@@ -1,0 +1,135 @@
+app std-text-chunker [
+  version: "1.0.0",
+  description: "std-text-chunker — splits a document into retrieval chunks, the step before embedding in a RAG pipeline. Strategy fixed cuts every chunkSize characters, carrying overlap characters into the next chunk; sentence and paragraph cut the text after each configured delimiter and pack whole units into chunks of at most chunkSize characters, carrying overlap whole units into the next chunk (a single unit longer than chunkSize becomes its own chunk, and a chunk always takes at least one unit beyond the carried ones, so a carried run plus that unit may exceed chunkSize). A final chunk shorter than minChunkSize is merged into the chunk before it, so the merged chunk may exceed chunkSize; minChunkSize 0 keeps every tail. Empty text yields zero chunks, text no longer than chunkSize yields one, and an overlap that cannot advance (fixed: overlap >= chunkSize) is refused. Chunk ids are stable (docId#index) and start/end are character offsets into the text. Pure circuit logic: str/* and array/* operators only, no model call."
+]
+
+orbital TextChunkerOrbital {
+
+  type Chunk = {
+    id    : string!
+    docId : string!
+    index : number!
+    text  : string!
+    start : number!
+    end   : number!
+  }
+
+  entity ChunkedDocument [runtime] {
+    docId  : string  = ""
+    chunks : [Chunk] = []
+    reason : string  = ""
+    status : "idle" | "chunked" | "refused" = idle
+  }
+
+  trait ChunkerRun -> ChunkedDocument [client] {
+    initial: idle
+
+    config {
+      strategy : "fixed" | "sentence" | "paragraph" = sentence
+        @label "Strategy"
+        @description "Fixed cuts every chunkSize characters; sentence and paragraph pack whole units split at the configured delimiters"
+        @tier "policy"
+      chunkSize : int = 800
+        @label "Chunk size"
+        @description "Characters per chunk for fixed; the most characters packed into one chunk for sentence and paragraph"
+        @tier "policy"
+      overlap : int = 0
+        @label "Overlap"
+        @description "Characters carried into the next chunk for fixed; whole sentences or paragraphs carried for sentence and paragraph. Fixed refuses an overlap of chunkSize or more"
+        @tier "policy"
+      sentenceDelimiters : [string] = [". ", "? ", "! "]
+        @label "Sentence delimiters"
+        @description "A sentence ends right after any of these strings; used when strategy is sentence"
+        @tier "domain"
+      paragraphDelimiter : string = "\n\n"
+        @label "Paragraph delimiter"
+        @description "A paragraph ends right after this string; used when strategy is paragraph"
+        @tier "domain"
+      minChunkSize : int = 0
+        @label "Minimum chunk size"
+        @description "A final chunk shorter than this many characters is merged into the chunk before it; 0 keeps every tail"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.docId "")
+        (set @entity.chunks [])
+        (set @entity.reason "")
+        (set @entity.status idle)
+
+      CHUNK -> idle when (or (< @config.chunkSize 1) (< @config.overlap 0) (and (== @config.strategy "fixed") (>= @config.overlap @config.chunkSize)))
+        (set @entity.docId ?docId)
+        (set @entity.chunks [])
+        (set @entity.reason (str/concat "overlap " @config.overlap " with chunkSize " @config.chunkSize " cannot advance: chunkSize must be at least 1, overlap at least 0, and for fixed overlap below chunkSize"))
+        (set @entity.status refused)
+        (emit CHUNK_REFUSED { docId: ?docId, reason: @entity.reason })
+
+      CHUNK -> idle when (and (== (str/len ?text) 0) (>= @config.chunkSize 1) (>= @config.overlap 0) (or (!= @config.strategy "fixed") (< @config.overlap @config.chunkSize)))
+        (set @entity.docId ?docId)
+        (set @entity.chunks [])
+        (set @entity.reason "")
+        (set @entity.status chunked)
+        (emit CHUNKED { docId: ?docId, chunks: [] })
+
+      CHUNK -> idle when (and (> (str/len ?text) 0) (>= @config.chunkSize 1) (>= @config.overlap 0) (or (!= @config.strategy "fixed") (< @config.overlap @config.chunkSize)))
+        (let ((text ?text)
+              (docId ?docId)
+              (len (str/len @text))
+              (delims (array/filter (if (== @config.strategy "paragraph") (array/prepend [] @config.paragraphDelimiter) @config.sentenceDelimiters) (fn d (> (str/len @d) 0))))
+              (rawEnds (array/flatten (array/map @delims (fn d (array/map (array/filter (array/range @len) (fn i (== (str/slice @text @i (+ @i (str/len @d))) @d))) (fn i (+ @i (str/len @d))))))))
+              (ue (array/sort (array/unique (array/append @rawEnds @len))))
+              (us (array/prepend (array/dropLast @ue 1) 0))
+              (n (array/len @ue))
+              (step (- @config.chunkSize @config.overlap))
+              (fixedN (if (<= @len @config.chunkSize) 1 (+ 1 (math/ceil (default (/ (- @len @config.chunkSize) @step) 0)))))
+              (fixedSpans (array/map (array/range @fixedN) (fn i { start: (* @i @step), end: (math/min @len (+ (* @i @step) @config.chunkSize)) })))
+              (unitSpans (array/reduce (array/range @n) { spans: [], cur: 0, prevEnd: 0 }
+                (fn st k
+                  (if (>= @st.prevEnd @n)
+                    @st
+                    (let ((fit (array/count (array/range @n) (fn j (and (>= @j @st.cur) (<= (- (default (array/nth @ue @j) 0) (default (array/nth @us @st.cur) 0)) @config.chunkSize)))))
+                          (stop (math/min @n (math/max (+ @st.prevEnd 1) (+ @st.cur (math/max 1 @fit))))))
+                      { spans: (array/append @st.spans { start: (default (array/nth @us @st.cur) 0), end: (default (array/nth @ue (- @stop 1)) 0) }),
+                        cur: (if (>= @stop @n) @n (math/max (+ @st.cur 1) (- @stop @config.overlap))),
+                        prevEnd: @stop })))))
+              (spans (if (== @config.strategy "fixed") @fixedSpans (object/get @unitSpans spans [])))
+              (m (array/len @spans))
+              (tail (default (array/last @spans) { start: 0, end: 0 }))
+              (merged (if (and (> @m 1) (< (- @tail.end @tail.start) @config.minChunkSize))
+                        (array/append (array/dropLast @spans 2) { start: (default (object/get (default (array/nth @spans (- @m 2)) { start: 0, end: 0 }) start 0) 0), end: @tail.end })
+                        @spans))
+              (chunks (array/map (array/range (array/len @merged)) (fn i (let ((sp (default (array/nth @merged @i) { start: 0, end: 0 }))) { id: (str/concat @docId "#" @i), docId: @docId, index: @i, text: (str/slice @text @sp.start @sp.end), start: @sp.start, end: @sp.end })))))
+          (do
+            (set @entity.docId @docId)
+            (set @entity.chunks @chunks)
+            (set @entity.reason "")
+            (set @entity.status chunked)
+            (emit CHUNKED { docId: @docId, chunks: @chunks })))
+    }
+
+    emits {
+      CHUNKED -> external {
+        docId : string!
+        chunks : [Chunk]!
+      }
+        @description "The document cut into ordered retrieval chunks with stable ids (docId#index) and character offsets; empty text yields no chunks"
+        @tier "primary"
+      CHUNK_REFUSED -> external {
+        docId : string!
+        reason : string!
+      }
+        @description "The chunking config cannot advance (chunkSize below 1, negative overlap, or fixed overlap of chunkSize or more), so no chunks were cut"
+        @tier "primary"
+    }
+
+    listens {
+      CHUNK {
+        docId : string!
+        text : string!
+      }
+    }
+  }
+
+  page boot as TextChunkerOrbitalStart -> ChunkerRun
+}

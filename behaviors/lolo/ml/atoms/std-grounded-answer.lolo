@@ -1,0 +1,230 @@
+app std-grounded-answer [
+  version: "1.0.0",
+  description: "std-grounded-answer — the generation step of RAG, with citations. Asks the model through std-llm (LLM_GENERATE) to answer a question only from the supplied passages, citing each claim as [id], then reads the reply deterministically: every bracketed token is a cited id; citations are the ids that match a supplied passage, unknownCitations are bracketed ids that were not supplied, uncitedPassages are supplied ids never cited, and refused is true when the reply equals or starts with config.refusalText. More passages than config.maxPassages are refused with GROUNDED_FAILED, never silently dropped. The instructions, refusal text and passage limit are config; the prompt vocabulary is the caller's.",
+  net: { "api.openai.com:443": [tcp] },
+]
+
+uses Llm from "std/behaviors/std-llm"
+
+uses Req from "std/behaviors/std-http-request"
+
+uses Http from "std/behaviors/std-http-client"
+
+orbital GroundedAnswerOrbital {
+
+  type Passage = {
+    id   : string!
+    text : string!
+  }
+
+  entity GroundedAnswer [runtime] {
+    question         : string    = ""
+    passages         : [Passage] = []
+    answer           : string    = ""
+    citations        : [string]  = []
+    unknownCitations : [string]  = []
+    uncitedPassages  : [string]  = []
+    refused          : boolean   = false
+    errorMessage     : string    = ""
+    status           : "idle" | "asking" | "done" = idle
+  }
+
+  trait GroundedLlm = Llm.traits.LlmClient {
+    listens {
+      GroundedRun.LLM_GENERATE -> LLM_GENERATE
+      GroundedChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      GroundedChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      GroundedChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      GroundedChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait GroundedChatRequest = Req.traits.HttpRequest {
+    listens {
+      GroundedLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      GroundedLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      GroundedChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      GroundedChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait GroundedChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      GroundedChatRequest.HTTP_SEND -> HTTP_SEND
+      GroundedChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+    }
+  }
+
+  trait GroundedRun -> GroundedAnswer [client] {
+    initial: idle
+
+    config {
+      instructions : string = "Answer the question using only the passages. Cite each claim with the id of the passage it comes from in square brackets, like [id]."
+        @label "Instructions"
+        @description "System prompt that tells the model to answer only from the passages and how to cite them"
+        @tier "domain"
+      refusalText : string = "I cannot answer this from the provided passages."
+        @label "Refusal text"
+        @description "The reply the model is told to give when the passages do not contain the answer; a reply that equals or starts with it is a refusal"
+        @tier "domain"
+      maxPassages : int = 8
+        @label "Max passages"
+        @description "Most passages one question may carry; more are refused with GROUNDED_FAILED, never dropped"
+        @tier "policy"
+      model : string = ""
+        @label "Model"
+        @description "Model override forwarded to the generate call"
+        @tier "infra"
+      temperature : number = 0
+        @label "Temperature"
+        @description "Sampling temperature forwarded to the generate call"
+        @tier "infra"
+      maxTokens : number = 1024
+        @label "Max tokens"
+        @description "Reply token limit forwarded to the generate call"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.question "")
+        (set @entity.passages [])
+        (set @entity.answer "")
+        (set @entity.citations [])
+        (set @entity.unknownCitations [])
+        (set @entity.uncitedPassages [])
+        (set @entity.refused false)
+        (set @entity.errorMessage "")
+        (set @entity.status idle)
+
+      GROUNDED_ASK -> asking when (<= (array/len ?passages) @config.maxPassages)
+        (set @entity.question ?question)
+        (set @entity.passages ?passages)
+        (set @entity.errorMessage "")
+        (set @entity.status asking)
+        (emit LLM_GENERATE {
+          systemPrompt: (str/concat @config.instructions "\n\nIf the passages do not contain the answer, reply with exactly: " @config.refusalText),
+          userPrompt: (str/concat "Passages:\n" (str/join (array/map ?passages (fn p (str/concat "[" @p.id "] " @p.text))) "\n") "\n\nQuestion: " ?question),
+          model: @config.model,
+          temperature: @config.temperature,
+          maxTokens: @config.maxTokens
+        })
+
+      GROUNDED_ASK -> done when (> (array/len ?passages) @config.maxPassages)
+        (set @entity.question ?question)
+        (set @entity.passages [])
+        (set @entity.errorMessage (str/concat (array/len ?passages) " passages supplied, more than maxPassages " @config.maxPassages))
+        (set @entity.status done)
+        (emit GROUNDED_FAILED { error: @entity.errorMessage })
+    }
+
+    state asking {
+      INIT -> idle
+        (set @entity.question "")
+        (set @entity.passages [])
+        (set @entity.answer "")
+        (set @entity.citations [])
+        (set @entity.unknownCitations [])
+        (set @entity.uncitedPassages [])
+        (set @entity.refused false)
+        (set @entity.errorMessage "")
+        (set @entity.status idle)
+
+      GROUNDED_REPLY -> done
+        (let ((supplied (array/map @entity.passages (fn p @p.id)))
+              (cited (array/unique (array/map (array/filter (array/drop (str/split ?content "[") 1) (fn piece (str/includes @piece "]"))) (fn piece (str/trim (default (array/first (str/split @piece "]")) ""))))))
+              (known (array/filter @cited (fn c (array/includes @supplied @c))))
+              (unknown (array/filter @cited (fn c (not (array/includes @supplied @c)))))
+              (uncited (array/filter @supplied (fn s (not (array/includes @cited @s)))))
+              (isRefusal (and (> (str/len @config.refusalText) 0) (str/startsWith (str/trim ?content) @config.refusalText))))
+          (do
+            (set @entity.answer ?content)
+            (set @entity.citations @known)
+            (set @entity.unknownCitations @unknown)
+            (set @entity.uncitedPassages @uncited)
+            (set @entity.refused @isRefusal)
+            (set @entity.status done)
+            (emit GROUNDED_ANSWERED { answer: ?content, citations: @known, unknownCitations: @unknown, uncitedPassages: @uncited, refused: @isRefusal })))
+
+      GROUNDED_CALL_FAILED -> done
+        (set @entity.answer "")
+        (set @entity.citations [])
+        (set @entity.unknownCitations [])
+        (set @entity.uncitedPassages [])
+        (set @entity.refused false)
+        (set @entity.errorMessage ?message)
+        (set @entity.status done)
+        (emit GROUNDED_FAILED { error: @entity.errorMessage })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      RESET -> idle
+        (set @entity.question "")
+        (set @entity.passages [])
+        (set @entity.answer "")
+        (set @entity.citations [])
+        (set @entity.unknownCitations [])
+        (set @entity.uncitedPassages [])
+        (set @entity.refused false)
+        (set @entity.errorMessage "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      LLM_GENERATE -> external {
+        systemPrompt : string!
+        userPrompt : string!
+        model : string
+        temperature : number
+        maxTokens : number
+      }
+        @description "Ask std-llm to answer the question from the numbered passages"
+        @tier "secondary"
+
+      GROUNDED_ANSWERED -> external {
+        answer : string!
+        citations : [string]!
+        unknownCitations : [string]!
+        uncitedPassages : [string]!
+        refused : boolean!
+      }
+        @description "The model's answer with the supplied passage ids it cited, the bracketed ids it cited that were not supplied, the supplied ids it never cited, and whether it refused"
+        @tier "primary"
+
+      GROUNDED_FAILED -> external {
+        error : string!
+      }
+        @description "The question carried more passages than maxPassages, or the model call failed, so no answer was produced"
+        @tier "primary"
+    }
+
+    listens {
+      GroundedLlm.LLM_GENERATE_RESULT -> GROUNDED_REPLY
+      GroundedLlm.LLM_FAILED -> GROUNDED_CALL_FAILED
+      GROUNDED_REPLY {
+        content : string!
+      }
+      GROUNDED_CALL_FAILED {
+        code : string
+        message : string!
+      }
+      GROUNDED_ASK {
+        question : string!
+        passages : [Passage]!
+      }
+    }
+  }
+
+  page boot as GroundedAnswerPage -> GroundedRun, GroundedLlm, GroundedChatRequest, GroundedChatHttp
+}

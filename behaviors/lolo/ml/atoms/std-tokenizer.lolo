@@ -23,14 +23,22 @@ orbital MlTokenizerOrbital {
     status     : "idle" | "checked" = idle
   }
 
-  trait TokenizerRun -> TokenSequence [client] {
+  trait TokenizerRun -> @rebindable TokenSequence [client] {
     initial: idle
 
     config {
-      method : "whitespace" | "character" | "delimiter" = whitespace
+      method : "whitespace" | "character" | "delimiter" | "bpe" = whitespace
         @label "Method"
-        @description "Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter"
+        @description "Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter, bpe splits each space-separated word into characters and applies config.merges in order"
         @tier "policy"
+      merges : [[string]] = []
+        @label "BPE merges"
+        @description "Ordered byte-pair merge rules for method bpe; each rule is a pair [left, right] and every adjacent left,right pair in a word becomes one symbol, rule by rule, left to right"
+        @tier "domain"
+      endOfWord : string = ""
+        @label "End-of-word marker"
+        @description "Symbol appended to every word before bpe merges are applied; empty adds none"
+        @tier "domain"
       delimiter : string = ","
         @label "Delimiter"
         @description "Split delimiter used when method is delimiter; ignored otherwise"
@@ -69,7 +77,15 @@ orbital MlTokenizerOrbital {
       TOKENIZE -> checked
         (let ((split (if (== @config.method "character")
                         (str/split ?text "")
-                        (str/split ?text (if (== @config.method "delimiter") @config.delimiter " "))))
+                        (if (== @config.method "bpe")
+                          (array/flatten (array/map (array/filter (str/split ?text " ") (fn w (> (str/len @w) 0)))
+                            (fn w (array/reduce @config.merges
+                              (array/concat (str/split (if @config.lowercase (str/lower @w) @w) "") (if (== @config.endOfWord "") [] (list @config.endOfWord)))
+                              (fn syms m (array/reduce @syms []
+                                (fn acc s (if (and (> (array/len @acc) 0) (== (array/last @acc) (default (array/nth @m 0) "")) (== @s (default (array/nth @m 1) "")))
+                                  (array/append (array/dropLast @acc 1) (str/concat (default (array/nth @m 0) "") (default (array/nth @m 1) "")))
+                                  (array/append @acc @s)))))))))
+                          (str/split ?text (if (== @config.method "delimiter") @config.delimiter " ")))))
               (trimmed (if @config.trimWhitespace (array/map @split (fn t (str/trim @t))) @split))
               (normalized (if @config.lowercase (array/map @trimmed (fn t (str/lower @t))) @trimmed))
               (nonEmpty (array/filter @normalized (fn t (> (str/len @t) 0))))

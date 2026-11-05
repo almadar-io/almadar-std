@@ -1,0 +1,848 @@
+app std-learn-train-loop [
+  version: "1.0.0",
+  description: "Generic watch-a-model-train instrument — full-batch gradient descent on a small config-declared dataset, one epoch per transport step. The model family is a config choice (linear y = w·x + b with MSE, logistic p = sigmoid(w·x + b) with log-loss, or polynomial y = Σ wₖ·xᵏ up to a degree knob, with an optional L2 penalty). Points are split into train and validation sets, by each point's own split field or deterministically by index from a validation fraction, and the canvas draws the data with the current model curve beside live train and validation loss curves over epochs, with epoch, loss, overfitting-gap and best-validation-epoch readouts and a learning-rate slider the learner can move while it trains. Reaching the target validation loss within maxEpochs converges and completes the round; a loss above the divergence ceiling stops the run as diverged. Step/Run/Pause/Reset come from the composed std-learn-transport clock. Every label, caption, color and narration phrase is config-declared so the same mechanism teaches learning rate, convergence, overfitting and regularization in any domain. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+]
+orbital LearnTrainLoopOrbital {
+  type LearnTrainLoopPoint = {
+    x : number!
+    y : number!
+    split : "train" | "val"
+  }
+  type LearnTrainLoopCanvasPoint = {
+    id : string
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type LearnTrainLoopCurve = {
+    label : string
+    color : string
+    samples : [LearnTrainLoopCurvePoint]!
+  }
+  type LearnTrainLoopCurvePoint = {
+    x : number!
+    y : number!
+  }
+  type LearnTrainLoopLoss = {
+    epoch : number!
+    loss : number!
+  }
+
+  entity LearnTrainLoopScene [runtime, shared] {
+    id : string!
+    active : boolean = false
+    title : string
+    running : boolean = false
+    steps : int = 0
+    elapsedMs : number = 0
+    done : boolean = false
+    speed : number = 1
+    sourcePoints : [LearnTrainLoopPoint] = []
+    data : [LearnTrainLoopPoint] = []
+    trainCount : number = 0
+    valCount : number = 0
+    weights : [number] = []
+    epoch : number = 0
+    learningRate : number = 0
+    trainLoss : number = 0
+    valLoss : number = 0
+    gap : number = 0
+    trainHistory : [LearnTrainLoopLoss] = []
+    valHistory : [LearnTrainLoopLoss] = []
+    bestValEpoch : number = 0
+    bestValLoss : number = 0
+    status : "idle" | "training" | "converged" | "diverged" | "done" = "idle"
+    canvasPoints : [LearnTrainLoopCanvasPoint] = []
+    curves : [LearnTrainLoopCurve] = []
+    lossCurves : [LearnTrainLoopCurve] = []
+    narration : string = ""
+  }
+
+  uses LearnTransport from "std/behaviors/std-learn-transport"
+
+  trait LearnTrainLoopTransport = LearnTransport.traits.LearnTransportSim -> LearnTrainLoopScene {
+    config {
+      title: ""
+      summary: ""
+      stepIntervalMs: 250
+    }
+    listens {
+      LearnTrainLoopSim.TOGGLE_RUN -> TOGGLE_RUN
+      LearnTrainLoopSim.STEP -> STEP
+      LearnTrainLoopSim.RESET -> RESET
+      SPEED_SET {
+        speed : number
+      }
+      MODE_SELECTED {
+        mode : string
+      }
+    }
+  }
+
+  trait LearnTrainLoopSim -> @rebindable LearnTrainLoopScene [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (and (== @config.matchMode "") (== @config.rosterSource "config"))
+        (let (
+            (src @config.points)
+            (k (math/max 2 (math/round (/ 1 (math/max 0.0001 @config.valFraction)))))
+            (data (array/map @src (fn p { x: (object/get @p x), y: (object/get @p y), split: (if (== @config.splitMode "fraction") (if (== (default (math/mod @index @k) 0) (- @k 1)) "val" "train") (if (== (object/get @p split) "val") "val" "train")) })))
+            (nW (if (== @config.modelKind "polynomial") (+ (math/clamp @config.degree 1 @config.maxDegree) 1) 2))
+            (w0 (array/map (array/range 0 @nW) (fn j (default (array/nth @config.initWeights @j) 0))))
+            (tSet (array/filter @data (fn p (== (object/get @p split) "train"))))
+            (vSet (array/filter @data (fn p (== (object/get @p split) "val"))))
+            (tl (if (== (array/len @tSet) 0) 0 (/ (array/reduce @tSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @tSet))))
+            (vl (if (== (array/len @vSet) 0) 0 (/ (array/reduce @vSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @vSet))))
+            (tH [ { epoch: 0, loss: @tl } ])
+            (vH [ { epoch: 0, loss: @vl } ])
+          )
+          (do
+            (set @entity.done false)
+            (set @entity.sourcePoints @src)
+            (set @entity.data @data)
+            (set @entity.trainCount (array/len @tSet))
+            (set @entity.valCount (array/len @vSet))
+            (set @entity.weights @w0)
+            (set @entity.epoch 0)
+            (set @entity.learningRate @config.learningRate)
+            (set @entity.trainLoss @tl)
+            (set @entity.valLoss @vl)
+            (set @entity.gap (- @vl @tl))
+            (set @entity.trainHistory @tH)
+            (set @entity.valHistory @vH)
+            (set @entity.bestValEpoch 0)
+            (set @entity.bestValLoss @vl)
+            (set @entity.status "idle")
+            (set @entity.canvasPoints (array/map @data (fn p { id: (str/concat "p" @index), x: (object/get @p x), y: (object/get @p y), label: "", color: (if (== (object/get @p split) "val") @config.valColor @config.trainColor), radius: @config.pointRadius })))
+            (set @entity.curves [ { label: @config.modelLabel, color: @config.modelColor, samples: (array/map (array/range 0 61) (fn i (let ((cx (+ @config.xMin (* @i (/ (- @config.xMax @config.xMin) 60))))) { x: @cx, y: (math/clamp (let ((zz (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow @cx @k) 0))))))) (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zz (- 0 30) 30))) 1))) 0.5) @zz)) @config.yMin @config.yMax) }))) } ])
+            (set @entity.lossCurves [ { label: @config.trainLossLabel, color: @config.trainColor, samples: (array/map @tH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) }, { label: @config.valLossLabel, color: @config.valColor, samples: (array/map @vH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) } ])
+            (set @entity.narration @config.narrationIdle)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (and (not (== @config.matchMode "")) (not (== ?mode @config.matchMode)))
+        (render-ui main null)
+
+      MODE_SELECTED -> idle when (and (== ?mode @config.matchMode) (== @config.rosterSource "config"))
+        (let (
+            (src @config.points)
+            (k (math/max 2 (math/round (/ 1 (math/max 0.0001 @config.valFraction)))))
+            (data (array/map @src (fn p { x: (object/get @p x), y: (object/get @p y), split: (if (== @config.splitMode "fraction") (if (== (default (math/mod @index @k) 0) (- @k 1)) "val" "train") (if (== (object/get @p split) "val") "val" "train")) })))
+            (nW (if (== @config.modelKind "polynomial") (+ (math/clamp @config.degree 1 @config.maxDegree) 1) 2))
+            (w0 (array/map (array/range 0 @nW) (fn j (default (array/nth @config.initWeights @j) 0))))
+            (tSet (array/filter @data (fn p (== (object/get @p split) "train"))))
+            (vSet (array/filter @data (fn p (== (object/get @p split) "val"))))
+            (tl (if (== (array/len @tSet) 0) 0 (/ (array/reduce @tSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @tSet))))
+            (vl (if (== (array/len @vSet) 0) 0 (/ (array/reduce @vSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @vSet))))
+            (tH [ { epoch: 0, loss: @tl } ])
+            (vH [ { epoch: 0, loss: @vl } ])
+          )
+          (do
+            (set @entity.done false)
+            (set @entity.sourcePoints @src)
+            (set @entity.data @data)
+            (set @entity.trainCount (array/len @tSet))
+            (set @entity.valCount (array/len @vSet))
+            (set @entity.weights @w0)
+            (set @entity.epoch 0)
+            (set @entity.learningRate @config.learningRate)
+            (set @entity.trainLoss @tl)
+            (set @entity.valLoss @vl)
+            (set @entity.gap (- @vl @tl))
+            (set @entity.trainHistory @tH)
+            (set @entity.valHistory @vH)
+            (set @entity.bestValEpoch 0)
+            (set @entity.bestValLoss @vl)
+            (set @entity.status "idle")
+            (set @entity.canvasPoints (array/map @data (fn p { id: (str/concat "p" @index), x: (object/get @p x), y: (object/get @p y), label: "", color: (if (== (object/get @p split) "val") @config.valColor @config.trainColor), radius: @config.pointRadius })))
+            (set @entity.curves [ { label: @config.modelLabel, color: @config.modelColor, samples: (array/map (array/range 0 61) (fn i (let ((cx (+ @config.xMin (* @i (/ (- @config.xMax @config.xMin) 60))))) { x: @cx, y: (math/clamp (let ((zz (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow @cx @k) 0))))))) (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zz (- 0 30) 30))) 1))) 0.5) @zz)) @config.yMin @config.yMax) }))) } ])
+            (set @entity.lossCurves [ { label: @config.trainLossLabel, color: @config.trainColor, samples: (array/map @tH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) }, { label: @config.valLossLabel, color: @config.valColor, samples: (array/map @vH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) } ])
+            (set @entity.narration @config.narrationIdle)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (== ?mode @config.matchMode))
+        (let (
+            (src ?points)
+            (k (math/max 2 (math/round (/ 1 (math/max 0.0001 @config.valFraction)))))
+            (data (array/map @src (fn p { x: (object/get @p x), y: (object/get @p y), split: (if (== @config.splitMode "fraction") (if (== (default (math/mod @index @k) 0) (- @k 1)) "val" "train") (if (== (object/get @p split) "val") "val" "train")) })))
+            (nW (if (== @config.modelKind "polynomial") (+ (math/clamp @config.degree 1 @config.maxDegree) 1) 2))
+            (w0 (array/map (array/range 0 @nW) (fn j (default (array/nth @config.initWeights @j) 0))))
+            (tSet (array/filter @data (fn p (== (object/get @p split) "train"))))
+            (vSet (array/filter @data (fn p (== (object/get @p split) "val"))))
+            (tl (if (== (array/len @tSet) 0) 0 (/ (array/reduce @tSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @tSet))))
+            (vl (if (== (array/len @vSet) 0) 0 (/ (array/reduce @vSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @vSet))))
+            (tH [ { epoch: 0, loss: @tl } ])
+            (vH [ { epoch: 0, loss: @vl } ])
+          )
+          (do
+            (set @entity.done false)
+            (set @entity.sourcePoints @src)
+            (set @entity.data @data)
+            (set @entity.trainCount (array/len @tSet))
+            (set @entity.valCount (array/len @vSet))
+            (set @entity.weights @w0)
+            (set @entity.epoch 0)
+            (set @entity.learningRate @config.learningRate)
+            (set @entity.trainLoss @tl)
+            (set @entity.valLoss @vl)
+            (set @entity.gap (- @vl @tl))
+            (set @entity.trainHistory @tH)
+            (set @entity.valHistory @vH)
+            (set @entity.bestValEpoch 0)
+            (set @entity.bestValLoss @vl)
+            (set @entity.status "idle")
+            (set @entity.canvasPoints (array/map @data (fn p { id: (str/concat "p" @index), x: (object/get @p x), y: (object/get @p y), label: "", color: (if (== (object/get @p split) "val") @config.valColor @config.trainColor), radius: @config.pointRadius })))
+            (set @entity.curves [ { label: @config.modelLabel, color: @config.modelColor, samples: (array/map (array/range 0 61) (fn i (let ((cx (+ @config.xMin (* @i (/ (- @config.xMax @config.xMin) 60))))) { x: @cx, y: (math/clamp (let ((zz (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow @cx @k) 0))))))) (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zz (- 0 30) 30))) 1))) 0.5) @zz)) @config.yMin @config.yMax) }))) } ])
+            (set @entity.lossCurves [ { label: @config.trainLossLabel, color: @config.trainColor, samples: (array/map @tH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) }, { label: @config.valLossLabel, color: @config.valColor, samples: (array/map @vH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) } ])
+            (set @entity.narration @config.narrationIdle)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      ROSTER_LOADED -> idle when (and (== @config.rosterSource "event") (not (== ?mode @config.matchMode)))
+        (render-ui main null)
+
+      LEARN_STEP -> idle when (and (== @entity.active true) (not (== @entity.done true)))
+        (let (
+            (w @entity.weights)
+            (tSet (array/filter @entity.data (fn p (== (object/get @p split) "train"))))
+            (vSet (array/filter @entity.data (fn p (== (object/get @p split) "val"))))
+            (nT (array/len @tSet))
+            (rows (array/map @tSet (fn p (let ((zr (array/reduce (array/range 0 (array/len @w)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w @k) 0) (default (math/pow (object/get @p x) @k) 0))))))) { x: (object/get @p x), r: (- (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zr (- 0 30) 30))) 1))) 0.5) @zr) (object/get @p y)) }))))
+            (scale (if (== @config.modelKind "logistic") 1 2))
+            (nw (array/map (array/range 0 (array/len @w)) (fn j
+              (let ((wj (default (array/nth @w @j) 0)))
+                (- @wj (* @entity.learningRate (+
+                  (if (> @nT 0) (* @scale (/ (array/reduce @rows 0 (fn (acc q) (+ @acc (* (object/get @q r) (default (math/pow (object/get @q x) @j) 0))))) @nT)) 0)
+                  (if (> @j 0) (* 2 @config.l2 @wj) 0))))))))
+            (tl (if (== (array/len @tSet) 0) 0 (/ (array/reduce @tSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @nw)) 0 (fn (acc k) (+ @acc (* (default (array/nth @nw @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @tSet))))
+            (vl (if (== (array/len @vSet) 0) 0 (/ (array/reduce @vSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @nw)) 0 (fn (acc k) (+ @acc (* (default (array/nth @nw @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @vSet))))
+            (nep (+ @entity.epoch 1))
+            (diverged (or (or (> @tl @config.divergeLoss) (> @vl @config.divergeLoss)) (not (== @tl @tl))))
+            (gradeLoss (if (> (array/len @vSet) 0) @vl @tl))
+            (converged (and (not @diverged) (<= @gradeLoss @config.targetValLoss)))
+            (status (if @diverged "diverged" (if @converged "converged" (if (>= @nep @config.maxEpochs) "done" "training"))))
+            (improved (< @vl @entity.bestValLoss))
+            (tH (array/append @entity.trainHistory { epoch: @nep, loss: @tl }))
+            (vH (array/append @entity.valHistory { epoch: @nep, loss: @vl }))
+          )
+          (do
+            (set @entity.weights @nw)
+            (set @entity.epoch @nep)
+            (set @entity.trainLoss @tl)
+            (set @entity.valLoss @vl)
+            (set @entity.gap (- @vl @tl))
+            (set @entity.trainHistory @tH)
+            (set @entity.valHistory @vH)
+            (set @entity.bestValEpoch (if @improved @nep @entity.bestValEpoch))
+            (set @entity.bestValLoss (if @improved @vl @entity.bestValLoss))
+            (set @entity.status @status)
+            (set @entity.done (not (== @status "training")))
+            (set @entity.curves [ { label: @config.modelLabel, color: @config.modelColor, samples: (array/map (array/range 0 61) (fn i (let ((cx (+ @config.xMin (* @i (/ (- @config.xMax @config.xMin) 60))))) { x: @cx, y: (math/clamp (let ((zz (array/reduce (array/range 0 (array/len @nw)) 0 (fn (acc k) (+ @acc (* (default (array/nth @nw @k) 0) (default (math/pow @cx @k) 0))))))) (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zz (- 0 30) 30))) 1))) 0.5) @zz)) @config.yMin @config.yMax) }))) } ])
+            (set @entity.lossCurves [ { label: @config.trainLossLabel, color: @config.trainColor, samples: (array/map @tH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) }, { label: @config.valLossLabel, color: @config.valColor, samples: (array/map @vH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) } ])
+            (set @entity.narration (if (== @status "diverged") @config.narrationDiverged (if (== @status "converged") @config.narrationConverged (if (== @status "done") @config.narrationDone (if (== @status "training") @config.narrationTraining @config.narrationIdle)))))
+            (emit TRAIN_EPOCH { epoch: @nep, trainLoss: @tl, valLoss: @vl, weights: @nw })
+            (if @diverged (emit TRAIN_DIVERGED { epoch: @nep, trainLoss: @tl, learningRate: @entity.learningRate }) null)
+            (if @converged (emit TRAIN_CONVERGED { epoch: @nep, trainLoss: @tl, valLoss: @vl }) null)
+            (if @converged (emit LEARN_ROUND_COMPLETE { score: 1, total: 1 }) null)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      LEARN_RESET -> idle when (== @entity.active true)
+        (let (
+            (src @entity.sourcePoints)
+            (k (math/max 2 (math/round (/ 1 (math/max 0.0001 @config.valFraction)))))
+            (data (array/map @src (fn p { x: (object/get @p x), y: (object/get @p y), split: (if (== @config.splitMode "fraction") (if (== (default (math/mod @index @k) 0) (- @k 1)) "val" "train") (if (== (object/get @p split) "val") "val" "train")) })))
+            (nW (if (== @config.modelKind "polynomial") (+ (math/clamp @config.degree 1 @config.maxDegree) 1) 2))
+            (w0 (array/map (array/range 0 @nW) (fn j (default (array/nth @config.initWeights @j) 0))))
+            (tSet (array/filter @data (fn p (== (object/get @p split) "train"))))
+            (vSet (array/filter @data (fn p (== (object/get @p split) "val"))))
+            (tl (if (== (array/len @tSet) 0) 0 (/ (array/reduce @tSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @tSet))))
+            (vl (if (== (array/len @vSet) 0) 0 (/ (array/reduce @vSet 0 (fn (acc q) (+ @acc (let ((zq (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow (object/get @q x) @k) 0)))))) (yq (object/get @q y))) (if (== @config.modelKind "logistic") (let ((pr (math/clamp (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zq (- 0 30) 30))) 1))) 0.5) 0.000000000001 (- 1 0.000000000001)))) (- 0 (+ (* @yq (default (math/ln @pr) 0)) (* (- 1 @yq) (default (math/ln (- 1 @pr)) 0))))) (* (- @zq @yq) (- @zq @yq))))))) (array/len @vSet))))
+            (tH [ { epoch: 0, loss: @tl } ])
+            (vH [ { epoch: 0, loss: @vl } ])
+          )
+          (do
+            (set @entity.done false)
+            (set @entity.sourcePoints @src)
+            (set @entity.data @data)
+            (set @entity.trainCount (array/len @tSet))
+            (set @entity.valCount (array/len @vSet))
+            (set @entity.weights @w0)
+            (set @entity.epoch 0)
+            (set @entity.learningRate @config.learningRate)
+            (set @entity.trainLoss @tl)
+            (set @entity.valLoss @vl)
+            (set @entity.gap (- @vl @tl))
+            (set @entity.trainHistory @tH)
+            (set @entity.valHistory @vH)
+            (set @entity.bestValEpoch 0)
+            (set @entity.bestValLoss @vl)
+            (set @entity.status "idle")
+            (set @entity.canvasPoints (array/map @data (fn p { id: (str/concat "p" @index), x: (object/get @p x), y: (object/get @p y), label: "", color: (if (== (object/get @p split) "val") @config.valColor @config.trainColor), radius: @config.pointRadius })))
+            (set @entity.curves [ { label: @config.modelLabel, color: @config.modelColor, samples: (array/map (array/range 0 61) (fn i (let ((cx (+ @config.xMin (* @i (/ (- @config.xMax @config.xMin) 60))))) { x: @cx, y: (math/clamp (let ((zz (array/reduce (array/range 0 (array/len @w0)) 0 (fn (acc k) (+ @acc (* (default (array/nth @w0 @k) 0) (default (math/pow @cx @k) 0))))))) (if (== @config.modelKind "logistic") (default (/ 1 (+ 1 (default (math/pow 2.718281828459045 (- 0 (math/clamp @zz (- 0 30) 30))) 1))) 0.5) @zz)) @config.yMin @config.yMax) }))) } ])
+            (set @entity.lossCurves [ { label: @config.trainLossLabel, color: @config.trainColor, samples: (array/map @tH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) }, { label: @config.valLossLabel, color: @config.valColor, samples: (array/map @vH (fn hp { x: (object/get @hp epoch), y: (math/min (object/get @hp loss) @config.lossMax) })) } ])
+            (set @entity.narration @config.narrationIdle)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      SET_LEARNING_RATE -> idle when (== @entity.active true)
+        (set @entity.learningRate (math/clamp ?value @config.lrMin @config.lrMax))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+
+      LEARN_UPDATED -> idle when (== @entity.active true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: start, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: h4, content: @config.title },
+                        (if (== @config.summary "") null { type: typography, variant: body2, color: muted, content: @config.summary })
+                      ] },
+                    { type: badge, label: (if (== @entity.status "training") @config.trainingLabel (if (== @entity.status "converged") @config.convergedLabel (if (== @entity.status "diverged") @config.divergedLabel (if (== @entity.status "done") @config.doneLabel @config.idleLabel)))), variant: (if (== @entity.status "converged") "success" (if (== @entity.status "diverged") "warning" (if (== @entity.status "training") "primary" "neutral"))) }
+                  ] },
+                @trait.LearnTrainLoopTransport,
+                { type: typography, variant: caption, color: muted, content: @config.fitCaption },
+                { type: math-canvas, keyMap: { Space: TOGGLE_RUN, ArrowRight: STEP, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: true, curves: @entity.curves, points: @entity.canvasPoints, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: caption, color: muted, content: @config.lossCaption },
+                { type: math-canvas, width: @config.width, height: @config.lossHeight, title: "", xMin: 0, xMax: @config.maxEpochs, yMin: 0, yMax: @config.lossMax, showAxes: true, showGrid: @config.showGrid, gridStep: @config.lossGridStep, showTickLabels: true, curves: @entity.lossCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, align: center, gap: md, wrap: true, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.epochLabel " " @entity.epoch " " @config.ofWord " " @config.maxEpochs) },
+                    { type: typography, variant: caption, content: (str/concat @config.trainLossLabel " " (math/round @entity.trainLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.valLossLabel " " (math/round @entity.valLoss 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.gapLabel " " (math/round @entity.gap 4)) },
+                    { type: typography, variant: caption, content: (str/concat @config.bestEpochLabel " " @entity.bestValEpoch) },
+                    { type: typography, variant: caption, content: (str/concat @config.splitLabel " " @entity.trainCount " / " @entity.valCount) }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.learningRateCaption (math/round @entity.learningRate 4)) },
+                    { type: range-slider, min: @config.lrMin, max: @config.lrMax, step: @config.lrStep, value: @entity.learningRate, showTooltip: true, action: "SET_LEARNING_RATE" }
+                  ] },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+    }
+
+    listens {
+      LearnTrainLoopTransport.LEARN_RESET -> LEARN_RESET
+      LearnTrainLoopTransport.LEARN_STEP -> LEARN_STEP
+      LearnTrainLoopTransport.LEARN_UPDATED -> LEARN_UPDATED
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ROSTER_LOADED {
+        mode : string!
+        points : [LearnTrainLoopPoint]!
+      }
+        @description "Runtime content feed, honoured only when rosterSource is event — mode names the instrument it is for (the matchMode it carries, blank when standalone) and points is the dataset, each point carrying its own split; a matching instrument re-initialises from it."
+        @tier "domain"
+      SET_LEARNING_RATE {
+        value : number!
+      }
+        @description "Learner moved the learning-rate slider — value is the new rate (clamped to the slider range); training continues from the current weights with it."
+        @tier "domain"
+      LEARN_STEP {
+        steps : int
+      }
+        @description "One epoch of the transport clock or Step button (from the composed std-learn-transport trait); runs one full-batch gradient-descent update on the training set and re-scores both sets."
+        @tier "domain"
+      LEARN_RESET {
+      }
+        @description "Transport Reset broadcast (from the composed std-learn-transport trait); reloads the dataset, restores the initial weights and learning rate, and clears both loss histories."
+        @tier "domain"
+      LEARN_UPDATED {
+        running : boolean
+        steps : int
+      }
+        @description "Transport state broadcast on load and Run/Pause toggle (from the composed std-learn-transport trait); repaints the full shell so the Run/Pause label stays fresh."
+        @tier "domain"
+    }
+
+    emits {
+      TRAIN_EPOCH -> external {
+        epoch : number
+        trainLoss : number
+        valLoss : number
+        weights : [number]
+      }
+        @description "Fired after every epoch with the epoch number, both losses and the new weights — a composed listener (readout, grader, coach) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "epoch, training step, loss, gradient descent, weights"
+        @tier "domain"
+      TRAIN_DIVERGED -> external {
+        epoch : number
+        trainLoss : number
+        learningRate : number
+      }
+        @description "Fired once when a loss passes the divergence ceiling (or stops being a number) and the run stops — the learning rate was too large for the data."
+        @synonyms "diverged, exploded, learning rate too high, unstable"
+        @tier "domain"
+      TRAIN_CONVERGED -> external {
+        epoch : number
+        trainLoss : number
+        valLoss : number
+      }
+        @description "Fired once when the graded loss (validation, or training when there is no validation set) first reaches the target within maxEpochs."
+        @synonyms "converged, target reached, trained, good fit"
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when training converges (score 1 of 1) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion, converged"
+        @tier "domain"
+      RESET {
+      }
+        @tier "presentation"
+      STEP {
+      }
+        @tier "presentation"
+      TOGGLE_RUN {
+      }
+        @tier "presentation"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT, or on ROSTER_LOADED when rosterSource is event."
+        @tier "presentation"
+      rosterSource : "config" | "event" = "config"
+        @label "Roster Source"
+        @description "Where the dataset comes from: config reads the points knob at INIT; event waits for ROSTER_LOADED and takes the points from its payload."
+        @tier "domain"
+      modelKind : "linear" | "logistic" | "polynomial" = "linear"
+        @label "Model Kind"
+        @description "Model family: linear (y = w·x + b, mean squared error), logistic (p = sigmoid(w·x + b) on 0/1 labels, log-loss) or polynomial (y = Σ wₖ·xᵏ for k = 0..degree, mean squared error)."
+        @synonyms "regression, classifier, polynomial fit, model family"
+        @tier "domain"
+      degree : number = 3
+        @label "Polynomial Degree"
+        @description "Highest power of x when modelKind is polynomial (clamped to 1..maxDegree); a high degree on few points memorizes them — validation loss rises while training loss falls."
+        @synonyms "model capacity, overfitting, order"
+        @tier "domain"
+      maxDegree : number = 6
+        @label "Max Degree"
+        @description "Ceiling the polynomial degree is clamped to."
+        @tier "domain"
+      l2 : number = 0
+        @label "L2 Penalty"
+        @description "Weight-decay strength: adds l2·Σwₖ² (bias excluded) to the training objective, shrinking the weights; 0 turns it off."
+        @synonyms "regularization, weight decay, ridge"
+        @tier "domain"
+      points : [LearnTrainLoopPoint] = [
+        { x: -1, y: -1.1, split: "train" },
+        { x: -0.75, y: -0.55, split: "train" },
+        { x: -0.5, y: -0.3, split: "val" },
+        { x: -0.25, y: 0.2, split: "train" },
+        { x: 0, y: 0.45, split: "train" },
+        { x: 0.25, y: 0.95, split: "val" },
+        { x: 0.5, y: 1.3, split: "train" },
+        { x: 0.75, y: 1.55, split: "train" },
+        { x: 1, y: 2.1, split: "train" }
+      ]
+        @label "Points"
+        @description "The dataset in axis data coordinates; each point carries its split (train or val; anything but val counts as train). Reset reloads this roster."
+        @synonyms "dataset, training data, samples"
+        @tier "domain"
+      splitMode : "points" | "fraction" = "points"
+        @label "Split Mode"
+        @description "points uses each point's own split field; fraction ignores it and makes every k-th point (by index, k = round(1 / valFraction)) a validation point — deterministic, no randomness."
+        @tier "domain"
+      valFraction : number = 0.25
+        @label "Validation Fraction"
+        @description "Share of points held out for validation when splitMode is fraction; the holdout is every k-th point, k = round(1 / valFraction) (at least 2)."
+        @tier "domain"
+      learningRate : number = 0.1
+        @label "Learning Rate"
+        @description "Step size of the gradient update; the learner moves it live with the slider. Reset restores this value."
+        @synonyms "step size, alpha, eta"
+        @tier "domain"
+      lrMin : number = 0
+        @label "Learning Rate Min"
+        @description "Lower bound of the learning-rate slider."
+        @tier "domain"
+      lrMax : number = 1
+        @label "Learning Rate Max"
+        @description "Upper bound of the learning-rate slider."
+        @tier "domain"
+      lrStep : number = 0.01
+        @label "Learning Rate Step"
+        @description "Slider step."
+        @tier "domain"
+      maxEpochs : number = 200
+        @label "Max Epochs"
+        @description "Epoch budget; reaching it without hitting the target ends the run as done. Also the right edge of the loss axis."
+        @tier "domain"
+      initWeights : [number] = [0, 0]
+        @label "Initial Weights"
+        @description "Starting weights, index k for the coefficient of xᵏ (index 0 is the bias); missing entries start at 0."
+        @tier "domain"
+      targetValLoss : number = 0.05
+        @label "Target Validation Loss"
+        @description "Grading target: the first epoch whose validation loss (training loss when there is no validation set) is at or below it converges the run and completes the round."
+        @tier "domain"
+      divergeLoss : number = 1000
+        @label "Divergence Loss"
+        @description "A training or validation loss above this, or a loss that is not a number, flags the run as diverged and stops it."
+        @tier "domain"
+      title : string = "Training Loop"
+        @label "Title"
+        @description "Title shown above the canvases."
+        @tier "presentation"
+      summary : string = ""
+        @label "Concept"
+        @description "One line under the title saying what the learner is looking at (keep it under ~65 characters). Empty shows no line."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 320
+        @label "Fit Height"
+        @description "Data and model canvas height in pixels."
+        @tier "presentation"
+      lossHeight : number = 200
+        @label "Loss Height"
+        @description "Loss-curve canvas height in pixels."
+        @tier "presentation"
+      xMin : number = -1
+        @label "X Axis Min"
+        @description "Lower bound of the data canvas x axis; also the left end the model curve is sampled from."
+        @tier "domain"
+      xMax : number = 1
+        @label "X Axis Max"
+        @description "Upper bound of the data canvas x axis; also the right end the model curve is sampled to."
+        @tier "domain"
+      yMin : number = -2
+        @label "Y Axis Min"
+        @description "Lower bound of the data canvas y axis; the model curve clamps to it."
+        @tier "domain"
+      yMax : number = 3
+        @label "Y Axis Max"
+        @description "Upper bound of the data canvas y axis; the model curve clamps to it."
+        @tier "domain"
+      lossMax : number = 2
+        @label "Loss Axis Max"
+        @description "Top of the loss axis; plotted losses clamp to it so a diverging run stays on the canvas (the readouts show the true value)."
+        @tier "domain"
+      gridStep : number = 0.5
+        @label "Grid Step"
+        @description "Gridline spacing of the data canvas, in data coordinates."
+        @tier "presentation"
+      lossGridStep : number = 50
+        @label "Loss Grid Step"
+        @description "Gridline spacing of the loss canvas, in epochs."
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      pointRadius : number = 5
+        @label "Point Radius"
+        @tier "presentation"
+      trainColor : string = "ink"
+        @label "Train Color"
+        @description "Color of training points and the training-loss curve."
+        @tier "presentation"
+      valColor : string = "series-3"
+        @label "Validation Color"
+        @description "Color of validation points and the validation-loss curve."
+        @tier "presentation"
+      modelColor : string = "series-2"
+        @label "Model Color"
+        @description "Color of the model curve."
+        @tier "presentation"
+      modelLabel : string = "model"
+        @label "Model Label"
+        @description "Legend label of the model curve."
+        @tier "presentation"
+      trainLossLabel : string = "train loss"
+        @label "Train Loss Label"
+        @description "Legend label of the training-loss curve and its readout."
+        @tier "presentation"
+      valLossLabel : string = "validation loss"
+        @label "Validation Loss Label"
+        @description "Legend label of the validation-loss curve and its readout."
+        @tier "presentation"
+      fitCaption : string = "Data and model"
+        @label "Fit Caption"
+        @description "Caption above the data canvas."
+        @tier "presentation"
+      lossCaption : string = "Loss per epoch"
+        @label "Loss Caption"
+        @description "Caption above the loss canvas."
+        @tier "presentation"
+      epochLabel : string = "Epoch"
+        @label "Epoch Label"
+        @description "Word before the epoch counter."
+        @tier "presentation"
+      ofWord : string = "of"
+        @label "Of Word"
+        @description "Word between the epoch and the epoch budget."
+        @tier "presentation"
+      gapLabel : string = "gap (val − train)"
+        @label "Gap Label"
+        @description "Label of the overfitting-gap readout."
+        @tier "presentation"
+      bestEpochLabel : string = "best val epoch"
+        @label "Best Epoch Label"
+        @description "Label of the readout naming the epoch with the lowest validation loss so far."
+        @tier "presentation"
+      splitLabel : string = "train / val points"
+        @label "Split Label"
+        @description "Label of the readout counting training and validation points."
+        @tier "presentation"
+      learningRateCaption : string = "Learning rate: "
+        @label "Learning Rate Caption"
+        @description "Text prefixed to the learning-rate value above its slider."
+        @tier "presentation"
+      idleLabel : string = "Ready"
+        @label "Idle Label"
+        @description "Status badge before the first epoch."
+        @tier "presentation"
+      trainingLabel : string = "Training"
+        @label "Training Label"
+        @description "Status badge while epochs are running."
+        @tier "presentation"
+      convergedLabel : string = "Converged"
+        @label "Converged Label"
+        @description "Status badge once the target loss is reached."
+        @tier "presentation"
+      divergedLabel : string = "Diverged"
+        @label "Diverged Label"
+        @description "Status badge when the loss exploded."
+        @tier "presentation"
+      doneLabel : string = "Out of epochs"
+        @label "Done Label"
+        @description "Status badge when maxEpochs ran out before the target."
+        @tier "presentation"
+      narrationIdle : string = "Press Step to run one epoch, or Play to watch it train."
+        @label "Idle Narration"
+        @description "Narration before the first epoch and after Reset."
+        @tier "presentation"
+      narrationTraining : string = "Training — watch both loss curves; try a different learning rate."
+        @label "Training Narration"
+        @description "Narration while epochs are running."
+        @tier "presentation"
+      narrationConverged : string = "Converged — the validation loss reached the target."
+        @label "Converged Narration"
+        @description "Narration once the target is reached."
+        @tier "presentation"
+      narrationDiverged : string = "Diverged — the learning rate is too large; the loss grew instead of shrinking."
+        @label "Diverged Narration"
+        @description "Narration when the loss exploded."
+        @tier "presentation"
+      narrationDone : string = "Out of epochs before the target loss was reached."
+        @label "Done Narration"
+        @description "Narration when maxEpochs ran out."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-train-loop" as LearnTrainLoopPage -> LearnTrainLoopTransport, LearnTrainLoopSim
+}

@@ -1,0 +1,96 @@
+app std-program-export [
+  version: "1.0.0",
+  fs: { cwd: "**": [read, write] },
+  description: "std-program-export — turns a program file into a runnable project for one target shell, the same generation `orb compile` performs, so an app can offer \"export as a Python (or TypeScript, Rust…) project\". EXPORT_PROGRAM { path, output, shell } asks program/eval to generate the project: path is the .lolo or .orb file, output the directory the project is written to, shell one of config.shells. It answers PROGRAM_EXPORTED { shell, output, lines, files, warnings, nextSteps } with the report the generator printed, or PROGRAM_EXPORT_FAILED { shell, error } when the shell is not offered, a path is empty, or generation refuses (for example a program that fails validation). One export runs at a time; a request while one runs is refused, never queued silently. Paths are taken as given and resolved by the host against the directory the app runs in."
+]
+type ExportReport = {
+  lines : [string]!
+  files : [string]!
+  warnings : [string]!
+  nextSteps : [string]!
+}
+
+orbital ProgramExportOrbital {
+  entity ProgramExportRun [runtime] {
+    id : string!
+    shell : string = ""
+    output : string = ""
+    status : "idle" | "exporting" = idle
+  }
+
+  trait ProgramExport -> ProgramExportRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      EXPORT_PROGRAM -> exporting when (and (array/includes @config.shells ?shell) (> (str/len ?path) 0) (> (str/len ?output) 0))
+        (set @entity.shell ?shell)
+        (set @entity.output ?output)
+        (set @entity.status exporting)
+        (program/eval null { generate: { path: ?path, output: ?output, shell: ?shell } } { emit: { success: EXPORT_GENERATED, failure: EXPORT_REFUSED } })
+      EXPORT_PROGRAM -> idle when (not (array/includes @config.shells ?shell))
+        (emit PROGRAM_EXPORT_FAILED { shell: ?shell, error: (str/concat "the shell '" ?shell "' is not offered; choose one of " (str/join @config.shells ", ")) })
+      EXPORT_PROGRAM -> idle when (and (array/includes @config.shells ?shell) (or (== (str/len ?path) 0) (== (str/len ?output) 0)))
+        (emit PROGRAM_EXPORT_FAILED { shell: ?shell, error: "both the program path and the output directory are needed" })
+    }
+
+    state exporting {
+      INIT -> exporting
+      EXPORT_PROGRAM -> exporting
+        (emit PROGRAM_EXPORT_FAILED { shell: ?shell, error: "an export is already running; wait for it to finish" })
+      EXPORT_GENERATED -> idle
+        (set @entity.status idle)
+        (emit PROGRAM_EXPORTED { shell: @entity.shell, output: @entity.output, lines: ?result.lines, files: ?result.files, warnings: ?result.warnings, nextSteps: ?result.nextSteps })
+      EXPORT_REFUSED -> idle
+        (set @entity.status idle)
+        (emit PROGRAM_EXPORT_FAILED { shell: @entity.shell, error: (default ?error "the generator refused the program") })
+    }
+
+    emits {
+      PROGRAM_EXPORTED -> external {
+        shell : string!
+        output : string!
+        lines : [string]!
+        files : [string]!
+        warnings : [string]!
+        nextSteps : [string]!
+      }
+        @description "The project was written: the generator's report lines, the files written, its warnings and the next steps to run it."
+        @tier "primary"
+      PROGRAM_EXPORT_FAILED -> external {
+        shell : string!
+        error : string!
+      }
+        @description "The export did not happen, and why."
+        @tier "primary"
+      EXPORT_GENERATED {
+        result : ExportReport!
+      }
+        @description "Internal: program/eval generated the project."
+        @tier "internal"
+      EXPORT_REFUSED {
+        error : string
+      }
+        @description "Internal: program/eval refused to generate the project."
+        @tier "internal"
+    }
+
+    listens {
+      EXPORT_PROGRAM {
+        path : string!
+        output : string!
+        shell : string!
+      }
+        @description "Generate a runnable project for this shell from the program at path into output."
+    }
+
+    config {
+      shells : [string] = ["python", "typescript", "rust"]
+        @label "Offered shells"
+        @description "The target shells this app lets a user export to; a request for any other shell is refused."
+        @tier "policy"
+    }
+  }
+
+  page boot as ProgramExportStart -> ProgramExport
+}
