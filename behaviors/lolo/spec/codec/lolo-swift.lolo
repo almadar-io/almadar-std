@@ -1,0 +1,33 @@
+app lolo-swift-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as Swift that compiles against the iOS shell's generated models and gives the kernel's answers, so a learner who reads an exercise written in .lolo can see the same program as Swift. LOLO_TO_SWIFT { source, path } answers SWIFT_RENDERED { text, warnings }: import Foundation, the helpers the code uses, and one final class per trait with an on<Event> method per event (an if / else if per transition, then the new state), with a warning for each operator that had no Swift template and for each effect called on the ports dictionary; or SWIFT_RENDER_FAILED { error } when the source cannot be read, the path is missing (Swift is typed, so the types come from the checker) or the operator table is not readable. It is std-lolo-source with the Swift vocabulary in config."
+]
+
+orbital LoloSwiftSpec {
+  expects entity LoloSwiftRun [runtime] {
+    id : string!
+  }
+  expects trait LoloSwift {
+    state ready {
+      LOLO_TO_SWIFT -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
+    }
+    emits {
+      SWIFT_RENDERED { text : string!  warnings : [string]! }
+      SWIFT_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloSwift
+}

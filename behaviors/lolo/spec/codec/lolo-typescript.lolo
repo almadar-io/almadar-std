@@ -1,0 +1,33 @@
+app lolo-typescript-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as strict TypeScript that type-checks against the TypeScript shell's generated models and gives the kernel's answers, so a learner who reads an exercise written in .lolo can see the same program as TypeScript. LOLO_TO_TYPESCRIPT { source, path } answers TYPESCRIPT_RENDERED { text, warnings }: the imports of the shell's generated entity and payload types, the helpers the code uses, and one exported class per trait with an on<Event> method per event (an if / else if per transition, then the new state), with a warning for each operator that had no TypeScript template and for each effect called on the ports object; or TYPESCRIPT_RENDER_FAILED { error } when the source cannot be read, the operator table is not readable or the request carries no absolute path. It is std-lolo-source with the TypeScript vocabulary in config."
+]
+
+orbital LoloTypescriptSpec {
+  expects entity LoloTypescriptRun [runtime] {
+    id : string!
+  }
+  expects trait LoloTypescript {
+    state ready {
+      LOLO_TO_TYPESCRIPT -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
+    }
+    emits {
+      TYPESCRIPT_RENDERED { text : string!  warnings : [string]! }
+      TYPESCRIPT_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloTypescript
+}

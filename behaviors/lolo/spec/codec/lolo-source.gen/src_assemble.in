@@ -36,10 +36,10 @@
                                       (dpart (if @hasDef (if @coll FILL{@config.modelFactory ## value => @defE} FILL{@config.modelDefault ## value => @defE}) (if (or @optional @isNullable) FILL{@config.modelDefault ## value => @config.nullLit} ""))))
                                   { line: FILL{@config.modelField ## i => @ind ## name => CASE{(default (object/get @f "name") "") ## @config.fieldCase} ## type => @ty ## default => @dpart}, plain: (= @dpart ""), typeText: @tt }))))))))
                     (if (object/get @c "alias")
-                      [FILL{@config.modelAlias ## name => (object/get @c "name") ## type => (object/get (default (array/first @fs) { line: "", plain: true, typeText: @config.typeAny }) "typeText")}]
+                      [FILL{@config.modelAlias ## name => ENT{(object/get @c "name")} ## type => (object/get (default (array/first @fs) { line: "", plain: true, typeText: @config.typeAny }) "typeText")}]
                       (array/concat
                         (if (!= @config.modelAnnotation "") [FILL{@config.modelAnnotation ## at => @at}] [])
-                        [FILL{@config.modelClassOpen ## name => (object/get @c "name")}]
+                        [FILL{@config.modelClassOpen ## name => ENT{(object/get @c "name")}}]
                         (if (= (array/len @fs) 0)
                           (if (!= @config.modelEmpty "") [FILL{@config.modelEmpty ## i => @ind}] [])
                           (array/map (array/concat (array/filter @fs (fn x (object/get @x "plain"))) (array/filter @fs (fn x (not (object/get @x "plain"))))) (fn x (object/get @x "line"))))
@@ -55,12 +55,12 @@
                     (if (!= @config.classClose "") [FILL{@config.classClose ## i => @ind}] []))
                   (let ((cfgR (default (array/first @rs) @nullR))
                         (trs (object/get @t "transitions"))
-                        (cfgLit (str/concat @config.mapOpen
-                                  (str/join (array/map (object/get @t "knobs") (fn kb ki FILL{@config.mapPair ## key => FILL{@config.stringForm ## json => (json/stringify (object/get @kb "key"))} ## value => (default (array/nth (object/get @cfgR "items") (+ @ki 1)) @config.nullLit)})) @config.mapSep)
-                                  @config.mapClose)))
+                        (cfgLit (if (and (!= @config.mapEmpty "") (= (array/len (object/get @t "knobs")) 0)) @config.mapEmpty (str/concat @config.mapOpen
+                                  (str/join (array/map (object/get @t "knobs") (fn kb ki FILL{@config.mapPair ## key => STR{(object/get @kb "key")} ## value => (default (array/nth (object/get @cfgR "items") (+ @ki 1)) @config.nullLit)})) @config.mapSep)
+                                  @config.mapClose))))
                     (array/concat
                       [FILL{@config.classOpen ## class => @cn ## i => @ind}]
-                      (array/map @config.constructor (fn l FILL{@l ## i => @ind ## class => @cn ## entity => (object/get @t "entity") ## initial => FILL{@config.stringForm ## json => (json/stringify (object/get @t "initial"))} ## config => @cfgLit}))
+                      (array/map @config.constructor (fn l FILL{@l ## i => @ind ## class => @cn ## entity => ENT{(object/get @t "entity")} ## initial => STR{(object/get @t "initial")} ## config => @cfgLit}))
                       [""]
                       (array/map @config.emitMethod (fn l FILL{@l ## i => @ind}))
                       (array/flatten (array/map (object/get @t "events") (fn ev
@@ -74,14 +74,14 @@
                                 (let ((tr (default (array/nth @trs @mi) { from: "", to: "", event: "" }))
                                       (jr (default (array/nth @rs (+ @mi 1)) @nullR))
                                       (base (str/concat (object/get @t "path") ".stateMachine.transitions[" @mi "]")))
-                                  (let ((st FILL{@config.stateTest ## state => FILL{@config.stringForm ## json => (json/stringify (object/get @tr "from"))}})
+                                  (let ((st FILL{@config.stateTest ## state => STR{(object/get @tr "from")}})
                                         (pre FILL{@config.bodyPrefix ## i => @ind}))
                                     (let ((test (if (!= (object/get @tr "guard" null) null) FILL{@config.branchTest ## stateTest => @st ## guard => (default (array/nth (object/get @jr "items") 1) @config.nullLit)} FILL{@config.branchTestPlain ## stateTest => @st})))
                                       (array/map
                                         (array/concat
                                           [FILL{(if (= @bi 0) @config.branchFirst @config.branchNext) ## i => @ind ## test => @test}]
                                           (array/map (array/flatten (array/drop (object/get @jr "stmts") 2)) (fn l (str/concat @pre @l)))
-                                          [(str/concat @pre FILL{@config.stateAssign ## state => FILL{@config.stringForm ## json => (json/stringify (object/get @tr "to"))}} @config.terminator)])
+                                          [(str/concat @pre FILL{@config.stateAssign ## state => STR{(object/get @tr "to")}} @config.terminator)])
                                         (fn l RESOLVE{@l ## @base})))))))))
                             (if (!= @config.branchClose "") [FILL{@config.branchClose ## i => @ind}] [])
                             (if (!= @config.methodClose "") [FILL{@config.methodClose ## i => @ind}] []))))))

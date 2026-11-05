@@ -40,3 +40,22 @@ def case(T, style):
 def lines_indent(lines, unit="@config.indent"):
     x = u("li")
     return '(array/map %s (fn %s (str/concat %s @%s)))' % (lines, x, unit, x)
+
+def strlit(x):
+    """a string literal: the quoted JSON text of x, with config.stringEscapes applied to the inner text in sorted key order"""
+    j, a, k = u("sj"), u("sa"), u("sk")
+    esc = ('(if (= (array/len (object/keys @config.stringEscapes)) 0) @%(j)s '
+           '(str/concat "\\"" (array/reduce (array/sort (object/keys @config.stringEscapes)) (str/slice @%(j)s 1 (- (str/len @%(j)s) 1)) '
+           '(fn %(a)s %(k)s (str/replaceAll @%(a)s @%(k)s (object/get @config.stringEscapes @%(k)s "")))) "\\""))') % dict(j=j, a=a, k=k)
+    return '(let ((%s (json/stringify %s))) %s)' % (j, x, F("@config.stringForm", [("json", esc)]))
+
+def numlit(x):
+    """a number literal: numberIntForm when the JSON text is an integer, else numberForm"""
+    j = u("nj")
+    return ('(let ((%(j)s (json/stringify %(x)s))) (if (= (str/replace-pattern @%(j)s "^-?[0-9]+$" "") "") %(i)s %(f)s))'
+            % dict(j=j, x=x, i=F("@config.numberIntForm", [("json", "@" + j)]), f=F("@config.numberForm", [("json", "@" + j)])))
+
+def entname(x):
+    """the generated name of an entity: config.entityNames, else the .lolo name"""
+    e = u("en")
+    return '(let ((%(e)s %(x)s)) (object/get @config.entityNames @%(e)s @%(e)s))' % dict(e=e, x=x)

@@ -1,0 +1,33 @@
+app lolo-rust-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as Rust that compiles against the Rust shell's generated models and gives the kernel's answers, so a learner who reads an exercise written in .lolo can see the same program as Rust. LOLO_TO_RUST { source, path } answers RUST_RENDERED { text, warnings }: the imports of the Rust shell's generated entity and payload models, the helpers the code uses, and one struct per trait with an on_<event> method per event (an if / else if per transition, then the new state), with a warning for each operator that had no Rust template and for each effect called on the ports callback; or RUST_RENDER_FAILED { error } when the source cannot be read, the request carries no path, or the operator table is not readable. It is std-lolo-source with the Rust vocabulary in config."
+]
+
+orbital LoloRustSpec {
+  expects entity LoloRustRun [runtime] {
+    id : string!
+  }
+  expects trait LoloRust {
+    state ready {
+      LOLO_TO_RUST -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
+    }
+    emits {
+      RUST_RENDERED { text : string!  warnings : [string]! }
+      RUST_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloRust
+}

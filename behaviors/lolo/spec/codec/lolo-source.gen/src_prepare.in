@@ -38,8 +38,8 @@
                 (object/fromEntries (array/filter (array/map (object/get @en "fields") (fn f [(default (object/get @f "name") "")
                   (let ((d (object/get @f "default" null)))
                     (if (= @d null) ""
-                      (if (validate/string @d) (let ((sv : string @d)) FILL{@config.stringForm ## json => (json/stringify @sv)})
+                      (if (validate/string @d) (let ((sv : string @d)) STR{@sv})
                         (if (validate/boolean @d) (if (= @d true) @config.trueLit @config.falseLit)
-                          (if (validate/number @d) (json/stringify @d)
+                          (if (validate/number @d) NUM{@d}
                             (if (and (validate/array @d) (= (array/len (default (as @d SrcList) [])) 0)) FILL{@config.listForm ## "*" => ""}
-                              (if (and (validate/object @d) (= (array/len (object/keys @d)) 0)) (str/concat @config.mapOpen @config.mapClose) "")))))))])) (fn p (!= (default (array/nth @p 1) "") ""))))) }))))
+                              (if (and (validate/object @d) (= (array/len (object/keys @d)) 0)) (if (!= @config.mapEmpty "") @config.mapEmpty (str/concat @config.mapOpen @config.mapClose)) "")))))))])) (fn p (!= (default (array/nth @p 1) "") ""))))) }))))

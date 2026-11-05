@@ -1,0 +1,33 @@
+app lolo-kotlin-spec [
+  version: "1.0.0",
+  description: "Design contract for rendering .lolo source as Kotlin that compiles against the Android shell's generated models and gives the kernel's answers, so a learner who reads an exercise written in .lolo can see the same program as Kotlin. LOLO_TO_KOTLIN { source, path? } answers KOTLIN_RENDERED { text, warnings }: a package generated header (the file sits beside Entities.kt and Events.kt of orb compile -s android, so the entity and payload models need no import), the helpers the code uses, and one class per trait with an on<Event> method per event (an if / else if per transition, then the new state), with a warning for each operator that had no Kotlin template and for each effect invoked on the ports function; or KOTLIN_RENDER_FAILED { error } when the source cannot be read or the operator table is not readable. It is std-lolo-source with the Kotlin vocabulary in config."
+]
+
+orbital LoloKotlinSpec {
+  expects entity LoloKotlinRun [runtime] {
+    id : string!
+  }
+  expects trait LoloKotlin {
+    state ready {
+      LOLO_TO_KOTLIN -> std
+    }
+    state std {
+      SRC_STD -> table
+    }
+    state table {
+      SRC_OPERATORS -> reading
+    }
+    state reading {
+      LOLO_READ -> rendering
+      LOLO_INSPECTED -> rendering
+    }
+    state rendering {
+      SRC_PREPARE -> rendering
+    }
+    emits {
+      KOTLIN_RENDERED { text : string!  warnings : [string]! }
+      KOTLIN_RENDER_FAILED { error : string! }
+    }
+  }
+  expects page boot -> LoloKotlin
+}

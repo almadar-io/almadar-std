@@ -1,7 +1,7 @@
 import re, sys
-from lolo_macros import F, FE, case, u, S, fill
+from lolo_macros import F, FE, case, u, S, fill, strlit, numlit, entname
 
-MACROS = ("FILLE", "FILLV", "FILL", "CASE", "RECL", "REC", "LOOKUP", "RESOLVE", "FILLV")
+MACROS = ("STR", "NUM", "ENT", "FILLE", "FILLV", "FILL", "CASE", "RECL", "REC", "LOOKUP", "RESOLVE", "FILLV")
 
 def resolve(T, BASE):
     a = u("rs")
@@ -84,6 +84,12 @@ def expand(text):
                 out.append(F(parts[0], pairs))
             elif hit == "FILLE":
                 out.append(FE(parts[0], parts[1]))
+            elif hit == "STR":
+                out.append(strlit(parts[0]))
+            elif hit == "NUM":
+                out.append(numlit(parts[0]))
+            elif hit == "ENT":
+                out.append(entname(parts[0]))
             elif hit == "CASE":
                 out.append(case(parts[0], parts[1]))
             elif hit == "FILLV":

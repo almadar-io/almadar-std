@@ -1,0 +1,360 @@
+app std-lolo-swift [
+  version: "1.0.0",
+  description: "std-lolo-swift — renders .lolo source as Swift, so a learner who reads an exercise written in .lolo can see the same program as Swift that compiles against the iOS shell's generated models and gives the kernel's answers. It is std-lolo-source with the Swift vocabulary in config and nothing else: LOLO_TO_SWIFT { source, path } answers SWIFT_RENDERED { text, warnings }, or SWIFT_RENDER_FAILED { error } when the source cannot be read or the request carries no path (Swift is typed, so the types come from the kernel checker). Each trait becomes a final class holding state, entity, ports and config, with one on<Event> method per event: an if / else if branch per transition (the from-state and the guard), the effects, then the new state; an emit records (event, payload) in emitted with the payload built as the shell's generated payload struct. The entity and payload structs are the ones Entities.swift and Events.swift of the iOS shell declare in the same module, so the output imports nothing but Foundation. entityNames mirrors the iOS shell's SWIFT_RESERVED_TYPES table (orbital-shell-ios backend.rs): an entity named like a Swift, Foundation or SwiftUI type is generated with the suffix Entity (Task is TaskEntity), and the constructor uses that name. payloadFieldOrder sorted builds a payload struct with its fields by name, the order the shell declares them in, which the memberwise initializer needs; mapEmpty writes the empty map as [:]. Every number is a Double, a string is measured and sliced by Unicode scalar like the kernel, and an answer that is null in the kernel (a division by zero, nth past the end, a missing key) is an Optional that default reads with ??. Kernel-semantics helpers are fileprivate functions written once, and only the ones the output uses. An operator with no Swift template is a named warning and a generic stub that stops when run. persist, fetch, notify, navigate and call-service are called on the ports dictionary of closures and each is listed in warnings; render-ui is a comment. See std-lolo-source for the config knobs and the type placeholders."
+]
+uses Spec from "almadar-std/lolo-swift"
+uses Src from "std/behaviors/std-lolo-source"
+
+orbital LoloSwiftOrbital {
+  entity LoloSwiftRun [runtime] {
+    id : string!
+  }
+
+  trait LoloSwift = Src.traits.LoloSource {
+    events {
+      LOLO_TO_SOURCE: LOLO_TO_SWIFT
+      SOURCE_RENDERED: SWIFT_RENDERED
+      SOURCE_RENDER_FAILED: SWIFT_RENDER_FAILED
+    }
+    config {
+      language: "Swift"
+      requiresTypes: true
+      operators: {
+          "/": "_div({{0}}, {{1}})",
+          "%": "_mod({{0}}, {{1}})",
+          "math/mod": "_mod({{0}}, {{1}})",
+          "=#2": "_eq({{0}}, {{1}})",
+          "==#2": "_eq({{0}}, {{1}})",
+          "!=#2": "(!_eq({{0}}, {{1}}))",
+          "str/len": "Double({{0}}.unicodeScalars.count)",
+          "str/upper": "{{0}}.uppercased()",
+          "str/lower": "{{0}}.lowercased()",
+          "str/trim": "{{0}}.trimmingCharacters(in: .whitespacesAndNewlines)",
+          "str/trimStart": "_trim_start({{0}})",
+          "str/trimEnd": "_trim_end({{0}})",
+          "str/capitalize": "_capitalize({{0}})",
+          "str/split": "_split({{0}}, {{1}})",
+          "str/join": "_join({{0}}, {{1}})",
+          "str/concat": "_concat({{*}})",
+          "str/includes": "_str_includes({{0}}, {{1}})",
+          "str/startsWith": "{{0}}.unicodeScalars.starts(with: {{1}}.unicodeScalars)",
+          "str/endsWith": "{{0}}.unicodeScalars.reversed().starts(with: {{1}}.unicodeScalars.reversed())",
+          "str/replace": "_replace({{0}}, {{1}}, {{2}}, false)",
+          "str/replaceAll": "_replace({{0}}, {{1}}, {{2}}, true)",
+          "str/repeat": "_repeat({{0}}, {{1}})",
+          "str/reverse": "_reverse_str({{0}})",
+          "str/slice#2": "_str_slice({{0}}, {{1}})",
+          "str/slice#3": "_str_slice({{0}}, {{1}}, {{2}})",
+          "str/padStart#2": "_pad_start({{0}}, {{1}})",
+          "str/padStart#3": "_pad_start({{0}}, {{1}}, {{2}})",
+          "str/padEnd#2": "_pad_end({{0}}, {{1}})",
+          "str/padEnd#3": "_pad_end({{0}}, {{1}}, {{2}})",
+          "str/truncate#2": "_truncate({{0}}, {{1}})",
+          "str/truncate#3": "_truncate({{0}}, {{1}}, {{2}})",
+          "str/to-int": "_to_int({{0}})",
+          "array/len": "Double({{0}}.count)",
+          "array/first": "{{0}}.first",
+          "array/last": "{{0}}.last",
+          "array/nth": "_nth({{0}}, {{1}})",
+          "array/range#2": "_range({{0}}, {{1}})",
+          "array/range#3": "_range({{0}}, {{1}}, {{2}})",
+          "array/slice#2": "_slice({{0}}, {{1}})",
+          "array/slice#3": "_slice({{0}}, {{1}}, {{2}})",
+          "array/take": "_take({{0}}, {{1}})",
+          "array/drop": "_drop({{0}}, {{1}})",
+          "array/takeLast": "_take_last({{0}}, {{1}})",
+          "array/dropLast": "_drop_last({{0}}, {{1}})",
+          "array/append": "({{0}} + [{{1}}])",
+          "array/prepend": "([{{1}}] + {{0}})",
+          "array/includes": "_includes({{0}}, {{1}})",
+          "array/indexOf": "_index_of({{0}}, {{1}})",
+          "array/reverse": "Array({{0}}.reversed())",
+          "array/unique": "_unique({{0}})",
+          "array/flatten": "{{0}}.flatMap { $0 }",
+          "array/zip": "zip({{0}}, {{1}}).map { [$0.0, $0.1] }",
+          "array/reduce": "{{0}}.reduce({{1}}, {{2}})",
+          "list": "[{{*}}]",
+          "object/get#2": "_get({{0}}, {{1}})",
+          "object/get#3": "(_get({{0}}, {{1}}) ?? {{2}})",
+          "object/has": "_has({{0}}, {{1}})",
+          "object/set": "_set({{0}}, {{1}}, {{2}})",
+          "object/merge#2": "{{0}}.merging({{1}}) { _, new in new }",
+          "object/pick": "_pick({{0}}, {{1}})",
+          "object/omit": "_omit({{0}}, {{1}})",
+          "math/abs": "abs({{0}})",
+          "math/max": "max({{*}})",
+          "math/min": "min({{*}})",
+          "math/round#2": "_round({{0}}, {{1}})",
+          "math/sqrt": "_sqrt({{0}})",
+          "math/ln": "_ln({{0}})",
+          "math/log10": "_log10({{0}})",
+          "math/pow": "_pow({{0}}, {{1}})",
+          "math/sign": "_sign({{0}})",
+          "math/clamp": "min(max({{0}}, {{1}}), {{2}})",
+          "default": "({{0}} ?? {{1}})",
+          "as": "{{0}}",
+          "validate/required": "_required({{0}})",
+          "validate/length": "(_size({{0}}) == {{1}})",
+          "validate/minLength": "(_size({{0}}) >= {{1}})",
+          "validate/maxLength": "(_size({{0}}) <= {{1}})",
+          "validate/min": "({{0}} >= {{1}})",
+          "validate/max": "({{0}} <= {{1}})",
+          "validate/range": "({{0}} >= {{1}} && {{0}} <= {{2}})",
+          "validate/oneOf": "_includes({{1}}, {{0}})",
+          "validate/equals": "_eq({{0}}, {{1}})"
+        }
+      unary: {
+          "-": "(-{{0}})",
+          "not": "(!{{0}})",
+          "array/range": "_range({{0}})",
+          "array/sum": "{{0}}.reduce(0, +)",
+          "array/count": "Double({{0}}.count)",
+          "array/sort": "{{0}}.sorted()",
+          "math/round": "_round({{0}})",
+          "array/concat": "{{0}}",
+          "object/merge": "{{0}}",
+          "array/avg": "_avg({{0}})",
+          "array/max": "{{0}}.max()",
+          "array/min": "{{0}}.min()"
+        }
+      infix: {"+": "+", "-": "-", "*": "*", "<": "<", "<=": "<=", ">": ">", ">=": ">=", "and": "&&", "or": "||", "array/concat": "+"}
+      infixForm: "({{*}})"
+      lambdaOperators: {
+          "array/map": "{{src}}.map { {{vars}} in {{body}} }",
+          "array/filter": "{{src}}.filter { {{vars}} in {{body}} }",
+          "array/reject": "{{src}}.filter { {{vars}} in !({{body}}) }",
+          "array/some": "{{src}}.contains { {{vars}} in {{body}} }",
+          "array/every": "{{src}}.allSatisfy { {{vars}} in {{body}} }",
+          "array/count": "Double({{src}}.filter { {{vars}} in {{body}} }.count)",
+          "array/find": "{{src}}.first { {{vars}} in {{body}} }",
+          "array/findIndex": "({{src}}.firstIndex { {{vars}} in {{body}} }.map { Double($0) } ?? -1)"
+        }
+      lambdaForm: "{ {{params}} in {{body}} }"
+      indexedSource: "{{src}}.enumerated().map { (Double($0.offset), $0.element) }"
+      indexedVars: "{{index}}, {{item}}"
+      callees: {"math/ceil": "ceil", "math/floor": "floor", "math/sin": "sin", "math/cos": "cos", "math/tan": "tan", "math/atan": "atan", "math/atan2": "atan2", "math/hypot": "hypot"}
+      calleeForm: "{{callee}}({{*}})"
+      unsupportedForm: "_unsupported({{op}})"
+      unsupportedWarn: "no {{language}} template for operator {{op}}"
+      helpers: {
+          "/": ["fileprivate func _div(_ a: Double, _ b: Double) -> Double? { b == 0 ? nil : a / b }"],
+          "%": ["fileprivate func _mod(_ a: Double, _ b: Double) -> Double? { b == 0 ? nil : fmod(a, b) }"],
+          "math/mod": ["fileprivate func _mod(_ a: Double, _ b: Double) -> Double? { b == 0 ? nil : fmod(a, b) }"],
+          "=": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }"],
+          "==": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }"],
+          "!=": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }"],
+          "str/len": [],
+          "str/upper": [],
+          "str/lower": [],
+          "str/trim": [],
+          "str/trimStart": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _trim_start(_ s: String) -> String { _str(s.unicodeScalars.drop(while: { CharacterSet.whitespacesAndNewlines.contains($0) })) }"],
+          "str/trimEnd": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _trim_end(_ s: String) -> String { _str(s.unicodeScalars.reversed().drop(while: { CharacterSet.whitespacesAndNewlines.contains($0) }).reversed()) }"],
+          "str/capitalize": ["fileprivate func _capitalize(_ s: String) -> String {\n    guard let f = s.unicodeScalars.first else { return s }\n    return String(f).uppercased() + String(s.unicodeScalars.dropFirst()).lowercased()\n}"],
+          "str/split": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _find(_ s: [Unicode.Scalar], _ d: [Unicode.Scalar], _ from: Int) -> Int? {\n    var i = from\n    while i + d.count <= s.count {\n        if s[i..<i + d.count].elementsEqual(d) { return i }\n        i += 1\n    }\n    return nil\n}", "fileprivate func _split(_ s: String, _ d: String) -> [String] {\n    let sc = Array(s.unicodeScalars), dc = Array(d.unicodeScalars)\n    if dc.isEmpty { return sc.map { String($0) } }\n    var out: [String] = []\n    var at = 0\n    while let i = _find(sc, dc, at) {\n        out.append(_str(sc[at..<i]))\n        at = i + dc.count\n    }\n    out.append(_str(sc[at...]))\n    return out\n}"],
+          "str/join": ["fileprivate func _num_text(_ x: Double) -> String {\n    if x.isNaN { return \"NaN\" }\n    if x.isInfinite { return x < 0 ? \"-Infinity\" : \"Infinity\" }\n    if x == 0 { return \"0\" }\n    var d = abs(x).description\n    var e = 0\n    if let i = d.firstIndex(where: { $0 == \"e\" || $0 == \"E\" }) {\n        e = Int(d[d.index(after: i)...]) ?? 0\n        d = String(d[..<i])\n    }\n    var digits = d\n    var point = d.count\n    if let i = d.firstIndex(of: \".\") {\n        point = d.distance(from: d.startIndex, to: i)\n        digits = d.replacingOccurrences(of: \".\", with: \"\")\n    }\n    var n = point + e\n    while digits.hasPrefix(\"0\") && digits.count > 1 { digits.removeFirst(); n -= 1 }\n    while digits.hasSuffix(\"0\") && digits.count > 1 { digits.removeLast() }\n    let k = digits.count\n    var out: String\n    if k <= n && n <= 21 {\n        out = digits + String(repeating: \"0\", count: n - k)\n    } else if 0 < n && n <= 21 {\n        out = String(digits.prefix(n)) + \".\" + String(digits.dropFirst(n))\n    } else if -6 < n && n <= 0 {\n        out = \"0.\" + String(repeating: \"0\", count: -n) + digits\n    } else {\n        let m = n - 1\n        let sign = m < 0 ? \"-\" : \"+\"\n        out = String(digits.prefix(1)) + (k > 1 ? \".\" + String(digits.dropFirst()) : \"\") + \"e\" + sign + String(abs(m))\n    }\n    return x < 0 ? \"-\" + out : out\n}\nfileprivate protocol _Textual { var _text: String { get } }\nextension String: _Textual { fileprivate var _text: String { self } }\nextension Bool: _Textual { fileprivate var _text: String { self ? \"true\" : \"false\" } }\nextension Double: _Textual { fileprivate var _text: String { _num_text(self) } }\nextension Int: _Textual { fileprivate var _text: String { String(self) } }", "fileprivate func _join<T: _Textual>(_ a: [T], _ d: String) -> String { a.map { $0._text }.joined(separator: d) }"],
+          "str/concat": ["fileprivate func _num_text(_ x: Double) -> String {\n    if x.isNaN { return \"NaN\" }\n    if x.isInfinite { return x < 0 ? \"-Infinity\" : \"Infinity\" }\n    if x == 0 { return \"0\" }\n    var d = abs(x).description\n    var e = 0\n    if let i = d.firstIndex(where: { $0 == \"e\" || $0 == \"E\" }) {\n        e = Int(d[d.index(after: i)...]) ?? 0\n        d = String(d[..<i])\n    }\n    var digits = d\n    var point = d.count\n    if let i = d.firstIndex(of: \".\") {\n        point = d.distance(from: d.startIndex, to: i)\n        digits = d.replacingOccurrences(of: \".\", with: \"\")\n    }\n    var n = point + e\n    while digits.hasPrefix(\"0\") && digits.count > 1 { digits.removeFirst(); n -= 1 }\n    while digits.hasSuffix(\"0\") && digits.count > 1 { digits.removeLast() }\n    let k = digits.count\n    var out: String\n    if k <= n && n <= 21 {\n        out = digits + String(repeating: \"0\", count: n - k)\n    } else if 0 < n && n <= 21 {\n        out = String(digits.prefix(n)) + \".\" + String(digits.dropFirst(n))\n    } else if -6 < n && n <= 0 {\n        out = \"0.\" + String(repeating: \"0\", count: -n) + digits\n    } else {\n        let m = n - 1\n        let sign = m < 0 ? \"-\" : \"+\"\n        out = String(digits.prefix(1)) + (k > 1 ? \".\" + String(digits.dropFirst()) : \"\") + \"e\" + sign + String(abs(m))\n    }\n    return x < 0 ? \"-\" + out : out\n}\nfileprivate protocol _Textual { var _text: String { get } }\nextension String: _Textual { fileprivate var _text: String { self } }\nextension Bool: _Textual { fileprivate var _text: String { self ? \"true\" : \"false\" } }\nextension Double: _Textual { fileprivate var _text: String { _num_text(self) } }\nextension Int: _Textual { fileprivate var _text: String { String(self) } }", "fileprivate func _concat(_ parts: any _Textual...) -> String { parts.map { $0._text }.joined() }"],
+          "str/includes": ["fileprivate func _find(_ s: [Unicode.Scalar], _ d: [Unicode.Scalar], _ from: Int) -> Int? {\n    var i = from\n    while i + d.count <= s.count {\n        if s[i..<i + d.count].elementsEqual(d) { return i }\n        i += 1\n    }\n    return nil\n}", "fileprivate func _str_includes(_ s: String, _ d: String) -> Bool { _find(Array(s.unicodeScalars), Array(d.unicodeScalars), 0) != nil }"],
+          "str/startsWith": [],
+          "str/endsWith": [],
+          "str/replace": ["fileprivate func _replace(_ s: String, _ d: String, _ r: String, _ all: Bool) -> String {\n    let sc = Array(s.unicodeScalars), dc = Array(d.unicodeScalars)\n    var out = String.UnicodeScalarView()\n    var i = 0\n    var done = false\n    while i <= sc.count {\n        if !done, i + dc.count <= sc.count, sc[i..<i + dc.count].elementsEqual(dc) {\n            out.append(contentsOf: r.unicodeScalars)\n            done = !all\n            if dc.isEmpty {\n                if i < sc.count { out.append(sc[i]) }\n                i += 1\n            } else {\n                i += dc.count\n            }\n        } else {\n            if i < sc.count { out.append(sc[i]) }\n            i += 1\n        }\n    }\n    return String(out)\n}"],
+          "str/replaceAll": ["fileprivate func _replace(_ s: String, _ d: String, _ r: String, _ all: Bool) -> String {\n    let sc = Array(s.unicodeScalars), dc = Array(d.unicodeScalars)\n    var out = String.UnicodeScalarView()\n    var i = 0\n    var done = false\n    while i <= sc.count {\n        if !done, i + dc.count <= sc.count, sc[i..<i + dc.count].elementsEqual(dc) {\n            out.append(contentsOf: r.unicodeScalars)\n            done = !all\n            if dc.isEmpty {\n                if i < sc.count { out.append(sc[i]) }\n                i += 1\n            } else {\n                i += dc.count\n            }\n        } else {\n            if i < sc.count { out.append(sc[i]) }\n            i += 1\n        }\n    }\n    return String(out)\n}"],
+          "str/repeat": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _repeat(_ s: String, _ n: Double) -> String { String(repeating: s, count: _count(n)) }"],
+          "str/reverse": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _reverse_str(_ s: String) -> String { _str(s.unicodeScalars.reversed()) }"],
+          "str/slice": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _str_slice(_ s: String, _ a: Double, _ b: Double? = nil) -> String {\n    let sc = Array(s.unicodeScalars)\n    let n = sc.count\n    func at(_ i: Int) -> Int { i < 0 ? max(0, n + i) : min(i, n) }\n    let lo = at(_whole(a))\n    let hi = b.map { at(_whole($0)) } ?? n\n    return lo < hi ? _str(sc[lo..<hi]) : \"\"\n}"],
+          "str/padStart": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _pad_start(_ s: String, _ n: Double, _ p: String = \" \") -> String {\n    guard p.unicodeScalars.count == 1 else { fatalError(\"expected a single padding character\") }\n    let k = max(0, _whole(n) - s.unicodeScalars.count)\n    return String(repeating: p, count: k) + s\n}"],
+          "str/padEnd": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _pad_end(_ s: String, _ n: Double, _ p: String = \" \") -> String {\n    guard p.unicodeScalars.count == 1 else { fatalError(\"expected a single padding character\") }\n    let k = max(0, _whole(n) - s.unicodeScalars.count)\n    return s + String(repeating: p, count: k)\n}"],
+          "str/truncate": ["fileprivate func _str<S: Sequence>(_ a: S) -> String where S.Element == Unicode.Scalar {\n    var v = String.UnicodeScalarView()\n    v.append(contentsOf: a)\n    return String(v)\n}", "fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _truncate(_ s: String, _ n: Double, _ suffix: String = \"...\") -> String {\n    let sc = Array(s.unicodeScalars)\n    return Double(sc.count) <= n ? s : _str(sc[0..<_count(n)]) + suffix\n}"],
+          "str/to-int": ["fileprivate func _to_int(_ s: String) -> Double? { Int64(s).map { Double($0) } }"],
+          "array/len": [],
+          "array/first": [],
+          "array/last": [],
+          "array/nth": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _nth<T>(_ a: [T], _ i: Double) -> T? {\n    let k = _count(i)\n    return k < a.count ? a[k] : nil\n}"],
+          "array/range": ["fileprivate func _range(_ a: Double, _ b: Double? = nil, _ step: Double = 1) -> [Double] {\n    let start = b == nil ? 0 : a\n    let end = b ?? a\n    guard step != 0, step.isFinite else { fatalError(\"range: step must be a non-zero finite number\") }\n    var out: [Double] = []\n    var x = start\n    while step > 0 ? x < end : x > end {\n        out.append(x)\n        x += step\n    }\n    return out\n}"],
+          "array/slice": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _slice<T>(_ a: [T], _ s: Double, _ e: Double? = nil) -> [T] {\n    let lo = _count(s)\n    let hi = min(e.map { _count($0) } ?? a.count, a.count)\n    return lo < hi ? Array(a[lo..<hi]) : []\n}"],
+          "array/take": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _take<T>(_ a: [T], _ n: Double) -> [T] { Array(a.prefix(_count(n))) }"],
+          "array/drop": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _drop<T>(_ a: [T], _ n: Double) -> [T] { Array(a.dropFirst(_count(n))) }"],
+          "array/takeLast": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _take_last<T>(_ a: [T], _ n: Double) -> [T] { Array(a.suffix(_count(n))) }"],
+          "array/dropLast": ["fileprivate func _whole(_ x: Double) -> Int {\n    guard x == x.rounded(), abs(x) < 9007199254740992 else { fatalError(\"expected a whole number\") }\n    return Int(x)\n}", "fileprivate func _count(_ x: Double) -> Int {\n    let k = _whole(x)\n    guard k >= 0 else { fatalError(\"expected a whole number from 0\") }\n    return k\n}", "fileprivate func _drop_last<T>(_ a: [T], _ n: Double) -> [T] { Array(a.dropLast(_count(n))) }"],
+          "array/append": [],
+          "array/prepend": [],
+          "array/includes": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }", "fileprivate func _includes<T: _Eq>(_ a: [T], _ x: T) -> Bool { a.contains { $0._same(x) } }"],
+          "array/indexOf": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }", "fileprivate func _index_of<T: _Eq>(_ a: [T], _ x: T) -> Double { Double(a.firstIndex { $0._same(x) } ?? -1) }"],
+          "array/reverse": [],
+          "array/unique": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }", "fileprivate func _unique<T: _Eq>(_ a: [T]) -> [T] {\n    var out: [T] = []\n    for x in a where !out.contains(where: { $0._same(x) }) { out.append(x) }\n    return out\n}"],
+          "array/flatten": [],
+          "array/zip": [],
+          "array/reduce": [],
+          "list": [],
+          "object/get": ["fileprivate func _get<T>(_ o: [String: T], _ p: String) -> T? {\n    guard !p.unicodeScalars.contains(\".\") else { fatalError(\"object/get: a dotted path is not supported on a typed map\") }\n    return o[p]\n}"],
+          "object/has": ["fileprivate func _has<T>(_ o: [String: T], _ p: String) -> Bool {\n    guard !p.unicodeScalars.contains(\".\") else { fatalError(\"object/has: a dotted path is not supported on a typed map\") }\n    return o.keys.contains(p)\n}"],
+          "object/set": ["fileprivate func _set<T>(_ o: [String: T], _ p: String, _ v: T) -> [String: T] {\n    guard !p.unicodeScalars.contains(\".\") else { fatalError(\"object/set: a dotted path is not supported on a typed map\") }\n    var out = o\n    out[p] = v\n    return out\n}"],
+          "object/merge": [],
+          "object/pick": ["fileprivate func _pick<T>(_ o: [String: T], _ ks: [String]) -> [String: T] { o.filter { ks.contains($0.key) } }"],
+          "object/omit": ["fileprivate func _omit<T>(_ o: [String: T], _ ks: [String]) -> [String: T] { o.filter { !ks.contains($0.key) } }"],
+          "math/abs": [],
+          "math/max": [],
+          "math/min": [],
+          "math/round": ["fileprivate func _round(_ x: Double, _ d: Double = 0) -> Double {\n    let m = pow(10, d)\n    return copysign(floor(abs(x) * m + 0.5) / m, x)\n}"],
+          "math/sqrt": ["fileprivate func _sqrt(_ x: Double) -> Double? { x < 0 ? nil : x.squareRoot() }"],
+          "math/ln": ["fileprivate func _ln(_ x: Double) -> Double? { x <= 0 ? nil : log(x) }"],
+          "math/log10": ["fileprivate func _log10(_ x: Double) -> Double? { x <= 0 ? nil : log10(x) }"],
+          "math/pow": ["fileprivate func _pow(_ a: Double, _ b: Double) -> Double? {\n    let r = pow(a, b)\n    return r.isNaN || r.isInfinite ? nil : r\n}"],
+          "math/sign": ["fileprivate func _sign(_ x: Double) -> Double { x > 0 ? 1 : (x < 0 ? -1 : 0) }"],
+          "math/clamp": [],
+          "default": [],
+          "as": [],
+          "validate/required": ["fileprivate func _required(_ v: String?) -> Bool { v != nil && v != \"\" }\nfileprivate func _required<T>(_ v: T?) -> Bool { v != nil }"],
+          "validate/length": ["fileprivate func _size(_ s: String) -> Double { Double(s.unicodeScalars.count) }\nfileprivate func _size<T>(_ a: [T]) -> Double { Double(a.count) }"],
+          "validate/minLength": ["fileprivate func _size(_ s: String) -> Double { Double(s.unicodeScalars.count) }\nfileprivate func _size<T>(_ a: [T]) -> Double { Double(a.count) }"],
+          "validate/maxLength": ["fileprivate func _size(_ s: String) -> Double { Double(s.unicodeScalars.count) }\nfileprivate func _size<T>(_ a: [T]) -> Double { Double(a.count) }"],
+          "validate/min": [],
+          "validate/max": [],
+          "validate/range": [],
+          "validate/oneOf": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }", "fileprivate func _includes<T: _Eq>(_ a: [T], _ x: T) -> Bool { a.contains { $0._same(x) } }"],
+          "validate/equals": ["fileprivate protocol _Eq { func _same(_ o: Self) -> Bool }\nextension String: _Eq { fileprivate func _same(_ o: String) -> Bool { unicodeScalars.elementsEqual(o.unicodeScalars) } }\nextension Double: _Eq { fileprivate func _same(_ o: Double) -> Bool { self == o } }\nextension Bool: _Eq { fileprivate func _same(_ o: Bool) -> Bool { self == o } }\nextension Array: _Eq where Element: _Eq { fileprivate func _same(_ o: [Element]) -> Bool { count == o.count && zip(self, o).allSatisfy { $0._same($1) } } }\nextension Optional: _Eq where Wrapped: _Eq {\n    fileprivate func _same(_ o: Wrapped?) -> Bool {\n        switch (self, o) {\n        case (nil, nil): return true\n        case let (a?, b?): return a._same(b)\n        default: return false\n        }\n    }\n}\nextension Dictionary: _Eq where Value: _Eq { fileprivate func _same(_ o: [Key: Value]) -> Bool { count == o.count && allSatisfy { kv in o[kv.key].map { kv.value._same($0) } ?? false } } }\nfileprivate func _eq<T: _Eq>(_ a: T, _ b: T) -> Bool { a._same(b) }"],
+          "-": [],
+          "not": [],
+          "array/sum": [],
+          "array/count": [],
+          "array/sort": [],
+          "array/concat": [],
+          "array/avg": ["fileprivate func _avg(_ a: [Double]) -> Double? { a.isEmpty ? nil : a.reduce(0, +) / Double(a.count) }"],
+          "array/max": [],
+          "array/min": [],
+          "unsupported": ["fileprivate func _unsupported<T>(_ name: String) -> T { fatalError(\"no native template for operator \" + name) }"]
+        }
+      helperGap: "\n"
+      portEffects: ["persist", "fetch", "fetch-stream", "notify", "navigate", "navigate-back", "call-service", "cancel-call", "send-server", "spawn", "despawn", "log"]
+      portCall: "self.ports[\"{{name}}\"]?([{{*}}])"
+      portCase: "lower"
+      portWarn: "{{op}} is called on the ports object"
+      attributeRoots: {"entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload"}
+      itemRoots: {"config": "self.config"}
+      attrAccess: ".{{name}}"
+      itemAccess: "[{{key}}]"
+      indexAccess: "[{{0}}]"
+      localAccess: "item"
+      entityReadDefault: "({{read}} ?? {{default}})"
+      typeNames: {
+          "string": "String",
+          "string?": "String?",
+          "[string]": "[String]",
+          "[string]?": "[String]?",
+          "[string?]": "[String?]",
+          "[[string]]": "[[String]]",
+          "[[string]]?": "[[String]]?",
+          "Map string string": "[String: String]",
+          "Map string string?": "[String: String]?",
+          "Map string [string]": "[String: [String]]",
+          "[Map string string]": "[[String: String]]",
+          "number": "Double",
+          "number?": "Double?",
+          "[number]": "[Double]",
+          "[number]?": "[Double]?",
+          "[number?]": "[Double?]",
+          "[[number]]": "[[Double]]",
+          "[[number]]?": "[[Double]]?",
+          "Map string number": "[String: Double]",
+          "Map string number?": "[String: Double]?",
+          "Map string [number]": "[String: [Double]]",
+          "[Map string number]": "[[String: Double]]",
+          "int": "Double",
+          "int?": "Double?",
+          "[int]": "[Double]",
+          "[int]?": "[Double]?",
+          "[int?]": "[Double?]",
+          "[[int]]": "[[Double]]",
+          "[[int]]?": "[[Double]]?",
+          "Map string int": "[String: Double]",
+          "Map string int?": "[String: Double]?",
+          "Map string [int]": "[String: [Double]]",
+          "[Map string int]": "[[String: Double]]",
+          "boolean": "Bool",
+          "boolean?": "Bool?",
+          "[boolean]": "[Bool]",
+          "[boolean]?": "[Bool]?",
+          "[boolean?]": "[Bool?]",
+          "[[boolean]]": "[[Bool]]",
+          "[[boolean]]?": "[[Bool]]?",
+          "Map string boolean": "[String: Bool]",
+          "Map string boolean?": "[String: Bool]?",
+          "Map string [boolean]": "[String: [Bool]]",
+          "[Map string boolean]": "[[String: Bool]]"
+        }
+      typeUnknown: "Any"
+      nullLit: "nil"
+      trueLit: "true"
+      falseLit: "false"
+      stringForm: "{{json}}"
+      listForm: "[{{*}}]"
+      mapOpen: "["
+      mapClose: "]"
+      mapPair: "{{key}}: {{value}}"
+      mapSep: ", "
+      mapEmpty: "[:]"
+      letStmt: "let {{name}}: {{type}} = {{value}}"
+      letExpr: "({ ({{name}}: {{type}}) in {{body}} })({{value}})"
+      condExpr: "({{cond}} ? {{then}} : {{else}})"
+      ifOpen: "if {{cond}} {"
+      elseOpen: "} else {"
+      blockClose: "}"
+      emptyBody: ""
+      setStyle: "assign"
+      setAssign: "{{target}} = {{value}}"
+      emitForm: "self.emit({{event}}, {{payload}})"
+      payloadType: "{{trait}}{{event}}Payload"
+      payloadCtor: "{{type}}({{fields}})"
+      payloadField: "{{name}}: {{value}}"
+      payloadSep: ", "
+      payloadFieldOrder: "sorted"
+      commentForm: "// {{text}}"
+      indent: "    "
+      terminator: ""
+      classCase: "keep"
+      fieldCase: "keep"
+      localCase: "keep"
+      methodCase: "pascal"
+      methodName: "on{{event}}"
+      modelImports: {"entity": "import Foundation", "payload": ""}
+      modelImportEach: false
+      modelImportSep: ", "
+      entityNames: { "Any": "AnyEntity", "AnyCodable": "AnyCodableEntity", "Array": "ArrayEntity", "Binding": "BindingEntity", "Bool": "BoolEntity", "Button": "ButtonEntity", "Calendar": "CalendarEntity", "Character": "CharacterEntity", "Color": "ColorEntity", "Data": "DataEntity", "Date": "DateEntity", "Dictionary": "DictionaryEntity", "Double": "DoubleEntity", "Environment": "EnvironmentEntity", "Error": "ErrorEntity", "Float": "FloatEntity", "Font": "FontEntity", "Form": "FormEntity", "Group": "GroupEntity", "Image": "ImageEntity", "Int": "IntEntity", "JSONDecoder": "JSONDecoderEntity", "JSONEncoder": "JSONEncoderEntity", "Label": "LabelEntity", "Link": "LinkEntity", "List": "ListEntity", "Locale": "LocaleEntity", "Menu": "MenuEntity", "Never": "NeverEntity", "Notification": "NotificationEntity", "Optional": "OptionalEntity", "Path": "PathEntity", "Picker": "PickerEntity", "Range": "RangeEntity", "Result": "ResultEntity", "Section": "SectionEntity", "Set": "SetEntity", "Shape": "ShapeEntity", "Slider": "SliderEntity", "State": "StateEntity", "Stepper": "StepperEntity", "String": "StringEntity", "Task": "TaskEntity", "Text": "TextEntity", "Timer": "TimerEntity", "Toggle": "ToggleEntity", "URL": "URLEntity", "UUID": "UUIDEntity", "View": "ViewEntity", "Void": "VoidEntity" }
+      sectionGap: "\n\n\n"
+      classOpen: "final class {{class}} {"
+      classClose: "}"
+      classEmpty: ""
+      constructor: ["{{i}}var state: String", "{{i}}var entity: {{entity}}", "{{i}}var ports: [String: ([Any]) -> Void]", "{{i}}var config: [String: Any]", "{{i}}private(set) var emitted: [(event: String, payload: any Encodable)] = []", "", "{{i}}init(entity: {{entity}}, ports: [String: ([Any]) -> Void] = [:], config overrides: [String: Any] = [:]) {", "{{i}}{{i}}let defaults: [String: Any] = {{config}}", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}{{i}}self.config = defaults.merging(overrides) { _, new in new }", "{{i}}}"]
+      emitMethod: ["{{i}}func emit(_ event: String, _ payload: any Encodable) {", "{{i}}{{i}}emitted.append((event: event, payload: payload))", "{{i}}}"]
+      methodOpen: "{{i}}func {{method}}(_ payload: {{payloadType}}) {"
+      methodOpenPlain: "{{i}}func {{method}}() {"
+      methodClose: "{{i}}}"
+      branchFirst: "{{i}}{{i}}if {{test}} {"
+      branchNext: "{{i}}{{i}}} else if {{test}} {"
+      branchClose: "{{i}}{{i}}}"
+      branchTest: "{{stateTest}} && {{guard}}"
+      branchTestPlain: "{{stateTest}}"
+      stateTest: "self.state == {{state}}"
+      stateAssign: "self.state = {{state}}"
+      bodyPrefix: "{{i}}{{i}}{{i}}"
+      renderModels: false
+      modelAnnotation: ""
+      modelClassOpen: "struct {{name}}: Codable {"
+      modelClassClose: "}"
+      modelField: "{{i}}var {{name}}: {{type}}{{default}}"
+      modelDefault: " = {{value}}"
+      modelFactory: " = {{value}}"
+      modelEmpty: ""
+      modelAlias: "typealias {{name}} = {{type}}"
+      typeMap: {"string": "String", "number": "Double", "float": "Double", "int": "Int", "integer": "Int", "boolean": "Bool", "bool": "Bool", "date": "String", "datetime": "String", "timestamp": "String", "instant": "String", "duration": "Double", "email": "String", "url": "String", "uuid": "String", "bytes": "[UInt8]"}
+      typeList: "[{{0}}]"
+      typeListBare: "[Any]"
+      typeDict: "[String: {{0}}]"
+      typeDictBare: "[String: Any]"
+      typeLiteral: "String"
+      typeNullable: "{{0}}?"
+      typeAny: "Any"
+    }
+  }
+
+  page boot as LoloSwiftStart -> LoloSwift
+}

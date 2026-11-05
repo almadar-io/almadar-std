@@ -4034,6 +4034,2382 @@
      }
     }
    ]
+  },
+  {
+   "id": "number-int-form",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "numberForm": "d({{json}})",
+    "numberIntForm": "i({{json}})"
+   },
+   "note": "numberIntForm writes the integers and numberForm the other numbers, in expressions and in the entityReadDefault default. Control: number-int-form-neutral, the same program with the neutral forms.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 2
+                ]
+               ],
+               [
+                "set",
+                "@entity.r",
+                1.5
+               ],
+               [
+                "set",
+                "@entity.n",
+                -3
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.n = (dflt(entity.n, i(0)) + i(2))\n      entity.r = d(1.5)\n      entity.n = i(-3)\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "number-int-form-neutral",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    }
+   },
+   "note": "Control of number-int-form: the default forms write every number as its JSON text.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 2
+                ]
+               ],
+               [
+                "set",
+                "@entity.r",
+                1.5
+               ],
+               [
+                "set",
+                "@entity.n",
+                -3
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.n = (dflt(entity.n, 0) + 2)\n      entity.r = 1.5\n      entity.n = -3\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "payload-field-order-sorted",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "payloadFieldOrder": "sorted"
+   },
+   "note": "payloadFieldOrder sorted builds the emit payload by field name, not in the order of the object literal. Control: payload-field-order-declared.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "DONE",
+                {
+                 "z": 1,
+                 "a": "s"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      emit(\"DONE\", TDONEPayload(a=\"s\", z=1))\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "payload-field-order-declared",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    }
+   },
+   "note": "Control of payload-field-order-sorted: the default order is the one of the object literal.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "DONE",
+                {
+                 "z": 1,
+                 "a": "s"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      emit(\"DONE\", TDONEPayload(z=1, a=\"s\"))\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "map-empty",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "mapOpen": "[",
+    "mapClose": "]",
+    "mapEmpty": "[:]",
+    "mapPair": "{{key}}: {{value}}"
+   },
+   "note": "mapEmpty writes a map literal with no pair, in an expression and as the config of a trait with no knob, and leaves a map with pairs alone. Control: map-empty-unset.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.m",
+                {}
+               ],
+               [
+                "set",
+                "@entity.m",
+                {
+                 "k": 1
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, [:])\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.m = [:]\n      entity.m = [\"k\": 1]\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "map-empty-unset",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "mapOpen": "[",
+    "mapClose": "]",
+    "mapPair": "{{key}}: {{value}}"
+   },
+   "note": "Control of map-empty: with no mapEmpty an empty map is mapOpen followed by mapClose.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.m",
+                {}
+               ],
+               [
+                "set",
+                "@entity.m",
+                {
+                 "k": 1
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, [])\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.m = []\n      entity.m = [\"k\": 1]\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "string-escapes",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "stringEscapes": {
+     "$": "\\$"
+    }
+   },
+   "note": "stringEscapes replaces text inside a string literal after the standard escaping, so a program string that already holds the replacement text round-trips (the string backslash dollar stays two characters in the program and four in the output). Control: string-escapes-neutral.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.label",
+                "a$b"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "\\$"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "a"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.label = \"a\\$b\"\n      entity.label = \"\\\\\\$\"\n      entity.label = \"a\"\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "string-escapes-order",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "stringEscapes": {
+     "b": "X",
+     "a": "b"
+    }
+   },
+   "note": "stringEscapes entries run one after another in sorted key order: a becomes b, then b becomes X. Control: string-escapes-neutral.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.label",
+                "a$b"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "\\$"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "a"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.label = \"X$X\"\n      entity.label = \"\\\\$\"\n      entity.label = \"X\"\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "string-escapes-neutral",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    }
+   },
+   "note": "Control of string-escapes: with no stringEscapes a string is its JSON text.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.label",
+                "a$b"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "\\$"
+               ],
+               [
+                "set",
+                "@entity.label",
+                "a"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      entity.label = \"a$b\"\n      entity.label = \"\\\\$\"\n      entity.label = \"a\"\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "file-header",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "fileHeader": "package generated"
+   },
+   "note": "fileHeader is the first text of the file, followed by sectionGap, before the imports. Control: file-header-neutral.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "package generated\n\n\nimport Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "file-header-neutral",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    }
+   },
+   "note": "Control of file-header: with no fileHeader the file starts with the imports.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-names",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "entityNames": {
+     "Rec": "RecEntity",
+     "Other": "OtherEntity"
+    }
+   },
+   "note": "entityNames renames the entity in the constructor and in the model imports and leaves a name it does not list. Control: entity-names-neutral.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import RecEntity\nimport TDONEPayload\n\n\nclass T {\n  ctor(RecEntity, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-names-neutral",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    }
+   },
+   "note": "Control of entity-names: with no entityNames the .lolo name is written.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "import Rec\nimport TDONEPayload\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-names-models",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "entityNames": {
+     "Rec": "RecEntity"
+    },
+    "renderModels": true,
+    "modelClassOpen": "class {{name}} {",
+    "typeMap": {
+     "string": "String",
+     "number": "Double",
+     "object": "Map"
+    }
+   },
+   "note": "entityNames renames the model class when renderModels is true, as well as the constructor. Control: entity-names-models-neutral.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "class RecEntity {\n  id: String\n  n: Double = 0\n  r: Double = 1.5\n  label: String = \"x\"\n  m: dict = {}\n}\n\n\nclass T {\n  ctor(RecEntity, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-names-models-neutral",
+   "entity": {
+    "operatorNames": [
+     "+",
+     "emit",
+     "set"
+    ]
+   },
+   "config": {
+    "language": "Neutral",
+    "attributeRoots": {
+     "entity": "entity"
+    },
+    "entityReadDefault": "dflt({{read}}, {{default}})",
+    "infix": {
+     "+": "+"
+    },
+    "methodOpenPlain": "{{i}}fun {{method}}() {",
+    "constructor": [
+     "{{i}}ctor({{entity}}, {{config}})"
+    ],
+    "modelImports": {
+     "entity": "import {{names}}",
+     "payload": "import {{names}}"
+    },
+    "renderModels": true,
+    "modelClassOpen": "class {{name}} {",
+    "typeMap": {
+     "string": "String",
+     "number": "Double",
+     "object": "Map"
+    }
+   },
+   "note": "Control of entity-names-models.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "LOLO_READ",
+     "payload": {
+      "result": {
+       "typeContractVersion": 1,
+       "name": "knobs",
+       "version": "1.0.0",
+       "schemaVersion": 1,
+       "orbitals": [
+        {
+         "name": "Fx",
+         "entity": {
+          "name": "Rec",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "nullable": false,
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "nullable": false,
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "nullable": false,
+            "name": "r",
+            "type": "number",
+            "default": 1.5
+           },
+           {
+            "nullable": false,
+            "name": "label",
+            "type": "string",
+            "default": "x"
+           },
+           {
+            "nullable": false,
+            "name": "m",
+            "type": "object",
+            "default": {}
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Rec",
+           "emits": [
+            {
+             "event": "DONE",
+             "scope": "external",
+             "payloadSchema": [
+              {
+               "nullable": false,
+               "name": "z",
+               "type": "number",
+               "required": true
+              },
+              {
+               "nullable": false,
+               "name": "a",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ],
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "GO",
+              "name": "Go"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SOURCE_RENDERED",
+        "payload": {
+         "text": "class Rec {\n  id: String\n  n: Double = 0\n  r: Double = 1.5\n  label: String = \"x\"\n  m: dict = {}\n}\n\n\nclass T {\n  ctor(Rec, {})\n\n\n  fun onGO() {\n    if (state == \"idle\") {\n      state = \"idle\"\n    }\n  }\n}\n",
+         "warnings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "SOURCE_RENDER_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }
