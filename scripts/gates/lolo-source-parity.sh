@@ -96,7 +96,6 @@ J
 run_rust() {
   need rust rustc "$CARGO_ONE" orb || { FAILS=$((FAILS + 1)); return; }
   goldens_leg rust || return
-  echo "NOTE G-CROSS-449: rust leg declares JsonValue in the gate's temp crate"
   local c=$T/rs-crate; mkdir -p "$c"
   printf '[package]\nname = "lolo-source-parity"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n\n[dependencies]\nserde = { version = "1", features = ["derive"] }\nserde_json = "1"\n' >"$c/Cargo.toml"
   local ex ready=""
@@ -106,8 +105,6 @@ run_rust() {
     if ! orb compile "$PAR/$ex.server.lolo" -s rust -o "$T/rs-$ex" >"$log" 2>&1; then report rust "$ex" bad "$log"; continue; fi
     render_text rust "$ex" "$d/lolo.rs" || { report rust "$ex" bad "$log"; continue; }
     cp "$T/rs-$ex/src/generated/"*.rs "$d/generated/"
-    printf '// gate-owned gap file (G-CROSS-449): the generated models name JsonValue without declaring it\npub type JsonValue = serde_json::Value;\n' >"$d/jsonvalue_gap.rs"
-    sed -i.bak 's|^use serde::{Deserialize, Serialize};|use serde::{Deserialize, Serialize};\nuse crate::jsonvalue_gap::JsonValue; // gate-owned line, G-CROSS-449|' "$d/generated/entities.rs" && rm "$d/generated/entities.rs.bak"
     cp "$PAR/drivers/rust/$ex.rs" "$d/main.rs"
     printf '\n[[bin]]\nname = "%s"\npath = "cases/%s/main.rs"\n' "$ex" "$ex" >>"$c/Cargo.toml"
     ready="$ready $ex"
