@@ -35,7 +35,7 @@ orbital LoloRustOrbital {
       portCall: "(self.ports)(\"{{name}}\", serde_json::json!([{{*}}]))"
       portCase: "lower"
       portWarn: "{{op}} is called on the ports object"
-      attributeRoots: { "entity": "self.entity", "state": "self.state", "payload": "payload" }
+      attributeRoots: { "entity": "self.entity", "state": "self.state", "payload": "payload", "config": "self.config" }
       attrAccess: ".{{name}}"
       indexAccess: "[{{0}}]"
       localAccess: "attr"
@@ -63,6 +63,7 @@ orbital LoloRustOrbital {
       setAssign: "{{target}} = ({{value}}).clone().into()"
       emitForm: "self.emit({{event}}, {{payload}})"
       payloadType: "{{trait}}{{event}}Payload"
+      configType: "{{trait}}Config"
       payloadCtor: "serde_json::to_value({{type}} { {{fields}} }).ok()"
       payloadField: "{{name}}: ({{value}}).clone().into()"
       payloadSep: ", "
@@ -81,7 +82,7 @@ orbital LoloRustOrbital {
       classOpen: "macro_rules! _list {\n    ($($x:expr),* $(,)?) => { vec![$(($x).clone()),*] };\n}\n\npub struct {{class}} {"
       classClose: "}"
       classEmpty: ""
-      constructor: ["{{i}}pub state: String,", "{{i}}pub entity: {{entity}},", "{{i}}pub ports: Box<dyn FnMut(&str, serde_json::Value)>,", "{{i}}pub emitted: Vec<(String, Option<serde_json::Value>)>,", "}", "", "impl {{class}} {", "{{i}}pub fn new(entity: {{entity}}) -> Self {", "{{i}}{{i}}Self { state: {{initial}}, entity, ports: Box::new(|_, _| {}), emitted: Vec::new() }", "{{i}}}", "", "{{i}}pub fn with_ports(mut self, ports: impl FnMut(&str, serde_json::Value) + 'static) -> Self {", "{{i}}{{i}}self.ports = Box::new(ports);", "{{i}}{{i}}self", "{{i}}}"]
+      constructor: ["{{i}}pub state: String,", "{{i}}pub entity: {{entity}},", "{{i}}pub config: {{configType}},", "{{i}}pub ports: Box<dyn FnMut(&str, serde_json::Value)>,", "{{i}}pub emitted: Vec<(String, Option<serde_json::Value>)>,", "}", "", "impl {{class}} {", "{{i}}pub fn new(entity: {{entity}}) -> Self {", "{{i}}{{i}}Self { state: {{initial}}, entity, config: {{configType}}::default(), ports: Box::new(|_, _| {}), emitted: Vec::new() }", "{{noConfig}}{{i}}{{i}}Self { state: {{initial}}, entity, ports: Box::new(|_, _| {}), emitted: Vec::new() }", "{{i}}}", "", "{{i}}pub fn with_config(mut self, config: {{configType}}) -> Self {", "{{withConfig}}{{i}}{{i}}self.config = config;", "{{withConfig}}{{i}}{{i}}self", "{{withConfig}}{{i}}}", "{{withConfig}}", "{{i}}pub fn with_ports(mut self, ports: impl FnMut(&str, serde_json::Value) + 'static) -> Self {", "{{i}}{{i}}self.ports = Box::new(ports);", "{{i}}{{i}}self", "{{i}}}"]
       emitMethod: ["{{i}}fn emit(&mut self, event: String, payload: Option<serde_json::Value>) {", "{{i}}{{i}}self.emitted.push((event, payload));", "{{i}}}"]
       methodOpen: "{{i}}pub fn {{method}}(&mut self, payload: &{{payloadType}}) {"
       methodOpenPlain: "{{i}}pub fn {{method}}(&mut self) {"

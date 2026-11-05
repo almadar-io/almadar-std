@@ -46,7 +46,7 @@
                         (if (!= @config.modelClassClose "") [@config.modelClassClose] [])))))))
               [])
             (array/map (array/range 0 (array/len @entity.traits)) (fn ti
-              (let ((t (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {} }))
+              (let ((t (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, configType: "" }))
                     (rs (default (array/nth @entity.renders (+ @nC @ti)) []))
                     (cn : string CASE{(default (object/get (default (array/nth @entity.traits @ti) { name: "" }) "name") "") ## @config.classCase}))
                 (if (not (object/get @t "hasMachine"))
@@ -60,7 +60,7 @@
                                   @config.mapClose))))
                     (array/concat
                       [FILL{@config.classOpen ## class => @cn ## i => @ind}]
-                      (array/map @config.constructor (fn l FILL{@l ## i => @ind ## class => @cn ## entity => ENT{(object/get @t "entity")} ## initial => STR{(object/get @t "initial")} ## config => @cfgLit}))
+                      (array/map (array/filter @config.constructor (fn l (if (= (object/get @t "configType") "") (not (or (str/includes @l "{{configType}}") (str/includes @l "{{withConfig}}"))) (not (str/includes @l "{{noConfig}}"))))) (fn l FILL{@l ## i => @ind ## class => @cn ## entity => ENT{(object/get @t "entity")} ## initial => STR{(object/get @t "initial")} ## config => @cfgLit ## configType => (object/get @t "configType") ## noConfig => "" ## withConfig => ""}))
                       [""]
                       (array/map @config.emitMethod (fn l FILL{@l ## i => @ind}))
                       (array/flatten (array/map (object/get @t "events") (fn ev

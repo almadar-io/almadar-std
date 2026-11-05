@@ -20,6 +20,7 @@
                       initial: (default (object/get (default (array/first @initials) { name: "" }) "name") ""),
                       hasMachine: (> (array/len (object/get @machine "states")) 0),
                       knobs: (array/map (object/entries (default (object/get @t "config") {})) (fn en { key: (default (array/nth @en 0) ""), default: (object/get (default (array/nth @en 1) {}) "default" null) })),
+                      configType: (if (or (= @config.configType "") (= (array/len (object/keys (default (object/get @t "config") {}))) 0)) "" FILL{@config.configType ## trait => @tn}),
                       transitions: (object/get @machine "transitions"),
                       events: (array/unique (array/map (object/get @machine "transitions") (fn tr (object/get @tr "event")))),
                       listenTypes: (object/fromEntries (array/map (array/filter @evs (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "key") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "key") ## "keep"}}]))),

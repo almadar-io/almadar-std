@@ -1,0 +1,29 @@
+app config-read [
+  version: "1.0.0"
+]
+orbital Fx {
+  entity Rec [runtime] {
+    id : string!
+    v : number = 0
+  }
+  trait T -> Rec [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      GO -> idle when @config.on
+        (set @entity.v (* ?a @config.factor))
+        (emit DONE { v: @entity.v })
+    }
+    emits {
+      DONE -> external { v : number! }
+    }
+    listens {
+      GO { a : number! }
+    }
+    config {
+      on : boolean = true
+      factor : number = 7
+    }
+  }
+  page boot as FxStart -> T
+}

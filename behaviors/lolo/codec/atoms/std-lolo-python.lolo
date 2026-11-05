@@ -38,8 +38,8 @@ orbital LoloPythonOrbital {
       portCall: "self.ports.{{name}}({{*}})"
       portCase: "lower"
       portWarn: "{{op}} is called on the ports object"
-      attributeRoots: { "entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload" }
-      itemRoots: { "config": "self.config" }
+      attributeRoots: { "entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload", "config": "self.config" }
+      itemRoots: {  }
       attrAccess: ".{{name}}"
       itemAccess: "[{{key}}]"
       indexAccess: "[{{0}}]"
@@ -65,6 +65,7 @@ orbital LoloPythonOrbital {
       setAssign: "{{target}} = {{value}}"
       emitForm: "self.emit({{event}}, {{payload}})"
       payloadType: "{{trait}}{{event}}Payload"
+      configType: "{{trait}}Config"
       payloadCtor: "{{type}}({{fields}})"
       payloadField: "{{name}}={{value}}"
       payloadSep: ", "
@@ -83,7 +84,7 @@ orbital LoloPythonOrbital {
       classOpen: "class {{class}}:"
       classClose: ""
       classEmpty: "{{i}}pass"
-      constructor: ["{{i}}def __init__(self, entity: {{entity}}, ports=None, config: dict | None = None):", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}{{i}}self.config = {{config}} | (config or {})", "{{i}}{{i}}self.emitted: list[tuple[str, object]] = []"]
+      constructor: ["{{i}}def __init__(self, entity: {{entity}}, ports=None, config: {{configType}} | None = None):", "{{noConfig}}{{i}}def __init__(self, entity: {{entity}}, ports=None):", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}{{i}}self.config = config if config is not None else {{configType}}()", "{{i}}{{i}}self.emitted: list[tuple[str, object]] = []"]
       emitMethod: ["{{i}}def emit(self, event, payload):", "{{i}}{{i}}self.emitted.append((event, payload))"]
       methodOpen: "{{i}}def {{method}}(self, payload: {{payloadType}}) -> None:"
       methodOpenPlain: "{{i}}def {{method}}(self, payload=None) -> None:"

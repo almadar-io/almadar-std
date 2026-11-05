@@ -228,8 +228,8 @@ orbital LoloSwiftOrbital {
       portCall: "self.ports[\"{{name}}\"]?([{{*}}])"
       portCase: "lower"
       portWarn: "{{op}} is called on the ports object"
-      attributeRoots: {"entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload"}
-      itemRoots: {"config": "self.config"}
+      attributeRoots: {"entity": "self.entity", "state": "self.state", "user": "self.user", "now": "self.now", "locale": "self.locale", "trait": "self.trait", "event": "self.event", "payload": "payload", "config": "self.config"}
+      itemRoots: {}
       attrAccess: ".{{name}}"
       itemAccess: "[{{key}}]"
       indexAccess: "[{{0}}]"
@@ -303,6 +303,7 @@ orbital LoloSwiftOrbital {
       setAssign: "{{target}} = {{value}}"
       emitForm: "self.emit({{event}}, {{payload}})"
       payloadType: "{{trait}}{{event}}Payload"
+      configType: "{{trait}}Config"
       payloadCtor: "{{type}}({{fields}})"
       payloadField: "{{name}}: {{value}}"
       payloadSep: ", "
@@ -323,7 +324,7 @@ orbital LoloSwiftOrbital {
       classOpen: "final class {{class}} {"
       classClose: "}"
       classEmpty: ""
-      constructor: ["{{i}}var state: String", "{{i}}var entity: {{entity}}", "{{i}}var ports: [String: ([Any]) -> Void]", "{{i}}var config: [String: Any]", "{{i}}private(set) var emitted: [(event: String, payload: any Encodable)] = []", "", "{{i}}init(entity: {{entity}}, ports: [String: ([Any]) -> Void] = [:], config overrides: [String: Any] = [:]) {", "{{i}}{{i}}let defaults: [String: Any] = {{config}}", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}{{i}}self.config = defaults.merging(overrides) { _, new in new }", "{{i}}}"]
+      constructor: ["{{i}}var state: String", "{{i}}var entity: {{entity}}", "{{i}}var ports: [String: ([Any]) -> Void]", "{{i}}var config = {{configType}}()", "{{i}}private(set) var emitted: [(event: String, payload: any Encodable)] = []", "", "{{i}}init(entity: {{entity}}, ports: [String: ([Any]) -> Void] = [:]) {", "{{i}}{{i}}self.state = {{initial}}", "{{i}}{{i}}self.entity = entity", "{{i}}{{i}}self.ports = ports", "{{i}}}"]
       emitMethod: ["{{i}}func emit(_ event: String, _ payload: any Encodable) {", "{{i}}{{i}}emitted.append((event: event, payload: payload))", "{{i}}}"]
       methodOpen: "{{i}}func {{method}}(_ payload: {{payloadType}}) {"
       methodOpenPlain: "{{i}}func {{method}}() {"
