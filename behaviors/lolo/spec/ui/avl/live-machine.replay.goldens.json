@@ -1598,7 +1598,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -1651,9 +1652,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             }
           },
           "expect": {
@@ -1720,7 +1723,8 @@
                         ],
                         "emits": [],
                         "listens": [],
-                        "observer": false
+                        "observer": false,
+                        "linked": false
                       },
                       {
                         "trait": "Board",
@@ -1773,9 +1777,11 @@
                         ],
                         "emits": [],
                         "listens": [],
-                        "observer": false
+                        "observer": false,
+                        "linked": false
                       }
-                    ]
+                    ],
+                    "wires": []
                   }
                 }
               }
@@ -1923,7 +1929,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -1976,9 +1983,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             }
           },
           "expect": {
@@ -2012,7 +2021,8 @@
             "behavior": "almadar-std/demo",
             "tree": {
               "page": "Home",
-              "traits": []
+              "traits": [],
+              "wires": []
             }
           },
           "expect": {
@@ -2074,7 +2084,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2127,9 +2138,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -2187,8 +2200,8 @@
       ]
     },
     {
-      "id": "orbital-moves-of-another-trait-ask-for-its-source",
-      "note": "Frame moved while Board's source is shown: the view lights the move and asks for Frame's source",
+      "id": "every-fired-move-of-a-dispatch-joins-the-route-in-order",
+      "note": "Frame then Board fired in one dispatch: the route lists both, in order, with each transition's index",
       "steps": [
         {
           "trait": "LiveMachineOrbit",
@@ -2235,7 +2248,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2288,9 +2302,199 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
+            },
+            "actives": [
+              {
+                "trait": "Frame",
+                "state": "idle"
+              },
+              {
+                "trait": "Board",
+                "state": "idle"
+              }
+            ],
+            "title": "Board",
+            "sourceText": "trait Board {\n  idle LOAD loading\n  loading LOADED idle\n}",
+            "sourceLines": [
+              {
+                "index": 0,
+                "start": 2,
+                "end": 2
+              },
+              {
+                "index": 1,
+                "start": 3,
+                "end": 3
+              }
+            ]
+          },
+          "event": "MOVES",
+          "payload": {
+            "moves": [
+              {
+                "trait": "Frame",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              },
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "from": "idle",
+                "to": "loading",
+                "fired": false
+              },
+              {
+                "trait": "Board",
+                "event": "LOADED",
+                "from": "loading",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "showing",
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.0.route": [
+                    {
+                      "trait": "Frame",
+                      "index": 0
+                    },
+                    {
+                      "trait": "Board",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-moves-of-another-trait-ask-for-its-source",
+      "note": "Frame moved while Board's source is shown: the view lights the move and asks for Frame's source",
+      "steps": [
+        {
+          "trait": "LiveMachineOrbit",
+          "from": "showing",
+          "entity": {
+            "id": "o",
+            "behavior": "almadar-std/demo",
+            "tree": {
+              "page": "Home",
+              "traits": [
+                {
+                  "trait": "Frame",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "idle",
+                      "event": "INIT",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false,
+                  "linked": false
+                },
+                {
+                  "trait": "Board",
+                  "orbital": "Main",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "stepsIn": "server",
+                  "linkedEntity": null,
+                  "instances": [
+                    {
+                      "entityId": "singleton",
+                      "state": "idle"
+                    }
+                  ],
+                  "states": [
+                    {
+                      "name": "idle",
+                      "isInitial": true,
+                      "isTerminal": false
+                    },
+                    {
+                      "name": "loading",
+                      "isInitial": false,
+                      "isTerminal": false
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "index": 0,
+                      "from": [
+                        "idle"
+                      ],
+                      "to": "loading",
+                      "event": "LOAD",
+                      "guarded": false,
+                      "emits": []
+                    },
+                    {
+                      "index": 1,
+                      "from": [
+                        "loading"
+                      ],
+                      "to": "idle",
+                      "event": "LOADED",
+                      "guarded": false,
+                      "emits": []
+                    }
+                  ],
+                  "emits": [],
+                  "listens": [],
+                  "observer": false,
+                  "linked": false
+                }
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -2405,7 +2609,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2458,9 +2663,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -2559,7 +2766,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2612,9 +2820,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -2710,7 +2920,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2763,9 +2974,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -2879,7 +3092,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -2932,9 +3146,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -3029,7 +3245,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3082,9 +3299,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -3197,7 +3416,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3250,9 +3470,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -3372,7 +3594,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3425,9 +3648,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -3545,7 +3770,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3598,9 +3824,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             },
             "actives": [
               {
@@ -3722,7 +3950,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3775,9 +4004,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             }
           },
           "expect": {
@@ -3876,7 +4107,8 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 },
                 {
                   "trait": "Board",
@@ -3929,9 +4161,11 @@
                   ],
                   "emits": [],
                   "listens": [],
-                  "observer": false
+                  "observer": false,
+                  "linked": false
                 }
-              ]
+              ],
+              "wires": []
             }
           },
           "expect": {
@@ -3980,7 +4214,8 @@
                         ],
                         "emits": [],
                         "listens": [],
-                        "observer": false
+                        "observer": false,
+                        "linked": false
                       },
                       {
                         "trait": "Board",
@@ -4033,9 +4268,11 @@
                         ],
                         "emits": [],
                         "listens": [],
-                        "observer": false
+                        "observer": false,
+                        "linked": false
                       }
-                    ]
+                    ],
+                    "wires": []
                   }
                 }
               }

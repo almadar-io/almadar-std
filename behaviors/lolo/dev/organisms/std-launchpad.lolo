@@ -127,7 +127,7 @@ orbital Launchpad {
         (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
           { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme,
-          { type: drawer, isOpen: true, modal: false, title: "State machine · this page", position: right, width: "min(1100px, 62vw)", closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
+          { type: drawer, isOpen: true, modal: false, title: "State machine · this page", position: right, width: "min(1100px, 62vw)", headerActions: { type: button, label: "Full screen", icon: maximize-2, variant: ghost, size: sm, action: MACHINE_SIZE }, closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
         ] })
         (emit MACHINE_OPEN { behavior: "almadar-std/std-launchpad" })
     }
@@ -150,6 +150,38 @@ orbital Launchpad {
           { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
           @trait.LaunchpadTheme
         ] })
+      MACHINE_SIZE -> full
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
+          { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
+          @trait.LaunchpadTheme,
+          { type: drawer, isOpen: true, modal: false, title: "State machine · this page", position: right, width: "100vw", headerActions: { type: button, label: "Side panel", icon: minimize-2, variant: ghost, size: sm, action: MACHINE_SIZE }, closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
+        ] })
+    }
+
+    state full {
+      INIT -> closed
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
+          { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
+          @trait.LaunchpadTheme
+        ] })
+      MACHINE_TOGGLE -> closed
+        (emit MACHINE_CLOSE { })
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
+          { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
+          @trait.LaunchpadTheme
+        ] })
+      CLOSE -> closed
+        (emit MACHINE_CLOSE { })
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
+          { type: button, label: "State machine", icon: workflow, variant: ghost, size: sm, action: MACHINE_TOGGLE },
+          @trait.LaunchpadTheme
+        ] })
+      MACHINE_SIZE -> open
+        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, children: [
+          { type: button, label: "State machine", icon: workflow, variant: primary, size: sm, action: MACHINE_TOGGLE },
+          @trait.LaunchpadTheme,
+          { type: drawer, isOpen: true, modal: false, title: "State machine · this page", position: right, width: "min(1100px, 62vw)", headerActions: { type: button, label: "Full screen", icon: maximize-2, variant: ghost, size: sm, action: MACHINE_SIZE }, closeEvent: CLOSE, children: [@trait.LaunchpadLive] }
+        ] })
     }
 
     emits {
@@ -166,6 +198,8 @@ orbital Launchpad {
         @description "The header's State machine button: open the view of this page, or close it."
       CLOSE { }
         @description "The drawer was closed."
+      MACHINE_SIZE { }
+        @description "The drawer's size button: fill the screen with the view, or go back to a side panel."
     }
   }
 
